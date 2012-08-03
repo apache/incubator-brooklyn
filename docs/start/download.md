@@ -40,26 +40,24 @@ Just download your preferred flavour and add it to your classpath.
 <a name="examples"></a>
 ## Examples
 
-You can download the most recent stable examples from [here](https://github.com/brooklyncentral/brooklyn-examples/tarball/master).
+You can clone the most recent stable examples from the [brooklyn-examples git repository](http://github.com/brooklyncentral/brooklyn-examples):
+
+{% highlight bash %}
+% git clone https://github.com/brooklyncentral/brooklyn-examples.git
+{% endhighlight %}
+
+You can also download them from [here](https://github.com/brooklyncentral/brooklyn-examples/tarball/master).
 
 If you prefer to do this from the command-line, use:
 
 {% highlight bash %}
-curl --location https://github.com/brooklyncentral/brooklyn-examples/tarball/master \
--o brooklyn-latest.tgz
+% curl -L https://github.com/brooklyncentral/brooklyn-examples/tarball/master -o brooklyn-latest.tgz
 {% endhighlight %}
 
 If you are looking for a specific version (versions of the examples are aligned with Brooklyn non-snapshot releases) try the following command:
 
 {% highlight bash %}
-curl --location https://github.com/brooklyncentral/brooklyn-examples/tarball/0.4.0-M2 \
--o brooklyn-0.4.0-M2.tgz
-{% endhighlight %}
-
-You can also clone the [brooklyn-examples git repository](http://github.com/brooklyncentral/brooklyn-examples):
-
-{% highlight bash %}
-git clone https://github.com/brooklyncentral/brooklyn-examples.git
+% curl -L https://github.com/brooklyncentral/brooklyn-examples/tarball/0.4.0-M2 -o brooklyn-0.4.0-M2.tgz
 {% endhighlight %}
 
 Once you have the examples you can build them with [maven (v3)]({{site.url}}/dev/build/).

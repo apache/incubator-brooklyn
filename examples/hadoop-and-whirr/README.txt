@@ -1,10 +1,10 @@
 Instructions for running examples
 =================================
 
-The commands below assume that the `brooklyn` script is already on your $PATH, and you are in the examples directory:
+The commands below assume that the `brooklyn` script is already on your $PATH, and you are in the "examples" directory:
 
-  export BROOKLYN_EXAMPLES_DIR=$(pwd)
-  export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/hadoop-and-whirr/target/classes
+  cd hadoop-and-whirr
+  export BROOKLYN_CLASSPATH=$(pwd)/target/classes
   
   # Runs hadoop in aws-ec2 us-east-1
   brooklyn launch --app brooklyn.extras.whirr.WhirrHadoopExample --stopOnKeyPress --location aws-ec2:us-east-1

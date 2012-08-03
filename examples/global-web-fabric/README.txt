@@ -1,10 +1,10 @@
 Instructions for running examples
 =================================
 
-The commands below assume that the `brooklyn` script is already on your $PATH, and you are in the examples directory:
+The commands below assume that the `brooklyn` script is already on your $PATH, and you are in the "examples" directory:
 
-  export BROOKLYN_EXAMPLES_DIR=$(pwd)
-  export BROOKLYN_CLASSPATH=${BROOKLYN_EXAMPLES_DIR}/global-web-fabric/target/classes
+  cd global-web-fabric
+  export BROOKLYN_CLASSPATH=$(pwd)/target/classes
 
   # Launch the app on localhost
   brooklyn launch --app brooklyn.demo.GlobalWebFabricExample --location locahost
