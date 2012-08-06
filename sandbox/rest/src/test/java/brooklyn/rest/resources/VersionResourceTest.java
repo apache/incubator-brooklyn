@@ -4,6 +4,7 @@ import brooklyn.rest.BaseResourceTest;
 import com.sun.jersey.api.client.ClientResponse;
 import javax.ws.rs.core.Response;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import org.testng.annotations.Test;
 
 public class VersionResourceTest extends BaseResourceTest {
@@ -15,7 +16,8 @@ public class VersionResourceTest extends BaseResourceTest {
 
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     String version = response.getEntity(String.class);
-    assertEquals("a.b.c-SNAPSHOT", version);
+
+    assertTrue(version.matches("^\\d+\\.\\d+\\.\\d+.*"));
   }
 
   @Override
