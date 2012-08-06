@@ -126,12 +126,12 @@ public class NginxController extends AbstractController {
         config.append("http {\n");
         config.append(format("  upstream "+getId()+" {\n"))
         if (sticky){
-            config.append("        sticky;\n");
+            config.append("    sticky;\n");
         }
         for (String address: addresses){
             config.append("    server "+address+";\n")
         }
-        config.append("}\n")
+        config.append("  }\n")
         config.append("  server {\n");
         config.append("    listen "+getPort()+";\n")
         config.append("    server_name "+getDomain()+";\n")
