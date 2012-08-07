@@ -23,11 +23,9 @@ executor:
   maximumPoolSize: 16
   keepAliveTimeInSeconds: 120
 
-# A list of users. Remove to disable authentication
-users:
-  - name: admin
-    password: admin
-    roles: [admin]
+http:
+  port: 60180
+  adminPort: 60181
 
 # Logging settings
 

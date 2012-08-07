@@ -1,11 +1,14 @@
 package brooklyn.rest.resources;
 
+import static com.google.common.collect.Iterables.transform;
+import com.google.common.collect.Lists;
 import static com.google.common.collect.Sets.filter;
 import groovy.lang.GroovyClassLoader;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -124,7 +127,7 @@ public class CatalogResource extends BaseResource {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Entity not found")
   })
-  public Iterable<String> getEntity(
+  public List<String> getEntity(
       @ApiParam(name = "entity", value = "The name of the entity to retrieve", required = true)
       @PathParam("entity") String entityType) throws Exception {
     if (!containsEntity(entityType)) {
@@ -138,10 +141,12 @@ public class CatalogResource extends BaseResource {
       Constructor constructor = clazz.getConstructor(new Class[]{Map.class});
 
       Entity instance = (Entity) constructor.newInstance(Maps.newHashMap());
-      return Iterables.transform(instance.getEntityType().getConfigKeys(), new Function<ConfigKey<?>, String>() {
-              public String apply(ConfigKey<?> configKey) {
-                return configKey.getName();
-              }});
+      return Lists.newArrayList(transform(instance.getEntityType().getConfigKeys(),
+          new Function<ConfigKey<?>, String>() {
+            public String apply(ConfigKey<?> configKey) {
+              return configKey.getName();
+            }
+          }));
 
     } catch (NoSuchMethodException e) {
       throw notFound(e.getMessage());

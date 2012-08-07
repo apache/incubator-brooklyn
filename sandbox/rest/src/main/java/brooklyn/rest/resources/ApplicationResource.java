@@ -5,24 +5,13 @@ import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
-import com.wordnik.swagger.core.Api;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
-
+import static com.google.common.base.Preconditions.checkNotNull;
+import com.wordnik.swagger.core.*;
+import java.net.URI;
 import javax.validation.Valid;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.net.URI;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;

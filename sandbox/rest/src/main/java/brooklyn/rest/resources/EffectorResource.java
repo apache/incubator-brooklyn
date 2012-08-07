@@ -8,6 +8,7 @@ import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
@@ -15,6 +16,7 @@ import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 import com.yammer.dropwizard.logging.Log;
 
+import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -50,7 +52,7 @@ public class EffectorResource extends BaseResource {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application or entity not found")
   })
-  public Iterable<EffectorSummary> list(
+  public List<EffectorSummary> list(
       @ApiParam(name = "application", value = "Application name", required = true)
       @PathParam("application") final String applicationName,
       @ApiParam(name = "entity", value = "Entity name", required = true)
@@ -59,14 +61,14 @@ public class EffectorResource extends BaseResource {
     final Application application = getApplicationOr404(manager.registry(), applicationName);
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
-    return transform(
+    return Lists.newArrayList(transform(
         entity.getEntityType().getEffectors(),
         new Function<Effector<?>, EffectorSummary>() {
           @Override
           public EffectorSummary apply(Effector<?> effector) {
             return new EffectorSummary(application, entity, effector);
           }
-        });
+        }));
   }
 
   @POST

@@ -12,18 +12,23 @@
     <parent>
         <groupId>io.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
-        <!-- BROOKLYN_VERSION -->
+        <version>0.4.0-SNAPSHOT</version><!-- BROOKLYN_VERSION -->
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <properties>
-        <dropwizard.version>0.3.1</dropwizard.version>
+        <dropwizard.version>0.4.4</dropwizard.version>
         <slf4j.version>1.6.4</slf4j.version>
         <reflections.version>0.9.5</reflections.version>
+        <guava.version>12.0.1</guava.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
@@ -40,6 +45,11 @@
             <version>${dropwizard.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.yammer.dropwizard</groupId>
+            <artifactId>dropwizard-auth</artifactId>
+            <version>${dropwizard.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
@@ -53,6 +63,12 @@
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -89,6 +105,12 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -113,8 +135,14 @@
             <groupId>com.wordnik</groupId>
             <artifactId>swagger-core_2.9.1</artifactId>
             <version>1.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-        <dependency>    
+        <dependency>
             <groupId>org.iq80.cli</groupId>
             <artifactId>git-like-cli</artifactId>
             <version>${git-like-cli.version}</version>
@@ -133,7 +161,6 @@
 
     <build>
         <plugins>
-            <!-- packaging as a single .jar is no longer possible because of BouncyCastle -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

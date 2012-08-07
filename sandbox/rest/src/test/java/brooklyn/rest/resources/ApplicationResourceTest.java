@@ -58,7 +58,6 @@ public class ApplicationResourceTest extends BaseResourceTest {
     addResource(new EntityResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager, executorService));
-    addResource(new DropwizardResourceConfig());
   }
 
   @AfterClass

@@ -1,8 +1,11 @@
 package brooklyn.rest;
 
 import brooklyn.rest.api.LocationSpec;
+import brooklyn.rest.auth.User;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.yammer.dropwizard.config.Configuration;
+import java.util.Set;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import javax.validation.Valid;
@@ -28,6 +31,14 @@ public class BrooklynConfiguration extends Configuration {
   @JsonProperty
   private ExecutorConfiguration executor = new ExecutorConfiguration();
 
+  @NotNull
+  @JsonProperty
+  private Set<User> users = Sets.newHashSet();
+
+  @NotNull
+  @JsonProperty
+  private String authBasicRealm = "Brooklyn REST Server";
+
   public List<LocationSpec> getLocations() {
     return locations;
   }
@@ -38,5 +49,13 @@ public class BrooklynConfiguration extends Configuration {
 
   public ExecutorConfiguration getExecutorConfiguration() {
     return executor;
+  }
+
+  public Set<User> getUsers() {
+    return users;
+  }
+
+  public String getAuthBasicRealm() {
+    return authBasicRealm;
   }
 }
