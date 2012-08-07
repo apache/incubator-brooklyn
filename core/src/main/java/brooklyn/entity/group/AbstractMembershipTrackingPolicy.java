@@ -16,8 +16,8 @@ import brooklyn.policy.basic.AbstractPolicy;
 
 import com.google.common.base.Preconditions;
 
-
-abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
+/** abstract class which helps track membership of a group, invoking (empty) methods in this class on MEMBER{ADDED,REMOVED} events, as well as SERVICE_UP {true,false} for those members. */
+public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractMembershipTrackingPolicy.class);
     private AbstractGroup group;
     
@@ -62,7 +62,7 @@ abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
      */
     protected void onEntityChange(Entity member) {}
 
-    //TODO - don't need/want members below, if we have the above
+    //TODO - don't need/want members below ?, if we have the above
     
     /**
      * Called when a member is added.

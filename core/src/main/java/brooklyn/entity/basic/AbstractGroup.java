@@ -2,8 +2,10 @@ package brooklyn.entity.basic;
 
 import groovy.transform.InheritConstructors;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -13,6 +15,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
+
+import com.google.common.base.Predicate;
 
 
 /**
@@ -73,6 +77,27 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
 	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
 	        }
 	        return changed;
+        }
+    }
+    
+    public void setMembers(Collection<Entity> m) {
+        setMembers(m, null);
+    }
+    public void setMembers(Collection<Entity> mm, Predicate<Entity> filter) {
+        synchronized (_members) {
+            log.debug("Group {} members set explicitly to {} (of which some possibly filtered)", this, _members);
+            List<Entity> mmo = new ArrayList<Entity>(getMembers());
+            for (Entity m: mmo) {
+                if (!(mm.contains(m) && (filter==null || filter.apply(m))))
+                    // remove, unless already present, being set, and not filtered out
+                    removeMember(m); 
+            }
+            for (Entity m: mm) {
+                if ((!mmo.contains(m)) && (filter==null || filter.apply(m))) {
+                    // add if not alrady contained, and not filtered out
+                    addMember(m);
+                }
+            }
         }
     }
  

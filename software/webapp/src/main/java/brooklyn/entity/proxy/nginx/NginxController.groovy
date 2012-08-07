@@ -1,24 +1,22 @@
 package brooklyn.entity.proxy.nginx;
 
-import java.util.concurrent.TimeUnit;
+import static java.lang.String.format
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
-import brooklyn.entity.group.AbstractController;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.event.adapter.ConfigSensorAdapter;
-import brooklyn.event.adapter.HttpSensorAdapter;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.internal.TimeExtras;
+import java.util.concurrent.TimeUnit
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
-import static java.lang.String.format;
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.group.AbstractController
+import brooklyn.entity.webapp.WebAppService
+import brooklyn.event.SensorEventListener
+import brooklyn.event.adapter.ConfigSensorAdapter
+import brooklyn.event.adapter.HttpSensorAdapter
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.DependentConfiguration
+import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.internal.TimeExtras
 
 /**
  * An entity that represents an Nginx proxy controlling a cluster.
@@ -53,6 +51,7 @@ public class NginxController extends AbstractController {
 
     public NginxController(Map properties, Entity owner) {
         super(properties, owner);
+        subscribeToChildren(this, UrlMapping.TARGET_ADDRESSES, { reconfigureService(); } as SensorEventListener);
     }
 
     public boolean isSticky() {
@@ -106,17 +105,21 @@ public class NginxController extends AbstractController {
     }
     
     protected void reconfigureService() {
-        LOG.info("Reconfiguring "+getDisplayName()+", members are "+addresses);
-        NginxSshDriver driver = (NginxSshDriver)getDriver();
 
-        File file = new File("/tmp/"+getId());
-        Files.write(getConfigFile(), file, Charsets.UTF_8);
-        driver.machine.copyTo(file, driver.getRunDir()+"/conf/server.conf");
-        file.delete();
+        def cfg = getConfigFile();
+        if (cfg==null) return;
+        LOG.info("Reconfiguring "+this+", targetting "+addresses+" and "+getOwnedChildren());
+        
+        NginxSshDriver driver = (NginxSshDriver)getDriver();
+        if (!driver.isCustomizationCompleted()) return;
+        driver.machine.copyTo(new ByteArrayInputStream(cfg.getBytes()), driver.getRunDir()+"/conf/server.conf");
     }
 
     public String getConfigFile() {
         NginxSshDriver driver = (NginxSshDriver)getDriver();
+        if (driver==null) return null;
+        int count=0;
+                
         StringBuffer config = new StringBuffer();
         config.append("\n")
         config.append(format("pid %s/logs/nginx.pid;\n",driver.getRunDir()));
@@ -124,23 +127,52 @@ public class NginxController extends AbstractController {
         config.append("  worker_connections 8196;\n");
         config.append("}\n");
         config.append("http {\n");
-        config.append(format("  upstream "+getId()+" {\n"))
-        if (sticky){
-            config.append("    sticky;\n");
+        if (addresses) {
+            config.append(format("  upstream "+getId()+" {\n"))
+            if (sticky){
+                config.append("    sticky;\n");
+            }
+            for (String address: addresses){
+                count++;
+                config.append("    server "+address+";\n")
+            }
+            config.append("  }\n")
+            config.append("  server {\n");
+            config.append("    listen "+getPort()+";\n")
+            config.append("    server_name "+getDomain()+";\n")
+            config.append("    location / {\n");
+            config.append("      proxy_pass http://"+getId()+"\n;");
+            config.append("    }\n");
+            config.append("  }\n");
         }
-        for (String address: addresses){
-            config.append("    server "+address+";\n")
+        for (Entity child: ownedChildren) {
+            if (child in UrlMapping) {
+                UrlMapping um = (UrlMapping)child; 
+                Collection<String> addrs = um.getAttribute(UrlMapping.TARGET_ADDRESSES);
+                if (addrs) {
+                    config.append(format("  upstream "+um.uniqueLabel+" {\n"))
+                    if (sticky){
+                        config.append("    sticky;\n");
+                    }
+                    for (String address: addrs) {
+                        count++;
+                        config.append("    server "+address+";\n")
+                    }
+                    config.append("  }\n")
+                    config.append("  server {\n");
+                    config.append("    listen "+getPort()+";\n")
+                    config.append("    server_name "+um.domain+";\n")
+                    config.append("    location / {\n");
+                    config.append("      proxy_pass http://"+um.uniqueLabel+"\n;");
+                    config.append("    }\n");
+                    config.append("  }\n");
+                }
+            }
         }
-        config.append("  }\n")
-        config.append("  server {\n");
-        config.append("    listen "+getPort()+";\n")
-        config.append("    server_name "+getDomain()+";\n")
-        config.append("    location / {\n");
-        config.append("      proxy_pass http://"+getId()+"\n;");
-        config.append("    }\n");
-        config.append("  }\n");
+        
         config.append("}\n");
 
+        if (count==0) return null;
         return config.toString();
     }
 }

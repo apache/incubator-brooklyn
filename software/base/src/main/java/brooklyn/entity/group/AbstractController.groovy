@@ -219,7 +219,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     boolean updateNeeded = true;
     
     public void start(Collection<? extends Location> locations) {
-        LOG.info("adding policy to {}", this);
+        LOG.info("Adding policy {} to {} on AbstractController.start", policy, this);
         addPolicy(policy);
         reset();
         super.start(locations);
@@ -245,7 +245,8 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     public void reset() {
         policy.reset();
         addresses.clear();
-        policy.setGroup(cluster);
+        if (cluster)
+            policy.setGroup(cluster);
         setAttribute(TARGETS, addresses);
     }
 

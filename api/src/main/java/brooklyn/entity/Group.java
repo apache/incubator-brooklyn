@@ -17,6 +17,7 @@ public interface Group extends Entity {
 
     boolean hasMember(Entity member);
 
+    //TODO make boolean?
     void addMember(Entity member);
  
     boolean removeMember(Entity member);

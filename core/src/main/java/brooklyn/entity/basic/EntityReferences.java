@@ -129,6 +129,11 @@ public class EntityReferences {
             return ImmutableList.copyOf(result);
         }
 
+        public synchronized void clear() {
+            entityRefs.clear();
+            entities = null;
+        }
+        
         public synchronized int size() {
             return entityRefs.size();
         }
