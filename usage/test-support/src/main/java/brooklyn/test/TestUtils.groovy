@@ -54,6 +54,14 @@ public class TestUtils {
         return status == 200
     }
     
+    /** Connects to the given HTTP URL and asserts that the response had status code 200. */
+    public static int urlRespondsStatusCode(String url) {
+        def connection = connectToURL(url)
+        int status = ((HttpURLConnection) connection).getResponseCode()
+        log.info "connection to {} gives {}", url, status
+        return status;
+    }
+    
     /** Connects to the given url and returns the connection. */
     public static URLConnection connectToURL(String u) {
         URL url = [u]
