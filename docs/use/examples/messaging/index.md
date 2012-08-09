@@ -82,7 +82,7 @@ out the Brooklyn [repository](https://www.github.com/brooklyncentral/brooklyn)
 as follows:
 
 {% highlight bash %}
-% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
+% ${BROOKLYN_HOME}/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
 {% endhighlight %}
 
 Now, visit the the Brooklyn web console on port 8081 using credentials
@@ -102,9 +102,12 @@ which was created at startup. The queue entity has sensors that
 monitor the depth of unread messages, which you can check while
 running the test client scripts later.
 
-Also visible in this output is the broker URL, which is used to
-configure JMS clients to connect to this broker. This URL can also
-be viewed as a sensor attribute in the web console, named _broker.url_.
+If the ``-v`` flag is passed to the startup command, all configured
+entity and sensor details will be output. This includes the broker URL,
+which is used to configure JMS clients to connect to this broker.
+This URL can also be viewed as a sensor attribute in the web console,
+named _broker.url_.
+
 This sensor is common to _all_ messaging brokers that Brooklyn
 provides, and is usually accessed by applications to allow them to
 provide it as a parameter to other entities, as shown in the code
@@ -114,17 +117,17 @@ fragment below.
 String url = broker.getAttribute(MessageBroker.BROKER_URL)
 {% endhighlight %}
 
-Using the URL the demo script printed, you can run the test ``Publish``
-and ``Subscribe`` classes, to send messages using the broker. Simply
-run the scripts in another window, with the provided URL as the
+Using the URL the demo script printed, you can run the test ``Subscribe``
+and then ``Publish`` classes, to send messages using the broker. Simply
+run the commands in another window, with the provided URL as the
 only argument. Note that the URLs may be different to those printed
 below, and that any unquoted ``&`` characters *must* be escaped,
 if present.
 
 {% highlight bash %}
-% cd ${BROOKLYN_EXAMPLES_DIR}/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/bin
-% ./publish.sh "amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
-% ./subscribe.sh "amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
+% URL="amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
+% java -cp "./resources/lib/*:./target/classes" brooklyn.demo.Subscribe ${URL}
+% java -cp "./resources/lib/*:./target/classes" brooklyn.demo.Publish ${URL}
 {% endhighlight %}
 
 In the _Publish_ window you should see a log message every time a

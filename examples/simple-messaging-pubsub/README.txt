@@ -7,15 +7,17 @@ The commands below assume that the `brooklyn` script is already on your $PATH, a
   export BROOKLYN_CLASSPATH=$(pwd)/target/classes
   
   # Launches a qpid broker on localhost
-  brooklyn launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
+  brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
 
-  # Test publishing a message to the broker
-  # You can get the broker's URL from the brooklyn web-console at http://localhost:8081, 
-  # by looking at the broker entity's sensors
-  java -cp "${BROOKLYN_EXAMPLES_DIR}/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/lib/*" brooklyn.demo.Publish ${URL}
+  # You can get the broker's URL from the brooklyn web-console at http://localhost:8081
+  # by looking at the broker entity's sensors or from the verbose output from the application startup
+  URL="amqp://guest:guest@/localhost?brokerlist='tcp://localhost:5672'"
 
   # Test subscribing, to receive a message from the broker
-  java -cp "${BROOKLYN_EXAMPLES_DIR}/simple-messaging-pubsub/brooklyn-example-simple-messaging-pubsub/lib/*" brooklyn.demo.Subscribe ${URL}
+  java -cp "./resources/lib/*:./target/classes" brooklyn.demo.Subscribe ${URL}
+
+  # Test publishing a message to the broker
+  java -cp "./resources/lib/*:./target/classes" brooklyn.demo.Publish ${URL}
 
 ---
 
