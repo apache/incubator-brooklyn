@@ -57,4 +57,11 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
         int result = getMachine().copyTo(props, getResource(url), getRunDir() + "/" + getDeploySubdir() + "/" + targetName);
         log.debug("{} deployed {} to {}:{}: result {}", new Object[]{entity, url, getHostname(), dest, result});
     }
+    
+    public void undeploy(String targetName) {
+        String dest = getRunDir() + "/" + getDeploySubdir() + "/" + targetName;
+        log.info("{} undeploying {}:{}", new Object[]{entity, getHostname(), dest});
+        int result = getMachine().run(String.format("rm -f %s", dest));
+        log.debug("{} undeployed {}:{}: result {}", new Object[]{entity, getHostname(), dest, result});
+    }
 }
