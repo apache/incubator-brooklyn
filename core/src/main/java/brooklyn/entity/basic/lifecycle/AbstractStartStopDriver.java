@@ -1,5 +1,7 @@
 package brooklyn.entity.basic.lifecycle;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.InputStream;
 
 import org.slf4j.Logger;
@@ -19,8 +21,8 @@ public abstract class AbstractStartStopDriver implements StartStopDriver {
     private final Location location;
     
     public AbstractStartStopDriver(EntityLocal entity, Location location) {
-    	this.entity = entity;
-    	this.location = location;
+    	this.entity = checkNotNull(entity, "entity");
+    	this.location = checkNotNull(location, "location");
     }
 	
     /**
