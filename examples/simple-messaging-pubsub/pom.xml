@@ -64,17 +64,27 @@
                                     <groupId>org.apache.qpid</groupId>
                                     <artifactId>qpid-bdbstore</artifactId>
                                     <version>0.14</version>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/resources</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.sleepycat</groupId>
                                     <artifactId>je</artifactId>
                                     <version>5.0.34</version>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/resources</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
+                            <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>
+                                geronimo-jms_1.1_spec,guava,jsr305,log4j,qpid-client,qpid-common,slf4j-api,slf4j-log4j12
+                            </includeArtifactIds>
+                            <outputDirectory>${project.basedir}/resources/lib</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -90,6 +100,7 @@
                                 <include>brooklyn*.log</include>
                                 <include>brooklyn*.log.*</include>
                                 <include>stacktrace.log</include>
+                                <include>resources/lib/</include>
                             </includes>
                         </fileset>
                     </filesets>
