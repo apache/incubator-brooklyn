@@ -1,5 +1,11 @@
 package brooklyn.rest;
 
+import brooklyn.rest.auth.BasicAuthFilter;
+import brooklyn.rest.auth.ConfigBasedAuthenticator;
+import brooklyn.rest.auth.User;
+import com.yammer.dropwizard.auth.Authenticator;
+import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
+import com.yammer.dropwizard.auth.basic.BasicCredentials;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +41,7 @@ import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.views.ViewBundle;
 
 import com.google.common.base.Throwables;
+import org.jclouds.http.filters.BasicAuthentication;
 
 /**
  * Application entry point. Configures and starts the embedded web-server.
@@ -46,7 +53,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
   private volatile ApplicationManager applicationManager;
 
   private final CountDownLatch initialized = new CountDownLatch(1);
-  
+
   protected BrooklynService() {
     super("brooklyn-rest");
     addBundle(new AssetsBundle("/swagger-ui"));
@@ -54,9 +61,9 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
   }
 
   public ApplicationManager getApplicationManager() {
-      return applicationManager;
+    return applicationManager;
   }
-  
+
   @Override
   protected void initialize(BrooklynConfiguration configuration, Environment environment)
       throws Exception {
@@ -91,41 +98,50 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.addResource(new VersionResource());
 
     environment.addHealthCheck(new GeneralHealthCheck());
-    
+
+    if (configuration.getUsers().size() > 0) {
+      Authenticator<BasicCredentials, User> authenticator = new ConfigBasedAuthenticator(configuration.getUsers());
+
+      /* protect all the resources exposed by this servlet container */
+      environment.addFilter(new BasicAuthFilter<User>(authenticator, configuration.getAuthBasicRealm()), "/*");
+      environment.addProvider(new BasicAuthProvider<User>(authenticator, configuration.getAuthBasicRealm()));
+    }
+
     initialized.countDown();
   }
 
   public void runAsync(final String[] args) throws InterruptedException {
     final AtomicReference<Throwable> err = new AtomicReference<Throwable>();
     new Thread("brooklyn-rest") {
-        public void run() {
-          try {
-            BrooklynService.this.run(args);
-          } catch (Throwable e) {
-              err.set(e);
-              initialized.countDown();
-              throw Throwables.propagate(e);
-          }
+      public void run() {
+        try {
+          BrooklynService.this.run(args);
+        } catch (Throwable e) {
+          err.set(e);
+          initialized.countDown();
+          throw Throwables.propagate(e);
         }
+      }
     }.start();
-    
+
+
     initialized.await();
     if (err.get() != null) {
-        throw Throwables.propagate(err.get());
+      throw Throwables.propagate(err.get());
     }
   }
 
   public void stop() throws Exception {
-      if (environment != null) {
-          environment.stop();
-      }
+    if (environment != null) {
+      environment.stop();
+    }
   }
 
   public static void main(String[] args) throws Exception {
-      BrooklynService service = newBrooklynService();
-      service.run(args);
+    BrooklynService service = newBrooklynService();
+    service.run(args);
   }
-  
+
   public static BrooklynService newBrooklynService() throws Exception {
     BrooklynService service = new BrooklynService();
     service.addCommand(new ListApplicationsCommand());
@@ -143,7 +159,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     service.addCommand(new ListCatalogEntitiesCommand());
     service.addCommand(new ListCatalogPoliciesCommand());
     service.addCommand(new LoadClassCommand());
-    
+
     return service;
   }
 }

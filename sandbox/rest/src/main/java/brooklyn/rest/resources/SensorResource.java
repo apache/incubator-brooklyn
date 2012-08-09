@@ -8,12 +8,14 @@ import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
+import java.util.List;
 import javax.annotation.Nullable;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -43,7 +45,7 @@ public class SensorResource extends BaseResource {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Missing application or entity")
   })
-  public Iterable<SensorSummary> list(
+  public List<SensorSummary> list(
       @ApiParam(value = "Application name", required = true)
       @PathParam("application") final String applicationName,
       @ApiParam(value = "Entity name", required = true)
@@ -52,7 +54,7 @@ public class SensorResource extends BaseResource {
     final Application application = getApplicationOr404(manager.registry(), applicationName);
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
-    return transform(filter(
+    return Lists.newArrayList(transform(filter(
         entity.getEntityType().getSensors(),
         new Predicate<Sensor<?>>() {
           @Override
@@ -65,7 +67,7 @@ public class SensorResource extends BaseResource {
           public SensorSummary apply(Sensor<?> sensor) {
             return new SensorSummary(application, entity, sensor);
           }
-        });
+        }));
   }
 
   @GET

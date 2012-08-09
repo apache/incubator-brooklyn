@@ -14,7 +14,6 @@ import javax.ws.rs.core.MediaType;
 public class VersionResource extends BaseResource {
 
   @GET
-  @Path("/")
   @ApiOperation(value = "Get brooklyn version", responseClass = "String", multiValueResponse = false)
   public String getVersion() {
     return BrooklynVersion.get();

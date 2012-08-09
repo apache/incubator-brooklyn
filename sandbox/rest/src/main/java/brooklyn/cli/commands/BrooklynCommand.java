@@ -8,6 +8,7 @@ import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.iq80.cli.Option;
 import org.iq80.cli.OptionType;
@@ -48,9 +49,21 @@ public abstract class BrooklynCommand implements Callable<Void> {
             description = "REST endpoint, default \""+DEFAULT_ENDPOINT+"\"")
     public String endpoint = DEFAULT_ENDPOINT;
 
+
+    @Option(type = OptionType.GLOBAL,
+            name = {"--user"},
+            description = "User name")
+    public String user = null;
+
+    @Option(type = OptionType.GLOBAL,
+            name = {"--password"},
+            description = "User password")
+    public String password = null;
+
     @Option(type = OptionType.GLOBAL,
             name = { "--retry" },
-            description = "Will retry connection to the endpoint for this time period, default \""+DEFAULT_RETRY_PERIOD+"s\"")
+            description = "Will retry connection to the endpoint for this time period, " +
+                "default \""+DEFAULT_RETRY_PERIOD+"s\"")
     public int retry = DEFAULT_RETRY_PERIOD;
 
     @Option(type = OptionType.GLOBAL,
@@ -63,6 +76,7 @@ public abstract class BrooklynCommand implements Callable<Void> {
         return Objects.toStringHelper(getClass())
                 .add("embedded", embedded)
                 .add("endpoint", endpoint)
+                .add("user", user)
                 .add("retry", retry)
                 .add("no-retry",noRetry)
                 .toString();
@@ -88,13 +102,15 @@ public abstract class BrooklynCommand implements Callable<Void> {
         additionalValidation();
 
         // Embedded web server feature
-        if(embedded)
+        if(embedded) {
             throw new UnsupportedOperationException(
                     "The \"--embedded\" option is not supported yet");
+        }
 
         // Number of retries should be zero if noRetry; number of "tries" would be 1
-        if(noRetry)
+        if(noRetry) {
             retry = 0;
+        }
 
         // Execute the command-specific code
         run();
@@ -159,6 +175,10 @@ public abstract class BrooklynCommand implements Callable<Void> {
                     throw lasterror;
                 }
             });
+
+            if (user !=null && password != null) {
+              httpClient.addFilter(new HTTPBasicAuthFilter(user, password));
+            }
 
             // Add a Jersey GZIP filter
             httpClient.addFilter(new GZIPContentEncodingFilter(true));

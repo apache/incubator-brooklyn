@@ -7,12 +7,15 @@ import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.core.ApplicationManager;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
+import static com.google.common.collect.Iterables.transform;
+import com.google.common.collect.Lists;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
+import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -38,7 +41,7 @@ public class EntityResource extends BaseResource {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application not found")
   })
-  public Iterable<EntitySummary> list(
+  public List<EntitySummary> list(
       @ApiParam(value = "The application name", required = true)
       @PathParam("application") final String applicationName) {
     Application application = getApplicationOr404(manager.registry(), applicationName);
@@ -77,13 +80,14 @@ public class EntityResource extends BaseResource {
     return summaryForChildrenEntities(application, entity);
   }
 
-  private Iterable<EntitySummary> summaryForChildrenEntities(final Application application, Entity rootEntity) {
-    return Iterables.transform(rootEntity.getOwnedChildren(),
+  private List<EntitySummary> summaryForChildrenEntities(final Application application, Entity rootEntity) {
+    return Lists.newArrayList(transform(
+        rootEntity.getOwnedChildren(),
         new Function<Entity, EntitySummary>() {
           @Override
           public EntitySummary apply(Entity entity) {
             return new EntitySummary(application, entity);
           }
-        });
+        }));
   }
 }

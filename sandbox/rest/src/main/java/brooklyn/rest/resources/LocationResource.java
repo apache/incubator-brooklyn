@@ -5,10 +5,13 @@ import brooklyn.rest.api.LocationSummary;
 import brooklyn.rest.core.LocationStore;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
+import static com.google.common.collect.Iterables.transform;
+import com.google.common.collect.Lists;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
+import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -38,14 +41,14 @@ public class LocationResource extends BaseResource {
   @ApiOperation(value = "Fetch the list of locations",
       responseClass = "brooklyn.rest.api.LocationSummary",
       multiValueResponse = true)
-  public Iterable<LocationSummary> list() {
-    return Iterables.transform(store.entries(),
+  public List<LocationSummary> list() {
+    return Lists.newArrayList(transform(store.entries(),
         new Function<Map.Entry<Integer, LocationSpec>, LocationSummary>() {
           @Override
           public LocationSummary apply(Map.Entry<Integer, LocationSpec> entry) {
             return new LocationSummary(entry.getKey().toString(), entry.getValue());
           }
-        });
+        }));
   }
 
   @GET

@@ -23,6 +23,15 @@ executor:
   maximumPoolSize: 16
   keepAliveTimeInSeconds: 120
 
+http:
+  port: 60080
+  adminPort: 60081
+
+users:
+  - name: admin
+    password: admin
+    roles: [admin]
+
 # Logging settings
 
 logging:

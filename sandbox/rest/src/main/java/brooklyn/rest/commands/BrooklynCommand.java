@@ -5,6 +5,7 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.apache4.ApacheHttpClient4Handler;
 import com.sun.jersey.client.apache4.config.ApacheHttpClient4Config;
 import com.sun.jersey.client.apache4.config.DefaultApacheHttpClient4Config;
@@ -32,6 +33,9 @@ public abstract class BrooklynCommand extends Command {
 
   private String endpoint;
 
+  private String user;
+  private String password;
+
   /**
    * Create a new {@link BrooklynCommand} instance.
    *
@@ -45,7 +49,9 @@ public abstract class BrooklynCommand extends Command {
   @Override
   public Options getOptions() {
     return super.getOptions()
-        .addOption("e", "endpoint", true, "Server endpoint");
+        .addOption(null, "endpoint", true, "Server endpoint")
+        .addOption(null, "user", true, "User name")
+        .addOption(null, "password", true, "User password");
   }
 
   @Override
@@ -65,6 +71,7 @@ public abstract class BrooklynCommand extends Command {
       jerseyConfig.setTimeout(Duration.seconds(2));
 
       setEndpointFromCommandLineOrEnvironment(params);
+      setLoginCredentialsFromCommandLineOrEnvironment(params);
 
       run(out, err, json, buildJerseyClient(json, jerseyConfig), params);
 
@@ -93,14 +100,25 @@ public abstract class BrooklynCommand extends Command {
   protected abstract void run(PrintStream out, PrintStream err, Json json,
                               Client client, CommandLine params) throws Exception;
 
-  private void setEndpointFromCommandLineOrEnvironment(CommandLine params) {
-    String endpointFromEnv = System.getenv("BROOKLYN_ENDPOINT");
+  /**
+   * Get a value from the command line params or from environment
+   */
+  private String getFromCliOrEnv(CommandLine params, String environmentVariableName,
+                                 String optionName, String defaultValue) {
+    String fromEnv = System.getenv(environmentVariableName);
 
-    // the command line has precedence over the environment
-    this.endpoint = params.getOptionValue("endpoint",
-        (endpointFromEnv != null) ? endpointFromEnv : "http://localhost:8080");
+    /* the command line has precedence over the environment */
+    return params.getOptionValue(optionName, (fromEnv != null) ? fromEnv : defaultValue);
   }
 
+  private void setEndpointFromCommandLineOrEnvironment(CommandLine params) {
+    this.endpoint = getFromCliOrEnv(params, "BROOKLYN_ENDPOINT", "endpoint", "http://localhost:8080");
+  }
+
+  private void setLoginCredentialsFromCommandLineOrEnvironment(CommandLine params) {
+    this.user = getFromCliOrEnv(params, "BROOKLYN_USER", "user", null);
+    this.password = getFromCliOrEnv(params, "BROOKLYN_PASSWORD", "password", null);
+  }
 
   protected String getEndpoint() {
     return endpoint;
@@ -127,6 +145,10 @@ public abstract class BrooklynCommand extends Command {
 
     final JerseyClient jerseyClient = new JerseyClient(handler, config);
     jerseyClient.setExecutorService(buildThreadPool(configuration));
+
+    if (user != null && password != null) {
+      jerseyClient.addFilter(new HTTPBasicAuthFilter(user, password));
+    }
 
     if (configuration.isGzipEnabled()) {
       jerseyClient.addFilter(new GZIPContentEncodingFilter());
