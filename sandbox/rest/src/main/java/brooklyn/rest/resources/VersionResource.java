@@ -1,7 +1,11 @@
 package brooklyn.rest.resources;
 
-import com.wordnik.swagger.core.*;
-import javax.ws.rs.*;
+import brooklyn.BrooklynVersion;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiOperation;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("/v1/version")
@@ -13,7 +17,7 @@ public class VersionResource extends BaseResource {
   @Path("/")
   @ApiOperation(value = "Get brooklyn version", responseClass = "String", multiValueResponse = false)
   public String getVersion() {
-    return "VERSION_STRING_STUB";
+    return BrooklynVersion.get();
   }
 
 }
