@@ -129,6 +129,8 @@ public class NginxController extends AbstractController {
         config.append("  worker_connections 8196;\n");
         config.append("}\n");
         config.append("http {\n");
+        
+        // For basic round-robin across the cluster
         if (addresses) {
             config.append(format("  upstream "+getId()+" {\n"))
             if (sticky){
@@ -146,29 +148,43 @@ public class NginxController extends AbstractController {
             config.append("    }\n");
             config.append("  }\n");
         }
-        for (Entity child: ownedChildren) {
-            if (child in UrlMapping) {
-                UrlMapping um = (UrlMapping)child;
-                Collection<String> addrs = um.getAttribute(UrlMapping.TARGET_ADDRESSES);
-                if (addrs) {
-                    config.append(format("  upstream "+um.uniqueLabel+" {\n"))
-                    if (sticky){
-                        config.append("    sticky;\n");
-                    }
-                    for (String address: addrs) {
-                        count++;
-                        config.append("    server "+address+";\n")
-                    }
-                    config.append("  }\n")
-                    config.append("  server {\n");
-                    config.append("    listen "+getPort()+";\n")
-                    config.append("    server_name "+um.domain+";\n")
-                    config.append("    location / {\n");
-                    config.append("      proxy_pass http://"+um.uniqueLabel+"\n;");
-                    config.append("    }\n");
-                    config.append("  }\n");
-                }
+        
+        // For mapping by URL
+        Iterable<UrlMapping> mappings = Iterables.filter(ownedChildren, Predicates.instanceOf(UrlMapping.class));
+        Multimap<String, UrlMapping> mappingsByDomain = new HashMultimap<String, UrlMapping>();
+        for (UrlMapping mapping : mappings) {
+            Collection<String> addrs = mapping.getAttribute(UrlMapping.TARGET_ADDRESSES);
+            if (addrs) {
+                mappingsByDomain.put(mapping.domain, mapping);
             }
+        }
+        
+        for (UrlMapping um : mappings) {
+            Collection<String> addrs = um.getAttribute(UrlMapping.TARGET_ADDRESSES);
+            if (addrs) {
+                String location = um.getPath() != null ? um.getPath() : "/";
+                config.append(format("  upstream "+um.uniqueLabel+" {\n"))
+                if (sticky){
+                    config.append("    sticky;\n");
+                }
+                for (String address: addrs) {
+                    config.append("    server "+address+";\n")
+                }
+                config.append("  }\n")
+            }
+        }
+        
+        for (String domain : mappingsByDomain.keySet()) {
+            config.append("  server {\n");
+            config.append("    listen "+getPort()+";\n")
+            config.append("    server_name "+domain+";\n")
+            for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
+                String location = mappingInDomain.getPath() != null ? mappingInDomain.getPath() : "/";
+                config.append("    location "+location+" {\n");
+                config.append("      proxy_pass http://"+mappingInDomain.uniqueLabel+"\n;");
+                config.append("    }\n");
+            }
+            config.append("  }\n");
         }
         
         // If no servers, then defaults to returning 404

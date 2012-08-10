@@ -32,6 +32,10 @@ public class UrlMapping extends AbstractGroup {
     public static final BasicConfigKey<String> DOMAIN =
         new BasicConfigKey<String>(String.class, "urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule");
 
+    @SetFromFlag("path")
+    public static final BasicConfigKey<String> PATH =
+        new BasicConfigKey<String>(String.class, "urlmapping.path", "URL path (pattern) for this URL map rule");
+
     @SetFromFlag("target")
     public static final BasicConfigKey<Entity> TARGET_PARENT =
         new BasicConfigKey<String>(Entity.class, "urlmapping.target.parent", "optional target entity whose children will be pointed at by this mapper");
@@ -58,6 +62,10 @@ public class UrlMapping extends AbstractGroup {
 
     public String getDomain() {
         return Preconditions.checkNotNull( getConfig(DOMAIN), "domain config argument required");
+    }
+    
+    public String getPath() {
+        return getConfig(PATH);
     }
     
     public Entity getTarget() { 
