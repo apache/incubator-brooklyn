@@ -305,9 +305,7 @@ public class WebAppIntegrationTest {
                 "hello-world/",
 				"" // no sub-page path
             ]
-        } 
-        + 
-        [
+        } + [
             [   new TomcatServer(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),newTestApplication()),
                 "swf-booking-mvc.war",
                 "swf-booking-mvc/",
