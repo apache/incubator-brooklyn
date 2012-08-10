@@ -30,7 +30,7 @@ public class HttpResponseContext extends AbstractSensorEvaluationContext {
 
 	/** usual constructor */	
 	public HttpResponseContext(HttpURLConnection conn) {
-		this(conn, conn.getResponseCode(), conn.getHeaderFields(), conn.getContent().readLines().join("\n"), null)
+		this(conn, conn.getResponseCode(), conn.getHeaderFields(), getContentOrNull(conn), null)
 	}
 	/** constructor for when there is an error; note that many of the methods on connection will throw errors */
 	public HttpResponseContext(HttpURLConnection conn, Exception error) {
@@ -45,6 +45,16 @@ public class HttpResponseContext extends AbstractSensorEvaluationContext {
 		this.error = error;
 	}
 
+    private static String getContentOrNull(HttpURLConnection conn) {
+        try {
+            return conn.getContent().readLines().join("\n");
+        } catch (FileNotFoundException e) {
+            // Happens a lot with things like 404, so just log at trace and let the rest of the response indicate what's wrong
+            log.trace("Content not available for HTTP connection "+conn, e);
+            return null;
+        }
+    } 
+    
 	protected Object getDefaultValue() { return content }
 	
 	private transient Map<String,Object> headers = null
