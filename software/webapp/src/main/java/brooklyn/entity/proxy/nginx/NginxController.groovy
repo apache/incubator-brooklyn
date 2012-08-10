@@ -13,10 +13,14 @@ import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
+
+import com.google.common.base.Predicates
+import com.google.common.collect.HashMultimap
+import com.google.common.collect.Iterables
+import com.google.common.collect.Multimap
 
 /**
  * An entity that represents an Nginx proxy controlling a cluster.
@@ -51,7 +55,7 @@ public class NginxController extends AbstractController {
 
     public NginxController(Map properties, Entity owner) {
         super(properties, owner);
-        subscribeToChildren(this, UrlMapping.TARGET_ADDRESSES, { reconfigureService(); } as SensorEventListener);
+        subscribeToChildren(this, UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
     }
 
     public boolean isSticky() {
@@ -70,8 +74,9 @@ public class NginxController extends AbstractController {
             new HttpSensorAdapter(getAttribute(AbstractController.SPECIFIED_URL), 
                 period: 1000*TimeUnit.MILLISECONDS));
         
+        // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
         http.with {
-            poll(SERVICE_UP, { 
+            poll(SERVICE_UP, {
                 headerLists.get("Server") == ["nginx/"+getConfig(SUGGESTED_VERSION)] 
             })
         }
@@ -100,8 +105,6 @@ public class NginxController extends AbstractController {
     
     protected void preStart() {
         super.preStart();
-        // block until we have targets
-        execution.submit(DependentConfiguration.attributeWhenReady(this, TARGETS)).get();
     }
     
     protected void reconfigureService() {
@@ -118,9 +121,8 @@ public class NginxController extends AbstractController {
     public String getConfigFile() {
         NginxSshDriver driver = (NginxSshDriver)getDriver();
         if (driver==null) return null;
-        int count=0;
                 
-        StringBuffer config = new StringBuffer();
+        StringBuilder config = new StringBuilder();
         config.append("\n")
         config.append(format("pid %s/logs/nginx.pid;\n",driver.getRunDir()));
         config.append("events {\n");
@@ -133,7 +135,6 @@ public class NginxController extends AbstractController {
                 config.append("    sticky;\n");
             }
             for (String address: addresses){
-                count++;
                 config.append("    server "+address+";\n")
             }
             config.append("  }\n")
@@ -147,7 +148,7 @@ public class NginxController extends AbstractController {
         }
         for (Entity child: ownedChildren) {
             if (child in UrlMapping) {
-                UrlMapping um = (UrlMapping)child; 
+                UrlMapping um = (UrlMapping)child;
                 Collection<String> addrs = um.getAttribute(UrlMapping.TARGET_ADDRESSES);
                 if (addrs) {
                     config.append(format("  upstream "+um.uniqueLabel+" {\n"))
@@ -170,9 +171,15 @@ public class NginxController extends AbstractController {
             }
         }
         
+        // If no servers, then defaults to returning 404
+        // TODO Give nicer page back 
+        config.append("  server {\n");
+        config.append("    listen "+getPort()+";\n")
+        config.append("    return 404;\n")
+        config.append("  }\n");
+        
         config.append("}\n");
 
-        if (count==0) return null;
         return config.toString();
     }
 }

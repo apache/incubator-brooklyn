@@ -73,8 +73,7 @@ public class NginxSshDriver extends StartStopSshDriver {
         script.body.append(
                 "mkdir -p dist",
                 format("./configure --prefix=%s/nginx-%s/dist ", getInstallDir(), getVersion()) +
-                        (sticky ? format("--add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : "") +
-                        "--without-http_rewrite_module",
+                        (sticky ? format("--add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : ""),
                 "make install");
 
         int result = script.execute();
