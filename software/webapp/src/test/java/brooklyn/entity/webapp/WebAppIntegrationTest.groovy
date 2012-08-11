@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableSet
  * Currently tests {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server}.
  */
 public class WebAppIntegrationTest {
+    
     private static final Logger log = LoggerFactory.getLogger(WebAppIntegrationTest.class)
     
     static { TimeExtras.init() }
@@ -54,14 +55,36 @@ public class WebAppIntegrationTest {
     SoftwareProcessEntity entity
     
 	static { TimeExtras.init() }
-	
-    // Make sure everything created by newTestApplication() is shut down
+    
+    /*
+     * Use of @DataProvider with test methods gives surprising behaviour with @AfterMethod.
+     * Unless careful, this causes problems when trying to ensure everything is shutdown cleanly.
+     *
+     * Empirically, the rules seem to be...
+     *  - @DataProvider method is called first; it creates a bunch of cases to run 
+     *    (all sharing the same instance of WebAppIntegrationTest).
+     *  - It runs the test method for the first time with the first @DataProvider value
+     *  - It runs @AfterMethod
+     *  - It runs the test method for the second @DataProvider value
+     *  - It runs @AfterMethod
+     *  - etc...
+     *
+     * Previously shutdownApp was calling stop on each app in applications, and clearing the applications set;
+     * but then the second invocation of the method was starting an entity that was never stopped. Until recently,
+     * every test method was also terminating the entity (belt-and-braces, but also brittle for if the method threw
+     * an exception earlier). When that "extra" termination was removed, it meant the second and subsequent 
+     * entities were never being stopped.
+     *
+     * Now we rely on having the test method set the entity field, so we can find out which application instance 
+     * it is and calling stop on just that app + entity.
+     */
     @AfterMethod(alwaysRun=true)
     public void shutdownApp() {
-        for (AbstractApplication app : applications) {
-            app.stop()
+        if (entity != null) {
+            AbstractApplication app = entity.getApplication();
+            entity.stop();
+            if (app != null) app.stop();
         }
-        applications.clear()
     }
 
     @AfterMethod(alwaysRun=true)
@@ -135,6 +158,8 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void canStartAndStop(SoftwareProcessEntity entity) {
         this.entity = entity
+        log.info("test=canStartAndStop; entity="+entity+"; app="+entity.getApplication())
+        
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         executeUntilSucceeds(timeout: 120*SECONDS) {
             assertTrue entity.getAttribute(Startable.SERVICE_UP)
@@ -151,6 +176,8 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestAndErrorCountMetrics(SoftwareProcessEntity entity) {
         this.entity = entity
+        log.info("test=publishesRequestAndErrorCountMetrics; entity="+entity+"; app="+entity.getApplication())
+        
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         executeUntilSucceeds(timeout:10*SECONDS) {
@@ -190,6 +217,8 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesRequestsPerSecondMetric(SoftwareProcessEntity entity) {
         this.entity = entity
+        log.info("test=publishesRequestsPerSecondMetric; entity="+entity+"; app="+entity.getApplication())
+        
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         log.info("Entity "+entity+" started");
         
@@ -254,6 +283,8 @@ public class WebAppIntegrationTest {
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void publishesZeroRequestsPerSecondMetricRepeatedly(SoftwareProcessEntity entity) {
         this.entity = entity
+        log.info("test=publishesZeroRequestsPerSecondMetricRepeatedly; entity="+entity+"; app="+entity.getApplication())
+        
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000 // events should publish every 500ms so this should be enough overhead
         final int NUM_CONSECUTIVE_EVENTS = 3
 
@@ -330,6 +361,8 @@ public class WebAppIntegrationTest {
     public void initialRootWarDeployments(SoftwareProcessEntity entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity
+        log.info("test=initialRootWarDeployments; entity="+entity+"; app="+entity.getApplication())
+        
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
         
@@ -350,6 +383,8 @@ public class WebAppIntegrationTest {
     public void initialNamedWarDeployments(SoftwareProcessEntity entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity
+        log.info("test=initialNamedWarDeployments; entity="+entity+"; app="+entity.getApplication())
+        
         URL resource = getClass().getClassLoader().getResource(war)
         assertNotNull resource
         
@@ -366,6 +401,8 @@ public class WebAppIntegrationTest {
     public void testWarDeployAndUndeploy(JavaWebAppSoftwareProcess entity, String war, 
             String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity;
+        log.info("test=testWarDeployAndUndeploy; entity="+entity+"; app="+entity.getApplication())
+        
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
@@ -375,7 +412,7 @@ public class WebAppIntegrationTest {
         entity.deploy(resource.path, "myartifactname.war")
         executeUntilSucceeds(abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity
-            assertTrue urlRespondsWithStatusCode200(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname"+urlSubPathToPageToQuery)
+            assertTrue urlRespondsWithStatusCode200(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname/"+urlSubPathToPageToQuery)
             assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("myartifactname.war"))
             true
         }
