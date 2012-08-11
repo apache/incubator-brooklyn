@@ -63,6 +63,9 @@ class AbstractControllerTest {
             public SshBasedAppSetup newDriver(SshMachineLocation machine) {
                 return new MockSshBasedSoftwareSetup(this, machine);
             }
+            public void reload() {
+                // no-op
+            }
         }
         app.getManagementContext().manage(app)
         app.start([loc])

@@ -133,23 +133,27 @@ public class NginxSshDriver extends StartStopSshDriver {
 
     @Override
     public void restart() {
-        //if it hasn't come up we can't do the restart optimization
-        if (entity.getAttribute(Startable.SERVICE_UP)) {
-            Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
-            newScript(flags, RESTARTING).
-                    body.append(
-                    format("cd %s", getRunDir()),
-                    format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir())
-            ).execute();
-        } else {
-            try {
-                if (isRunning()) {
-                    stop();
-                }
-            } catch (Exception e) {
-                log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
+        try {
+            if (isRunning()) {
+                stop();
             }
-            launch();
+        } catch (Exception e) {
+            log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
         }
+        launch();
+    }
+    
+    public void reload() {
+        //if it hasn't come up we can't do the restart optimization
+        if (!entity.getAttribute(Startable.SERVICE_UP)) {
+            throw new IllegalStateException(getEntity() + " not up; can't reload");
+        }
+        
+        Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
+        newScript(flags, RESTARTING).
+                body.append(
+                format("cd %s", getRunDir()),
+                format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir())
+        ).execute();
     }
 }

@@ -1,25 +1,21 @@
 package brooklyn.entity.group;
 
-import java.util.Collection
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.trait.Startable;
+import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.DependentConfiguration
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
-import brooklyn.management.Task
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -58,6 +54,8 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     
     public static final BasicAttributeSensor<Set> TARGETS = new BasicAttributeSensor<Set>(
             Set.class, "proxy.targets", "Downstream targets");
+    
+    public static final MethodEffector<Void> RELOAD = new MethodEffector(AbstractController.class, "reload");
     
     @SetFromFlag
     Cluster cluster;
@@ -115,6 +113,9 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         }
     }
 
+    @Description("Forces reload of the configuration")
+    public abstract void reload();
+    
     protected void makeUrl() {
         if (url==null || url.contains("://"+ANONYMOUS+":")) {
             String hostname = domain;
@@ -237,7 +238,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             LOG.info("updating {}", this);
             reconfigureService();
             LOG.debug("submitting restart for update to {}", this);
-            invoke(RESTART);
+            invoke(RELOAD);
         }
         setAttribute(TARGETS, addresses);
     }

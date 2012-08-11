@@ -58,6 +58,14 @@ public class NginxController extends AbstractController {
         subscribeToChildren(this, UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
     }
 
+    @Override
+    public void reload() {
+        NginxSshDriver driver = (NginxSshDriver)getDriver();
+        if (driver==null) throw new IllegalStateException("Cannot reload (no driver instance; stopped?)");
+        
+        driver.reload();
+    }
+ 
     public boolean isSticky() {
         return getConfig(STICKY);
     } 
