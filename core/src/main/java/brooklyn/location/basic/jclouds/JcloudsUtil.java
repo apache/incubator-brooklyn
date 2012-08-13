@@ -15,6 +15,8 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -29,18 +31,17 @@ import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.compute.predicates.OperatingSystemPredicates;
-import org.jclouds.compute.predicates.RetryIfSocketNotYetOpen;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts;
-import org.jclouds.compute.util.ComputeServiceUtils;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.domain.PasswordDataAndPrivateKey;
 import org.jclouds.ec2.compute.functions.WindowsLoginCredentialsFromEncryptedData;
 import org.jclouds.ec2.domain.PasswordData;
 import org.jclouds.ec2.services.WindowsClient;
+import org.jclouds.compute.util.ConcurrentOpenSocketFinder;
+import org.jclouds.compute.util.OpenSocketFinder;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
-import org.jclouds.net.IPSocket;
 import org.jclouds.predicates.InetSocketAddressConnect;
 import org.jclouds.predicates.RetryablePredicate;
 import org.jclouds.scriptbuilder.domain.Statement;
@@ -59,6 +60,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+import com.google.common.net.HostAndPort;
 import com.google.inject.Module;
 
 public class JcloudsUtil {
@@ -268,10 +270,15 @@ public class JcloudsUtil {
         //   For validating result, could use guava's InternetDomainName.isValidLenient(ip) or InetAddresses.isInetAddress(ip)
         //   He also mentioned context.utils.sshForNode
 
-        InetSocketAddressConnect inetSocketAddressConnect = new InetSocketAddressConnect();
         Timeouts timeouts = new ComputeServiceConstants.Timeouts();
-        IPSocket reachableSocketOnNode = ComputeServiceUtils.findReachableSocketOnNode(new RetryIfSocketNotYetOpen(inetSocketAddressConnect, timeouts), node, 22);
-        return (reachableSocketOnNode != null) ? reachableSocketOnNode.getAddress() : null;
+        ExecutorService executor = Executors.newCachedThreadPool();
+        try {
+            OpenSocketFinder socketFinder = new ConcurrentOpenSocketFinder(new InetSocketAddressConnect(), null, executor);
+            HostAndPort reachableSocketOnNode = socketFinder.findOpenSocketOnNode(node, 22, timeouts.portOpen, TimeUnit.MILLISECONDS);
+            return reachableSocketOnNode.getHostText();
+        } finally {
+            executor.shutdown();
+        }
         
         //previous approach, keep for a few weeks if any problems with above (from 26 Jun 2012):
 //        ExecutorService executor = Executors.newCachedThreadPool();

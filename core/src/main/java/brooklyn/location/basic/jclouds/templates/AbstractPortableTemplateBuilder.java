@@ -39,6 +39,7 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     private Predicate<Image> imageCondition;
     private Double minCores;
     private Integer minRam;
+    private Double minDisk;
     /** this is the last options instance set by a call to options(TemplateOptions) */
     private TemplateOptions options;
     /** these are extra options that we want _added_, in order, on top of the last options set */
@@ -299,6 +300,19 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     /** megabytes */
     public Integer getMinRam() {
         return minRam;
+    }
+    
+    @Override
+    public T minDisk(final double gigabytes) {
+        this.minDisk = gigabytes;
+        commands.add(new Function<TemplateBuilder,TemplateBuilder>() { 
+            public TemplateBuilder apply(TemplateBuilder b) { return b.minDisk(gigabytes); }});
+        return (T)this;
+    }
+
+    /** megabytes */
+    public Double getMinDisk() {
+        return minDisk;
     }
     
     /** clears everything set in this template, including any default from the compute service */

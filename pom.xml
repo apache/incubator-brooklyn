@@ -91,16 +91,16 @@
         <groovy.version>1.8.6</groovy.version>
         <testng.version>6.3.1</testng.version>
         <mockito.version>1.8.4</mockito.version>
-        <!-- need 0.8.0 whirr to get guava 11, because 0.7 uses guava 10 which is incompatible -->
-        <whirr.version>0.8.0-brooklyn.1</whirr.version>
+        <!-- need 0.8.0 whirr to get guava 12, because 0.7 uses guava 10 which is incompatible -->
+        <whirr.version>0.8.0-brooklyn.2</whirr.version>
         <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
         <slf4j.version>1.5.11</slf4j.version>
         <!-- NB: slf4j 1.6.x seems to change some signatures which breaks e.g. grails 1.3; grails may ask for 1.5.8 but that's okay -->
         <xstream.version>1.3.1</xstream.version>
         <jansi.version>1.2.1</jansi.version>
-        <guava.version>11.0.2</guava.version>
+        <guava.version>12.0.1</guava.version>
         <ivy.version>2.2.0</ivy.version>
-        <jclouds.version>1.4.0</jclouds.version>
+        <jclouds.version>1.5.0-beta.9</jclouds.version>
         <spring.version>3.0.5.RELEASE</spring.version>
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>

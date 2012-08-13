@@ -310,8 +310,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
     public JcloudsSshMachineLocation obtain(Map flags) throws NoMachinesAvailableException {
         BrooklynJcloudsSetupHolder setup = new BrooklynJcloudsSetupHolder(this).useConfig(flags).apply();
-                
-        String groupId = elvis(setup.remove("groupId"), "brooklyn_"+System.getProperty("user.name")+"_"+IdGenerator.makeRandomId(8));
+        
+        String groupId = elvis(setup.remove("groupId"), generateGroupId());
         final ComputeService computeService = JcloudsUtil.buildOrFindComputeService(setup.allconf, setup.unusedConf);
         
         NodeMetadata node = null;
@@ -572,6 +572,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
     }
     
+    public static String generateGroupId() {
+        // In jclouds 1.5, there are strict rules for group id: it must be DNS compliant, and no more than 15 characters
+        String user = System.getProperty("user.name");
+        String rand = IdGenerator.makeRandomId(2);
+        String result = "br-"+(user.substring(0,Math.min(user.length(),5)))+"-"+rand;
+        return result.toLowerCase();
+    }
+
     public static File asFile(Object o) {
         if (o instanceof File) return (File)o;
         if (o == null) return null;

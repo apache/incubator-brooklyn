@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import org.jclouds.Constants;
 import org.jclouds.providers.ProviderMetadata;
@@ -77,11 +76,6 @@ public class JcloudsResolver implements LocationResolver {
             log.warn("Use of deprecated location '"+region+"'; in future refer to with explicit provider '"+provider+":"+region+"'");
         }
         
-        if (!PROVIDERS_REST.contains(provider)) {
-            log.warn("Unknown jclouds provider '"+provider+"' (will throw); known providers are: "+PROVIDERS_REST);
-            throw new NoSuchElementException("Unknown location '"+spec+"'");
-        }
-
         Map jcloudsProperties = new MutableMap(new CredentialsFromEnv(BrooklynProperties.Factory.newDefault().addFromMap(properties), provider).asMap());
         
         // TODO Adding properties here, so user can programmatically pass things through to JcloudsLocation for provisioning
