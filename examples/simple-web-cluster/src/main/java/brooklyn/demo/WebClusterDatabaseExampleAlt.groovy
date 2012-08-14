@@ -73,7 +73,7 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
 
     protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
         JBoss7Server jb7 = new JBoss7Server(flags).configure(httpPort: "8000+");
-        jb7.setConfig(JBoss7Server.JAVA_OPTIONS, ["brooklyn.example.db.url": 
+        jb7.setConfig(JBoss7Server.JAVA_SYSPROPS, ["brooklyn.example.db.url": 
                 //"jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n"
                 DependentConfiguration.valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, 
                     { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);

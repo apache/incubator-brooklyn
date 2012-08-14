@@ -72,15 +72,15 @@ public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
         web.setConfig(ControlledDynamicWebAppCluster.ROOT_WAR, WAR_PATH); 
         mysql.setConfig(MySqlNode.CREATION_SCRIPT_URL, DB_SETUP_SQL_URL);
         web.getFactory().setConfig(WebAppService.HTTP_PORT, "8080+"); 
-        Map jvmOpts = new LinkedHashMap();
-        jvmOpts.put("brooklyn.example.db.url", valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, 
+        Map jvmSysProps = new LinkedHashMap();
+        jvmSysProps.put("brooklyn.example.db.url", valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, 
                 new Function() {
                     @Override
                     public Object apply(Object input) {
                         return makeJdbcUrl(""+input);
                     }
                 }));
-        web.getFactory().setConfig(JBoss7Server.JAVA_OPTIONS, jvmOpts);
+        web.getFactory().setConfig(JBoss7Server.JAVA_SYSPROPS, jvmSysProps);
 
         web.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)

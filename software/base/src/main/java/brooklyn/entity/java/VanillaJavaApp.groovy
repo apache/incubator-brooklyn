@@ -107,4 +107,9 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) {
         new VanillaJavaAppSshDriver(this, loc);
     }
+    
+    public String getRunDir() {
+        // FIXME Make this an attribute
+        return getDriver()?.getRunDir();
+    }
 }

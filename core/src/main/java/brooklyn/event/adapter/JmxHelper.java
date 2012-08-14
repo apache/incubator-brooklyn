@@ -215,7 +215,7 @@ public class JmxHelper {
      * @return
      */
     public boolean connect(long timeoutMs) {
-        if (LOG.isDebugEnabled()) LOG.debug("Connecting to JMX URL: {} ({})", url, ((timeoutMs == -1) ? "indefinitely" : "${timeoutMs}ms timeout"));
+        if (LOG.isDebugEnabled()) LOG.debug("Connecting to JMX URL: {} ({})", url, ((timeoutMs == -1) ? "indefinitely" : timeoutMs+"ms timeout"));
         long startMs = System.currentTimeMillis();
         long endMs = (timeoutMs == -1) ? Long.MAX_VALUE : (startMs + timeoutMs);
         long currentTime = startMs;
