@@ -30,6 +30,9 @@ import com.google.common.collect.Multimap
  * this entity may be more finicky about the OS/image where it runs than others.
  * <p>
  * Paritcularly on OS X we require Xcode and command-line gcc installed and on the path.
+ * <p>
+ * See {@link http://library.linode.com/web-servers/nginx/configuration/basic} for useful info/examples
+ * of configuring nginx.
  */
 public class NginxController extends AbstractController {
 
@@ -138,6 +141,13 @@ public class NginxController extends AbstractController {
         config.append("}\n");
         config.append("http {\n");
         
+        // If no servers, then defaults to returning 404
+        // TODO Give nicer page back 
+        config.append("  server {\n");
+        config.append("    listen "+getPort()+";\n")
+        config.append("    return 404;\n")
+        config.append("  }\n");
+        
         // For basic round-robin across the cluster
         if (addresses) {
             config.append(format("  upstream "+getId()+" {\n"))
@@ -187,20 +197,15 @@ public class NginxController extends AbstractController {
             config.append("    listen "+getPort()+";\n")
             config.append("    server_name "+domain+";\n")
             for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
-                String location = mappingInDomain.getPath() != null ? mappingInDomain.getPath() : "/";
+                // TODO Currently only supports "~" for regex. Could add support for other options,
+                // such as "~*", "^~", literals, etc.
+                String location = mappingInDomain.getPath() != null ? "~ " + mappingInDomain.getPath() : "/";
                 config.append("    location "+location+" {\n");
                 config.append("      proxy_pass http://"+mappingInDomain.uniqueLabel+"\n;");
                 config.append("    }\n");
             }
             config.append("  }\n");
         }
-        
-        // If no servers, then defaults to returning 404
-        // TODO Give nicer page back 
-        config.append("  server {\n");
-        config.append("    listen "+getPort()+";\n")
-        config.append("    return 404;\n")
-        config.append("  }\n");
         
         config.append("}\n");
 

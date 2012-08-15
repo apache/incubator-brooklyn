@@ -30,11 +30,13 @@ public class UrlMapping extends AbstractGroup {
 
     @SetFromFlag("domain")
     public static final BasicConfigKey<String> DOMAIN =
-        new BasicConfigKey<String>(String.class, "urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule");
+        new BasicConfigKey<String>(String.class, "urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule; required.");
 
     @SetFromFlag("path")
     public static final BasicConfigKey<String> PATH =
-        new BasicConfigKey<String>(String.class, "urlmapping.path", "URL path (pattern) for this URL map rule");
+        new BasicConfigKey<String>(String.class, "urlmapping.path", 
+                "URL path (pattern) for this URL map rule. Currently only supporting regex matches "+ 
+                "(if not supplied, will match all paths at the indicated domain)");
 
     @SetFromFlag("target")
     public static final BasicConfigKey<Entity> TARGET_PARENT =

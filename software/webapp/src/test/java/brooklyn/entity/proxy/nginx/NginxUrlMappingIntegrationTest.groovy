@@ -78,6 +78,47 @@ public class NginxUrlMappingIntegrationTest {
     }
     
     @Test(groups = "Integration")
+    public void testUrlMappingServerNameAndPath() {
+        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
+        DynamicCluster c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
+    
+        nginx = new NginxController([
+                "owner" : app,
+                "port" : 8000
+            ])
+    
+        UrlMapping u0 = new UrlMapping(nginx, domain: "localhost1", path: '/atC0($|/.*)', target: c0);
+        UrlMapping u1 = new UrlMapping(nginx, domain: "localhost2", path: '/atC1($|/.*)', target: c1);
+    
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+    
+        for (Entity child : c0.getOwnedChildren()) {
+            ((JBoss7Server)child).deploy(war.toString(), "atC0.war")
+        }
+        for (Entity child : c1.getOwnedChildren()) {
+            ((JBoss7Server)child).deploy(war.toString(), "atC1.war")
+        }
+    
+        // Confirm routes requests to the correct cluster
+        // Do more than one request for each in-case just lucky with round-robin...
+        // FIXME Make JBoss7Server.deploy wait for the web-app to actually be deployed
+        executeUntilSucceeds {
+            for (int i = 0; i < 2; i++) {
+                assertUrlHasText("http://localhost1:8000/atC0", "Hello");
+                assertUrlHasText("http://localhost1:8000/atC0/", "Hello");
+            }
+            for (int i = 0; i < 2; i++) {
+                assertUrlHasText("http://localhost2:8000/atC1", "Hello");
+                assertUrlHasText("http://localhost2:8000/atC1/", "Hello");
+            }
+        }
+        assertFails {
+            //this should *not* be available
+            assertUrlHasText("http://localhost1:8000/atC1", "Hello");
+        }
+    }
+
+    @Test(groups = "Integration")
     public void testUrlMappingRoutesRequestByPathToCorrectGroup() {
         def serverFactory = { throw new UnsupportedOperationException(); }
         DynamicCluster nullCluster = new DynamicCluster(owner:app, factory:serverFactory, initialSize:0)
@@ -93,8 +134,8 @@ public class NginxUrlMappingIntegrationTest {
                 "portNumberSensor" : WebAppService.HTTP_PORT,
             ])
         
-        UrlMapping u0 = new UrlMapping(nginx, domain: "localhost", path: "~ /atC0(\$|/\\.*)", target: c0);
-        UrlMapping u1 = new UrlMapping(nginx, domain: "localhost", path: "~ /atC1(\$|/\\.*)", target: c1);
+        UrlMapping u0 = new UrlMapping(nginx, domain: "localhost", path: '/atC0($|/.*)', target: c0);
+        UrlMapping u1 = new UrlMapping(nginx, domain: "localhost", path: '/atC1($|/.*)', target: c1);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
@@ -111,9 +152,11 @@ public class NginxUrlMappingIntegrationTest {
         executeUntilSucceeds {
             for (int i = 0; i < 2; i++) {
                 assertUrlHasText("http://localhost:8000/atC0", "Hello");
+                assertUrlHasText("http://localhost:8000/atC0/", "Hello");
             }
             for (int i = 0; i < 2; i++) {
                 assertUrlHasText("http://localhost:8000/atC1", "Hello");
+                assertUrlHasText("http://localhost:8000/atC1/", "Hello");
             }
         }
     }
@@ -282,7 +325,6 @@ public class NginxUrlMappingIntegrationTest {
         }
         
         // and check core group does _not_ resolve
-        assertFails { new ResourceUtils(this).getResourceAsString("http://localhost:8000"); }
+        assertEquals(urlRespondsStatusCode("http://localhost:8000"), 404)
     }
-
 }
