@@ -25,8 +25,6 @@ import com.google.common.base.Preconditions
 
 /**
  * Test the operation of the {@link NginxController} class.
- *
- * TODO clarify test purpose
  */
 public class NginxIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(NginxIntegrationTest.class)
@@ -51,7 +49,35 @@ public class NginxIntegrationTest {
      * Test that the Nginx proxy starts up and sets SERVICE_UP correctly.
      */
     @Test(groups = "Integration")
-    public void canStartupAndShutdown() {
+    public void testWhenNoServersReturns404() {
+        def serverFactory = { throw new UnsupportedOperationException(); }
+        cluster = new DynamicCluster(owner:app, factory:serverFactory, initialSize:0)
+        
+        nginx = new NginxController([
+                "owner" : app,
+                "cluster" : cluster,
+                "domain" : "localhost",
+                "port" : 8000,
+                "portNumberSensor" : WebAppService.HTTP_PORT,
+            ])
+        
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+        
+        executeUntilSucceeds() {
+            // Nginx has started
+            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+
+            // Nginx URL is available
+            String url = nginx.getAttribute(NginxController.ROOT_URL)
+            assertEquals(urlRespondsStatusCode(url), 404);
+        }
+    }
+
+    /**
+     * Test that the Nginx proxy starts up and sets SERVICE_UP correctly.
+     */
+    @Test(groups = "Integration")
+    public void testCanStartupAndShutdown() {
         def template = { Map properties -> new JBoss7Server(properties) }
         URL war = getClass().getClassLoader().getResource("hello-world.war")
         Preconditions.checkState war != null, "Unable to locate resource $war"

@@ -299,4 +299,13 @@ public class TestUtils {
         }
     }
 
+    public static void assertFails(Closure c) {
+        try {
+            c.call();
+            fail("Did not throw exception");
+        } catch (Exception e) {
+            log.debug("Test for exception successful ("+e+")");
+        }
+    }
+    
 }

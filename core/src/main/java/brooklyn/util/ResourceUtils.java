@@ -103,7 +103,7 @@ public class ResourceUtils {
         try {
             return readFullyString(getResourceFromUrl(url));
         } catch (Exception e) {
-            log.warn("error reading "+url+(context==null?"":" "+context)+" (rethrowing): "+e);
+            log.debug("ResourceUtils got error reading "+url+(context==null?"":" "+context)+" (rethrowing): "+e);
             throw Throwables.propagate(e);
         }
     }

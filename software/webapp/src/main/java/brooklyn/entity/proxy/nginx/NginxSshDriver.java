@@ -1,6 +1,13 @@
 package brooklyn.entity.proxy.nginx;
 
 
+import static java.lang.String.format;
+
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
@@ -9,18 +16,14 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-
-import static java.lang.String.format;
 
 /**
  * Start a {@link NginxController} in a {@link brooklyn.location.Location} accessible over ssh.
  */
 public class NginxSshDriver extends StartStopSshDriver {
     public static final Logger log = LoggerFactory.getLogger(NginxSshDriver.class);
+
+    boolean customizationCompleted = false;
 
     public NginxSshDriver(NginxController entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -70,8 +73,7 @@ public class NginxSshDriver extends StartStopSshDriver {
         script.body.append(
                 "mkdir -p dist",
                 format("./configure --prefix=%s/nginx-%s/dist ", getInstallDir(), getVersion()) +
-                        (sticky ? format("--add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : "") +
-                        "--without-http_rewrite_module",
+                        (sticky ? format("--add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : ""),
                 "make install");
 
         int result = script.execute();
@@ -86,10 +88,15 @@ public class NginxSshDriver extends StartStopSshDriver {
                 format("mkdir -p %s", getRunDir()),
                 format("cp -R %s/nginx-%s/dist/{conf,html,logs,sbin} %s", getInstallDir(), getVersion(), getRunDir())
         ).execute();
-
+        
+        customizationCompleted = true;
         ((NginxController) entity).doExtraConfigurationDuringStart();
     }
 
+    public boolean isCustomizationCompleted() {
+        return customizationCompleted;
+    }
+    
     @Override
     public void launch() {
         // By default, nginx writes the pid of the master process to "logs/nginx.pid"
@@ -126,23 +133,27 @@ public class NginxSshDriver extends StartStopSshDriver {
 
     @Override
     public void restart() {
-        //if it hasn't come up we can't do the restart optimization
-        if (entity.getAttribute(Startable.SERVICE_UP)) {
-            Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
-            newScript(flags, RESTARTING).
-                    body.append(
-                    format("cd %s", getRunDir()),
-                    format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir())
-            ).execute();
-        } else {
-            try {
-                if (isRunning()) {
-                    stop();
-                }
-            } catch (Exception e) {
-                log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
+        try {
+            if (isRunning()) {
+                stop();
             }
-            launch();
+        } catch (Exception e) {
+            log.debug(getEntity() + " stop failed during restart (but wasn't in stop state, so not surprising): " + e);
         }
+        launch();
+    }
+    
+    public void reload() {
+        //if it hasn't come up we can't do the restart optimization
+        if (!entity.getAttribute(Startable.SERVICE_UP)) {
+            throw new IllegalStateException(getEntity() + " not up; can't reload");
+        }
+        
+        Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
+        newScript(flags, RESTARTING).
+                body.append(
+                format("cd %s", getRunDir()),
+                format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir())
+        ).execute();
     }
 }
