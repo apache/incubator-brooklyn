@@ -13,6 +13,7 @@ import java.util.TreeSet;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
+import org.jclouds.compute.domain.TemplateBuilderSpec;
 import org.jclouds.compute.options.TemplateOptions;
 
 import com.google.common.base.Function;
@@ -107,5 +108,18 @@ public class PortableTemplateBuilder<T extends PortableTemplateBuilder> extends 
         if (!aggr.getUserMetadata().isEmpty()) s = "metadata="+aggr.getUserMetadata()+(s!=null && s.length()>0 ? ", "+s : "");
         if (!aggr.getTags().isEmpty()) s = "tags="+aggr.getTags()+(s!=null && s.length()>0 ? ", "+s : "");
         return s;
+    }
+    
+    @Override
+    public TemplateBuilder from(TemplateBuilderSpec spec) {
+        TemplateOptions options = new TemplateOptions();
+        addOptionalOptions(options);
+        TemplateBuilder result = spec.copyTo(this, options);
+        return result;
+    }
+
+    @Override
+    public TemplateBuilder from(String spec) {
+        return from(TemplateBuilderSpec.parse(spec));
     }
 }
