@@ -534,6 +534,33 @@
                     <arguments>-DskipTests=true -PBrooklyn,Console,Launcher</arguments>
                 </configuration>
             </plugin>
+            <!--  workaround for src/main/resources excluding all in eclipse, as per
+                  https://issues.sonatype.org/browse/MNGECLIPSE-864 -->
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>maven-replacer-plugin</artifactId>
+                <version>1.4.0</version>
+                <executions>
+                    <execution>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <ignoreMissingFile>true</ignoreMissingFile>
+                    <file>.classpath</file>
+                    <regex>false</regex>
+                    <replacements>
+                        <replacement>
+                            <xpath>/classpath/classpathentry[@path='src/main/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
+                            <token>**</token>
+                            <value></value>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
         </plugins>
         <extensions>
             <extension>
