@@ -11,12 +11,16 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 public class SingleThreadedSchedulerTest {
 
+    private static final Logger log = LoggerFactory.getLogger(SingleThreadedSchedulerTest)
+    
     private BasicExecutionManager em
     
     @BeforeMethod
@@ -59,7 +63,7 @@ public class SingleThreadedSchedulerTest {
         for (i in 1..NUM_TIMES) {
             BasicTask t = [ {counter.incrementAndGet()} ]
             em.submit tag:"category1", t
-            if (i % 500 == 0) println("Submitted $i jobs...")
+            if (i % 500 == 0) log.info("Submitted $i jobs...")
         }
 
         Thread.sleep(100) // give it more of a chance to create the threads before we let them execute
