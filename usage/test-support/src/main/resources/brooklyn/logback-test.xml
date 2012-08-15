@@ -1,0 +1,10 @@
+<included>
+
+    <include resource="brooklyn/logback-stdout.xml"/>
+    <include resource="brooklyn/logback-test-file.xml"/>
+    
+    <include resource="brooklyn/logback-excludes.xml"/>
+    
+    <include resource="brooklyn/logback-debug.xml"/>
+
+</included>

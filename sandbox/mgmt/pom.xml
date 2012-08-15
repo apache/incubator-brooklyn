@@ -28,13 +28,6 @@
             <version>${project.version}</version>
         </dependency>
 
-    <!--  FIXME slf4j-jdk14 is only wanted for a "run" scope or similar (to start the mgmt console)  -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>

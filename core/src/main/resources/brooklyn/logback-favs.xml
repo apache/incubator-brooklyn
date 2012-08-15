@@ -1,0 +1,9 @@
+<included>
+
+<!-- if you're just going to have a few debug categories these are recommended -->
+
+    <logger name="brooklyn.SSH" level="DEBUG"/>
+    <logger name="brooklyn.location.basic.jclouds" level="DEBUG"/>
+    <logger name="brooklyn.util.internal.ssh" level="DEBUG"/>
+
+</included>
