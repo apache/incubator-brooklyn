@@ -311,6 +311,20 @@ public class JmxHelper {
 
     // ====================== query related calls =======================================
 
+    /**
+     * Converts from an object name pattern to a real object name, by querying with findMBean; 
+     * if no matching MBean can be found (or if more than one match found) then returns null.
+     * If the supplied object name is not a pattern then just returns that. If the 
+     */
+    public ObjectName toLiteralObjectName(ObjectName objectName) {
+        if (checkNotNull(objectName, "objectName").isPattern()) {
+            ObjectInstance bean = findMBean(objectName);    
+            return (bean != null) ? bean.getObjectName() : null;
+        } else {
+            return objectName;
+        }
+    }
+    
     public Set<ObjectInstance> findMBeans(final ObjectName objectName) {
         return invokeWithReconnect(new Callable<Set<ObjectInstance>>() {
                 public Set<ObjectInstance> call() throws Exception {
@@ -398,11 +412,12 @@ public class JmxHelper {
      * Returns a specific attribute for a JMX {@link ObjectName}.
      */
     public Object getAttribute(ObjectName objectName, final String attribute) {
-        final ObjectInstance bean = findMBean(objectName);
-        if (bean != null) {
+        final ObjectName realObjectName = toLiteralObjectName(objectName);
+        
+        if (realObjectName != null) {
             Object result = invokeWithReconnect(new Callable<Object>() {
                     public Object call() throws Exception {
-                        return getConnectionOrFail().getAttribute(bean.getObjectName(), attribute);
+                        return getConnectionOrFail().getAttribute(realObjectName, attribute);
                     }});
 
             if (LOG.isTraceEnabled()) LOG.trace("From {}, for jmx attribute {}.{}, got value {}", new Object[] {url, objectName.getCanonicalName(), attribute, result});
@@ -417,11 +432,12 @@ public class JmxHelper {
     }
 
     public void setAttribute(ObjectName objectName, final String attribute, final Object val) {
-        final ObjectInstance bean = findMBean(objectName);
-        if (bean != null) {
+        final ObjectName realObjectName = toLiteralObjectName(objectName);
+        
+        if (realObjectName != null) {
             invokeWithReconnect(new Callable<Void>() {
                     public Void call() throws Exception {
-                        getConnectionOrFail().setAttribute(bean.getObjectName(), new javax.management.Attribute(attribute, val));
+                        getConnectionOrFail().setAttribute(realObjectName, new javax.management.Attribute(attribute, val));
                         return null;
                     }});
             if (LOG.isTraceEnabled()) LOG.trace("From {}, for jmx attribute {}.{}, set value {}", new Object[] {url, objectName.getCanonicalName(), attribute, val});
@@ -439,18 +455,19 @@ public class JmxHelper {
      * Executes an operation on a JMX {@link ObjectName}.
      */
     public Object operation(ObjectName objectName, final String method, final Object... arguments) {
-        final ObjectInstance bean = findMBean(objectName);
+        final ObjectName realObjectName = toLiteralObjectName(objectName);
         final String[] signature = new String[arguments.length];
         for (int i = 0; i < arguments.length; i++) {
             Class<?> clazz = arguments[i].getClass();
             signature[i] = (CLASSES.containsKey(clazz.getSimpleName()) ? CLASSES.get(clazz.getSimpleName()) : clazz.getName());
         }
+        
         Object result = invokeWithReconnect(new Callable<Object>() {
                 public Object call() throws Exception {
-                    return getConnectionOrFail().invoke(bean.getObjectName(), method, arguments, signature);
+                    return getConnectionOrFail().invoke(realObjectName, method, arguments, signature);
                 }});
 
-        if (LOG.isTraceEnabled()) LOG.trace("From {}, for jmx operation {}.{}, got value {}", new Object[] {url, objectName.getCanonicalName(), method, result});
+        if (LOG.isTraceEnabled()) LOG.trace("From {}, for jmx operation {}.{}, got value {}", new Object[] {url, realObjectName.getCanonicalName(), method, result});
         return result;
     }
 
