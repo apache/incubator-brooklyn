@@ -86,6 +86,12 @@
           <artifactId>jsp-2.1-glassfish</artifactId>
           <version>${jsp.version}</version>
         </dependency>
+
+        <dependency>
+          <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+          <artifactId>concurrentlinkedhashmap-lru</artifactId>
+          <version>1.0_jdk5</version>
+        </dependency>
     </dependencies>
 
     <build>
