@@ -40,13 +40,16 @@ public class JmxHelperTest {
     private JmxHelper jmxHelper;
     
     private String objectName = "Brooklyn:type=MyTestMBean,name=myname";
+    private String objectNameWithWildcard = "Brooklyn:type=MyTestMBean,name=mynam*";
     private ObjectName jmxObjectName;
+    private ObjectName jmxObjectNameWithWildcard;
     private String attributeName = "myattrib";
     private String opName = "myop";
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         jmxObjectName = new ObjectName(objectName);
+        jmxObjectNameWithWildcard = new ObjectName(objectNameWithWildcard);
         jmxService = new JmxService("localhost", 40123);
         jmxHelper = new JmxHelper(jmxService.getUrl());
         jmxHelper.connect(TIMEOUT_MS);
@@ -65,10 +68,25 @@ public class JmxHelperTest {
     }
 
     @Test
+    public void testGetAttributeUsingObjectNameWildcard() throws Exception {
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(MutableMap.of("myattr", "myval"), objectName);
+        assertEquals(jmxHelper.getAttribute(jmxObjectNameWithWildcard, "myattr"), "myval");
+    }
+
+    @Test
     public void testSetAttribute() throws Exception {
         DynamicMBean mbean = jmxService.registerMBean(MutableMap.of("myattr", "myval"), objectName);
 
         jmxHelper.setAttribute(jmxObjectName, "myattr", "abc");
+        Object actual = jmxHelper.getAttribute(jmxObjectName, "myattr");
+        assertEquals(actual, "abc");
+    }
+
+    @Test
+    public void testSetAttributeUsingObjectNameWildcard() throws Exception {
+        DynamicMBean mbean = jmxService.registerMBean(MutableMap.of("myattr", "myval"), objectName);
+
+        jmxHelper.setAttribute(jmxObjectNameWithWildcard, "myattr", "abc");
         Object actual = jmxHelper.getAttribute(jmxObjectName, "myattr");
         assertEquals(actual, "abc");
     }
@@ -85,6 +103,20 @@ public class JmxHelperTest {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(ImmutableMap.of(), ImmutableMap.of(opInfo, opImpl), objectName);
         
         assertEquals(jmxHelper.operation(objectName, opName), opReturnVal);
+    }
+
+    @Test
+    public void testInvokeOperationUsingObjectNameWildcard() {
+        final String opReturnVal = "my result";
+        MBeanOperationInfo opInfo = new MBeanOperationInfo(opName, "my descr", new MBeanParameterInfo[0], String.class.getName(), MBeanOperationInfo.ACTION);
+        Callable<String> opImpl = new Callable<String>() {
+            public String call() {
+                return opReturnVal;
+            }
+        };
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(ImmutableMap.of(), ImmutableMap.of(opInfo, opImpl), objectName);
+        
+        assertEquals(jmxHelper.operation(objectNameWithWildcard, opName), opReturnVal);
     }
 
     @Test
