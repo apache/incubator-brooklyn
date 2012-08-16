@@ -28,6 +28,7 @@ import brooklyn.util.internal.LanguageUtils;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.SingleThreadedScheduler;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 
 /**
@@ -40,11 +41,34 @@ public class LocalSubscriptionManager implements SubscriptionManager {
     
     private static final Logger LOG = LoggerFactory.getLogger(SubscriptionManager.class);
 
-    static String makeEntitySensorToken(Entity e, Sensor<?> s) {
-        return (e != null ? e.getId() :  "*")+":"+(s != null ? s.getName() : "*");
+    public static class EntitySensorToken {
+        Entity e;
+        Sensor<?> s;
+        public EntitySensorToken(Entity e, Sensor<?> s) {
+            this.e = e;
+            this.s = s;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(e, s);
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof EntitySensorToken)) return false;
+            if (!Objects.equal(e, ((EntitySensorToken)obj).e)) return false;
+            if (!Objects.equal(s, ((EntitySensorToken)obj).s)) return false;
+            return true;
+        }
+        @Override
+        public String toString() {
+            return (e != null ? e.getId() :  "*")+":"+(s != null ? s.getName() : "*");
+        }
     }
- 
-    static String makeEntitySensorToken(SensorEvent<?> se) {
+    static Object makeEntitySensorToken(Entity e, Sensor<?> s) {
+        return new EntitySensorToken(e, s);
+    }
+    static Object makeEntitySensorToken(SensorEvent<?> se) {
         return makeEntitySensorToken(se.getSource(), se.getSensor());
     }
 
