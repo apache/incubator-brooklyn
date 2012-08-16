@@ -29,7 +29,7 @@ import brooklyn.management.Task;
  * the task is started in a thread (and {@link Task#isStarted()} returns true), but (of course)
  * <em>before</em> the {@link Task#job} actually gets invoked.
  */
-public class SingleThreadedScheduler implements TaskScheduler {
+public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
     private static final Logger LOG = LoggerFactory.getLogger(SingleThreadedScheduler.class);
     
     private final Queue<QueuedSubmission<?>> order = new ConcurrentLinkedQueue<QueuedSubmission<?>>();
@@ -37,6 +37,18 @@ public class SingleThreadedScheduler implements TaskScheduler {
     
     private ExecutorService executor;
 
+    private String name;
+    
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name!=null ? "SingleThreadedExecutor["+name+"]" : super.toString();
+    }
+    
     public void injectExecutor(ExecutorService executor) { this.executor = executor; }
 
     public synchronized <T> Future<T> submit(Callable<T> c) {

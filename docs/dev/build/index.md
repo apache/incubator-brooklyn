@@ -15,6 +15,10 @@ brooklyn% mvn clean install
 
 Key things to note if you're new to Maven:
 
+* You may need more JVM memory, e.g. at the command-line (or in `.profile`):
+
+  ``export MAVEN_OPTS="-Xmx1024m -Xms512m -XX:MaxPermSize=256m``
+
 * You can do this in specific projects as well.
 
 * Add ``-DskipTests`` to skip tests. 

@@ -24,6 +24,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
     protected static final Logger LOG = LoggerFactory.getLogger(SubscriptionPerformanceTest.class)
     
     private static final long LONG_TIMEOUT_MS = 30*1000
+    private static final int NUM_ITERATIONS = 10000
     
     TestEntity entity
     List<TestEntity> entities
@@ -43,11 +44,35 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
         subscriptionManager = app.managementContext.subscriptionManager
     }
     
+    @Test(groups=["Integration", "Acceptance"])
+    public void testManyPublishedOneSubscriber() {
+        int numSubscribers = 1
+        int numIterations = NUM_ITERATIONS
+        double minRatePerSec = 100 * PERFORMANCE_EXPECTATION; // i.e. 100*10 events delivered per sec
+        int iter = 0
+        int expectedCount = numIterations*numSubscribers
+        
+        AtomicInteger listenerCount = new AtomicInteger()
+        CountDownLatch completionLatch = new CountDownLatch(1)
+        
+        for (int i = 0; i < numSubscribers; i++) {
+            subscriptionManager.subscribe([subscriber:i], entity, TestEntity.SEQUENCE,
+                {
+                    int count = listenerCount.incrementAndGet()
+                    if (count >= expectedCount) completionLatch.countDown()
+                } as SensorEventListener)
+        }
+        
+        measureAndAssert("updateAttributeWithManyPublishedOneSubscriber", numIterations, minRatePerSec,
+                { entity.setAttribute(TestEntity.SEQUENCE, (iter++)) },
+                { completionLatch.await(LONG_TIMEOUT_MS, TimeUnit.MILLISECONDS); assertTrue(completionLatch.getCount() <= 0) })
+    }
+    
     // TODO but surely parallel should be much faster?!
     @Test(groups=["Integration", "Acceptance"])
     public void testManyListenersForSensorEvent() {
         int numSubscribers = 10
-        int numIterations = 1000
+        int numIterations = NUM_ITERATIONS
         double minRatePerSec = 100 * PERFORMANCE_EXPECTATION; // i.e. 100*10 events delivered per sec
         int iter = 0
         int expectedCount = numIterations*numSubscribers
@@ -71,7 +96,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
     @Test(groups=["Integration", "Acceptance"])
     public void testUpdateAttributeWithNoListenersButManyUnrelatedListeners() {
         int numUnrelatedSubscribers = 1000
-        int numIterations = 1000
+        int numIterations = NUM_ITERATIONS
         double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         int iter = 0
         int lastVal = 0

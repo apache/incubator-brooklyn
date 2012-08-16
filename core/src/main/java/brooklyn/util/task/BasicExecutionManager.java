@@ -482,7 +482,10 @@ public class BasicExecutionManager implements ExecutionManager {
                 throw new IllegalStateException("Not allowed to set multiple TaskSchedulers on ExecutionManager tag (tag "+tag+", has "+old+", setting new "+scheduler+")");
             }
             try {
-                setTaskSchedulerForTag(tag, scheduler.newInstance());
+                TaskScheduler schedulerI = scheduler.newInstance();
+                // allow scheduler to have a nice name, for logging etc
+                if (schedulerI instanceof CanSetName) ((CanSetName)schedulerI).setName(""+tag);
+                setTaskSchedulerForTag(tag, schedulerI);
             } catch (InstantiationException e) {
                 throw Throwables.propagate(e);
             } catch (IllegalAccessException e) {
