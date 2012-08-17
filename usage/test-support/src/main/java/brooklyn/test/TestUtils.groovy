@@ -300,12 +300,14 @@ public class TestUtils {
     }
 
     public static void assertFails(Closure c) {
+        boolean failed = false;
         try {
             c.call();
-            fail("Did not throw exception");
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            failed = true;
             log.debug("Test for exception successful ("+e+")");
         }
+        if (!failed) fail("Code that should have thrown exception did not do so!");
     }
     
 }
