@@ -200,6 +200,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
     
     /**
+     * Sets a config key value, and returns this Entity instance for use in fluent-API style coding.
+     */
+    public <T> Entity configure(ConfigKey<T> key, T value) {
+        setConfig(key, value);
+        return this;
+    }
+    
+    /**
      * Adds this as a member of the given group, registers with application if necessary
      */
     public AbstractEntity setOwner(Entity entity) {
