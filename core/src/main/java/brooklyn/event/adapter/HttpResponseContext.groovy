@@ -52,6 +52,9 @@ public class HttpResponseContext extends AbstractSensorEvaluationContext {
             // Happens a lot with things like 404, so just log at trace and let the rest of the response indicate what's wrong
             log.trace("Content not available for HTTP connection "+conn, e);
             return null;
+        } catch (IOException e) {
+            log.trace("Content not available for HTTP connection "+conn, e);
+            return null;
         }
     } 
     
@@ -68,7 +71,10 @@ public class HttpResponseContext extends AbstractSensorEvaluationContext {
 	}
 	private transient Object json;
 	public synchronized Object getJson() {
-		if (json==null) json = new JsonSlurper().parseText(content);
+		if (json==null) {
+            if (content!=null && !content.isEmpty()) json = new JsonSlurper().parseText(content);
+            else json = new JsonSlurper()
+		}
 		return json
 	}
 	

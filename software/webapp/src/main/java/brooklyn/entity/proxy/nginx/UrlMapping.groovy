@@ -38,6 +38,10 @@ public class UrlMapping extends AbstractGroup {
                 "URL path (pattern) for this URL map rule. Currently only supporting regex matches "+ 
                 "(if not supplied, will match all paths at the indicated domain)");
 
+    @SetFromFlag("ssl")
+    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG =
+        new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
+        
     @SetFromFlag("rewrites")
     public static final BasicConfigKey<Collection<UrlRewriteRule>> REWRITES =
         new BasicConfigKey<Collection<UrlRewriteRule>>(Collection.class, "urlmapping.rewrites", "Set of URL rewrite rules to apply");

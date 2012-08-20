@@ -5,7 +5,7 @@ import groovy.time.TimeDuration
 
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 import org.codehaus.groovy.runtime.InvokerInvocationException
@@ -66,6 +66,7 @@ public class TestUtils {
     public static URLConnection connectToURL(String u) {
         URL url = [u]
         URLConnection connection = url.openConnection()
+        TrustingSslSocketFactory.configure(connection)
         connection.connect()
         connection.getContentLength() // Make sure the connection is made.
         return connection

@@ -17,6 +17,7 @@ import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
 
@@ -36,6 +37,12 @@ import com.google.common.collect.Multimap
  * <p>
  * See {@link http://library.linode.com/web-servers/nginx/configuration/basic} for useful info/examples
  * of configuring nginx.
+ * <p>
+ * https configuration is supported, with the certificates providable on a per-UrlMapping basis or a global basis.
+ * (not supported to define in both places.) 
+ * per-Url is useful if different certificates are used for different server names,
+ * or different ports if that is supported.
+ * see more info on Ssl in {@link ProxySslConfig}.
  */
 public class NginxController extends AbstractController {
 
@@ -50,6 +57,9 @@ public class NginxController extends AbstractController {
     public static final BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
 
+    @SetFromFlag("ssl")
+    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = UrlMapping.SSL_CONFIG;
+    
     public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
     
     public NginxController(Entity owner) {
@@ -131,6 +141,27 @@ public class NginxController extends AbstractController {
         NginxSshDriver driver = (NginxSshDriver)getDriver();
         if (!driver.isCustomizationCompleted()) return;
         driver.machine.copyTo(new ByteArrayInputStream(cfg.getBytes()), driver.getRunDir()+"/conf/server.conf");
+        
+        installSslKeys("global", getConfig(SSL_CONFIG));
+        Iterable<UrlMapping> mappings = Iterables.filter(ownedChildren, Predicates.instanceOf(UrlMapping.class));
+        for (UrlMapping mapping: mappings)
+            //cache ensures only the first is installed, which is what is assumed below
+            installSslKeys(mapping.getDomain(), mapping.getConfig(UrlMapping.SSL_CONFIG));
+    }
+    
+    Set<String> installedKeysCache = [];
+    protected void installSslKeys(String id, ProxySslConfig ssl) {
+        if (ssl==null) return;
+        if (installedKeysCache.contains(id)) return;
+        NginxSshDriver driver = (NginxSshDriver)getDriver();
+        driver.machine.copyTo(permissions: "0400", 
+            new ResourceUtils(this).getResourceFromUrl(ssl.certificate),
+            driver.getRunDir()+"/conf/"+id+".crt");
+        if (ssl.key!=null)
+            driver.machine.copyTo(permissions: "0400", 
+                new ResourceUtils(this).getResourceFromUrl(ssl.key),
+                driver.getRunDir()+"/conf/"+id+".key");
+        installedKeysCache.add(id);
     }
 
     public String getConfigFile() {
@@ -145,9 +176,14 @@ public class NginxController extends AbstractController {
         config.append("}\n");
         config.append("http {\n");
         
+        ProxySslConfig globalSslConfig = getConfig(SSL_CONFIG);
+        boolean ssl = globalSslConfig != null;
+        if (ssl) appendSslConfig("global", config, "    ", globalSslConfig, true, true);
+        
         // If no servers, then defaults to returning 404
         // TODO Give nicer page back 
         config.append("  server {\n");
+        //if (ssl) appendSslConfig("global", config, "    ", globalSslConfig, true, true);
         config.append("    listen "+getPort()+";\n")
         config.append("    return 404;\n")
         config.append("  }\n");
@@ -165,8 +201,9 @@ public class NginxController extends AbstractController {
             config.append("  server {\n");
             config.append("    listen "+getPort()+";\n")
             config.append("    server_name "+getDomain()+";\n")
+            //if (ssl) appendSslConfig("global", config, "    ", globalSslConfig, true, true);
             config.append("    location / {\n");
-            config.append("      proxy_pass http://"+getId()+"\n;");
+            config.append("      proxy_pass "+(globalSslConfig && globalSslConfig.targetIsSsl ? "https" : "http")+"://"+getId()+";\n");
             config.append("    }\n");
             config.append("  }\n");
         }
@@ -201,6 +238,39 @@ public class NginxController extends AbstractController {
             config.append("    listen "+getPort()+";\n")
             config.append("    server_name "+domain+";\n")
             boolean hasRoot = false;
+
+            // set up SSL
+            ProxySslConfig localSslConfig = null;
+            for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
+                ProxySslConfig sslConfig = mappingInDomain.getConfig(UrlMapping.SSL_CONFIG);
+                if (sslConfig!=null) {
+                    if (localSslConfig!=null) {
+                        if (localSslConfig.equals(sslConfig)) {
+                            //ignore identical config specified on multiple mappings
+                        } else {
+                            log.warn(""+this+" mapping "+mappingInDomain+" provides SSL config for "+domain+" when a different config had already been provided by another mapping, ignoring this one");
+                        }
+                    } else if (globalSslConfig!=null) {
+                        if (globalSslConfig.equals(sslConfig)) {
+                            //ignore identical config specified on multiple mappings
+                        } else {
+                            log.warn(""+this+" mapping "+mappingInDomain+" provides SSL config for "+domain+" when a different config had been provided at root nginx scope, ignoring this one");
+                        }
+                    } else {
+                        //new config, is okay
+                        localSslConfig = sslConfig;
+                    }
+                }
+            }
+            boolean serverSsl;
+            if (localSslConfig!=null) {
+                serverSsl = appendSslConfig(""+domain, config, "    ", localSslConfig, true, true);
+            } else if (globalSslConfig!=null) {
+                // can't set ssl_certificate globally, so do it per server
+                serverSsl = true; 
+                //appendSslConfig(""+domain, config, "    ", globalSslConfig, true, true);
+            }
+
             for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
                 // TODO Currently only supports "~" for regex. Could add support for other options,
                 // such as "~*", "^~", literals, etc.
@@ -220,7 +290,11 @@ public class NginxController extends AbstractController {
                             config.append(" ;\n");
                         }
                     }
-                    config.append("      proxy_pass http://"+mappingInDomain.uniqueLabel+" ;\n");
+                    config.append("      proxy_pass "+
+                        (localSslConfig && localSslConfig.targetIsSsl ? "https" :
+                         !localSslConfig && globalSslConfig && globalSslConfig.targetIsSsl ? "https" :
+                         "http")+
+                        "://"+mappingInDomain.uniqueLabel+" ;\n");
                     config.append("    }\n");
                 }
             }
@@ -235,4 +309,29 @@ public class NginxController extends AbstractController {
 
         return config.toString();
     }
+    
+    public boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl,
+            boolean sslBlock, boolean certificateBlock) {
+        if (ssl==null) return false;
+        if (sslBlock) {
+            out.append(prefix);
+            out.append("ssl on;\n");
+        }
+        if (ssl.reuseSessions) {
+            out.append(prefix);
+            out.append("proxy_ssl_session_reuse on;");
+        }
+        if (certificateBlock) {
+            String cert = ""+id+".crt";
+            out.append(prefix);
+            out.append("ssl_certificate "+cert+";\n");
+            if (ssl.key!=null) {
+                String key = ""+id+".key";
+                out.append(prefix);
+                out.append("ssl_certificate_key "+key+";\n");
+            }
+        }
+        return true;
+    }
+    
 }

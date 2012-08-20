@@ -1,9 +1,12 @@
 package brooklyn.event.adapter;
 
+import javax.net.ssl.HttpsURLConnection
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.util.internal.StringEscapeUtils
+import brooklyn.util.internal.TrustingSslSocketFactory;
 
 protected class HttpPollHelper extends AbstractPollHelper {
 	public static final Logger log = LoggerFactory.getLogger(HttpPollHelper.class);
@@ -35,8 +38,11 @@ protected class HttpPollHelper extends AbstractPollHelper {
 	
 	@Override
 	AbstractSensorEvaluationContext executePollOnSuccess() {
-        if (log.isDebugEnabled()) log.debug "http polling for {} sensors at {}", adapter.entity, adapter.baseUrl+adapter.urlVars
+        if (log.isDebugEnabled()) log.debug "http polling for {} sensors at {}", adapter.entity, adapter.baseUrl+" "+adapter.urlVars
 		HttpURLConnection connection = getConnection();
+        if (connection in HttpsURLConnection) {
+            ((HttpsURLConnection)connection).setSSLSocketFactory(TrustingSslSocketFactory.INSTANCE);
+        }
 		connection.connect()
 		def result = new HttpResponseContext(connection)
         if (log.isDebugEnabled()) log.debug "http poll for {} got: {}", adapter.entity, result.content
