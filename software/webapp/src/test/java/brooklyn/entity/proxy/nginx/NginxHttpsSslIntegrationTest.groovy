@@ -66,9 +66,6 @@ public class NginxHttpsSslIntegrationTest {
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
 
-        HttpURLConnection connection = new URL("https://localhost:8000/").openConnection()
-        TrustingSslSocketFactory.configure(connection);
-
         executeUntilSucceeds() {
             // Services are running
             assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)

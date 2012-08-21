@@ -40,9 +40,7 @@ protected class HttpPollHelper extends AbstractPollHelper {
 	AbstractSensorEvaluationContext executePollOnSuccess() {
         if (log.isDebugEnabled()) log.debug "http polling for {} sensors at {}", adapter.entity, adapter.baseUrl+" "+adapter.urlVars
 		HttpURLConnection connection = getConnection();
-        if (connection in HttpsURLConnection) {
-            ((HttpsURLConnection)connection).setSSLSocketFactory(TrustingSslSocketFactory.INSTANCE);
-        }
+        TrustingSslSocketFactory.configure(connection);
 		connection.connect()
 		def result = new HttpResponseContext(connection)
         if (log.isDebugEnabled()) log.debug "http poll for {} got: {}", adapter.entity, result.content
