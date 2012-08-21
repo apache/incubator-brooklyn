@@ -190,8 +190,12 @@ public abstract class JavaStartStopSshDriver extends StartStopSshDriver {
 	    return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.JMX_PORT);
     }
 	
+	@Deprecated // since 0.4, use getRmiServerPort
 	public Integer getRmiPort() {
-	    return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.RMI_PORT);
+	    return getRmiServerPort();
+	}
+	public Integer getRmiServerPort() {
+	    return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.RMI_SERVER_PORT);
     }
 	public String getJmxContext() {
 	    return !isJmxEnabled() ? null : entity.getAttribute(UsesJmx.JMX_CONTEXT);

@@ -46,9 +46,11 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
     @SetFromFlag("jmxPort")
     public static final PortAttributeSensorAndConfigKey JMX_PORT = new PortAttributeSensorAndConfigKey(UsesJmx.JMX_PORT, "1099+")
 
-    @SetFromFlag("rmiPort")
-    public static final PortAttributeSensorAndConfigKey RMI_PORT = new PortAttributeSensorAndConfigKey(UsesJmx.RMI_PORT, "44444+")
-
+    @SetFromFlag("rmiServerPort")
+    public static final PortAttributeSensorAndConfigKey RMI_SERVER_PORT = new PortAttributeSensorAndConfigKey(UsesJmx.RMI_SERVER_PORT, "44444+")
+    @Deprecated // since 0.4 use RMI_SERVER_PORT
+    public static final PortAttributeSensorAndConfigKey RMI_PORT = RMI_SERVER_PORT;
+    
     @SetFromFlag("jmxContext")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = [ UsesJmx.JMX_CONTEXT, "karaf-"+KARAF_NAME.configKey.defaultValue ]
 
@@ -62,7 +64,7 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
     public static final BasicAttributeSensor<Integer> KARAF_PID = [ Integer, "karaf.admin.pid", "Karaf instance PID" ]
     public static final BasicAttributeSensor<Integer> KARAF_SSH_PORT = [ Integer, "karaf.admin.ssh_port", "Karaf SSH Port" ]
     public static final BasicAttributeSensor<Integer> KARAF_RMI_REGISTRY_PORT = [ Integer, "karaf.admin.rmi_registry_port", "Karaf instance RMI registry port" ]
-    public static final BasicAttributeSensor<Integer> KARAF_RMI_SERVER_PORT = [ Integer, "karaf.admin.rmi_server_port", "Karaf RMI server port" ]
+    public static final BasicAttributeSensor<Integer> KARAF_RMI_SERVER_PORT = [ Integer, "karaf.admin.rmi_server_port", "Karaf RMI (JMX) server port" ]
     public static final BasicAttributeSensor<String> KARAF_STATE = [ String, "karaf.admin.state", "Karaf instance state" ]
 
     protected JmxSensorAdapter jmxAdapter

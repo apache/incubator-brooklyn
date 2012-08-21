@@ -155,9 +155,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                     getAttribute(SERVICE_UP)
                 }
                 .run()) {
-            throw new IllegalStateException("Could not determine if ${this} is up");
+            throw new IllegalStateException("Timeout waiting for SERVICE_UP from ${this}");
         }
-        log.info("Service ${this} is running")
+        log.debug("Detected SERVICE_UP for software ${this}")
     }
 
     public void checkModifiable() {

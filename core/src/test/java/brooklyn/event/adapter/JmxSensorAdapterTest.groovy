@@ -76,7 +76,7 @@ public class JmxSensorAdapterTest {
                         super.start(locs);
                         entity.setAttribute(Attributes.HOSTNAME, "localhost");
                         entity.setAttribute(Attributes.JMX_PORT, 40123)
-                        entity.setAttribute(Attributes.RMI_PORT, 40124)
+                        entity.setAttribute(Attributes.RMI_SERVER_PORT, 40124)
                         entity.setAttribute(Attributes.JMX_CONTEXT)
                     }
         };

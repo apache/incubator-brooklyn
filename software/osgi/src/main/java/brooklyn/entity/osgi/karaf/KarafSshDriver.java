@@ -51,7 +51,7 @@ public class KarafSshDriver extends JavaStartStopSshDriver {
     public void customize() {
         Map<String, Object> ports = new HashMap<String, Object>();
         ports.put("jmxPort", getJmxPort());
-        ports.put("rmiPort", getRmiPort());
+        ports.put("rmiServerPort", getRmiServerPort());
 
         NetworkUtils.checkPortsValid(ports);
         newScript(CUSTOMIZING).
@@ -59,7 +59,7 @@ public class KarafSshDriver extends JavaStartStopSshDriver {
                 format("cd %s", getRunDir()),
                 format("cp -R %s/%s/{bin,etc,lib,system,deploy} . || exit $!", getInstallDir(), getUntarredDirName()),
                 format("sed -i.bk 's/rmiRegistryPort = 1099/rmiRegistryPort = %s/g' etc/org.apache.karaf.management.cfg", getJmxPort()),
-                format("sed -i.bk 's/rmiServerPort = 44444/rmiServerPort = %s/g' etc/org.apache.karaf.management.cfg", getRmiPort())
+                format("sed -i.bk 's/rmiServerPort = 44444/rmiServerPort = %s/g' etc/org.apache.karaf.management.cfg", getRmiServerPort())
         ).execute();
     }
 

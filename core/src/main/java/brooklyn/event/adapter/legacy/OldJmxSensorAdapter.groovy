@@ -60,7 +60,7 @@ public class OldJmxSensorAdapter {
 
     final EntityLocal entity
     final String host
-    final Integer rmiRegistryPort
+    final Integer jmxPort
     final Integer rmiServerPort
     final String context
     final String url
@@ -72,17 +72,17 @@ public class OldJmxSensorAdapter {
         this.entity = entity
 
         host = entity.getAttribute(Attributes.HOSTNAME);
-        rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
-        rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
+        jmxPort = entity.getAttribute(Attributes.JMX_PORT);
+        rmiServerPort = entity.getAttribute(Attributes.RMI_SERVER_PORT);
         context = entity.getAttribute(Attributes.JMX_CONTEXT);
 
         if (rmiServerPort) {
-            url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context)
+            url = String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, jmxPort, context)
         } else {
-            url = String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context)
+            url = String.format(JMX_URL_FORMAT, host, jmxPort, context)
         }
 
-        if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service on ${host}:${rmiRegistryPort}")
+        if (!connect(timeout)) throw new IllegalStateException("Could not connect to JMX service on ${host}:${jmxPort}")
     }
 
     public <T> ValueProvider<T> newAttributeProvider(String objectName, String attribute) {
@@ -134,20 +134,20 @@ public class OldJmxSensorAdapter {
         Throwable lastError;
         while (start <= end) {
             start = System.currentTimeMillis()
-            if (log.isDebugEnabled()) log.debug "trying connection to {}:{} at {}", host, rmiRegistryPort, start
+            if (log.isDebugEnabled()) log.debug "trying connection to {}:{} at {}", host, jmxPort, start
             try {
                 connect()
                 return true
             } catch (IOException e) {
-                if (log.isDebugEnabled()) log.debug "failed connection (io) to {}:{} ({})", host, rmiRegistryPort, e.message
+                if (log.isDebugEnabled()) log.debug "failed connection (io) to {}:{} ({})", host, jmxPort, e.message
                 lastError = e;
             } catch (SecurityException e) {
                 if (lastError==null) {
-                    log.warn "failed connection (security) to {}:{}, will retry ({})", host, rmiRegistryPort, e.message
+                    log.warn "failed connection (security) to {}:{}, will retry ({})", host, jmxPort, e.message
                     //maybe just throw? a security exception is likely definitive, retry probably won't help
                     //(but maybe it will?)
                 } else {
-                    if (log.isDebugEnabled()) log.debug "failed connection (security) to {}:{} ({})", host, rmiRegistryPort, e.message
+                    if (log.isDebugEnabled()) log.debug "failed connection (security) to {}:{} ({})", host, jmxPort, e.message
                 }
                 lastError = e;
             }
@@ -161,7 +161,7 @@ public class OldJmxSensorAdapter {
             try {
                 jmxc.close()
             } catch (Exception e) {
-                log.warn("Caught exception disconnecting from JMX at {}:{}, {}", host, rmiRegistryPort, e.message)
+                log.warn("Caught exception disconnecting from JMX at {}:{}, {}", host, jmxPort, e.message)
             } finally {
                 jmxc = null
                 mbsc = null

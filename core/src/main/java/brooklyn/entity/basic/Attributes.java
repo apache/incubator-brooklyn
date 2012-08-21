@@ -30,13 +30,17 @@ public interface Attributes {
      * JMX attributes.
      */
 
-    //1099 is standard, others are made up to provide something of a standard
+    // 1099 is standard, sometimes 9999
     PortAttributeSensorAndConfigKey JMX_PORT = new PortAttributeSensorAndConfigKey(
-            "jmx.port", "JMX port", PortRanges.fromString("9001, 32099-32000"));
+            "jmx.port", "JMX port (RMI registry port)", PortRanges.fromString("1099, 31099+"));
     
-    PortAttributeSensorAndConfigKey RMI_PORT = new PortAttributeSensorAndConfigKey(
-            "rmi.port", "RMI port", PortRanges.fromString("1099, 31099-31000"));
-    
+    // usually chosen by java; setting this will often not have any effect
+    PortAttributeSensorAndConfigKey RMI_SERVER_PORT = new PortAttributeSensorAndConfigKey(
+            "rmi.server.port", "RMI server port", PortRanges.fromString("9001, 39001+"));
+
+    @Deprecated // since 0.4, use RMI_REGISTRY_PORT instead
+    PortAttributeSensorAndConfigKey RMI_PORT = RMI_SERVER_PORT;
+
     BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "jmx.user", "JMX username");
     
