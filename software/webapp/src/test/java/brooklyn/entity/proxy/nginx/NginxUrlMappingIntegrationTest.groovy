@@ -12,6 +12,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.webapp.JavaWebAppService
@@ -23,7 +24,6 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.util.ResourceUtils
 import brooklyn.util.internal.TimeExtras
 
-import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 
@@ -40,6 +40,7 @@ public class NginxUrlMappingIntegrationTest {
     private DynamicCluster cluster
 
     private URL war;
+    private static String WAR_URL = "classpath://hello-world.war";
     
     @BeforeMethod(groups = "Integration")
     public void setup() {
@@ -79,43 +80,67 @@ public class NginxUrlMappingIntegrationTest {
     
     @Test(groups = "Integration")
     public void testUrlMappingServerNameAndPath() {
-        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
-        DynamicCluster c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
-    
         nginx = new NginxController([
                 "owner" : app,
                 "port" : 8000
             ])
     
-        UrlMapping u0 = new UrlMapping(nginx, domain: "localhost1", path: '/atC0($|/.*)', target: c0);
-        UrlMapping u1 = new UrlMapping(nginx, domain: "localhost2", path: '/atC1($|/.*)', target: c1);
-    
+        //cluster 0 mounted at localhost1 /
+        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
+            configure(JavaWebAppService.ROOT_WAR, WAR_URL)
+        UrlMapping u0 = new UrlMapping(nginx, domain: "localhost1", target: c0);
+        
+        //cluster 1 at localhost2 /hello-world/
+        DynamicCluster c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
+            configure(JavaWebAppService.NAMED_WARS, [WAR_URL]);
+        UrlMapping u1 = new UrlMapping(nginx, domain: "localhost2", path: '/hello-world($|/.*)', target: c1);
+
+        // cluster 2 at localhost3 /c2/  and mapping /hello/xxx to /hello/new xxx
+        DynamicCluster c2 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
+        UrlMapping u2 = new UrlMapping(nginx, domain: "localhost3", path: '/c2($|/.*)', target: c2).
+//            addRewrite('^(.*/|)(hello/)(.*)$', '$1$2new$3');
+            // break needed (syntax below) to prevent infinite recursion
+            addRewrite(new UrlRewriteRule('(.*/|)(hello/)(.*)', '$1$2new $3').setBreak());
+
         app.start([ new LocalhostMachineProvisioningLocation() ])
+        c2.getOwnedChildren().each { it.deploy(war.toString(), "c2.war") }
     
-        for (Entity child : c0.getOwnedChildren()) {
-            ((JBoss7Server)child).deploy(war.toString(), "atC0.war")
-        }
-        for (Entity child : c1.getOwnedChildren()) {
-            ((JBoss7Server)child).deploy(war.toString(), "atC1.war")
-        }
-    
+        Entities.dumpInfo(app);
+        
         // Confirm routes requests to the correct cluster
         // Do more than one request for each in-case just lucky with round-robin...
         // FIXME Make JBoss7Server.deploy wait for the web-app to actually be deployed
         executeUntilSucceeds {
+            //cluster 0
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost1:8000/atC0", "Hello");
-                assertUrlHasText("http://localhost1:8000/atC0/", "Hello");
+                assertUrlHasText("http://localhost1:8000", "Hello");
+                assertUrlHasText("http://localhost1:8000/", "Hello");
+                assertUrlHasText("http://localhost1:8000/hello/frank", "http://"+u0.id+"/hello/frank");
             }
+            //cluster 1
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost2:8000/atC1", "Hello");
-                assertUrlHasText("http://localhost2:8000/atC1/", "Hello");
+                assertUrlHasText("http://localhost2:8000/hello-world", "Hello");
+                assertUrlHasText("http://localhost2:8000/hello-world/", "Hello");
+                assertUrlHasText("http://localhost2:8000/hello-world/hello/bob", "http://"+u1.id+"/hello-world/hello/bob");
+            }
+            //cluster 2
+            for (int i = 0; i < 2; i++) {
+                assertUrlHasText("http://localhost3:8000/c2", "Hello");
+                assertUrlHasText("http://localhost3:8000/c2/", "Hello");
+                assertUrlHasText("http://localhost3:8000/c2/hello/joe", "http://"+u2.id+"/c2/hello/new%20joe");
             }
         }
-        assertFails {
-            //this should *not* be available
-            assertUrlHasText("http://localhost1:8000/atC1", "Hello");
-        }
+        //these should *not* be available
+        assertFails { assertUrlHasText(timeout:1, "http://localhost:8000/", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost1:8000/hello-world", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost2:8000/", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost2:8000/hello-world/notexists", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost3:8000/", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost3:8000/c2/hello/joe", "hello/joe"); }
+        //make sure nginx default welcome page isn't displayed
+        assertFails { assertUrlHasText(timeout:1, "http://localhost:8000/", "ginx"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost2:8000/", "ginx"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost3:8000/", "ginx"); }
     }
 
     @Test(groups = "Integration")
@@ -210,6 +235,51 @@ public class NginxUrlMappingIntegrationTest {
             assertUrlHasText("http://localhost1:8000", "Hello");
     
             assertUrlHasText("http://localhost:8000", "Hello");
+        }
+    }
+    
+    @Test(groups = "Integration")
+    public void testUrlMappingMultipleRewrites() {
+        nginx = new NginxController([
+                "owner" : app,
+                "port" : 8000
+            ])
+    
+        //cluster 0 mounted at localhost1 /
+        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
+            configure(JavaWebAppService.ROOT_WAR, WAR_URL)
+        UrlMapping u0 = new UrlMapping(nginx, domain: "localhost1", target: c0);
+        u0.addRewrite("/goodbye/al(.*)", '/hello/al$1');
+        u0.addRewrite(new UrlRewriteRule('/goodbye(|/.*)$', '/hello$1').setBreak());
+        u0.addRewrite("(.*)/hello/al(.*)", '$1/hello/Big Al$2');
+        u0.addRewrite('/hello/an(.*)', '/hello/Sir An$1');
+
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+        
+        // Confirm routes requests to the correct cluster
+        // Do more than one request for each in-case just lucky with round-robin...
+        // FIXME Make JBoss7Server.deploy wait for the web-app to actually be deployed
+        executeUntilSucceeds {
+            // health check
+            assertUrlHasText("http://localhost1:8000", "Hello");
+            assertUrlHasText("http://localhost1:8000/hello/frank", "http://"+u0.id+"/hello/frank");
+            
+            // goodbye rewritten to hello
+            assertUrlHasText("http://localhost1:8000/goodbye/frank", "http://"+u0.id+"/hello/frank");
+            // hello al rewritten to hello Big Al
+            assertUrlHasText("http://localhost1:8000/hello/aled", "http://"+u0.id+"/hello/Big%20Aled");
+            // hello andrew rewritten to hello Sir Andrew
+            assertUrlHasText("http://localhost1:8000/hello/andrew", "http://"+u0.id+"/hello/Sir%20Andrew");
+            
+            // goodbye alex rewritten to hello Big Alex (two rewrites)
+            assertUrlHasText("http://localhost1:8000/goodbye/alex", "http://"+u0.id+"/hello/Big%20Alex");
+            // but goodbye andrew rewritten only to hello Andrew -- test the "break" logic above (won't continue rewriting)
+            assertUrlHasText("http://localhost1:8000/goodbye/andrew", "http://"+u0.id+"/hello/andrew");
+            
+            // al rewrite can be anywhere
+            assertUrlHasText("http://localhost1:8000/hello/hello/alex", "http://"+u0.id+"/hello/hello/Big%20Alex");
+            // but an rewrite must be at beginning
+            assertUrlHasText("http://localhost1:8000/hello/hello/andrew", "http://"+u0.id+"/hello/hello/andrew");
         }
     }
     

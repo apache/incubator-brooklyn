@@ -38,6 +38,10 @@ public class UrlMapping extends AbstractGroup {
                 "URL path (pattern) for this URL map rule. Currently only supporting regex matches "+ 
                 "(if not supplied, will match all paths at the indicated domain)");
 
+    @SetFromFlag("rewrites")
+    public static final BasicConfigKey<Collection<UrlRewriteRule>> REWRITES =
+        new BasicConfigKey<Collection<UrlRewriteRule>>(Collection.class, "urlmapping.rewrites", "Set of URL rewrite rules to apply");
+
     @SetFromFlag("target")
     public static final BasicConfigKey<Entity> TARGET_PARENT =
         new BasicConfigKey<String>(Entity.class, "urlmapping.target.parent", "optional target entity whose children will be pointed at by this mapper");
@@ -62,6 +66,21 @@ public class UrlMapping extends AbstractGroup {
         else return id;
     }
 
+    /** adds a rewrite rule, must be called at config time.  see {@link UrlRewriteRule} for more info. */
+    public synchronized UrlMapping addRewrite(String from, String to) {
+        addRewrite(new UrlRewriteRule(from, to));
+    }
+    /** adds a rewrite rule, must be called at config time.  see {@link UrlRewriteRule} for more info. */
+    public synchronized UrlMapping addRewrite(UrlRewriteRule rule) {
+        Collection<UrlRewriteRule> rewrites = getConfig(REWRITES);
+        if (rewrites==null) {
+            rewrites = new ArrayList<UrlRewriteRule>();
+        }
+        rewrites.add(rule);
+        setConfig(REWRITES, rewrites);
+        return this;
+    }
+    
     public String getDomain() {
         return Preconditions.checkNotNull( getConfig(DOMAIN), "domain config argument required");
     }

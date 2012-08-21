@@ -4,6 +4,9 @@ import static java.lang.String.format
 
 import java.util.concurrent.TimeUnit
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.AbstractController
@@ -18,8 +21,8 @@ import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
 
 import com.google.common.base.Predicates
-import com.google.common.collect.HashMultimap
 import com.google.common.collect.Iterables
+import com.google.common.collect.LinkedHashMultimap
 import com.google.common.collect.Multimap
 
 /**
@@ -36,6 +39,7 @@ import com.google.common.collect.Multimap
  */
 public class NginxController extends AbstractController {
 
+    private static final Logger log = LoggerFactory.getLogger(NginxController.class);
     static { TimeExtras.init(); }
        
     @SetFromFlag("version")
@@ -169,7 +173,7 @@ public class NginxController extends AbstractController {
         
         // For mapping by URL
         Iterable<UrlMapping> mappings = Iterables.filter(ownedChildren, Predicates.instanceOf(UrlMapping.class));
-        Multimap<String, UrlMapping> mappingsByDomain = new HashMultimap<String, UrlMapping>();
+        Multimap<String, UrlMapping> mappingsByDomain = new LinkedHashMultimap<String, UrlMapping>();
         for (UrlMapping mapping : mappings) {
             Collection<String> addrs = mapping.getAttribute(UrlMapping.TARGET_ADDRESSES);
             if (addrs) {
@@ -196,13 +200,33 @@ public class NginxController extends AbstractController {
             config.append("  server {\n");
             config.append("    listen "+getPort()+";\n")
             config.append("    server_name "+domain+";\n")
+            boolean hasRoot = false;
             for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
                 // TODO Currently only supports "~" for regex. Could add support for other options,
                 // such as "~*", "^~", literals, etc.
-                String location = mappingInDomain.getPath() != null ? "~ " + mappingInDomain.getPath() : "/";
-                config.append("    location "+location+" {\n");
-                config.append("      proxy_pass http://"+mappingInDomain.uniqueLabel+"\n;");
-                config.append("    }\n");
+                boolean isRoot = mappingInDomain.getPath()==null || mappingInDomain.getPath().length()==0 || mappingInDomain.getPath().equals("/");
+                if (isRoot && hasRoot) {
+                    log.warn(""+this+" mapping "+mappingInDomain+" provides a duplicate / proxy, ignoring");
+                } else {
+                    hasRoot |= isRoot;
+                    String location = isRoot ? "/" : "~ " + mappingInDomain.getPath();
+                    config.append("    location "+location+" {\n");
+                    Collection<UrlRewriteRule> rewrites = mappingInDomain.getConfig(UrlMapping.REWRITES);
+                    if (rewrites) {
+                        for (UrlRewriteRule rule: rewrites) {
+                            config.append("      rewrite \"^"+rule.getFrom()+'$\" \"'+rule.getTo()+"\"");
+                            if (rule.isBreak()) config.append(" break");
+//                            if (rule.isLast()) config.append(" last");
+                            config.append(" ;\n");
+                        }
+                    }
+                    config.append("      proxy_pass http://"+mappingInDomain.uniqueLabel+" ;\n");
+                    config.append("    }\n");
+                }
+            }
+            if (!hasRoot) {
+                //provide a root block giving 404 if there isn't one for this server
+                config.append("    location / { return 404; }\n");
             }
             config.append("  }\n");
         }
