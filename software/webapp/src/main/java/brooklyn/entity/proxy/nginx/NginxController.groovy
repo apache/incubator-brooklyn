@@ -150,6 +150,9 @@ public class NginxController extends AbstractController {
     }
     
     Set<String> installedKeysCache = [];
+    /** installs SSL keys named as  ID.{crt,key}  where nginx can find them; 
+     * currently skips re-installs (does not support changing)
+     */
     protected void installSslKeys(String id, ProxySslConfig ssl) {
         if (ssl==null) return;
         if (installedKeysCache.contains(id)) return;
@@ -165,6 +168,8 @@ public class NginxController extends AbstractController {
     }
 
     public String getConfigFile() {
+        // TODO should refactor this method to a new class with methods e.g. NginxConfigFileGenerator...
+        
         NginxSshDriver driver = (NginxSshDriver)getDriver();
         if (driver==null) return null;
                 
@@ -183,7 +188,6 @@ public class NginxController extends AbstractController {
         // If no servers, then defaults to returning 404
         // TODO Give nicer page back 
         config.append("  server {\n");
-        //if (ssl) appendSslConfig("global", config, "    ", globalSslConfig, true, true);
         config.append("    listen "+getPort()+";\n")
         config.append("    return 404;\n")
         config.append("  }\n");
@@ -201,7 +205,6 @@ public class NginxController extends AbstractController {
             config.append("  server {\n");
             config.append("    listen "+getPort()+";\n")
             config.append("    server_name "+getDomain()+";\n")
-            //if (ssl) appendSslConfig("global", config, "    ", globalSslConfig, true, true);
             config.append("    location / {\n");
             config.append("      proxy_pass "+(globalSslConfig && globalSslConfig.targetIsSsl ? "https" : "http")+"://"+getId()+";\n");
             config.append("    }\n");
@@ -268,7 +271,6 @@ public class NginxController extends AbstractController {
             } else if (globalSslConfig!=null) {
                 // can't set ssl_certificate globally, so do it per server
                 serverSsl = true; 
-                //appendSslConfig(""+domain, config, "    ", globalSslConfig, true, true);
             }
 
             for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
@@ -286,7 +288,6 @@ public class NginxController extends AbstractController {
                         for (UrlRewriteRule rule: rewrites) {
                             config.append("      rewrite \"^"+rule.getFrom()+'$\" \"'+rule.getTo()+"\"");
                             if (rule.isBreak()) config.append(" break");
-//                            if (rule.isLast()) config.append(" last");
                             config.append(" ;\n");
                         }
                     }

@@ -13,9 +13,14 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Throwables;
 
 public class TrustingSslSocketFactory extends SSLSocketFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(TrustingSslSocketFactory.class);
     
     private static TrustingSslSocketFactory INSTANCE;
     public synchronized static TrustingSslSocketFactory getInstance() {
@@ -28,7 +33,7 @@ public class TrustingSslSocketFactory extends SSLSocketFactory {
         try {
             sslContext = SSLContext.getInstance("TLS");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Unable to set up SSLContext with TLS. Https activity will likely fail.", e);
         }
     }
 
@@ -56,7 +61,9 @@ public class TrustingSslSocketFactory extends SSLSocketFactory {
         }
     };
 
-    public TrustingSslSocketFactory() {
+    // no reason this can't be public, but no reason it should be necessary;
+    // just use getInstance to get the shared INSTANCE
+    protected TrustingSslSocketFactory() {
         super();
         try {
             sslContext.init(null, new TrustManager[] { TRUST_ALL }, null);

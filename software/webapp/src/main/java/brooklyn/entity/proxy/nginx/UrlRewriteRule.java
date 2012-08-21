@@ -12,9 +12,14 @@ package brooklyn.entity.proxy.nginx;
 public class UrlRewriteRule {
 
     String from, to;
-    boolean 
-//        isLast, 
-        isBreak;
+    boolean isBreak;
+    
+    /* there is also a flag "last" possible on nginx which might be useful,
+     * but i don't know how portable that is --
+     * we'll know e.g. when we support HA Proxy and others.
+     * presumably everything has at least one "break-after-this-rewrite" mode
+     * so i think we're safe having one in here.
+     */
 
     public UrlRewriteRule() {}
     public UrlRewriteRule(String from, String to) {
@@ -34,15 +39,7 @@ public class UrlRewriteRule {
     public void setTo(String to) {
         this.to = to;
     }
-    
-    // TODO how portable is "last" ?  we'll know e.g. when we support HA Proxy and others
-    
-//    public boolean isLast() {
-//        return isLast;
-//    }
-//    public void setLast(boolean isLast) {
-//        this.isLast = isLast;
-//    }
+        
     public boolean isBreak() {
         return isBreak;
     }
@@ -51,7 +48,5 @@ public class UrlRewriteRule {
     }
 
     public UrlRewriteRule setBreak() { setBreak(true); return this; }
-    
-//    public UrlRewriteRule setLast() { setLast(true); return this; }
     
 }
