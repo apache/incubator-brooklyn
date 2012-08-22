@@ -10,8 +10,8 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
-import brooklyn.entity.group.AbstractController
 import brooklyn.entity.group.DynamicFabric
+import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster

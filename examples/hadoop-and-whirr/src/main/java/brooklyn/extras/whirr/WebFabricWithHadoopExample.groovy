@@ -2,10 +2,6 @@ package brooklyn.extras.whirr
 
 import groovy.transform.InheritConstructors
 
-import java.io.File
-import java.net.InetAddress
-import java.util.List
-
 import org.apache.whirr.service.hadoop.HadoopCluster
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,7 +13,6 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
-import brooklyn.entity.group.AbstractController
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.ElasticJavaWebAppService
@@ -39,7 +34,7 @@ import brooklyn.util.task.ParallelTask
 
 import com.google.common.base.Charsets
 import com.google.common.collect.Iterables
-import com.google.common.collect.Lists;
+import com.google.common.collect.Lists
 import com.google.common.io.Files
 
 /**
