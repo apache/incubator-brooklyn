@@ -468,6 +468,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return subscriptionTracker.subscribeToChildren(parent, sensor, listener)
     }
 
+    /** @see EntityLocal#subscribeToMembers */
+    public <T> SubscriptionHandle subscribeToMembers(Group group, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        return subscriptionTracker.subscribeToMembers(group, sensor, listener)
+    }
+
     /**
      * Unsubscribes the given producer.
      *
