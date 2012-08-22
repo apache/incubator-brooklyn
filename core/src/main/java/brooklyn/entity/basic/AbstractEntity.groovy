@@ -1,6 +1,5 @@
 package brooklyn.entity.basic
 
-import java.util.Collection
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -17,8 +16,8 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityType
 import brooklyn.entity.Group
 import brooklyn.entity.ConfigKey.HasConfigKey
-import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
-import brooklyn.entity.basic.EntityReferences.EntityReference;
+import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
+import brooklyn.entity.basic.EntityReferences.EntityReference
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
@@ -37,7 +36,7 @@ import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
-import brooklyn.util.IdGenerator;
+import brooklyn.util.IdGenerator
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.task.BasicExecutionContext
 
@@ -646,6 +645,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     /** Invoke an {@link Effector} directly. */
     public <T> Task<T> invoke(Map parameters=[:], Effector<T> eff) {
+        invoke(eff, parameters);
+    }
+
+    /**
+     * TODO Calling the above groovy method from java gives compilation error due to use of generics
+     * This method will be removed once that is resolved in groovy (or when this is converted to pure java).
+     */
+    public Task<?> invokeFromJava(Map parameters=[:], Effector eff) {
         invoke(eff, parameters);
     }
 

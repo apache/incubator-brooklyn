@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
@@ -19,7 +19,7 @@ import com.google.common.base.Preconditions;
 /** abstract class which helps track membership of a group, invoking (empty) methods in this class on MEMBER{ADDED,REMOVED} events, as well as SERVICE_UP {true,false} for those members. */
 public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractMembershipTrackingPolicy.class);
-    private AbstractGroup group;
+    private Group group;
     
     public AbstractMembershipTrackingPolicy(Map flags) {
         super(flags);
@@ -28,7 +28,7 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         this(Collections.emptyMap());
     }
     
-    public void setGroup(AbstractGroup group) {
+    public void setGroup(Group group) {
         Preconditions.checkNotNull(group, "The group cannot be null");
         this.group = group;
         reset();

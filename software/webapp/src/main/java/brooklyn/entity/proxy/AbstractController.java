@@ -1,27 +1,36 @@
 package brooklyn.entity.proxy;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.Description
-import brooklyn.entity.basic.MethodEffector
-import brooklyn.entity.basic.PreStart;
-import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy
-import brooklyn.entity.group.Cluster
-import brooklyn.entity.trait.Startable
-import brooklyn.event.Sensor
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
-import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.location.Location
-import brooklyn.location.MachineLocation
-import brooklyn.util.flags.SetFromFlag
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
-import com.google.common.base.Preconditions
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import brooklyn.entity.group.Cluster;
+import brooklyn.entity.trait.Startable;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.location.Location;
+import brooklyn.location.MachineLocation;
+import brooklyn.util.MutableMap;
+import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
@@ -31,14 +40,14 @@ public abstract class AbstractController extends SoftwareProcessEntity {
 
     /** sensor for port to forward to on target entities */
     @SetFromFlag("portNumberSensor")
-    public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = new BasicConfigKey<Sensor>(
-            Sensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port)", Attributes.HTTP_PORT);
+    public static final BasicConfigKey<AttributeSensor> PORT_NUMBER_SENSOR = new BasicConfigKey<AttributeSensor>(
+            AttributeSensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port)", Attributes.HTTP_PORT);
 
     //TODO make independent from web; push web-logic to subclass (AbstractWebController) with default 8000
     @SetFromFlag("port")
     /** port where this controller should live */
     public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(
-            "proxy.http.port", "Main HTTP port where this proxy listens", [8000,"8001+"]);
+            "proxy.http.port", "Main HTTP port where this proxy listens", ImmutableList.of(8000,"8001+"));
     
     @SetFromFlag("protocol")
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
@@ -66,26 +75,46 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     
     @SetFromFlag
     Cluster cluster;
-    
-    String domain;
-    Integer port;
-    String protocol;
-    String url;
-    Sensor portNumber;
+
+    protected String domain;
+    protected Integer port;
+    protected String protocol;
+    protected String url;
+    protected AttributeSensor portNumber;
 
     AbstractMembershipTrackingPolicy policy;
     protected Set<String> addresses = new LinkedHashSet<String>();
     protected Set<Entity> targets = new LinkedHashSet<Entity>();
     
-
-    public AbstractController(Map properties=[:], Entity owner=null, Cluster cluster=null) {
+    public AbstractController() {
+        this(MutableMap.of(), null, null);
+    }
+    public AbstractController(Map properties) {
+        this(properties, null, null);
+    }
+    public AbstractController(Entity owner) {
+        this(MutableMap.of(), owner, null);
+    }
+    public AbstractController(Cluster cluster) {
+        this(MutableMap.of(), null, cluster);
+    }
+    public AbstractController(Map properties, Entity owner) {
+        this(properties, owner, null);
+    }
+    public AbstractController(Map properties, Cluster cluster) {
+        this(properties, null, cluster);
+    }
+    public AbstractController(Entity owner, Cluster cluster) {
+        this(MutableMap.of(), owner, cluster);
+    }
+    public AbstractController(Map properties, Entity owner, Cluster cluster) {
         super(properties, owner);
 
-        policy = new AbstractMembershipTrackingPolicy(name: "Controller targets tracker") {
+        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Controller targets tracker")) {
             protected void onEntityChange(Entity member) { checkEntity(member); }
             protected void onEntityAdded(Entity member) { addEntity(member); }
             protected void onEntityRemoved(Entity member) { removeEntity(member); }
-        }
+        };
     }
 
     @Description("Forces reload of the configuration")
@@ -111,7 +140,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
                 else protocol = getConfig(SSL_CONFIG)!=null ? "https" : "http";
             }
             url = protocol+"://"+hostname+":"+port+"/";
-            setAttribute(SPECIFIED_URL, url)
+            setAttribute(SPECIFIED_URL, url);
         }
     }
     
@@ -120,13 +149,13 @@ public abstract class AbstractController extends SoftwareProcessEntity {
      * Can pass in the 'cluster'.
      */
     public void bind(Map flags) {
-        this.cluster = flags.cluster ?: this.cluster;
+        this.cluster = elvis((Cluster)flags.get("cluster"), this.cluster);
     }
 
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts();
-        if (getAttribute(PROXY_HTTP_PORT)) result.add(getAttribute(PROXY_HTTP_PORT));
+        if (groovyTruth(getAttribute(PROXY_HTTP_PORT))) result.add(getAttribute(PROXY_HTTP_PORT));
         return result;
     }
 
@@ -142,7 +171,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         protocol = getConfig(PROTOCOL);
         domain = getConfig(DOMAIN_NAME);
 
-        if (!getConfig(SPECIFIED_URL)) {
+        if (!groovyTruth(getConfig(SPECIFIED_URL))) {
             // previously we would attempt to infer values from a specified URL, but now we don't
             // as that specified URL might be for another machine with port-forwarding
         } else {
@@ -163,32 +192,33 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     
     public boolean belongs(Entity member) {
         if (!member.getAttribute(Startable.SERVICE_UP)) {
-            LOG.debug("Members of {}, checking {}, eliminating because not up", displayName, member.displayName);
+            LOG.debug("Members of {}, checking {}, eliminating because not up", getDisplayName(), member.getDisplayName());
             return false;
         }
-        if (!cluster.members.contains(member)) {
-            LOG.debug("Members of {}, checking {}, eliminating because not member", displayName, member.displayName);
+        if (!cluster.getMembers().contains(member)) {
+            LOG.debug("Members of {}, checking {}, eliminating because not member", getDisplayName(), member.getDisplayName());
             return false;
         }
-        LOG.debug("Members of {}, checking {}, approving", displayName, member.displayName);
+        LOG.debug("Members of {}, checking {}, approving", getDisplayName(), member.getDisplayName());
         return true;
     }
     
     //FIXME members locations might be remote?
     public synchronized void addEntity(Entity member) {
         if (LOG.isTraceEnabled()) LOG.trace("Considering to add to {}, new member {} in locations {} - "+
-                "waiting for service to be up", displayName, member.displayName, member.locations);
+                "waiting for service to be up", new Object[] {getDisplayName(), member.getDisplayName(), member.getLocations()});
         if (targets.contains(member)) return;
         
         if (!member.getAttribute(Startable.SERVICE_UP)) {
-            LOG.debug("Members of {}, not adding {} because not yet up", displayName, member.displayName);
+            LOG.debug("Members of {}, not adding {} because not yet up", getDisplayName(), member.getDisplayName());
             return;
         }
         
         Set oldAddresses = new LinkedHashSet(addresses);
-        for (MachineLocation machine : member.locations) {
+        for (Location loc : member.getLocations()) {
+            MachineLocation machine = (MachineLocation) loc;
             //use hostname as this is more portable (eg in amazon, ip doesn't resolve)
-            String ip = machine.address.hostName;
+            String ip = machine.getAddress().getHostName();
             Integer port = member.getAttribute(portNumber);
             if (ip==null || port==null) {
                 LOG.warn("Missing ip/port for web controller {} target {}, skipping", this, member);
@@ -200,7 +230,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             if (LOG.isTraceEnabled()) LOG.trace("invocation of {}.addEntity({}) causes no change", this, member);
             return;
         }
-        LOG.info("Adding to {}, new member {} in locations {}", displayName, member.displayName, member.locations);
+        LOG.info("Adding to {}, new member {} in locations {}", new Object[] {getDisplayName(), member.getDisplayName(), member.getLocations()});
         
         // TODO shouldn't need to do this here? (no harm though)
         makeUrl();
@@ -213,17 +243,19 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         if (!targets.contains(member)) return;
         
         Set oldAddresses = new LinkedHashSet(addresses);
-        for (MachineLocation machine : member.locations) {
-            String ip = machine.address.hostAddress;
+        for (Location loc : member.getLocations()) {
+            MachineLocation machine = (MachineLocation) loc;
+            String ip = machine.getAddress().getHostAddress();
             int port = member.getAttribute(portNumber);
             addresses.remove(ip+":"+port);
         }
         if (addresses==oldAddresses) {
-            LOG.debug("when removing from {}, member {}, not found (already removed?)", displayName, member.displayName);
+            LOG.debug("when removing from {}, member {}, not found (already removed?)", getDisplayName(), member.getDisplayName());
             return;
         }
         
-        LOG.info("Removing from {}, member {} previously in locations {}", displayName, member.displayName, member.locations);
+        LOG.info("Removing from {}, member {} previously in locations {}", 
+                new Object[] {getDisplayName(), member.getDisplayName(), member.getLocations()});
         update();
         targets.remove(member);
     }
@@ -250,7 +282,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             LOG.debug("Updating {} in response to changes", this);
             reconfigureService();
             LOG.debug("Submitting restart for update to {}", this);
-            invoke(RELOAD);
+            invokeFromJava(RELOAD);
         }
         setAttribute(TARGETS, addresses);
     }
@@ -258,8 +290,9 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     public void reset() {
         policy.reset();
         addresses.clear();
-        if (cluster)
+        if (groovyTruth(cluster)) {
             policy.setGroup(cluster);
+        }
         setAttribute(TARGETS, addresses);
     }
 
