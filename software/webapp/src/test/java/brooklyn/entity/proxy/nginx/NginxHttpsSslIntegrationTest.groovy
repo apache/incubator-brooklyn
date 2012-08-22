@@ -4,23 +4,22 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import javax.net.ssl.HttpsURLConnection
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.proxy.ProxySslConfig
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
-import brooklyn.util.internal.TrustingSslSocketFactory
 
 /**
  * Test the operation of the {@link NginxController} class.
@@ -59,13 +58,15 @@ public class NginxHttpsSslIntegrationTest {
         nginx = new NginxController(app,
 	            cluster: cluster,
 	            domain : "localhost",
-	            port: 8000,
-                protocol: "https",
+	            port: "8443+",
                 ssl: ssl 
             );
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
 
+        String url = nginx.getAttribute(WebAppService.ROOT_URL);
+        if (!url.startsWith("https://")) Assert.fail("URL should be https: "+url);
+        
         executeUntilSucceeds() {
             // Services are running
             assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
@@ -74,7 +75,6 @@ public class NginxHttpsSslIntegrationTest {
             assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
 
             // Nginx URL is available
-            String url = nginx.getAttribute(NginxController.ROOT_URL)
             assertTrue urlRespondsWithStatusCode200(url)
 
             // Web-server URL is available

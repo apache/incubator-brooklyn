@@ -3,7 +3,8 @@ package brooklyn.entity.proxy.nginx;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.trait.Changeable
+import brooklyn.entity.proxy.AbstractController
+import brooklyn.entity.proxy.ProxySslConfig
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.event.SensorEvent
@@ -39,9 +40,8 @@ public class UrlMapping extends AbstractGroup {
                 "(if not supplied, will match all paths at the indicated domain)");
 
     @SetFromFlag("ssl")
-    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG =
-        new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
-        
+    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = AbstractController.SSL_CONFIG;
+            
     @SetFromFlag("rewrites")
     public static final BasicConfigKey<Collection<UrlRewriteRule>> REWRITES =
         new BasicConfigKey<Collection<UrlRewriteRule>>(Collection.class, "urlmapping.rewrites", "Set of URL rewrite rules to apply");

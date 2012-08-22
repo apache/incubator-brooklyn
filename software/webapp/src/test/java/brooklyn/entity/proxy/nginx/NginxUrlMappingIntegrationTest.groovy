@@ -80,10 +80,7 @@ public class NginxUrlMappingIntegrationTest {
     
     @Test(groups = "Integration")
     public void testUrlMappingServerNameAndPath() {
-        nginx = new NginxController([
-                "owner" : app,
-                "port" : 8000
-            ])
+        nginx = new NginxController(app);
     
         //cluster 0 mounted at localhost1 /
         DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
@@ -103,6 +100,7 @@ public class NginxUrlMappingIntegrationTest {
             addRewrite(new UrlRewriteRule('(.*/|)(hello/)(.*)', '$1$2new $3').setBreak());
 
         app.start([ new LocalhostMachineProvisioningLocation() ])
+        int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         c2.getOwnedChildren().each { it.deploy(war.toString(), "c2.war") }
     
         Entities.dumpInfo(app);
@@ -113,34 +111,34 @@ public class NginxUrlMappingIntegrationTest {
         executeUntilSucceeds {
             //cluster 0
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost1:8000", "Hello");
-                assertUrlHasText("http://localhost1:8000/", "Hello");
-                assertUrlHasText("http://localhost1:8000/hello/frank", "http://"+u0.id+"/hello/frank");
+                assertUrlHasText("http://localhost1:${port}", "Hello");
+                assertUrlHasText("http://localhost1:${port}/", "Hello");
+                assertUrlHasText("http://localhost1:${port}/hello/frank", "http://"+u0.id+"/hello/frank");
             }
             //cluster 1
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost2:8000/hello-world", "Hello");
-                assertUrlHasText("http://localhost2:8000/hello-world/", "Hello");
-                assertUrlHasText("http://localhost2:8000/hello-world/hello/bob", "http://"+u1.id+"/hello-world/hello/bob");
+                assertUrlHasText("http://localhost2:${port}/hello-world", "Hello");
+                assertUrlHasText("http://localhost2:${port}/hello-world/", "Hello");
+                assertUrlHasText("http://localhost2:${port}/hello-world/hello/bob", "http://"+u1.id+"/hello-world/hello/bob");
             }
             //cluster 2
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost3:8000/c2", "Hello");
-                assertUrlHasText("http://localhost3:8000/c2/", "Hello");
-                assertUrlHasText("http://localhost3:8000/c2/hello/joe", "http://"+u2.id+"/c2/hello/new%20joe");
+                assertUrlHasText("http://localhost3:${port}/c2", "Hello");
+                assertUrlHasText("http://localhost3:${port}/c2/", "Hello");
+                assertUrlHasText("http://localhost3:${port}/c2/hello/joe", "http://"+u2.id+"/c2/hello/new%20joe");
             }
         }
         //these should *not* be available
-        assertFails { assertUrlHasText(timeout:1, "http://localhost:8000/", "Hello"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost1:8000/hello-world", "Hello"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost2:8000/", "Hello"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost2:8000/hello-world/notexists", "Hello"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost3:8000/", "Hello"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost3:8000/c2/hello/joe", "hello/joe"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost:${port}/", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost1:${port}/hello-world", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost2:${port}/", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost2:${port}/hello-world/notexists", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost3:${port}/", "Hello"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost3:${port}/c2/hello/joe", "hello/joe"); }
         //make sure nginx default welcome page isn't displayed
-        assertFails { assertUrlHasText(timeout:1, "http://localhost:8000/", "ginx"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost2:8000/", "ginx"); }
-        assertFails { assertUrlHasText(timeout:1, "http://localhost3:8000/", "ginx"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost:${port}/", "ginx"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost2:${port}/", "ginx"); }
+        assertFails { assertUrlHasText(timeout:1, "http://localhost3:${port}/", "ginx"); }
     }
 
     @Test(groups = "Integration")
@@ -155,7 +153,7 @@ public class NginxUrlMappingIntegrationTest {
                 "owner" : app,
                 "cluster" : nullCluster,
                 "domain" : "localhost",
-                "port" : 8000,
+                "port" : "8000+",
                 "portNumberSensor" : WebAppService.HTTP_PORT,
             ])
         
@@ -163,6 +161,7 @@ public class NginxUrlMappingIntegrationTest {
         UrlMapping u1 = new UrlMapping(nginx, domain: "localhost", path: '/atC1($|/.*)', target: c1);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
+        int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
         for (Entity child : c0.getOwnedChildren()) {
             ((JBoss7Server)child).deploy(war.toString(), "atC0.war")
@@ -176,12 +175,12 @@ public class NginxUrlMappingIntegrationTest {
         // FIXME Make JBoss7Server.deploy wait for the web-app to actually be deployed
         executeUntilSucceeds {
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost:8000/atC0", "Hello");
-                assertUrlHasText("http://localhost:8000/atC0/", "Hello");
+                assertUrlHasText("http://localhost:${port}/atC0", "Hello");
+                assertUrlHasText("http://localhost:${port}/atC0/", "Hello");
             }
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost:8000/atC1", "Hello");
-                assertUrlHasText("http://localhost:8000/atC1/", "Hello");
+                assertUrlHasText("http://localhost:${port}/atC1", "Hello");
+                assertUrlHasText("http://localhost:${port}/atC1/", "Hello");
             }
         }
     }
@@ -206,6 +205,7 @@ public class NginxUrlMappingIntegrationTest {
         def u1 = new UrlMapping(nginx, domain: "localhost1", target: c1);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
+        int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
         Entity c0jboss = Iterables.getOnlyElement(c0.getOwnedChildren());
         Entity c1jboss = Iterables.getOnlyElement(c1.getOwnedChildren());
@@ -232,18 +232,15 @@ public class NginxUrlMappingIntegrationTest {
         
         // check nginx forwards localhost1 to c1, and localhost to core gorup 
         executeUntilSucceeds {
-            assertUrlHasText("http://localhost1:8000", "Hello");
+            assertUrlHasText("http://localhost1:${port}", "Hello");
     
-            assertUrlHasText("http://localhost:8000", "Hello");
+            assertUrlHasText("http://localhost:${port}", "Hello");
         }
     }
     
     @Test(groups = "Integration")
     public void testUrlMappingMultipleRewrites() {
-        nginx = new NginxController([
-                "owner" : app,
-                "port" : 8000
-            ])
+        nginx = new NginxController(app);
     
         //cluster 0 mounted at localhost1 /
         DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
@@ -255,31 +252,32 @@ public class NginxUrlMappingIntegrationTest {
         u0.addRewrite('/hello/an(.*)', '/hello/Sir An$1');
 
         app.start([ new LocalhostMachineProvisioningLocation() ])
+        int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
         // Confirm routes requests to the correct cluster
         // Do more than one request for each in-case just lucky with round-robin...
         // FIXME Make JBoss7Server.deploy wait for the web-app to actually be deployed
         executeUntilSucceeds {
             // health check
-            assertUrlHasText("http://localhost1:8000", "Hello");
-            assertUrlHasText("http://localhost1:8000/hello/frank", "http://"+u0.id+"/hello/frank");
+            assertUrlHasText("http://localhost1:${port}", "Hello");
+            assertUrlHasText("http://localhost1:${port}/hello/frank", "http://"+u0.id+"/hello/frank");
             
             // goodbye rewritten to hello
-            assertUrlHasText("http://localhost1:8000/goodbye/frank", "http://"+u0.id+"/hello/frank");
+            assertUrlHasText("http://localhost1:${port}/goodbye/frank", "http://"+u0.id+"/hello/frank");
             // hello al rewritten to hello Big Al
-            assertUrlHasText("http://localhost1:8000/hello/aled", "http://"+u0.id+"/hello/Big%20Aled");
+            assertUrlHasText("http://localhost1:${port}/hello/aled", "http://"+u0.id+"/hello/Big%20Aled");
             // hello andrew rewritten to hello Sir Andrew
-            assertUrlHasText("http://localhost1:8000/hello/andrew", "http://"+u0.id+"/hello/Sir%20Andrew");
+            assertUrlHasText("http://localhost1:${port}/hello/andrew", "http://"+u0.id+"/hello/Sir%20Andrew");
             
             // goodbye alex rewritten to hello Big Alex (two rewrites)
-            assertUrlHasText("http://localhost1:8000/goodbye/alex", "http://"+u0.id+"/hello/Big%20Alex");
+            assertUrlHasText("http://localhost1:${port}/goodbye/alex", "http://"+u0.id+"/hello/Big%20Alex");
             // but goodbye andrew rewritten only to hello Andrew -- test the "break" logic above (won't continue rewriting)
-            assertUrlHasText("http://localhost1:8000/goodbye/andrew", "http://"+u0.id+"/hello/andrew");
+            assertUrlHasText("http://localhost1:${port}/goodbye/andrew", "http://"+u0.id+"/hello/andrew");
             
             // al rewrite can be anywhere
-            assertUrlHasText("http://localhost1:8000/hello/hello/alex", "http://"+u0.id+"/hello/hello/Big%20Alex");
+            assertUrlHasText("http://localhost1:${port}/hello/hello/alex", "http://"+u0.id+"/hello/hello/Big%20Alex");
             // but an rewrite must be at beginning
-            assertUrlHasText("http://localhost1:8000/hello/hello/andrew", "http://"+u0.id+"/hello/hello/andrew");
+            assertUrlHasText("http://localhost1:${port}/hello/hello/andrew", "http://"+u0.id+"/hello/hello/andrew");
         }
     }
     
@@ -294,7 +292,7 @@ public class NginxUrlMappingIntegrationTest {
                 "owner" : app,
                 "cluster" : c0,
                 "domain" : "localhost",
-                "port" : 8000,
+                "port" : "8000+",
                 "portNumberSensor" : WebAppService.HTTP_PORT,
             ])
         
@@ -303,6 +301,7 @@ public class NginxUrlMappingIntegrationTest {
         def u1 = new UrlMapping(nginx, domain: "localhost1", target: c1);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
+        int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
         Entity c1jboss = Iterables.getOnlyElement(c1.getOwnedChildren());
         
@@ -320,7 +319,7 @@ public class NginxUrlMappingIntegrationTest {
 
         // check nginx forwards localhost1 to c1 
         executeUntilSucceeds {
-            assertUrlHasText("http://localhost1:8000", "Hello");
+            assertUrlHasText("http://localhost1:${port}", "Hello");
         }
         
         // Resize target cluster of url-mapping
@@ -354,7 +353,7 @@ public class NginxUrlMappingIntegrationTest {
         
         // and check forwarding to c1 by nginx still works
         for (int i = 0; i < 2; i++) {
-            assertUrlHasText("http://localhost1:8000", "Hello");
+            assertUrlHasText("http://localhost1:${port}", "Hello");
         }
     }
     
@@ -365,7 +364,6 @@ public class NginxUrlMappingIntegrationTest {
         nginx = new NginxController([
                 "owner" : app,
                 "domain" : "localhost",
-                "port" : 8000,
             ])
         
         def c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
@@ -373,6 +371,7 @@ public class NginxUrlMappingIntegrationTest {
         def u1 = new UrlMapping(nginx, domain: "localhost1", target: c1);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
+        int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
 
         Entity c1jboss = Iterables.getOnlyElement(c1.getOwnedChildren());
         
@@ -391,10 +390,10 @@ public class NginxUrlMappingIntegrationTest {
         
         executeUntilSucceeds {
             // check localhost1 forwarded (to c1) by nginx
-            assertUrlHasText("http://localhost1:8000", "Hello");
+            assertUrlHasText("http://localhost1:${port}", "Hello");
         }
         
         // and check core group does _not_ resolve
-        assertEquals(urlRespondsStatusCode("http://localhost:8000"), 404)
+        assertEquals(urlRespondsStatusCode("http://localhost:${port}"), 404)
     }
 }

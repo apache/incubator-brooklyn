@@ -1,4 +1,4 @@
-package brooklyn.entity.proxy.nginx;
+package brooklyn.entity.proxy;
 
 public class ProxySslConfig {
 
