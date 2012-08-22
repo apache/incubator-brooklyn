@@ -369,8 +369,16 @@ public class JmxHelper {
         return doesMBeanExistsEventually(objectName, timeoutMillis, TimeUnit.MILLISECONDS);
     }
     
+    public Set<ObjectInstance> doesMBeanExistsEventually(String objectName, TimeDuration timeout) {
+        return doesMBeanExistsEventually(createObjectName(objectName), timeout);
+    }
+    
+    public Set<ObjectInstance> doesMBeanExistsEventually(String objectName, long timeout, TimeUnit timeUnit) {
+        return doesMBeanExistsEventually(createObjectName(objectName), timeout, timeUnit);
+    }
+    
     public Set<ObjectInstance> doesMBeanExistsEventually(final ObjectName objectName, long timeout, TimeUnit timeUnit) {
-        long timeoutMillis = timeUnit.toMillis(timeout);
+        final long timeoutMillis = timeUnit.toMillis(timeout);
         final AtomicReference<Set<ObjectInstance>> beans = new AtomicReference<Set<ObjectInstance>>(Collections.<ObjectInstance>emptySet());
         try {
             //TODO: Success value is ignored.
@@ -379,6 +387,7 @@ public class JmxHelper {
                     "Wait for "+objectName,
             		new Callable<Boolean>() {
                         public Boolean call() {
+                            connect(timeoutMillis);
                             beans.set(findMBeans(objectName));
                             return !beans.get().isEmpty();
                         }
@@ -519,7 +528,7 @@ public class JmxHelper {
         return JMX.newMBeanProxy(connection, objectName, mbeanInterface, false);
     }
 
-    private static ObjectName createObjectName(String name) {
+    public static ObjectName createObjectName(String name) {
         try {
             return new ObjectName(name);
         } catch (MalformedObjectNameException e) {
