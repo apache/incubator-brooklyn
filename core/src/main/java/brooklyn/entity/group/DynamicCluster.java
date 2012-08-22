@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroup;
-import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
@@ -46,7 +46,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     private final Object mutex = new Object[0];
     
     @SetFromFlag
-    ConfigurableEntityFactory factory;
+    EntityFactory<?> factory;
 
     @SetFromFlag
     Function<Collection<Entity>, Entity> removalStrategy;
@@ -100,8 +100,12 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         setRemovalStrategy(GroovyJavaMethods.functionFromClosure(val));
     }
 
-    public ConfigurableEntityFactory getFactory() {
+    public EntityFactory<?> getFactory() {
         return factory;
+    }
+    
+    public void setFactory(EntityFactory<?> factory) {
+        this.factory = factory;
     }
     
     public void start(Collection<? extends Location> locs) {
