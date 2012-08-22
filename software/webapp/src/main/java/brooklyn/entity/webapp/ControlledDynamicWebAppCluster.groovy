@@ -1,8 +1,5 @@
 package brooklyn.entity.webapp
 
-import java.util.Collection
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -12,8 +9,8 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.ConfigurableEntityFactory
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.group.AbstractController
 import brooklyn.entity.group.Cluster
+import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable

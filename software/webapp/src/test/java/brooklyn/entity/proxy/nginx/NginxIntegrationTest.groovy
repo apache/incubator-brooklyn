@@ -57,8 +57,7 @@ public class NginxIntegrationTest {
                 "owner" : app,
                 "cluster" : cluster,
                 "domain" : "localhost",
-                "port" : 8000,
-                "portNumberSensor" : WebAppService.HTTP_PORT,
+                "port" : 8000
             ])
         
         app.start([ new LocalhostMachineProvisioningLocation() ])

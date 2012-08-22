@@ -1,13 +1,15 @@
-package brooklyn.entity.group;
+package brooklyn.entity.proxy;
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy
+import brooklyn.entity.group.Cluster
 import brooklyn.entity.trait.Startable
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
@@ -51,6 +53,10 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     @SetFromFlag("url")
     public static final BasicAttributeSensorAndConfigKey<String> SPECIFIED_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "proxy.url", "URL this proxy controller responds to");
+    
+    @SetFromFlag("ssl")
+    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = 
+        new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
     
     public static final BasicAttributeSensor<Set> TARGETS = new BasicAttributeSensor<Set>(
             Set.class, "proxy.targets", "Downstream targets");
@@ -122,6 +128,10 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             // use 'hostname' instead of domain if domain is anonymous
             if (hostname==null || hostname==ANONYMOUS) hostname = getAttribute(HOSTNAME);
             if (hostname==null) hostname = ANONYMOUS;
+            if (protocol==null) {
+                if (url!=null && !url.startsWith("null:")) protocol = url.substring(0, url.indexOf(':'));
+                else protocol = getConfig(SSL_CONFIG)!=null ? "https" : "http";
+            }
             url = protocol+"://"+hostname+":"+port+"/";
             setAttribute(SPECIFIED_URL, url)
         }

@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.group.AbstractController
+import brooklyn.entity.proxy.AbstractController
+import brooklyn.entity.proxy.ProxySslConfig
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.event.SensorEventListener
 import brooklyn.event.adapter.ConfigSensorAdapter
@@ -56,9 +57,6 @@ public class NginxController extends AbstractController {
     @SetFromFlag("sticky")
     public static final BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
-
-    @SetFromFlag("ssl")
-    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = UrlMapping.SSL_CONFIG;
     
     public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
     
