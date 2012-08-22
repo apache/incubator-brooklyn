@@ -55,7 +55,7 @@ public class OldJmxSensorAdapterTest {
         entity = new LocallyManagedEntity()
         entity.setAttribute(Attributes.HOSTNAME, jmxService.jmxHost)
         entity.setAttribute(Attributes.JMX_PORT, jmxService.jmxPort)
-        entity.setAttribute(Attributes.RMI_PORT)
+        entity.setAttribute(Attributes.RMI_SERVER_PORT)
         entity.setAttribute(Attributes.JMX_CONTEXT)
     }
     

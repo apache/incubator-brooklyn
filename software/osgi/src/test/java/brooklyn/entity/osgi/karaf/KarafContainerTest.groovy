@@ -37,7 +37,7 @@ public class KarafContainerTest {
 
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        karaf = new KarafContainer(owner:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiPort:"9099+");
+        karaf = new KarafContainer(owner:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiServerPort:"9099+");
         app.start([ localhost ]);
         executeUntilSucceeds(timeout:30 * SECONDS) {
             assertNotNull karaf.getAttribute(Startable.SERVICE_UP)

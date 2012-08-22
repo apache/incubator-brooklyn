@@ -56,11 +56,12 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
     }
 
     public void deployInitialWars() {
-        JavaWebAppSshDriver driver = getDriver();
+        if (getAttribute(DEPLOYED_WARS) == null) setAttribute(DEPLOYED_WARS, Sets.<String>newLinkedHashSet());
+        
         String rootWar = getConfig(ROOT_WAR);
         if (rootWar!=null) deploy(rootWar, "ROOT.war");
 
-        List<String> namedWars = getConfig(NAMED_WARS, Collections.EMPTY_LIST);
+        List<String> namedWars = getConfig(NAMED_WARS, Collections.<String>emptyList());
         for(String war: namedWars){
             String name = war.substring(war.lastIndexOf('/') + 1);
             deploy(war, name);

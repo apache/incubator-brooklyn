@@ -42,7 +42,6 @@ public class EntityPollingTest {
 		 */
         entity = new VanillaJavaApp(owner:app,
                 jmxPort:40123,
-                rmiPort:0,
                 jmxContext:null,
                 mxbeanStatsEnabled:false) {
 

@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.time.TimeDuration;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +49,7 @@ public class JmxHelper {
     static { TimeExtras.init(); }
 
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s";
+    // first host:port may be ignored, so above is sufficient, but not sure
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s";
 
     // Tracks the MBeans we have failed to find, with a set keyed off the url
@@ -70,11 +72,11 @@ public class JmxHelper {
             .put("CompositeDataSupport", CompositeData.class.getName())
             .build();
 
-    public static String toConnectorUrl(String host, Integer rmiRegistryPort, Integer rmiServerPort, String context) {
+    public static String toConnectorUrl(String host, Integer jmxRmiRegistryPort, Integer rmiServerPort, String context) {
         if (rmiServerPort != null && rmiServerPort > 0) {
-            return String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, rmiRegistryPort, context);
+            return String.format(RMI_JMX_URL_FORMAT, host, rmiServerPort, host, jmxRmiRegistryPort, context);
         } else {
-            return String.format(JMX_URL_FORMAT, host, rmiRegistryPort, context);
+            return String.format(JMX_URL_FORMAT, host, jmxRmiRegistryPort, context);
         }
     }
 
@@ -84,11 +86,11 @@ public class JmxHelper {
             return url;
         } else {
             String host = checkNotNull(entity.getAttribute(Attributes.HOSTNAME));
-            Integer rmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
-            Integer rmiServerPort = entity.getAttribute(Attributes.RMI_PORT);
+            Integer jmxRmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
+            Integer rmiServerPort = entity.getAttribute(Attributes.RMI_SERVER_PORT);
             String context = entity.getAttribute(Attributes.JMX_CONTEXT);
 
-            url = toConnectorUrl(host, rmiRegistryPort, rmiServerPort, context);
+            url = toConnectorUrl(host, jmxRmiRegistryPort, rmiServerPort, context);
             if (entity.getEntityType().getSensors().contains(Attributes.JMX_SERVICE_URL))
                 entity.setAttribute(Attributes.JMX_SERVICE_URL, url);
             return url;
@@ -367,8 +369,16 @@ public class JmxHelper {
         return doesMBeanExistsEventually(objectName, timeoutMillis, TimeUnit.MILLISECONDS);
     }
     
+    public Set<ObjectInstance> doesMBeanExistsEventually(String objectName, TimeDuration timeout) {
+        return doesMBeanExistsEventually(createObjectName(objectName), timeout);
+    }
+    
+    public Set<ObjectInstance> doesMBeanExistsEventually(String objectName, long timeout, TimeUnit timeUnit) {
+        return doesMBeanExistsEventually(createObjectName(objectName), timeout, timeUnit);
+    }
+    
     public Set<ObjectInstance> doesMBeanExistsEventually(final ObjectName objectName, long timeout, TimeUnit timeUnit) {
-        long timeoutMillis = timeUnit.toMillis(timeout);
+        final long timeoutMillis = timeUnit.toMillis(timeout);
         final AtomicReference<Set<ObjectInstance>> beans = new AtomicReference<Set<ObjectInstance>>(Collections.<ObjectInstance>emptySet());
         try {
             //TODO: Success value is ignored.
@@ -377,6 +387,7 @@ public class JmxHelper {
                     "Wait for "+objectName,
             		new Callable<Boolean>() {
                         public Boolean call() {
+                            connect(timeoutMillis);
                             beans.set(findMBeans(objectName));
                             return !beans.get().isEmpty();
                         }
@@ -467,7 +478,8 @@ public class JmxHelper {
                     return getConnectionOrFail().invoke(realObjectName, method, arguments, signature);
                 }});
 
-        if (LOG.isTraceEnabled()) LOG.trace("From {}, for jmx operation {}.{}, got value {}", new Object[] {url, realObjectName.getCanonicalName(), method, result});
+        if (LOG.isTraceEnabled()) LOG.trace("From {}, for jmx operation {}.{}({}), got value {}", new Object[] {url, realObjectName.getCanonicalName(), method, Arrays.asList(arguments), 
+                result});
         return result;
     }
 
@@ -516,7 +528,7 @@ public class JmxHelper {
         return JMX.newMBeanProxy(connection, objectName, mbeanInterface, false);
     }
 
-    private static ObjectName createObjectName(String name) {
+    public static ObjectName createObjectName(String name) {
         try {
             return new ObjectName(name);
         } catch (MalformedObjectNameException e) {

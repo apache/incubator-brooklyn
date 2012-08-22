@@ -104,7 +104,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     protected void preStart() {
         super.preStart();
         // NOTE difference of 100 hard-coded in Qpid - RMI port ignored
-        setAttribute(RMI_PORT, getAttribute(JMX_PORT) + 100)
+        setAttribute(RMI_SERVER_PORT, getAttribute(JMX_PORT) + 100)
     }
 
     transient JmxSensorAdapter jmxAdapter;

@@ -3,8 +3,10 @@ package brooklyn.entity.basic;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +101,7 @@ public class Entities {
     }
 	public static void dumpInfo(Entity e, Writer out, String currentIndentation, String tab) throws IOException {
 		out.append(currentIndentation+e.toString()+"\n");
-		for (ConfigKey<?> it : e.getEntityType().getConfigKeys()) {
+		for (ConfigKey<?> it : sortConfigKeys(e.getEntityType().getConfigKeys())) {
             Object v = e.getConfig(it);
             if (!isTrivial(v)) {
                 out.append(currentIndentation+tab+tab+it.getName());
@@ -122,7 +124,7 @@ public class Entities {
                 out.append("\n");
             }
 		}
-		for (Sensor<?> it : e.getEntityType().getSensors()) {
+		for (Sensor<?> it : sortSensors(e.getEntityType().getSensors())) {
 			if (it instanceof AttributeSensor) {
                 Object v = e.getAttribute((AttributeSensor<?>)it);
                 if (!isTrivial(v)) {
@@ -140,7 +142,32 @@ public class Entities {
 		out.flush();
 	}
 
-	public static boolean isAncestor(Entity descendant, Entity potentialAncestor) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+    public static List<Sensor<?>> sortSensors(Set<Sensor<?>> sensors) {
+	    List result = new ArrayList(sensors);
+	    Collections.sort(result, new Comparator<Sensor>() {
+                    @Override
+                    public int compare(Sensor arg0, Sensor arg1) {
+                        return arg0.getName().compareTo(arg1.getName());
+                    }
+	        
+	    });
+	    return result;
+    }
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static List<ConfigKey<?>> sortConfigKeys(Set<ConfigKey<?>> configs) {
+        List result = new ArrayList(configs);
+        Collections.sort(result, new Comparator<ConfigKey>() {
+                    @Override
+                    public int compare(ConfigKey arg0, ConfigKey arg1) {
+                        return arg0.getName().compareTo(arg1.getName());
+                    }
+            
+        });
+        return result;
+    }
+    
+    public static boolean isAncestor(Entity descendant, Entity potentialAncestor) {
 		Entity ancestor = descendant.getOwner();
 		while (ancestor != null) {
 			if (ancestor.equals(potentialAncestor)) return true;
