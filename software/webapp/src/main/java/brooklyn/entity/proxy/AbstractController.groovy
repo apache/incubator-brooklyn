@@ -7,6 +7,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.MethodEffector
+import brooklyn.entity.basic.PreStart;
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy
 import brooklyn.entity.group.Cluster
@@ -31,35 +32,35 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     /** sensor for port to forward to on target entities */
     @SetFromFlag("portNumberSensor")
     public static final BasicConfigKey<Sensor> PORT_NUMBER_SENSOR = new BasicConfigKey<Sensor>(
-            Sensor.class, "member.sensor.portNumber", "Port number sensor on members");
+            Sensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port)", Attributes.HTTP_PORT);
 
     //TODO make independent from web; push web-logic to subclass (AbstractWebController) with default 8000
     @SetFromFlag("port")
     /** port where this controller should live */
     public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(
-            "proxy.http.port", "HTTP port", [8000,"8001+"]);
+            "proxy.http.port", "Main HTTP port where this proxy listens", [8000,"8001+"]);
     
     @SetFromFlag("protocol")
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.protocol", "Protocol", null);
+            String.class, "proxy.protocol", "Main URL protocol this proxy answers (typically http or https)", null);
     
     //does this have special meaning to nginx/others? or should we just take the hostname ?
     public static final String ANONYMOUS = "anonymous";
     
     @SetFromFlag("domain")
     public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.domainName", "Domain name", ANONYMOUS);
+            String.class, "proxy.domainName", "Domain name that this controller responds to", ANONYMOUS);
         
     @SetFromFlag("url")
     public static final BasicAttributeSensorAndConfigKey<String> SPECIFIED_URL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.url", "URL this proxy controller responds to");
+            String.class, "proxy.url", "Main URL this proxy listens at");
     
     @SetFromFlag("ssl")
     public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = 
         new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
     
     public static final BasicAttributeSensor<Set> TARGETS = new BasicAttributeSensor<Set>(
-            Set.class, "proxy.targets", "Downstream targets");
+            Set.class, "proxy.targets", "Main set of downstream targets");
     
     public static final MethodEffector<Void> RELOAD = new MethodEffector(AbstractController.class, "reload");
     
@@ -67,7 +68,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     Cluster cluster;
     
     String domain;
-    int port;
+    Integer port;
     String protocol;
     String url;
     Sensor portNumber;
@@ -79,38 +80,6 @@ public abstract class AbstractController extends SoftwareProcessEntity {
 
     public AbstractController(Map properties=[:], Entity owner=null, Cluster cluster=null) {
         super(properties, owner);
-
-        // TODO Are these checks too early? What if someone subsequently calls setConfig;
-        // why must they have already set the URL etc?
-
-        // use http port by default
-        portNumber = getConfig(PORT_NUMBER_SENSOR);
-        if (portNumber==null) portNumber = Attributes.HTTP_PORT;
-
-        // FIXME shouldn't have these as vars and config keys; just use a getter method
-        // TODO needs to be discovered/obtained
-        port = getConfig(PROXY_HTTP_PORT)?.iterator()?.next() ?: 8000;
-        protocol = getConfig(PROTOCOL);
-        domain = getConfig(DOMAIN_NAME);
-
-        if (getConfig(SPECIFIED_URL)) {
-	        url = getConfig(SPECIFIED_URL);
-	        setAttribute(SPECIFIED_URL, url);
-
-            // Set attributes from URL
-            URI uri = new URI(url)
-            if (port==null) port = uri.port; else assert port==uri.port : "mismatch between port and uri "+url+" for "+this;
-            if (protocol==null) protocol = uri.scheme; else assert protocol==uri.scheme : "mismatch between port and uri "+url+" for "+this;
-            if (domain==null) domain = uri.host; else assert domain==uri.host : "mismatch between domain and uri "+url+" for "+this;
-        } else {
-            // Set attributes from properties or config with defaults
-            makeUrl();
-        }
-        setAttribute(PROXY_HTTP_PORT, port);
-        setAttribute(PROTOCOL, protocol);
-        setAttribute(DOMAIN_NAME, domain);
-        
-        Preconditions.checkNotNull(domain, "Domain must be set for controller");
 
         policy = new AbstractMembershipTrackingPolicy(name: "Controller targets tracker") {
             protected void onEntityChange(Entity member) { checkEntity(member); }
@@ -152,6 +121,30 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         return result;
     }
 
+    protected void preStart() {
+        super.preStart();
+        
+        // use http port by default
+        portNumber = getConfig(PORT_NUMBER_SENSOR);
+
+        port = getAttribute(PROXY_HTTP_PORT);
+        Preconditions.checkNotNull(port, "Port must be set for controller");
+        
+        protocol = getConfig(PROTOCOL);
+        domain = getConfig(DOMAIN_NAME);
+
+        if (!getConfig(SPECIFIED_URL)) {
+            // previously we would attempt to infer values from a specified URL, but now we don't
+            // as that specified URL might be for another machine with port-forwarding
+        } else {
+            makeUrl();
+        }
+        setAttribute(PROTOCOL, protocol);
+        setAttribute(DOMAIN_NAME, domain);
+        
+        Preconditions.checkNotNull(domain, "Domain must be set for controller");
+    }
+    
     public void checkEntity(Entity member) {
         if (LOG.isTraceEnabled()) LOG.trace("Start {} checkEntity {}", this, member);
         if (belongs(member)) addEntity(member);
