@@ -13,6 +13,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.event.AttributeSensor
 
 import com.google.common.base.Predicate
 import com.google.common.base.Supplier
@@ -297,6 +298,18 @@ public class TestUtils {
                 log.warn("CONTENTS OF URL MISSING TEXT: $text\n"+contents)
                 fail("URL $url does not contain text: $text")
             }
+        }
+    }
+
+    public static <T> void assertAttributeEventually(Entity entity, AttributeSensor<T> attribute, T expected) {
+        executeUntilSucceeds() {
+            assertEquals(entity.getAttribute(attribute), expected);
+        }
+    }
+    
+    public static void assertUrlStatusCodeEventually(final String url, final int expected) {
+        executeUntilSucceeds() {
+            assertEquals(urlRespondsStatusCode(url), expected);
         }
     }
 

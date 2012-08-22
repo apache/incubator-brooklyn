@@ -1,7 +1,7 @@
 package brooklyn.entity.proxy;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
@@ -35,52 +36,52 @@ import com.google.common.collect.ImmutableList;
 /**
  * Represents a controller mechanism for a {@link Cluster}.
  */
-public abstract class AbstractController extends SoftwareProcessEntity {
+public abstract class AbstractController extends SoftwareProcessEntity implements LoadBalancer {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class);
 
-    /** sensor for port to forward to on target entities */
-    @SetFromFlag("portNumberSensor")
-    public static final BasicConfigKey<AttributeSensor> PORT_NUMBER_SENSOR = new BasicConfigKey<AttributeSensor>(
-            AttributeSensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port)", Attributes.HTTP_PORT);
-
-    //TODO make independent from web; push web-logic to subclass (AbstractWebController) with default 8000
-    @SetFromFlag("port")
-    /** port where this controller should live */
-    public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(
-            "proxy.http.port", "Main HTTP port where this proxy listens", ImmutableList.of(8000,"8001+"));
-    
-    @SetFromFlag("protocol")
-    public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.protocol", "Main URL protocol this proxy answers (typically http or https)", null);
-    
-    //does this have special meaning to nginx/others? or should we just take the hostname ?
-    public static final String ANONYMOUS = "anonymous";
-    
-    @SetFromFlag("domain")
-    public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.domainName", "Domain name that this controller responds to", ANONYMOUS);
-        
-    @SetFromFlag("url")
-    public static final BasicAttributeSensorAndConfigKey<String> SPECIFIED_URL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.url", "Main URL this proxy listens at");
-    
-    @SetFromFlag("ssl")
-    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = 
-        new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
+//    /** sensor for port to forward to on target entities */
+//    @SetFromFlag("portNumberSensor")
+//    public static final BasicConfigKey<AttributeSensor> PORT_NUMBER_SENSOR = new BasicConfigKey<AttributeSensor>(
+//            AttributeSensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port)", Attributes.HTTP_PORT);
+//
+//    //TODO make independent from web; push web-logic to subclass (AbstractWebController) with default 8000
+//    @SetFromFlag("port")
+//    /** port where this controller should live */
+//    public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(
+//            "proxy.http.port", "Main HTTP port where this proxy listens", ImmutableList.of(8000,"8001+"));
+//    
+//    @SetFromFlag("protocol")
+//    public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
+//            String.class, "proxy.protocol", "Main URL protocol this proxy answers (typically http or https)", null);
+//    
+//    //does this have special meaning to nginx/others? or should we just take the hostname ?
+//    public static final String ANONYMOUS = "anonymous";
+//    
+//    @SetFromFlag("domain")
+//    public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = new BasicAttributeSensorAndConfigKey<String>(
+//            String.class, "proxy.domainName", "Domain name that this controller responds to", ANONYMOUS);
+//        
+//    @SetFromFlag("url")
+//    public static final BasicAttributeSensorAndConfigKey<String> SPECIFIED_URL = new BasicAttributeSensorAndConfigKey<String>(
+//            String.class, "proxy.url", "Main URL this proxy listens at");
+//    
+//    @SetFromFlag("ssl")
+//    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = 
+//        new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
     
     public static final BasicAttributeSensor<Set> TARGETS = new BasicAttributeSensor<Set>(
             Set.class, "proxy.targets", "Main set of downstream targets");
     
     public static final MethodEffector<Void> RELOAD = new MethodEffector(AbstractController.class, "reload");
     
-    @SetFromFlag
-    Cluster cluster;
-
     protected String domain;
     protected Integer port;
     protected String protocol;
     protected String url;
-    protected AttributeSensor portNumber;
+    protected AttributeSensor<Integer> portNumber;
+    protected boolean isActive = false;
+    protected boolean updateNeeded = true;
+    protected Group serverPool;
 
     AbstractMembershipTrackingPolicy policy;
     protected Set<String> addresses = new LinkedHashSet<String>();
@@ -95,14 +96,8 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     public AbstractController(Entity owner) {
         this(MutableMap.of(), owner, null);
     }
-    public AbstractController(Cluster cluster) {
-        this(MutableMap.of(), null, cluster);
-    }
     public AbstractController(Map properties, Entity owner) {
         this(properties, owner, null);
-    }
-    public AbstractController(Map properties, Cluster cluster) {
-        this(properties, null, cluster);
     }
     public AbstractController(Entity owner, Cluster cluster) {
         this(MutableMap.of(), owner, cluster);
@@ -115,6 +110,48 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             protected void onEntityAdded(Entity member) { addEntity(member); }
             protected void onEntityRemoved(Entity member) { removeEntity(member); }
         };
+    }
+
+    @Override
+    public Entity configure(Map flags) {
+        Entity result = super.configure(flags);
+        
+        // Support old "cluster" flag (deprecated)
+        if (flags.containsKey("cluster")) {
+            Group cluster = (Group) flags.get("cluster");
+            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, cluster);
+            if (getConfig(SERVER_POOL) == null) {
+                setConfig(SERVER_POOL, cluster);
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
+     * Can pass in the 'cluster'.
+     */
+    public void bind(Map flags) {
+        if (flags.containsKey("cluster")) {
+            setConfig(SERVER_POOL, (Group) flags.get("cluster"));
+        }
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+    
+    public Integer getPort() {
+        return port;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
     @Description("Forces reload of the configuration")
@@ -144,14 +181,6 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         }
     }
     
-    /**
-     * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
-     * Can pass in the 'cluster'.
-     */
-    public void bind(Map flags) {
-        this.cluster = elvis((Cluster)flags.get("cluster"), this.cluster);
-    }
-
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts();
@@ -163,7 +192,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         super.preStart();
         
         // use http port by default
-        portNumber = getConfig(PORT_NUMBER_SENSOR);
+        portNumber = checkNotNull(getConfig(PORT_NUMBER_SENSOR));
 
         port = getAttribute(PROXY_HTTP_PORT);
         Preconditions.checkNotNull(port, "Port must be set for controller");
@@ -195,7 +224,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
             LOG.debug("Members of {}, checking {}, eliminating because not up", getDisplayName(), member.getDisplayName());
             return false;
         }
-        if (!cluster.getMembers().contains(member)) {
+        if (!serverPool.getMembers().contains(member)) {
             LOG.debug("Members of {}, checking {}, eliminating because not member", getDisplayName(), member.getDisplayName());
             return false;
         }
@@ -209,7 +238,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
                 "waiting for service to be up", new Object[] {getDisplayName(), member.getDisplayName(), member.getLocations()});
         if (targets.contains(member)) return;
         
-        if (!member.getAttribute(Startable.SERVICE_UP)) {
+        if (!groovyTruth(member.getAttribute(Startable.SERVICE_UP))) {
             LOG.debug("Members of {}, not adding {} because not yet up", getDisplayName(), member.getDisplayName());
             return;
         }
@@ -260,10 +289,10 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         targets.remove(member);
     }
     
-    boolean isActive = false;
-    boolean updateNeeded = true;
-    
     public void start(Collection<? extends Location> locations) {
+        // TODO Should not add policy before NginxController is properly started; otherwise
+        // get callbacks for addEntity when fields like portNumber are still null.
+        serverPool = getConfig(SERVER_POOL);
         LOG.info("Adding policy {} to {} on AbstractController.start", policy, this);
         addPolicy(policy);
         reset();
@@ -290,8 +319,8 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     public void reset() {
         policy.reset();
         addresses.clear();
-        if (groovyTruth(cluster)) {
-            policy.setGroup(cluster);
+        if (groovyTruth(serverPool)) {
+            policy.setGroup(serverPool);
         }
         setAttribute(TARGETS, addresses);
     }

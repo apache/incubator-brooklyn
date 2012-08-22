@@ -8,6 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
+import brooklyn.entity.Group
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
@@ -18,7 +19,7 @@ import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.ResourceUtils;
+import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
 
@@ -28,7 +29,7 @@ import com.google.common.collect.LinkedHashMultimap
 import com.google.common.collect.Multimap
 
 /**
- * An entity that represents an Nginx proxy controlling a cluster.
+ * An entity that represents an Nginx proxy (e.g. for routing requests to servers in a cluster).
  * <p>
  * The default driver *builds* nginx from source (because binaries are not reliably available, esp not with sticky sessions).
  * This requires gcc and other build tools installed. The code attempts to install them but inevitably 
@@ -70,9 +71,15 @@ public class NginxController extends AbstractController {
 
     public NginxController(Map properties, Entity owner) {
         super(properties, owner);
-        subscribeToChildren(this, UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
     }
 
+    public void onManagementBecomingMaster() {
+        // Now can guarantee that owner/managementContext has been set
+        if (getConfig(URL_MAPPINGS) != null) {
+            subscribeToMembers(getConfig(URL_MAPPINGS), UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
+        }
+    }
+    
     @Override
     public void reload() {
         NginxSshDriver driver = (NginxSshDriver)getDriver();
@@ -132,19 +139,21 @@ public class NginxController extends AbstractController {
     
     protected void reconfigureService() {
 
-        def cfg = getConfigFile();
+        String cfg = getConfigFile();
         if (cfg==null) return;
-        LOG.debug("Reconfiguring "+this+", targetting "+addresses+" and "+getOwnedChildren());
+        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", this, addresses, findUrlMappings());
+        if (LOG.isTraceEnabled()) LOG.trace("Reconfiguring {}, config file:\n{}", this, cfg);
         
         NginxSshDriver driver = (NginxSshDriver)getDriver();
         if (!driver.isCustomizationCompleted()) return;
         driver.machine.copyTo(new ByteArrayInputStream(cfg.getBytes()), driver.getRunDir()+"/conf/server.conf");
         
         installSslKeys("global", getConfig(SSL_CONFIG));
-        Iterable<UrlMapping> mappings = Iterables.filter(ownedChildren, Predicates.instanceOf(UrlMapping.class));
-        for (UrlMapping mapping: mappings)
+        
+        for (UrlMapping mapping: findUrlMappings()) {
             //cache ensures only the first is installed, which is what is assumed below
             installSslKeys(mapping.getDomain(), mapping.getConfig(UrlMapping.SSL_CONFIG));
+        }
     }
     
     Set<String> installedKeysCache = [];
@@ -190,7 +199,7 @@ public class NginxController extends AbstractController {
         config.append("    return 404;\n")
         config.append("  }\n");
         
-        // For basic round-robin across the cluster
+        // For basic round-robin across the server-pool
         if (addresses) {
             config.append(format("  upstream "+getId()+" {\n"))
             if (sticky){
@@ -210,7 +219,7 @@ public class NginxController extends AbstractController {
         }
         
         // For mapping by URL
-        Iterable<UrlMapping> mappings = Iterables.filter(ownedChildren, Predicates.instanceOf(UrlMapping.class));
+        Iterable<UrlMapping> mappings = findUrlMappings();
         Multimap<String, UrlMapping> mappingsByDomain = new LinkedHashMultimap<String, UrlMapping>();
         for (UrlMapping mapping : mappings) {
             Collection<String> addrs = mapping.getAttribute(UrlMapping.TARGET_ADDRESSES);
@@ -332,5 +341,14 @@ public class NginxController extends AbstractController {
         }
         return true;
     }
-    
+
+    private Iterable<UrlMapping> findUrlMappings() {
+        // For mapping by URL
+        Group urlMappingGroup = getConfig(URL_MAPPINGS);
+        if (urlMappingGroup != null) {
+            return Iterables.filter(urlMappingGroup.getMembers(), Predicates.instanceOf(UrlMapping.class));
+        } else {
+            return Collections.<UrlMapping>emptyList();
+        }
+    }
 }
