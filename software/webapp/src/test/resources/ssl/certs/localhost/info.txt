@@ -1,0 +1,2 @@
+created following instructions at http://www.akadia.com/services/ssh_test_certificate.html
+for localhost

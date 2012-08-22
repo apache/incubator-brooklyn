@@ -39,7 +39,7 @@ public abstract class AbstractController extends SoftwareProcessEntity {
     
     @SetFromFlag("protocol")
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.protocol", "Protocol", "http");
+            String.class, "proxy.protocol", "Protocol", null);
     
     //does this have special meaning to nginx/others? or should we just take the hostname ?
     public static final String ANONYMOUS = "anonymous";

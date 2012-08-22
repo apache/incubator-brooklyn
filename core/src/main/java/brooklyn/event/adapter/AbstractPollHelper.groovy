@@ -99,11 +99,11 @@ public abstract class AbstractPollHelper {
         } catch (Exception e) {
             String optionalContextForErrors = getOptionalContextForErrors(response)
             if (adapter.isConnected())
-                log.warn "unable to compute ${s} for ${entity}: ${e.getMessage()}"+
-                        (optionalContextForErrors?"\n"+optionalContextForErrors:""), e
+                log.debug "${this} unable to compute ${s} for ${entity}: ${e.getMessage()}"+
+                        (optionalContextForErrors?"\n"+optionalContextForErrors:"")
             else
-            if (log.isDebugEnabled()) log.debug "unable to compute ${s} for ${entity} (when deactive): ${e.getMessage()}"+
-            (optionalContextForErrors?"\n"+optionalContextForErrors:""), e
+                if (log.isDebugEnabled()) log.debug "${this} unable to compute ${s} for ${entity} (when inactive): ${e.getMessage()}"+
+                    (optionalContextForErrors?"\n"+optionalContextForErrors:"")
         }
         return null
     }

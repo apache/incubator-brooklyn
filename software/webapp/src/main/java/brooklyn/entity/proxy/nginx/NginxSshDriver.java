@@ -72,8 +72,10 @@ public class NginxSshDriver extends StartStopSshDriver {
 
         script.body.append(
                 "mkdir -p dist",
-                format("./configure --prefix=%s/nginx-%s/dist ", getInstallDir(), getVersion()) +
-                        (sticky ? format("--add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : ""),
+                "./configure"+
+                    format(" --prefix=%s/nginx-%s/dist", getInstallDir(), getVersion()) +
+                    " --with-http_ssl_module"+
+                    (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : ""),
                 "make install");
 
         int result = script.execute();
@@ -144,9 +146,11 @@ public class NginxSshDriver extends StartStopSshDriver {
     }
     
     public void reload() {
-        //if it hasn't come up we can't do the restart optimization
         if (!entity.getAttribute(Startable.SERVICE_UP)) {
-            throw new IllegalStateException(getEntity() + " not up; can't reload");
+            //if it hasn't come up completely then do restart instead
+            log.debug("Reload of nginx "+entity+" is doing restart because has not come up");
+            restart();
+            return;
         }
         
         Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
