@@ -89,7 +89,7 @@
         <ant.version>1.8.2</ant.version>
 
         <groovy.version>1.8.6</groovy.version>
-        <testng.version>6.3.1</testng.version>
+        <testng.version>6.7</testng.version>
         <mockito.version>1.8.4</mockito.version>
         <!-- need 0.8.0 whirr to get guava 12, because 0.7 uses guava 10 which is incompatible -->
         <whirr.version>0.8.0-brooklyn.2</whirr.version>
@@ -853,58 +853,21 @@
             <build>
                 <plugins>
                     <plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <inherited>true</inherited>
-                        <executions>
-                            <execution>
-                                <id>run-tests</id>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                                <phase>test</phase>
-                                <configuration>
-                                    <target unless="${skipTests}">
-                                        <taskdef resource="testngtasks" classpathref="maven.plugin.classpath" />
-                                        <!-- Replace with 'testnames' when testng task is fixed (or we use surefire) -->
-                                        <condition property="test" value="*Test" else="${test}">
-                                            <length string="${test}" trim="true" when="greater" length="0" />
-                                        </condition>
-                                        <testng listeners="brooklyn.test.StatusListener" groups="${includedTestGroups}"
-                                            excludedGroups="${excludedTestGroups}" haltonfailure="true" enableAssert="true"
-                                            classpathref="maven.test.classpath" outputDir="target/testng">
-                                            <jvmarg value="-Dlog4j.configuration=test-log4j.properties"/>                                         
-                                            <jvmarg value="-Dmaven.test.failure.ignore=true"/>
-                                            <classfileset dir="target/test-classes" includes="**/${test}.class" />
-                                            <sysproperty key="java.util.logging.config.file" value="src/test/resources/logging.properties" />
-                                            <sysproperty key="net.sourceforge.cobertura.datafile" value="${project.build.directory}/cobertura/cobertura.ser" />
-                                            <sysproperty key="cobertura.user.java.nio" value="false" />
-                                        </testng>
-                                    </target>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.apache.ant</groupId>
-                                <artifactId>ant-launcher</artifactId>
-                                <version>${ant.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.apache.ant</groupId>
-                                <artifactId>ant</artifactId>
-                                <version>${ant.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.testng</groupId>
-                                <artifactId>testng</artifactId>
-                                <version>${testng.version}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.12.2</version>
                         <configuration>
-                            <skip>true</skip>
+                            <enableAssertions>true</enableAssertions>
+                            <groups>${includedTestGroups}</groups>
+                            <excludedGroups>${excludedTestGroups}</excludedGroups>
+                            <testFailureIgnore>false</testFailureIgnore>
+                            <systemProperties>
+                                <verbose>-1</verbose>
+                                <log4j.configuration>test-log4j.properties</log4j.configuration>
+                                <net.sourceforge.cobertura.datafile>${project.build.directory}/cobertura/cobertura.ser</net.sourceforge.cobertura.datafile>
+                                <obertura.user.java.nio>false</obertura.user.java.nio>
+                            </systemProperties>
+                            <printSummary>true</printSummary>
                         </configuration>
                     </plugin>
                     <plugin>
