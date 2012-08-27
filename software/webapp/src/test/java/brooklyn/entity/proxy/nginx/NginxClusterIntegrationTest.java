@@ -20,6 +20,7 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.LoadBalancerCluster;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -171,6 +172,30 @@ public class NginxClusterIntegrationTest {
 
         loadBalancerCluster.resize(0);
         TestUtils.assertAttributeEventually(loadBalancerCluster, Startable.SERVICE_UP, false);
+    }
+    
+    // Warning: test is a little brittle for if a previous run leaves something on these required ports
+    @Test(groups = "Integration")
+    public void testConfiguresNginxInstancesWithCorrectPort() {
+        loadBalancerCluster = new LoadBalancerCluster(
+                MutableMap.builder()
+                        .put("domain", "localhost")
+                        .put("factory", nginxFactory)
+                        .put("port", "8765+")
+                        .put("initialSize", 1)
+                        .build(),
+                app);
+        
+        app.start(ImmutableList.of(localhostProvisioningLoc));
+        
+        NginxController nginx1 = Iterables.getOnlyElement(findNginxs());
+
+        loadBalancerCluster.resize(2);
+        NginxController nginx2 = Iterables.getOnlyElement(Iterables.filter(findNginxs(), 
+                Predicates.not(Predicates.in(ImmutableList.of(nginx1)))));
+
+        assertEquals((int) nginx1.getAttribute(LoadBalancer.PROXY_HTTP_PORT), 8765);
+        assertEquals((int) nginx2.getAttribute(LoadBalancer.PROXY_HTTP_PORT), 8766);
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
