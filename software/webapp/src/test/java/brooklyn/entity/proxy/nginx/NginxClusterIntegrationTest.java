@@ -40,7 +40,10 @@ import com.google.common.collect.Lists;
 public class NginxClusterIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(NginxClusterIntegrationTest.class);
 
+    private static final long TIMEOUT_MS = 60*1000;
+    
     private URL war;
+    private LocalhostMachineProvisioningLocation localhostProvisioningLoc;
     private TestApplication app;
     private LoadBalancerCluster loadBalancerCluster;
     private EntityFactory<NginxController> nginxFactory;
@@ -50,6 +53,7 @@ public class NginxClusterIntegrationTest {
     @BeforeMethod(groups = "Integration")
     public void setup() throws Exception {
         war = getClass().getClassLoader().getResource("hello-world.war");
+        localhostProvisioningLoc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
         app = new TestApplication();
         nginxFactory = new BasicConfigurableEntityFactory<NginxController>(NginxController.class);
         urlMappings = new BasicGroup(MutableMap.of("childrenAsMembers", true), app);
@@ -70,7 +74,7 @@ public class NginxClusterIntegrationTest {
                         .build(),
                 app);
         
-        app.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
+        app.start(ImmutableList.of(localhostProvisioningLoc));
         
         assertEquals(findNginxs().size(), 1);
         assertNginxsResponsiveEvenutally(findNginxs());
@@ -102,7 +106,7 @@ public class NginxClusterIntegrationTest {
                         .build(),
                 app);
         
-        app.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
+        app.start(ImmutableList.of(localhostProvisioningLoc));
         
         assertEquals(findNginxs().size(), 1);
         
@@ -139,7 +143,7 @@ public class NginxClusterIntegrationTest {
                         .build(),
                 app);
 
-        app.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
+        app.start(ImmutableList.of(localhostProvisioningLoc));
         
         assertEquals(findNginxs().size(), 1);
         
@@ -171,7 +175,7 @@ public class NginxClusterIntegrationTest {
     }
     
     private void assertNginxsResponsiveEvenutally(final Iterable<NginxController> nginxs, final String hostname, final List<String> pathsFor200) {
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        TestUtils.executeUntilSucceeds(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 for (NginxController nginx : nginxs) {
                     assertTrue(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));

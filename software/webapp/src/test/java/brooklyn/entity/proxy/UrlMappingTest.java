@@ -40,7 +40,7 @@ public class UrlMappingTest {
 
     @Test(groups = "Integration")
     public void testTargetMappingsMatchesClusterMembers() {
-        EntityFactory<BasicAppServer> serverFactory = new BasicConfigurableEntityFactory<BasicAppServer>(BasicAppServer.class);
+        EntityFactory<StubAppServer> serverFactory = new BasicConfigurableEntityFactory<StubAppServer>(StubAppServer.class);
         final DynamicCluster cluster = new DynamicCluster(MutableMap.of("initialSize", 2, "factory", serverFactory), app);
 
         urlMapping = new UrlMapping(

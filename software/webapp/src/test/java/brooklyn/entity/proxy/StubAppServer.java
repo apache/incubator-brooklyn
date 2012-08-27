@@ -19,16 +19,16 @@ import brooklyn.util.MutableMap;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 
-public class BasicAppServer extends AbstractEntity implements Startable {
+public class StubAppServer extends AbstractEntity implements Startable {
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
     public static final PortAttributeSensorAndConfigKey HTTP_PORT = Attributes.HTTP_PORT;
     public static AtomicInteger nextPort = new AtomicInteger(1234);
 
-    public BasicAppServer(Map flags) {
+    public StubAppServer(Map flags) {
         super(flags);
     }
     
-    public BasicAppServer(Map flags, Entity owner) {
+    public StubAppServer(Map flags, Entity owner) {
         super(flags, owner);
     }
     
