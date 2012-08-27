@@ -1,6 +1,6 @@
 package brooklyn.test
 
-import static org.testng.AssertJUnit.*
+import static org.testng.Assert.*
 import groovy.time.TimeDuration
 
 import java.util.concurrent.Callable
@@ -303,6 +303,12 @@ public class TestUtils {
 
     public static <T> void assertAttributeEventually(Entity entity, AttributeSensor<T> attribute, T expected) {
         executeUntilSucceeds() {
+            assertEquals(entity.getAttribute(attribute), expected);
+        }
+    }
+    
+    public static <T> void assertAttributeContinually(Entity entity, AttributeSensor<T> attribute, T expected) {
+        assertSucceedsContinually() {
             assertEquals(entity.getAttribute(attribute), expected);
         }
     }

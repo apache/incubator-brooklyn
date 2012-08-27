@@ -15,12 +15,15 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.EntityStartException;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
@@ -41,6 +44,8 @@ import com.google.common.collect.Maps;
  */
 public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster.class);
+
+    public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
@@ -113,15 +118,20 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkArgument(locs.size() == 1, "Exactly one location must be supplied");
         location = Iterables.getOnlyElement(locs);
         getLocations().add(location);
+        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         resize(getConfig(INITIAL_SIZE));
         for (Policy it : getPolicies()) { it.resume(); }
-        setAttribute(SERVICE_UP, true);
+        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+        setAttribute(SERVICE_UP, calculateServiceUp());
     }
 
     public void stop() {
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        setAttribute(SERVICE_UP, calculateServiceUp());
         for (Policy it : getPolicies()) { it.suspend(); }
         resize(0);
-        setAttribute(SERVICE_UP, false);
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
+        setAttribute(SERVICE_UP, calculateServiceUp());
     }
 
     public void restart() {
@@ -168,6 +178,13 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         return getCurrentSize();
     }
 
+    /**
+     * Default impl is to be up when running, and !up otherwise.
+     */
+    protected boolean calculateServiceUp() {
+        return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
+    }
+    
     protected void waitForTasksOnEntityStart(Map<Entity,Task<?>> tasks) {
         // TODO Could have CompoundException, rather than propagating first
         Throwable toPropagate = null;

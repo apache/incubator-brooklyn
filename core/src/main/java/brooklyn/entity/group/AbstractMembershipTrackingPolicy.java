@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 /** abstract class which helps track membership of a group, invoking (empty) methods in this class on MEMBER{ADDED,REMOVED} events, as well as SERVICE_UP {true,false} for those members. */
 public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractMembershipTrackingPolicy.class);
+    
     private Group group;
     
     public AbstractMembershipTrackingPolicy(Map flags) {
@@ -27,11 +28,43 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     public AbstractMembershipTrackingPolicy() {
         this(Collections.emptyMap());
     }
-    
+
+    /**
+     * Sets the group to be tracked; unsubscribes from any previous group, and subscribes to this group.
+     * 
+     * @param group
+     */
     public void setGroup(Group group) {
         Preconditions.checkNotNull(group, "The group cannot be null");
+        unsubscribeFromGroup();
         this.group = group;
-        reset();
+        subscribeToGroup();
+    }
+    
+    /**
+     * Unsubscribes from the group.
+     */
+    public void reset() {
+        unsubscribeFromGroup();
+    }
+
+    @Override
+    public void suspend() {
+        unsubscribeFromGroup();
+        super.suspend();
+    }
+    
+    @Override
+    public void resume() {
+        super.resume();
+        if (group != null) {
+            subscribeToGroup();
+        }
+    }
+    
+    protected void subscribeToGroup() {
+        Preconditions.checkNotNull(group, "The group cannot be null");
+
         subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 onEntityAdded(event.getValue());
@@ -53,8 +86,8 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         // FIXME cluster may be remote, we need to make this retrieve the remote values, or store members in local mgmt node, or use children
     }
 
-    public void reset() {
-        if (getSubscriptionTracker()!=null) unsubscribe(group);
+    protected void unsubscribeFromGroup() {
+        if (getSubscriptionTracker()!=null && group != null) unsubscribe(group);
     }
 
     /**

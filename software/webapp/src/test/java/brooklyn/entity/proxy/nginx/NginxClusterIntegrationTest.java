@@ -21,6 +21,7 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.LoadBalancerCluster;
+import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -152,6 +153,26 @@ public class NginxClusterIntegrationTest {
         assertNginxsResponsiveEvenutally(findNginxs(), hostname, pathsFor200);
     }
 
+    @Test(groups = "Integration")
+    public void testClusterIsUpIffHasChildLoadBalancer() {
+        loadBalancerCluster = new LoadBalancerCluster(
+                MutableMap.builder()
+                        .put("domain", "localhost")
+                        .put("factory", nginxFactory)
+                        .put("initialSize", 0)
+                        .build(),
+                app);
+        
+        app.start(ImmutableList.of(localhostProvisioningLoc));
+        TestUtils.assertAttributeContinually(loadBalancerCluster, Startable.SERVICE_UP, false);
+        
+        loadBalancerCluster.resize(1);
+        TestUtils.assertAttributeEventually(loadBalancerCluster, Startable.SERVICE_UP, true);
+
+        loadBalancerCluster.resize(0);
+        TestUtils.assertAttributeEventually(loadBalancerCluster, Startable.SERVICE_UP, false);
+    }
+    
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private List<NginxController> findNginxs() {
         ImmutableList result = ImmutableList.copyOf(Iterables.filter(app.getManagementContext().getEntities(), Predicates.instanceOf(NginxController.class)));
