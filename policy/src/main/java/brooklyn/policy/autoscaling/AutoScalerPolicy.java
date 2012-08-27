@@ -128,7 +128,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         }
         private Map<String,?> toFlags() {
             return MutableMap.<String,Object>builder()
-                    .put("id", id)
+                    .putIfNotNull("id", id)
                     .put("name", name)
                     .put("metric", metric)
                     .put("metricUpperBound", metricUpperBound)

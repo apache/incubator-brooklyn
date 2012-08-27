@@ -8,6 +8,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -67,6 +68,16 @@ public class AutoScalerPolicyTest {
         
         // expect pool to grow to 3 (i.e. minimum to have <= 80 per container)
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
+    }
+
+    @Test
+    public void testHasId() throws Exception {
+        resizable.removePolicy(policy);
+        policy = AutoScalerPolicy.builder()
+                .minPoolSize(2)
+                .build();
+        resizable.addPolicy(policy);
+        Assert.assertTrue(policy.getId()!=null);
     }
     
     @Test

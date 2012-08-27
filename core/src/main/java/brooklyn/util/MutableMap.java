@@ -118,6 +118,11 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
             return this;
         }
 
+        public Builder<K, V> putIfNotNull(K key, V value) {
+            if (value!=null) result.put(key, value);
+            return this;
+        }
+
         public Builder<K, V> put(Entry<? extends K, ? extends V> entry) {
             result.put(entry.getKey(), entry.getValue());
             return this;

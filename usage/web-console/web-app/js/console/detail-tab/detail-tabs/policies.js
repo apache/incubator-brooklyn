@@ -37,7 +37,7 @@ Brooklyn.policies = (function(){
         $('#policyName').empty();
         var nameText = document.createElement("p");
         if(policyName!=null){
-            nameText.textContent = policyName;
+            nameText.textContent = policyName + " ("+policyId+")";
         }
         else{
             nameText.textContent = 'The policy has no name';
@@ -80,6 +80,7 @@ Brooklyn.policies = (function(){
     function executeAction(event){
         var chosenAction = document.getElementById('policyAction').value;
         if(chosenAction=='default'){ alert('You must choose an action to execute!'); }
+        else if(policyId==null){ alert('You must choose a policy!'); }
         else{
             if(confirm("Are you sure you wish to "+chosenAction+" this policy?")){
                 var dataMap = new Object();
