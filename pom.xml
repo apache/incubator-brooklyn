@@ -861,12 +861,12 @@
                             <groups>${includedTestGroups}</groups>
                             <excludedGroups>${excludedTestGroups}</excludedGroups>
                             <testFailureIgnore>false</testFailureIgnore>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <verbose>-1</verbose>
                                 <log4j.configuration>test-log4j.properties</log4j.configuration>
                                 <net.sourceforge.cobertura.datafile>${project.build.directory}/cobertura/cobertura.ser</net.sourceforge.cobertura.datafile>
-                                <obertura.user.java.nio>false</obertura.user.java.nio>
-                            </systemProperties>
+                                <cobertura.user.java.nio>false</cobertura.user.java.nio>
+                            </systemPropertyVariables>
                             <printSummary>true</printSummary>
                         </configuration>
                     </plugin>
