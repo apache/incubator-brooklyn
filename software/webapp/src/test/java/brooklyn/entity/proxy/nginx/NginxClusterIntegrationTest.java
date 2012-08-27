@@ -20,12 +20,12 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.LoadBalancerCluster;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.MutableMap;
@@ -70,11 +70,11 @@ public class NginxClusterIntegrationTest {
     public void testCreatesNginxInstancesAndResizes() {
         loadBalancerCluster = new LoadBalancerCluster(
                 MutableMap.builder()
-                        .put("domain", "localhost")
                         .put("factory", nginxFactory)
                         .put("initialSize", 1)
                         .build(),
                 app);
+        loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
@@ -104,9 +104,9 @@ public class NginxClusterIntegrationTest {
                         .put("serverPool", serverPool)
                         .put("factory", nginxFactory)
                         .put("initialSize", 1)
-                        .put("domain", "localhost")
                         .build(),
                 app);
+        loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
@@ -158,11 +158,11 @@ public class NginxClusterIntegrationTest {
     public void testClusterIsUpIffHasChildLoadBalancer() {
         loadBalancerCluster = new LoadBalancerCluster(
                 MutableMap.builder()
-                        .put("domain", "localhost")
                         .put("factory", nginxFactory)
                         .put("initialSize", 0)
                         .build(),
                 app);
+        loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         TestUtils.assertAttributeContinually(loadBalancerCluster, Startable.SERVICE_UP, false);
@@ -176,15 +176,15 @@ public class NginxClusterIntegrationTest {
     
     // Warning: test is a little brittle for if a previous run leaves something on these required ports
     @Test(groups = "Integration")
-    public void testConfiguresNginxInstancesWithCorrectPort() {
+    public void testConfiguresNginxInstancesWithInheritedPortConfig() {
         loadBalancerCluster = new LoadBalancerCluster(
                 MutableMap.builder()
-                        .put("domain", "localhost")
                         .put("factory", nginxFactory)
-                        .put("port", "8765+")
                         .put("initialSize", 1)
                         .build(),
                 app);
+        loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
+        loadBalancerCluster.setConfig(NginxController.PROXY_HTTP_PORT.getConfigKey(), PortRanges.fromString("8765+"));
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
@@ -194,8 +194,8 @@ public class NginxClusterIntegrationTest {
         NginxController nginx2 = Iterables.getOnlyElement(Iterables.filter(findNginxs(), 
                 Predicates.not(Predicates.in(ImmutableList.of(nginx1)))));
 
-        assertEquals((int) nginx1.getAttribute(LoadBalancer.PROXY_HTTP_PORT), 8765);
-        assertEquals((int) nginx2.getAttribute(LoadBalancer.PROXY_HTTP_PORT), 8766);
+        assertEquals((int) nginx1.getAttribute(NginxController.PROXY_HTTP_PORT), 8765);
+        assertEquals((int) nginx2.getAttribute(NginxController.PROXY_HTTP_PORT), 8766);
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
