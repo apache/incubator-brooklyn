@@ -134,7 +134,7 @@ public class NginxController extends AbstractController {
 
         def cfg = getConfigFile();
         if (cfg==null) return;
-        LOG.info("Reconfiguring "+this+", targetting "+addresses+" and "+getOwnedChildren());
+        LOG.debug("Reconfiguring "+this+", targetting "+addresses+" and "+getOwnedChildren());
         
         NginxSshDriver driver = (NginxSshDriver)getDriver();
         if (!driver.isCustomizationCompleted()) return;

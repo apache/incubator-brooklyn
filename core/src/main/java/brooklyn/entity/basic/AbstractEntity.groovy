@@ -424,7 +424,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     protected <T> T setConfigEvenIfOwned(ConfigKey<T> key, T val) {
         configsInternal.setConfig(key, val);
     }
-    
+
+    protected <T> T setConfigEvenIfOwned(HasConfigKey<T> key, T val) {
+        configsInternal.setConfig(key.getConfigKey(), val);
+    }
+
     protected void setConfigIfValNonNull(ConfigKey key, Object val) {
         if (val != null) setConfig(key, val)
     }
