@@ -32,6 +32,8 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     /**
      * Sets the group to be tracked; unsubscribes from any previous group, and subscribes to this group.
      * 
+     * Note this must be called *after* adding the policy to the entity.
+     * 
      * @param group
      */
     public void setGroup(Group group) {

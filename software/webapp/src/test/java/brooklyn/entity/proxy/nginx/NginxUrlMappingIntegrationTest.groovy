@@ -188,6 +188,32 @@ public class NginxUrlMappingIntegrationTest {
     }
     
     @Test(groups = "Integration")
+    public void testUrlMappingRemovedWhenMappingEntityRemoved() {
+        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
+        c0.setConfig(JBoss7Server.ROOT_WAR, war.toString())
+        
+        UrlMapping u0 = new UrlMapping(urlMappingsGroup, domain: "localhost2", target: c0);
+        
+        nginx = new NginxController([
+                "owner" : app,
+                "domain" : "localhost",
+                "port" : "8000+",
+                "portNumberSensor" : WebAppService.HTTP_PORT,
+                "urlMappings" : urlMappingsGroup
+            ])
+        
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+        int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
+        
+        // Wait for deployment to be successful
+        assertUrlStatusCodeEventually("http://localhost2:${port}/", 200);
+        
+        // Now remove mapping; will no longer route requests
+        app.getManagementContext().unmanage(u0);
+        assertUrlStatusCodeEventually("http://localhost2:${port}/", 404);
+    }
+    
+    @Test(groups = "Integration")
     public void testWithCoreClusterAndUrlMappedGroup() {
         // TODO Should use different wars, so can confirm content from each cluster
         // TODO Could also assert on: nginx.getConfigFile()

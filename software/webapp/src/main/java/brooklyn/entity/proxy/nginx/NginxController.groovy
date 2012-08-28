@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
 import brooklyn.entity.webapp.WebAppService
@@ -48,7 +49,7 @@ import com.google.common.collect.Multimap
  */
 public class NginxController extends AbstractController {
 
-    private static final Logger log = LoggerFactory.getLogger(NginxController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NginxController.class);
     static { TimeExtras.init(); }
        
     @SetFromFlag("version")
@@ -75,8 +76,19 @@ public class NginxController extends AbstractController {
 
     public void onManagementBecomingMaster() {
         // Now can guarantee that owner/managementContext has been set
-        if (getConfig(URL_MAPPINGS) != null) {
-            subscribeToMembers(getConfig(URL_MAPPINGS), UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
+        Group urlMappings = getConfig(URL_MAPPINGS);
+        if (urlMappings != null) {
+            // Listen to the targets of each url-mapping changing
+            subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
+            
+            // Listen to url-mappings being added and removed
+            AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
+                @Override protected void onEntityChange(Entity member) { update(); }
+                @Override protected void onEntityAdded(Entity member) { update(); }
+                @Override protected void onEntityRemoved(Entity member) { update(); }
+            };
+            addPolicy(policy);
+            policy.setGroup(urlMappings);
         }
     }
     
@@ -258,13 +270,13 @@ public class NginxController extends AbstractController {
                         if (localSslConfig.equals(sslConfig)) {
                             //ignore identical config specified on multiple mappings
                         } else {
-                            log.warn(""+this+" mapping "+mappingInDomain+" provides SSL config for "+domain+" when a different config had already been provided by another mapping, ignoring this one");
+                            LOG.warn(""+this+" mapping "+mappingInDomain+" provides SSL config for "+domain+" when a different config had already been provided by another mapping, ignoring this one");
                         }
                     } else if (globalSslConfig!=null) {
                         if (globalSslConfig.equals(sslConfig)) {
                             //ignore identical config specified on multiple mappings
                         } else {
-                            log.warn(""+this+" mapping "+mappingInDomain+" provides SSL config for "+domain+" when a different config had been provided at root nginx scope, ignoring this one");
+                            LOG.warn(""+this+" mapping "+mappingInDomain+" provides SSL config for "+domain+" when a different config had been provided at root nginx scope, ignoring this one");
                         }
                     } else {
                         //new config, is okay
@@ -285,7 +297,7 @@ public class NginxController extends AbstractController {
                 // such as "~*", "^~", literals, etc.
                 boolean isRoot = mappingInDomain.getPath()==null || mappingInDomain.getPath().length()==0 || mappingInDomain.getPath().equals("/");
                 if (isRoot && hasRoot) {
-                    log.warn(""+this+" mapping "+mappingInDomain+" provides a duplicate / proxy, ignoring");
+                    LOG.warn(""+this+" mapping "+mappingInDomain+" provides a duplicate / proxy, ignoring");
                 } else {
                     hasRoot |= isRoot;
                     String location = isRoot ? "/" : "~ " + mappingInDomain.getPath();
@@ -346,7 +358,7 @@ public class NginxController extends AbstractController {
         // For mapping by URL
         Group urlMappingGroup = getConfig(URL_MAPPINGS);
         if (urlMappingGroup != null) {
-            return Iterables.filter(urlMappingGroup.getMembers(), Predicates.instanceOf(UrlMapping.class));
+            return Iterables.filter(urlMappingGroup.getMembers(), UrlMapping.class);
         } else {
             return Collections.<UrlMapping>emptyList();
         }
