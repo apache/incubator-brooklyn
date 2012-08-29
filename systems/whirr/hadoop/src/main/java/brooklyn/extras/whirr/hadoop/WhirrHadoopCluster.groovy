@@ -1,18 +1,20 @@
 package brooklyn.extras.whirr.hadoop
 
-import brooklyn.extras.whirr.core.WhirrCluster
-import brooklyn.entity.Entity
-import brooklyn.util.flags.SetFromFlag
-import brooklyn.event.basic.BasicConfigKey
-import com.google.common.collect.Lists
-import static com.google.common.base.Preconditions.checkArgument
-import com.google.common.base.Joiner
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.location.Location
-import static org.apache.whirr.RolePredicates.role
+import org.apache.whirr.RolePredicates
 import org.apache.whirr.service.hadoop.HadoopProxy
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+import brooklyn.entity.Entity
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.extras.whirr.core.WhirrCluster
+import brooklyn.location.Location
+import brooklyn.util.flags.SetFromFlag
+
+import com.google.common.base.Joiner
+import com.google.common.base.Preconditions
+import com.google.common.collect.Lists
 
 public class WhirrHadoopCluster extends WhirrCluster {
 
@@ -47,8 +49,8 @@ public class WhirrHadoopCluster extends WhirrCluster {
     }
 
     public void generateWhirrClusterRecipe() {
-        checkArgument(getConfig(SIZE) > 1, "Min cluster size is 2")
-        checkArgument(getConfig(MEMORY) >= 1000, "We need at least 1GB of memory per machine")
+        Preconditions.checkArgument(getConfig(SIZE) > 1, "Min cluster size is 2")
+        Preconditions.checkArgument(getConfig(MEMORY) >= 1000, "We need at least 1GB of memory per machine")
 
         List<String> recipeLines = Lists.newArrayList(
                 "whirr.cluster-name=" + (((String)getConfig(NAME))?:"brooklyn-whirr-cluster").replaceAll("\\s+","-"),
@@ -81,10 +83,10 @@ public class WhirrHadoopCluster extends WhirrCluster {
 
         setAttribute(SOCKS_SERVER, "localhost:6666")
 
-        String namenodeHost = cluster.getInstanceMatching(role("hadoop-namenode")).publicHostName
+        String namenodeHost = cluster.getInstanceMatching(RolePredicates.role("hadoop-namenode")).publicHostName
         setAttribute(NAME_NODE_URL, "hdfs://" + namenodeHost + ":8020/")
 
-        String jobtrackerHost = cluster.getInstanceMatching(role("hadoop-jobtracker")).publicHostName
+        String jobtrackerHost = cluster.getInstanceMatching(RolePredicates.role("hadoop-jobtracker")).publicHostName
         setAttribute(JOB_TRACKER_HOST_PORT, jobtrackerHost + ":8021")
     }
 

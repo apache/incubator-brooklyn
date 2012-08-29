@@ -46,6 +46,17 @@ If you encounter issues, the following hints may be helpful:
   You can manually mark as permanently ignored certain errors;
   this updates the pom.xml (and should be current).
 
+* m2e likes to put ``excluding="**"`` on `resources`` directories; if you're seeing funny missing files
+  (things like not resolving jclouds/aws-ec2 locations or missing WARs), try building clean install
+  from the command-line then doing Maven -> Update Project (clean uses a maven-replacer-plugin to fix ``.classpath``s).
+  Alternatively you can go through and remove these manually in Eclipse (Build Path -> Configure)
+  or the filesystem, or use
+  the following command to remove these rogue blocks in the generated .classpath files:
+
+  ``find . -name .classpath -exec sed -i.bak 's/[ ]*..cluding="[\*\/]*\(\.java\)*"//g' {} \;``
+
+* Getting the web console project to build nicely can be trickier. 
+
 * You may need to ensure ``src/main/{java,resources}`` is created in each project dir,
   if (older versions) complain about missing directories,
   and the same for ``src/test/{java,resources}`` *if* there are tests (``src/test`` exists):
@@ -54,18 +65,10 @@ If you encounter issues, the following hints may be helpful:
 
 * You may need to add the groovy nature (or even java nature) to projects;
   with some maven-eclipse plugins this works fine, 
-  but for others you may need to handcraft these 
+  but for others (older ones) you may need to handcraft these 
   (either right-click the project in the Package Explorer and choose Configure,
   or edit the ``.project`` manually adding it to the project properties).
   The tips [for jclouds maven-eclipse](http://www.jclouds.org/documentation/devguides/using-eclipse) might be helpful. 
-
-* Some maven integration sets up crazy filters in the generated ``.classpath`` files,
-  excluding * or ** or including only *.java.
-  You can go through and remove these manually in Eclipse (Build Path -> Configure)
-  or the filesystem.
-  The following command has been suggested to remove these rogue blocks in the generated .classpath files:
-
-  ``find . -name .classpath -exec sed -i.bak 's/[ ]*..cluding="[\*\/]*\(\.java\)*"//g' {} \;``
 
 * Getting the web console project to build nicely can be trickier. 
   If you're lucky it will just work...

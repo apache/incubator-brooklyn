@@ -8,6 +8,7 @@ import brooklyn.extras.whirr.core.WhirrCluster
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location;
 import brooklyn.location.basic.CommandLineLocations
+import brooklyn.location.basic.LocationRegistry;
 import brooklyn.util.CommandLineUtil;
 
 import org.slf4j.Logger
@@ -18,14 +19,14 @@ public class WhirrHadoopExample extends AbstractApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(WhirrHadoopExample.class);
 
-    public static final List<String> DEFAULT_LOCATION = [ "aws-ec2:eu-west-1" ]
+    public static final String DEFAULT_LOCATION = "aws-ec2:eu-west-1"
 
     WhirrCluster cluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "brooklyn-hadoop-example")
 
     public static void main(String[] argv) {
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
+        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
 
         def app = new WhirrHadoopExample()
 

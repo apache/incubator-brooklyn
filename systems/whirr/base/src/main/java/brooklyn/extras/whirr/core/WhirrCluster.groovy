@@ -2,11 +2,14 @@ package brooklyn.extras.whirr.core
 
 import static com.google.common.collect.Iterables.getOnlyElement
 
+import org.apache.commons.configuration.ConfigurationUtils;
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.whirr.Cluster
 import org.apache.whirr.ClusterController
 import org.apache.whirr.ClusterControllerFactory
 import org.apache.whirr.ClusterSpec
+import org.apache.whirr.ClusterSpec.Property;
+import org.jclouds.compute.domain.TemplateBuilderSpec;
 import org.jclouds.scriptbuilder.domain.OsFamily
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -93,6 +96,7 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 
         //provide the BYON nodes to whirr
         config.setProperty("jclouds.byon.nodes", nodes.toString())
+        config.setProperty(ClusterSpec.Property.LOCATION_ID.getConfigName(), "byon");
 
         clusterSpec = new ClusterSpec(config)
 
@@ -100,7 +104,6 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         clusterSpec.setProvider("byon")
         clusterSpec.setIdentity("notused")
         clusterSpec.setCredential("notused")
-        clusterSpec.setLocationId("byon");
 
         log.info("Starting cluster with roles " + config.getProperty("whirr.instance-templates")
                 + " in location " + location)
@@ -117,11 +120,12 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         PropertiesConfiguration config = new PropertiesConfiguration()
         config.load(new StringReader(getConfig(RECIPE)))
 
+        customizeClusterSpecConfiguration(location, config);        
+
         clusterSpec = new ClusterSpec(config)
         clusterSpec.setProvider(location.getConf().provider)
         clusterSpec.setIdentity(location.getConf().identity)
         clusterSpec.setCredential(location.getConf().credential)
-        clusterSpec.setLocationId(location.getConf().providerLocationId)
         clusterSpec.setPrivateKey((File)location.getPrivateKeyFile());
         clusterSpec.setPublicKey((File)location.getPublicKeyFile());
         // TODO: also add security groups when supported in the Whirr trunk
@@ -129,6 +133,11 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         startWithClusterSpec(clusterSpec, config);
     }
 
+    protected void customizeClusterSpecConfiguration(JcloudsLocation location, PropertiesConfiguration config) {
+        if (location.getConf().providerLocationId)
+            config.setProperty(ClusterSpec.Property.LOCATION_ID.getConfigName(), location.getConf().providerLocationId);
+    }
+    
     synchronized ClusterController getController() {
         if (_controller==null) {
             _controller = new ClusterControllerFactory().create(clusterSpec?.getServiceName());
@@ -136,7 +145,7 @@ public class WhirrCluster extends AbstractEntity implements Startable {
         return _controller;
     }
 
-    private void startWithClusterSpec(ClusterSpec clusterSpec, PropertiesConfiguration config) {
+    void startWithClusterSpec(ClusterSpec clusterSpec, PropertiesConfiguration config) {
         log.info("Starting cluster "+this+" with roles " + config.getProperty("whirr.instance-templates")
                 + " in location " + location)
         if (log.isDebugEnabled()) log.debug("Cluster "+this+" using recipe:\n"+getConfig(RECIPE));
@@ -145,7 +154,7 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 
         for (Cluster.Instance instance : cluster.getInstances()) {
             log.info("Creating group for instance " + instance.id)
-            def rolesGroup = new AbstractGroup(displayName: "Instance:" + instance.id, this) {}
+            def rolesGroup = new WhirrInstance(displayName: "Instance:" + instance.id, instance: instance, this);
             for (String role: instance.roles) {
                 log.info("Creating entity for '" + role + "' on instance " + instance.id)
                 rolesGroup.addOwnedChild(new WhirrRole(displayName: "Role:" + role, role: role, rolesGroup))
