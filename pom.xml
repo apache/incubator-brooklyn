@@ -84,7 +84,7 @@
         <brooklyn.version>0.4.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
 
         <cobertura.version>1.9.4.1</cobertura.version>
-        <surefire.version>2.12.13</surefire.version>
+        <surefire.version>2.12.3</surefire.version>
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.2</ant.version>
 
