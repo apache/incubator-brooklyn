@@ -1,5 +1,8 @@
 package brooklyn.entity.proxy.nginx;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.Attributes
@@ -25,6 +28,8 @@ import com.google.common.base.Predicate
  */
 public class UrlMapping extends AbstractGroup {
 
+    private static final Logger log = LoggerFactory.getLogger(UrlMapping.class);
+    
     @SetFromFlag("label")
     public static final BasicConfigKey<String> LABEL =
         new BasicConfigKey<String>(String.class, "urlmapping.label", "optional human-readable label to identify a server");

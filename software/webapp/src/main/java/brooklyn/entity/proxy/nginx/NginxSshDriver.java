@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.StartStopSshDriver;
@@ -146,7 +147,19 @@ public class NginxSshDriver extends StartStopSshDriver {
     }
     
     public void reload() {
-        if (!entity.getAttribute(Startable.SERVICE_UP)) {
+        // FIXME There is a race on stop()+reload(). Nginx can simultaneously be stopping and also reconfiguring 
+        // (e.g. due to a cluster-resize). The restart() call below means that nginx can be restarted after stop 
+        // has executed. Looking at lifecycle reduces the race, but we need some proper synchronization...
+        
+        Lifecycle lifecycle = entity.getAttribute(NginxController.SERVICE_STATE);
+        Boolean serviceUp = entity.getAttribute(Startable.SERVICE_UP);
+
+        if (lifecycle==Lifecycle.STOPPING || lifecycle==Lifecycle.STOPPED || lifecycle==Lifecycle.DESTROYED) {
+            log.debug("Ignoring reload of nginx "+entity+", becausing in state "+lifecycle);
+            return;
+        }
+        
+        if (serviceUp == null || serviceUp == false) {
             //if it hasn't come up completely then do restart instead
             log.debug("Reload of nginx "+entity+" is doing restart because has not come up");
             restart();

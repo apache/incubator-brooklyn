@@ -28,7 +28,9 @@ public class EntitySubscriptionTest {
     private TestApplication app;
     private TestEntity entity;
     private TestEntity observedEntity;
+    private BasicGroup observedGroup;
     private TestEntity observedChildEntity;
+    private TestEntity observedMemberEntity;
     private TestEntity otherEntity;
     private RecordingSensorEventListener listener;
     
@@ -39,6 +41,11 @@ public class EntitySubscriptionTest {
         entity = new TestEntity(owner:app);
         observedEntity = new TestEntity(owner:app);
         observedChildEntity = new TestEntity(owner:observedEntity);
+        
+        observedGroup = new BasicGroup(owner:app);
+        observedMemberEntity = new TestEntity(owner:app);
+        observedGroup.addMember(observedMemberEntity);
+        
         otherEntity = new TestEntity(owner:app);
         listener = new RecordingSensorEventListener();
         app.start([loc])
@@ -90,6 +97,64 @@ public class EntitySubscriptionTest {
             assertEquals(listener.events, [
                 new BasicSensorEvent(TestEntity.SEQUENCE, observedChildEntity, 123)
             ])
+        }
+    }
+    
+    @Test
+    public void testSubscribeToChildrenReceivesEventsForDynamicallyAddedChildren() {
+        entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
+        
+        TestEntity observedChildEntity2 = new TestEntity(owner:observedEntity);
+        
+        observedChildEntity2.setAttribute(TestEntity.SEQUENCE, 123);
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(listener.events, [
+                new BasicSensorEvent(TestEntity.SEQUENCE, observedChildEntity2, 123)
+            ])
+        }
+    }
+    
+    @Test
+    public void testSubscribeToMembersReceivesEvents() {
+        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        
+        observedMemberEntity.setAttribute(TestEntity.SEQUENCE, 123);
+        observedGroup.setAttribute(TestEntity.SEQUENCE, 456);
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(listener.events, [
+                new BasicSensorEvent(TestEntity.SEQUENCE, observedMemberEntity, 123)
+            ])
+        }
+    }
+    
+    @Test
+    public void testSubscribeToMembersReceivesEventsForDynamicallyAddedMembers() {
+        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        
+        TestEntity observedMemberEntity2 = new TestEntity(owner:app);
+        observedGroup.addMember(observedMemberEntity2);
+        
+        observedMemberEntity2.setAttribute(TestEntity.SEQUENCE, 123);
+        
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            assertEquals(listener.events, [
+                new BasicSensorEvent(TestEntity.SEQUENCE, observedMemberEntity2, 123)
+            ])
+        }
+    }
+    
+    @Test
+    public void testSubscribeToMembersIgnoresEventsForDynamicallyRemovedMembers() {
+        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        
+        observedGroup.removeMember(observedMemberEntity);
+        
+        observedMemberEntity.setAttribute(TestEntity.SEQUENCE, 123);
+        
+        assertSucceedsContinually {
+            assertEquals(listener.events, []);
         }
     }
     

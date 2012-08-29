@@ -11,11 +11,13 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.event.AttributeSensor
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
@@ -60,14 +62,8 @@ public class NginxIntegrationTest {
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
-        executeUntilSucceeds() {
-            // Nginx has started
-            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-
-            // Nginx URL is available
-            String url = nginx.getAttribute(NginxController.ROOT_URL)
-            assertEquals(urlRespondsStatusCode(url), 404);
-        }
+        assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 404);
     }
 
     /**
@@ -91,29 +87,27 @@ public class NginxIntegrationTest {
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
-        executeUntilSucceeds() {
-            // Services are running
-            assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-            cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
-            
-            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-
-            // Nginx URL is available
-            String url = nginx.getAttribute(NginxController.ROOT_URL)
-            assertTrue urlRespondsWithStatusCode200(url)
-
-            // Web-server URL is available
-            cluster.members.each {
-	            assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
-            }
+        // App-servers and nginx has started
+        assertAttributeEventually(cluster, SoftwareProcessEntity.SERVICE_UP, true);
+        cluster.members.each {
+            assertAttributeEventually(it, SoftwareProcessEntity.SERVICE_UP, true);
         }
-        
-        app.stop()
+        assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
+
+        // URLs reachable        
+        assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 200);
+        cluster.members.each {
+            assertUrlStatusCodeEventually(it.getAttribute(WebAppService.ROOT_URL), 200);
+        }
+
+        app.stop();
 
         // Services have stopped
-        assertFalse nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-        assertFalse cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-        cluster.members.each { assertFalse it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        cluster.members.each {
+            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        }
     }
     
     @Test(groups = "Integration")
@@ -141,17 +135,14 @@ public class NginxIntegrationTest {
 
         assertTrue(url1.contains(":1400"), url1);
         assertTrue(url2.contains(":1400"), url2);
-        if (url1.equals(url2)) Assert.fail("Two nginxs should listen on different ports, not both on "+url1);
+        assertNotEquals(url1, url2, "Two nginxs should listen on different ports, not both on "+url1);
         
-        executeUntilSucceeds() {
-            // Nginx has started
-            assertTrue nginx1.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-            assertTrue nginx2.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+        // Nginx has started
+        assertAttributeEventually(nginx1, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(nginx2, SoftwareProcessEntity.SERVICE_UP, true);
 
-            // Nginx URL is available
-            assertEquals(urlRespondsStatusCode(url1), 404);
-            assertEquals(urlRespondsStatusCode(url2), 404);
-        }
+        // Nginx reachable (returning default 404)
+        assertUrlStatusCodeEventually(url1, 404);
+        assertUrlStatusCodeEventually(url2, 404);
     }
-
 }
