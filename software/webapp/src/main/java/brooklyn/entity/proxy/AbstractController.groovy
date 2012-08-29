@@ -95,7 +95,16 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         if (url==null || url.contains("://"+ANONYMOUS+":")) {
             String hostname = domain;
             // use 'hostname' instead of domain if domain is anonymous
-            if (hostname==null || hostname==ANONYMOUS) hostname = getAttribute(HOSTNAME);
+            if (hostname==null || hostname==ANONYMOUS) {
+                hostname = getAttribute(HOSTNAME);
+                if (hostname!=null) {
+                    domain = hostname;
+                    setConfigEvenIfOwned(DOMAIN_NAME, hostname);
+                    setAttribute(DOMAIN_NAME, hostname);
+                } else {
+                    log.warn("Unable to determine domain/hostname for "+this);
+                }
+            }
             if (hostname==null) hostname = ANONYMOUS;
             if (protocol==null) {
                 if (url!=null && !url.startsWith("null:")) protocol = url.substring(0, url.indexOf(':'));
@@ -238,9 +247,9 @@ public abstract class AbstractController extends SoftwareProcessEntity {
         if (!isActive) updateNeeded = true;
         else {
             updateNeeded = false;
-            LOG.info("updating {}", this);
+            LOG.debug("Updating {} in response to changes", this);
             reconfigureService();
-            LOG.debug("submitting restart for update to {}", this);
+            LOG.debug("Submitting restart for update to {}", this);
             invoke(RELOAD);
         }
         setAttribute(TARGETS, addresses);
