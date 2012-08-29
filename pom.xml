@@ -857,6 +857,12 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>${surefire.version}</version>
                         <configuration>
+                            <properties>
+                                <property>
+                                    <name>listener</name>
+                                    <value>brooklyn.test.LoggingVerboseReporter</value>
+                                </property>
+                            </properties>
                             <enableAssertions>true</enableAssertions>
                             <groups>${includedTestGroups}</groups>
                             <excludedGroups>${excludedTestGroups}</excludedGroups>

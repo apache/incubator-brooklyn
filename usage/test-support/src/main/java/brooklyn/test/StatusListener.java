@@ -13,6 +13,8 @@ import org.testng.ITestResult;
  * adapted from the following class:
  * 
  * @see org.jclouds.test.testng.UnitTestStatusListener
+ * 
+ * normally not used, preferring instead LoggingVerboseReporter which prints out config info
  */
 public class StatusListener implements ITestListener {
 	
