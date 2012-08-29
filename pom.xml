@@ -84,7 +84,7 @@
         <brooklyn.version>0.4.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
 
         <cobertura.version>1.9.4.1</cobertura.version>
-        <surefire.version>2.9</surefire.version>
+        <surefire.version>2.12.13</surefire.version>
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.2</ant.version>
 
@@ -855,7 +855,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.12.2</version>
+                        <version>${surefire.version}</version>
                         <configuration>
                             <enableAssertions>true</enableAssertions>
                             <groups>${includedTestGroups}</groups>
@@ -1168,6 +1168,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.version}</version>
                         <inherited>true</inherited>
                         <configuration>
                             <reportFormat>xml</reportFormat>
