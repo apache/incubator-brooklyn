@@ -88,7 +88,7 @@ public class SensorRegistryTest {
         }
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testRemoveSensorStopsItBeingUpdated() {
         AbstractEntity entity = new LocallyManagedEntity()
         SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:50])
@@ -134,7 +134,7 @@ public class SensorRegistryTest {
         }
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testClosePollerStopsItBeingUpdated() {
         AbstractEntity entity = new LocallyManagedEntity()
         SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:50])
