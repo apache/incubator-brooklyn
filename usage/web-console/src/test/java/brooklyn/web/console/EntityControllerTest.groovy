@@ -24,51 +24,51 @@ public class EntityControllerTest extends grails.test.ControllerUnitTestCase {
     MyApp app
     Location loc
     
-    @BeforeMethod
-    public void setupController() {
-        super.setUp()
-        
-        entityService = new EntityService()
-        loc = new SimulatedLocation([latitude: 56, longitude: -2.5]);
-        app = new MyApp()
-        app.start([loc])
-        entityService.managementContextService = app.managementContext
-        
-        controller.entityService = entityService
-    }
-
-    @AfterMethod
-    public void tearDown() {
-        super.tearDown()
-    }
+//    @BeforeMethod
+//    public void setupController() {
+//        super.setUp()
+//
+//        entityService = new EntityService()
+//        loc = new SimulatedLocation([latitude: 56, longitude: -2.5]);
+//        app = new MyApp()
+//        app.start([loc])
+//        entityService.managementContextService = app.managementContext
+//
+//        controller.entityService = entityService
+//    }
+//
+//    @AfterMethod
+//    public void tearDown() {
+//        super.tearDown()
+//    }
     
-    @Test(enabled=false)
-    void testRetrievesEntityInfo() {
-        controller.params.id = app.id
-        controller.info()
-        Object result = new JsonSlurper().parseText(controller.response.contentAsString)
-        assertEquals(result.id, app.id) 
-        assertEquals(result.displayName, app.displayName) 
-    }
-    
-    @Test(enabled=false)
-    void testRetrievingEntityInfoForNonExistantEntityGives404() {
-        controller.params.id = "doesnotexist"
-        controller.info()
-        assertEquals(404, controller.response.status)
-    }
-    
-    // FIXME actually returns json of collection of SensorSummary objects, rather than map
-    @Test(enabled=false)
-    void testSerializeSensorOfTypeEnum() {
-        app.setAttribute(MyApp.MY_ENUM_SIMPLE, MyEnumSimple.B)
-        app.setAttribute(MyApp.MY_ENUM, MyEnumWithGetterMethod.A)
-        controller.params.id = app.id
-        controller.sensors()
-        Object result = new JsonSlurper().parseText(controller.response.contentAsString)
-        assertEquals(result.myenumWithGetterMethod, "A")
-        assertEquals(result.myenumSimple, "A")
-    }
+//    @Test(enabled=false)
+//    void testRetrievesEntityInfo() {
+//        controller.params.id = app.id
+//        controller.info()
+//        Object result = new JsonSlurper().parseText(controller.response.contentAsString)
+//        assertEquals(result.id, app.id)
+//        assertEquals(result.displayName, app.displayName)
+//    }
+//
+//    @Test(enabled=false)
+//    void testRetrievingEntityInfoForNonExistantEntityGives404() {
+//        controller.params.id = "doesnotexist"
+//        controller.info()
+//        assertEquals(404, controller.response.status)
+//    }
+//
+//    // FIXME actually returns json of collection of SensorSummary objects, rather than map
+//    @Test(enabled=false)
+//    void testSerializeSensorOfTypeEnum() {
+//        app.setAttribute(MyApp.MY_ENUM_SIMPLE, MyEnumSimple.B)
+//        app.setAttribute(MyApp.MY_ENUM, MyEnumWithGetterMethod.A)
+//        controller.params.id = app.id
+//        controller.sensors()
+//        Object result = new JsonSlurper().parseText(controller.response.contentAsString)
+//        assertEquals(result.myenumWithGetterMethod, "A")
+//        assertEquals(result.myenumSimple, "A")
+//    }
 }
 
 @InheritConstructors
