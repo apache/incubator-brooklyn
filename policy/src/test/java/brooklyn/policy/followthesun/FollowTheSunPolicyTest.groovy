@@ -203,7 +203,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         testRespectsMinPeriodBetweenExecs();
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testRespectsMinPeriodBetweenExecs() {
         long minPeriodBetweenExecs = 1000
         long timePrecision = 250

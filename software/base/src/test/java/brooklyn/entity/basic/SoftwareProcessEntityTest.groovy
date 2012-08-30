@@ -1,15 +1,10 @@
 package brooklyn.entity.basic;
 
-import groovy.lang.MetaClass
-
-import java.util.List
-import java.util.Map
-
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -17,7 +12,7 @@ import brooklyn.location.basic.SshMachineLocation
 
 public class SoftwareProcessEntityTest {
 
-    @Test
+    @Test(groups="Integration")
     public void testShutdownIsIdempotentInFixedListMachineProvisioningLocation() {
         SshMachineLocation machine = new SshMachineLocation(address:"localhost");
         def loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
@@ -30,7 +25,7 @@ public class SoftwareProcessEntityTest {
     
     private static class MyService extends SoftwareProcessEntity {
         @Override
-        public SshBasedAppSetup newDriver(SshMachineLocation loc) {
+        public StartStopSshDriver newDriver(SshMachineLocation loc) {
             return new SimulatedSshBasedAppSetup(this, loc)
         }
         @Override
@@ -40,14 +35,29 @@ public class SoftwareProcessEntityTest {
     }
 }
 
-public class SimulatedSshBasedAppSetup extends SshBasedAppSetup {
+public class SimulatedSshBasedAppSetup extends StartStopSshDriver {
     SimulatedSshBasedAppSetup(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine)
     }
-    public List<String> getRunScript() {
-        return []
+
+    @Override
+    public boolean isRunning() {
+        return false;
     }
-    public List<String> getCheckRunningScript() {
-        return []
+
+    @Override
+    public void stop() {
+    }
+
+    @Override
+    public void install() {
+    }
+
+    @Override
+    public void customize() {
+    }
+
+    @Override
+    public void launch() {
     }
 }

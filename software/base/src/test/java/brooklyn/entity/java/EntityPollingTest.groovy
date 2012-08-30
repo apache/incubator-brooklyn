@@ -84,7 +84,7 @@ public class EntityPollingTest {
     }
 
 	// Tests that the happy path works
-    @Test
+    @Test(groups="Integration")
     public void testSimpleConnection() {
         jmxService = new JmxService("localhost", 40123)
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): "myval")
@@ -98,7 +98,7 @@ public class EntityPollingTest {
     }
 
 	// Test that connect will keep retrying (e.g. start script returns before the JMX server is up)
-    @Test
+    @Test(groups="Integration")
     public void testEntityWithDelayedJmxStartupWillKeepRetrying() {
 		// In 2 seconds time, we'll start the JMX server
         Thread t = new Thread({
@@ -119,7 +119,7 @@ public class EntityPollingTest {
         }
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testJmxConnectionGoesDownRequiringReconnect() {
         jmxService = new JmxService("localhost", 40123)
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): "myval")

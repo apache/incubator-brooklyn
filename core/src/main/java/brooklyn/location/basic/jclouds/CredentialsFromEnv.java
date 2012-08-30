@@ -81,7 +81,7 @@ public class CredentialsFromEnv {
         // TODO do these need to be required?:
         String privateKeyFile = elvis(findProviderSpecificValueFile("private-key-file"),
                 (truth(props.get("noDefaultSshKeys")) || truth(sysProps.get("noDefaultSshKeys"))  
-                        ? null : pickExistingFile(ImmutableList.of("~/.ssh/id_rsa", "~/.ssh/id_dsa"))));
+                        ? null : pickExistingFile(ImmutableList.of("~/.ssh/id_rsa", "~/.ssh/id_dsa"), null)));
         if (privateKeyFile != null) props.put("privateKeyFile", privateKeyFile);
         
         String publicKeyFile = elvis(findProviderSpecificValueFile("public-key-file"),
@@ -114,10 +114,19 @@ public class CredentialsFromEnv {
     }
 
     protected String pickExistingFile(List<String> candidates) {
+        String result = pickExistingFile(candidates, null);
+        if (result!=null) return result;
+        throw new IllegalStateException("Unable to locate "+
+                (candidates.size()>1 ? "any of the candidate files "+candidates : "file "+candidates.get(0) ) +
+                "; set brooklyn.jclouds."+getProvider()+".public-key-file" );
+ 
+    }
+    protected String pickExistingFile(List<String> candidates, String defaultIfNone) {
         if (!truth(candidates)) return null;
         
         String home=null;
         for (String f: candidates) {
+            if (f==null) return f;
             if (f.startsWith("~/")) {
                 if (home==null) home = sysProps.getFirst(MutableMap.of("defaultIfNone", null), "user.home");
                 if (home==null) home = System.getProperty("user.home");
@@ -126,9 +135,7 @@ public class CredentialsFromEnv {
             File ff = new File(f);
             if (ff.exists()) return f;
         }
-        throw new IllegalStateException("Unable to locate "+
-            (candidates.size()>1 ? "any of the candidate files "+candidates : "file "+candidates.get(0) ) +
-            "; set brooklyn.jclouds."+getProvider()+".public-key-file" );
+        return defaultIfNone;
     }
     
     protected String findProviderSpecificValueFile(String type) {

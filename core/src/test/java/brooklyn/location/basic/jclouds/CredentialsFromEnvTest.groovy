@@ -56,7 +56,7 @@ public class CredentialsFromEnvTest {
     }
 
 
-    @Test
+    @Test(groups="Integration")  // requires key in ~/.ssh/id_rsa
     public void testDefaultKeyFile() {
         def ce = new CredentialsFromEnv(newSampleProps(), "FooServers");
         String keyfile = ce.getPublicKeyFile();

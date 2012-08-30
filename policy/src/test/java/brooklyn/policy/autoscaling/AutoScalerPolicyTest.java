@@ -36,7 +36,7 @@ public class AutoScalerPolicyTest {
     TestCluster cluster;
     LocallyResizableEntity resizable;
     
-    @BeforeMethod()
+    @BeforeMethod(alwaysRun=true)
     public void before() throws Exception {
         policy = new AutoScalerPolicy();
         cluster = new TestCluster(1);
@@ -130,7 +130,7 @@ public class AutoScalerPolicyTest {
         assertEquals(resizable.getCurrentSize(), (Integer)2);
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testConcurrentShrinkShrink() throws Exception {
         resizable.resizeSleepTime = 250;
         resizable.resize(4);
@@ -143,7 +143,7 @@ public class AutoScalerPolicyTest {
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testConcurrentGrowGrow() throws Exception {
         resizable.resizeSleepTime = 250;
         resizable.resize(2);
@@ -156,7 +156,7 @@ public class AutoScalerPolicyTest {
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testConcurrentGrowShrink() throws Exception {
         resizable.resizeSleepTime = 250;
         resizable.resize(2);
@@ -169,7 +169,7 @@ public class AutoScalerPolicyTest {
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testConcurrentShrinkGrow() throws Exception {
         resizable.resizeSleepTime = 250;
         resizable.resize(4);
@@ -241,7 +241,7 @@ public class AutoScalerPolicyTest {
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testResizeUpStabilizationDelayIgnoresBlip() throws Exception {
         long resizeUpStabilizationDelay = 1000L;
         long minPeriodBetweenExecs = 0;
@@ -271,7 +271,7 @@ public class AutoScalerPolicyTest {
         testResizeUpStabilizationDelayTakesMaxSustainedDesired();
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testResizeUpStabilizationDelayTakesMaxSustainedDesired() throws Exception {
         long resizeUpStabilizationDelay = 1100L;
         long minPeriodBetweenExecs = 0;
@@ -325,7 +325,7 @@ public class AutoScalerPolicyTest {
                 "Resizing to 4: time=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay");
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testResizeUpStabilizationDelayResizesAfterDelay() {
         final long resizeUpStabilizationDelay = 1000L;
         long minPeriodBetweenExecs = 0;
@@ -358,7 +358,7 @@ public class AutoScalerPolicyTest {
         assertTrue(resizeDelay >= (resizeUpStabilizationDelay-EARLY_RETURN_MS), "resizeDelay=$resizeDelay");
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testResizeDownStabilizationDelayIgnoresBlip() throws Exception {
         long resizeStabilizationDelay = 1000L;
         long minPeriodBetweenExecs = 0;
@@ -388,7 +388,7 @@ public class AutoScalerPolicyTest {
         testResizeDownStabilizationDelayTakesMinSustainedDesired();
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testResizeDownStabilizationDelayTakesMinSustainedDesired() throws Exception {
         long resizeDownStabilizationDelay = 1100L;
         long minPeriodBetweenExecs = 0;
@@ -437,7 +437,7 @@ public class AutoScalerPolicyTest {
 
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testResizeDownStabilizationDelayResizesAfterDelay() throws Exception {
         final long resizeDownStabilizationDelay = 1000L;
         long minPeriodBetweenExecs = 0;
