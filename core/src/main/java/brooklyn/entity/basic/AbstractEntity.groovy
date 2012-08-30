@@ -370,6 +370,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return result;
     }
 
+    @Override
+    public void removeAttribute(AttributeSensor<?> attribute) {
+        attributesInternal.remove(attribute);
+        entityType.removeSensor(attribute);
+    }
+
     /** sets the value of the given attribute sensor from the config key value herein,
      * if the config key resolves to a non-null value as a sensor
      * <p>
