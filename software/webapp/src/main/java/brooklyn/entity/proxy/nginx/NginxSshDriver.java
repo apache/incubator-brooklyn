@@ -24,7 +24,7 @@ import brooklyn.util.NetworkUtils;
 public class NginxSshDriver extends StartStopSshDriver {
     public static final Logger log = LoggerFactory.getLogger(NginxSshDriver.class);
 
-    boolean customizationCompleted = false;
+    protected boolean customizationCompleted = false;
 
     public NginxSshDriver(NginxController entity, SshMachineLocation machine) {
         super(entity, machine);
