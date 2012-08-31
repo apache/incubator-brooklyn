@@ -18,6 +18,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
 public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity implements JavaWebAppService {
@@ -72,33 +73,45 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
     public void deploy(
             @NamedParameter("url") String url, 
             @NamedParameter("targetName") String targetName) {
-        checkNotNull(url, "url");
-        checkNotNull(targetName, "targetName");
-        JavaWebAppSshDriver driver = getDriver();
-        driver.deploy(url, targetName);
-        
-        // Update attribute
-        Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
-        if (deployedWars == null) {
-            deployedWars = Sets.newLinkedHashSet();
+        try {
+            checkNotNull(url, "url");
+            checkNotNull(targetName, "targetName");
+            JavaWebAppSshDriver driver = getDriver();
+            driver.deploy(url, targetName);
+            
+            // Update attribute
+            Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
+            if (deployedWars == null) {
+                deployedWars = Sets.newLinkedHashSet();
+            }
+            deployedWars.add(targetName);
+            setAttribute(DEPLOYED_WARS, deployedWars);
+        } catch (RuntimeException e) {
+            // Log and propagate, so that log says which entity had problems...
+            LOG.warn("Error deploying '"+url+"' to "+targetName+" on "+toString()+"; rethrowing...", e);
+            throw Throwables.propagate(e);
         }
-        deployedWars.add(targetName);
-        setAttribute(DEPLOYED_WARS, deployedWars);
     }
 
     @Description("Undeploys the given artifact")
     public void undeploy(
             @NamedParameter("targetName") String targetName) {
-        JavaWebAppSshDriver driver = getDriver();
-        driver.undeploy(targetName);
-        
-        // Update attribute
-        Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
-        if (deployedWars == null) {
-            deployedWars = Sets.newLinkedHashSet();
+        try {
+            JavaWebAppSshDriver driver = getDriver();
+            driver.undeploy(targetName);
+            
+            // Update attribute
+            Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
+            if (deployedWars == null) {
+                deployedWars = Sets.newLinkedHashSet();
+            }
+            deployedWars.remove(targetName);
+            setAttribute(DEPLOYED_WARS, deployedWars);
+        } catch (RuntimeException e) {
+            // Log and propagate, so that log says which entity had problems...
+            LOG.warn("Error undeploying '"+targetName+"' on "+toString()+"; rethrowing...", e);
+            throw Throwables.propagate(e);
         }
-        deployedWars.remove(targetName);
-        setAttribute(DEPLOYED_WARS, deployedWars);
     }
     
     //TODO deploy effector
