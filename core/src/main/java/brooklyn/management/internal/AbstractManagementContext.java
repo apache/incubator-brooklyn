@@ -55,8 +55,10 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      */
     public void manage(Entity e) {
         if (isManaged(e)) {
-            log.warn("call to manage entity {} but it is already managed (known at {}); skipping, and all descendants", e, this);
-            new Throwable("source of duplicate management").printStackTrace();
+            if (log.isDebugEnabled()) {
+                log.debug(""+this+" redundant call to start management of entity (and descendants of) "+e+"; skipping", 
+                    new Throwable("source of duplicate management of "+e));
+            }
             return;
         }
         if (manageNonRecursive(e)) {
@@ -82,12 +84,12 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      */
     public void unmanage(Entity e) {
         if (e==null) {
-            log.warn("call to unmanage null entity "+e+" in "+this+"; skipping",  
-                new IllegalStateException("call to unmanage null entity "+e+" in "+this));
+            log.warn(""+this+" call to unmanage null entity; skipping",  
+                new IllegalStateException("source of null unmanagement call to "+this));
             return;
         }
         if (!isManaged(e)) {
-            log.warn("call to unmanage entity {} but it is not known at {}; skipping, and all descendants", e, this);
+            log.warn("{} call to stop management of unknown entity (already unmanaged?) {}; skipping, and all descendants", this, e);
             return;
         }
         for (Entity ei : e.getOwnedChildren()) {

@@ -43,6 +43,7 @@ import com.google.common.base.Throwables;
  * the pool is hot or cold, but instead relies on these events being emitted by the monitored entity itself, or
  * by another policy that is attached to it; see, for example, {@link LoadBalancingPolicy}.)
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class AutoScalerPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(AutoScalerPolicy.class);
@@ -357,7 +358,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             }
         } else if (currentMetricD < metricLowerBoundD) {
             // scale back
-            desiredSize = currentSize - (int)Math.ceil(currentSize * (Math.abs(currentMetricD - metricLowerBoundD) / metricLowerBoundD));
+            desiredSize = currentSize - (int)Math.ceil(currentSize * ((metricLowerBoundD - currentMetricD) / metricLowerBoundD));
             desiredSize = toBoundedDesiredPoolSize(desiredSize);
             if (desiredSize < currentSize) {
                 if (LOG.isTraceEnabled()) LOG.trace("{} resizing pool {} from {} to {} ({} < {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricLowerBoundD});
