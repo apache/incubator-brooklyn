@@ -7,7 +7,7 @@ import com.google.common.base.Throwables;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-public class BasicDriverFactory implements EntityDriverFactory {
+public class BasicEntityDriverFactory implements EntityDriverFactory {
 
     @Override
    public <D extends EntityDriver> D build(DriverDependentEntity<D> entity, Location location){
@@ -17,8 +17,7 @@ public class BasicDriverFactory implements EntityDriverFactory {
             if (location instanceof SshMachineLocation) {
                 String driverInterfaceName = driverInterface.getName();
                 if (!driverInterfaceName.endsWith("Driver")) {
-                    //TODO: Improve
-                    throw new RuntimeException("Driver name doesn't end with driver; " + driverInterfaceName);
+                    throw new RuntimeException(String.format("Driver name [%s] doesn't end with 'Driver'",driverInterfaceName));
                 }
 
                 String driverClassName = driverInterfaceName.replace("Driver", "SshDriver");
@@ -56,6 +55,6 @@ public class BasicDriverFactory implements EntityDriverFactory {
         }
 
         //TODO:
-        throw new RuntimeException();
+        throw new RuntimeException(String.format("Class [%s] has no constructor with 2 arguments",driverClass.getName()));
     }
 }

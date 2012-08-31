@@ -1,6 +1,5 @@
 package brooklyn.management;
 
-import java.sql.DriverManager;
 import java.util.Collection;
 
 import brooklyn.entity.Application;
