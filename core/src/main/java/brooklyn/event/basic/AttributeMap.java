@@ -88,6 +88,25 @@ public final class AttributeMap implements Serializable {
         return (isNull(oldValue)) ? null : oldValue;
     }
 
+    public void remove(AttributeSensor<?> attribute) {
+        if (log.isDebugEnabled()) {
+            log.debug("removing attribute {} on {}", attribute.getName(), entity);
+        }
+
+        remove(attribute.getNameParts());
+    }
+
+    // TODO path must be ordered(and legal to contain duplicates like "a.b.a"; list would be better
+    public void remove(Collection<String> path) {
+        checkPath(path);
+
+        if (log.isTraceEnabled()) {
+            log.trace("removing sensor {} for {}", new Object[] {path, entity});
+        }
+
+        values.remove(path);
+    }
+
     /**
      * Gets the value
      *

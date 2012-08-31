@@ -73,6 +73,32 @@ public class TestUtils {
         return connection
     }
     
+    // TODO calling groovy from java doesn't cope with generics here; stripping them :-( 
+    //      <T> void assertEventually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate)
+    public static void assertEventually(Map flags=[:], Supplier supplier, Predicate predicate) {
+        assertEventually(flags, supplier, predicate, (String)null);
+    }
+    
+    public static <T> void assertEventually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
+        TimeDuration timeout = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
+        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
+        long periodMs = period.toMilliseconds()
+        long startTime = System.currentTimeMillis()
+        long expireTime = startTime+timeout.toMilliseconds()
+        
+        boolean first = true;
+        T supplied = supplier.get();
+        while (first || System.currentTimeMillis() <= expireTime) {
+            supplied = supplier.get();
+            if (predicate.apply(supplied)) {
+                return;
+            }
+            first = false;
+            if (periodMs > 0) sleep(periodMs);
+        }
+        fail("supplied="+supplied+"; predicate="+predicate+(errMsg!=null?"; "+errMsg:""));
+    }
+    
     public static void assertEventually(Map flags=[:], Callable c) {
         executeUntilSucceeds(flags, c);
     }

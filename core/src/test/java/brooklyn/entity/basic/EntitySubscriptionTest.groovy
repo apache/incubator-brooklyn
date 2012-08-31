@@ -214,8 +214,8 @@ public class EntitySubscriptionTest {
         }
     }
 
-    private static class RecordingSensorEventListener implements SensorEventListener<Object> {
-        final List<SensorEvent<?>> events = new CopyOnWriteArrayList<SensorEvent<?>>();
+    public static class RecordingSensorEventListener implements SensorEventListener<Object> {
+        public final List<SensorEvent<?>> events = new CopyOnWriteArrayList<SensorEvent<?>>();
         
         @Override public void onEvent(SensorEvent<Object> event) {
             events.add(event);
