@@ -354,7 +354,7 @@ public class NginxController extends AbstractController {
         return true;
     }
 
-    private Iterable<UrlMapping> findUrlMappings() {
+    protected Iterable<UrlMapping> findUrlMappings() {
         // For mapping by URL
         Group urlMappingGroup = getConfig(URL_MAPPINGS);
         if (urlMappingGroup != null) {

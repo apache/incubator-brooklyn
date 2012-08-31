@@ -261,6 +261,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     public AutoScalerPolicy() {
         this(MutableMap.<String,Object>of());
     }
+    
     public AutoScalerPolicy(Map<String,?> props) {
         super(props);
         resizeOperator = elvis(resizeOperator, defaultResizeOperator);
@@ -273,6 +274,41 @@ public class AutoScalerPolicy extends AbstractPolicy {
         recentDesiredResizes = new TimeWindowedList<Number>(MutableMap.of("timePeriod", maxResizeStabilizationDelay, "minExpiredVals", 1));
     }
 
+    public void setMetricLowerBound(Number val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing metricLowerBound from {} to {}", new Object[] {this, metricLowerBound, val});
+        this.metricLowerBound = checkNotNull(val);
+    }
+    
+    public void setMetricUpperBound(Number val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing metricUpperBound from {} to {}", new Object[] {this, metricUpperBound, val});
+        this.metricUpperBound = checkNotNull(val);
+    }
+    
+    public void setMinPeriodBetweenExecs(long val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing minPeriodBetweenExecs from {} to {}", new Object[] {this, minPeriodBetweenExecs, val});
+        this.minPeriodBetweenExecs = val;
+    }
+    
+    public void setResizeUpStabilizationDelay(long val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeUpStabilizationDelay from {} to {}", new Object[] {this, resizeUpStabilizationDelay, val});
+        this.resizeUpStabilizationDelay = val;
+    }
+    
+    public void setResizeDownStabilizationDelay(long val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeDownStabilizationDelay from {} to {}", new Object[] {this, resizeDownStabilizationDelay, val});
+        this.resizeDownStabilizationDelay = val;
+    }
+    
+    public void setMinPoolSize(int val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing minPoolSize from {} to {}", new Object[] {this, minPoolSize, val});
+        this.minPoolSize = val;
+    }
+    
+    public void setMaxPoolSize(int val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing maxPoolSize from {} to {}", new Object[] {this, maxPoolSize, val});
+        this.maxPoolSize = val;
+    }
+    
     @Override
     public void suspend() {
         super.suspend();
