@@ -15,7 +15,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
-public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortableTemplateBuilder> implements TemplateBuilder {
+public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortableTemplateBuilder<?>> implements TemplateBuilder {
 
     /** list of commands supplied by user, excluding options */
     protected List<Function<TemplateBuilder,TemplateBuilder>> commands = new ArrayList<Function<TemplateBuilder,TemplateBuilder>>();

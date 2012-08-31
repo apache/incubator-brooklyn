@@ -88,7 +88,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     /** properties which are passed to ssh */
-    public static final Collection<String> SSH_PROPS = ImmutableSet.of("logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData", "permissions");
+    public static final Collection<String> SSH_PROPS = ImmutableSet.of("logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData", "permissions", "sshTries");
     //TODO prefer privateKeyData (confusion about whether other holds a file or data)
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");

@@ -20,7 +20,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
 
-public class PortableTemplateBuilder<T extends PortableTemplateBuilder> extends AbstractPortableTemplateBuilder<T> {
+public class PortableTemplateBuilder<T extends PortableTemplateBuilder<?>> extends AbstractPortableTemplateBuilder<T> {
     
     ComputeService svc;
     List<TemplateOptions> additionalOptionalOptions = new ArrayList<TemplateOptions>();
