@@ -162,9 +162,4 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
         }
     }
     
-    /** returns true iff there is at least one sensor, and there are no sensors returning null */
-    public boolean isComplete() {
-        return !values.isEmpty() && !values.containsValue(null);
-    }
-    
 }
