@@ -358,7 +358,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             }
         } else if (currentMetricD < metricLowerBoundD) {
             // scale back
-            desiredSize = currentSize - (int)Math.ceil(currentSize * ((metricLowerBoundD - currentMetricD) / metricLowerBoundD));
+            desiredSize = currentSize - (int)Math.floor(currentSize * ((metricLowerBoundD - currentMetricD) / metricLowerBoundD));
             desiredSize = toBoundedDesiredPoolSize(desiredSize);
             if (desiredSize < currentSize) {
                 if (LOG.isTraceEnabled()) LOG.trace("{} resizing pool {} from {} to {} ({} < {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricLowerBoundD});
@@ -456,6 +456,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
         // finish? On ec2 for example, this can cause us to grow very slowly if first request is for
         // just one new VM to be provisioned.
         
+        // Alex comments: yes, for scale out
+        
         if (isRunning() && executorQueued.compareAndSet(false, true) && isEntityUp()) {
             long now = System.currentTimeMillis();
             long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now);
@@ -472,6 +474,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
                         long desiredPoolSize = calculatedDesiredPoolSize.size;
                         boolean stable = calculatedDesiredPoolSize.stable;
                         
+                        // TODO Alex says: I think we should change even if not stable ... worst case we'll shrink later
+                        // otherwise if we're at 100 nodes and the num required keeps shifting from 10 to 11 to 8 to 13
+                        // we'll always have 100 ... or worse if we have 10 and num required keeps shifting 100 to 101 to 98...
                         if (!stable) {
                             // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
                             // even if no additional events have been received
@@ -485,11 +490,11 @@ public class AutoScalerPolicy extends AbstractPolicy {
                             return;
                         }
                         
+                        if (LOG.isDebugEnabled()) LOG.debug("{} requesting resize to {}; current {}, min {}, max {}", 
+                                new Object[] {this, desiredPoolSize, currentPoolSize, minPoolSize, maxPoolSize});
+                        
                         // TODO Should we use int throughout, rather than casting here?
                         resizeOperator.resize(poolEntity, (int) desiredPoolSize);
-                        
-                        if (LOG.isDebugEnabled()) LOG.debug("{} requested resize to {}; current {}, min {}, max {}", 
-                                new Object[] {this, desiredPoolSize, currentPoolSize, minPoolSize, maxPoolSize});
                         
                     } catch (Exception e) {
                         if (isRunning()) {
@@ -519,22 +524,33 @@ public class AutoScalerPolicy extends AbstractPolicy {
         long now = System.currentTimeMillis();
         List<TimestampedValue<Number>> downsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeDownStabilizationDelay);
         List<TimestampedValue<Number>> upsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeUpStabilizationDelay);
+        // this is the largest size that has been requested in the "stable-for-shrinking" period:
         long minDesiredPoolSize = maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay).longValue();
+        // this is the smallest size that has been requested in the "stable-for-growing" period:
         long maxDesiredPoolSize = minInWindow(upsizeWindowVals, resizeUpStabilizationDelay).longValue();
-        
+        // (it is a logical consequence of the above that minDesired >= maxDesired -- this is correct, if confusing:
+        // think of minDesired as the minimum size we are allowed to resize to, and similarly for maxDesired; 
+        // if min > max we can scale to max if current < max, or scale to min if current > min)
+
         long desiredPoolSize;
-        if (currentPoolSize > minDesiredPoolSize) {
-            // need to shrink
-            desiredPoolSize = minDesiredPoolSize;
-        } else if (currentPoolSize < maxDesiredPoolSize) {
-            // need to grow
+        
+        boolean stableForShrinking = (minInWindow(downsizeWindowVals, resizeDownStabilizationDelay).equals(maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay)));
+        boolean stableForGrowing = (minInWindow(upsizeWindowVals, resizeUpStabilizationDelay).equals(maxInWindow(upsizeWindowVals, resizeUpStabilizationDelay)));
+        boolean stable;
+        
+        if (currentPoolSize < maxDesiredPoolSize) {
+            // we have valid request to grow 
+            // (we'll never have a valid request to grow and a valid to shrink simultaneously, btw)
             desiredPoolSize = maxDesiredPoolSize;
+            stable = stableForGrowing;
+        } else if (currentPoolSize > minDesiredPoolSize) {
+            // we have valid request to shrink
+            desiredPoolSize = minDesiredPoolSize;
+            stable = stableForShrinking;
         } else {
             desiredPoolSize = currentPoolSize;
+            stable = stableForGrowing && stableForShrinking;
         }
-        
-        boolean stable = (minInWindow(downsizeWindowVals, resizeDownStabilizationDelay).equals(maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay))) &&
-                (minInWindow(upsizeWindowVals, resizeUpStabilizationDelay).equals(maxInWindow(upsizeWindowVals, resizeUpStabilizationDelay)));
 
         if (LOG.isTraceEnabled()) LOG.trace("{} calculated desired pool size: from {} to {}; minDesired {}, maxDesired {}; " +
                 "stable {}; now {}; downsizeHistory {}; upsizeHistory {}", 
