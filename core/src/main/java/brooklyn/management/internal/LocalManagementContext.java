@@ -2,7 +2,7 @@ package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 
-import brooklyn.entity.drivers.BasicDriverFactory;
+import brooklyn.entity.drivers.BasicEntityDriverFactory;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import groovy.util.ObservableList;
 
@@ -43,7 +43,7 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     private static final Object MANAGED_LOCALLY = new Object();
 
-    private final EntityDriverFactory entityDriverFactory = new BasicDriverFactory();
+    private final EntityDriverFactory entityDriverFactory = new BasicEntityDriverFactory();
 
     @Override
     public EntityDriverFactory getEntityDriverFactory() {
