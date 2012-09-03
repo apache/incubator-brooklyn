@@ -31,7 +31,7 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
     
     private static final Logger LOG = LoggerFactory.getLogger(AbstractAggregatingEnricher.class);
     
-    AttributeSensor<S> source;
+    AttributeSensor<? extends S> source;
     protected AttributeSensor<T> target;
     protected S defaultValue;
 
@@ -47,11 +47,12 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
     // We use a synchronizedMap over a ConcurrentHashMap for entities that store null values.
     protected final Map<Entity, S> values = Collections.synchronizedMap(new LinkedHashMap<Entity, S>());
 
-    public AbstractAggregatingEnricher(Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target) {
+    public AbstractAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target) {
         this(flags, source, target, null);
     }
     
-    public AbstractAggregatingEnricher(Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, S defaultValue) {
+    @SuppressWarnings("unchecked")
+    public AbstractAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target, S defaultValue) {
         super(flags);
         this.source = source;
         this.target = target;
@@ -160,4 +161,5 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
             return ImmutableMap.copyOf(values);
         }
     }
+    
 }

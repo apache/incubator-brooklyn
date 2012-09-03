@@ -45,12 +45,13 @@ public class LocalManagementContext extends AbstractManagementContext {
         Object old = entitiesById.put(e.getId(), e);
         if (old!=null) {
             if (old == e) {
-                log.warn("call to manage entity {} but it is already managed (known at {})", e, this);
+                log.warn("{} redundant call to start management of entity {}", this, e);
             } else {
                 throw new IllegalStateException("call to manage entity "+e+" but different entity "+old+" already known under that id at "+this);
             }
             return false;
         } else {
+            log.debug("{} starting management of entity {}", this, e);
             entities.add(e);
             if (e instanceof Application) applications.add((Application)e);
             return true;
@@ -63,10 +64,15 @@ public class LocalManagementContext extends AbstractManagementContext {
         if (e instanceof Application) applications.remove(e);
         entities.remove(e);
         Object old = entitiesById.remove(e.getId());
-        if (old!=e) {
-            log.warn("call to unmanage entity {} but it is not known at {}", e, this);
+        if (old==null) {
+            log.warn("{} call to stop management of unknown entity (already unmanaged?) {}", this, e);
             return false;
+        } else if (!old.equals(e)) {
+            // shouldn't happen...
+            log.error("{} call to stop management of entity {} removed different entity {}", new Object[] { this, e, old });
+            return true;
         } else {
+            log.debug("{} stopped management of entity {}", this, e);
             return true;
         }
     }

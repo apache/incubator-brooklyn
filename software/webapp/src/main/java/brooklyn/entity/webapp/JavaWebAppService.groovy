@@ -15,9 +15,14 @@ interface JavaWebAppService extends WebAppService, UsesJava {
     @Deprecated
 	public static final BasicConfigKey<String> WAR = ROOT_WAR;
 
+
     @SetFromFlag("wars")
 	public static final BasicConfigKey<List<String>> NAMED_WARS = [ List, "wars.named", 
-        "Archive files to deploy preserving their names for access as the path, as URL strings (supporting file: and classpath: prefixes)" ]
+        "Archive files to deploy, as URL strings (supporting file: and classpath: prefixes); context (path in user-facing URL) will be inferred by name" ]
+    
+    @SetFromFlag("warsByContext")
+    public static final BasicConfigKey<Map<String,String>> WARS_BY_CONTEXT = [ Map, "wars.by.context",
+        "Map of context keys (path in user-facing URL, typically without slashes) to archives (e.g. WARs by URL) to deploy, supporting file: and classpath: prefixes)" ]
 
     /**
      * @deprecated will be deleted in 0.5.  use flag 'wars' now; kept for compatibility

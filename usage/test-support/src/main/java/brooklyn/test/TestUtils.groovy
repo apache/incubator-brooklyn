@@ -49,7 +49,7 @@ public class TestUtils {
     public static boolean urlRespondsWithStatusCode200(String url) {
         def connection = connectToURL(url)
         int status = ((HttpURLConnection) connection).getResponseCode()
-        log.info "connection to {} gives {}", url, status
+        log.debug "connection to {} gives {}", url, status
         if (status == 404)
             throw new Exception("Connection to $url gave 404");
         return status == 200
@@ -59,7 +59,7 @@ public class TestUtils {
     public static int urlRespondsStatusCode(String url) {
         def connection = connectToURL(url)
         int status = ((HttpURLConnection) connection).getResponseCode()
-        log.info "connection to {} gives {}", url, status
+        log.debug "connection to {} gives {}", url, status
         return status;
     }
     
@@ -217,7 +217,7 @@ public class TestUtils {
                 sleepTimeBetweenAttempts = Math.min(sleepTimeBetweenAttempts*2, maxPeriod.toMilliseconds())
             }
             
-            log.trace "Exceeded max attempts or timeout - {} attempts lasting {} ms", attempt, System.currentTimeMillis()-startTime
+            log.debug "TestUtils.executeUntilSucceedsWithFinallyBlockInternal exceeded max attempts or timeout - {} attempts lasting {} ms", attempt, System.currentTimeMillis()-startTime
             if (lastException != null)
                 throw lastException
             fail "invalid result: $result"

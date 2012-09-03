@@ -1,7 +1,5 @@
 package brooklyn.enricher;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
 import groovy.lang.Closure;
 
 import java.util.Collection;
@@ -17,10 +15,12 @@ import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
-import brooklyn.util.MutableMap;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
@@ -46,23 +46,23 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * @param aggregator   Aggregates a collection of values, to return a single value for the target sensor
      * @param defaultValue Default value to populate the collection given to aggregator, defaults to null
      */
-    public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target,
+    public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target,
             Function<Collection<S>, T> aggregator, S defaultValue) {
         super(flags, source, target, defaultValue);
         this.aggregator = aggregator;
     }
     
-    public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target,
+    public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target,
             Function<Collection<S>, T> aggregator) {
         this(flags, source, target, aggregator, null);
     }
     
-    public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target,
+    public CustomAggregatingEnricher(AttributeSensor<? extends S> source, AttributeSensor<T> target,
             Function<Collection<S>, T> aggregator, S defaultValue) {
         this(Collections.<String,Object>emptyMap(), source, target, aggregator, defaultValue);
     }
     
-    public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target,
+    public CustomAggregatingEnricher(AttributeSensor<? extends S> source, AttributeSensor<T> target,
             Function<Collection<S>, T> aggregator) {
         this(Collections.<String,Object>emptyMap(), source, target, aggregator, null);
     }
@@ -76,33 +76,35 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * 
      * @see #CustomAggregatingEnricher(Map<String,?>, AttributeSensor<S>, AttributeSensor<T> target, Function<Collection<S>, T> aggregator, S defaultValue)
      */
-    public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target,
-            Closure aggregator, S defaultValue) {
-        this(flags, source, target, GroovyJavaMethods.<Collection<S>, T>functionFromClosure(aggregator), defaultValue);
+    @SuppressWarnings("unchecked")
+    public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target,
+            Closure<?> aggregator, S defaultValue) {
+        this(flags, source, target, GroovyJavaMethods.<Collection<S>, T>functionFromClosure((Closure<T>)aggregator), defaultValue);
     }
 
-    public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Closure aggregator) {
+    public CustomAggregatingEnricher(Map<String,?> flags, AttributeSensor<? extends S> source, AttributeSensor<T> target, Closure<?> aggregator) {
         this(flags, source, target, aggregator, null);
     }
 
-    public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target, Closure aggregator, S defaultValue) {
+    public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator, S defaultValue) {
         this(Collections.<String,Object>emptyMap(), source, target, aggregator, defaultValue);
     }
 
-    public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target, Closure aggregator) {
+    public CustomAggregatingEnricher(AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator) {
         this(Collections.<String,Object>emptyMap(), source, target, aggregator, null);
     }
 
     /**
      * @deprecated will be deleted in 0.5. Use CustomAggregatingEnricher(source, target, aggregator, deafultValue, producers:producer)
      */
+    @SuppressWarnings("unchecked")
     public CustomAggregatingEnricher(List<Entity> producer, AttributeSensor<S> source, AttributeSensor<T> target, 
-            Closure aggregator, S defaultValue) {
-        this(producer, source, target, GroovyJavaMethods.<Collection<S>, T>functionFromClosure(aggregator), defaultValue);
+            Closure<?> aggregator, S defaultValue) {
+        this(producer, source, target, GroovyJavaMethods.<Collection<S>, T>functionFromClosure((Closure<T>)aggregator), defaultValue);
     }
 
     @Deprecated
-    public CustomAggregatingEnricher(List<Entity> producer, AttributeSensor<S> source, AttributeSensor<T> target, Closure aggregator) {
+    public CustomAggregatingEnricher(List<Entity> producer, AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator) {
         this(producer, source, target, aggregator, null);
     }
 
@@ -139,19 +141,19 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
 
     // FIXME Clean up explosion of overloading, caused by groovy-equivalent default vals...
     public static <S,T> CustomAggregatingEnricher<S,T> newEnricher(
-            Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Closure aggregator, S defaultVal) {
+            Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator, S defaultVal) {
         return newEnricher(flags, source, target, aggregator, defaultVal);
     }
     public static <S,T> CustomAggregatingEnricher<S,T> newEnricher(
-            Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Closure aggregator) {
+            Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator) {
         return newEnricher(flags, source, target, aggregator, null);
     }
     public static <S,T> CustomAggregatingEnricher<S,T> newEnricher(
-            AttributeSensor<S> source, AttributeSensor<T> target, Closure aggregator, S defaultVal) {
+            AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator, S defaultVal) {
         return newEnricher(Collections.<String,Object>emptyMap(), source, target, aggregator, defaultVal);
     }
     public static <S,T> CustomAggregatingEnricher<S,T> newEnricher(
-            AttributeSensor<S> source, AttributeSensor<T> target, Closure aggregator) {
+            AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator) {
         return newEnricher(Collections.<String,Object>emptyMap(), source, target, aggregator, null);
     }
     
@@ -199,17 +201,30 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         return newSummingEnricher(ImmutableMap.of("producers", producer, "allMembers", true), source, target);
     }
 
+    /** creates an enricher which averages over all sensors, 
+     * counting ZERO for sensors which have not yet published anything;
+     * to have those sensors excluded, pass null as an additional argument (defaultValue)
+     */
+    // this function can't strictly return <N,Double> like the others because 
+    // we have to supply a 0 of instance of N
+    public static CustomAggregatingEnricher<Number,Double> newAveragingEnricher(
+            Map<String,?> flags, AttributeSensor<? extends Number> source, AttributeSensor<Double> target) {
+        return newAveragingEnricher(flags, source, target, 0);
+    }
+    /** defaultValue of null means that the sensor is excluded */
     public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
-            Map<String,?> flags, AttributeSensor<N> source, AttributeSensor<Double> target) {
+            Map<String,?> flags, AttributeSensor<? extends N> source, AttributeSensor<Double> target,
+            N defaultValue) {
         
         Function<Collection<N>, Double> aggregator = new Function<Collection<N>, Double>() {
             @Override public Double apply(Collection<N> vals) {
-                return (vals == null || vals.isEmpty()) ? 0d : ((Double) sum(vals) / vals.size());
+                int count = count(vals);
+                return (count==0) ? 0d : ((Double) sum(vals) / count);
             }
         };
-        return new CustomAggregatingEnricher<N,Double>(flags, source, target, aggregator);
+        return new CustomAggregatingEnricher<N,Double>(flags, source, target, aggregator, defaultValue);
     }
-    public static <N extends Number> CustomAggregatingEnricher<N,Double> newAveragingEnricher(
+    public static <N extends Number> CustomAggregatingEnricher<Number,Double> newAveragingEnricher(
             AttributeSensor<N> source, AttributeSensor<Double> target) {
         return newAveragingEnricher(Collections.<String,Object>emptyMap(), source, target);
     }
@@ -218,14 +233,21 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
      * @deprecated will be deleted in 0.5. Use newAveragingEnricher(source, target, producers:producer, allMembers:true)
      */
     @Deprecated
-    public static <N extends Number> CustomAggregatingEnricher<N,Double> getAveragingEnricher(
+    public static <N extends Number> CustomAggregatingEnricher<Number,Double> getAveragingEnricher(
             List<Entity> producer, AttributeSensor<N> source, AttributeSensor<Double> target) {
         return newAveragingEnricher(MutableMap.of("producers", producer, "allMembers", true), source, target);
     }
     
     private static <N extends Number> double sum(Iterable<N> vals) {
         double result = 0d;
-        for (N val : vals) result += (val != null) ? val.doubleValue() : 0d;
+        if (vals!=null) for (Number val : vals) if (val!=null) result += val.doubleValue();
         return result;
     }
+    
+    private static int count(Iterable<? extends Object> vals) {
+        int result = 0;
+        if (vals!=null) for (Object val : vals) if (val!=null) result++;
+        return result;
+    }
+
 }

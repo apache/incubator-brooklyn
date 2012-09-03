@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +28,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
     private static final Logger log = LoggerFactory.getLogger(JavaWebAppSoftwareProcess.class);
 
     public static final AttributeSensor<Set<String>> DEPLOYED_WARS = new BasicAttributeSensor(
-            Set.class, "webapp.deployedWars", "Names of archives that are currently deployed");
+            Set.class, "webapp.deployedWars", "Names of archives/contexts that are currently deployed");
 
     public JavaWebAppSoftwareProcess(){
         this(new LinkedHashMap(),null);
@@ -64,12 +66,43 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
 
         List<String> namedWars = getConfig(NAMED_WARS, Collections.<String>emptyList());
         for(String war: namedWars){
-            String name = war.substring(war.lastIndexOf('/') + 1);
-            deploy(war, name);
+            deploy(war, getDriver().getFilenameContextMapper().findArchiveNameFromUrl(war, true));
+        }
+        
+        Map<String,String> warsByContext = getConfig(WARS_BY_CONTEXT);
+        if (warsByContext!=null) {
+            for (String context: warsByContext.keySet()) {
+                deploy(warsByContext.get(context), context);
+            }
         }
     }
 
-    @Description("Deploys the given artifact")
+    /**
+     * Deploys the given artifact, from a source URL, to a given deployment filename/context.
+     * There is some variance in expected filename/context at various servers,
+     * so the following conventions are followed:
+     * <p>
+     *   either ROOT.WAR or /       denotes root context
+     * <p>
+     *   anything of form  FOO.?AR  (ending .?AR) is copied with that name (unless copying not necessary)
+     *                              and is expected to be served from /FOO
+     * <p>
+     *   anything of form  /FOO     (with leading slash) is expected to be served from /FOO
+     *                              (and is copied as FOO.WAR)
+     * <p>
+     *   anything of form  FOO      (without a dot) is expected to be served from /FOO
+     *                              (and is copied as FOO.WAR)
+     * <p>                            
+     *   otherwise <i>please note</i> behaviour may vary on different appservers;
+     *   e.g. FOO.FOO would probably be ignored on appservers which expect a file copied across (usually),
+     *   but served as /FOO.FOO on systems that take a deployment context.
+     * <p>
+     * See {@link FileNameToContextMappingTest} for definitive examples!
+     * 
+     * @param url  where to get the war, as a URL, either classpath://xxx or file:///home/xxx or http(s)...
+     * @param targetName  where to tell the server to serve the WAR, see above
+     */
+    @Description("Deploys the given artifact, from a source URL, to a given deployment filename/context")
     public void deploy(
             @NamedParameter("url") String url, 
             @NamedParameter("targetName") String targetName) {
@@ -77,14 +110,14 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
             checkNotNull(url, "url");
             checkNotNull(targetName, "targetName");
             JavaWebAppSshDriver driver = getDriver();
-            driver.deploy(url, targetName);
+            String deployedName = driver.deploy(url, targetName);
             
             // Update attribute
             Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
             if (deployedWars == null) {
                 deployedWars = Sets.newLinkedHashSet();
             }
-            deployedWars.add(targetName);
+            deployedWars.add(deployedName);
             setAttribute(DEPLOYED_WARS, deployedWars);
         } catch (RuntimeException e) {
             // Log and propagate, so that log says which entity had problems...
@@ -114,8 +147,6 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
         }
     }
     
-    //TODO deploy effector
-
     @Override
     public void stop() {
         super.stop();

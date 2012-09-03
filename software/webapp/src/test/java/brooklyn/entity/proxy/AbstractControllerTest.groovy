@@ -133,7 +133,7 @@ class AbstractControllerTest {
             def u = new ArrayList(updates);
             log.debug "test ${u.size()} updates, expecting ${locationsToAddresses(1234, cluster.ownedChildren)} = ${u ? u.last() : 'empty'}"
             assertTrue(u.size() > 0);
-            assertTrue(u.last() == locationsToAddresses(1234, cluster.ownedChildren), "actual="+u.last());
+            assertTrue(u.last() == locationsToAddresses(1234, cluster.ownedChildren), "actual="+u.last()+" expected="+locationsToAddresses(1234, cluster.ownedChildren));
         }
     }
     
@@ -144,7 +144,7 @@ class AbstractControllerTest {
     private Collection<String> locationsToAddresses(int port, Collection<Entity> entities) {
         Set<String> result = [] as Set
         entities.each {
-            result << it.firstLocation().address.hostAddress+":"+port
+            result << it.firstLocation().address.hostName+":"+port
         }
         return result
     }

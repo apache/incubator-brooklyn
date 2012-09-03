@@ -43,7 +43,8 @@ protected class HttpPollHelper extends AbstractPollHelper {
         TrustingSslSocketFactory.configure(connection);
 		connection.connect()
 		def result = new HttpResponseContext(connection)
-        if (log.isDebugEnabled()) log.debug "http poll for {} got: {}", adapter.entity, result.content
+        if (log.isDebugEnabled()) log.debug "http poll for {} returned status {}", adapter.entity, result.responseCode
+        if (log.isTraceEnabled()) log.trace "http poll for {} returned content: {}", adapter.entity, result.content
 		return result
 	}
 	

@@ -32,6 +32,7 @@ import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
+import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
 import groovy.time.TimeDuration
@@ -287,14 +288,20 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     }
     
 	// TODO Find a better way to detect early death of process.
-	public void waitForEntityStart() throws IllegalStateException {
+	public void waitForEntityStart() {
 		if (log.isDebugEnabled()) log.debug "waiting to ensure $this doesn't abort prematurely"
 		long startTime = System.currentTimeMillis()
 		long waitTime = startTime + 75000 // FIXME magic number; should be config key with default value?
 		boolean isRunningResult = false;
 		while (!isRunningResult && System.currentTimeMillis() < waitTime) {
 		    Thread.sleep 1000 // FIXME magic number; should be config key with default value?
-			isRunningResult = driver.isRunning()
+            try {
+                isRunningResult = driver.isRunning()
+            } catch (Exception  e) {
+                setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+                // provide extra context info, as we're seeing this happen in strange circumstances
+                throw new IllegalStateException("Error detecting whether ${this} is running: "+e, e);
+            }
 			if (log.isDebugEnabled()) log.debug "checked {}, is running returned: {}", this, isRunningResult
 		}
 		if (!isRunningResult) {
