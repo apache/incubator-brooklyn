@@ -1,60 +1,27 @@
 package brooklyn.entity.drivers;
 
 import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
-import com.google.common.base.Throwables;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 public class BasicEntityDriverFactory implements EntityDriverFactory {
 
-    @Override
-   public <D extends EntityDriver> D build(DriverDependentEntity<D> entity, Location location){
-        Class<D> driverInterface = entity.getDriverInterface();
-        Class<? extends D> driverClass;
-        if (driverInterface.isInterface()) {
-            if (location instanceof SshMachineLocation) {
-                String driverInterfaceName = driverInterface.getName();
-                if (!driverInterfaceName.endsWith("Driver")) {
-                    throw new RuntimeException(String.format("Driver name [%s] doesn't end with 'Driver'",driverInterfaceName));
-                }
-
-                String driverClassName = driverInterfaceName.replace("Driver", "SshDriver");
-                try {
-                    driverClass = (Class<? extends D>) entity.getClass().getClassLoader().loadClass(driverClassName);
-                } catch (ClassNotFoundException e) {
-                    throw Throwables.propagate(e);
-                }
-            } else {
-                //TODO: Improve
-                throw new RuntimeException("Currently only SshMachineLocation is supported");
-            }
-        } else {
-            driverClass = driverInterface;
-        }
-
-        Constructor constructor = getConstructor(driverClass);
-        try {
-            constructor.setAccessible(true);
-            return (D) constructor.newInstance(entity, location);
-        } catch (InstantiationException e) {
-            throw Throwables.propagate(e);
-        } catch (IllegalAccessException e) {
-            throw Throwables.propagate(e);
-        } catch (InvocationTargetException e) {
-            throw Throwables.propagate(e);
-        }
+    private final RegistryEntityDriverFactory registry;
+    private final ReflectiveEntityDriverFactory reflective;
+    
+    public BasicEntityDriverFactory() {
+        registry = new RegistryEntityDriverFactory();
+        reflective = new ReflectiveEntityDriverFactory();
     }
-
-    private Constructor<EntityDriver> getConstructor(Class<? extends EntityDriver> driverClass) {
-        for (Constructor constructor : driverClass.getConstructors()) {
-            if (constructor.getParameterTypes().length == 2) {
-                return constructor;
-            }
+    
+    public <D extends EntityDriver> void registerDriver(Class<D> driverInterface, Class<? extends Location> locationClazz, Class<? extends D> driverClazz) {
+        registry.registerDriver(driverInterface, locationClazz, driverClazz);
+    }
+    
+    @Override
+    public <D extends EntityDriver> D build(DriverDependentEntity<D> entity, Location location){
+        if (registry.hasDriver(entity, location)) {
+            return registry.build(entity, location);
+        } else {
+            return reflective.build(entity, location);
         }
-
-        //TODO:
-        throw new RuntimeException(String.format("Class [%s] has no constructor with 2 arguments",driverClass.getName()));
     }
 }
