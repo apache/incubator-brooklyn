@@ -346,23 +346,48 @@ public class AutoScalerPolicy extends AbstractPolicy {
         double metricUpperBoundD = metricUpperBound.doubleValue();
         double metricLowerBoundD = metricLowerBound.doubleValue();
         int currentSize = currentSizeOperator.apply(entity);
-        
+        double currentTotalActivity = currentSize * currentMetricD;
         int desiredSize;
+        
+        /* We always scale out (modulo stabilization delay) if:
+         *   currentTotalActivity > currentSize*metricUpperBound
+         * With newDesiredSize the smallest n such that   n*metricUpperBound >= currentTotalActivity
+         * ie  n >= currentTotalActiviy/metricUpperBound, thus n := Math.ceil(currentTotalActivity/metricUpperBound)
+         * 
+         * Else consider scale back if:
+         *   currentTotalActivity < currentSize*metricLowerBound
+         * With newDesiredSize normally the largest n such that:  
+         *   n*metricLowerBound <= currentTotalActivity
+         * BUT with an absolute requirement which trumps the above computation
+         * that the newDesiredSize doesn't cause immediate scale out:
+         *   n*metricUpperBound >= currentTotalActivity
+         * thus n := Math.max ( floor(currentTotalActiviy/metricLowerBound), ceil(currentTotal/metricUpperBound) )
+         */
         if (currentMetricD > metricUpperBoundD) {
             // scale out
-            desiredSize = currentSize + (int)Math.ceil(currentSize * ((currentMetricD - metricUpperBoundD) / metricUpperBoundD));
+            desiredSize = (int)Math.ceil(currentTotalActivity/metricUpperBoundD);
             desiredSize = toBoundedDesiredPoolSize(desiredSize);
             if (desiredSize > currentSize) {
-                if (LOG.isTraceEnabled()) LOG.trace("{} resizing pool {} from {} to {} ({} > {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricUpperBoundD});
+                if (LOG.isTraceEnabled()) LOG.trace("{} resizing out pool {} from {} to {} ({} > {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricUpperBoundD});
                 scheduleResize(desiredSize);
+            } else {
+                if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} > {} > {}, but scale-out blocked eg by bounds/check)", new Object[] {this, poolEntity, currentSize, currentMetricD, metricUpperBoundD, metricLowerBoundD});
             }
         } else if (currentMetricD < metricLowerBoundD) {
             // scale back
-            desiredSize = currentSize - (int)Math.floor(currentSize * ((metricLowerBoundD - currentMetricD) / metricLowerBoundD));
+            desiredSize = (int)Math.floor(currentTotalActivity/metricLowerBoundD);
             desiredSize = toBoundedDesiredPoolSize(desiredSize);
+            if (desiredSize < currentTotalActivity/metricUpperBoundD) {
+                // this desired size would cause scale-out on next run, ie thrashing, so tweak
+                if (LOG.isTraceEnabled()) LOG.trace("{} resizing back pool {} from {}, tweaking from {} to prevent thrashing", new Object[] {this, poolEntity, currentSize, desiredSize });
+                desiredSize = (int)Math.ceil(currentTotalActivity/metricUpperBoundD);
+                desiredSize = toBoundedDesiredPoolSize(desiredSize);
+            }
             if (desiredSize < currentSize) {
-                if (LOG.isTraceEnabled()) LOG.trace("{} resizing pool {} from {} to {} ({} < {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricLowerBoundD});
+                if (LOG.isTraceEnabled()) LOG.trace("{} resizing back pool {} from {} to {} ({} < {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricLowerBoundD});
                 scheduleResize(desiredSize);
+            } else {
+                if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} < {} < {}, but scale-back blocked eg by bounds/check)", new Object[] {this, poolEntity, currentSize, currentMetricD, metricLowerBoundD, metricUpperBoundD});
             }
         } else {
             if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} within range {}..{})", new Object[] {this, poolEntity, currentSize, currentMetricD, metricLowerBoundD, metricUpperBoundD});
