@@ -4,7 +4,6 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.ConfigKey
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -25,32 +24,31 @@ public class SoftwareProcessEntityTest {
     
     private static class MyService extends SoftwareProcessEntity {
         @Override
-        public StartStopSshDriver newDriver(SshMachineLocation loc) {
-            return new SimulatedSshBasedAppSetup(this, loc)
-        }
-        @Override
         public <T> T getConfig(ConfigKey<T> key, T defaultValue=null) {
             return super.getConfig(key, defaultValue)
         }
 
         Class getDriverInterface() {
-            return null;
+            return SimulatedSshBasedAppSetup.class;
         }
     }
 }
 
-public class SimulatedSshBasedAppSetup extends StartStopSshDriver {
+public class SimulatedSshBasedAppSetup extends AbstractSoftwareProcessSshDriver {
+    private volatile boolean launched = false;
+    
     SimulatedSshBasedAppSetup(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine)
     }
 
     @Override
     public boolean isRunning() {
-        return false;
+        return launched;
     }
 
     @Override
     public void stop() {
+        launched = false;
     }
 
     @Override
@@ -63,5 +61,6 @@ public class SimulatedSshBasedAppSetup extends StartStopSshDriver {
 
     @Override
     public void launch() {
+        launched = true;
     }
 }

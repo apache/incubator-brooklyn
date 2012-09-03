@@ -2,10 +2,6 @@ package brooklyn.entity.java;
 
 import static java.lang.String.format;
 
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.internal.StringEscapeUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -14,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.StringEscapeUtils;

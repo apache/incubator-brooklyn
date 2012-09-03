@@ -86,10 +86,6 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
         return QpidDriver.class;
     }
 
-//    public QpidSshDriver newDriver(SshMachineLocation machine) {
-//        return new QpidSshDriver(this, machine)
-//    }
-
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = super.getRequiredOpenPorts() + getAttribute(AMQP_PORT)

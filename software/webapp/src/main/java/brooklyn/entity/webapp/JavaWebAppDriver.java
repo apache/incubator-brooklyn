@@ -12,5 +12,5 @@ public interface JavaWebAppDriver extends JavaSoftwareProcessDriver {
 
     void deploy(File f, String targetName);
 
-    void deploy(String url, String targetName);
+    String deploy(String url, String targetName);
 }

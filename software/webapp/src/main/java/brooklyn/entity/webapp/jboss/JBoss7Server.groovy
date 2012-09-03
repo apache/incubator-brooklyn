@@ -77,8 +77,4 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
         http.poll(BYTES_RECEIVED) { json.bytesReceived };
         http.poll(BYTES_SENT, { json.bytesSent }) ;
     }
-
-    public JBoss7SshDriver newDriver(SshMachineLocation machine) {
-        return new JBoss7SshDriver(this, machine);
-    }
 }

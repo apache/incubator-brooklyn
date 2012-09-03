@@ -21,7 +21,7 @@ import brooklyn.util.NetworkUtils;
 /**
  * Start a {@link NginxController} in a {@link brooklyn.location.Location} accessible over ssh.
  */
-public class NginxSshDriver AbstractSoftwareProcessSshDriver implements NginxDriver {
+public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements NginxDriver {
     public static final Logger log = LoggerFactory.getLogger(NginxSshDriver.class);
 
     protected boolean customizationCompleted = false;

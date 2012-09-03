@@ -15,7 +15,6 @@ import brooklyn.event.adapter.SshSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.event.adapter.AbstractSensorAdapter
 import brooklyn.event.adapter.FunctionSensorAdapter
@@ -78,10 +77,6 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
     public Class getDriverInterface() {
         return RabbitDriver.class;
     }
-
-//    public RabbitSshDriver newDriver(SshMachineLocation machine) {
-//        return new RabbitSshDriver(this, machine)
-//    }
 
     @Override
     protected void connectSensors() {
