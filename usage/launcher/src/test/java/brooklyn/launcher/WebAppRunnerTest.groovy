@@ -11,10 +11,15 @@ import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynServiceAttributes
 import brooklyn.management.internal.LocalManagementContext
+import brooklyn.test.TestUtils;
 import brooklyn.util.BrooklynLanguageExtensions
 import brooklyn.util.internal.BrooklynSystemProperties;
 import brooklyn.util.internal.TimeExtras
 
+
+/**
+ * These tests require the brooklyn.war to work. (Should be placed by maven build.)
+ */
 public class WebAppRunnerTest {
     static { TimeExtras.init() }
 
@@ -23,7 +28,7 @@ public class WebAppRunnerTest {
     private static TimeDuration TIMEOUT_MS;
     static { TIMEOUT_MS = 30*SECONDS }
     
-    public static createLauncher(Map properties) {
+    public static BrooklynWebServer createWebServer(Map properties) {
         Map bigProps = [:] + properties;
         Map attributes = bigProps.attributes
         if (attributes==null) {
@@ -33,22 +38,23 @@ public class WebAppRunnerTest {
         }
         bigProps.attributes = attributes;
         attributes.put(BrooklynSystemProperties.SECURITY_PROVIDER.getPropertyName(), 'brooklyn.web.console.security.AnyoneSecurityProvider');
-        return new WebAppRunner(bigProps, new LocalManagementContext());
+        return new BrooklynWebServer(bigProps, new LocalManagementContext());
+    }
+    /** @deprecated since 0.4.0. user createWebServer, or better, use BrooklynLauncher.newLauncher() */
+    public static BrooklynWebServer createLauncher(Map properties) {
+        return createWebServer(properties);        
     }
     
-    /**
-     * This test requires the brooklyn.war to work. (Should be placed by maven build.)
-     */
     @Test
     public void testStartWar1() {
-        WebAppRunner launcher = createLauncher(port:8090);
-        assertNotNull(launcher);
+        BrooklynWebServer server = createWebServer(port:8090);
+        assertNotNull(server);
         
         try {
-            launcher.start();
+            server.start();
             assertBrooklynAt("http://localhost:8090/");
         } finally {
-            launcher.stop();
+            server.stop();
         }
     }
 
@@ -56,7 +62,10 @@ public class WebAppRunnerTest {
         assertUrlHasText(url, "Brooklyn Web Console", "Dashboard");
     }
     
+    /** @deprecated since 0.4.0 use TestUtils.assertUrlHasText */
     public static void assertUrlHasText(String url, String ...phrases) {
+        TestUtils.assertUrlHasText(url, phrases);
+        
         String contents;
         executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
             contents = new URL(url).openStream().getText();
@@ -72,38 +81,54 @@ public class WebAppRunnerTest {
         
     @Test
     public void testStartSecondaryWar() {
-        WebAppRunner launcher = createLauncher(port:8090, war:"brooklyn.war", wars:["hello":"hello-world.war"]);
-        assertNotNull(launcher);
+        BrooklynWebServer server = createWebServer(port:8090, war:"brooklyn.war", wars:["hello":"hello-world.war"]);
+        assertNotNull(server);
         
         try {
-            launcher.start();
+            server.start();
 
             assertBrooklynAt("http://localhost:8090/");
             assertUrlHasText("http://localhost:8090/hello",
                 "This is the home page for a sample application");
 
         } finally {
-            launcher.stop();
+            server.stop();
         }
     }
 
     @Test
     public void testStartSecondaryWarAfter() {
-        WebAppRunner launcher = createLauncher(port:8090, war:"brooklyn.war");
-        assertNotNull(launcher);
+        BrooklynWebServer server = createWebServer(port:8090, war:"brooklyn.war");
+        assertNotNull(server);
         
         try {
-            launcher.start();
-            launcher.deploy("/hello", "hello-world.war");
+            server.start();
+            server.deploy("/hello", "hello-world.war");
 
             assertBrooklynAt("http://localhost:8090/");
             assertUrlHasText("http://localhost:8090/hello",
                 "This is the home page for a sample application");
 
         } finally {
-            launcher.stop();
+            server.stop();
         }
     }
 
+    @Test
+    public void testStartWithLauncher() {
+        BrooklynServerDetails details = BrooklynLauncher.newLauncher().webapp("/hello", "hello-world.war").launch();
+        
+        try {
+            details.getWebServer().deploy("/hello2", "hello-world.war");
 
+            assertBrooklynAt(details.getWebServerUrl());
+            assertUrlHasText(details.getWebServerUrl()+"hello", "This is the home page for a sample application");
+            assertUrlHasText(details.getWebServerUrl()+"hello2", "This is the home page for a sample application");
+            assertUrlStatusCodeEventually(details.getWebServerUrl()+"hello0", 404);
+
+        } finally {
+            details.getWebServer().stop();
+        }
+    }
+    
 }

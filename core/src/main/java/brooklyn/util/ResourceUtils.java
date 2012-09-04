@@ -29,6 +29,7 @@ public class ResourceUtils {
         this.context = context;
     }
     /** uses the classloader of the given object, and the phrase object's toString (preceded by the word 'for') as the context string used in errors */
+    @SuppressWarnings("rawtypes")
     public ResourceUtils(Object context) {
         this(context==null ? null : context instanceof Class ? ((Class)context).getClassLoader() : context.getClass().getClassLoader(), context==null ? null : ""+context);
     }
@@ -153,6 +154,23 @@ public class ResourceUtils {
             Closeables.closeQuietly(out);
         }
         return tmpWarFile;
+    }
+
+    public static Thread addShutdownHook(final Runnable task) {
+        Thread t = new Thread("shutdownHookThread") {
+            public void run() {
+                try {
+                    task.run();
+                } catch (Exception e) {
+                    log.error("Failed to execute shutdownhook", e);
+                }
+            }
+        };
+        Runtime.getRuntime().addShutdownHook(t);
+        return t;
+    }
+    public static boolean removeShutdownHook(Thread hook) {
+        return Runtime.getRuntime().removeShutdownHook(hook);
     }
 
 }

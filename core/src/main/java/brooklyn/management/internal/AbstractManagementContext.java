@@ -13,6 +13,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EffectorUtils;
+import brooklyn.entity.drivers.BasicEntityDriverFactory;
+import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExpirationPolicy;
@@ -42,7 +44,14 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public SubscriptionContext getSubscriptionContext(Entity e) {
         return new BasicSubscriptionContext(getSubscriptionManager(), e);
     }
-        
+
+    private final EntityDriverFactory entityDriverFactory = new BasicEntityDriverFactory();
+
+    @Override
+    public EntityDriverFactory getEntityDriverFactory() {
+        return entityDriverFactory;
+    }
+    
     public boolean isManaged(Entity e) {
         return (getEntity(e.getId())!=null);
     }
