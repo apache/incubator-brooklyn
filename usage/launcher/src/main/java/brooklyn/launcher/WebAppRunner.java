@@ -1,10 +1,6 @@
 package brooklyn.launcher;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,8 +19,6 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 import com.google.common.base.Throwables;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 
 /**
  * Starts the web-app running, connected to the given management context
@@ -87,43 +81,21 @@ public class WebAppRunner {
         return port;
     }
 
+    /** @deprecated use {@link #deploy(String, String)} with "/" as first argument */
     public WebAppRunner setWar(String url) {
         this.war = url;
         return this;
     }
 
+    /** @deprecated use {@link #deploy(String, String)} */
     public WebAppRunner addWar(String path, String warUrl) {
-        wars.put(path, warUrl);
+        deploy(path, warUrl);
         return this;
     }
 
     public WebAppRunner addAttribute(String field, Object value) {
         attributes.put(field, value);
         return this;
-    }
-
-    public static File writeToTempFile(InputStream is, String prefix, String suffix) {
-        File tmpWarFile;
-
-        try {
-            tmpWarFile = File.createTempFile(prefix, suffix);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-        tmpWarFile.deleteOnExit();
-
-        OutputStream out = null;
-        try {
-            if (is == null) throw new NullPointerException();
-            out = new FileOutputStream(tmpWarFile);
-            ByteStreams.copy(is, out);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            Closeables.closeQuietly(is);
-            Closeables.closeQuietly(out);
-        }
-        return tmpWarFile;
     }
 
     ContextHandlerCollectionHotSwappable handlers = new ContextHandlerCollectionHotSwappable();
@@ -166,13 +138,15 @@ public class WebAppRunner {
         log.info("Stopped Brooklyn web console at http://localhost:" + port);
     }
 
+    /** serve given WAR at the given pathSpec; if not yet started, it is simply remembered until start;
+     * if server already running, the context for this WAR is started  */
     public void deploy(String pathSpec, String warUrl) {
         String cleanPathSpec = pathSpec;
         while (cleanPathSpec.startsWith("/"))
             cleanPathSpec = cleanPathSpec.substring(1);
         boolean isRoot = cleanPathSpec.isEmpty();
 
-        File tmpWarFile = writeToTempFile(new ResourceUtils(this).getResourceFromUrl(warUrl), 
+        File tmpWarFile = ResourceUtils.writeToTempFile(new ResourceUtils(this).getResourceFromUrl(warUrl), 
                 isRoot ? "ROOT" : ("embedded-" + cleanPathSpec), ".war");
 
         WebAppContext context = new WebAppContext();

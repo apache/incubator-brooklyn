@@ -3,6 +3,7 @@ package brooklyn.util;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 
 public class ResourceUtils {
     
@@ -126,6 +129,30 @@ public class ResourceUtils {
             bytesRead = input.read(buf);
         }
         output.flush();
+    }
+
+    public static File writeToTempFile(InputStream is, String prefix, String suffix) {
+        File tmpWarFile;
+
+        try {
+            tmpWarFile = File.createTempFile(prefix, suffix);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+        tmpWarFile.deleteOnExit();
+
+        OutputStream out = null;
+        try {
+            if (is == null) throw new NullPointerException();
+            out = new FileOutputStream(tmpWarFile);
+            ByteStreams.copy(is, out);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        } finally {
+            Closeables.closeQuietly(is);
+            Closeables.closeQuietly(out);
+        }
+        return tmpWarFile;
     }
 
 }
