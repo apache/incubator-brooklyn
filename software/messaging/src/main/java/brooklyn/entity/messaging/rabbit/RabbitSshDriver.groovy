@@ -2,12 +2,10 @@ package brooklyn.entity.messaging.rabbit;
 
 import static brooklyn.entity.basic.lifecycle.CommonCommands.*
 
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
 import brooklyn.entity.messaging.amqp.AmqpServer
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
@@ -15,7 +13,7 @@ import brooklyn.util.NetworkUtils
 /**
  * TODO javadoc
  */
-public class RabbitSshDriver extends StartStopSshDriver {
+public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements RabbitDriver {
 
     private static final Logger log = LoggerFactory.getLogger(RabbitSshDriver.class);
 

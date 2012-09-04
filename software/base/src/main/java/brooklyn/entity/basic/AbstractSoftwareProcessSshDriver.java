@@ -1,4 +1,4 @@
-package brooklyn.entity.basic.lifecycle;
+package brooklyn.entity.basic;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.entity.basic.lifecycle.ScriptRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.location.basic.SshMachineLocation;
 
@@ -23,16 +23,19 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public abstract class StartStopSshDriver extends AbstractStartStopDriver implements ScriptRunner {
+/**
+ * An abstract SSH implementation of the {@link AbstractSoftwareProcessDriver}.
+ */
+public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareProcessDriver implements ScriptRunner {
 
-    public static final Logger log = LoggerFactory.getLogger(StartStopSshDriver.class);
+    public static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessSshDriver.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
 
     public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn-"+System.getProperty("user.name");
     public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+"/"+"installs";
     public static final String NO_VERSION_INFO = "no-version-info";
 
-    public StartStopSshDriver(EntityLocal entity, SshMachineLocation machine) {
+    public AbstractSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 

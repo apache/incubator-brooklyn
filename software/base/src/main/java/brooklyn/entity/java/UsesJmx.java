@@ -1,5 +1,6 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.java;
 
+import brooklyn.entity.basic.Attributes;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;

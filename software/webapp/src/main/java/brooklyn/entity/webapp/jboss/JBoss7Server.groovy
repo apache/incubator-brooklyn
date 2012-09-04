@@ -15,7 +15,6 @@ import brooklyn.event.basic.BasicAttributeSensor ;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 
 public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAppService {
@@ -53,6 +52,11 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     }
 
     @Override
+    public Class getDriverInterface() {
+        return JBoss7Driver.class;
+    }
+
+    @Override
     protected void connectSensors() {
         super.connectSensors();
 
@@ -72,9 +76,5 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
         http.poll(MAX_PROCESSING_TIME) { json.maxTime } ;
         http.poll(BYTES_RECEIVED) { json.bytesReceived };
         http.poll(BYTES_SENT, { json.bytesSent }) ;
-    }
-
-    public JBoss7SshDriver newDriver(SshMachineLocation machine) {
-        return new JBoss7SshDriver(this, machine);
     }
 }

@@ -73,8 +73,12 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
         return null
     }
 
-    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
-        return RedisSetup.newInstance(this, machine)
+//    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
+//        return RedisSetup.newInstance(this, machine)
+//    }
+
+    Class getDriverInterface() {
+        return RedisSetup.class;
     }
 
     @Override

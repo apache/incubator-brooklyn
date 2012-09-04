@@ -53,7 +53,11 @@ public class EntityPollingTest {
                     attribute(attributeName).subscribe(stringAttribute)
                 }
             }
-            
+
+            Class getDriverInterface() {
+                return null  //To change body of implemented methods use File | Settings | File Templates.
+            }
+
             @Override
             public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) {
                 new VanillaJavaAppSshDriver(this, loc) {
@@ -76,7 +80,7 @@ public class EntityPollingTest {
             }
         };        
     }
-    
+
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         app?.stop()

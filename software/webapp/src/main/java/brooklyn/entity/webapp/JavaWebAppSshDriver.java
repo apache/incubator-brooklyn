@@ -4,10 +4,10 @@ package brooklyn.entity.webapp;
 import java.io.File;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 
-public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
+public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver implements JavaWebAppDriver {
 
     public JavaWebAppSshDriver(JavaWebAppSoftwareProcess entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -17,6 +17,7 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
         return (JavaWebAppSoftwareProcess) super.getEntity();
     }
 
+    @Override
     public Integer getHttpPort() {
         return entity.getAttribute(Attributes.HTTP_PORT);
     }
@@ -46,10 +47,12 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
         return getRunDir() + "/" + getDeploySubdir();
     }
 
+    @Override
     public void deploy(File file) {
         deploy(file, null);
     }
 
+    @Override
     public void deploy(File f, String targetName) {
         if (targetName == null) {
             targetName = f.getName();
@@ -63,6 +66,7 @@ public abstract class JavaWebAppSshDriver extends JavaStartStopSshDriver {
      * or the web context (if using an API to manage).
      * <p>
      * see {@link JavaWebAppSoftwareProcess#deploy(String, String)} for details of how input filenames are handled */
+    @Override
     public String deploy(String url, String targetName) {
         String canonicalTargetName = getFilenameContextMapper().convertDeploymentTargetNameToFilename(targetName);
         String dest = getDeployDir() + "/" + canonicalTargetName;

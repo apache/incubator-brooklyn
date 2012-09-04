@@ -1,14 +1,12 @@
 package brooklyn.entity.osgi.karaf
 
-import java.util.Collection
-import java.util.Map
 import java.util.concurrent.TimeUnit
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.UsesJava
-import brooklyn.entity.basic.UsesJmx
+import brooklyn.entity.java.UsesJava
+import brooklyn.entity.java.UsesJmx
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.JmxPostProcessors
 import brooklyn.event.adapter.JmxSensorAdapter
@@ -18,7 +16,6 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.event.basic.MapConfigKey
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 
 /**
@@ -73,11 +70,16 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
         super(properties, owner)
     }
 
+//    @Override
+//    public KarafSshDriver newDriver(SshMachineLocation machine) {
+//        return new KarafSshDriver(this, machine)
+//    }
+
     @Override
-    public KarafSshDriver newDriver(SshMachineLocation machine) {
-        return new KarafSshDriver(this, machine)
+    public Class getDriverInterface() {
+        return KarafDriver.class;
     }
-    
+
     @Override
     protected void connectSensors() {
         super.connectSensors();

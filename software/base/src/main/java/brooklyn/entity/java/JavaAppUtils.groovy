@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.UsesJavaMXBeans
 import brooklyn.event.adapter.JmxSensorAdapter
 import java.util.concurrent.TimeUnit
 
