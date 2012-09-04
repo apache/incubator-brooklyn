@@ -2,14 +2,13 @@ package brooklyn.entity.database.mysql
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.StartStopDriver
+
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.location.Location
+
 import brooklyn.location.basic.PortRanges
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
+
 import brooklyn.util.flags.SetFromFlag
 
 public class MySqlNode extends SoftwareProcessEntity {
@@ -37,14 +36,17 @@ public class MySqlNode extends SoftwareProcessEntity {
 
     public static final BasicAttributeSensor<String> MYSQL_URL = [ String, "mysql.url", "URL to access mysql (e.g. mysql://localhost:3306/)" ]
 
-    public MySqlNode(Entity owner) { this([:], owner) }
+    public MySqlNode(Entity owner) {
+        this([:], owner)
+    }
+
     public MySqlNode(Map flags=[:], Entity owner=null) {
         super(flags, owner)
     }
 
     @Override
-    protected StartStopDriver newDriver(SshMachineLocation loc) {
-        return new MySqlSshDriver(this, loc);
+    public Class getDriverInterface() {
+        return MySqlDriver.class;
     }
 
     @Override
@@ -57,5 +59,4 @@ public class MySqlNode extends SoftwareProcessEntity {
     public int getPort() {
         getAttribute(MYSQL_PORT)
     }
-
 }

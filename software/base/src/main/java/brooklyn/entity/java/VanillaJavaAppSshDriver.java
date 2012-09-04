@@ -10,12 +10,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.StringEscapeUtils;
 
-public class VanillaJavaAppSshDriver extends JavaStartStopSshDriver {
+/**
+ * The SSH implementation of the {@link VanillaJavaAppDriver}.
+ */
+public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implements VanillaJavaAppDriver {
 
     public VanillaJavaAppSshDriver(VanillaJavaApp entity, SshMachineLocation machine) {
         super(entity, machine);

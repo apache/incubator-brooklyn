@@ -1,6 +1,6 @@
 package brooklyn.entity.osgi.karaf;
 
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver;
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
 
@@ -11,7 +11,7 @@ import java.util.Map;
 
 import static java.lang.String.format;
 
-public class KarafSshDriver extends JavaStartStopSshDriver {
+public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements KarafDriver {
 
     // TODO getJmxJavaSystemProperties(), don't set via JAVA_OPTS; set ourselves manually
     // (karaf reads from props files)

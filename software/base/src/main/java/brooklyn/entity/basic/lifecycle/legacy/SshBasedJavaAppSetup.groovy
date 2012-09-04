@@ -9,7 +9,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.StringEscapeUtils
-import brooklyn.entity.basic.UsesJava;
+import brooklyn.entity.java.UsesJava;
 
 /**
  * Java application installation, configuration and startup using ssh.

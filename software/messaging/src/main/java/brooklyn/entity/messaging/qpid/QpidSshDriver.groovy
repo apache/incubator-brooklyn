@@ -1,17 +1,16 @@
 package brooklyn.entity.messaging.qpid;
 
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.lifecycle.CommonCommands
-import brooklyn.entity.basic.lifecycle.JavaStartStopSshDriver
+
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
 import brooklyn.util.ResourceUtils
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver
 
-public class QpidSshDriver extends JavaStartStopSshDriver {
+public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidDriver{
 
     private static final Logger log = LoggerFactory.getLogger(QpidSshDriver.class);
 
@@ -22,7 +21,10 @@ public class QpidSshDriver extends JavaStartStopSshDriver {
     @Override
     protected String getLogFileLocation() { "${runDir}/log/qpid.log"; }
 
+    @Override
     public Integer getAmqpPort() { entity.getAttribute(QpidBroker.AMQP_PORT) }
+
+    @Override
     public String getAmqpVersion() { entity.getAttribute(QpidBroker.AMQP_VERSION) }
     
     protected String getInstallFilename() { "qpid-java-broker-${version}.tar.gz" }

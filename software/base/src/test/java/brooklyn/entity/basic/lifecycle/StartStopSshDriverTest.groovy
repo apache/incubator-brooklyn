@@ -1,5 +1,7 @@
 package brooklyn.entity.basic.lifecycle
 
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
+
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
@@ -8,7 +10,6 @@ import groovy.transform.InheritConstructors
 import java.lang.management.ManagementFactory
 import java.lang.management.ThreadInfo
 import java.lang.management.ThreadMXBean
-import java.util.List
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -23,7 +24,7 @@ class StartStopSshDriverTest {
     TestApplication app
     TestEntity entity
     SshMachineLocation sshMachineLocation
-    StartStopSshDriver driver
+    AbstractSoftwareProcessSshDriver driver
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
@@ -70,7 +71,7 @@ class StartStopSshDriverTest {
 }
 
 @InheritConstructors
-public class BasicStartStopSshDriver extends StartStopSshDriver {
+public class BasicStartStopSshDriver extends AbstractSoftwareProcessSshDriver {
     public boolean isRunning() { true }
     public void stop() {}
     public void install() {}

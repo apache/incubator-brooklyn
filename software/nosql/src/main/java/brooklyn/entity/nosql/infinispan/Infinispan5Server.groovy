@@ -1,13 +1,11 @@
 package brooklyn.entity.nosql.infinispan
 
-import java.util.Collection
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.UsesJmx
+import brooklyn.entity.java.UsesJmx
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
@@ -41,9 +39,14 @@ public class Infinispan5Server extends SoftwareProcessEntity implements UsesJmx 
         return Infinispan5Setup.newInstance(this, machine)
     }
 
+    @Override
+    public Class getDriverInterface() {
+        return Infinispan5Setup.class;
+    }
+
     public void connectSensors() {
 		super.connectSensors()
 		
-        sensorRegistry.addSensor(SERVICE_UP, { return setup.isRunning() } as ValueProvider)
+        sensorRegistry.addSensor(SERVICE_UP, { return getDriver().isRunning() } as ValueProvider)
     }
 }

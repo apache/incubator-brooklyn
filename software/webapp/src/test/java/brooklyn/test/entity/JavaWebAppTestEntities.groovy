@@ -5,10 +5,10 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.location.Location
-import brooklyn.location.basic.SshMachineLocation
+
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.entity.java.VanillaJavaApp
-import brooklyn.entity.java.VanillaJavaAppSshDriver
+
 import brooklyn.entity.webapp.WebAppServiceConstants
 
 /**
@@ -27,7 +27,8 @@ public class TestJavaWebAppEntity extends VanillaJavaApp {
 
 	public void waitForHttpPort() { }
 
-	public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) { null }
+	//public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) { null }
+
 
     @Override
 	public void start(Collection<? extends Location> loc) {

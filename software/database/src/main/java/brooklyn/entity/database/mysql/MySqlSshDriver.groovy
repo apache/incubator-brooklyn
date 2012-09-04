@@ -1,11 +1,11 @@
-package brooklyn.entity.database.mysql;
+package brooklyn.entity.database.mysql
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.lifecycle.CommonCommands
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicOsDetails.OsArchs
 import brooklyn.location.basic.BasicOsDetails.OsVersions
@@ -13,7 +13,10 @@ import brooklyn.util.ComparableVersion
 import brooklyn.util.IdGenerator;
 import brooklyn.util.ResourceUtils
 
-public class MySqlSshDriver extends StartStopSshDriver {
+/**
+ * The SSH implementation of the {@link MySlDriver}.
+ */
+public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements MySqlDriver{
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
     

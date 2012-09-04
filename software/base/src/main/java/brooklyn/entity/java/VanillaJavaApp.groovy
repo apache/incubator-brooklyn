@@ -10,16 +10,12 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.UsesJava
-import brooklyn.entity.basic.UsesJavaMXBeans
-import brooklyn.entity.basic.UsesJmx
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.flags.SetFromFlag
 
+import brooklyn.util.flags.SetFromFlag
 
 public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, UsesJmx, UsesJavaMXBeans {
 
@@ -104,8 +100,8 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
         super.preStop();
     }
 
-    public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) {
-        new VanillaJavaAppSshDriver(this, loc);
+    Class getDriverInterface() {
+        return VanillaJavaAppDriver.class;
     }
     
     public String getRunDir() {

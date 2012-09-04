@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.drivers.EntityDriverFactory;
 
 /**
  * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
@@ -36,7 +37,14 @@ public interface ManagementContext {
      * to submit tasks and to observe what tasks are occurring
      */
     ExecutionManager getExecutionManager();
-    
+
+    /**
+     * Returns the {@link EntityDriverFactory} entities can use to create drivers.
+     *
+      * @return the EntityDriverFactory to use.
+     */
+    EntityDriverFactory getEntityDriverFactory();
+
     /**
      * Returns the {@link SubscriptionManager} instance for entities and users of this management realm
      * to subscribe to sensor events (and, in the case of entities, to emit sensor events) 

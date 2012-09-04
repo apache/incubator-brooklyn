@@ -62,8 +62,10 @@ class AbstractControllerTest {
                 log.info "test controller reconfigure, addresses $addresses"
                 if ((addresses && !updates) || (updates && addresses!=updates.last())) updates.add(addresses)
             }
-            public SshBasedAppSetup newDriver(SshMachineLocation machine) {
-                return new MockSshBasedSoftwareSetup(this, machine);
+
+            @Override
+            public Class getDriverInterface() {
+                return MockSshBasedSoftwareSetup.class;
             }
             public void reload() {
                 // no-op

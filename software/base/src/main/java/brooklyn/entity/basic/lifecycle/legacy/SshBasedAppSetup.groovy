@@ -1,9 +1,5 @@
 package brooklyn.entity.basic.lifecycle.legacy
 
-import java.io.File
-import java.util.List
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -12,7 +8,7 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.basic.lifecycle.ScriptHelper
 import brooklyn.entity.basic.lifecycle.ScriptRunner
-import brooklyn.entity.basic.lifecycle.StartStopSshDriver
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
 import brooklyn.location.PortRange
 import brooklyn.location.basic.PortRanges
 import brooklyn.location.basic.SshMachineLocation
@@ -31,7 +27,7 @@ import com.google.common.base.Strings
  * @deprecated will be deleted in 0.5. Use StartStopSshDriver, with SoftwareProcessEntity
  */
 @Deprecated
-public abstract class SshBasedAppSetup extends StartStopSshDriver implements ScriptRunner {
+public abstract class SshBasedAppSetup extends AbstractSoftwareProcessSshDriver implements ScriptRunner {
     protected static final Logger log = LoggerFactory.getLogger(SshBasedAppSetup.class)
 
 	public void setVersion(String s) {

@@ -9,8 +9,6 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Lifecycle
-import brooklyn.entity.basic.UsesJava
-import brooklyn.entity.basic.UsesJmx
 import brooklyn.location.basic.SshMachineLocation
 
 class VanillaJavaAppTest {
