@@ -3,6 +3,9 @@ package brooklyn.entity.drivers;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 
@@ -18,6 +21,8 @@ import com.google.common.base.Throwables;
  */
 public class ReflectiveEntityDriverFactory implements EntityDriverFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ReflectiveEntityDriverFactory.class);
+
     @Override
     public <D extends EntityDriver> D build(DriverDependentEntity<D> entity, Location location){
         Class<D> driverInterface = entity.getDriverInterface();
@@ -25,13 +30,6 @@ public class ReflectiveEntityDriverFactory implements EntityDriverFactory {
         if (driverInterface.isInterface()) {
             String driverClassName = inferClassName(driverInterface, location);
             try {
-                System.out.println("Loading "+driverInterface.getName());
-                entity.getClass().getClassLoader().loadClass(driverInterface.getName());
-            } catch (ClassNotFoundException e) {
-                throw Throwables.propagate(e);
-            }
-            try {
-                System.out.println("Loading "+driverClassName);
                 driverClass = (Class<? extends D>) entity.getClass().getClassLoader().loadClass(driverClassName);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);
@@ -40,10 +38,10 @@ public class ReflectiveEntityDriverFactory implements EntityDriverFactory {
             driverClass = driverInterface;
         }
 
-        Constructor constructor = getConstructor(driverClass);
+        Constructor<? extends D> constructor = getConstructor(driverClass);
         try {
             constructor.setAccessible(true);
-            return (D) constructor.newInstance(entity, location);
+            return constructor.newInstance(entity, location);
         } catch (InstantiationException e) {
             throw Throwables.propagate(e);
         } catch (IllegalAccessException e) {
@@ -68,10 +66,10 @@ public class ReflectiveEntityDriverFactory implements EntityDriverFactory {
         }
     }
     
-    private Constructor<EntityDriver> getConstructor(Class<? extends EntityDriver> driverClass) {
-        for (Constructor constructor : driverClass.getConstructors()) {
+    private <D extends EntityDriver> Constructor<D> getConstructor(Class<D> driverClass) {
+        for (Constructor<?> constructor : driverClass.getConstructors()) {
             if (constructor.getParameterTypes().length == 2) {
-                return constructor;
+                return (Constructor<D>) constructor;
             }
         }
 
