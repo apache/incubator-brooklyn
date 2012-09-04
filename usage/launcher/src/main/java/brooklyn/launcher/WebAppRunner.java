@@ -1,5 +1,18 @@
 package brooklyn.launcher;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.BrooklynLanguageExtensions;
@@ -7,24 +20,11 @@ import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
+
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Starts the web-app running, connected to the given management context
@@ -106,7 +106,7 @@ public class WebAppRunner {
         File tmpWarFile;
 
         try {
-            tmpWarFile = File.createTempFile("embedded", "war");
+            tmpWarFile = File.createTempFile(prefix, suffix);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -126,6 +126,8 @@ public class WebAppRunner {
         return tmpWarFile;
     }
 
+    ContextHandlerCollectionHotSwappable handlers = new ContextHandlerCollectionHotSwappable();
+    
     /**
      * Starts the embedded web application server.
      */
@@ -133,47 +135,16 @@ public class WebAppRunner {
         log.info("Starting Brooklyn console at http://localhost:" + port + ", running " + war + (wars != null ? " and " + wars.values() : ""));
 
         server = new Server(port);
-        List<WebAppContext> handlers = new LinkedList<WebAppContext>();
 
         for (Map.Entry<String, String> entry : wars.entrySet()) {
             String pathSpec = entry.getKey();
             String warUrl = entry.getValue();
-            String cleanPathSpec = pathSpec;
-            while (cleanPathSpec.startsWith("/"))
-                cleanPathSpec = cleanPathSpec.substring(1);
-
-            File tmpWarFile = writeToTempFile(new ResourceUtils(this).getResourceFromUrl(warUrl), "embedded-" + cleanPathSpec, "war");
-
-            WebAppContext context = new WebAppContext();
-            context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
-            for (Map.Entry<String, Object> attributeEntry : attributes.entrySet()) {
-                context.setAttribute(attributeEntry.getKey(), attributeEntry.getValue());
-            }
-
-            context.setWar(tmpWarFile.getAbsolutePath());
-            context.setContextPath("/" + cleanPathSpec);
-            context.setParentLoaderPriority(true);
-            handlers.add(context);
+            deploy(pathSpec, warUrl);
         }
 
-        File tmpWarFile = writeToTempFile(new ResourceUtils(this).getResourceFromUrl(war), "embedded", "war");
-        WebAppContext context;
-        context = new WebAppContext();
-        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
-        for (Map.Entry<String, Object> attributeEntry : attributes.entrySet()) {
-            context.setAttribute(attributeEntry.getKey(), attributeEntry.getValue());
-        }
+        deploy("/", war);
 
-        context.setWar(tmpWarFile.getAbsolutePath());
-        context.setContextPath("/");
-        context.setParentLoaderPriority(true);
-        handlers.add(context);
-
-        HandlerList hl = new HandlerList();
-        hl.setHandlers(handlers.toArray(new WebAppContext[0]));
-
-        server.setHandler(hl);
-
+        server.setHandler(handlers);
         server.start();
         //reinit required because grails wipes our language extension bindings
         BrooklynLanguageExtensions.reinit();
@@ -193,6 +164,32 @@ public class WebAppRunner {
             /* NPE may be thrown e.g. if threadpool not started */
         }
         log.info("Stopped Brooklyn web console at http://localhost:" + port);
+    }
+
+    public void deploy(String pathSpec, String warUrl) {
+        String cleanPathSpec = pathSpec;
+        while (cleanPathSpec.startsWith("/"))
+            cleanPathSpec = cleanPathSpec.substring(1);
+        boolean isRoot = cleanPathSpec.isEmpty();
+
+        File tmpWarFile = writeToTempFile(new ResourceUtils(this).getResourceFromUrl(warUrl), 
+                isRoot ? "ROOT" : ("embedded-" + cleanPathSpec), ".war");
+
+        WebAppContext context = new WebAppContext();
+        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
+        for (Map.Entry<String, Object> attributeEntry : attributes.entrySet()) {
+            context.setAttribute(attributeEntry.getKey(), attributeEntry.getValue());
+        }
+
+        context.setWar(tmpWarFile.getAbsolutePath());
+        context.setContextPath("/" + cleanPathSpec);
+        context.setParentLoaderPriority(true);
+        
+        try {
+            handlers.updateHandler(context);
+        } catch (Exception e) {
+            Throwables.propagate(e);
+        }
     }
 
     public Server getServer() {

@@ -44,8 +44,8 @@ public class WebAppRunnerTest {
         WebAppRunner launcher = createLauncher(port:8090);
         assertNotNull(launcher);
         
-        launcher.start();
         try {
+            launcher.start();
             assertBrooklynAt("http://localhost:8090/");
         } finally {
             launcher.stop();
@@ -75,8 +75,8 @@ public class WebAppRunnerTest {
         WebAppRunner launcher = createLauncher(port:8090, war:"brooklyn.war", wars:["hello":"hello-world.war"]);
         assertNotNull(launcher);
         
-        launcher.start();
         try {
+            launcher.start();
 
             assertBrooklynAt("http://localhost:8090/");
             assertUrlHasText("http://localhost:8090/hello",
@@ -86,5 +86,24 @@ public class WebAppRunnerTest {
             launcher.stop();
         }
     }
+
+    @Test
+    public void testStartSecondaryWarAfter() {
+        WebAppRunner launcher = createLauncher(port:8090, war:"brooklyn.war");
+        assertNotNull(launcher);
+        
+        try {
+            launcher.start();
+            launcher.deploy("/hello", "hello-world.war");
+
+            assertBrooklynAt("http://localhost:8090/");
+            assertUrlHasText("http://localhost:8090/hello",
+                "This is the home page for a sample application");
+
+        } finally {
+            launcher.stop();
+        }
+    }
+
 
 }
