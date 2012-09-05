@@ -196,9 +196,13 @@ public class Main {
             
             // Start application
             if (application!=null) {
-                application.start(brooklynLocations);
                 log.info("Starting brooklyn application {} in location{} {}", new Object[] { app, brooklynLocations.size()!=1?"s":"", brooklynLocations });
                 if (!noShutdownOnExit) Entities.invokeStopOnShutdown(application);
+                try {
+                    application.start(brooklynLocations);
+                } catch (Exception e) {
+                    log.error("Error starting "+application+": "+e, e);
+                }
             } else if (brooklynLocations!=null && !brooklynLocations.isEmpty()) {
                 log.warn("Locations specified without any applications; ignoring");
             }
