@@ -1,20 +1,30 @@
-Instructions for running examples
+Instructions for Running Examples
 =================================
 
-The commands below assume that the `brooklyn` script is already on your $PATH, and you are in the "examples" directory:
+The commands below assume that the `brooklyn` script is on your $PATH, this project has been built,
+and you are in this directory.  Adjust to taste for other configurations.
 
-  cd simple-web-cluster
   export BROOKLYN_CLASSPATH=$(pwd)/target/classes
   
-  # An app with a single web-server
-  brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
-
-  # A cluster of web-servers
-  brooklyn launch --app brooklyn.demo.WebClusterExample --location localhost
-  
-  # A cluster of web-servers, plus MySql
+  # Three-tier: auto-scaling app-server cluster fronted by nginx, MySql backend wired up, on localhost
   brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
 
----
+Other examples:
 
-For more information, please visit: http://brooklyncentral.github.com/use/examples/webcluster/
+  # Same three-tier, but in Amazon California (location arg can be changed for any example, of course)
+  brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location aws-ec2:us-west-1
+
+  # Very simple: an app with a single web-server
+  brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
+
+  # Very simple Brooklyn App, but more interesting results: a cluster of app-servers with nginx
+  brooklyn launch --app brooklyn.demo.WebClusterExample --location localhost
+
+  # The three tier example, but written in pure Java
+  brooklyn launch --app brooklyn.demo.WebClusterDatabaseExampleAltJava --localhost localhost
+
+
+For more information, please visit:
+
+  http://brooklyncentral.github.com/use/examples/webcluster/
+
