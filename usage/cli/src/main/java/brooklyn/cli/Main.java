@@ -226,7 +226,10 @@ public class Main {
 
         private synchronized void waitUntilInterrupted() {
             try {
-                wait();
+                while (true) {
+                    wait();
+                    log.debug("suprious wake in brooklyn Main, how about that!");
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return; // exit gracefully

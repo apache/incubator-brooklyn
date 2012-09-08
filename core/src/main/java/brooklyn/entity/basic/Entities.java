@@ -220,32 +220,36 @@ public class Entities {
     }
 
     private static List<Entity> entitiesToStopOnShutdown = null;
-    public static synchronized void invokeStopOnShutdown(Entity e) {
-        if (entitiesToStopOnShutdown==null) {
-            entitiesToStopOnShutdown = new ArrayList<Entity>();
-            ResourceUtils.addShutdownHook(new Runnable() {
-                @SuppressWarnings({ "unchecked", "rawtypes" })
-                public void run() {
-                    log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping "+entitiesToStopOnShutdown);
-                    List<Task> stops = new ArrayList<Task>();
-                    for (Entity e: entitiesToStopOnShutdown) {
-                        try {
-                            e.invoke(Startable.STOP, new MutableMap());
-                        } catch (Exception e2) {
-                            log.debug("stopOnShutdown of "+e+" returned error: "+e2, e2);
+    public static synchronized void invokeStopOnShutdown(Entity entity) {
+        synchronized (entitiesToStopOnShutdown) {
+            if (entitiesToStopOnShutdown==null) {
+                entitiesToStopOnShutdown = new ArrayList<Entity>();
+                ResourceUtils.addShutdownHook(new Runnable() {
+                    @SuppressWarnings({ "unchecked", "rawtypes" })
+                    public void run() {
+                        synchronized (entitiesToStopOnShutdown) {
+                            log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping "+entitiesToStopOnShutdown);
+                            List<Task> stops = new ArrayList<Task>();
+                            for (Entity entity: entitiesToStopOnShutdown) {
+                                try {
+                                    stops.add(entity.invoke(Startable.STOP, new MutableMap()));
+                                } catch (Exception exc) {
+                                    log.debug("stopOnShutdown of "+entity+" returned error: "+exc, exc);
+                                }
+                            }
+                            for (Task t: stops) { 
+                                try {
+                                    log.debug("stopOnShutdown of {} completed: {}", t, t.get()); 
+                                } catch (Exception exc) {
+                                    log.debug("stopOnShutdown of "+t+" returned error: "+exc, exc);
+                                }
+                            }
                         }
                     }
-                    for (Task t: stops) { 
-                        try {
-                            log.debug("stopOnShutdown of {} completed: {}", t, t.get()); 
-                        } catch (Exception e2) {
-                            log.debug("stopOnShutdown of "+t+" returned error: "+e2, e2);
-                        }
-                    }
-                }
-            });
+                });
+            }
+            entitiesToStopOnShutdown.add(entity);
         }
-        
     }
     
 }

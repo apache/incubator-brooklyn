@@ -133,19 +133,18 @@ public class ResourceUtils {
     }
 
     public static File writeToTempFile(InputStream is, String prefix, String suffix) {
-        File tmpWarFile;
-
+        if (is == null) throw new NullPointerException("Input stream required to create temp file for "+prefix+"*"+suffix);
+        File tempFile;
         try {
-            tmpWarFile = File.createTempFile(prefix, suffix);
+            tempFile = File.createTempFile(prefix, suffix);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
-        tmpWarFile.deleteOnExit();
+        tempFile.deleteOnExit();
 
         OutputStream out = null;
         try {
-            if (is == null) throw new NullPointerException();
-            out = new FileOutputStream(tmpWarFile);
+            out = new FileOutputStream(tempFile);
             ByteStreams.copy(is, out);
         } catch (IOException e) {
             throw Throwables.propagate(e);
@@ -153,7 +152,7 @@ public class ResourceUtils {
             Closeables.closeQuietly(is);
             Closeables.closeQuietly(out);
         }
-        return tmpWarFile;
+        return tempFile;
     }
 
     public static Thread addShutdownHook(final Runnable task) {
