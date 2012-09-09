@@ -17,6 +17,10 @@ public class SequentialTask<T> extends CompoundTask<T> {
     public SequentialTask(Collection<Object> tasks) { super(tasks); }
 
     protected List<T> runJobs() throws InterruptedException, ExecutionException {
+        setBlockingDetails("Executing "+
+                (children.size()==1 ? "1 child task" :
+                children.size()+" children tasks sequentially") );
+
         List<T> result = new ArrayList<T>();
         for (Task<? extends T> task : children) {
             submitIfNecessary(task);

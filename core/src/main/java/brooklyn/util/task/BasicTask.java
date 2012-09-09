@@ -12,7 +12,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -381,19 +383,44 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		if (getThread()==null)
 			//thread might have moved on to a new task; if so, recompute (it should now say "done")
 			return getStatusString(verbosity);
+		
+		if (verbosity >= 1 && GroovyJavaMethods.truth(blockingDetails)) {
+		    if (verbosity==1)
+		        // short status string will just show blocking details
+		        return blockingDetails;
+		    //otherwise show the blocking details, then a new line, then additional information
+		    rv = blockingDetails + "\n\n";
+		}
+
+		if (verbosity>=2 && this instanceof CompoundTask) {
+		    // list children tasks for compound tasks
+		    try {
+		        List<Task> childrenTasks = ((CompoundTask)this).getChildrenTasks();
+		        if (!childrenTasks.isEmpty()) {
+		            rv += "Children:\n";
+		            for (Task child: childrenTasks) {
+		                rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
+		            }
+		        }
+		    } catch (ConcurrentModificationException exc) {
+		        rv += "  (children not available - currently being modified)\n";
+		    }
+		    rv += "\n";
+		}
+		
 		LockInfo lock = ti.getLockInfo();
 		if (!GroovyJavaMethods.truth(lock) && ti.getThreadState()==Thread.State.RUNNABLE) {
 			//not blocked
 			if (ti.isSuspended()) {
 				// when does this happen?
-				rv = "Waiting";
+				rv += "Waiting";
 				if (verbosity >= 1) rv += ", thread suspended";
 			} else {
-				rv = "Running";
+				rv += "Running";
 				if (verbosity >= 1) rv += " ("+ti.getThreadState()+")";
 			}
 		} else {
-			rv = "Waiting";
+			rv += "Waiting";
 			if (verbosity>=1) {
 				if (ti.getThreadState() == Thread.State.BLOCKED) {
 					rv += " (mutex) on "+lookup(lock);
@@ -405,7 +432,6 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 				} else {
 					rv = " ("+ti.getThreadState()+") on "+lookup(lock);
 				}
-				if (GroovyJavaMethods.truth(blockingDetails)) rv += " - "+blockingDetails;
 			}
 		}
 		if (verbosity>=2) {

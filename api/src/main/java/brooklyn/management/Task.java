@@ -18,6 +18,8 @@ public interface Task<T> extends TaskStub, Future<T> {
     public long getEndTimeUtc();
     public String getDisplayName();
     public String getDescription();
+    
+    /** task which submitted this task, if was submitted by a task */
     public Task<?> getSubmittedByTask();
 
     /** The thread where the task is running, if it is running. */

@@ -247,14 +247,20 @@ public class DependentConfiguration {
         }));
     }
 
-    /** blocks until the given task completes, submitting if necessary, returning the result of that (uncoerced) 
-     * @throws InterruptedException
-     */
+    /** @see #waitForTask(Task, Entity, String) */
     public static <T> T waitForTask(Task<T> t, Entity context) throws InterruptedException {
+        return waitForTask(t, context, null);
+    }
+    
+    /** blocks until the given task completes, submitting if necessary, returning the result of that task;
+     * optional contextMessage is available in status if this is running in a task
+     */
+    public static <T> T waitForTask(Task<T> t, Entity context, String contextMessage) throws InterruptedException {
         try {
-            return (T) Tasks.resolveValue(t, Object.class, ((EntityLocal)context).getExecutionContext());
+            return (T) Tasks.resolveValue(t, Object.class, ((EntityLocal)context).getExecutionContext(), contextMessage);
         } catch (ExecutionException e) {
             throw Throwables.propagate(e);
         }
     }
+    
 }

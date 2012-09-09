@@ -22,6 +22,9 @@ public class ParallelTask<T> extends CompoundTask<T> {
     public ParallelTask(Iterable<? extends Object> tasks) { super(ImmutableList.copyOf(tasks)); }
 
     protected List<T> runJobs() throws InterruptedException, ExecutionException {
+        setBlockingDetails("Executing "+
+                (children.size()==1 ? "1 child task" :
+                children.size()+" children tasks in parallel") );
         for (Task<? extends T> task : children) {
             submitIfNecessary(task);
         }
