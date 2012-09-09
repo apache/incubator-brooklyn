@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
 import brooklyn.entity.Effector
+import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task
+import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.Tasks
 
 public class EffectorConcatenateTest {
@@ -30,13 +32,25 @@ public class EffectorConcatenateTest {
         }
 
         AtomicReference concatTask = new AtomicReference();
+        AtomicReference response = new AtomicReference();
         
         @Description("sample effector concatenating strings and sometimes waiting")
         String concatenate(@NamedParameter("first") @Description("first argument") String first,
                 @NamedParameter("second") @Description("2nd arg") String second) {
             if ("wait".equals(first)) {
-                // if first arg is wait, spawn a child,
-                // then wait, setting task info from the second arg
+                // if first arg is wait, spawn a child, then wait
+                BasicExecutionContext.getCurrentExecutionContext().submit(
+                    displayName: "SarcyResponse",
+                    {
+                        log.info("beginning scary response "+Tasks.current()+", with tags "+Tasks.current().tags)
+                        synchronized (response) {
+                            Tasks.setBlockingDetails("looks like the backstroke to me");
+                            response.notifyAll();
+                            response.wait(TIMEOUT);
+                        }
+                    });
+                
+                // wait, setting task info from the second arg
                 // (test will assert that status details are reported correctly)
                 long startTime = System.currentTimeMillis();
                 synchronized (concatTask) {
@@ -73,38 +87,67 @@ public class EffectorConcatenateTest {
         MyEntity e = new MyEntity([owner:app]);
         final AtomicReference<String> result = new AtomicReference<String>();
 
-        new Thread({
-            long startTime = System.currentTimeMillis();
-            synchronized (e.concatTask) {
-                try {
-                    while (e.concatTask.get()==null) {
-                        e.concatTask.wait(1000);
-                        if (System.currentTimeMillis()-startTime >= TIMEOUT) {
-                            result.set("took too long, probably wasn't notified");
+        Thread bg = new Thread({
+            try {
+                long startTime = System.currentTimeMillis();
+                synchronized (e.concatTask) {
+                    try {
+                        while (e.concatTask.get()==null) {
+                            e.concatTask.wait(1000);
+                            if (System.currentTimeMillis()-startTime >= TIMEOUT) {
+                                result.set("took too long, probably wasn't notified");
+                                return;
+                            }
+                        }
+
+                        Task t = e.concatTask.get();
+                        String status = t.getStatusDetail(true);
+                        log.info("concat task says:\n"+status);
+                        if (!status.startsWith("waiter, what's this fly doing")) {
+                            result.set("Status not in expected format: doesn't start with blocking details 'waiter...'\n"+status);
                             return;
                         }
-                    }
+                        // looks healthy
 
-                    Task t = e.concatTask.get();
-                    String status = t.getStatusDetail(true);
-                    log.info("concat task says:\n"+status);
-                    if (!status.startsWith("waiter, what's this fly doing")) {
-                        result.set("Status not in expected format: doesn't start with blocking details\n"+status);
+                    } finally {
+                        e.concatTask.notifyAll();
+                    }
+                }
+
+                ExecutionManager em = e.getExecutionContext().getExecutionManager();
+                synchronized (e.response) {
+                    Task reply=null;
+                    while (reply==null) {
+                        Collection<Task> entityTasks = em.getTasksWithTag(e);
+                        log.info("entity "+e+" running: "+entityTasks);
+                        reply = entityTasks.find { Task t -> t.displayName=="SarcyResponse" }
+                        if (reply!=null) break;
+                        if (System.currentTimeMillis()-startTime >= TIMEOUT) {
+                            result.set("response took too long, probably wasn't notified");
+                            return;
+                        }
+                        e.response.wait(TIMEOUT);
+                    }
+                    String status = reply.getStatusDetail(true);
+                    log.info("reply task says:\n"+status);
+                    if (!status.contains("backstroke")) {
+                        result.set("Status not in expected format: doesn't contain blocking details phrase 'backstroke'\n"+status);
                         return;
                     }
-                    // looks healthy
-                    
-                    // TODO add child above, and assert child details also included
-                } finally {
-                    e.concatTask.notifyAll();
+                    e.response.notifyAll();
                 }
+            } catch (Throwable t) {
+                log.warn("Failure: "+t, t);
+                result.set("Failure: "+t);
             }
-        }).start();
+        });
+        bg.start();
     
         e.concatenate("wait", "waiter, what's this fly doing in my soup?");
         
+        bg.join();
         String problem = result.get();
-        if (problem!=null) fail(problem);        
+        if (problem!=null) fail(problem);
     }
     
 }

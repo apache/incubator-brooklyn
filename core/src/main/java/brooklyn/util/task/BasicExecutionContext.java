@@ -26,6 +26,7 @@ public class BasicExecutionContext implements ExecutionContext {
     
     public static BasicExecutionContext getCurrentExecutionContext() { return perThreadExecutionContext.get(); }
  
+    /** @deprecated in 0.4.0, use Tasks.current() */
     public Task<?> getCurrentTask() { return BasicExecutionManager.getCurrentTask(); }
 
     final ExecutionManager executionManager;

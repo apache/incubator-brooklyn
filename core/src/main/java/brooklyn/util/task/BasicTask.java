@@ -392,19 +392,30 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		    rv = blockingDetails + "\n\n";
 		}
 
-		if (verbosity>=2 && this instanceof CompoundTask) {
-		    // list children tasks for compound tasks
-		    try {
-		        List<Task> childrenTasks = ((CompoundTask)this).getChildrenTasks();
-		        if (!childrenTasks.isEmpty()) {
-		            rv += "Children:\n";
-		            for (Task child: childrenTasks) {
-		                rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
-		            }
-		        }
-		    } catch (ConcurrentModificationException exc) {
-		        rv += "  (children not available - currently being modified)\n";
+		if (verbosity>=2) {
+		    rv += ""+toString()+"\n";
+		    if (submittedByTask!=null) {
+		        rv += "Submitted by "+submittedByTask+"\n";
 		    }
+
+		    if (this instanceof CompoundTask) {
+		        // list children tasks for compound tasks
+		        try {
+		            List<Task> childrenTasks = ((CompoundTask)this).getChildrenTasks();
+		            if (!childrenTasks.isEmpty()) {
+		                rv += "Children:\n";
+		                for (Task child: childrenTasks) {
+		                    rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
+		                }
+		            }
+		        } catch (ConcurrentModificationException exc) {
+		            rv += "  (children not available - currently being modified)\n";
+		        }
+		    }
+//		    // TODO spawned tasks would be interesting, but hard to retrieve
+//		    // as we store execution context in thread local for the _task_;
+//		    // it isn't actually stored on the task itself so not available to
+//		    // 3rd party threads calling this extended toString method
 		    rv += "\n";
 		}
 		

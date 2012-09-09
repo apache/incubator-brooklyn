@@ -35,8 +35,8 @@ public class EntityService {
 
     public static class NoSuchEntity extends Exception {}
 
-    // TODO Should this return Task objects, and let the EntityController convert them to TaskSummary?
     // TODO Want to handle pagination better; for now we just restrict list to 20 most recent
+    /** returns only _effector_ calls */
     public List<TaskSummary> getTasksOfAllEntities() {
         final int MAX_NUM_RETURNED = 20
         
@@ -49,13 +49,28 @@ public class EntityService {
         return result.subList(0, Math.min(MAX_NUM_RETURNED, result.size()))
     }
 
-    // TODO Should this return Task objects, and let the EntityController convert them to TaskSummary?
+    /** returns any active task or any invoked effector */
     public Collection<TaskSummary> getTasksOfEntity(String entityId) {
         Entity e = getEntity(entityId)
         if (!e) throw new NoSuchEntity()
 
-        return managementContextService.executionManager.getTasksWithAllTags(
-                [e, AbstractManagementContext.EFFECTOR_TAG]).collect { new TaskSummary(it) }
+        List taskSummaries = managementContextService.executionManager.getTasksWithAllTags([e]).collect { new TaskSummary(it) }
+        // only show active subtasks, and effectors
+        taskSummaries = taskSummaries.findAll { TaskSummary t -> t.endTimeUtc==-1 || t.isEffector };
+        Collections.sort(taskSummaries, 
+            { TaskSummary t1, TaskSummary t2 ->
+                if (t1.endTimeUtc && !t2.endTimeUtc) {
+                    //only t2 active, put it first
+                    return 1;
+                }
+                if (t2.endTimeUtc && !t1.endTimeUtc) {
+                    //only t1 active, put it first
+                    return -1;
+                }
+                //otherwise sort by start time
+                return t2.rawSubmitTimeUtc - t1.rawSubmitTimeUtc;
+            } as Comparator);
+        return taskSummaries;
     }
 
     private void unsubscribeEntitySensors() {
