@@ -169,7 +169,13 @@ public class ResourceUtils {
         return t;
     }
     public static boolean removeShutdownHook(Thread hook) {
-        return Runtime.getRuntime().removeShutdownHook(hook);
+        try {
+            return Runtime.getRuntime().removeShutdownHook(hook);
+        } catch (IllegalStateException e) {
+            // probably shutdown in progress
+            log.debug("cannot remove shutdown hook "+hook+": "+e);
+            return false;
+        }
     }
 
 }

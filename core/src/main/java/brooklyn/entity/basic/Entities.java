@@ -220,8 +220,8 @@ public class Entities {
     }
 
     private static List<Entity> entitiesToStopOnShutdown = null;
-    public static synchronized void invokeStopOnShutdown(Entity entity) {
-        synchronized (entitiesToStopOnShutdown) {
+    public static void invokeStopOnShutdown(Entity entity) {
+        synchronized (Entities.class) {
             if (entitiesToStopOnShutdown==null) {
                 entitiesToStopOnShutdown = new ArrayList<Entity>();
                 ResourceUtils.addShutdownHook(new Runnable() {
@@ -248,6 +248,8 @@ public class Entities {
                     }
                 });
             }
+        }
+        synchronized (entitiesToStopOnShutdown) {
             entitiesToStopOnShutdown.add(entity);
         }
     }

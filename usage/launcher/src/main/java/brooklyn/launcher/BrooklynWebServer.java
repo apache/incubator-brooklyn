@@ -167,8 +167,9 @@ public class BrooklynWebServer {
      */
     public synchronized void stop() throws Exception {
         if (server==null) return;
+        String root = getRootUrl();
         ResourceUtils.removeShutdownHook(shutdownHook);
-        log.info("Stopping Brooklyn web console at "+getRootUrl()+ " (" + war + (wars != null ? " and " + wars.values() : "") + ")");
+        log.info("Stopping Brooklyn web console at "+root+ " (" + war + (wars != null ? " and " + wars.values() : "") + ")");
         server.stop();
         try {
             server.join();
@@ -178,7 +179,7 @@ public class BrooklynWebServer {
         server = null;
         LocalhostMachineProvisioningLocation.releasePort(getAddress(), actualPort);
         actualPort = -1;
-        log.info("Stopped Brooklyn web console at "+getRootUrl());
+        log.info("Stopped Brooklyn web console at "+root);
     }
 
     /** serve given WAR at the given pathSpec; if not yet started, it is simply remembered until start;
