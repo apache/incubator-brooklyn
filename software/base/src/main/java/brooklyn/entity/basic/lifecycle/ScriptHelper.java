@@ -153,7 +153,7 @@ public class ScriptHelper {
         } catch (RuntimeInterruptedException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalStateException(format("execution failed, invocation error for %s", summary), e);
+            throw new IllegalStateException(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
         } finally {
             mutexRelease.run();
         }
@@ -161,7 +161,7 @@ public class ScriptHelper {
             log.debug("finished executing: {} - result code {}", summary, result);
         }
         if (!resultCodeCheck.apply(result)) {
-            throw new IllegalStateException(format("execution failed, invalid result %s for %s", result, summary));
+            throw new IllegalStateException(format("Execution failed, invalid result %s for %s", result, summary));
         }
         return result;
     }

@@ -188,7 +188,10 @@ class EntityController {
         try {
             render entityService.getTasksOfEntity(params.id) as JSON
         } catch (NoSuchEntity e) {
-            render(status: 404, text: '{message: "Entity with specified id '+params.id+'does not exist"}')
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+' does not exist"}')
+        } catch (StringIndexOutOfBoundsException e) {
+            println "ERROR returning 404, but tasks fyi are "+entityService.getTasksOfEntity(params.id);
+            render(status: 404, text: '{message: "Entity with specified id '+params.id+' caused error rendering as json"}')
         }
     }
 

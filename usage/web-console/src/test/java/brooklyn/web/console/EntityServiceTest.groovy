@@ -15,13 +15,13 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
-import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.location.basic.SimulatedLocation
 import brooklyn.web.console.entity.TaskSummary
 
 import com.google.common.collect.Iterables
 
 class EntityServiceTest {
-    def testService
+    EntityService testService
 
     Entity testEntity
     List<Entity> testEntities
@@ -162,6 +162,7 @@ class EntityServiceTest {
         
         tier.invoke(eff)
         List<TaskSummary> tasks = testService.getTasksOfEntity(tier.id)
+        if (!tasks) fail("Should have had a task on "+tier.id+", since we invoked "+eff);
         TaskSummary task = tasks.get(0)
         
         assertEquals(task.entityDisplayName, tier.displayName)

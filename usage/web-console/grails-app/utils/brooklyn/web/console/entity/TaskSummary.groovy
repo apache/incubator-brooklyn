@@ -19,7 +19,7 @@ public class TaskSummary {
     final String displayName;
     final String description;
     final String id;
-    final Set<String> tags;
+    final Collection<String> tags;
     final long rawSubmitTimeUtc;
     final String submitTimeUtc;
     final String startTimeUtc;
@@ -52,8 +52,8 @@ public class TaskSummary {
         this.currentStatus = task.statusSummary
         this.detailedStatus = task.getStatusDetail(true)
         
-        this.tags = tags;
-        this.isEffector = tags?.contains AbstractManagementContext.EFFECTOR_TAG;
+        this.tags = task.tags.collect { ""+it };
+        this.isEffector = task.tags?.contains(AbstractManagementContext.EFFECTOR_TAG);
     }
 
     public String toString() {

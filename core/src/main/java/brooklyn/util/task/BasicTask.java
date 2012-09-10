@@ -326,13 +326,16 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                     catch (Throwable tt) { error = tt; }
 
                     //remove outer ExecException which is reported by the get(), we want the exception the task threw
-                    if (error instanceof ExecutionException) error = ((Throwable)error).getCause();
+                    while (error instanceof ExecutionException) error = ((Throwable)error).getCause();
+                    String errorMessage = null;
+                    if (error instanceof Throwable) errorMessage = ((Throwable)error).getMessage();
+                    if (errorMessage==null || errorMessage.isEmpty()) errorMessage = ""+error;
 
-                    if (verbosity == 1) rv += " ("+error+")";
-                    else {
+                    if (verbosity >= 1) rv += ": "+errorMessage;
+                    if (verbosity >= 2) {
                         StringWriter sw = new StringWriter();
                         ((Throwable)error).printStackTrace(new PrintWriter(sw));
-                        rv += "\n"+sw.getBuffer();
+                        rv += "\n\n"+sw.getBuffer();
                     }
                 }
             } else {
@@ -340,14 +343,16 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 if (verbosity>=1) {
                     if (verbosity==1) {
                         try {
-                            rv += ", result "+get();
+                            Object v = get();
+                            rv += ", " +(v==null ? "no return value (null)" : "result: "+v);
                         } catch (Exception e) {
                             rv += ", but error accessing result ["+e+"]"; //shouldn't happen
                         }
                     } else {
                         rv += " after "+duration;
                         try {
-                            rv += "\n" + "Result: "+get();
+                            Object v = get();
+                            rv += "\n\n" + (v==null ? "No return value (null)" : "Result: "+v);
                         } catch (Exception e) {
                             rv += " at first\n" +
                             		"Error accessing result ["+e+"]"; //shouldn't happen

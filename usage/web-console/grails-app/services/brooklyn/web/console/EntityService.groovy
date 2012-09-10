@@ -36,27 +36,26 @@ public class EntityService {
     public static class NoSuchEntity extends Exception {}
 
     // TODO Want to handle pagination better; for now we just restrict list to 20 most recent
-    /** returns only _effector_ calls */
+    /** returns only _effector_ calls, in submission order (reversed) */
     public List<TaskSummary> getTasksOfAllEntities() {
         final int MAX_NUM_RETURNED = 20
         
         List<TaskSummary> result = managementContextService.executionManager.getTasksWithAllTags(
                 [AbstractManagementContext.EFFECTOR_TAG]).collect { new TaskSummary(it) }
-                
         Collections.sort(result, {TaskSummary t1, TaskSummary t2 -> 
-                return new Long(t2.rawSubmitTimeUtc - t1.rawSubmitTimeUtc).intValue() } as Comparator)
+                return t2.rawSubmitTimeUtc.compareTo(t1.rawSubmitTimeUtc) } as Comparator)
         
         return result.subList(0, Math.min(MAX_NUM_RETURNED, result.size()))
     }
 
-    /** returns any active task or any invoked effector */
+    /** returns any active task or any invoked effector, in order of submission time, but with active tasks first */
     public Collection<TaskSummary> getTasksOfEntity(String entityId) {
         Entity e = getEntity(entityId)
         if (!e) throw new NoSuchEntity()
 
-        List taskSummaries = managementContextService.executionManager.getTasksWithAllTags([e]).collect { new TaskSummary(it) }
+        List taskSummaries = managementContextService.executionManager.getTasksWithTag(e).collect { new TaskSummary(it) }
         // only show active subtasks, and effectors
-        taskSummaries = taskSummaries.findAll { TaskSummary t -> t.endTimeUtc==-1 || t.isEffector };
+        taskSummaries = taskSummaries.findAll { TaskSummary t -> !t.endTimeUtc || t.isEffector };
         Collections.sort(taskSummaries, 
             { TaskSummary t1, TaskSummary t2 ->
                 if (t1.endTimeUtc && !t2.endTimeUtc) {
@@ -68,7 +67,7 @@ public class EntityService {
                     return -1;
                 }
                 //otherwise sort by start time
-                return t2.rawSubmitTimeUtc - t1.rawSubmitTimeUtc;
+                return t2.rawSubmitTimeUtc.compareTo(t1.rawSubmitTimeUtc);
             } as Comparator);
         return taskSummaries;
     }

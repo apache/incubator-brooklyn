@@ -14,6 +14,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.trait.Startable;
+import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
@@ -79,9 +80,34 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                     (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : ""),
                 "make install");
 
+        script.failOnNonZeroResultCode(false);
         int result = script.execute();
-        if (result != 0)
-            throw new IllegalStateException(String.format("execution failed, invalid result %s for %s; NB gcc 4.2 is required", result, script.summary));
+        
+        if (result != 0) {
+            String notes = "likely an error building nginx. consult the brooklyn log ssh output for further details.\n"+
+                    "note that this Brooklyn nginx driver compiles nginx from source. " +
+                    "it attempts to install common prerequisites but this does not always succeed.\n";
+            OsDetails os = getMachine().getOsDetails();
+            if (os.isMac()) {
+                notes += "deploying to Mac OS X, you will require Xcode and Xcode command-line tools, and on " +
+                		"some versions the pcre library (e.g. using macports, sudo port install pcre).\n";
+            }
+            if (os.isWindows()) {
+                notes += "this nginx driver is not designed for windows, unless cygwin is installed, and you are patient.\n";
+            }
+            if (getEntity().getApplication().getClass().getCanonicalName().startsWith("brooklyn.demo.")) {
+                // this is maybe naughty ... but since we use nginx in the first demo example,
+                // and since it's actually pretty complicated, let's give a little extra hand-holding
+                notes +=
+                		"if debugging this is all a bit much and you just want to run a demo, " +
+                		"you have two fairly friendly options.\n" +
+                		"1. you can use a well known cloud, like AWS or Rackspace, where this should run " +
+                		"in a tried-and-tested Ubuntu or CentOS environment, without any problems " +
+                		"(and if it does let us know and we'll fix it!).\n"+
+                		"2. or you can just use the demo without nginx, instead access the appserver instances directly.\n";
+            }
+            throw new IllegalStateException("installation of nginx failed (result "+result+"): "+notes.trim());
+        }
     }
 
     @Override
