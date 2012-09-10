@@ -106,9 +106,15 @@ Brooklyn.circles = (function() {
     }
 
     function init() {
-        drawMap();
-        drawCircles();
-        $(Brooklyn.eventBus).bind("update", update);
+    	try {
+    		drawMap();
+    		drawCircles();
+    		$(Brooklyn.eventBus).bind("update", update);
+    	} catch (err) {
+    		if ( typeof console != 'undefined' && typeof console.log != 'undefined' ) {
+    			console.log( err );
+            }
+    	}
     }
 
     return {init: init};
