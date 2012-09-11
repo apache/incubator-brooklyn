@@ -9,6 +9,9 @@ and you are in this directory.  Adjust to taste for other configurations.
   # Three-tier: auto-scaling app-server cluster fronted by nginx, MySql backend wired up, on localhost
   brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
 
+The above requires passwordless `ssh localhost` and requires `gcc` to build `nginx`.
+You could instead target your favourite cloud, e.g. `--location aws-ec2:eu-west-1`.
+
 Other examples:
 
   # Same three-tier, but in Amazon California (location arg can be changed for any example, of course)
