@@ -321,6 +321,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         
         PipedOutputStream outO = null;
         PipedOutputStream outE = null;
+        StreamGobbler gO=null, gE=null;
         try {
             if (truth(flags.get("logPrefix"))) {
                 PipedInputStream insO = new PipedInputStream();
@@ -328,8 +329,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 PipedInputStream insE = new PipedInputStream();
                 outE = new PipedOutputStream(insE);
             
-                new StreamGobbler(insO, (OutputStream) flags.get("out"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stdout] ").start();
-                new StreamGobbler(insE, (OutputStream) flags.get("err"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stderr] ").start();
+                gO = new StreamGobbler(insO, (OutputStream) flags.get("out"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stdout] ");
+                gE = new StreamGobbler(insE, (OutputStream) flags.get("err"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stderr] ");
+                gO.start();
+                gE.start();
                 
                 flags.put("out", outO);
                 flags.put("err", outE);
@@ -349,8 +352,18 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             throw Throwables.propagate(e);
         } finally {
             // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
+            if (outO!=null) try { outO.flush(); } catch (IOException e) {}
+            if (outE!=null) try { outE.flush(); } catch (IOException e) {}
             Closeables.closeQuietly(outO);
             Closeables.closeQuietly(outE);
+            
+            try {
+                if (gE!=null) { gE.join(); }
+                if (gO!=null) { gO.join(); }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                Throwables.propagate(e);
+            }
         }
 
     }

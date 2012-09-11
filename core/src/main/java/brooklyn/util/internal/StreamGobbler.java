@@ -89,6 +89,7 @@ public class StreamGobbler extends Thread {
     
     public void onClose() {
         onLine(lineSoFar.toString());
+        if (out!=null) out.flush();
         lineSoFar.setLength(0);
         finished = true;
         synchronized (this) { notifyAll(); }

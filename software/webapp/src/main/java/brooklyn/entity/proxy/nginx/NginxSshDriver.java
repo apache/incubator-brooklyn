@@ -81,6 +81,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                     (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : ""),
                 "make install");
 
+        script.header.prepend("set -x");
+        script.gatherOutput();
         script.failOnNonZeroResultCode(false);
         int result = script.execute();
         
@@ -107,8 +109,14 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 		"(and if it does let us know and we'll fix it!).\n"+
                 		"2. or you can just use the demo without nginx, instead access the appserver instances directly.\n";
             }
+
+            if (!script.getResultStderr().isEmpty())
+                notes += "\n" + "STDERR\n" + script.getResultStderr()+"\n";
+            if (!script.getResultStdout().isEmpty())
+                notes += "\n" + "STDOUT\n" + script.getResultStdout()+"\n";
+            
             Tasks.setExtraStatusDetails(notes.trim());
-            // TODO get CLI output
+            
             throw new IllegalStateException("Installation of nginx failed (shell returned non-zero result "+result+")");
         }
     }

@@ -294,6 +294,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             } catch (Exception  e) {
                 setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
                 // provide extra context info, as we're seeing this happen in strange circumstances
+                if (driver==null) throw new IllegalStateException("${this} concurrent start and shutdown detected");
                 throw new IllegalStateException("Error detecting whether ${this} is running: "+e, e);
             }
 			if (log.isDebugEnabled()) log.debug "checked {}, is running returned: {}", this, isRunningResult

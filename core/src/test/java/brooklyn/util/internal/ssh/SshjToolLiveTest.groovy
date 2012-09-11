@@ -93,6 +93,13 @@ public class SshjToolLiveTest {
     }
 
     @Test(groups = [ "Integration" ])
+    public void testScriptDataNotLost() {
+        String out = execShell([ "echo `echo foo``echo bar`" ])
+
+        assertTrue(out.contains("foobar"), "out="+out);
+    }
+
+    @Test(groups = [ "Integration" ])
     public void testExecShellWithCommandTakingStdin() {
         // Uses `tee` to redirect stdin to the given file; cntr-d (i.e. char 4) stops tee with exit code 0
         String content = "blah blah"
@@ -349,8 +356,8 @@ public class SshjToolLiveTest {
         assertRemoteFileContents(remoteFileInDirPath, contents)
     }
     
-    // TODO stderr seems to be written to stdout!?
-    @Test(enabled=false, groups = [ "Integration" ])
+    // fails if VT100 enabled
+    @Test(groups = [ "Integration" ])
     public void testExecShellCapturesStderr() {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         ByteArrayOutputStream err = new ByteArrayOutputStream()
@@ -359,14 +366,15 @@ public class SshjToolLiveTest {
         assertEquals(new String(err.toByteArray()), "-bash: $nonExistantCmd: command not found\n", "out="+out+"; err="+err);
     }
 
-    // TODO stderr seems to be written to stdout!?
-    @Test(enabled=false, groups = [ "Integration" ])
+    // fails if VT100 enabled
+    @Test(groups = [ "Integration" ])
     public void testExecCapturesStderr() {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         ByteArrayOutputStream err = new ByteArrayOutputStream()
         String nonExistantCmd = "acmdthatdoesnotexist"
         tool.execCommands([out:out, err:err], [nonExistantCmd])
-        assertEquals(new String(err.toByteArray()), "-bash: $nonExistantCmd: command not found\n", "out="+out+"; err="+err);
+        String errMsg = new String(err.toByteArray());
+        assertTrue(errMsg.contains("bash: $nonExistantCmd: command not found\n"), "errMsg="+errMsg+"; out="+out+"; err="+err);
         
     }
 
@@ -416,6 +424,14 @@ public class SshjToolLiveTest {
     private String execShell(SshjTool t, List<String> cmds, Map<String,?> env=[:]) {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         int exitcode = t.execShell(out:out, cmds, env)
+        String outstr = new String(out.toByteArray())
+        assertEquals(exitcode, 0, outstr)
+        return outstr
+    }
+    
+    private String execScript(List<String> cmds, Map<String,?> env=[:]) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream()
+        int exitcode = tool.execScript(out:out, cmds, env)
         String outstr = new String(out.toByteArray())
         assertEquals(exitcode, 0, outstr)
         return outstr

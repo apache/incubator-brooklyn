@@ -349,7 +349,7 @@ public class SshjTool implements SshTool {
         return execScript(props, commands, Collections.<String,Object>emptyMap());
     }
     public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        return execScript(props, commands, Collections.<String,Object>emptyMap());
+        return execScript(props, commands, env);
     }
 
     @Override
@@ -675,6 +675,12 @@ public class SshjTool implements SshTool {
         LOG.debug("<< PROPAGATING: " + message, e);
         throw new SshException("(" + toString() + ") " + message, e);
     }
+    
+    protected void allocatePTY(Session s) throws ConnectionException, TransportException {
+        // this was set as the default, but it makes output harder to read
+        // and causes stderr to be sent to stdout
+//        s.allocatePTY("vt100", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
+    }
 
     @Override
     public String toString() {
@@ -697,7 +703,7 @@ public class SshjTool implements SshTool {
             public Session create() throws Exception {
                 checkConnected();
                 session = sshClientConnection.ssh.startSession();
-                session.allocatePTY("vt100", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
+                allocatePTY(session);
                 return session;
             }
 

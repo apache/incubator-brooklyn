@@ -1,18 +1,23 @@
 package brooklyn.entity.basic.lifecycle;
 
-import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.RuntimeInterruptedException;
-import brooklyn.util.mutex.WithMutexes;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
+import static java.lang.String.format;
 import groovy.lang.Closure;
+
+import java.io.ByteArrayOutputStream;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
-import java.util.List;
+import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.MutableMap;
+import brooklyn.util.RuntimeInterruptedException;
+import brooklyn.util.mutex.WithMutexes;
 
-import static java.lang.String.format;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 public class ScriptHelper {
 
@@ -27,6 +32,9 @@ public class ScriptHelper {
 
     protected Predicate<Integer> resultCodeCheck = Predicates.alwaysTrue();
     protected Predicate<ScriptHelper> executionCheck = Predicates.alwaysTrue();
+    
+    protected boolean gatherOutput = false;
+    protected ByteArrayOutputStream stdout, stderr;
 
     public ScriptHelper(ScriptRunner runner, String summary) {
         this.runner = runner;
@@ -137,6 +145,14 @@ public class ScriptHelper {
         return this;
     }
 
+    public ScriptHelper gatherOutput() {
+        return gatherOutput(true);
+    }
+    public ScriptHelper gatherOutput(boolean gather) {
+        gatherOutput = gather;
+        return this;
+    }
+    
     public int execute() {
         if (!executionCheck.apply(this)) {
             return 0;
@@ -149,7 +165,14 @@ public class ScriptHelper {
         int result;
         try {
             mutexAcquire.run();
-            result = runner.execute(lines, summary);
+            Map flags = new MutableMap();
+            if (gatherOutput) {
+                if (stdout==null) stdout = new ByteArrayOutputStream();
+                if (stderr==null) stderr = new ByteArrayOutputStream();
+                flags.put("out", stdout);
+                flags.put("err", stderr);
+            }
+            result = runner.execute(flags, lines, summary);
         } catch (RuntimeInterruptedException e) {
             throw e;
         } catch (Exception e) {
@@ -173,7 +196,14 @@ public class ScriptHelper {
         result.addAll(footer.lines);
         return result;
     }
+    
+    public String getResultStdout() {
+        if (stdout==null) throw new IllegalStateException("output not available on "+this+"; ensure gatherOutput(true) is set");
+        return stdout.toString();
+    }
+    public String getResultStderr() {
+        if (stderr==null) throw new IllegalStateException("output not available on "+this+"; ensure gatherOutput(true) is set");
+        return stderr.toString();
+    }
+    
 }
-
-
-
