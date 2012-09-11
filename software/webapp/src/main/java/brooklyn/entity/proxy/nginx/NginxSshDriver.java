@@ -18,6 +18,7 @@ import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.task.Tasks;
 
 /**
  * Start a {@link NginxController} in a {@link brooklyn.location.Location} accessible over ssh.
@@ -106,7 +107,9 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 		"(and if it does let us know and we'll fix it!).\n"+
                 		"2. or you can just use the demo without nginx, instead access the appserver instances directly.\n";
             }
-            throw new IllegalStateException("installation of nginx failed (result "+result+"): "+notes.trim());
+            Tasks.setExtraStatusDetails(notes.trim());
+            // TODO get CLI output
+            throw new IllegalStateException("Installation of nginx failed (shell returned non-zero result "+result+")");
         }
     }
 

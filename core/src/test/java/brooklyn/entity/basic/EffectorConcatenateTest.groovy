@@ -50,6 +50,8 @@ public class EffectorConcatenateTest {
                         }
                     });
                 
+                Tasks.setExtraStatusDetails("What's the soup du jour? That's the soup of the day!");
+                
                 // wait, setting task info from the second arg
                 // (test will assert that status details are reported correctly)
                 long startTime = System.currentTimeMillis();
@@ -107,8 +109,11 @@ public class EffectorConcatenateTest {
                             result.set("Status not in expected format: doesn't start with blocking details 'waiter...'\n"+status);
                             return;
                         }
+                        if (!status.contains("du jour")) {
+                            result.set("Status not in expected format: doesn't contain extra status details phrase 'du jour'\n"+status);
+                            return;
+                        }
                         // looks healthy
-
                     } finally {
                         e.concatTask.notifyAll();
                     }

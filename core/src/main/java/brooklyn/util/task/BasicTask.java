@@ -13,6 +13,7 @@ import java.lang.management.ThreadInfo;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     protected final Set tags = new LinkedHashSet();
 
     protected String blockingDetails = null;
+    Object extraStatusText = null;
 
     /**
      * Constructor needed to prevent confusion in groovy stubs when looking for default constructor,
@@ -310,6 +312,9 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 long elapsed = System.currentTimeMillis() - submitTimeUtc;
                 rv += " "+elapsed+" ms ago";
             }
+            if (verbosity >= 2 && getExtraStatusText()!=null) {
+                rv += "\n\n"+getExtraStatusText();
+            }
         } else if (isDone()) {
             long elapsed = endTimeUtc - submitTimeUtc;
             String duration = ""+elapsed+" ms";
@@ -317,6 +322,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
             if (isCancelled()) {
                 rv += "by cancellation";
                 if (verbosity >= 1) rv+=" after "+duration;
+                
+                if (verbosity >= 2 && getExtraStatusText()!=null) {
+                    rv += "\n\n"+getExtraStatusText();
+                }
             } else if (isError()) {
                 rv += "by error";
                 if (verbosity >= 1) {
@@ -325,6 +334,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                     try { String rvx = ""+get(); error = "no error, return value "+rvx; /* shouldn't happen */ }
                     catch (Throwable tt) { error = tt; }
 
+                    if (verbosity >= 2 && getExtraStatusText()!=null) {
+                        rv += "\n\n"+getExtraStatusText();
+                    }
+                    
                     //remove outer ExecException which is reported by the get(), we want the exception the task threw
                     while (error instanceof ExecutionException) error = ((Throwable)error).getCause();
                     String errorMessage = null;
@@ -356,6 +369,9 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                         } catch (Exception e) {
                             rv += " at first\n" +
                             		"Error accessing result ["+e+"]"; //shouldn't happen
+                        }
+                        if (verbosity >= 2 && getExtraStatusText()!=null) {
+                            rv += "\n\n"+getExtraStatusText();
                         }
                     }
                 }
@@ -398,6 +414,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		}
 
 		if (verbosity>=2) {
+            if (getExtraStatusText()!=null) {
+                rv += getExtraStatusText()+"\n\n";
+            }
+            
 		    rv += ""+toString()+"\n";
 		    if (submittedByTask!=null) {
 		        rv += "Submitted by "+submittedByTask+"\n";
@@ -474,6 +494,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public String getDescription() {
         return description;
     }
+
     
     /** allows a task user to specify why a task is blocked; for use immediately before a blocking/wait,
      * and typically cleared immediately afterwards; referenced by management api to inspect a task
@@ -486,4 +507,12 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public String getBlockingDetails() {
         return blockingDetails;
     }
+    
+    public void setExtraStatusText(Object extraStatus) {
+        this.extraStatusText = extraStatus;
+    }
+    public Object getExtraStatusText() {
+        return extraStatusText;
+    }
+    
 }

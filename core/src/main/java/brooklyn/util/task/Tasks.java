@@ -124,4 +124,13 @@ public class Tasks {
         return resolveValue(v, type, exec, contextMessage);
     }
 
+    /** sets extra status details on the current task, if possible (otherwise does nothing).
+     * the extra status is presented in Task.getStatusDetails(true)
+     */
+    public static void setExtraStatusDetails(String notes) {
+        Task current = current();
+        if (current instanceof BasicTask)
+            ((BasicTask)current).setExtraStatusText(notes); 
+    }
+
 }
