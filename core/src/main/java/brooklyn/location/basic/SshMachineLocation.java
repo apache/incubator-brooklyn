@@ -46,7 +46,6 @@ import brooklyn.util.mutex.WithMutexes;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -439,7 +438,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @Override
     public String toString() {
-        return address.toString();
+        return (address != null) ? address.toString() : "SshMachineLocation(null)";
     }
 
     /**
