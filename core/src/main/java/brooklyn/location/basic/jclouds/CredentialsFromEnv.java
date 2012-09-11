@@ -108,6 +108,7 @@ public class CredentialsFromEnv {
     protected String getProviderSpecificValue(Map flags, String type) {
         return sysProps.getFirst(flags,
             "brooklyn.jclouds."+getProvider()+"."+type,
+            "JCLOUDS_"+convertFromPropertyToShell(getProvider())+"_"+convertFromPropertyToShell(type),
             "JCLOUDS_"+convertFromPropertyToShell(type)+"_"+convertFromPropertyToShell(getProvider()),
             "brooklyn.jclouds."+type,
             "JCLOUDS_"+convertFromPropertyToShell(type) );
