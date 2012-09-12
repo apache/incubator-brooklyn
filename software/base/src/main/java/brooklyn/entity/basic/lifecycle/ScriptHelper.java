@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +17,7 @@ import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
 import brooklyn.util.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -91,6 +94,33 @@ public class ScriptHelper {
         return failOnNonZeroResultCode(true);
     }
 
+    public ScriptHelper updateTaskAndFailOnNonZeroResultCode() {
+        gatherOutput();
+        // a failure listener would be a cleaner way
+
+        resultCodeCheck = new Predicate<Integer>() {
+            @Override
+            public boolean apply(@Nullable Integer input) {
+                if (input==0) return true;
+
+                try {
+                    String notes = "";
+                    if (!getResultStderr().isEmpty())
+                        notes += "STDERR\n" + getResultStderr()+"\n";
+                    if (!getResultStdout().isEmpty())
+                        notes += "\n" + "STDOUT\n" + getResultStdout()+"\n";
+                    Tasks.setExtraStatusDetails(notes.trim());
+                } catch (Exception e) {
+                    log.warn("Unable to collect additional metadata on failure of "+summary+": "+e);
+                }
+
+                return false;
+            }
+        };
+        
+        return this;
+    }
+    
     /**
      * Convenience for error-checking the result.
      * <p/>

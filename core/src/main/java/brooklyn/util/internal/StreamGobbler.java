@@ -57,7 +57,7 @@ public class StreamGobbler extends Thread {
         } catch (IOException e) {
         	onClose();
         	//TODO parametrise log level, for this error, and for normal messages
-        	if (log!=null) log.debug(logPrefix+"exception reading from stream ("+e+")");
+        	if (log!=null && log.isTraceEnabled()) log.trace(logPrefix+"exception reading from stream ("+e+")");
         }
     }
     
