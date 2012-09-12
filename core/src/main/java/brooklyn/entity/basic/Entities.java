@@ -15,6 +15,9 @@ import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -24,6 +27,8 @@ import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.util.MutableMap;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.task.ParallelTask;
 
 import com.google.common.collect.Iterables;
@@ -35,7 +40,9 @@ import com.google.common.collect.Sets;
  * Also see the various *Methods classes for traits 
  * (eg StartableMethods for Startable implementations). */
 public class Entities {
-	
+
+    private static final Logger log = LoggerFactory.getLogger(Entities.class);
+    
 	/** invokes the given effector with the given named arguments on the entitiesToCall, from the calling context of the callingEntity;
 	 * intended for use only from the callingEntity
 	 * @return ParallelTask containing a results from each invocation; calling get() on the result will block until all complete,
@@ -211,4 +218,40 @@ public class Entities {
         if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
         if (context != null) context.unmanage(e);
     }
+
+    private static List<Entity> entitiesToStopOnShutdown = null;
+    public static void invokeStopOnShutdown(Entity entity) {
+        synchronized (Entities.class) {
+            if (entitiesToStopOnShutdown==null) {
+                entitiesToStopOnShutdown = new ArrayList<Entity>();
+                ResourceUtils.addShutdownHook(new Runnable() {
+                    @SuppressWarnings({ "unchecked", "rawtypes" })
+                    public void run() {
+                        synchronized (entitiesToStopOnShutdown) {
+                            log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping "+entitiesToStopOnShutdown);
+                            List<Task> stops = new ArrayList<Task>();
+                            for (Entity entity: entitiesToStopOnShutdown) {
+                                try {
+                                    stops.add(entity.invoke(Startable.STOP, new MutableMap()));
+                                } catch (Exception exc) {
+                                    log.debug("stopOnShutdown of "+entity+" returned error: "+exc, exc);
+                                }
+                            }
+                            for (Task t: stops) { 
+                                try {
+                                    log.debug("stopOnShutdown of {} completed: {}", t, t.get()); 
+                                } catch (Exception exc) {
+                                    log.debug("stopOnShutdown of "+t+" returned error: "+exc, exc);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        synchronized (entitiesToStopOnShutdown) {
+            entitiesToStopOnShutdown.add(entity);
+        }
+    }
+    
 }

@@ -7,14 +7,14 @@ import org.slf4j.LoggerFactory;
 public class Main {
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
-    private WebAppRunner launcher = newDefaultWebAppRunner();
+    private BrooklynWebServer launcher = newDefaultWebAppRunner();
 
     public static void main(String... args) throws Exception {
         new Main().run(args);
     }
 
-    public WebAppRunner newDefaultWebAppRunner() {
-        return new WebAppRunner(null);
+    public BrooklynWebServer newDefaultWebAppRunner() {
+        return new BrooklynWebServer(null);
     }
 
     public void run(String[] args) throws Exception {
@@ -22,7 +22,7 @@ public class Main {
         startWebApp();
     }
 
-    public WebAppRunner startWebApp() throws Exception {
+    public BrooklynWebServer startWebApp() throws Exception {
         launcher.start();
         return launcher;
     }

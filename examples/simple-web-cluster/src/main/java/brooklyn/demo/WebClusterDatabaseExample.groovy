@@ -67,13 +67,15 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     }    
 
     public static void main(String[] argv) {
-        ArrayList args = new ArrayList(Arrays.asList(argv));
-        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
-
         WebClusterDatabaseExample app = new WebClusterDatabaseExample(name:'Brooklyn WebApp Cluster with Database example')
-            
-        BrooklynLauncher.manage(app, port)
+        
+        ArrayList args = new ArrayList(Arrays.asList(argv));
+        BrooklynLauncher.newLauncher().
+                webconsolePort( CommandLineUtil.getCommandLineOption(args, "--port", "8081+") ).
+                managing(app).
+                launch();
+
+        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
         app.start(locations)
         Entities.dumpInfo(app)
     }

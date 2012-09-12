@@ -124,7 +124,7 @@ public class Main {
         
         @Option(name = { "-p", "--port" }, title = "port number",
                 description = "Specifies the port to be used by the Brooklyn Management Console.")
-        public int port = 8081;
+        public String port = "8081+";
         
         @Option(name = { "-nc", "--noConsole" },
                 description = "Whether to start the web console")
@@ -158,21 +158,29 @@ public class Main {
             if (verbose) {
                 System.out.println("Launching brooklyn app: "+app+" in "+locations);
             }
+            BrooklynLauncher launcher = BrooklynLauncher.newLauncher();
             
             ResourceUtils utils = new ResourceUtils(this);
             ClassLoader parent = utils.getLoader();
             GroovyClassLoader loader = new GroovyClassLoader(parent);
             
-            // Get an instance of the brooklyn app
-            log.debug("Load the user's application: {}", app);
-            AbstractApplication application = loadApplicationFromClasspathOrParse(utils, loader, app);
-            
-            //First, run a setup script if the user has provided one
+            // First, run a setup script if the user has provided one
             if (script != null) {
-                log.debug("Running the user povided script: {}", script);
+                log.debug("Running the user provided script: {}", script);
                 String content = utils.getResourceAsString(script);
                 GroovyShell shell = new GroovyShell(loader);
                 shell.evaluate(content);
+            }
+
+            launcher.webconsolePort(port);
+            launcher.webconsole(!noConsole);
+            
+            // Create the instance of the brooklyn app
+            AbstractApplication application = null;
+            if (app!=null) {
+                log.debug("Load the user's application: {}", app);
+                application = loadApplicationFromClasspathOrParse(utils, loader, app);
+                launcher.managing(application);
             }
             
             // Figure out the brooklyn location(s) where to launch the application
@@ -182,14 +190,25 @@ public class Main {
                     (parsedLocations==null || Iterables.isEmpty(parsedLocations)) ?
                             ImmutableSet.of(CommandLineLocations.LOCALHOST) : parsedLocations);
             
-            // Start the application
-            log.info("Adding application under brooklyn management");
-            BrooklynLauncher.manage(application, port, !noShutdownOnExit, !noConsole);
-            log.info("Starting brooklyn application {} in location(s) {}", app, brooklynLocations);
-            application.start(brooklynLocations);
+            // Launch server
+            log.info("Launching Brooklyn web console management");
+            launcher.launch();
+            
+            // Start application
+            if (application!=null) {
+                log.info("Starting brooklyn application {} in location{} {}", new Object[] { app, brooklynLocations.size()!=1?"s":"", brooklynLocations });
+                if (!noShutdownOnExit) Entities.invokeStopOnShutdown(application);
+                try {
+                    application.start(brooklynLocations);
+                } catch (Exception e) {
+                    log.error("Error starting "+application+": "+e, e);
+                }
+            } else if (brooklynLocations!=null && !brooklynLocations.isEmpty()) {
+                log.warn("Locations specified without any applications; ignoring");
+            }
             
             if (verbose) {
-                Entities.dumpInfo(application);
+                if (application!=null) Entities.dumpInfo(application);
             }
             
             if(stopOnKeyPress){
@@ -207,7 +226,10 @@ public class Main {
 
         private synchronized void waitUntilInterrupted() {
             try {
-                wait();
+                while (true) {
+                    wait();
+                    log.debug("suprious wake in brooklyn Main, how about that!");
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return; // exit gracefully

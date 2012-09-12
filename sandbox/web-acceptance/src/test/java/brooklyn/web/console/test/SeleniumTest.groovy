@@ -1,6 +1,6 @@
 package brooklyn.web.console.test
 
-import brooklyn.launcher.WebAppRunner
+import brooklyn.launcher.BrooklynWebServer
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
 import com.thoughtworks.selenium.DefaultSelenium
@@ -18,7 +18,7 @@ import static org.testng.Assert.fail
 public class SeleniumTest {
     private static final Logger LOG = LoggerFactory.getLogger(SeleniumTest.class)
     private static SeleniumServer seleniumServer;
-    private static WebAppRunner launcher;
+    private static BrooklynWebServer launcher;
 
     public static int timeout = 20;
     public static Selenium selenium;
@@ -40,7 +40,7 @@ public class SeleniumTest {
         LOG.info("Starting Jetty")
         ManagementContext context = new LocalManagementContext();
         context.manage(new TestApplication(mgmt: context));
-        launcher = new WebAppRunner(context, 9090)
+        launcher = new BrooklynWebServer(context, 9090)
         launcher.start()
 
         // hold everything up till we have something running

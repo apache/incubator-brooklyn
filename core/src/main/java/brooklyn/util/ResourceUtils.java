@@ -3,6 +3,7 @@ package brooklyn.util;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 
 public class ResourceUtils {
     
@@ -26,6 +29,7 @@ public class ResourceUtils {
         this.context = context;
     }
     /** uses the classloader of the given object, and the phrase object's toString (preceded by the word 'for') as the context string used in errors */
+    @SuppressWarnings("rawtypes")
     public ResourceUtils(Object context) {
         this(context==null ? null : context instanceof Class ? ((Class)context).getClassLoader() : context.getClass().getClassLoader(), context==null ? null : ""+context);
     }
@@ -126,6 +130,52 @@ public class ResourceUtils {
             bytesRead = input.read(buf);
         }
         output.flush();
+    }
+
+    public static File writeToTempFile(InputStream is, String prefix, String suffix) {
+        if (is == null) throw new NullPointerException("Input stream required to create temp file for "+prefix+"*"+suffix);
+        File tempFile;
+        try {
+            tempFile = File.createTempFile(prefix, suffix);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+        tempFile.deleteOnExit();
+
+        OutputStream out = null;
+        try {
+            out = new FileOutputStream(tempFile);
+            ByteStreams.copy(is, out);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        } finally {
+            Closeables.closeQuietly(is);
+            Closeables.closeQuietly(out);
+        }
+        return tempFile;
+    }
+
+    public static Thread addShutdownHook(final Runnable task) {
+        Thread t = new Thread("shutdownHookThread") {
+            public void run() {
+                try {
+                    task.run();
+                } catch (Exception e) {
+                    log.error("Failed to execute shutdownhook", e);
+                }
+            }
+        };
+        Runtime.getRuntime().addShutdownHook(t);
+        return t;
+    }
+    public static boolean removeShutdownHook(Thread hook) {
+        try {
+            return Runtime.getRuntime().removeShutdownHook(hook);
+        } catch (IllegalStateException e) {
+            // probably shutdown in progress
+            log.debug("cannot remove shutdown hook "+hook+": "+e);
+            return false;
+        }
     }
 
 }

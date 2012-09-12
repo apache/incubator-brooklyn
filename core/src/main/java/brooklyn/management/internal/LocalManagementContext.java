@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ExecutionManager;
@@ -43,13 +44,6 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     private static final Object MANAGED_LOCALLY = new Object();
 
-    private final EntityDriverFactory entityDriverFactory = new BasicEntityDriverFactory();
-
-    @Override
-    public EntityDriverFactory getEntityDriverFactory() {
-        return entityDriverFactory;
-    }
-
     protected synchronized boolean manageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = MANAGED_LOCALLY;
         Object old = entitiesById.put(e.getId(), e);
@@ -62,8 +56,11 @@ public class LocalManagementContext extends AbstractManagementContext {
             return false;
         } else {
             log.debug("{} starting management of entity {}", this, e);
+            if (e instanceof Application) {
+                applications.add((Application)e);
+                ((AbstractApplication)e).setManagementContext(this);
+            }
             entities.add(e);
-            if (e instanceof Application) applications.add((Application)e);
             return true;
         }
     }

@@ -74,15 +74,16 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         setAttribute(SERVICE_UP, false);
         StartableMethods.stop(this);
 
-        deployed = false;
-
-        //TODO review mgmt destroy lifecycle
-        //  we don't necessarily want to forget all about the app on stop, 
-        //since operator may be interested in things recently stopped;
-        //but that could be handled by the impl at management
-        //(keeping recently unmanaged things)  
-        //  however unmanaging must be done last, _after_ we stop children and set attributes 
-        getManagementContext().unmanage(this);
+        synchronized (this) {
+            deployed = false;
+            //TODO review mgmt destroy lifecycle
+            //  we don't necessarily want to forget all about the app on stop, 
+            //since operator may be interested in things recently stopped;
+            //but that could be handled by the impl at management
+            //(keeping recently unmanaged things)  
+            //  however unmanaging must be done last, _after_ we stop children and set attributes 
+            getManagementContext().unmanage(this);
+        }
 
         log.info("Stopped application " + this);
     }
@@ -91,23 +92,34 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         throw new UnsupportedOperationException();
     }
 
+    public boolean hasManagementContext() {
+        return mgmt!=null;
+    }
+    
+    public synchronized void setManagementContext(AbstractManagementContext mgmt) {
+        if (mgmt!=null && mgmt.equals(this.mgmt))
+            return;
+        if (hasManagementContext() && mgmt!=null)
+            throw new IllegalStateException("Cannot set management context on "+this+" as it already has a management context");
+        if (isDeployed())
+            throw new IllegalStateException("Cannot set management context on "+this+" as it is already deployed");
+        
+        this.mgmt = mgmt;
+        if (isDeployed()) {
+            mgmt.manage(this);            
+        }
+    }
+    
     @Override
     public synchronized AbstractManagementContext getManagementContext() {
-        if (mgmt!=null)
+        if (hasManagementContext())
             return mgmt;
 
-        //TODO how does user override?  expect he annotates a field in this class, then look up that field?
-        //(do that here)
-
-        mgmt = new LocalManagementContext();
-        if (deployed) {
-            mgmt.manage(this);
-        }
+        setManagementContext(new LocalManagementContext());
         return mgmt;
     }
 
     public boolean isDeployed() {
-        // TODO How to tell if we're deployed? What if sub-class overrides start 
         return deployed;
     }
 }
