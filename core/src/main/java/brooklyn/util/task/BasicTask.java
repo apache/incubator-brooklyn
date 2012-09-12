@@ -12,7 +12,10 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -56,6 +59,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     protected final Set tags = new LinkedHashSet();
 
     protected String blockingDetails = null;
+    Object extraStatusText = null;
 
     /**
      * Constructor needed to prevent confusion in groovy stubs when looking for default constructor,
@@ -308,6 +312,9 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 long elapsed = System.currentTimeMillis() - submitTimeUtc;
                 rv += " "+elapsed+" ms ago";
             }
+            if (verbosity >= 2 && getExtraStatusText()!=null) {
+                rv += "\n\n"+getExtraStatusText();
+            }
         } else if (isDone()) {
             long elapsed = endTimeUtc - submitTimeUtc;
             String duration = ""+elapsed+" ms";
@@ -315,6 +322,10 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
             if (isCancelled()) {
                 rv += "by cancellation";
                 if (verbosity >= 1) rv+=" after "+duration;
+                
+                if (verbosity >= 2 && getExtraStatusText()!=null) {
+                    rv += "\n\n"+getExtraStatusText();
+                }
             } else if (isError()) {
                 rv += "by error";
                 if (verbosity >= 1) {
@@ -323,14 +334,21 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                     try { String rvx = ""+get(); error = "no error, return value "+rvx; /* shouldn't happen */ }
                     catch (Throwable tt) { error = tt; }
 
+                    if (verbosity >= 2 && getExtraStatusText()!=null) {
+                        rv += "\n\n"+getExtraStatusText();
+                    }
+                    
                     //remove outer ExecException which is reported by the get(), we want the exception the task threw
-                    if (error instanceof ExecutionException) error = ((Throwable)error).getCause();
+                    while (error instanceof ExecutionException) error = ((Throwable)error).getCause();
+                    String errorMessage = null;
+                    if (error instanceof Throwable) errorMessage = ((Throwable)error).getMessage();
+                    if (errorMessage==null || errorMessage.isEmpty()) errorMessage = ""+error;
 
-                    if (verbosity == 1) rv += " ("+error+")";
-                    else {
+                    if (verbosity >= 1) rv += ": "+errorMessage;
+                    if (verbosity >= 2) {
                         StringWriter sw = new StringWriter();
                         ((Throwable)error).printStackTrace(new PrintWriter(sw));
-                        rv += "\n"+sw.getBuffer();
+                        rv += "\n\n"+sw.getBuffer();
                     }
                 }
             } else {
@@ -338,17 +356,22 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
                 if (verbosity>=1) {
                     if (verbosity==1) {
                         try {
-                            rv += ", result "+get();
+                            Object v = get();
+                            rv += ", " +(v==null ? "no return value (null)" : "result: "+v);
                         } catch (Exception e) {
                             rv += ", but error accessing result ["+e+"]"; //shouldn't happen
                         }
                     } else {
                         rv += " after "+duration;
                         try {
-                            rv += "\n" + "Result: "+get();
+                            Object v = get();
+                            rv += "\n\n" + (v==null ? "No return value (null)" : "Result: "+v);
                         } catch (Exception e) {
                             rv += " at first\n" +
                             		"Error accessing result ["+e+"]"; //shouldn't happen
+                        }
+                        if (verbosity >= 2 && getExtraStatusText()!=null) {
+                            rv += "\n\n"+getExtraStatusText();
                         }
                     }
                 }
@@ -381,19 +404,59 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		if (getThread()==null)
 			//thread might have moved on to a new task; if so, recompute (it should now say "done")
 			return getStatusString(verbosity);
+		
+		if (verbosity >= 1 && GroovyJavaMethods.truth(blockingDetails)) {
+		    if (verbosity==1)
+		        // short status string will just show blocking details
+		        return blockingDetails;
+		    //otherwise show the blocking details, then a new line, then additional information
+		    rv = blockingDetails + "\n\n";
+		}
+
+		if (verbosity>=2) {
+            if (getExtraStatusText()!=null) {
+                rv += getExtraStatusText()+"\n\n";
+            }
+            
+		    rv += ""+toString()+"\n";
+		    if (submittedByTask!=null) {
+		        rv += "Submitted by "+submittedByTask+"\n";
+		    }
+
+		    if (this instanceof CompoundTask) {
+		        // list children tasks for compound tasks
+		        try {
+		            List<Task> childrenTasks = ((CompoundTask)this).getChildrenTasks();
+		            if (!childrenTasks.isEmpty()) {
+		                rv += "Children:\n";
+		                for (Task child: childrenTasks) {
+		                    rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
+		                }
+		            }
+		        } catch (ConcurrentModificationException exc) {
+		            rv += "  (children not available - currently being modified)\n";
+		        }
+		    }
+//		    // TODO spawned tasks would be interesting, but hard to retrieve
+//		    // as we store execution context in thread local for the _task_;
+//		    // it isn't actually stored on the task itself so not available to
+//		    // 3rd party threads calling this extended toString method
+		    rv += "\n";
+		}
+		
 		LockInfo lock = ti.getLockInfo();
 		if (!GroovyJavaMethods.truth(lock) && ti.getThreadState()==Thread.State.RUNNABLE) {
 			//not blocked
 			if (ti.isSuspended()) {
 				// when does this happen?
-				rv = "Waiting";
+				rv += "Waiting";
 				if (verbosity >= 1) rv += ", thread suspended";
 			} else {
-				rv = "Running";
+				rv += "Running";
 				if (verbosity >= 1) rv += " ("+ti.getThreadState()+")";
 			}
 		} else {
-			rv = "Waiting";
+			rv += "Waiting";
 			if (verbosity>=1) {
 				if (ti.getThreadState() == Thread.State.BLOCKED) {
 					rv += " (mutex) on "+lookup(lock);
@@ -405,7 +468,6 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 				} else {
 					rv = " ("+ti.getThreadState()+") on "+lookup(lock);
 				}
-				if (GroovyJavaMethods.truth(blockingDetails)) rv += " - "+blockingDetails;
 			}
 		}
 		if (verbosity>=2) {
@@ -432,6 +494,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public String getDescription() {
         return description;
     }
+
     
     /** allows a task user to specify why a task is blocked; for use immediately before a blocking/wait,
      * and typically cleared immediately afterwards; referenced by management api to inspect a task
@@ -444,4 +507,12 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public String getBlockingDetails() {
         return blockingDetails;
     }
+    
+    public void setExtraStatusText(Object extraStatus) {
+        this.extraStatusText = extraStatus;
+    }
+    public Object getExtraStatusText() {
+        return extraStatusText;
+    }
+    
 }

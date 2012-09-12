@@ -335,6 +335,13 @@ textarea#logbox{
     max-height: 200px;
     overflow-y: auto;
 }
+.activity-bottom-buttons {
+    float:right;
+}
+.activity-bottom-buttons a {
+    margin-left: 8px;
+    text-decoration: none;
+}
 
 .sensor-table {
     min-height: 400px;

@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat
 
 import brooklyn.entity.Entity
 import brooklyn.management.Task
+import brooklyn.management.internal.AbstractManagementContext;
 
 /** Summary of a Brooklyn Task   */
 public class TaskSummary {
@@ -18,13 +19,14 @@ public class TaskSummary {
     final String displayName;
     final String description;
     final String id;
-    final Set<String> tags;
+    final Collection<String> tags;
     final long rawSubmitTimeUtc;
     final String submitTimeUtc;
     final String startTimeUtc;
     final String endTimeUtc;
     final String currentStatus;
     final String detailedStatus;
+    final boolean isEffector;
 
     // formatter is not thread-safe; use thread-local storage
     private static final ThreadLocal<DateFormat> formatter = new ThreadLocal<DateFormat>() {
@@ -49,6 +51,9 @@ public class TaskSummary {
         this.endTimeUtc = (task.endTimeUtc == -1) ? "" : formatter.get().format(new Date(task.endTimeUtc))
         this.currentStatus = task.statusSummary
         this.detailedStatus = task.getStatusDetail(true)
+        
+        this.tags = task.tags.collect { ""+it };
+        this.isEffector = task.tags?.contains(AbstractManagementContext.EFFECTOR_TAG);
     }
 
     public String toString() {

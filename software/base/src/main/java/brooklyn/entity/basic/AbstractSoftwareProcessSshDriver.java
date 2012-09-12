@@ -79,6 +79,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return execute(Maps.newLinkedHashMap(), script, summaryForLogging);
     }
     
+    @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
         Map flags = Maps.newLinkedHashMap(flags2);
         Map<String, String> environment = (Map<String, String>) ((flags.get("env") != null) ? flags.get("env") : getShellEnvironment());
@@ -149,7 +150,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         if (ImmutableSet.of(CHECK_RUNNING, LAUNCHING, STOPPING, RESTARTING).contains(phase))
             s.failIfBodyEmpty();
         if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase))
-            s.failOnNonZeroResultCode();
+            s.updateTaskAndFailOnNonZeroResultCode();
 
         if (truth(flags.get("usePidFile"))) {
             String pidFile = (flags.get("usePidFile") instanceof CharSequence ? flags.get("usePidFile") : getRunDir()+"/"+PID_FILENAME).toString();

@@ -345,6 +345,7 @@
                      <artifactId>maven-surefire-plugin</artifactId>
                      <version>${surefire.version}</version>
                      <configuration>
+                         <argLine>-Xms256m -Xmx512m -XX:MaxPermSize=512m</argLine>
                          <systemProperties>
                               <property>
                                 <name>maven.junit.sysproperties</name>

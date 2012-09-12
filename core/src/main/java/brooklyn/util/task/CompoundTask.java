@@ -67,7 +67,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> {
         }
     }
 
-    /** return value needs to be specified by subclass 
+    /** return value needs to be specified by subclass; subclass should also setBlockingDetails 
      * @throws ExecutionException 
      * @throws InterruptedException */    
     protected abstract List<T> runJobs() throws InterruptedException, ExecutionException;
@@ -87,4 +87,9 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> {
             }
         }
     }
+    
+    protected List<Task<? extends T>> getChildrenTasks() {
+        return children;
+    }
+    
 }

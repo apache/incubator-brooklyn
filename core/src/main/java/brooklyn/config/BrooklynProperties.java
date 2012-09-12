@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -157,7 +158,7 @@ public class BrooklynProperties extends LinkedHashMap {
                 ((Closure)f).call(keys);
             if (Boolean.TRUE.equals(f))
                 throw new NoSuchElementException("Brooklyn unable to find mandatory property "+keys[0]+
-                    (keys.length>1 ? " (or "+(keys.length-1)+" other possible names, full list is "+keys+")" : "") );
+                    (keys.length>1 ? " (or "+(keys.length-1)+" other possible names, full list is "+Arrays.asList(keys)+")" : "") );
             else
                 throw new NoSuchElementException(""+f);
         }

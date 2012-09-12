@@ -25,6 +25,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
@@ -207,8 +208,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		Map<String,Object> flags = obtainProvisioningFlags(location);
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
-		provisioningLoc = location
-		SshMachineLocation machine = location.obtain(flags)
+		provisioningLoc = location;
+        SshMachineLocation machine;
+        Tasks.withBlockingDetails("Provisioning machine in "+location) {
+            machine = location.obtain(flags);
+        }
 		if (machine == null) throw new NoMachinesAvailableException(location)
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("SoftwareProcessEntity {} obtained a new location instance {}, now preparing process there", this, machine)
@@ -294,6 +298,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             } catch (Exception  e) {
                 setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
                 // provide extra context info, as we're seeing this happen in strange circumstances
+                if (driver==null) throw new IllegalStateException("${this} concurrent start and shutdown detected");
                 throw new IllegalStateException("Error detecting whether ${this} is running: "+e, e);
             }
 			if (log.isDebugEnabled()) log.debug "checked {}, is running returned: {}", this, isRunningResult

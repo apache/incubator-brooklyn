@@ -32,7 +32,7 @@ class ManagementContextService {
         // TODO use a different mechanism for specifying test-app
         if (!managementContext) {
             managementContext = new LocalManagementContext();
-            managementContext.manage(new TestWebApplication())
+            managementContext.manage(new TestWebApplication(mgmt: managementContext))
         }
         // END TODO
 

@@ -102,6 +102,7 @@ public class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<
      * Retrieves the value corresponding to this config key from the given map.
      * Could be overridden by more sophisticated config keys, such as MapConfigKey etc.
      */
+    @SuppressWarnings("unchecked")
     @Override
     public T extractValue(Map<?,?> vals, ExecutionContext exec) {
         Object v = vals.get(this);
@@ -121,7 +122,7 @@ public class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<
     }
     
     protected Object resolveValue(Object v, ExecutionContext exec) throws ExecutionException, InterruptedException {
-        return Tasks.resolveValue(v, type, exec);
+        return Tasks.resolveValue(v, type, exec, "config "+name);
     }
     
     /** attempt to resolve the given value as the given type, waiting on futures,

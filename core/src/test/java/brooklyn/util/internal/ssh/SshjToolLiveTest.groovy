@@ -93,10 +93,18 @@ public class SshjToolLiveTest {
     }
 
     @Test(groups = [ "Integration" ])
+    public void testScriptDataNotLost() {
+        String out = execShell([ "echo `echo foo``echo bar`" ])
+
+        assertTrue(out.contains("foobar"), "out="+out);
+    }
+
+    // TODO requires vt100 terminal emulation to work?
+    @Test(enabled = false, groups = [ "Integration" ])
     public void testExecShellWithCommandTakingStdin() {
         // Uses `tee` to redirect stdin to the given file; cntr-d (i.e. char 4) stops tee with exit code 0
         String content = "blah blah"
-        String out = execShellDirect([ "tee "+remoteFilePath, content, ""+(char)4, "echo file contents: `cat "+remoteFilePath+"`" ])
+        String out = execShellDirectWithTerminalEmulation([ "tee "+remoteFilePath, content, ""+(char)4, "echo file contents: `cat "+remoteFilePath+"`" ])
 
         assertTrue(out.contains("file contents: blah blah"), "out="+out);
     }
@@ -349,24 +357,25 @@ public class SshjToolLiveTest {
         assertRemoteFileContents(remoteFileInDirPath, contents)
     }
     
-    // TODO stderr seems to be written to stdout!?
-    @Test(enabled=false, groups = [ "Integration" ])
+    // fails if terminal enabled
+    @Test(groups = [ "Integration" ])
     public void testExecShellCapturesStderr() {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         ByteArrayOutputStream err = new ByteArrayOutputStream()
         String nonExistantCmd = "acmdthatdoesnotexist"
         tool.execShell([out:out, err:err], [nonExistantCmd])
-        assertEquals(new String(err.toByteArray()), "-bash: $nonExistantCmd: command not found\n", "out="+out+"; err="+err);
+        assertTrue(new String(err.toByteArray()).contains("$nonExistantCmd: command not found"), "out="+out+"; err="+err);
     }
 
-    // TODO stderr seems to be written to stdout!?
-    @Test(enabled=false, groups = [ "Integration" ])
+    // fails if terminal enabled
+    @Test(groups = [ "Integration" ])
     public void testExecCapturesStderr() {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         ByteArrayOutputStream err = new ByteArrayOutputStream()
         String nonExistantCmd = "acmdthatdoesnotexist"
         tool.execCommands([out:out, err:err], [nonExistantCmd])
-        assertEquals(new String(err.toByteArray()), "-bash: $nonExistantCmd: command not found\n", "out="+out+"; err="+err);
+        String errMsg = new String(err.toByteArray());
+        assertTrue(errMsg.contains("bash: $nonExistantCmd: command not found\n"), "errMsg="+errMsg+"; out="+out+"; err="+err);
         
     }
 
@@ -421,6 +430,14 @@ public class SshjToolLiveTest {
         return outstr
     }
     
+    private String execScript(List<String> cmds, Map<String,?> env=[:]) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream()
+        int exitcode = tool.execScript(out:out, cmds, env)
+        String outstr = new String(out.toByteArray())
+        assertEquals(exitcode, 0, outstr)
+        return outstr
+    }
+    
     private String execShellDirect(List<String> cmds, Map<String,?> env=[:]) {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         int exitcode = tool.execShellDirect(out:out, cmds, env)
@@ -428,4 +445,13 @@ public class SshjToolLiveTest {
         assertEquals(exitcode, 0, outstr)
         return outstr
     }
+    
+    private String execShellDirectWithTerminalEmulation(List<String> cmds, Map<String,?> env=[:]) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream()
+        int exitcode = tool.execShellDirect(allocatePTY:true, out:out, cmds, env)
+        String outstr = new String(out.toByteArray())
+        assertEquals(exitcode, 0, outstr)
+        return outstr
+    }
+
 }

@@ -14,9 +14,11 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.trait.Startable;
+import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.task.Tasks;
 
 /**
  * Start a {@link NginxController} in a {@link brooklyn.location.Location} accessible over ssh.
@@ -46,6 +48,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void install() {
+        newScript("disable requiretty").
+            setFlag("allocatePTY", true).
+            body.append(CommonCommands.sudo("bash -c 'sed -i s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers'")).
+            execute();
+        
         String nginxUrl = format("http://nginx.org/download/nginx-%s.tar.gz", getVersion());
         String nginxSaveAs = format("nginx-%s.tar.gz", getVersion());
         String stickyModuleUrl = "http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0.tar.gz";
@@ -55,9 +62,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         ScriptHelper script = newScript(INSTALLING);
         script.body.append(CommonCommands.INSTALL_TAR);
         MutableMap<String, String> installPackageFlags = MutableMap.of(
-                "yum", "openssl-devel", 
-                "rpm", "openssl-devel", 
-                "apt", "libssl-dev zlib1g-dev libpcre3-dev",
+                "yum", "gcc make openssl-devel pcre-devel", 
+                "apt", "gcc make libssl-dev zlib1g-dev libpcre3-dev",
                 "port", null);
         script.body.append(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
         script.body.append(CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel("/"), nginxSaveAs));
@@ -79,15 +85,50 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                     (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : ""),
                 "make install");
 
+        script.header.prepend("set -x");
+        script.gatherOutput();
+        script.failOnNonZeroResultCode(false);
         int result = script.execute();
-        if (result != 0)
-            throw new IllegalStateException(String.format("execution failed, invalid result %s for %s; NB gcc 4.2 is required", result, script.summary));
+        
+        if (result != 0) {
+            String notes = "likely an error building nginx. consult the brooklyn log ssh output for further details.\n"+
+                    "note that this Brooklyn nginx driver compiles nginx from source. " +
+                    "it attempts to install common prerequisites but this does not always succeed.\n";
+            OsDetails os = getMachine().getOsDetails();
+            if (os.isMac()) {
+                notes += "deploying to Mac OS X, you will require Xcode and Xcode command-line tools, and on " +
+                		"some versions the pcre library (e.g. using macports, sudo port install pcre).\n";
+            }
+            if (os.isWindows()) {
+                notes += "this nginx driver is not designed for windows, unless cygwin is installed, and you are patient.\n";
+            }
+            if (getEntity().getApplication().getClass().getCanonicalName().startsWith("brooklyn.demo.")) {
+                // this is maybe naughty ... but since we use nginx in the first demo example,
+                // and since it's actually pretty complicated, let's give a little extra hand-holding
+                notes +=
+                		"if debugging this is all a bit much and you just want to run a demo, " +
+                		"you have two fairly friendly options.\n" +
+                		"1. you can use a well known cloud, like AWS or Rackspace, where this should run " +
+                		"in a tried-and-tested Ubuntu or CentOS environment, without any problems " +
+                		"(and if it does let us know and we'll fix it!).\n"+
+                		"2. or you can just use the demo without nginx, instead access the appserver instances directly.\n";
+            }
+
+            if (!script.getResultStderr().isEmpty())
+                notes += "\n" + "STDERR\n" + script.getResultStderr()+"\n";
+            if (!script.getResultStdout().isEmpty())
+                notes += "\n" + "STDOUT\n" + script.getResultStdout()+"\n";
+            
+            Tasks.setExtraStatusDetails(notes.trim());
+            
+            throw new IllegalStateException("Installation of nginx failed (shell returned non-zero result "+result+")");
+        }
     }
 
     @Override
     public void customize() {
         newScript(CUSTOMIZING).
-                body.append(
+            body.append(
                 format("mkdir -p %s", getRunDir()),
                 format("cp -R %s/nginx-%s/dist/{conf,html,logs,sbin} %s", getInstallDir(), getVersion(), getRunDir())
         ).execute();

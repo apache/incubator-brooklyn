@@ -32,6 +32,7 @@ import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
+import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.RunScriptOptions;
@@ -113,7 +114,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static final Logger LOG = LoggerFactory.getLogger(JcloudsLocation.class);
     
     public static final String ROOT_USERNAME = "root";
-    public static final List<String> NON_ADDABLE_USERS = ImmutableList.of(ROOT_USERNAME, "ubuntu");
+    /** these userNames are known to be the preferred/required logins in some common/default images 
+     *  where root@ is not allowed to log in */  
+    public static final List<String> ROOT_ALIASES = ImmutableList.of("ubuntu", "ec2-user");
+    public static final List<String> NON_ADDABLE_USERS = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).build();
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
@@ -140,7 +144,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     @Override
     public String toString() {
         Object identity = getConf().get("identity");
-        return getClass().getSimpleName()+"["+(identity != null ? identity : null)+":"+name+"]";
+        return getClass().getSimpleName()+"["+name+":"+(identity != null ? identity : null)+"]";
     }
     
     public String getProvider() {
@@ -336,20 +340,22 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             LoginCredentials expectedCredentials = setup.customCredentials;
             if (expectedCredentials!=null) {
                 //set userName and other data, from these credentials
-                setup.allconf.put("userName", expectedCredentials.getUser());
+                Object oldUsername = setup.allconf.put("userName", expectedCredentials.getUser());
+                LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, expectedCredentials.getUser(), oldUsername });
                 if (truth(expectedCredentials.getPassword())) setup.allconf.put("password", expectedCredentials.getPassword());
                 if (truth(expectedCredentials.getPrivateKey())) setup.allconf.put("sshPrivateKeyData", expectedCredentials.getPrivateKey());
             }
             if (expectedCredentials==null && truth(setup.allconf.get("sshPrivateKeyData"))) {
                 expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
                 String userName = (String) setup.allconf.get("userName");
+                LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, userName, expectedCredentials.getUser() });
                 if (truth(expectedCredentials.getUser())) {
-                    if ("root".equals(userName) && "ubuntu".equals(expectedCredentials.getUser())) {
+                    if ("root".equals(userName) && ROOT_ALIASES.contains(expectedCredentials.getUser())) {
                         // FIXME should use 'null' as username then learn it from jclouds
                         // (or use AdminAccess!)
-                        LOG.debug("overriding username 'root' in favour of 'ubuntu' at {}", node);
-                        setup.allconf.put("userName", "ubuntu");
-                        userName = "ubuntu";
+                        LOG.debug("overriding username 'root' in favour of '"+expectedCredentials.getUser()+"' at {}", node);
+                        setup.allconf.put("userName", expectedCredentials.getUser());
+                        userName = expectedCredentials.getUser();
                     }
                 }
                 expectedCredentials = LoginCredentials.fromCredentials(new Credentials(userName, (String)setup.allconf.get("sshPrivateKeyData")));
@@ -769,6 +775,19 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
 
         Template template = templateBuilder.build();
+        if (template.getImage().getName().contains(".rc-")) {
+            // release candidates might break things :(
+            if (templateBuilder instanceof PortableTemplateBuilder) {
+                if (((PortableTemplateBuilder)templateBuilder).getOsFamily()==null) {
+                    templateBuilder.osFamily(OsFamily.UBUNTU);
+                    Template template2 = templateBuilder.build();
+                    if (template2!=null) {
+                        LOG.debug("preferring template {} over {}", template2, template);
+                        template = template2;
+                    }
+                }
+            }
+        }
         TemplateOptions options = template.getOptions();
         
         for (Map.Entry<String, CustomizeTemplateOptions> entry : SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.entrySet()) {

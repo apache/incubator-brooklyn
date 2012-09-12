@@ -1,5 +1,12 @@
 package brooklyn.entity.basic;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.EntityReferences.SelfEntityReference;
 import brooklyn.entity.trait.Startable;
@@ -7,12 +14,6 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public abstract class AbstractApplication extends AbstractEntity implements Startable, Application {
     public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
@@ -99,10 +100,17 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public synchronized void setManagementContext(AbstractManagementContext mgmt) {
         if (mgmt!=null && mgmt.equals(this.mgmt))
             return;
-        if (hasManagementContext() && mgmt!=null)
-            throw new IllegalStateException("Cannot set management context on "+this+" as it already has a management context");
-        if (isDeployed())
-            throw new IllegalStateException("Cannot set management context on "+this+" as it is already deployed");
+        if (hasManagementContext() && mgmt!=null) {
+            // TODO it is too easy to accidentally create an automatic local mgmt context
+            // e.g. by emitting a sensor in the constructor ... as AbstractApplication does !!
+            // (only affects us in testing, but still)
+            throw new IllegalStateException("Cannot set management context on "+this+" to "+mgmt+" as it already has a management context "+this.mgmt+"; " +
+            		"if unwanted auto-management is occurring try passing mgmt flag to application creation");
+        }
+        if (isDeployed()) {
+            // do we have to be so strict about this? it is a weird case, but still...
+            throw new IllegalStateException("Cannot set management context on "+this+" to "+mgmt+" as it is already deployed");
+        }
         
         this.mgmt = mgmt;
         if (isDeployed()) {
@@ -115,7 +123,14 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         if (hasManagementContext())
             return mgmt;
 
-        setManagementContext(new LocalManagementContext());
+        LocalManagementContext newMgmt = new LocalManagementContext();
+        if (log.isDebugEnabled()) {
+            log.debug("creating new local management context for "+this+" ("+newMgmt+") automatically on attempt to access context");
+            if (log.isTraceEnabled())
+                log.trace("trace for local mgmt creation of "+this, new Throwable("trace for local mgmt creation of "+this));
+        }
+        
+        setManagementContext(newMgmt);
         return mgmt;
     }
 

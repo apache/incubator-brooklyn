@@ -1,18 +1,27 @@
 package brooklyn.entity.basic.lifecycle;
 
-import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.RuntimeInterruptedException;
-import brooklyn.util.mutex.WithMutexes;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
+import static java.lang.String.format;
 import groovy.lang.Closure;
+
+import java.io.ByteArrayOutputStream;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
-import java.util.List;
+import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.MutableMap;
+import brooklyn.util.RuntimeInterruptedException;
+import brooklyn.util.mutex.WithMutexes;
+import brooklyn.util.task.Tasks;
 
-import static java.lang.String.format;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 public class ScriptHelper {
 
@@ -24,9 +33,13 @@ public class ScriptHelper {
     public final ScriptPart header = new ScriptPart(this);
     public final ScriptPart body = new ScriptPart(this);
     public final ScriptPart footer = new ScriptPart(this);
-
+    
+    protected final Map flags = new LinkedHashMap();
     protected Predicate<Integer> resultCodeCheck = Predicates.alwaysTrue();
     protected Predicate<ScriptHelper> executionCheck = Predicates.alwaysTrue();
+    
+    protected boolean gatherOutput = false;
+    protected ByteArrayOutputStream stdout, stderr;
 
     public ScriptHelper(ScriptRunner runner, String summary) {
         this.runner = runner;
@@ -83,6 +96,33 @@ public class ScriptHelper {
         return failOnNonZeroResultCode(true);
     }
 
+    public ScriptHelper updateTaskAndFailOnNonZeroResultCode() {
+        gatherOutput();
+        // a failure listener would be a cleaner way
+
+        resultCodeCheck = new Predicate<Integer>() {
+            @Override
+            public boolean apply(@Nullable Integer input) {
+                if (input==0) return true;
+
+                try {
+                    String notes = "";
+                    if (!getResultStderr().isEmpty())
+                        notes += "STDERR\n" + getResultStderr()+"\n";
+                    if (!getResultStdout().isEmpty())
+                        notes += "\n" + "STDOUT\n" + getResultStdout()+"\n";
+                    Tasks.setExtraStatusDetails(notes.trim());
+                } catch (Exception e) {
+                    log.warn("Unable to collect additional metadata on failure of "+summary+": "+e);
+                }
+
+                return false;
+            }
+        };
+        
+        return this;
+    }
+    
     /**
      * Convenience for error-checking the result.
      * <p/>
@@ -137,6 +177,14 @@ public class ScriptHelper {
         return this;
     }
 
+    public ScriptHelper gatherOutput() {
+        return gatherOutput(true);
+    }
+    public ScriptHelper gatherOutput(boolean gather) {
+        gatherOutput = gather;
+        return this;
+    }
+    
     public int execute() {
         if (!executionCheck.apply(this)) {
             return 0;
@@ -149,11 +197,18 @@ public class ScriptHelper {
         int result;
         try {
             mutexAcquire.run();
-            result = runner.execute(lines, summary);
+            Map flags = getFlags();
+            if (gatherOutput) {
+                if (stdout==null) stdout = new ByteArrayOutputStream();
+                if (stderr==null) stderr = new ByteArrayOutputStream();
+                flags.put("out", stdout);
+                flags.put("err", stderr);
+            }
+            result = runner.execute(flags, lines, summary);
         } catch (RuntimeInterruptedException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalStateException(format("execution failed, invocation error for %s", summary), e);
+            throw new IllegalStateException(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
         } finally {
             mutexRelease.run();
         }
@@ -161,11 +216,20 @@ public class ScriptHelper {
             log.debug("finished executing: {} - result code {}", summary, result);
         }
         if (!resultCodeCheck.apply(result)) {
-            throw new IllegalStateException(format("execution failed, invalid result %s for %s", result, summary));
+            throw new IllegalStateException(format("Execution failed, invalid result %s for %s", result, summary));
         }
         return result;
     }
 
+    public Map getFlags() {
+        return flags;
+    }
+    
+    public ScriptHelper setFlag(String flag, Object value) {
+        flags.put(flag, value);
+        return this;
+    }
+    
     public List<String> getLines() {
         List<String> result = new LinkedList<String>();
         result.addAll(header.lines);
@@ -173,7 +237,14 @@ public class ScriptHelper {
         result.addAll(footer.lines);
         return result;
     }
+    
+    public String getResultStdout() {
+        if (stdout==null) throw new IllegalStateException("output not available on "+this+"; ensure gatherOutput(true) is set");
+        return stdout.toString();
+    }
+    public String getResultStderr() {
+        if (stderr==null) throw new IllegalStateException("output not available on "+this+"; ensure gatherOutput(true) is set");
+        return stderr.toString();
+    }
+    
 }
-
-
-

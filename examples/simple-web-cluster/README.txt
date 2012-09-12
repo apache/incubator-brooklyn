@@ -9,18 +9,25 @@ and you are in this directory.  Adjust to taste for other configurations.
   # Three-tier: auto-scaling app-server cluster fronted by nginx, MySql backend wired up, on localhost
   brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
 
-Other examples:
+The above requires passwordless `ssh localhost` and requires `gcc` to build `nginx`.
+You could instead target your favourite cloud, where this has been tried and tested:
 
-  # Same three-tier, but in Amazon California (location arg can be changed for any example, of course)
+  # Same three-tier, but in Amazon California, prompting for credentials
+  # (the location arg can be changed for any example, of course, and other clouds are available)
+  export JCLOUDS_AWS_EC2_IDENTITY=AKA50M30N3S1DFR0MAW55
+  export JCLOUDS_AWS_EC2_CREDENTIAL=aT0Ps3cr3tC0D3wh1chAW5w1llG1V3y0uTOus333
   brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location aws-ec2:us-west-1
 
-  # Very simple: an app with a single web-server
+
+Other examples:
+
+  # A very simple app: a single web-server
   brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
 
-  # Very simple Brooklyn App, but more interesting results: a cluster of app-servers with nginx
+  # A simple app: just load-balancer and appservers
   brooklyn launch --app brooklyn.demo.WebClusterExample --location localhost
 
-  # The three tier example, but written in pure Java
+  # Pure Java three-tier example
   brooklyn launch --app brooklyn.demo.WebClusterDatabaseExampleAltJava --localhost localhost
 
 

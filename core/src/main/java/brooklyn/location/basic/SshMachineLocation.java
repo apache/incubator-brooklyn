@@ -42,6 +42,7 @@ import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshjTool;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -87,7 +88,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     /** properties which are passed to ssh */
-    public static final Collection<String> SSH_PROPS = ImmutableSet.of("logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData", "permissions", "sshTries", "env");
+    public static final Collection<String> SSH_PROPS = ImmutableSet.of("logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData", "permissions", "sshTries", "env", "allocatePTY");
     //TODO prefer privateKeyData (confusion about whether other holds a file or data)
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");
@@ -178,29 +179,47 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return connectSsh(MutableMap.of());
     }
     
+    protected boolean previouslyConnected = false;
     protected SshTool connectSsh(Map props) {
-        if (!truth(user)) user = System.getProperty("user.name");
-        Map<?,?> allprops = MutableMap.builder().putAll(config).putAll(leftoverProperties).putAll(props).build();
-        Map<String,Object> args = MutableMap.<String,Object>of("user", user, "host", address.getHostName());
-        for (Map.Entry<?, ?> entry : allprops.entrySet()) {
-            String k = ""+entry.getKey();
-            Object v = entry.getValue();
-            if (SSH_PROPS.contains(k)) {
-                args.put(k, v);
-            } else if (k.startsWith(SSHCONFIG_PREFIX+".")) {
-                args.put(k.substring(SSHCONFIG_PREFIX.length()+1), v);
-            } else {
-                // TODO remove once everything is included above and we no longer see these warnings
-                if (!NON_SSH_PROPS.contains(k)) {
-                    LOG.warn("including legacy SSH config property "+k+" for "+this+"; either prefix with sshconfig or add to NON_SSH_PROPS");
+        try {
+            if (!truth(user)) user = System.getProperty("user.name");
+            Map<?,?> allprops = MutableMap.builder().putAll(config).putAll(leftoverProperties).putAll(props).build();
+            Map<String,Object> args = MutableMap.<String,Object>of("user", user, "host", address.getHostName());
+            for (Map.Entry<?, ?> entry : allprops.entrySet()) {
+                String k = ""+entry.getKey();
+                Object v = entry.getValue();
+                if (SSH_PROPS.contains(k)) {
                     args.put(k, v);
+                } else if (k.startsWith(SSHCONFIG_PREFIX+".")) {
+                    args.put(k.substring(SSHCONFIG_PREFIX.length()+1), v);
+                } else {
+                    // TODO remove once everything is included above and we no longer see these warnings
+                    if (!NON_SSH_PROPS.contains(k)) {
+                        LOG.warn("including legacy SSH config property "+k+" for "+this+"; either prefix with sshconfig or add to NON_SSH_PROPS");
+                        args.put(k, v);
+                    }
                 }
             }
+            if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
+            SshTool ssh = new SshjTool(args);
+            Tasks.setBlockingDetails("Opening ssh connection");
+            try { ssh.connect(); } finally { Tasks.setBlockingDetails(null); }
+            previouslyConnected = true;
+            return ssh;
+        } catch (Exception e) {
+            if (previouslyConnected) throw Throwables.propagate(e);
+            // subsequence connection (above) most likely network failure, our remarks below won't help
+            // on first connection include additional information if we can't connect, to help with debugging
+            String rootCause = Throwables.getRootCause(e).getMessage();
+            throw new IllegalStateException("Cannot establish ssh connection to "+user+" @ "+this+
+                    (rootCause!=null && !rootCause.isEmpty() ? " ("+rootCause+")" : "")+". \n"+
+                    "Ensure that passwordless and passphraseless ssh access is enabled using standard keys from ~/.ssh or " +
+                    "as configured in brooklyn.properties. " +
+                    "Check that the target host is accessible, that correct permissions are set on your keys, " +
+                    "and that there is sufficient random noise in /dev/random on both ends. " +
+                    "To debug less common causes, see the original error in the trace or log, and/or enable 'net.schmizz' (sshj) logging."
+                    , e);
         }
-        if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
-        SshTool ssh = new SshjTool(args);
-        ssh.connect();
-        return ssh;
     }
 
     /**
@@ -302,6 +321,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         
         PipedOutputStream outO = null;
         PipedOutputStream outE = null;
+        StreamGobbler gO=null, gE=null;
         try {
             if (truth(flags.get("logPrefix"))) {
                 PipedInputStream insO = new PipedInputStream();
@@ -309,26 +329,41 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 PipedInputStream insE = new PipedInputStream();
                 outE = new PipedOutputStream(insE);
             
-                new StreamGobbler(insO, (OutputStream) flags.get("out"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stdout] ").start();
-                new StreamGobbler(insE, (OutputStream) flags.get("err"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stderr] ").start();
+                gO = new StreamGobbler(insO, (OutputStream) flags.get("out"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stdout] ");
+                gE = new StreamGobbler(insE, (OutputStream) flags.get("err"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stderr] ");
+                gO.start();
+                gE.start();
                 
                 flags.put("out", outO);
                 flags.put("err", outE);
             }
             
             SshTool ssh = connectSsh(flags);
-            int result = execCommand.exec(ssh, flags, commands, env);
-            ssh.disconnect();
-            if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} completed: {}", new Object[] {summaryForLogging, this, result});
-            
-            return result;
+            Tasks.setBlockingDetails("SSH executing, "+summaryForLogging);
+            try {  
+                int result = execCommand.exec(ssh, flags, commands, env);
+                ssh.disconnect();
+                if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} completed: {}", new Object[] {summaryForLogging, this, result});
+
+                return result;
+            } finally { Tasks.setBlockingDetails(null); }
         } catch (IOException e) {
             if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} failed: {}", new Object[] {summaryForLogging, this, e});
             throw Throwables.propagate(e);
         } finally {
             // Must close the pipedOutStreams, otherwise input will never read -1 so StreamGobbler thread would never die
+            if (outO!=null) try { outO.flush(); } catch (IOException e) {}
+            if (outE!=null) try { outE.flush(); } catch (IOException e) {}
             Closeables.closeQuietly(outO);
             Closeables.closeQuietly(outE);
+            
+            try {
+                if (gE!=null) { gE.join(); }
+                if (gO!=null) { gO.join(); }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                Throwables.propagate(e);
+            }
         }
 
     }
@@ -438,7 +473,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @Override
     public String toString() {
-        return (address != null) ? address.toString() : "SshMachineLocation(null)";
+        return "SshMachineLocation["+name+":"+address+"]";
     }
 
     /**
@@ -494,6 +529,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @Override
     public OsDetails getOsDetails() {
+        // TODO ssh and find out what we need to know, or use jclouds...
         return BasicOsDetails.Factory.ANONYMOUS_LINUX;
     }
 

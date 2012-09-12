@@ -76,6 +76,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         // TODO we could try resolving http resources remotely, rather than fetching here then copying
         int result = getMachine().copyTo(getResource(url), dest);
         log.debug("{} deployed {} to {}:{}: result {}", new Object[]{entity, url, getHostname(), dest, result});
+        if (result!=0) log.warn("Problem deploying {} to {}:{} for {}: result {}", new Object[]{url, getHostname(), dest, entity, result}); 
         return getFilenameContextMapper().convertDeploymentTargetNameToContext(canonicalTargetName);
     }
     
