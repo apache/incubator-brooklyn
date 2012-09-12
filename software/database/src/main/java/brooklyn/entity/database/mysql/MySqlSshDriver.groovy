@@ -131,7 +131,7 @@ datadir         = .
         newScript(LAUNCHING, usePidFile: true).
             failOnNonZeroResultCode().
             body.append(
-                "nohup ${basedir}/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` &",  //FIXME
+                "nohup ${basedir}/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` > out.log 2> err.log < /dev/null &", 
             ).execute();
     }
 
