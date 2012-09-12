@@ -13,3 +13,6 @@
     </div>
   </div>
 </div>
+<div class='activity-bottom-buttons'>
+  <a href='javascript:Brooklyn.activity.updateTasks();'>RELOAD</a>
+</div>
