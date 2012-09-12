@@ -64,10 +64,10 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public void install() {
         String saveAs  = "${basename}.tar.gz"
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
         commands.add(CommonCommands.INSTALL_TAR);
+        commands.add("(which apt-get && "+CommonCommands.sudo("apt-get install libaio1")+") || echo skipping libaio installation");
+        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
         commands.add("tar xfvz ${saveAs}");
-        commands.add("(which apt-get && apt-get install libaio1) || echo skipping libaio installation");
 
         newScript(INSTALLING).
             failOnNonZeroResultCode().
@@ -91,7 +91,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         else creationScript = new StringReader(entity.getConfig(MySqlNode.CREATION_SCRIPT_CONTENTS)?:"")
 		machine.copyTo(creationScript, runDir+"/"+"creation-script.cnf");
         newScript(CUSTOMIZING).
-            failOnNonZeroResultCode().
+            updateTaskAndFailOnNonZeroResultCode().
             body.append(
                 "cat > mymysql.cnf << END_MYSQL_CONF_${entity.id}\n"+"""
 [client]
@@ -129,7 +129,7 @@ datadir         = .
     @Override
     public void launch() {
         newScript(LAUNCHING, usePidFile: true).
-            failOnNonZeroResultCode().
+            updateTaskAndFailOnNonZeroResultCode().
             body.append(
                 "nohup ${basedir}/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` > out.log 2> err.log < /dev/null &", 
             ).execute();

@@ -131,6 +131,7 @@ public class SshjTool implements SshTool {
     private String privateKeyData;
     private File privateKeyFile;
     private boolean strictHostKeyChecking;
+    private boolean allocatePTY;
 
     public static Builder builder() {
         return new Builder();
@@ -144,6 +145,7 @@ public class SshjTool implements SshTool {
         private String privateKeyData;
         private Set<String> privateKeyFiles = Sets.newLinkedHashSet();
         private boolean strictHostKeyChecking = false;
+        private boolean allocatePTY = false;
         private int connectTimeout;
         private int sessionTimeout;
         private int sshTries = 4;  //allow 4 tries by default, much safer
@@ -156,6 +158,7 @@ public class SshjTool implements SshTool {
             user = getOptionalVal(props, "user", String.class, user);
             password = getOptionalVal(props, "password", String.class, password);
             strictHostKeyChecking = getOptionalVal(props, "strictHostKeyChecking", Boolean.class, strictHostKeyChecking);
+            allocatePTY = getOptionalVal(props, "allocatePTY", Boolean.class, allocatePTY);
             connectTimeout = getOptionalVal(props, "connectTimeout", Integer.class, connectTimeout);
             sessionTimeout = getOptionalVal(props, "sessionTimeout", Integer.class, sessionTimeout);
             sshTries = getOptionalVal(props, "sshTries", Integer.class, sshTries);
@@ -226,6 +229,7 @@ public class SshjTool implements SshTool {
         user = builder.user;
         password = builder.password;
         strictHostKeyChecking = builder.strictHostKeyChecking;
+        allocatePTY = builder.allocatePTY;
         sshTries = builder.sshTries ;
         backoffLimitedRetryHandler = new BackoffLimitedRetryHandler(sshTries, builder.sshRetryDelay);
         privateKeyData = builder.privateKeyData;
@@ -678,8 +682,11 @@ public class SshjTool implements SshTool {
     
     protected void allocatePTY(Session s) throws ConnectionException, TransportException {
         // this was set as the default, but it makes output harder to read
-        // and causes stderr to be sent to stdout
-//        s.allocatePTY("vt100", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
+        // and causes stderr to be sent to stdout;
+        // but some systems requiretty for sudoing
+        if (allocatePTY)
+            s.allocatePTY("vt100", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
+//            s.allocatePTY("dumb", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
     }
 
     @Override

@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import groovy.lang.Closure;
 
 import java.io.ByteArrayOutputStream;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,8 @@ public class ScriptHelper {
     public final ScriptPart header = new ScriptPart(this);
     public final ScriptPart body = new ScriptPart(this);
     public final ScriptPart footer = new ScriptPart(this);
-
+    
+    protected final Map flags = new LinkedHashMap();
     protected Predicate<Integer> resultCodeCheck = Predicates.alwaysTrue();
     protected Predicate<ScriptHelper> executionCheck = Predicates.alwaysTrue();
     
@@ -195,7 +197,7 @@ public class ScriptHelper {
         int result;
         try {
             mutexAcquire.run();
-            Map flags = new MutableMap();
+            Map flags = getFlags();
             if (gatherOutput) {
                 if (stdout==null) stdout = new ByteArrayOutputStream();
                 if (stderr==null) stderr = new ByteArrayOutputStream();
@@ -219,6 +221,15 @@ public class ScriptHelper {
         return result;
     }
 
+    public Map getFlags() {
+        return flags;
+    }
+    
+    public ScriptHelper setFlag(String flag, Object value) {
+        flags.put(flag, value);
+        return this;
+    }
+    
     public List<String> getLines() {
         List<String> result = new LinkedList<String>();
         result.addAll(header.lines);

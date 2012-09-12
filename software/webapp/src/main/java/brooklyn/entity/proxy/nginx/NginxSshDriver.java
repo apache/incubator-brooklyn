@@ -48,6 +48,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void install() {
+        newScript("disable requiretty").
+            setFlag("allocatePTY", true).
+            body.append(CommonCommands.sudo("bash -c 'sed -i s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers'")).
+            execute();
+        
         String nginxUrl = format("http://nginx.org/download/nginx-%s.tar.gz", getVersion());
         String nginxSaveAs = format("nginx-%s.tar.gz", getVersion());
         String stickyModuleUrl = "http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0.tar.gz";
@@ -57,9 +62,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         ScriptHelper script = newScript(INSTALLING);
         script.body.append(CommonCommands.INSTALL_TAR);
         MutableMap<String, String> installPackageFlags = MutableMap.of(
-                "yum", "openssl-devel", 
-                "rpm", "openssl-devel", 
-                "apt", "libssl-dev zlib1g-dev libpcre3-dev",
+                "yum", "gcc make openssl-devel pcre-devel", 
+                "apt", "gcc make libssl-dev zlib1g-dev libpcre3-dev",
                 "port", null);
         script.body.append(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
         script.body.append(CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel("/"), nginxSaveAs));
@@ -124,7 +128,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     @Override
     public void customize() {
         newScript(CUSTOMIZING).
-                body.append(
+            body.append(
                 format("mkdir -p %s", getRunDir()),
                 format("cp -R %s/nginx-%s/dist/{conf,html,logs,sbin} %s", getInstallDir(), getVersion(), getRunDir())
         ).execute();

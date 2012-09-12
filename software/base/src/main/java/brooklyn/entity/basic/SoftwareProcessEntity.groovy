@@ -25,6 +25,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
@@ -207,8 +208,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		Map<String,Object> flags = obtainProvisioningFlags(location);
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
-		provisioningLoc = location
-		SshMachineLocation machine = location.obtain(flags)
+		provisioningLoc = location;
+        SshMachineLocation machine;
+        Tasks.withBlockingDetails("Provisioning machine in "+location) {
+            machine = location.obtain(flags);
+        }
 		if (machine == null) throw new NoMachinesAvailableException(location)
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("SoftwareProcessEntity {} obtained a new location instance {}, now preparing process there", this, machine)

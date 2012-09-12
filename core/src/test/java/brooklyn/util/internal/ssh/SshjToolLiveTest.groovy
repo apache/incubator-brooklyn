@@ -356,7 +356,7 @@ public class SshjToolLiveTest {
         assertRemoteFileContents(remoteFileInDirPath, contents)
     }
     
-    // fails if VT100 enabled
+    // fails if terminal enabled
     @Test(groups = [ "Integration" ])
     public void testExecShellCapturesStderr() {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
@@ -366,7 +366,7 @@ public class SshjToolLiveTest {
         assertEquals(new String(err.toByteArray()), "-bash: $nonExistantCmd: command not found\n", "out="+out+"; err="+err);
     }
 
-    // fails if VT100 enabled
+    // fails if terminal enabled
     @Test(groups = [ "Integration" ])
     public void testExecCapturesStderr() {
         ByteArrayOutputStream out = new ByteArrayOutputStream()

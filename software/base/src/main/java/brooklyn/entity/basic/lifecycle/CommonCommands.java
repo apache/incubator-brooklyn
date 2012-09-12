@@ -47,14 +47,14 @@ public class CommonCommands {
      * from stdin routed to {@code /dev/null} and {@code -E} passes the parent
      * environment in. If already root, simplem runs the command.
      * <p/>
-     * The command is not escapped in any ways. If you are using single quotes
-     * you need to escape them.
+     * The command is not quoted or escaped in any ways. 
+     * If you are doing privileged redirect you may need to pass e.g. "bash -c 'echo hi > file'".
      * <p/>
-     * null is returned pass-through (sometimes used to indicate no command desired).
+     * If null is supplied, it is returned (sometimes used to indicate no command desired).
      */
     public static String sudo(String command) {
         if (command==null) return null;
-        return format("(test $UID -eq 0 && %s || sudo -E -n -s -- \'%s\')", command, command);
+        return format("(test $UID -eq 0 && %s || sudo -E -n -s -- %s)", command, command);
     }
 
     /**
@@ -73,11 +73,12 @@ public class CommonCommands {
 
     /**
      * Returns a command that runs only if the specified executable is in the path.
-     * If command is null, no command runs (and the script component this creates will return true if the package manager exists).
+     * If command is null, no command runs (and the script component this creates will return true if the executable).
      */
-    public static String exists(String executable, String command) {
-        if (command==null) return format("(which %s)", executable, command);
-        return format("(which %s && %s)", executable, command);
+    public static String exists(String executable, String ...commands) {
+        String extraCommandsAnded = "";
+        for (String c: commands) if (c!=null) extraCommandsAnded += " && "+c;
+        return format("(which %s%s)", executable, extraCommandsAnded);
     }
 
     /**
@@ -131,7 +132,8 @@ public class CommonCommands {
     public static String installPackage(Map flags, String packageDefaultName) {
         List<String> commands = new LinkedList<String>();
         commands.add(exists("dpkg", sudo(formatIfNotNull("dpkg -i %s", getFlag(flags, "deb", packageDefaultName)))));
-        commands.add(exists("apt-get", sudo(formatIfNotNull("apt-get update && apt-get install -y %s", getFlag(flags, "apt", packageDefaultName)))));
+        commands.add(exists("apt-get", sudo("apt-get update"),
+                sudo(formatIfNotNull("apt-get install -y %s", getFlag(flags, "apt", packageDefaultName)))));
         commands.add(exists("yum", sudo(formatIfNotNull("yum -y install %s", getFlag(flags, "yum", packageDefaultName)))));
         commands.add(exists("rpm", sudo(formatIfNotNull("rpm -i %s", getFlag(flags, "rpm", packageDefaultName)))));
         commands.add(exists("port", sudo(formatIfNotNull("port install %s", getFlag(flags, "port", packageDefaultName)))));
