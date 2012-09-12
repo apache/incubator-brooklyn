@@ -70,11 +70,7 @@ public class BasicExecutionManager implements ExecutionManager {
      * 
      * @deprecated in 0.4.0, use Tasks.setBlockingDetails */
     public static void setBlockingDetails(String description) {
-        try {
-            withBlockingDetails(description, null);
-        } catch (Exception e) {
-            Throwables.propagate(e);
-        }
+        Tasks.setBlockingDetails(description);
     }
     /** convenience for setting "blocking details" on any task where the current thread is running,
      * while the passed code is executed; often used from groovy as

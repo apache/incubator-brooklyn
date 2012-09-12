@@ -9,6 +9,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.util.flags.TypeCoercions;
@@ -19,15 +22,16 @@ import com.google.common.collect.Maps;
 
 public class Tasks {
 
+    
+    private static final Logger log = LoggerFactory.getLogger(Tasks.class);
+    
     /** convenience for setting "blocking details" on any task where the current thread is running;
      * typically invoked prior to a wait, for transparency to a user;
      * then invoked with 'null' just after the wait */
     public static void setBlockingDetails(String description) {
-        try {
-            withBlockingDetails(description, null);
-        } catch (Exception e) {
-            Throwables.propagate(e);
-        }
+        Task current = current();
+        if (current instanceof BasicTask)
+            ((BasicTask)current).setBlockingDetails(description); 
     }
     
     /** convenience for setting "blocking details" on any task where the current thread is running,
@@ -37,17 +41,18 @@ public class Tasks {
     @SuppressWarnings("rawtypes")
     public static Object withBlockingDetails(String description, Callable code) throws Exception {
         Task current = current();
+        if (code==null) {
+            log.warn("legacy invocation of withBlockingDetails with null code block, ignoring");
+            return null;
+        }
         if (current instanceof BasicTask)
             ((BasicTask)current).setBlockingDetails(description); 
-        if (code!=null) {
-            try {
-                return code.call();
-            } finally {
-                if (current instanceof BasicTask)
-                    ((BasicTask)current).setBlockingDetails(null); 
-            }
+        try {
+            return code.call();
+        } finally {
+            if (current instanceof BasicTask)
+                ((BasicTask)current).setBlockingDetails(null); 
         }
-        return null;
     }
 
     /** the {@link Task} where the current thread is executing, if executing in a Task, otherwise null */
