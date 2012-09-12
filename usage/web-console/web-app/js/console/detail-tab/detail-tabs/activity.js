@@ -52,7 +52,6 @@ Brooklyn.activity = (function(){
             	selectedTaskData = currentData;
             } else if(currentRow.hasClass('row_selected')){
                 currentRow.removeClass('row_selected');
-                clearLog();
                 break;
             }
         }
@@ -60,6 +59,8 @@ Brooklyn.activity = (function(){
         if (selectedTaskData) {
             var logBox=document.getElementById("logbox");        	
             logBox.value = selectedTaskData.detailedStatus;
+        } else {
+        	clearLog();
         }
     }
 
