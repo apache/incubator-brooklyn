@@ -28,7 +28,7 @@ Other examples:
   brooklyn launch --app brooklyn.demo.WebClusterExample --location localhost
 
   # Pure Java three-tier example
-  brooklyn launch --app brooklyn.demo.WebClusterDatabaseExampleAltJava --localhost localhost
+  brooklyn launch --app brooklyn.demo.WebClusterDatabaseExampleAltJava --location localhost
 
 
 For more information, please visit:
