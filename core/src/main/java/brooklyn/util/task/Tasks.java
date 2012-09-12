@@ -36,9 +36,9 @@ public class Tasks {
     @SuppressWarnings("rawtypes")
     public static Object withBlockingDetails(String description, Callable code) throws Exception {
         Task current = current();
-        if (current instanceof BasicTask)
-            ((BasicTask)current).setBlockingDetails(description); 
         if (code!=null) {
+            if (current instanceof BasicTask)
+                ((BasicTask)current).setBlockingDetails(description); 
             try {
                 return code.call();
             } finally {
