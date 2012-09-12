@@ -126,8 +126,20 @@ public class BrooklynWebServer {
         return this;
     }
 
+    /** @deprecated use setAttribute */
     public BrooklynWebServer addAttribute(String field, Object value) {
+        return setAttribute(field, value);
+    }
+    /** Specifies an attribute passed to deployed webapps 
+     * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT} */
+    public BrooklynWebServer setAttribute(String field, Object value) {
         attributes.put(field, value);
+        return this;
+    }
+    /** Specifies attributes passed to deployed webapps 
+     * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT} */
+    public BrooklynWebServer putAttributes(Map newAttrs) {
+        attributes.putAll(newAttrs);
         return this;
     }
 

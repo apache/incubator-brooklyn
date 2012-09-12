@@ -116,7 +116,9 @@ public class WebAppRunnerTest {
 
     @Test
     public void testStartWithLauncher() {
-        BrooklynServerDetails details = BrooklynLauncher.newLauncher().webapp("/hello", "hello-world.war").launch();
+        BrooklynServerDetails details = BrooklynLauncher.newLauncher().
+            setAttribute(BrooklynSystemProperties.SECURITY_PROVIDER.getPropertyName(), 'brooklyn.web.console.security.AnyoneSecurityProvider').
+            webapp("/hello", "hello-world.war").launch();
         
         try {
             details.getWebServer().deploy("/hello2", "hello-world.war");

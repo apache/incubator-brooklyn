@@ -8,6 +8,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
@@ -16,6 +17,7 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.flags.SetFromFlag;
 
 public class BrooklynLauncher {
 
@@ -66,7 +68,8 @@ public class BrooklynLauncher {
     boolean startWebApps = true;
     PortRange port = PortRanges.fromString("8081+");
     Map<String,String> webApps = new LinkedHashMap<String,String>();
-    
+    Map<String, Object> attributes = new LinkedHashMap<String, Object>();
+
     /** Specifies the management context this launcher should use. 
      * If not specified a new {@link LocalManagementContext} is used. */
     public BrooklynLauncher management(ManagementContext context) {
@@ -114,6 +117,13 @@ public class BrooklynLauncher {
         webApps.put(contextPath, warUrl);
         return this;
     }
+    
+    /** Specifies an attribute passed to deployed webapps 
+     * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT} */
+    public BrooklynLauncher setAttribute(String field, Object value) {
+        attributes.put(field, value);
+        return this;        
+    }
 
     /** Starts the web server (with web console) and Brooklyn applications, as per the specifications configured. 
      * @return An object containing details of the web server and the management context. */
@@ -129,6 +139,7 @@ public class BrooklynLauncher {
             try {
                 webServer = new BrooklynWebServer(context);
                 webServer.setPort(port);
+                webServer.putAttributes(attributes);
                 
                 for (Map.Entry<String, String> webapp : webApps.entrySet())
                     webServer.deploy(webapp.getKey(), webapp.getValue());
