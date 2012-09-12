@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -219,35 +220,34 @@ public class Entities {
         if (context != null) context.unmanage(e);
     }
 
-    private static List<Entity> entitiesToStopOnShutdown = null;
+    private static final List<Entity> entitiesToStopOnShutdown = Lists.newArrayList();
+    private static final AtomicBoolean isShutdownHookRegistered = new AtomicBoolean();
+    
     public static void invokeStopOnShutdown(Entity entity) {
-        synchronized (Entities.class) {
-            if (entitiesToStopOnShutdown==null) {
-                entitiesToStopOnShutdown = new ArrayList<Entity>();
-                ResourceUtils.addShutdownHook(new Runnable() {
-                    @SuppressWarnings({ "unchecked", "rawtypes" })
-                    public void run() {
-                        synchronized (entitiesToStopOnShutdown) {
-                            log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping "+entitiesToStopOnShutdown);
-                            List<Task> stops = new ArrayList<Task>();
-                            for (Entity entity: entitiesToStopOnShutdown) {
-                                try {
-                                    stops.add(entity.invoke(Startable.STOP, new MutableMap()));
-                                } catch (Exception exc) {
-                                    log.debug("stopOnShutdown of "+entity+" returned error: "+exc, exc);
-                                }
+        if (isShutdownHookRegistered.compareAndSet(false, true)) {
+            ResourceUtils.addShutdownHook(new Runnable() {
+                @SuppressWarnings({ "unchecked", "rawtypes" })
+                public void run() {
+                    synchronized (entitiesToStopOnShutdown) {
+                        log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping "+entitiesToStopOnShutdown);
+                        List<Task> stops = new ArrayList<Task>();
+                        for (Entity entity: entitiesToStopOnShutdown) {
+                            try {
+                                stops.add(entity.invoke(Startable.STOP, new MutableMap()));
+                            } catch (Exception exc) {
+                                log.debug("stopOnShutdown of "+entity+" returned error: "+exc, exc);
                             }
-                            for (Task t: stops) { 
-                                try {
-                                    log.debug("stopOnShutdown of {} completed: {}", t, t.get()); 
-                                } catch (Exception exc) {
-                                    log.debug("stopOnShutdown of "+t+" returned error: "+exc, exc);
-                                }
+                        }
+                        for (Task t: stops) { 
+                            try {
+                                log.debug("stopOnShutdown of {} completed: {}", t, t.get()); 
+                            } catch (Exception exc) {
+                                log.debug("stopOnShutdown of "+t+" returned error: "+exc, exc);
                             }
                         }
                     }
-                });
-            }
+                }
+            });
         }
         synchronized (entitiesToStopOnShutdown) {
             entitiesToStopOnShutdown.add(entity);
