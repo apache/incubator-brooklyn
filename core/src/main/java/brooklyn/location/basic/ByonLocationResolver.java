@@ -21,11 +21,11 @@ import com.google.common.collect.Sets;
 /**
  * Examples of valid specs:
  *   <ul>
- *     <li>byon(hosts=myhost)
- *     <li>byon(hosts=myhost,myhost2)
- *     <li>byon(hosts="myhost, myhost2")
- *     <li>byon(hosts=myhost,myhost2, name=abc)
- *     <li>byon(hosts="myhost, myhost2", name="my location name")
+ *     <li>byon:(hosts=myhost)
+ *     <li>byon:(hosts=myhost,myhost2)
+ *     <li>byon:(hosts="myhost, myhost2")
+ *     <li>byon:(hosts=myhost,myhost2, name=abc)
+ *     <li>byon:(hosts="myhost, myhost2", name="my location name")
  *   </ul>
  * 
  * @author aled
@@ -36,7 +36,7 @@ public class ByonLocationResolver implements LocationResolver {
     
     public static final String BYON = "byon";
 
-    private static final Pattern PATTERN = Pattern.compile("("+BYON+"|"+BYON.toUpperCase()+")" + "\\((.*)\\)$");
+    private static final Pattern PATTERN = Pattern.compile("("+BYON+"|"+BYON.toUpperCase()+")" + ":" + "\\((.*)\\)$");
 
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("hosts", "name");
 

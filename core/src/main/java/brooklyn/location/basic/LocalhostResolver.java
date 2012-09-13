@@ -18,9 +18,9 @@ import com.google.common.collect.Sets;
  * Examples of valid specs:
  *   <ul>
  *     <li>localhost
- *     <li>localhost()
- *     <li>localhost(name=abc)
- *     <li>localhost(name="abc")
+ *     <li>localhost:()
+ *     <li>localhost:(name=abc)
+ *     <li>localhost:(name="abc")
  *   </ul>
  * 
  * @author alex, aled
@@ -29,7 +29,7 @@ public class LocalhostResolver implements LocationResolver {
     
     public static final String LOCALHOST = "localhost";
     
-    private static final Pattern PATTERN = Pattern.compile("("+LOCALHOST+"|"+LOCALHOST.toUpperCase()+")" + "(\\((.*)\\))?$");
+    private static final Pattern PATTERN = Pattern.compile("("+LOCALHOST+"|"+LOCALHOST.toUpperCase()+")" + "(:\\((.*)\\))?$");
 
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("name");
 

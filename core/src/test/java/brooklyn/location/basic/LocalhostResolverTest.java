@@ -15,9 +15,9 @@ public class LocalhostResolverTest {
     @Test
     public void testThrowsOnInvalid() throws Exception {
         assertThrowsIllegalArgument("wrongprefix");
-        assertThrowsIllegalArgument("localhost(name=abc"); // no closing bracket
-        assertThrowsIllegalArgument("localhost(name)"); // no value for name
-        assertThrowsIllegalArgument("localhost(name=)"); // no value for name
+        assertThrowsIllegalArgument("localhost:(name=abc"); // no closing bracket
+        assertThrowsIllegalArgument("localhost:(name)"); // no value for name
+        assertThrowsIllegalArgument("localhost:(name=)"); // no value for name
     }
     
     @Test
@@ -26,11 +26,11 @@ public class LocalhostResolverTest {
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getName(), "localhost");
 
-        Location location2 = resolve("localhost()");
+        Location location2 = resolve("localhost:()");
         assertTrue(location2 instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location2.getName(), "localhost");
 
-        Location location3 = resolve("localhost(name=myname)");
+        Location location3 = resolve("localhost:(name=myname)");
         assertTrue(location3 instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location3.getName(), "myname");
     }
