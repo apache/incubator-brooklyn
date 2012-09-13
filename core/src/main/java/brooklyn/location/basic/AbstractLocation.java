@@ -178,7 +178,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     
     /** override this, adding to the returned value, to supply additional fields to include in the toString */
     protected ToStringHelper string() {
-        return Objects.toStringHelper(AbstractLocation.class).add("id", id).add("name", name);
+        return Objects.toStringHelper(getClass()).add("id", id).add("name", name);
     }
     
     public HostGeoInfo getHostGeoInfo() { return hostGeoInfo; }    
