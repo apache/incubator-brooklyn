@@ -17,21 +17,22 @@ public class ByonLocationResolverTest {
 
     @Test
     public void testThrowsOnInvalid() throws Exception {
-        assertThrowsIllegalArgument("wrongprefix(hosts=\"1.1.1.1\")");
-        assertThrowsIllegalArgument("byon()"); // no hosts
-        assertThrowsIllegalArgument("byon(hosts=\"\")"); // empty hosts
-        assertThrowsIllegalArgument("byon(hosts=\"1.1.1.1\""); // no closing bracket
-        assertThrowsIllegalArgument("byon(hosts=\"1.1.1.1\", name)"); // no value for name
-        assertThrowsIllegalArgument("byon(hosts=\"1.1.1.1\", name=)"); // no value for name
+        assertThrowsIllegalArgument("wrongprefix:(hosts=\"1.1.1.1\")");
+        assertThrowsIllegalArgument("byon"); // no hosts
+        assertThrowsIllegalArgument("byon:()"); // no hosts
+        assertThrowsIllegalArgument("byon:(hosts=\"\")"); // empty hosts
+        assertThrowsIllegalArgument("byon:(hosts=\"1.1.1.1\""); // no closing bracket
+        assertThrowsIllegalArgument("byon:(hosts=\"1.1.1.1\", name)"); // no value for name
+        assertThrowsIllegalArgument("byon:(hosts=\"1.1.1.1\", name=)"); // no value for name
     }
     
     @Test
     public void testResolvesHosts() throws Exception {
-        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"), null);
-        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"), null);
-        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1,1.1.1.2\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"), null);
-        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1\", name=myname)"), ImmutableSet.of("1.1.1.1"), "myname");
-        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1\", name=\"myname\")"), ImmutableSet.of("1.1.1.1"), "myname");
+        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"), null);
+        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"), null);
+        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1,1.1.1.2\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"), null);
+        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\", name=myname)"), ImmutableSet.of("1.1.1.1"), "myname");
+        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\", name=\"myname\")"), ImmutableSet.of("1.1.1.1"), "myname");
     }
         
     private void assertByonClusterEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<String> expectedHosts, String expectedName) {
