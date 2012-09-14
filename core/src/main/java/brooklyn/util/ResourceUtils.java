@@ -7,10 +7,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
@@ -58,14 +61,17 @@ public class ResourceUtils {
             if (url=="") throw new NullPointerException("Cannot read from empty string");
             String orig = url;
             if (url.startsWith("classpath:")) {
-                url = url.substring(10);
-                while (url.startsWith("/")) url = url.substring(1);
-                URL u = getLoader().getResource(url);
                 try {
-                    if (u!=null) return u.openStream();
-                    else throw new IOException(url+" not found on classpath");
+                    return getResourceViaClasspath(url);
                 } catch (IOException e) {
                     //catch the above because both orig and modified url may be interesting
+                    throw new IOException("Error accessing "+orig+": "+e, e);
+                }
+            }
+            if (url.startsWith("sftp://")) {
+                try {
+                    return getResourceViaSftp(url);
+                } catch (IOException e) {
                     throw new IOException("Error accessing "+orig+": "+e, e);
                 }
             }
@@ -102,6 +108,48 @@ public class ResourceUtils {
         }
     }
 
+    private InputStream getResourceViaClasspath(String url) throws IOException {
+        assert url.startsWith("classpath:");
+        String subUrl = url.substring("classpath://".length());
+        while (subUrl.startsWith("/")) subUrl = subUrl.substring(1);
+        URL u = getLoader().getResource(subUrl);
+        if (u!=null) return u.openStream();
+        else throw new IOException(subUrl+" not found on classpath");
+    }
+    
+    private InputStream getResourceViaSftp(String url) throws IOException {
+        assert url.startsWith("sftp://");
+        String subUrl = url.substring("sftp://".length());
+        String user;
+        String address;
+        String path;
+        int atIndex = subUrl.indexOf("@");
+        int colonIndex = subUrl.indexOf(":", (atIndex > 0 ? atIndex : 0));
+        if (colonIndex <= 0 || colonIndex <= atIndex) {
+            throw new IllegalArgumentException("Invalid sftp url ("+url+"); IP or hostname must be specified, such as sftp://localhost:/path/to/file");
+        }
+        if (subUrl.length() <= (colonIndex+1)) {
+            throw new IllegalArgumentException("Invalid sftp url ("+url+"); must specify path of remote file, such as sftp://localhost:/path/to/file");
+        }
+        if (atIndex >= 0) {
+            user = subUrl.substring(0, atIndex);
+        } else {
+            user = null;
+        }
+        address = subUrl.substring(atIndex + 1, colonIndex);
+        path = subUrl.substring(colonIndex+1);
+        SshMachineLocation machine = new SshMachineLocation(MutableMap.builder()
+                .putIfNotNull("username", user)
+                .put("address", InetAddress.getByName(address))
+                .build());
+
+        File tempFile = File.createTempFile("brooklyn-sftp", ".tmp");
+        tempFile.deleteOnExit();
+        tempFile.setReadable(true, true);
+        machine.copyFrom(path, tempFile.getAbsolutePath());
+        return new FileInputStream(tempFile);
+    }
+    
     /** takes {@link #getResourceFromUrl(String)} and reads fully, into a string */
     public String getResourceAsString(String url) {
         try {
