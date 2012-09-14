@@ -866,13 +866,19 @@ public class SshjTool implements SshTool {
                 output.close();
                 
                 try {
-                    long timeout = System.currentTimeMillis() + sshClientConnection.getSessionTimeout();
+                    int timeout = sshClientConnection.getSessionTimeout();
+                    long timeoutEnd = System.currentTimeMillis() + timeout;
+                    Exception last = null;
                     do {
-                        if (!shell.isOpen()) break;
-                        boolean endBecauseReturned = (((SessionChannel)session).getExitStatus()!=null);
+                        if (!shell.isOpen() && ((SessionChannel)session).getExitStatus()!=null)
+                            // shell closed, and exit status returned
+                            break;
+                        boolean endBecauseReturned =
+                            // if either condition is satisfied, then wait 1s in hopes the other does, then return
+                            (!shell.isOpen() || ((SessionChannel)session).getExitStatus()!=null);
                         try {
                             shell.join(1000, TimeUnit.MILLISECONDS);
-                        } catch (ConnectionException e) { /* ignore timeout */ }
+                        } catch (ConnectionException e) { last = e; }
                         if (endBecauseReturned)
                             // shell is still open, ie some process is running
                             // but we have a result code, so main shell is finished
@@ -880,10 +886,12 @@ public class SshjTool implements SshTool {
                             // which is nohupped to really be in the background (#162)
                             // now let's bail out
                             break;
-                    } while (System.currentTimeMillis() < timeout);
-                    if (((SessionChannel)session).getExitStatus()==null)
-                        // we timed out, simulate an sshj timeout error
-                        throw new ConnectionException("timeout");
+                    } while (timeout<=0 || System.currentTimeMillis() < timeoutEnd);
+                    if (shell.isOpen() && ((SessionChannel)session).getExitStatus()==null) {
+                        LOG.debug("Timeout ({}) in SSH shell to {}", sshClientConnection.getSessionTimeout(), this);
+                        // we timed out, or other problem -- reproduce the error
+                        throw last;
+                    }
                     return ((SessionChannel)session).getExitStatus();
                 } finally {
                     // wait for all stdout/stderr to have been re-directed
