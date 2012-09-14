@@ -458,6 +458,7 @@ public class SshjTool implements SshTool {
         List<String> allcmds = toCommandSequence(commands, env);
         
         StringBuilder result = new StringBuilder();
+        // -e causes it to fail on any command in the script which has an error (non-zero return code)
         result.append("#!/bin/bash -e"+"\n");
         
         for (String cmd : allcmds) {
@@ -862,13 +863,36 @@ public class SshjTool implements SshTool {
                     }
                 }
                 shell.sendEOF();
+                output.close();
                 
                 try {
-                    shell.join(sshClientConnection.getSessionTimeout(), TimeUnit.MILLISECONDS);
+                    long timeout = System.currentTimeMillis() + sshClientConnection.getSessionTimeout();
+                    do {
+                        if (!shell.isOpen()) break;
+                        boolean endBecauseReturned = (((SessionChannel)session).getExitStatus()!=null);
+                        try {
+                            shell.join(1000, TimeUnit.MILLISECONDS);
+                        } catch (ConnectionException e) { /* ignore timeout */ }
+                        if (endBecauseReturned)
+                            // shell is still open, ie some process is running
+                            // but we have a result code, so main shell is finished
+                            // we waited one second extra to allow any background process 
+                            // which is nohupped to really be in the background (#162)
+                            // now let's bail out
+                            break;
+                    } while (System.currentTimeMillis() < timeout);
+                    if (((SessionChannel)session).getExitStatus()==null)
+                        // we timed out, simulate an sshj timeout error
+                        throw new ConnectionException("timeout");
                     return ((SessionChannel)session).getExitStatus();
-                    
                 } finally {
                     // wait for all stdout/stderr to have been re-directed
+                    try {
+                        shell.close();
+                    } catch (Exception e) {
+                        LOG.debug("ssh shell closing error: "+e);
+                        /* close quietly */
+                    }
                     try {
                         if (outgobbler != null) outgobbler.join();
                         if (errgobbler != null) errgobbler.join();
