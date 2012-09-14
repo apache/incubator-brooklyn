@@ -70,7 +70,6 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         commands.add("tar xfvz ${saveAs}");
 
         newScript(INSTALLING).
-            failOnNonZeroResultCode().
             body.append(commands).execute();
     }
 

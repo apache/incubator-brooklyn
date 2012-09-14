@@ -178,4 +178,20 @@ public class ResourceUtils {
         }
     }
 
+    /** returns the items with exactly one "/" between items (whether or not the individual items start or end with /) */
+    public static String mergePaths(String ...items) {
+        StringBuilder result = new StringBuilder();
+        for (String item: items) {
+            if (result.length()>0) {
+                while (result.charAt(result.length()-1)=='/')
+                    result.deleteCharAt(result.length()-1);
+                result.append('/');
+            }
+            int i = result.length();
+            result.append(item);
+            while (result.charAt(i)=='/')
+                result.deleteCharAt(i);
+        }
+        return result.toString();
+    }
 }
