@@ -142,7 +142,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
     // FIXME Clean up explosion of overloading, caused by groovy-equivalent default vals...
     public static <S,T> CustomAggregatingEnricher<S,T> newEnricher(
             Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator, S defaultVal) {
-        return newEnricher(flags, source, target, aggregator, defaultVal);
+        return new CustomAggregatingEnricher<S,T>(flags, source, target, aggregator, defaultVal);
     }
     public static <S,T> CustomAggregatingEnricher<S,T> newEnricher(
             Map<String,?> flags, AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator) {

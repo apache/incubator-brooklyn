@@ -1,10 +1,6 @@
 package brooklyn.entity.basic.lifecycle
 
-import brooklyn.entity.basic.SoftwareProcessDriver
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-
 import static brooklyn.test.TestUtils.*
-
 import static org.testng.Assert.*
 import groovy.transform.InheritConstructors
 
@@ -13,13 +9,15 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.SoftwareProcessDriver
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.event.adapter.legacy.ValueProvider
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver
+import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.IdGenerator;
+import brooklyn.util.IdGenerator
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 
@@ -42,10 +40,9 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     @Test(groups = "Integration")
     public void testJavaStartStopSshDriverStartsAndStopsApp() {
-        MyEntity entity = new MyEntity(owner:app);
+        MyEntity entity = new MyEntity(app);
         app.start([ localhost ]);
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertNotNull entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
             assertTrue entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
         }
         
@@ -57,30 +54,30 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 @InheritConstructors
 class MyEntity extends SoftwareProcessEntity {
     
-    protected SoftwareProcessDriver newDriver(SshMachineLocation loc) {
-        return new MyEntityDriver(this, loc);
-    }
-
     @Override
     Class getDriverInterface() {
-        return null;
+        return MyEntityDriver;
     }
 
     @Override
     protected void connectSensors() {
         super.connectSensors();
 
-        sensorRegistry.addSensor(SoftwareProcessEntity.SERVICE_UP, { driver.isRunning() } as ValueProvider)
+        sensorRegistry.register(new FunctionSensorAdapter(
+            { driver.isRunning() } )).
+        poll(SoftwareProcessEntity.SERVICE_UP); 
     }
 }
 
-class MyEntityDriver extends JavaSoftwareProcessSshDriver {
+interface MyEntityDriver extends SoftwareProcessDriver {}
+
+class MyEntitySshDriver extends JavaSoftwareProcessSshDriver implements MyEntityDriver {
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "0.1"]
 
-    public MyEntityDriver(MyEntity entity, SshMachineLocation machine) {
-        super(entity, machine)
+    public MyEntitySshDriver(MyEntity entity, SshMachineLocation machine) {
+        super(entity, machine);
     }
 
     @Override
@@ -112,7 +109,7 @@ class MyEntityDriver extends JavaSoftwareProcessSshDriver {
     public void launch() {
         newScript(LAUNCHING, usePidFile:true)
             .body.append(
-                "nohup java -classpath $installDir/classes \$JAVA_OPTS ${MyEntityApp.class.name} </dev/null &"
+                "nohup java -classpath $installDir/classes \$JAVA_OPTS ${MyEntityApp.class.name} &"
             ).execute();
     }
     
