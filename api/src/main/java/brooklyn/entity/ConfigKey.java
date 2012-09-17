@@ -4,6 +4,8 @@ import java.util.Collection;
 
 /**
  * Represents the name of a piece of typed configuration data for an entity.
+ * <p>
+ * Two ConfigKeys should be considered equal if they have the same FQN.
  */
 public interface ConfigKey<T> {
     /**
@@ -12,7 +14,7 @@ public interface ConfigKey<T> {
     String getDescription();
 
     /**
-     * Returns the name of the configuration parameter, in a dot-separated namespace.
+     * Returns the name of the configuration parameter, in a dot-separated namespace (FQN).
      */
     String getName();
 

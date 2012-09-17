@@ -3,9 +3,11 @@ package brooklyn.entity.basic
 import static org.testng.Assert.assertEquals
 import groovy.transform.InheritConstructors
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.ConfigMap;
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.test.entity.TestApplication
 
@@ -39,12 +41,21 @@ class ConfigFieldTest {
         assertEquals(entity2.getConfig(MySubEntity.SUPER_KEY_1), "changed")
     }
 
-    //FIXME config needs to be mapped based on string value, not the key itself
-//    @Test
-//    public void testConfigureFromSuperKey() throws Exception {
-//        MySubEntity entity2 = new MySubEntity((MyBaseEntity.SUPER_KEY_1): "changed", app);
-//        assertEquals(entity2.getConfig(MySubEntity.SUPER_KEY_1), "changed")
-//    }
+    @Test
+    public void testConfigureFromSuperKey() throws Exception {
+        MySubEntity entity2 = new MySubEntity((MyBaseEntity.SUPER_KEY_1): "changed", app);
+        assertEquals(entity2.getConfig(MySubEntity.SUPER_KEY_1), "changed")
+    }
+    
+    @Test
+    public void testConfigSubMap() throws Exception {
+        entity.configure(MyBaseEntity.SUPER_KEY_1, "s1");
+        entity.configure(MySubEntity.SUB_KEY_2, "s2");
+        ConfigMap sub = entity.getConfigMap().submapMatchingGlob("sup*");
+        Assert.assertEquals(sub.getRawConfig(MyBaseEntity.SUPER_KEY_1), "s1");
+        Assert.assertNull(sub.getRawConfig(MySubEntity.SUB_KEY_2));
+    }
+
 
     @InheritConstructors
     public static class MyBaseEntity extends AbstractEntity {

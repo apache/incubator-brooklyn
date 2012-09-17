@@ -8,6 +8,7 @@ import java.util.NoSuchElementException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableMap;
@@ -124,4 +125,58 @@ public class BrooklynPropertiesTest {
         Assert.assertEquals(p.getFirst("a"), "b=c");
         Assert.assertEquals(p.getFirst("aa"), "$a");
     }
+    
+    @Test
+    public void testGetSubMap() {
+        BrooklynProperties props = BrooklynProperties.Factory.newEmpty().addFromMap(ImmutableMap.of(
+                "a.key", "aval", "a.key2", "aval2", "akey", "noval", "b.key", "bval"));
+        BrooklynProperties p2 = props.submapMatchingGlob("a.*");
+        assertEquals(p2.getAllConfig().keySet().size(), 2, "wrong size submap: "+p2);
+        assertEquals(p2.getFirst("a.key"), "aval");
+        assertEquals(p2.getFirst("b.key"), null);
+        assertEquals(p2.getFirst("akey"), null);
+        
+        BrooklynProperties p3 = props.submapMatchingRegex("a\\..*");
+        assertEquals(p3, p2);
+        
+        BrooklynProperties p4 = props.submapMatchingRegex("a.*");
+        assertEquals(p4.getAllConfig().keySet().size(), 3, "wrong size submap: "+p4);
+        assertEquals(p4.getFirst("a.key"), "aval");
+        assertEquals(p4.getFirst("b.key"), null);
+        assertEquals(p4.getFirst("akey"), "noval");
+    }
+
+    @Test
+    public void testGetAndPutConfig() {
+        BrooklynProperties props = BrooklynProperties.Factory.newEmpty().addFromMap(ImmutableMap.of(
+                "a.key", "aval", "a.key2", "aval2", "akey", "noval", "n.key", "234"));
+        
+        BasicConfigKey<String> aString = new BasicConfigKey<String>(String.class, "a.key");
+        BasicConfigKey<Integer> nNum = new BasicConfigKey<Integer>(Integer.class, "n.key");
+        BasicConfigKey<Integer> aBsent = new BasicConfigKey<Integer>(Integer.class, "ab.sent");
+        BasicConfigKey<Integer> aMisstyped = new BasicConfigKey<Integer>(Integer.class, "am.isstyped");
+        BasicConfigKey<Integer> aDfault = new BasicConfigKey<Integer>(Integer.class, "a.default", "-", 123);
+        
+        assertEquals(props.getConfig(aString), "aval");
+        assertEquals(props.getConfig(nNum), (Integer)234);
+        
+        props.put(aString, "aval2");
+        assertEquals(props.getConfig(aString), "aval2");
+        assertEquals(props.get("a.key"), "aval2");
+
+        props.put(nNum, "345");
+        assertEquals(props.getConfig(nNum), (Integer)345);
+        assertEquals(props.get("n.key"), "345");
+
+        assertEquals(props.getConfig(aBsent), null);
+        assertEquals(props.getConfig(aBsent, 123), (Integer)123);
+        assertEquals(props.getConfig(aDfault), (Integer)123);
+        
+        props.put(aMisstyped, "x1");
+        assertEquals(props.get("am.isstyped"), "x1");
+        boolean workedWhenShouldntHave = false;
+        try { props.getConfig(aMisstyped); workedWhenShouldntHave = true; } catch (Exception e) {}
+        if (workedWhenShouldntHave) fail("should have failed getting "+aMisstyped+" because can't coerce");
+    }
+
 }

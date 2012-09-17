@@ -3,6 +3,7 @@ package brooklyn.management;
 import java.util.Collection;
 
 import brooklyn.entity.Application;
+import brooklyn.entity.ConfigMap.StringConfigMap;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.EntityDriverFactory;
 
@@ -80,4 +81,10 @@ public interface ManagementContext {
      * Unmanage an entity.
      */
     void unmanage(Entity e);
+    
+    /**
+     * Returns the ConfigMap (e.g. BrooklynProperties) applicable to this management context.
+     * Defaults to reading ~/.brooklyn/brooklyn.properties but configurable in the management context.
+     */
+    StringConfigMap getConfig();
 }

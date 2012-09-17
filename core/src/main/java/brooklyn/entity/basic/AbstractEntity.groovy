@@ -1,5 +1,6 @@
 package brooklyn.entity.basic
 
+import java.util.Map;
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -41,6 +42,7 @@ import brooklyn.util.flags.FlagUtils
 import brooklyn.util.task.BasicExecutionContext
 
 import com.google.common.collect.Iterables
+import com.google.common.collect.Maps;
 
 /**
  * Default {@link Entity} implementation.
@@ -93,7 +95,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
      */
-    protected final ConfigMap configsInternal = new ConfigMap(this)
+    protected final BasicConfigMap configsInternal = new BasicConfigMap(this)
 
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -175,7 +177,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
 
         displayName = flags.remove('displayName') ?: displayName;
-        
+
         // allow config keys, and fields, to be set from these flags if they have a SetFromFlag annotation
         flags = FlagUtils.setConfigKeysFromFlags(flags, this);
         flags = FlagUtils.setFieldsFromFlags(flags, this);
@@ -183,10 +185,13 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 		if (displayName==null)
 			displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)
 		
+        // all config keys specified in map should be set as config
         for (Iterator fi = flags.iterator(); fi.hasNext(); ) {
             Map.Entry entry = fi.next();
-            if (entry.key in ConfigKey) {
-                setConfigEvenIfOwned(entry.key, entry.value)
+            Object k = entry.key;
+            if (k in HasConfigKey) k = ((HasConfigKey)k).getConfigKey();
+            if (k in ConfigKey) {
+                setConfigEvenIfOwned(k, entry.value);
                 fi.remove();
             }
         }
@@ -454,11 +459,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     void refreshInheritedConfigOfChildren() {
         ownedChildren.get().each {
-            it.refreshInheritedConfig()
+            ((AbstractEntity)it).refreshInheritedConfig()
         }
     }
 
-    @Override
+    public brooklyn.entity.ConfigMap getConfigMap() {
+        return configsInternal;
+    }
+    
     public Map<ConfigKey,Object> getAllConfig() {
         return configsInternal.getAllConfig();
     }
