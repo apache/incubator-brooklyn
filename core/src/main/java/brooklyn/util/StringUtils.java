@@ -1,9 +1,13 @@
 package brooklyn.util;
 
+import brooklyn.util.text.Strings;
+
 /**
  * Conveniences for manipulating strings.
  * <p>
  * Many of these are aligned with apache commons string utils, providing a lightweight variant of that project.
+ * 
+ * @deprecated since 0.4.0 use {@link Strings}
  */
 public class StringUtils {
 

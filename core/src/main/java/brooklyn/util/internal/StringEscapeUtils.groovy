@@ -1,30 +1,15 @@
 package brooklyn.util.internal
 
-import java.net.URLEncoder
+import brooklyn.util.text.StringEscapes
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
-import brooklyn.util.StringUtils
-
-public class StringEscapeUtils {
-
-	public static String escapeHttpUrl(String url) {
-        return URLEncoder.encode(url, "UTF-8")
-	}
-
-    /** replaces all instances in source, of the given pattern, with replacement,
-     * NOT interpreting any arguments as regular expressions
-     */
-	public static String replaceAllNonRegex(String source, String pattern, String replacement) {
-        return StringUtils.replace(source, pattern, replacement);
-	}
+/** @deprecated since 0.4.0 use BashStringEscapes */
+public class StringEscapeUtils extends StringEscapes {
 	
-	public static String replaceAllNonRegex(String source, Map replacements) {
-		replacements.inject(source, { input,entry -> replaceAllNonRegex(input, entry.key, entry.value) })
-	}
-	
-	// see SshBasedJavaAppSetup
 	public static String escapeLiteralForDoubleQuotedBash(String arg) {
-		return replaceAllNonRegex(arg, ["\\":"\\\\", "\"":"\\\"", "\$":"\\\$", "`":"\\`"]);
+        BashStringEscapes.escapeLiteralForDoubleQuotedBash(arg);
 	}
+    
 	/** transforms e.g. [ "-Dname=Bob Johnson", "-Dnet.worth=$100" ]  to 
 	 * string which _renders_ as "-Dname=Bob Johnson" "-Dnet.worth=\$100"
 	 * so it gets picked up as 2 params in java
@@ -57,11 +42,6 @@ public class StringEscapeUtils {
             "("+BACKSLASH+BACKSLASH+")*"+
             "&"+".*")) return "unescaped ampersand";
         return null;
-    }
-
-    public static String escapeSql(String x) {
-        //identical to apache commons StringEscapeUtils.escapeSql
-        return x?.replaceAll("'", "''");
     }
     
 }
