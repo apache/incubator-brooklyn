@@ -9,7 +9,7 @@ import java.util.concurrent.CountDownLatch
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.ConfigKey
+import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.basic.SimulatedLocation;

@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;

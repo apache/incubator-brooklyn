@@ -9,9 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigMap.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.ConfigMap.StringConfigMap;
 import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EffectorUtils;

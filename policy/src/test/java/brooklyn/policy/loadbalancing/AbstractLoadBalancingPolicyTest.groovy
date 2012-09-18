@@ -13,8 +13,8 @@ import org.testng.annotations.BeforeMethod
 
 import com.google.common.base.Preconditions;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application
-import brooklyn.entity.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.DynamicGroup

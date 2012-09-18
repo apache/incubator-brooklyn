@@ -1,6 +1,5 @@
 package brooklyn.entity.basic
 
-import java.util.Map;
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -9,14 +8,14 @@ import java.util.concurrent.ExecutionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.config.ConfigKey
+import brooklyn.config.ConfigKey.HasConfigKey
 import brooklyn.enricher.basic.AbstractEnricher
 import brooklyn.entity.Application
-import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityType
 import brooklyn.entity.Group
-import brooklyn.entity.ConfigKey.HasConfigKey
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
 import brooklyn.entity.basic.EntityReferences.EntityReference
 import brooklyn.event.AttributeSensor
@@ -37,12 +36,11 @@ import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
-import brooklyn.util.IdGenerator
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.task.BasicExecutionContext
+import brooklyn.util.text.Identifiers
 
 import com.google.common.collect.Iterables
-import com.google.common.collect.Maps;
 
 /**
  * Default {@link Entity} implementation.
@@ -66,7 +64,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.removed", "Sensor dynamically removed from entity")
 
-    final String id = IdGenerator.makeRandomId(8);
+    final String id = Identifiers.makeRandomId(8);
     String displayName
     
     EntityReference<Entity> owner
@@ -95,7 +93,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
      */
-    protected final BasicConfigMap configsInternal = new BasicConfigMap(this)
+    protected final brooklyn.config.ConfigMap configsInternal = new EntityConfigMap(this)
 
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -463,7 +461,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
     }
 
-    public brooklyn.entity.ConfigMap getConfigMap() {
+    public brooklyn.config.ConfigMap getConfigMap() {
         return configsInternal;
     }
     

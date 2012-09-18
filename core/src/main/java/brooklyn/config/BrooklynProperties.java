@@ -13,21 +13,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.ConfigKey;
-import brooklyn.entity.ConfigKey.HasConfigKey;
-import brooklyn.entity.ConfigMap.StringConfigMap;
+import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigMap.StringConfigMap;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.text.WildcardGlobs;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -246,38 +241,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     }
 
     @Override
-    public BrooklynProperties submapMatchingGlob(final String glob) {
-        return submapMatchingConfigKeys(new Predicate<ConfigKey<?>>() {
-            @Override
-            public boolean apply(@Nullable ConfigKey<?> input) {
-                return WildcardGlobs.isGlobMatched(glob, input.getName());
-            }
-        });
-    }
-
-    @Override
-    public BrooklynProperties submapMatchingRegex(String regex) {
-        final Pattern p = Pattern.compile(regex);
-        return submapMatchingConfigKeys(new Predicate<ConfigKey<?>>() {
-            @Override
-            public boolean apply(@Nullable ConfigKey<?> input) {
-                return p.matcher(input.getName()).matches();
-            }
-        });
-    }
-    
-    @Override
-    public BrooklynProperties submapMatching(final Predicate<String> filter) {
-        return submapMatchingConfigKeys(new Predicate<ConfigKey<?>>() {
-            @Override
-            public boolean apply(@Nullable ConfigKey<?> input) {
-                return filter.apply(input.getName());
-            }
-        });
-    }
-
-    @Override
-    public BrooklynProperties submapMatchingConfigKeys(Predicate<ConfigKey<?>> filter) {
+    public BrooklynProperties submap(Predicate<ConfigKey<?>> filter) {
         BrooklynProperties result = Factory.newEmpty();
         for (Object entry: entrySet()) {
             ConfigKey<?> k = new BasicConfigKey<Object>(Object.class, ""+((Map.Entry)entry).getKey());

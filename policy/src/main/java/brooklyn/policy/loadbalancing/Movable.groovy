@@ -1,6 +1,6 @@
 package brooklyn.policy.loadbalancing;
 
-import brooklyn.entity.ConfigKey
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Description

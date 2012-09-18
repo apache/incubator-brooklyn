@@ -1,20 +1,23 @@
 package brooklyn.event.basic;
 
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.Maps;
 
 /** A config key which represents a map, where contents can be accessed directly via subkeys.
- * Items added directly to the map must be of type map, and are put (as individual subkeys). */
+ * Items added directly to the map must be of type map, and are put (as individual subkeys). 
+ * <p>
+ * You can also pass an appropriate {@link MapModification} from {@link MapModifications}
+ * to clear (and clear-and-set). */
 //TODO Create interface
-//TODO supply mechanism for clearing. supply mechanism for putting a closure which returns multiple values added (but that might be too hard).
 public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements StructuredConfigKey {
     
     private static final long serialVersionUID = -6126481503795562602L;
@@ -85,25 +88,63 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Object applyValueToMap(Object value, Map target) {
-        // other items are added to the list
-        if (!(value instanceof Map)) throw new IllegalArgumentException("Cannot set non-map entries "+value+" on "+this);
+        if (value instanceof StructuredModification)
+            return ((StructuredModification)value).applyToKeyInMap(this, target);
+        if (value instanceof Map.Entry)
+            return applyEntryValueToMap((Map.Entry)value, target);
+        if (!(value instanceof Map)) 
+            throw new IllegalArgumentException("Cannot set non-map entries "+value+" on "+this);
+        
         Map result = new MutableMap();
         for (Object entry: ((Map)value).entrySet()) {
-            Object k = ((Map.Entry)entry).getKey();
-            if (isSubKey(k)) {
-                // do nothing
-            } else if (k instanceof String) {
-                k = subKey((String)k);
-            } else {
-                log.warn("Unexpected subkey "+k+" being inserted into "+this+"; ignoring");
-                k = null;
-            }
-            if (k!=null)
-                result.put(k, target.put(k, ((Map.Entry)entry).getValue()));
-            else 
-                return null;
+            Map.Entry entryT = (Map.Entry)entry;
+            result.put(entryT.getKey(), applyEntryValueToMap(entryT, target));
         }
         return result;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Object applyEntryValueToMap(Entry value, Map target) {
+        Object k = value.getKey();
+        if (isSubKey(k)) {
+            // do nothing
+        } else if (k instanceof String) {
+            k = subKey((String)k);
+        } else {
+            log.warn("Unexpected subkey "+k+" being inserted into "+this+"; ignoring");
+            k = null;
+        }
+        if (k!=null)
+            return target.put(k, value.getValue());
+        else 
+            return null;
+    }
+
+    public interface MapModification extends StructuredModification<MapConfigKey<?>> {}
+    
+    @SuppressWarnings("rawtypes")
+    public static class MapModifications extends StructuredModifications {
+        /** when passed as a value to a MapConfigKey, causes each of these items to be put 
+         * (this Mod is redundant as no other value is really sensible) */
+        public static final MapModification put(final Map items) { 
+            return new MapModification() {
+                @Override
+                public Object applyToKeyInMap(MapConfigKey<?> key, Map target) {
+                    return key.applyValueToMap(items, target);
+                }
+            };
+        }
+        /** when passed as a value to a MapConfigKey, causes the map to be cleared and these items added */
+        public static final MapModification set(final Map items) { 
+            return new MapModification() {
+                @Override
+                public Object applyToKeyInMap(MapConfigKey<?> key, Map target) {
+                    clear().applyToKeyInMap(key, target);
+                    put(items).applyToKeyInMap(key, target);
+                    return null;
+                }
+            };
+        }
     }
 
 }

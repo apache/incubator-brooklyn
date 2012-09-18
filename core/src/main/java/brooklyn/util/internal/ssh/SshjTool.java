@@ -60,11 +60,11 @@ import org.jclouds.io.payloads.StringPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.IdGenerator;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.SshTool;
 import brooklyn.util.internal.StreamGobbler;
-import brooklyn.util.internal.StringEscapeUtils;
+import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -401,7 +401,7 @@ public class SshjTool implements SshTool {
         OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
         OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
         String scriptDir = getOptionalVal(props, "scriptDir", String.class, "/tmp");
-        String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+IdGenerator.makeRandomId(8)+".sh";
+        String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
         
         String scriptContents = toScript(commands, env);
         
@@ -490,7 +490,7 @@ public class SshjTool implements SshTool {
                 LOG.warn("env key-values must not be null; ignoring: key="+entry.getKey()+"; value="+entry.getValue());
                 continue;
             }
-            String escapedVal = StringEscapeUtils.escapeLiteralForDoubleQuotedBash(entry.getValue().toString());
+            String escapedVal = BashStringEscapes.escapeLiteralForDoubleQuotedBash(entry.getValue().toString());
             result.add("export "+entry.getKey()+"=\""+escapedVal+"\"");
         }
         

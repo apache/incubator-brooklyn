@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;

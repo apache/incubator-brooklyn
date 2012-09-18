@@ -1,6 +1,7 @@
 package brooklyn.entity.java;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import groovy.json.StringEscapeUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,7 +24,7 @@ import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.internal.StringEscapeUtils;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -65,12 +66,12 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
      * error is thrown if there is an unescaped double quote in the string. All other unescaped
      * characters are permitted, but unless $var expansion or `command` execution is desired (although
      * this is not confirmed as supported) the generally caller should escape any such characters, for
-     * example using {@link StringEscapeUtils#escapeLiteralForDoubleQuotedBash(String)}.
+     * example using {@link BashStringEscapes#escapeLiteralForDoubleQuotedBash(String)}.
      */
     @Override
     public Map<String, String> getShellEnvironment() {
         for (String it : getJavaOpts()) {
-            StringEscapeUtils.assertValidForDoubleQuotingInBash(it);
+            BashStringEscapes.assertValidForDoubleQuotingInBash(it);
         }
         // do not double quote here; the env var is double quoted subsequently;
         // spaces should be preceded by double-quote

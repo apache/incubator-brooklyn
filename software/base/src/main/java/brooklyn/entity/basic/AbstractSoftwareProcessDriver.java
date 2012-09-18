@@ -7,7 +7,7 @@ import java.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 

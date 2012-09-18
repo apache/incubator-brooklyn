@@ -1,6 +1,7 @@
 package brooklyn.entity.hello;
 
 import static org.testng.Assert.*
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
@@ -9,7 +10,6 @@ import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.BasicSensor
-import brooklyn.entity.ConfigKey
 
 
 public class HelloEntity extends AbstractGroup {

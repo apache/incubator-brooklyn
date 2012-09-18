@@ -15,8 +15,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.ConfigKey;
-import brooklyn.entity.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.util.GroovyJavaMethods;
 

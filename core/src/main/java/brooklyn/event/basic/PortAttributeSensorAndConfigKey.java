@@ -5,7 +5,7 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;

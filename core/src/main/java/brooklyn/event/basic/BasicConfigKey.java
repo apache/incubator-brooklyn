@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.Tasks;

@@ -1,8 +1,8 @@
-package brooklyn.entity;
+package brooklyn.config;
 
 import java.util.Map;
 
-import brooklyn.entity.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 
 import com.google.common.base.Predicate;
 
@@ -29,12 +29,11 @@ public interface ConfigMap {
 
     /** returns a map of all config keys to their raw (unresolved+uncoerced) contents */
     public Map<ConfigKey<?>,Object> getAllConfig();
-    
-    public ConfigMap submapMatchingGlob(String glob);
-    public ConfigMap submapMatchingRegex(String regex);
-    public ConfigMap submapMatchingConfigKeys(Predicate<ConfigKey<?>> filter);
-    public ConfigMap submapMatching(Predicate<String> filter);
 
+    /** returns submap matching the given filter predicate; see ConfigPredicates for common predicates */
+    public ConfigMap submap(Predicate<ConfigKey<?>> filter);
+
+    
     /** convenience extension where map is principally strings or converted to strings
      * (supporting BrooklynProperties) */
     public interface StringConfigMap extends ConfigMap {

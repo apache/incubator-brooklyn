@@ -2,7 +2,7 @@ package brooklyn.util.internal;
 
 import java.util.Map;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 
 /** Interface for resolving key values; typically implemented by the config key,
