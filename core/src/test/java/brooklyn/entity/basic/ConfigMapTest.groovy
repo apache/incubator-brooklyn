@@ -13,7 +13,7 @@ import brooklyn.test.entity.TestApplication
 
 import com.google.common.collect.ImmutableSet
 
-class ConfigFieldTest {
+class ConfigMapTest {
 
     private TestApplication app
     private MySubEntity entity

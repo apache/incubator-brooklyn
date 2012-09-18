@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.ConfigKey;
 import brooklyn.entity.ConfigKey.HasConfigKey;
+import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
@@ -119,7 +120,12 @@ public class BasicConfigMap implements brooklyn.entity.ConfigMap, ConfigMap {
                 throw new IllegalArgumentException("Cannot coerce or set "+v+" to "+key, e);
             }
         }
-        Object oldVal = ownConfig.put(key, val);
+        Object oldVal;
+        if (key instanceof StructuredConfigKey) {
+            oldVal = ((StructuredConfigKey)key).applyValueToMap(val, ownConfig);
+        } else {
+            oldVal = ownConfig.put(key, val);
+        }
         entity.refreshInheritedConfigOfChildren();
         return oldVal;
     }

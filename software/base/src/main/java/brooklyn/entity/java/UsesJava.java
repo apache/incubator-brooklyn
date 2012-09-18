@@ -1,18 +1,21 @@
 package brooklyn.entity.java;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.ListConfigKey;
+import brooklyn.event.basic.MapConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.collect.Maps;
 
 public interface UsesJava {
 
+    /** system properties (-D) to append to JAVA_OPTS; normally accessed through {@link JavaEntityMethods#javaSysProp(String)} */
     @SetFromFlag("javaSysProps")
-    public static final BasicConfigKey<Map<String, String>> JAVA_SYSPROPS = new BasicConfigKey<Map<String, String>>(
-            (Class)Map.class, "java.sysprops", "Java command line system properties", new HashMap<String,String>());
+    public static final MapConfigKey<String> JAVA_SYSPROPS = new MapConfigKey<String>(String.class,
+            "java.sysprops", "Java command line system properties", Maps.<String,String>newLinkedHashMap());
 
     /**
      * Used to set java options. These options are pre-pended to the defaults.
@@ -34,8 +37,8 @@ public interface UsesJava {
      * </ul> 
      */
     @SetFromFlag("javaOpts")
-    public static final BasicConfigKey<List<String>> JAVA_OPTS = new BasicConfigKey<List<String>>(
-            (Class)List.class, "java.opts", "Java command line options", new ArrayList<String>());
+    public static final ListConfigKey<String> JAVA_OPTS = new ListConfigKey<String>(String.class, 
+            "java.opts", "Java command line options", new ArrayList<String>());
 
     /**
      * @deprecated Use JAVA_SYSPROPS instead; was deprecated in 0.4.0

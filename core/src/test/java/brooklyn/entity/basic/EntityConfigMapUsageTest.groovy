@@ -19,7 +19,7 @@ import brooklyn.test.entity.TestEntity
 /**
  * Test that configuration properties are usable and inherited correctly.
  */
-public class InheritedConfigTest {
+public class EntityConfigMapUsageTest {
     private BasicConfigKey intKey = [ Integer, "bkey", "b key"]
     private BasicConfigKey strKey = [ String, "akey", "a key"]
     private BasicConfigKey intKeyWithDefault = [ Integer, "ckey", "c key", 1]
@@ -235,60 +235,4 @@ public class InheritedConfigTest {
         }
     }
 
-    @Test    
-    public void testMapConfigKeyCanStoreAndRetrieveVals() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
-        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
-        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval")
-        app.start([new SimulatedLocation()])
-        
-        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
-    }
-    
-    @Test
-    public void testMapConfigKeyCanStoreAndRetrieveFutureVals() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
-        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), DependentConfiguration.whenDone( {return "aval"} as Callable))
-        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), DependentConfiguration.whenDone( {return "bval"} as Callable))
-        app.start([new SimulatedLocation()])
-        
-        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
-    }
-
-	@Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
-	public void testConfigKeyStringWontStoreAndRetrieveMaps() throws Exception {
-		TestEntity entity = new TestEntity([owner:app])
-		Map v1 = [a:1, b:"bb"]
-        //it only allows strings
-		entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), v1)
-	}
-    
-    @Test
-    public void testConfigKeyCanStoreAndRetrieveMaps() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
-        Map v1 = [a:1, b:"bb"]
-        entity.setConfig(TestEntity.CONF_MAP_PLAIN, v1)
-        app.start([new SimulatedLocation()])
-        assertEquals(entity.getConfig(TestEntity.CONF_MAP_PLAIN), v1)
-    }
-
-    @Test    
-    public void testListConfigKeyCanStoreAndRetrieveVals() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
-        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
-        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "bval")
-        app.start([new SimulatedLocation()])
-        
-        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
-    }
-    
-    @Test
-    public void testListConfigKeyCanStoreAndRetrieveFutureVals() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
-        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), DependentConfiguration.whenDone( {return "aval"} as Callable))
-        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), DependentConfiguration.whenDone( {return "bval"} as Callable))
-        app.start([new SimulatedLocation()])
-        
-        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
-    }
 }
