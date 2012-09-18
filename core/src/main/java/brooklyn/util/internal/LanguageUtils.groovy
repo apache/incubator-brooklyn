@@ -6,6 +6,8 @@ import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
+import brooklyn.util.text.Identifiers;
+
 import com.thoughtworks.xstream.XStream
 
 /**
@@ -71,11 +73,9 @@ public class LanguageUtils {
     }
 
     /**
-     * Return a unique identifier as a string.
-     *
-     * TODO move this to a shared service provider interface
+     * @deprecated use Identifiers.makeRandomId(8)
      */
-    public static String newUid() { UUID.randomUUID().toString() }
+    public static String newUid() { Identifiers.makeRandomId(8) }
 
     public static Map setFieldsFromMap(Object target, Map fieldValues) {
         Map unused = [:]

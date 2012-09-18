@@ -14,7 +14,7 @@ import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
@@ -93,7 +93,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
         properties.putAll(leftoverProperties);
         leftoverProperties = properties;
         
-        if (id==null) id = LanguageUtils.newUid();
+        if (id==null) id = Identifiers.makeRandomId(8);
         
         if (!truth(name) && truth(properties.get("displayName"))) {
             //'displayName' is a legacy way to refer to a location's name
