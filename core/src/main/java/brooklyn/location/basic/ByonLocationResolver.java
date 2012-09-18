@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.location.LocationResolver;
 import brooklyn.util.KeyValueParser;
 import brooklyn.util.MutableMap;
 
@@ -30,7 +29,8 @@ import com.google.common.collect.Sets;
  * 
  * @author aled
  */
-public class ByonLocationResolver implements LocationResolver {
+@SuppressWarnings({"unchecked","rawtypes"})
+public class ByonLocationResolver implements RegistryLocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(ByonLocationResolver.class);
     
@@ -43,12 +43,21 @@ public class ByonLocationResolver implements LocationResolver {
     public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec) {
         return newLocationFromString(Maps.newLinkedHashMap(), spec);
     }
-    
+
     @Override
     public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(Map properties, String spec) {
+        return newLocationFromString(spec, null, properties, new MutableMap());
+    }
+    
+    @Override
+    public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, LocationRegistry registry, Map locationFlags) {
+        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
+    }
+    
+    protected FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, LocationRegistry registry, Map properties, Map locationFlags) {
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon:(hosts=\"addr1,addr2\")");
+            throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon(hosts=\"addr1,addr2\")");
         }
         
         String argsPart = matcher.group(2);
@@ -73,6 +82,7 @@ public class ByonLocationResolver implements LocationResolver {
         }
         
         Map<String,Object> flags = Maps.newLinkedHashMap();
+        flags.putAll(locationFlags);
         flags.put("machines", machines);
         if (namePart != null) {
             flags.put("name", namePart);
@@ -86,3 +96,4 @@ public class ByonLocationResolver implements LocationResolver {
         return BYON;
     }
 }
+@SuppressWarnings("unchecked")

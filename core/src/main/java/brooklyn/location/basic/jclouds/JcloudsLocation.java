@@ -270,7 +270,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     //also, we need a way to define imageId (and others?) with a specific location
         
     public static final Collection<String> SUPPORTED_BASIC_PROPERTIES = ImmutableSet.of(
-        "provider", "identity", "credential", "userName", "publicKeyFile", "privateKeyFile", 
+        "provider", "identity", "credential", "userName", "publicKeyFile", "privateKeyFile", "privateKeyPassphrase", 
         "sshPublicKey", "sshPrivateKey", "rootSshPrivateKey", "rootSshPublicKey", "groupId", 
         "providerLocationId", "provider");
     

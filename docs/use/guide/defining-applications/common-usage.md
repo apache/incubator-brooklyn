@@ -45,18 +45,34 @@ See [Extras](../extras/) for a full list of systems available out of the box.
 
 ### Off-the-Shelf Locations
 
-- SSH
-- Compute: Amazon, GoGrid, vCloud, and many more (using jclouds)
+- SSH: any machine or set of machines to which you can ssh
+- Clouds: Amazon, GoGrid, vCloud, and many more (using jclouds)
+
+Configuration is typically set in `~/.brooklyn/brooklyn.properties` using keys such as the following:
+
 {% highlight java %}
-    # use a special key when connecting to public clouds
-    brooklyn.jclouds.private-key-file=~/.ssh/public_clouds/id_rsa
-    
-    # need this one for localhost
-    brooklyn.jclouds.localhost.private-key-file=~/.ssh/id_rsa   
-    
-    # AWS credentials
+    # use this key for localhost (this is the default, although if you have a passphrase you must set it)
+    brooklyn.localhost.privateKeyFile=~/.ssh/id_rsa
+    brooklyn.localhost.privateKeyPassphrase=s3cr3tPASSPHRASE
+       
+    # use a special key when connecting to public clouds, and a special one for AWS
+    brooklyn.jclouds.privateKeyFile=~/.ssh/public_clouds/id_rsa
+    brooklyn.jclouds.aws-ec2.privateKeyFile=~/.ssh/public_clouds/aws_id_rsa
+        
+    # AWS credentials (when deploying to location jclouds:aws-ec2)
     brooklyn.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST      
     brooklyn.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
+
+    # define a "named" location which uses a special set of AWS credentials (deploy to named:company-aws)
+    brooklyn.location.named.company-aws=jclouds:aws-ec2:us-west-1
+    brooklyn.location.named.company-aws.identity=BCDEFGHIJKLMNOPQRSTU      
+    brooklyn.location.named.company-aws.privateKeyFile=~/.ssh/public_clouds/company_aws_id_rsa
+
+    # and a "named" location which uses a fixed set of machines (deploy to named:prod1)
+    brooklyn.location.named.prod1=byon:(hosts="10.9.0.1,10.9.0.2,10.9.0.3,10.9.0.4")
+    brooklyn.location.named.prod1.user=produser      
+    brooklyn.location.named.prod1.privateKeyFile=~/.ssh/produser_id_rsa
+    brooklyn.location.named.prod1.privateKeyPassphrase=s3cr3tCOMPANYpassphrase
     
     # credentials for 'geoscaling' service
     brooklyn.geoscaling.username=cloudsoft                      
@@ -70,7 +86,8 @@ For any provider you will typically need to set ``identity`` and ``credential``
 in the ``brooklyn.jclouds.provider`` namespace.
 Other fields may be available (from brooklyn or jclouds).
 
-``brooklyn.jclouds.public-key-file`` can also be specied but can usually be omitted 
+Public keys can also be specified, using ``brooklyn.jclouds.publicKeyFile``, 
+but these can usually be omitted 
 (it will be inferred by adding the suffix ``.pub`` to the private key).
-There should be no passphrases on the key files.
+If there is a passphrase on the key file being used, you must supply it to Brooklyn for it to work, of course!
 

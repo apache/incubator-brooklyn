@@ -62,8 +62,8 @@ public class CredentialsFromEnv {
     public CredentialsFromEnv(String provider) {
         this(MutableMap.of(), provider);
     }
-    public CredentialsFromEnv(Map properties, String provider) {
-        this(BrooklynProperties.Factory.newWithSystemAndEnvironment().addFromMap(properties), provider);
+    public CredentialsFromEnv(@SuppressWarnings("rawtypes") Map properties, String provider) {
+        this(BrooklynProperties.Factory.newDefault().addFromMap(properties), provider);
     }
     public CredentialsFromEnv(BrooklynProperties sysProps, String provider) {
         this.sysProps = sysProps;
@@ -79,12 +79,12 @@ public class CredentialsFromEnv {
         props.put("credential", getRequiredProviderSpecificValue("credential"));
         
         // TODO do these need to be required?:
-        String privateKeyFile = elvis(findProviderSpecificValueFile("private-key-file"),
+        String privateKeyFile = elvis(findProviderSpecificValueFile("privateKeyFile"),
                 (truth(props.get("noDefaultSshKeys")) || truth(sysProps.get("noDefaultSshKeys"))  
                         ? null : pickExistingFile(ImmutableList.of("~/.ssh/id_rsa", "~/.ssh/id_dsa"), null)));
         if (privateKeyFile != null) props.put("privateKeyFile", privateKeyFile);
         
-        String publicKeyFile = elvis(findProviderSpecificValueFile("public-key-file"),
+        String publicKeyFile = elvis(findProviderSpecificValueFile("publicKeyFile"),
                 (truth(props.get("noDefaultSshKeys")) || truth(sysProps.get("noDefaultSshKeys")) || !truth(privateKeyFile)) 
                         ? null : pickExistingFile(ImmutableList.of(privateKeyFile+".pub")));
         if (publicKeyFile != null) props.put("publicKeyFile", publicKeyFile);
@@ -111,8 +111,13 @@ public class CredentialsFromEnv {
     protected String getProviderSpecificValue(String type) {
         return getProviderSpecificValue(ImmutableMap.of(), type);
     }
-    protected String getProviderSpecificValue(Map flags, String type) {
+    protected String getProviderSpecificValue(@SuppressWarnings("rawtypes") Map flags, String typeCamel) {
+        String type = convertFromCamelToProperty(typeCamel);
         return sysProps.getFirst(flags,
+            // this is now preferred:
+            getProvider() != null ? "brooklyn.jclouds."+getProvider()+"."+typeCamel : null,
+            "brooklyn.jclouds."+typeCamel,
+            // legacy:
             getProvider() != null ? "brooklyn.jclouds."+getProvider()+"."+type : null,
             getProvider() != null ? "JCLOUDS_"+convertFromPropertyToShell(getProvider())+"_"+convertFromPropertyToShell(type) : null,
             getProvider() != null ? "JCLOUDS_"+convertFromPropertyToShell(type)+"_"+convertFromPropertyToShell(getProvider()) : null,
@@ -157,10 +162,10 @@ public class CredentialsFromEnv {
         }
         File ff = new File(f);
         if (ff.exists()) return f;
-        throw new IllegalStateException("Unable to locate SSH key file "+f+
-                "; set brooklyn.jclouds."+getProvider()+".public-key-file" );
+        throw new IllegalStateException("Unable to find required file "+f+" for "+getProvider()+" "+type);
     }
     
+    @SuppressWarnings("rawtypes")
     static Set WARNED_MISSING_KEY_FILES = Sets.newLinkedHashSet();
     
     protected static String convertFromPropertyToShell(String word) {
@@ -188,6 +193,7 @@ public class CredentialsFromEnv {
         for (String n : JcloudsLocation.getAllSupportedProperties()) {
             Object fv = f2.remove(n);
             if (fv!=null) {
+                f2.put("brooklyn.jclouds."+provider+"."+n, fv);
                 f2.put("brooklyn.jclouds."+provider+"."+convertFromCamelToProperty(n), fv);
             }
         }
@@ -195,6 +201,7 @@ public class CredentialsFromEnv {
         return new CredentialsFromEnv(f2, provider);        
     }
     
+    @SuppressWarnings("rawtypes")
     public Map asMap() {
         return props;
     }
