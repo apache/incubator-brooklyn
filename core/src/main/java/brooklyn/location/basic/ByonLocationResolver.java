@@ -96,4 +96,3 @@ public class ByonLocationResolver implements RegistryLocationResolver {
         return BYON;
     }
 }
-@SuppressWarnings("unchecked")
