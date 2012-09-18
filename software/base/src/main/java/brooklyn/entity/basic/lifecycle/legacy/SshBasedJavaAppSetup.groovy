@@ -5,11 +5,11 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.entity.java.UsesJava
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.NetworkUtils
 import brooklyn.util.internal.LanguageUtils
-import brooklyn.util.internal.StringEscapeUtils
-import brooklyn.entity.java.UsesJava;
+import brooklyn.util.text.StringEscapes.BashStringEscapes
 
 /**
  * Java application installation, configuration and startup using ssh.
@@ -116,7 +116,7 @@ public abstract class SshBasedJavaAppSetup extends SshBasedAppSetup {
 	public Map<String, String> getShellEnvironment() {
 		super.getShellEnvironment() +
 		[ "JAVA_OPTS" : getJavaOpts().collect({
-				if (!StringEscapeUtils.isValidForDoubleQuotingInBash(it))
+				if (!BashStringEscapes.isValidForDoubleQuotingInBash(it))
 					throw new IllegalArgumentException("will not accept ${it} as valid BASH string (has unescaped double quote)")
 				/*"\""+*/ it /*+"\""*/
 			}).join(" ") ]

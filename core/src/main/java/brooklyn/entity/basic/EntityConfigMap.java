@@ -7,28 +7,25 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.ConfigKey;
-import brooklyn.entity.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.event.basic.StructuredConfigKey;
+import brooklyn.event.basic.StructuredConfigKey.StructuredModification;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
-import brooklyn.util.text.WildcardGlobs;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 
 @SuppressWarnings("deprecation")
-public class BasicConfigMap implements brooklyn.entity.ConfigMap, ConfigMap {
+public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BasicConfigMap.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityConfigMap.class);
 
     /** entity against which config resolution / task execution will occur */
     private final AbstractEntity entity;
@@ -50,7 +47,7 @@ public class BasicConfigMap implements brooklyn.entity.ConfigMap, ConfigMap {
     private final Map<ConfigKey<?>,Object> ownConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
     private final Map<ConfigKey<?>,Object> inheritedConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
 
-    public BasicConfigMap(AbstractEntity entity) {
+    public EntityConfigMap(AbstractEntity entity) {
         this.entity = Preconditions.checkNotNull(entity, "entity must be specified");
     }
 
@@ -111,7 +108,10 @@ public class BasicConfigMap implements brooklyn.entity.ConfigMap, ConfigMap {
     public Object setConfig(ConfigKey<?> key, Object v) {
         Object val;
         if ((v instanceof Future) || (v instanceof Closure)) {
-            //no coercion for these (yet)
+            // no coercion for these (coerce on exit)
+            val = v;
+        } else if (key instanceof StructuredConfigKey) {
+            // no coercion for these structures (they decide what to do)
             val = v;
         } else {
             try {
@@ -139,39 +139,8 @@ public class BasicConfigMap implements brooklyn.entity.ConfigMap, ConfigMap {
     }
 
     @Override
-    public BasicConfigMap submapMatchingGlob(final String glob) {
-        return submapMatchingConfigKeys(new Predicate<ConfigKey<?>>() {
-            @Override
-            public boolean apply(@Nullable ConfigKey<?> input) {
-                return WildcardGlobs.isGlobMatched(glob, input.getName());
-            }
-        });
-    }
-
-    @Override
-    public BasicConfigMap submapMatchingRegex(String regex) {
-        final Pattern p = Pattern.compile(regex);
-        return submapMatchingConfigKeys(new Predicate<ConfigKey<?>>() {
-            @Override
-            public boolean apply(@Nullable ConfigKey<?> input) {
-                return p.matcher(input.getName()).matches();
-            }
-        });
-    }
-    
-    @Override
-    public BasicConfigMap submapMatching(final Predicate<String> filter) {
-        return submapMatchingConfigKeys(new Predicate<ConfigKey<?>>() {
-            @Override
-            public boolean apply(@Nullable ConfigKey<?> input) {
-                return filter.apply(input.getName());
-            }
-        });
-    }
-
-    @Override
-    public BasicConfigMap submapMatchingConfigKeys(Predicate<ConfigKey<?>> filter) {
-        BasicConfigMap m = new BasicConfigMap(entity);
+    public EntityConfigMap submap(Predicate<ConfigKey<?>> filter) {
+        EntityConfigMap m = new EntityConfigMap(entity);
         for (Map.Entry<ConfigKey<?>,Object> entry: inheritedConfig.entrySet())
             if (filter.apply(entry.getKey()))
                 m.inheritedConfig.put(entry.getKey(), entry.getValue());

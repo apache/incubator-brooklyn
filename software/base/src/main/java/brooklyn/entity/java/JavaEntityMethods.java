@@ -1,6 +1,6 @@
 package brooklyn.entity.java;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 
 /** DSL conveniences for Java entities. Also see {@link JavaAppUtils} for methods useful within Java classes. */
 public class JavaEntityMethods {

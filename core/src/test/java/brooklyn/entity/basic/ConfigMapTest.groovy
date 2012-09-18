@@ -7,7 +7,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.ConfigMap;
+import brooklyn.config.ConfigMap;
+import brooklyn.config.ConfigPredicates;
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.test.entity.TestApplication
 
@@ -51,7 +52,7 @@ class ConfigMapTest {
     public void testConfigSubMap() throws Exception {
         entity.configure(MyBaseEntity.SUPER_KEY_1, "s1");
         entity.configure(MySubEntity.SUB_KEY_2, "s2");
-        ConfigMap sub = entity.getConfigMap().submapMatchingGlob("sup*");
+        ConfigMap sub = entity.getConfigMap().submap(ConfigPredicates.matchingGlob("sup*"));
         Assert.assertEquals(sub.getRawConfig(MyBaseEntity.SUPER_KEY_1), "s1");
         Assert.assertNull(sub.getRawConfig(MySubEntity.SUB_KEY_2));
     }

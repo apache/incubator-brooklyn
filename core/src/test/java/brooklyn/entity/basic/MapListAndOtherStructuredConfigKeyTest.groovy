@@ -8,6 +8,8 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.event.basic.DependentConfiguration
+import brooklyn.event.basic.ListConfigKey.ListModifications
+import brooklyn.event.basic.MapConfigKey.MapModifications
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
@@ -77,8 +79,82 @@ public class MapListAndOtherStructuredConfigKeyTest {
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
     }
 
-    // TODO more tests, where we set the structured key itself, assert additivity,
-    // and implement ability to CLEAR etc, as described in {Map,List}ConfigKey.
-    // NB: there are more, practical tests covering much of this in JavaOptsTest 
-       
+    @Test
+    public void testListConfigKeyAddDirect() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
+        entity.setConfig(TestEntity.CONF_LIST_THING, "bval")
+        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
+    }
+
+    @Test
+    public void testListConfigKeyClear() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
+        entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.clear())
+        // for now defaults to null, but empty list might be better? or whatever the default is?
+        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), null)
+    }
+
+    @Test
+    public void testListConfigKeyAddMod() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
+        entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.add("bval", "cval"))
+        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval","cval"])
+    }
+    @Test
+    public void testListConfigKeyAddAllMod() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
+        entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.addAll(["bval", "cval"]))
+        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval","cval"])
+    }
+    @Test
+    public void testListConfigKeyAddItemMod() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
+        entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.addItem(["bval", "cval"]))
+        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval",["bval","cval"]])
+    }
+    @Test
+    public void testListConfigKeySetMod() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
+        entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.set(["bval", "cval"]))
+        assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["bval","cval"])
+    }
+
+    @Test
+    public void testMapConfigPutDirect() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
+        entity.setConfig(TestEntity.CONF_MAP_THING, [bkey:"bval"])
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
+    }
+
+    @Test
+    public void testMapConfigPutAllMod() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
+        entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.put([bkey:"bval"]))
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
+    }
+
+    @Test
+    public void testMapConfigClearMod() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
+        entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.clear())
+        // for now defaults to null, but empty map might be better? or whatever the default is?
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), null)
+    }
+    @Test
+    public void testMapConfigSetMode() throws Exception {
+        TestEntity entity = new TestEntity([owner:app])
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
+        entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.set([bkey:"bval"]))
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [bkey:"bval"])
+    }
+
 }

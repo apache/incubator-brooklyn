@@ -5,7 +5,6 @@ import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.InvalidPatternException;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 import brooklyn.util.text.WildcardGlobs.SpecialistGlobExpander;
@@ -201,19 +200,5 @@ public class WildcardGlobsTest extends Assert {
 	private SpecialistGlobExpander newGlobExpander() {
 		return new SpecialistGlobExpander(true, PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR);
 	}
-
-//	//negative numbers won't be accepted by glob, overloading of "-" symbol
-//	@Test
-//	public void testNumNegAndLeadZero() throws InvalidPatternException {
-//		assertTrue(NumericRangeGlobExpander.isGlobMatchedNumeric("a{-1-1}", "a-1"));
-//		assertTrue(NumericRangeGlobExpander.isGlobMatchedNumeric("a{-1-1}", "a0"));
-//		assertTrue(NumericRangeGlobExpander.isGlobMatchedNumeric("a{-1-1}", "a1"));
-//		assertFalse(NumericRangeGlobExpander.isGlobMatchedNumeric("a{-1-1}", "a2"));
-//		
-//		assertTrue(NumericRangeGlobExpander.isGlobMatchedNumeric("a{-01-01}", "a-01"));
-//		assertTrue(NumericRangeGlobExpander.isGlobMatchedNumeric("a{-01-01}", "a00"));
-//		assertTrue(NumericRangeGlobExpander.isGlobMatchedNumeric("a{-01-01}", "a01"));
-//		assertFalse(NumericRangeGlobExpander.isGlobMatchedNumeric("a{-01-01}", "a0"));
-//	}
 
 }

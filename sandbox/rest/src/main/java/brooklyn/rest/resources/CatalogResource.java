@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
 
 import org.reflections.Reflections;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.policy.basic.AbstractPolicy;

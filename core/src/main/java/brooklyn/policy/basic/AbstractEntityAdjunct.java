@@ -15,8 +15,8 @@ import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.internal.BasicSubscriptionContext;
 import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.policy.EntityAdjunct;
-import brooklyn.util.IdGenerator;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.text.Identifiers;
 
 
 /**
@@ -24,7 +24,7 @@ import brooklyn.util.flags.SetFromFlag;
  */
 public abstract class AbstractEntityAdjunct implements EntityAdjunct {
     @SetFromFlag
-    protected String id = IdGenerator.makeRandomId(8);
+    protected String id = Identifiers.makeRandomId(8);
     
     @SetFromFlag
     protected String name;

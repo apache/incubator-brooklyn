@@ -130,16 +130,18 @@ public class BrooklynPropertiesTest {
     public void testGetSubMap() {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty().addFromMap(ImmutableMap.of(
                 "a.key", "aval", "a.key2", "aval2", "akey", "noval", "b.key", "bval"));
-        BrooklynProperties p2 = props.submapMatchingGlob("a.*");
+        BrooklynProperties p2 = props.submap(ConfigPredicates.matchingGlob("a.*"));
         assertEquals(p2.getAllConfig().keySet().size(), 2, "wrong size submap: "+p2);
         assertEquals(p2.getFirst("a.key"), "aval");
         assertEquals(p2.getFirst("b.key"), null);
         assertEquals(p2.getFirst("akey"), null);
         
-        BrooklynProperties p3 = props.submapMatchingRegex("a\\..*");
-        assertEquals(p3, p2);
+        BrooklynProperties p3a = props.submap(ConfigPredicates.startingWith("a."));
+        assertEquals(p3a, p2);
+        BrooklynProperties p3b = props.submap(ConfigPredicates.matchingRegex("a\\..*"));
+        assertEquals(p3b, p2);
         
-        BrooklynProperties p4 = props.submapMatchingRegex("a.*");
+        BrooklynProperties p4 = props.submap(ConfigPredicates.matchingRegex("a.*"));
         assertEquals(p4.getAllConfig().keySet().size(), 3, "wrong size submap: "+p4);
         assertEquals(p4.getFirst("a.key"), "aval");
         assertEquals(p4.getFirst("b.key"), null);

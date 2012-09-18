@@ -2,7 +2,7 @@ package brooklyn.event.basic;
 
 import java.util.Map;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 
 @SuppressWarnings("rawtypes")

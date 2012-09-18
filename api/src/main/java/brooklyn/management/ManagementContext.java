@@ -2,8 +2,8 @@ package brooklyn.management;
 
 import java.util.Collection;
 
+import brooklyn.config.ConfigMap.StringConfigMap;
 import brooklyn.entity.Application;
-import brooklyn.entity.ConfigMap.StringConfigMap;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.EntityDriverFactory;
 

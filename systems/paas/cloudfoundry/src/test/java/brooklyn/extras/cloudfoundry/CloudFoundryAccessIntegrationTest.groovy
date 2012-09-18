@@ -13,7 +13,7 @@ import com.google.common.collect.Sets;
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.AppRecord
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStatLine
 import brooklyn.extras.cloudfoundry.CloudFoundryVmcCliAccess.CloudFoundryAppStats
-import brooklyn.util.IdGenerator
+import brooklyn.util.text.Identifiers;
 
 
 /** requires vmc installed and configured */
@@ -42,7 +42,7 @@ class CloudFoundryAccessIntegrationTest {
 
     @Test(groups = [ "Integration", "WIP" ])
     public void testVmcAppCreateRunUpdateScaleStats() {
-        String id = "brooklyn-"+IdGenerator.makeRandomId(8).toLowerCase();
+        String id = "brooklyn-"+Identifiers.makeRandomId(8).toLowerCase();
         CloudFoundryVmcCliAccess access = new CloudFoundryVmcCliAccess(appName: id);
         log.info("creating $id in ${access.appPath}");
         Collection apps1 = access.getAppNames(true);

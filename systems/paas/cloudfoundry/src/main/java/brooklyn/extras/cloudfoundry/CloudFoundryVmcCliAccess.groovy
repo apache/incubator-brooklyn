@@ -6,10 +6,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.util.IdGenerator
 import brooklyn.util.ResourceUtils
 import brooklyn.util.ShellUtils
 import brooklyn.util.mutex.WithMutexes
+import brooklyn.util.text.Identifiers;
 
 class CloudFoundryVmcCliAccess {
     
@@ -29,7 +29,7 @@ class CloudFoundryVmcCliAccess {
             appPath = "/tmp/brooklyn/apps/"+((Entity)context).application.id+"/staging/"+
                 "cloudfoundry/"+((Entity)context).id+"/";
         } else {
-            appPath = "/tmp/brooklyn/cloudfoundry/"+IdGenerator.makeRandomId(6)+"/"
+            appPath = "/tmp/brooklyn/cloudfoundry/"+Identifiers.makeRandomId(6)+"/"
         }
         return this.@appPath
     }

@@ -54,9 +54,9 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder;
-import brooklyn.util.IdGenerator;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.Repeater;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
@@ -582,7 +582,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static String generateGroupId() {
         // In jclouds 1.5, there are strict rules for group id: it must be DNS compliant, and no more than 15 characters
         String user = System.getProperty("user.name");
-        String rand = IdGenerator.makeRandomId(2);
+        String rand = Identifiers.makeRandomId(2);
         String result = "br-"+(user.substring(0,Math.min(user.length(),5)))+"-"+rand;
         return result.toLowerCase();
     }

@@ -1,13 +1,10 @@
 package brooklyn.event.adapter
 
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.event.Sensor
 import brooklyn.util.flags.FlagUtils
-import brooklyn.util.internal.StringEscapeUtils
 
 
 public class HttpSensorAdapter extends AbstractSensorAdapter {

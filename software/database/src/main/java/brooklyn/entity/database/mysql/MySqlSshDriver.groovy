@@ -10,8 +10,8 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicOsDetails.OsArchs
 import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
-import brooklyn.util.IdGenerator;
 import brooklyn.util.ResourceUtils
+import brooklyn.util.text.Identifiers;
 
 /**
  * The SSH implementation of the {@link MySlDriver}.
@@ -73,8 +73,8 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
             body.append(commands).execute();
     }
 
-    final String socketUid = IdGenerator.makeRandomId(6);
-    String secretPassword = IdGenerator.makeRandomId(6);
+    final String socketUid = Identifiers.makeRandomId(6);
+    String secretPassword = Identifiers.makeRandomId(6);
     public String getPassword() { secretPassword }
     public MySqlNode getEntity() { return super.getEntity() }
     public int getPort() { return entity.port }

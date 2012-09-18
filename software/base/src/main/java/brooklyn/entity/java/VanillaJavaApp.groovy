@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.ConfigKey
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.event.adapter.ConfigSensorAdapter

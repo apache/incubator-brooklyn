@@ -15,8 +15,8 @@ import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.IdGenerator
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.text.Identifiers;
 
 
 class GeoscalingDnsService extends AbstractGeoDnsService {
@@ -83,7 +83,7 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
             // if no smart subdomain specified, but random is, use something random
             if (smartSubdomainName) smartSubdomainName += "-";
             else smartSubdomainName = "";
-            smartSubdomainName += IdGenerator.makeRandomId(8);
+            smartSubdomainName += Identifiers.makeRandomId(8);
         }
         checkNotNull(smartSubdomainName, "The GeoScaling smart subdomain name is not specified or randomized");
         
