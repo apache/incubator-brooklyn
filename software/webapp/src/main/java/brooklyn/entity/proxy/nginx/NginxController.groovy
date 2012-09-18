@@ -118,7 +118,10 @@ public class NginxController extends AbstractController {
         // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
         http.with {
             poll(SERVICE_UP, {
-                headerLists.get("Server") == ["nginx/"+getConfig(SUGGESTED_VERSION)] 
+                // Accept any nginx response (don't assert specific version), so that sub-classing
+                // for a custom nginx build is not strict about custom version numbers in headers
+                def actual = headerLists.get("Server")
+                return actual != null && actual.size() == 1 && actual.get(0).startsWith("nginx/"); 
             })
         }
     }
