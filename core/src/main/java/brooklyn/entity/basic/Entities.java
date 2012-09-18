@@ -110,7 +110,7 @@ public class Entities {
 	public static void dumpInfo(Entity e, Writer out, String currentIndentation, String tab) throws IOException {
 		out.append(currentIndentation+e.toString()+"\n");
 		
-        out.append(currentIndentation+tab+tab+"locations = "+e.getLocations());
+        out.append(currentIndentation+tab+tab+"locations = "+e.getLocations()+"\n");
 
 		for (ConfigKey<?> it : sortConfigKeys(e.getEntityType().getConfigKeys())) {
             Object v = e.getConfig(it);
