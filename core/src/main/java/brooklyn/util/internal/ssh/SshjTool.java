@@ -128,10 +128,12 @@ public class SshjTool implements SshTool {
     private final String user;
     private final String password;
     private final int port;
+    private String privateKeyPassphrase;
     private String privateKeyData;
     private File privateKeyFile;
     private boolean strictHostKeyChecking;
     private boolean allocatePTY;
+
 
     public static Builder builder() {
         return new Builder();
@@ -142,6 +144,7 @@ public class SshjTool implements SshTool {
         private String user = System.getProperty("user.name");
         private String password;
         private int port = 22;
+        public String privateKeyPassphrase;
         private String privateKeyData;
         private Set<String> privateKeyFiles = Sets.newLinkedHashSet();
         private boolean strictHostKeyChecking = false;
@@ -164,6 +167,7 @@ public class SshjTool implements SshTool {
             sshTries = getOptionalVal(props, "sshTries", Integer.class, sshTries);
             sshRetryDelay = getOptionalVal(props, "sshRetryDelay", Long.class, sshRetryDelay);
 
+            privateKeyPassphrase = getOptionalVal(props, "privateKeyPassphrase", String.class, privateKeyPassphrase);
             privateKeyData = getOptionalVal(props, "privateKey", String.class, privateKeyData);
             privateKeyData = getOptionalVal(props, "privateKeyData", String.class, privateKeyData);
 
@@ -186,6 +190,9 @@ public class SshjTool implements SshTool {
         }
         public Builder port(int val) {
             this.port = val; return this;
+        }
+        public Builder privateKeyPassphrase(String val) {
+            this.privateKeyPassphrase = val; return this;
         }
         /** @deprecated 1.4.0, use privateKeyData */
         public Builder privateKey(String val) {
@@ -232,6 +239,7 @@ public class SshjTool implements SshTool {
         allocatePTY = builder.allocatePTY;
         sshTries = builder.sshTries ;
         backoffLimitedRetryHandler = new BackoffLimitedRetryHandler(sshTries, builder.sshRetryDelay);
+        privateKeyPassphrase = builder.privateKeyPassphrase;
         privateKeyData = builder.privateKeyData;
         
         if (builder.privateKeyFiles.size() > 1) {
@@ -254,6 +262,7 @@ public class SshjTool implements SshTool {
                 .hostAndPort(HostAndPort.fromParts(host, port))
                 .username(user)
                 .password(password)
+                .privateKeyPassphrase(privateKeyPassphrase)
                 .privateKeyData(privateKeyData)
                 .privateKeyFile(privateKeyFile)
                 .strictHostKeyChecking(strictHostKeyChecking)

@@ -107,11 +107,17 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     
     public boolean canProvisionMore() { return canProvisionMore; }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void provisionMore(int size) {
         for (int i=0; i<size; i++) {
-            SshMachineLocation child = new LocalhostMachine(MutableMap.of(
+            Map flags = MutableMap.of(
                     "parentLocation", this, 
-                    "address", elvis(address, lookupLocalHost())));
+                    "address", elvis(address, lookupLocalHost()));
+            for (String k: SshMachineLocation.SSH_PROPS) {
+                Object v = findLocationProperty(k);
+                if (v!=null) flags.put(k, v);
+            }
+            SshMachineLocation child = new LocalhostMachine(flags);
             addChildLocation(child);
        }
     }

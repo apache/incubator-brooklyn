@@ -168,7 +168,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     @Override
     public String getFirst(Map flags, String ...keys) {
         for (String k: keys) {
-            if (containsKey(k)) return (String) get(k);
+            if (k!=null && containsKey(k)) return (String) get(k);
         }
         if (flags.get("warnIfNone")!=null && !Boolean.FALSE.equals(flags.get("warnIfNone"))) {
             if (Boolean.TRUE.equals(flags.get("warnIfNone")))

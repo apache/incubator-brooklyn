@@ -97,6 +97,11 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         return this;
     }
 
+    public MutableMap<K,V> addIfNotNull(K key, V value) {
+        if (value!=null) add(key, value);
+        return this;
+    }
+
     public ImmutableMap<K,V> toImmutable() {
         return ImmutableMap.copyOf(this);
     }
@@ -137,4 +142,5 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
           return new MutableMap<K,V>(result);
         }
     }
+
 }

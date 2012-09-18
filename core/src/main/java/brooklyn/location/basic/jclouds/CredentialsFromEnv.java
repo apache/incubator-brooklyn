@@ -68,7 +68,7 @@ public class CredentialsFromEnv {
     public CredentialsFromEnv(BrooklynProperties sysProps, String provider) {
         this.sysProps = sysProps;
         props.put("provider", provider);
-
+        
         for (String it : JcloudsLocation.getAllSupportedProperties()) {
             String v = getProviderSpecificValue(convertFromCamelToProperty(it));
             if (v!=null) props.put(it, v);
@@ -88,9 +88,15 @@ public class CredentialsFromEnv {
                 (truth(props.get("noDefaultSshKeys")) || truth(sysProps.get("noDefaultSshKeys")) || !truth(privateKeyFile)) 
                         ? null : pickExistingFile(ImmutableList.of(privateKeyFile+".pub")));
         if (publicKeyFile != null) props.put("publicKeyFile", publicKeyFile);
+        
+        String privateKeyPassphrase = findProviderSpecificValueFile("passphrase");
+        if (privateKeyPassphrase != null) props.put("privateKeyPassphrase", privateKeyPassphrase);
     }
 
+    /** provider is the jclouds provider, or null if not jclouds */
     public String getProvider() { return (String) props.get("provider"); }
+    /** location name is a user-suppliable name for the location, or null if no location */
+    public String getLocationName() { return (String) props.get("locationName"); }
     public String getIdentity() { return (String) props.get("identity"); }
     public String getCredential() { return (String) props.get("credential"); }
     public String getPublicKeyFile() { return (String) props.get("publicKeyFile"); }
@@ -107,18 +113,18 @@ public class CredentialsFromEnv {
     }
     protected String getProviderSpecificValue(Map flags, String type) {
         return sysProps.getFirst(flags,
-            "brooklyn.jclouds."+getProvider()+"."+type,
-            "JCLOUDS_"+convertFromPropertyToShell(getProvider())+"_"+convertFromPropertyToShell(type),
-            "JCLOUDS_"+convertFromPropertyToShell(type)+"_"+convertFromPropertyToShell(getProvider()),
-            "brooklyn.jclouds."+type,
-            "JCLOUDS_"+convertFromPropertyToShell(type) );
+            getProvider() != null ? "brooklyn.jclouds."+getProvider()+"."+type : null,
+            getProvider() != null ? "JCLOUDS_"+convertFromPropertyToShell(getProvider())+"_"+convertFromPropertyToShell(type) : null,
+            getProvider() != null ? "JCLOUDS_"+convertFromPropertyToShell(type)+"_"+convertFromPropertyToShell(getProvider()) : null,
+            getProvider() != null ? "brooklyn.jclouds."+type : null,
+            getProvider() != null ? "JCLOUDS_"+convertFromPropertyToShell(type) : null );
     }
 
     protected String pickExistingFile(List<String> candidates) {
         String result = pickExistingFile(candidates, null);
         if (result!=null) return result;
         throw new IllegalStateException("Unable to locate "+
-                (candidates.size()>1 ? "any of the candidate files "+candidates : "file "+candidates.get(0) ) +
+                (candidates.size()!=1 ? "any of the candidate files "+candidates : "file "+candidates.get(0) ) +
                 "; set brooklyn.jclouds."+getProvider()+".public-key-file" );
  
     }

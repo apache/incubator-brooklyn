@@ -48,7 +48,7 @@ public class ByonLocationResolver implements LocationResolver {
     public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(Map properties, String spec) {
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon(hosts=\"addr1,addr2\")");
+            throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon:(hosts=\"addr1,addr2\")");
         }
         
         String argsPart = matcher.group(2);

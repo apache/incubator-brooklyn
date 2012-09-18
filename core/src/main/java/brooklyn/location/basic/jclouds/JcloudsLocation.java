@@ -228,7 +228,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 if (truth(unusedConf.remove("customCredentials"))) 
                     customCredentials = (LoginCredentials) allconf.get("customCredentials");
          
-                // this does not apply to creating a password
+                // following values are copies pass-through, no change
+                unusedConf.remove("privateKeyPassphrase");
                 unusedConf.remove("password");
                 
                 unusedConf.remove("provider");
@@ -412,6 +413,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
             } else if (node.getCredentials().getPassword() != null) {
                 sshConfig.put("password", node.getCredentials().getPassword());
+            }
+            if (truth(setup.allconf.get("privateKeyPassphrase"))) {
+                // not sure jclouds supports this, but we try, and our ssh routines should use it
+                sshConfig.put("privateKeyPassphrase", setup.allconf.get("privateKeyPassphrase"));
             }
             if (truth(setup.allconf.get("sshPublicKeyData"))) {
                 sshConfig.put("sshPublicKeyData", setup.allconf.get("sshPublicKeyData"));
@@ -864,6 +869,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath())); 
             if (truth(allconf.get("sshPrivateKeyData"))) 
                 sshConfig.put("privateKeyData", allconf.get("sshPrivateKeyData"));
+            if (truth(allconf.get("privateKeyPassphrase"))) 
+                sshConfig.put("privateKeyPassphrase", allconf.get("privateKeyPassphrase"));
             // TODO messy way to get an SSH session 
             SshMachineLocation sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "username", allconf.get("userName"), "config", sshConfig));
             

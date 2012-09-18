@@ -154,12 +154,17 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
      */
     public static class Builder {
         String user;
+        String privateKeyPassphrase;
         String privateKeyFile;
         String privateKeyData;
         List machines = Lists.newArrayList();
         public Builder user(String user) {
             this.user = user;
             return this;
+        }
+        public Builder keyPassphrase(String keyPassphrase) {
+            this.privateKeyPassphrase = keyPassphrase;
+            return this; 
         }
         public Builder keyFile(String keyFile) {
             this.privateKeyFile = keyFile;
@@ -179,6 +184,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         public Builder addAddress(String address) {
             Map config = MutableMap.of("address",  address);
             if (truth(user)) config.put("sshconfig.user", user);
+            if (truth(privateKeyPassphrase)) config.put("sshconfig.privateKeyPassphrase", privateKeyPassphrase);
             if (truth(privateKeyFile)) config.put("sshconfig.privateKeyFile", privateKeyFile);
             if (truth(privateKeyData)) config.put("sshconfig.privateKey", privateKeyData);
             add(new SshMachineLocation(config)); 
@@ -187,6 +193,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         public Builder addAddressMultipleTimes(String address, int n) {
             Map config = MutableMap.of("address", address);
             if (truth(user)) config.put("sshconfig.user", user);
+            if (truth(privateKeyPassphrase)) config.put("sshconfig.privateKeyPassphrase", privateKeyPassphrase);
             if (truth(privateKeyFile)) config.put("sshconfig.privateKeyFile", privateKeyFile);
             if (truth(privateKeyData)) config.put("sshconfig.privateKey", privateKeyData);
             for (int i=0; i<n; i++)
@@ -197,6 +204,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
             return new FixedListMachineProvisioningLocation(MutableMap.builder()
                     .put("machines", machines)
                     .put("user", user)
+                    .put("privateKeyPassphrase", privateKeyPassphrase)
                     .put("privateKeyFile", privateKeyFile)
                     .put("privateKeyData", privateKeyData)
                     .build());

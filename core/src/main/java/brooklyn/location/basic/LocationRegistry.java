@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
 import brooklyn.location.LocationResolver;
+import brooklyn.util.MutableMap;
 
 public class LocationRegistry {
 
@@ -37,6 +38,9 @@ public class LocationRegistry {
     }
 
     public Location resolve(String spec) {
+        return resolve(spec, new MutableMap());
+    }
+    public Location resolve(String spec, Map locationFlags) {
         int colon = spec.indexOf(':');
         String prefix = colon>=0 ? spec.substring(0, colon) : spec;
         LocationResolver resolver = resolvers.get(prefix);
@@ -46,7 +50,11 @@ public class LocationRegistry {
             resolver = resolvers.get("jclouds");
         }
         
-        if (resolver != null) {
+        if (resolver instanceof RegistryLocationResolver) {
+            return ((RegistryLocationResolver)resolver).newLocationFromString(spec, this, locationFlags);
+        } else if (resolver != null) {
+            if (!locationFlags.isEmpty())
+                log.warn("Ignoring location flags "+locationFlags+" when instantiating "+spec);
             return resolver.newLocationFromString(properties, spec);
         }
         
@@ -75,5 +83,8 @@ public class LocationRegistry {
         }
         return result;
     }
-    
+
+    public Map getProperties() {
+        return properties;
+    }
 }
