@@ -88,7 +88,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     /** properties which are passed to ssh */
-    public static final Collection<String> SSH_PROPS = ImmutableSet.of("logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData", "permissions", "sshTries", "env", "allocatePTY");
+    public static final Collection<String> SSH_PROPS = ImmutableSet.of("noStdoutLogging", "noStderrLogging", "logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData", "permissions", "sshTries", "env", "allocatePTY");
     //TODO prefer privateKeyData (confusion about whether other holds a file or data)
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");
@@ -247,8 +247,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // TODO submitCommands and submitScript which submit objects we can subsequently poll (cf JcloudsSshMachineLocation.submitRunScript)
     
     /** executes a set of commands, directly on the target machine (no wrapping in script).
-     * joined using ' ; ' by default.  
-     * set flag 'logPrefix' to have logging send to brooklyn.SSH logger.
+     * joined using ' ; ' by default.
+     * <p>
+     * Stdout and stderr will be logged automatically to brooklyn.SSH logger, unless the 
+     * flags 'noStdoutLogging' and 'noStderrLogging' are set. To set a logging prefix, use
+     * the flag 'logPrefix'.
      * <p>
      * Currently runs the commands in an interactive/login shell
      * by passing each as a line to bash. To terminate early, use:
@@ -284,8 +287,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     /** executes a set of commands, wrapped as a script sent to the remote machine.
-    * set flag 'logPrefix' to have logging send to brooklyn.SSH logger.
-    */
+     * <p>
+     * Stdout and stderr will be logged automatically to brooklyn.SSH logger, unless the 
+     * flags 'noStdoutLogging' and 'noStderrLogging' are set. To set a logging prefix, use
+     * the flag 'logPrefix'.
+     */
     public int execScript(String summaryForLogging, List<String> commands) {
         return execScript(MutableMap.<String,Object>of(), summaryForLogging, commands, MutableMap.<String,Object>of());
     }
@@ -323,18 +329,27 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         PipedOutputStream outE = null;
         StreamGobbler gO=null, gE=null;
         try {
-            if (truth(flags.get("logPrefix"))) {
+            String logPrefix = (flags.get("logPrefix") != null) ? ""+flags.get("logPrefix") : getAddress().getHostName();
+            
+            if (!truth(flags.get("noStdoutLogging"))) {
                 PipedInputStream insO = new PipedInputStream();
                 outO = new PipedOutputStream(insO);
+            
+                String stdoutLogPrefix = "["+(logPrefix != null ? logPrefix+":stdout" : "stdout")+"] ";
+                gO = new StreamGobbler(insO, (OutputStream) flags.get("out"), logSsh).setLogPrefix(stdoutLogPrefix);
+                gO.start();
+                
+                flags.put("out", outO);
+            }
+            
+            if (!truth(flags.get("noStdoutLogging"))) {
                 PipedInputStream insE = new PipedInputStream();
                 outE = new PipedOutputStream(insE);
             
-                gO = new StreamGobbler(insO, (OutputStream) flags.get("out"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stdout] ");
-                gE = new StreamGobbler(insE, (OutputStream) flags.get("err"), logSsh).setLogPrefix("["+flags.get("logPrefix")+":stderr] ");
-                gO.start();
+                String stderrLogPrefix = "["+(logPrefix != null ? logPrefix+":stderr" : "stderr")+"] ";
+                gE = new StreamGobbler(insE, (OutputStream) flags.get("err"), logSsh).setLogPrefix(stderrLogPrefix);
                 gE.start();
                 
-                flags.put("out", outO);
                 flags.put("err", outE);
             }
             
