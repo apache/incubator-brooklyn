@@ -345,15 +345,35 @@ public class TestUtils {
         }
     }
 
-    public static void assertFails(Closure c) {
+    public static void assertFails(Runnable c) {
+        assertFailsWith(c, (Predicate)null);
+    }
+    public static void assertFailsWith(Runnable c, Closure exceptionChecker) {
+        assertFailsWith(c, exceptionChecker as Predicate);
+    }
+    public static void assertFailsWith(Runnable c, final Class<? extends Throwable> validException, final Class<? extends Throwable> ...otherValidExceptions) {
+        assertFailsWith(c, { e -> 
+            if (validException.isInstance(e)) return true;
+            if (otherValidExceptions.find {it.isInstance(e)}) return true;
+            List expectedTypes = [validException];
+            expectedTypes.addAll(Arrays.asList(otherValidExceptions));
+            fail("Test threw exception of unexpected type "+e.getClass()+"; expecting "+expectedTypes);             
+        });
+    }
+    public static void assertFailsWith(Runnable c, Predicate<Throwable> exceptionChecker) {
         boolean failed = false;
         try {
-            c.call();
+            c.run();
         } catch (Throwable e) {
             failed = true;
+            if (exceptionChecker!=null) {
+                if (!exceptionChecker.apply(e)) {
+                    fail("Test threw invalid exception: "+e);
+                }
+            }
             log.debug("Test for exception successful ("+e+")");
         }
-        if (!failed) fail("Code that should have thrown exception did not do so!");
+        if (!failed) fail("Test code should have thrown exception but did not");
     }
     
 }

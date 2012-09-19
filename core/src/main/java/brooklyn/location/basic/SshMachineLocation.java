@@ -71,7 +71,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         public int exec(SshTool ssh, Map<String,?> flags, List<String> cmds, Map<String,?> env);
     }
     
-    @SetFromFlag("username")
+    @SetFromFlag("user")
     String user;
 
     @SetFromFlag("privateKeyData")
@@ -115,11 +115,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
         super.configure(properties);
 
+        if (properties.containsKey("username")) {
+            LOG.warn("Using deprecated ssh machine property 'username': use 'user' instead", new Throwable("source of deprecated ssh 'username' invocation"));
+            user = ""+properties.get("username");
+        }
         Preconditions.checkNotNull(address, "address is required for SshMachineLocation");
-        String host = (truth(user) ? user+"@" : "") + address.getHostName();
         
         if (name == null) {
-            name = host;
+            name = (truth(user) ? user+"@" : "") + address.getHostName();
         }
         if (getHostGeoInfo() == null) {
             Location parentLocation = getParentLocation();

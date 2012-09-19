@@ -69,7 +69,8 @@ Configuration is typically set in `~/.brooklyn/brooklyn.properties` using keys s
     brooklyn.location.named.company-aws.privateKeyFile=~/.ssh/public_clouds/company_aws_id_rsa
 
     # and a "named" location which uses a fixed set of machines (deploy to named:prod1)
-    brooklyn.location.named.prod1=byon:(hosts="10.9.0.1,10.9.0.2,10.9.0.3,10.9.0.4")
+    # note powerful byon syntax, optionally including globs and per-machine user override
+    brooklyn.location.named.prod1=byon:(hosts="10.9.0.1,10.9.0.2,produser2@10.9.1.{10,11,20-29}")
     brooklyn.location.named.prod1.user=produser      
     brooklyn.location.named.prod1.privateKeyFile=~/.ssh/produser_id_rsa
     brooklyn.location.named.prod1.privateKeyPassphrase=s3cr3tCOMPANYpassphrase
