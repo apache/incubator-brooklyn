@@ -7,11 +7,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import brooklyn.location.Location;
-import brooklyn.location.LocationResolver;
 import brooklyn.util.KeyValueParser;
+import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -25,7 +24,7 @@ import com.google.common.collect.Sets;
  * 
  * @author alex, aled
  */
-public class LocalhostResolver implements LocationResolver {
+public class LocalhostResolver implements RegistryLocationResolver {
     
     public static final String LOCALHOST = "localhost";
     
@@ -34,7 +33,21 @@ public class LocalhostResolver implements LocationResolver {
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("name");
 
     @Override
+    public String getPrefix() {
+        return LOCALHOST;
+    }
+
+    @Override
     public Location newLocationFromString(Map properties, String spec) {
+        return newLocationFromString(spec, null, properties, new MutableMap());
+    }
+    
+    @Override
+    public Location newLocationFromString(String spec, LocationRegistry registry, Map locationFlags) {
+        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
+    }
+    
+    protected Location newLocationFromString(String spec, LocationRegistry registry, Map properties, Map locationFlags) {
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like localhost or localhost(name=abc)");
@@ -52,7 +65,16 @@ public class LocalhostResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
         }
 
-        Map<String,Object> flags = Maps.newLinkedHashMap();
+        MutableMap flags = new MutableMap();
+        // legacy syntax
+        flags.addIfNotNull("privateKeyFile", properties.get("brooklyn.localhost.private-key-file"));
+        flags.addIfNotNull("privateKeyPassphrase", properties.get("brooklyn.localhost.private-key-passphrase"));
+        flags.addIfNotNull("publicKeyFile", properties.get("brooklyn.localhost.public-key-file"));
+        // now prefer these names, for consistency (and sanity)
+        flags.addIfNotNull("privateKeyFile", properties.get("brooklyn.localhost.privateKeyFile"));
+        flags.addIfNotNull("privateKeyPassphrase", properties.get("brooklyn.localhost.privateKeyPassphrase"));
+        flags.addIfNotNull("publicKeyFile", properties.get("brooklyn.localhost.publicKeyFile"));
+        flags.add(locationFlags);
         if (namePart != null) {
             flags.put("name", namePart);
         }
@@ -60,8 +82,4 @@ public class LocalhostResolver implements LocationResolver {
         return new LocalhostMachineProvisioningLocation(flags);
     }
     
-    @Override
-    public String getPrefix() {
-        return LOCALHOST;
-    }
 }

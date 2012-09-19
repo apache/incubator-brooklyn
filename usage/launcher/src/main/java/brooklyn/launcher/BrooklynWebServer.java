@@ -97,11 +97,7 @@ public class BrooklynWebServer {
     
     /** interface/address where this server binds */
     public InetAddress getAddress() {
-        try {
-            return InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            throw Throwables.propagate(e);
-        }
+        return LocalhostMachineProvisioningLocation.getLocalhostInetAddress();
     }
     
     /** URL for accessing this web server (root context) */

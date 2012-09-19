@@ -12,7 +12,7 @@ import java.util.Map;
 
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.internal.StringEscapeUtils;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 /**
  * The SSH implementation of the {@link VanillaJavaAppDriver}.
@@ -112,7 +112,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
         StringBuffer sb = new StringBuffer();
         for(Iterator<String> it = args.iterator();it.hasNext();){
             String arg = it.next();
-            StringEscapeUtils.assertValidForDoubleQuotingInBash(arg);
+            BashStringEscapes.assertValidForDoubleQuotingInBash(arg);
             sb.append(format("\"%s\"",arg));
             if(it.hasNext()){
                 sb.append(" ");

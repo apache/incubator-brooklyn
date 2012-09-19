@@ -1,6 +1,6 @@
 package brooklyn.entity.basic;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 
 

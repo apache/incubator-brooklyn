@@ -3,6 +3,7 @@ package brooklyn.location.basic;
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,8 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.text.WildcardGlobs;
+import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -148,18 +151,23 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
                 addAddress("10.0.0.1").
                 addAddress("10.0.0.2").
                 addAddress("10.0.0.3").
-                addAddressMultipleTimes("127.0.0.1", 5).
+                addAddressMultipleTimes("me@127.0.0.1", 5).
                 build();
      * </code>
      */
     public static class Builder {
         String user;
+        String privateKeyPassphrase;
         String privateKeyFile;
         String privateKeyData;
         List machines = Lists.newArrayList();
         public Builder user(String user) {
             this.user = user;
             return this;
+        }
+        public Builder keyPassphrase(String keyPassphrase) {
+            this.privateKeyPassphrase = keyPassphrase;
+            return this; 
         }
         public Builder keyFile(String keyFile) {
             this.privateKeyFile = keyFile;
@@ -177,26 +185,45 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
             return this;
         }
         public Builder addAddress(String address) {
-            Map config = MutableMap.of("address",  address);
-            if (truth(user)) config.put("sshconfig.user", user);
-            if (truth(privateKeyFile)) config.put("sshconfig.privateKeyFile", privateKeyFile);
-            if (truth(privateKeyData)) config.put("sshconfig.privateKey", privateKeyData);
-            add(new SshMachineLocation(config)); 
-            return this;
+            return addAddresses(address);
         }
         public Builder addAddressMultipleTimes(String address, int n) {
+            for (int i=0; i<n; i++)
+                addAddresses(address);
+            return this;
+        }
+        public Builder addAddresses(String address1, String ...others) {
+            List<String> addrs = new ArrayList<String>();
+            addrs.addAll(WildcardGlobs.getGlobsAfterBraceExpansion("{"+address1+"}",
+                    true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR));
+            for (String address: others) 
+                addrs.addAll(WildcardGlobs.getGlobsAfterBraceExpansion("{"+address+"}",
+                        true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR));
+            for (String addr: addrs)
+                add(new SshMachineLocation(makeConfig(addr))); 
+            return this;
+        }
+        private Map makeConfig(String address) {
+            String user = this.user;
+            if (address.contains("@")) {
+                user = address.substring(0, address.indexOf("@"));
+                address = address.substring(address.indexOf("@")+1);
+            }
             Map config = MutableMap.of("address", address);
-            if (truth(user)) config.put("sshconfig.user", user);
+            if (truth(user)) {
+                config.put("user", user);
+                config.put("sshconfig.user", user);
+            }
+            if (truth(privateKeyPassphrase)) config.put("sshconfig.privateKeyPassphrase", privateKeyPassphrase);
             if (truth(privateKeyFile)) config.put("sshconfig.privateKeyFile", privateKeyFile);
             if (truth(privateKeyData)) config.put("sshconfig.privateKey", privateKeyData);
-            for (int i=0; i<n; i++)
-                add(new SshMachineLocation(new MutableMap(config))); 
-            return this;
+            return config;
         }
         public FixedListMachineProvisioningLocation build() {
             return new FixedListMachineProvisioningLocation(MutableMap.builder()
                     .put("machines", machines)
                     .put("user", user)
+                    .put("privateKeyPassphrase", privateKeyPassphrase)
                     .put("privateKeyFile", privateKeyFile)
                     .put("privateKeyData", privateKeyData)
                     .build());

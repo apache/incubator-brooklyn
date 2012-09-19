@@ -54,9 +54,9 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder;
-import brooklyn.util.IdGenerator;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.Repeater;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
@@ -228,7 +228,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 if (truth(unusedConf.remove("customCredentials"))) 
                     customCredentials = (LoginCredentials) allconf.get("customCredentials");
          
-                // this does not apply to creating a password
+                // following values are copies pass-through, no change
+                unusedConf.remove("privateKeyPassphrase");
                 unusedConf.remove("password");
                 
                 unusedConf.remove("provider");
@@ -269,7 +270,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     //also, we need a way to define imageId (and others?) with a specific location
         
     public static final Collection<String> SUPPORTED_BASIC_PROPERTIES = ImmutableSet.of(
-        "provider", "identity", "credential", "userName", "publicKeyFile", "privateKeyFile", 
+        "provider", "identity", "credential", "userName", "publicKeyFile", "privateKeyFile", "privateKeyPassphrase", 
         "sshPublicKey", "sshPrivateKey", "rootSshPrivateKey", "rootSshPublicKey", "groupId", 
         "providerLocationId", "provider");
     
@@ -412,6 +413,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
             } else if (node.getCredentials().getPassword() != null) {
                 sshConfig.put("password", node.getCredentials().getPassword());
+            }
+            if (truth(setup.allconf.get("privateKeyPassphrase"))) {
+                // not sure jclouds supports this, but we try, and our ssh routines should use it
+                sshConfig.put("privateKeyPassphrase", setup.allconf.get("privateKeyPassphrase"));
             }
             if (truth(setup.allconf.get("sshPublicKeyData"))) {
                 sshConfig.put("sshPublicKeyData", setup.allconf.get("sshPublicKeyData"));
@@ -582,7 +587,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static String generateGroupId() {
         // In jclouds 1.5, there are strict rules for group id: it must be DNS compliant, and no more than 15 characters
         String user = System.getProperty("user.name");
-        String rand = IdGenerator.makeRandomId(2);
+        String rand = Identifiers.makeRandomId(2);
         String result = "br-"+(user.substring(0,Math.min(user.length(),5)))+"-"+rand;
         return result.toLowerCase();
     }
@@ -864,6 +869,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath())); 
             if (truth(allconf.get("sshPrivateKeyData"))) 
                 sshConfig.put("privateKeyData", allconf.get("sshPrivateKeyData"));
+            if (truth(allconf.get("privateKeyPassphrase"))) 
+                sshConfig.put("privateKeyPassphrase", allconf.get("privateKeyPassphrase"));
             // TODO messy way to get an SSH session 
             SshMachineLocation sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "username", allconf.get("userName"), "config", sshConfig));
             

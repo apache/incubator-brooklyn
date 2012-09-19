@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.location.Location;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.basic.jclouds.CredentialsFromEnv;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
@@ -21,7 +22,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class JcloudsResolver implements LocationResolver {
+public class JcloudsResolver implements RegistryLocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(JcloudsResolver.class);
     
@@ -48,6 +49,15 @@ public class JcloudsResolver implements LocationResolver {
     
     @Override
     public JcloudsLocation newLocationFromString(Map properties, String spec) {
+        return newLocationFromString(spec, null, properties, new MutableMap());
+    }
+    
+    @Override
+    public JcloudsLocation newLocationFromString(String spec, LocationRegistry registry, Map locationFlags) {
+        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
+    }
+    
+    protected JcloudsLocation newLocationFromString(String spec, LocationRegistry registry, Map properties, Map locationFlags) {
         String provider=spec, region=null;
         int split = spec.indexOf(':');
         if (split<0) {
@@ -78,18 +88,23 @@ public class JcloudsResolver implements LocationResolver {
         
         Map jcloudsProperties = new MutableMap(new CredentialsFromEnv(BrooklynProperties.Factory.newDefault().addFromMap(properties), provider).asMap());
         
-        // TODO Adding properties here, so user can programmatically pass things through to JcloudsLocation for provisioning
+        // adding properties here, so user can programmatically pass things through to JcloudsLocation for provisioning;
+        // they are filtered by location, in the factory constructor below
         jcloudsProperties.putAll(properties);
         
+        JcloudsLocation l;
         if (PROVIDERS_LOADER.contains(provider)) {
             // providers from ServiceLoader take a location (endpoint already configured)
-            return new JcloudsLocationFactory(jcloudsProperties).newLocation(region);
+            l = new JcloudsLocationFactory(jcloudsProperties).newLocation(region);
         } else {
             // other "providers" are APIs (jclouds 1.4 way of detecting, there's an Apis class is 1.5)
             // and so take an _endpoint_ (but not a location)
             jcloudsProperties.put(Constants.PROPERTY_ENDPOINT, region);
-            return new JcloudsLocationFactory(jcloudsProperties).newLocation(null);          
+            l = new JcloudsLocationFactory(jcloudsProperties).newLocation(null);          
         }
+        // location flags trump other properties
+        l.getConf().putAll(locationFlags);
+        return l;
     }
     
     @Override

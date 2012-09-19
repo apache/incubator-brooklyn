@@ -2,10 +2,14 @@ package brooklyn.event.basic;
 
 import java.util.Map;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 
+@SuppressWarnings("rawtypes")
 public class SubElementConfigKey<T> extends BasicConfigKey<T> {
+    
+    private static final long serialVersionUID = -1587240876351450665L;
+    
     public final ConfigKey parent;
 
     public SubElementConfigKey(ConfigKey parent, Class<T> type, String name) {

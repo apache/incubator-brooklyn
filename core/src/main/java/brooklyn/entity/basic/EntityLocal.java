@@ -2,9 +2,9 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.entity.ConfigKey;
-import brooklyn.entity.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;

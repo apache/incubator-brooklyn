@@ -11,7 +11,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.util.IdGenerator
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets
 import com.google.common.base.Strings
@@ -36,8 +36,8 @@ public class SshjToolLiveTest {
     
     @BeforeMethod(alwaysRun=true)//(groups = [ "Integration" ])
     public void setUp() throws Exception {
-        localFilePath = "/tmp/sshj-test-local-"+IdGenerator.makeRandomId(8)
-        remoteFilePath = "/tmp/sshj-test-remote-"+IdGenerator.makeRandomId(8)
+        localFilePath = "/tmp/sshj-test-local-"+Identifiers.makeRandomId(8)
+        remoteFilePath = "/tmp/sshj-test-remote-"+Identifiers.makeRandomId(8)
         filesCreated = new ArrayList<String>()
         filesCreated.add(localFilePath)
         filesCreated.add(remoteFilePath)
@@ -347,8 +347,8 @@ public class SshjToolLiveTest {
     @Test(enabled=false, groups = [ "Integration" ])
     public void testCreateFileInNonExistantDir() {
         String contents = "echo hello world!\n"
-        String remoteFileDirPath = "/tmp/sshj-test-remote-dir-"+IdGenerator.makeRandomId(8)
-        String remoteFileInDirPath = remoteFileDirPath + File.separator + "sshj-test-remote-"+IdGenerator.makeRandomId(8)
+        String remoteFileDirPath = "/tmp/sshj-test-remote-dir-"+Identifiers.makeRandomId(8)
+        String remoteFileInDirPath = remoteFileDirPath + File.separator + "sshj-test-remote-"+Identifiers.makeRandomId(8)
         filesCreated.add(remoteFileInDirPath)
         filesCreated.add(remoteFileDirPath)
         

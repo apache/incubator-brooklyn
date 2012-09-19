@@ -1,12 +1,10 @@
 package brooklyn.event.adapter;
 
-import javax.net.ssl.HttpsURLConnection
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.util.internal.StringEscapeUtils
-import brooklyn.util.internal.TrustingSslSocketFactory;
+import brooklyn.util.internal.TrustingSslSocketFactory
+import brooklyn.util.text.StringEscapes
 
 protected class HttpPollHelper extends AbstractPollHelper {
 	public static final Logger log = LoggerFactory.getLogger(HttpPollHelper.class);
@@ -23,8 +21,8 @@ protected class HttpPollHelper extends AbstractPollHelper {
 		String url = adapter.baseUrl;
 		if (adapter.urlVars) {
 			def args = adapter.urlVars.collect { k,v ->
-                StringEscapeUtils.escapeHttpUrl(k.toString()) +
-                    (v != null ? "=" + StringEscapeUtils.escapeHttpUrl(v.toString()) : "")
+                StringEscapes.escapeHttpUrl(k.toString()) +
+                    (v != null ? "=" + StringEscapes.escapeHttpUrl(v.toString()) : "")
 			}
             url += "?" + args.join("&")
 		}

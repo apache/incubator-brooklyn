@@ -3,6 +3,7 @@ package brooklyn.entity;
 import java.io.Serializable;
 import java.util.Set;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.event.Sensor;
 
 /**

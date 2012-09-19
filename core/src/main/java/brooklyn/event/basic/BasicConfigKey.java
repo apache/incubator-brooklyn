@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.Tasks;
@@ -84,13 +84,12 @@ public class BasicConfigKey<T> implements ConfigKey<T>, ConfigKeySelfExtracting<
         if (!(obj instanceof BasicConfigKey)) return false;
         BasicConfigKey<?> o = (BasicConfigKey<?>) obj;
         
-        return Objects.equal(name,  o.name) && Objects.equal(typeName,  o.typeName) && 
-                Objects.equal(description,  o.description) && Objects.equal(defaultValue,  o.defaultValue);
+        return Objects.equal(name,  o.name);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hashCode(name, type, typeName, description, defaultValue);
+        return Objects.hashCode(name);
     }
     
     @Override

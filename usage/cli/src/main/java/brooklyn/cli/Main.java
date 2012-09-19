@@ -18,6 +18,8 @@ import org.iq80.cli.Help;
 import org.iq80.cli.Option;
 import org.iq80.cli.OptionType;
 import org.iq80.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
@@ -26,29 +28,22 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.CommandLineLocations;
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.text.QuotedStringTokenizer;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Main {
 
     // Error codes
     public static final int PARSE_ERROR = 1;
     public static final int EXECUTION_ERROR = 2;
-
-    private static final Splitter LOCATIONS_SPLITTER = Splitter.on(',')
-            .trimResults()
-            .omitEmptyStrings();
 
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
@@ -158,6 +153,10 @@ public class Main {
             if (verbose) {
                 System.out.println("Launching brooklyn app: "+app+" in "+locations);
             }
+            if (locations==null) {
+                log.warn("Locations parameter not supplied. Assuming empty list.");
+                locations = "";
+            }
             BrooklynLauncher launcher = BrooklynLauncher.newLauncher();
             
             ResourceUtils utils = new ResourceUtils(this);
@@ -184,7 +183,7 @@ public class Main {
             }
             
             // Figure out the brooklyn location(s) where to launch the application
-            Iterable<String> parsedLocations = LOCATIONS_SPLITTER.split(locations);
+            Iterable<String> parsedLocations = new QuotedStringTokenizer(locations).remainderAsList();
             log.info("Parsed user provided location(s): {}",Lists.newArrayList(parsedLocations));
             List<Location> brooklynLocations = new LocationRegistry().getLocationsById(
                     (parsedLocations==null || Iterables.isEmpty(parsedLocations)) ?

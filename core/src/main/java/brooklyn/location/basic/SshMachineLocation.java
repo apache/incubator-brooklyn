@@ -71,7 +71,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         public int exec(SshTool ssh, Map<String,?> flags, List<String> cmds, Map<String,?> env);
     }
     
-    @SetFromFlag("username")
+    @SetFromFlag("user")
     String user;
 
     @SetFromFlag("privateKeyData")
@@ -88,8 +88,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     /** properties which are passed to ssh */
-    public static final Collection<String> SSH_PROPS = ImmutableSet.of("noStdoutLogging", "noStderrLogging", "logPrefix", "out", "err", "password", "keyFiles", "publicKey", "privateKey", "privateKeyData", "permissions", "sshTries", "env", "allocatePTY");
-    //TODO prefer privateKeyData (confusion about whether other holds a file or data)
+    public static final Collection<String> SSH_PROPS = ImmutableSet.of(
+            "noStdoutLogging", "noStderrLogging", "logPrefix", "out", "err", "password", 
+            "keyFiles", "publicKey", "privateKey", "privateKeyPassphrase", "privateKeyFile", "privateKeyData", 
+            //TODO prefer privateKeyData/privateKeyFile (confusion about whether other holds a file or data)
+            "permissions", "sshTries", "env", "allocatePTY");
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");
     
@@ -112,11 +115,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
         super.configure(properties);
 
+        if (properties.containsKey("username")) {
+            LOG.warn("Using deprecated ssh machine property 'username': use 'user' instead", new Throwable("source of deprecated ssh 'username' invocation"));
+            user = ""+properties.get("username");
+        }
         Preconditions.checkNotNull(address, "address is required for SshMachineLocation");
-        String host = (truth(user) ? user+"@" : "") + address.getHostName();
         
         if (name == null) {
-            name = host;
+            name = (truth(user) ? user+"@" : "") + address.getHostName();
         }
         if (getHostGeoInfo() == null) {
             Location parentLocation = getParentLocation();

@@ -1,7 +1,7 @@
 package brooklyn.event.basic;
 
-import brooklyn.entity.ConfigKey;
-import brooklyn.entity.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;

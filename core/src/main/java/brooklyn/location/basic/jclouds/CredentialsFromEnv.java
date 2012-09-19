@@ -62,13 +62,13 @@ public class CredentialsFromEnv {
     public CredentialsFromEnv(String provider) {
         this(MutableMap.of(), provider);
     }
-    public CredentialsFromEnv(Map properties, String provider) {
-        this(BrooklynProperties.Factory.newWithSystemAndEnvironment().addFromMap(properties), provider);
+    public CredentialsFromEnv(@SuppressWarnings("rawtypes") Map properties, String provider) {
+        this(BrooklynProperties.Factory.newDefault().addFromMap(properties), provider);
     }
     public CredentialsFromEnv(BrooklynProperties sysProps, String provider) {
         this.sysProps = sysProps;
         props.put("provider", provider);
-
+        
         for (String it : JcloudsLocation.getAllSupportedProperties()) {
             String v = getProviderSpecificValue(convertFromCamelToProperty(it));
             if (v!=null) props.put(it, v);
@@ -79,18 +79,24 @@ public class CredentialsFromEnv {
         props.put("credential", getRequiredProviderSpecificValue("credential"));
         
         // TODO do these need to be required?:
-        String privateKeyFile = elvis(findProviderSpecificValueFile("private-key-file"),
+        String privateKeyFile = elvis(findProviderSpecificValueFile("privateKeyFile"),
                 (truth(props.get("noDefaultSshKeys")) || truth(sysProps.get("noDefaultSshKeys"))  
                         ? null : pickExistingFile(ImmutableList.of("~/.ssh/id_rsa", "~/.ssh/id_dsa"), null)));
         if (privateKeyFile != null) props.put("privateKeyFile", privateKeyFile);
         
-        String publicKeyFile = elvis(findProviderSpecificValueFile("public-key-file"),
+        String publicKeyFile = elvis(findProviderSpecificValueFile("publicKeyFile"),
                 (truth(props.get("noDefaultSshKeys")) || truth(sysProps.get("noDefaultSshKeys")) || !truth(privateKeyFile)) 
                         ? null : pickExistingFile(ImmutableList.of(privateKeyFile+".pub")));
         if (publicKeyFile != null) props.put("publicKeyFile", publicKeyFile);
+        
+        String privateKeyPassphrase = findProviderSpecificValueFile("passphrase");
+        if (privateKeyPassphrase != null) props.put("privateKeyPassphrase", privateKeyPassphrase);
     }
 
+    /** provider is the jclouds provider, or null if not jclouds */
     public String getProvider() { return (String) props.get("provider"); }
+    /** location name is a user-suppliable name for the location, or null if no location */
+    public String getLocationName() { return (String) props.get("locationName"); }
     public String getIdentity() { return (String) props.get("identity"); }
     public String getCredential() { return (String) props.get("credential"); }
     public String getPublicKeyFile() { return (String) props.get("publicKeyFile"); }
@@ -105,20 +111,25 @@ public class CredentialsFromEnv {
     protected String getProviderSpecificValue(String type) {
         return getProviderSpecificValue(ImmutableMap.of(), type);
     }
-    protected String getProviderSpecificValue(Map flags, String type) {
+    protected String getProviderSpecificValue(@SuppressWarnings("rawtypes") Map flags, String typeCamel) {
+        String type = convertFromCamelToProperty(typeCamel);
         return sysProps.getFirst(flags,
-            "brooklyn.jclouds."+getProvider()+"."+type,
-            "JCLOUDS_"+convertFromPropertyToShell(getProvider())+"_"+convertFromPropertyToShell(type),
-            "JCLOUDS_"+convertFromPropertyToShell(type)+"_"+convertFromPropertyToShell(getProvider()),
-            "brooklyn.jclouds."+type,
-            "JCLOUDS_"+convertFromPropertyToShell(type) );
+            // this is now preferred:
+            getProvider() != null ? "brooklyn.jclouds."+getProvider()+"."+typeCamel : null,
+            "brooklyn.jclouds."+typeCamel,
+            // legacy:
+            getProvider() != null ? "brooklyn.jclouds."+getProvider()+"."+type : null,
+            getProvider() != null ? "JCLOUDS_"+convertFromPropertyToShell(getProvider())+"_"+convertFromPropertyToShell(type) : null,
+            getProvider() != null ? "JCLOUDS_"+convertFromPropertyToShell(type)+"_"+convertFromPropertyToShell(getProvider()) : null,
+            getProvider() != null ? "brooklyn.jclouds."+type : null,
+            getProvider() != null ? "JCLOUDS_"+convertFromPropertyToShell(type) : null );
     }
 
     protected String pickExistingFile(List<String> candidates) {
         String result = pickExistingFile(candidates, null);
         if (result!=null) return result;
         throw new IllegalStateException("Unable to locate "+
-                (candidates.size()>1 ? "any of the candidate files "+candidates : "file "+candidates.get(0) ) +
+                (candidates.size()!=1 ? "any of the candidate files "+candidates : "file "+candidates.get(0) ) +
                 "; set brooklyn.jclouds."+getProvider()+".public-key-file" );
  
     }
@@ -151,10 +162,10 @@ public class CredentialsFromEnv {
         }
         File ff = new File(f);
         if (ff.exists()) return f;
-        throw new IllegalStateException("Unable to locate SSH key file "+f+
-                "; set brooklyn.jclouds."+getProvider()+".public-key-file" );
+        throw new IllegalStateException("Unable to find required file "+f+" for "+getProvider()+" "+type);
     }
     
+    @SuppressWarnings("rawtypes")
     static Set WARNED_MISSING_KEY_FILES = Sets.newLinkedHashSet();
     
     protected static String convertFromPropertyToShell(String word) {
@@ -182,6 +193,7 @@ public class CredentialsFromEnv {
         for (String n : JcloudsLocation.getAllSupportedProperties()) {
             Object fv = f2.remove(n);
             if (fv!=null) {
+                f2.put("brooklyn.jclouds."+provider+"."+n, fv);
                 f2.put("brooklyn.jclouds."+provider+"."+convertFromCamelToProperty(n), fv);
             }
         }
@@ -189,6 +201,7 @@ public class CredentialsFromEnv {
         return new CredentialsFromEnv(f2, provider);        
     }
     
+    @SuppressWarnings("rawtypes")
     public Map asMap() {
         return props;
     }

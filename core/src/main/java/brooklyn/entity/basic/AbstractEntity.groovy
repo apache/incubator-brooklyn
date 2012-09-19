@@ -8,14 +8,14 @@ import java.util.concurrent.ExecutionException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.config.ConfigKey
+import brooklyn.config.ConfigKey.HasConfigKey
 import brooklyn.enricher.basic.AbstractEnricher
 import brooklyn.entity.Application
-import brooklyn.entity.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.EntityType
 import brooklyn.entity.Group
-import brooklyn.entity.ConfigKey.HasConfigKey
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
 import brooklyn.entity.basic.EntityReferences.EntityReference
 import brooklyn.event.AttributeSensor
@@ -36,9 +36,9 @@ import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
-import brooklyn.util.IdGenerator
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.task.BasicExecutionContext
+import brooklyn.util.text.Identifiers
 
 import com.google.common.collect.Iterables
 
@@ -64,7 +64,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.removed", "Sensor dynamically removed from entity")
 
-    final String id = IdGenerator.makeRandomId(8);
+    final String id = Identifiers.makeRandomId(8);
     String displayName
     
     EntityReference<Entity> owner
@@ -93,7 +93,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
      */
-    protected final ConfigMap configsInternal = new ConfigMap(this)
+    protected final brooklyn.config.ConfigMap configsInternal = new EntityConfigMap(this)
 
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
@@ -175,7 +175,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
 
         displayName = flags.remove('displayName') ?: displayName;
-        
+
         // allow config keys, and fields, to be set from these flags if they have a SetFromFlag annotation
         flags = FlagUtils.setConfigKeysFromFlags(flags, this);
         flags = FlagUtils.setFieldsFromFlags(flags, this);
@@ -183,10 +183,13 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 		if (displayName==null)
 			displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)
 		
+        // all config keys specified in map should be set as config
         for (Iterator fi = flags.iterator(); fi.hasNext(); ) {
             Map.Entry entry = fi.next();
-            if (entry.key in ConfigKey) {
-                setConfigEvenIfOwned(entry.key, entry.value)
+            Object k = entry.key;
+            if (k in HasConfigKey) k = ((HasConfigKey)k).getConfigKey();
+            if (k in ConfigKey) {
+                setConfigEvenIfOwned(k, entry.value);
                 fi.remove();
             }
         }
@@ -454,11 +457,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     void refreshInheritedConfigOfChildren() {
         ownedChildren.get().each {
-            it.refreshInheritedConfig()
+            ((AbstractEntity)it).refreshInheritedConfig()
         }
     }
 
-    @Override
+    public brooklyn.config.ConfigMap getConfigMap() {
+        return configsInternal;
+    }
+    
     public Map<ConfigKey,Object> getAllConfig() {
         return configsInternal.getAllConfig();
     }

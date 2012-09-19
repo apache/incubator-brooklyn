@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigMap.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
@@ -32,6 +34,8 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public static final String EFFECTOR_TAG = "EFFECTOR";
 
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
+
+    protected BrooklynProperties configMap = BrooklynProperties.Factory.newDefault();
     
     public long getTotalEffectorInvocations() {
         return totalEffectorInvocationCount.get();
@@ -208,4 +212,9 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public abstract void addEntitySetListener(CollectionChangeListener<Entity> listener);
 
     public abstract void removeEntitySetListener(CollectionChangeListener<Entity> listener);
+    
+    @Override
+    public StringConfigMap getConfig() {
+        return configMap;
+    }
 }

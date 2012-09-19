@@ -1,17 +1,17 @@
 package brooklyn.util.task;
 
 import brooklyn.management.TaskStub;
-import brooklyn.util.IdGenerator;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Objects;
 
 public class BasicTaskStub implements TaskStub {
-    private final long idCode  = IdGenerator.randomLong();
+    private final long idCode  = Identifiers.randomLong();
     
     private transient String idCache = null;
     public String getId() {
         if (idCache!=null) return idCache;
-        idCache = IdGenerator.getBase64IdFromValue(idCode);
+        idCache = Identifiers.getBase64IdFromValue(idCode);
         return idCache;
     }
 

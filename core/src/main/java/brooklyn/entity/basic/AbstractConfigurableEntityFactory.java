@@ -1,6 +1,6 @@
 package brooklyn.entity.basic;
 
-import brooklyn.entity.ConfigKey;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 
 import java.util.HashMap;
@@ -23,13 +23,21 @@ public abstract class AbstractConfigurableEntityFactory<T extends Entity> implem
         return this;
     }
 
-    public AbstractConfigurableEntityFactory<T> setConfig(ConfigKey key, Object value) {
+    public AbstractConfigurableEntityFactory<T> configure(ConfigKey key, Object value) {
         config.put(key, value);
         return this;
     }
 
-    public AbstractConfigurableEntityFactory<T> setConfig(ConfigKey.HasConfigKey key, Object value) {
+    public AbstractConfigurableEntityFactory<T> configure(ConfigKey.HasConfigKey key, Object value) {
         return setConfig(key.getConfigKey(), value);
+    }
+
+    public AbstractConfigurableEntityFactory<T> setConfig(ConfigKey key, Object value) {
+        return configure(key, value);
+    }
+
+    public AbstractConfigurableEntityFactory<T> setConfig(ConfigKey.HasConfigKey key, Object value) {
+        return configure(key.getConfigKey(), value);
     }
 
     public T newEntity(Entity owner){

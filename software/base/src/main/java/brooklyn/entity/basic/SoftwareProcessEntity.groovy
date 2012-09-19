@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.ConfigKey
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity
 import brooklyn.entity.drivers.DriverDependentEntity
 import brooklyn.entity.trait.Startable
@@ -217,6 +217,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             machine = location.obtain(flags);
         }
 		if (machine == null) throw new NoMachinesAvailableException(location)
+		if (LOG.isDebugEnabled())
+		    LOG.debug("SoftwareProcessEntity {} obtained new location instance {}, details {}", this, machine,
+		            machine.getUser()+":"+Entities.sanitize(machine.getConfig()))
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("SoftwareProcessEntity {} obtained a new location instance {}, now preparing process there", this, machine)
 		startInLocation(machine)

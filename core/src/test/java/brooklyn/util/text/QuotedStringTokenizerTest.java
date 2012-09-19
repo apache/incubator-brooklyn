@@ -3,7 +3,7 @@
  * Supplied under license http://www.cloudsoftcorp.com/license/montereyDeveloperEdition
  * or such subsequent license agreed between Cloudsoft Corporation Ltd and the licensee.
  */
-package brooklyn.util;
+package brooklyn.util.text;
 
 import static org.testng.Assert.assertEquals;
 
@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**

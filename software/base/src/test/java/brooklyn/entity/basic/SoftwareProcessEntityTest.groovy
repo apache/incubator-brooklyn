@@ -3,8 +3,8 @@ package brooklyn.entity.basic;
 import org.testng.Assert
 import org.testng.annotations.Test
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application
-import brooklyn.entity.ConfigKey
 import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation

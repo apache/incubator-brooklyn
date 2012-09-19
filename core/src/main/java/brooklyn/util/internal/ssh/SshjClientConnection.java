@@ -27,6 +27,7 @@ import java.io.IOException;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.keyprovider.OpenSSHKeyFile;
+import net.schmizz.sshj.userauth.password.PasswordUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class SshjClientConnection implements SshAction<SSHClient> {
         protected HostAndPort hostAndPort;
         protected String username;
         protected String password;
+        protected String privateKeyPassphrase;
         protected String privateKeyData;
         protected File privateKeyFile;
         protected int connectTimeout;
@@ -76,6 +78,11 @@ public class SshjClientConnection implements SshAction<SSHClient> {
             return this;
         }
 
+        public Builder privateKeyPassphrase(String val) {
+            this.privateKeyPassphrase = val;
+            return this;
+        }
+        
         public Builder privateKeyData(String val) {
             this.privateKeyData = val;
             return this;
@@ -114,6 +121,7 @@ public class SshjClientConnection implements SshAction<SSHClient> {
     private final HostAndPort hostAndPort;
     private final String username;
     private final String password;
+    private final String privateKeyPassphrase;
     private final String privateKeyData;
     private final File privateKeyFile;
     private final boolean strictHostKeyChecking;
@@ -126,6 +134,7 @@ public class SshjClientConnection implements SshAction<SSHClient> {
         this.hostAndPort = checkNotNull(builder.hostAndPort);
         this.username = builder.username;
         this.password = builder.password;
+        this.privateKeyPassphrase = builder.privateKeyPassphrase;
         this.privateKeyData = builder.privateKeyData;
         this.privateKeyFile = builder.privateKeyFile;
         this.strictHostKeyChecking = builder.strictHostKeyChecking;
@@ -167,11 +176,11 @@ public class SshjClientConnection implements SshAction<SSHClient> {
             ssh.authPassword(username, password);
         } else if (privateKeyData != null) {
             OpenSSHKeyFile key = new OpenSSHKeyFile();
-            key.init(privateKeyData, null);
+            key.init(privateKeyData, null, PasswordUtils.createOneOff(privateKeyPassphrase.toCharArray()));
             ssh.authPublickey(username, key);
         } else if (privateKeyFile != null) {
             OpenSSHKeyFile key = new OpenSSHKeyFile();
-            key.init(privateKeyFile);
+            key.init(privateKeyFile, PasswordUtils.createOneOff(privateKeyPassphrase.toCharArray()));
             ssh.authPublickey(username, key);
         } else {
             // Accept defaults (in ~/.ssh)
