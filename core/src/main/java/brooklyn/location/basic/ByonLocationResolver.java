@@ -78,7 +78,15 @@ public class ByonLocationResolver implements RegistryLocationResolver {
         
         List<SshMachineLocation> machines = Lists.newArrayList();
         for (String host : hostsPart.split(",")) {
-            machines.add(new SshMachineLocation(MutableMap.of("address", host.trim())));
+            SshMachineLocation machine;
+            if (host.contains("@")) {
+                String userPart = host.substring(0, host.indexOf("@"));
+                String hostPart = host.substring(host.indexOf("@")+1);
+                machine = new SshMachineLocation(MutableMap.of("username", userPart.trim(), "address", hostPart.trim()));    
+            } else {
+                machine = new SshMachineLocation(MutableMap.of("address", host.trim()));
+            }
+            machines.add(machine);
         }
         
         Map<String,Object> flags = Maps.newLinkedHashMap();
