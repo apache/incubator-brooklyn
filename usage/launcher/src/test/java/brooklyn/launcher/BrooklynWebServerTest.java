@@ -25,39 +25,33 @@ public class BrooklynWebServerTest {
 
     @Test
     public void verifyHttp() throws Exception {
-        log.info("===========================================================");
         BrooklynWebServer webServer = new BrooklynWebServer(new LocalManagementContext());
         webServer.start();
 
         DefaultHttpClient httpclient = new DefaultHttpClient();
 
         HttpGet httpget = new HttpGet(webServer.getRootUrl());
-        System.out.println(httpget);
         HttpResponse response = httpclient.execute(httpget);
         HttpEntity entity = response.getEntity();
         InputStream instream = entity.getContent();
-        log.info("===========================================================");
     }
 
     @Test
     public void verifyHttps() throws Exception {
-        log.info("===========================================================");
         BrooklynWebServer webServer = buildWebServer();
 
         DefaultHttpClient httpclient = buildHttpsClient(webServer);
 
         HttpGet httpget = new HttpGet(webServer.getRootUrl());
-        System.out.println(httpget);
         HttpResponse response = httpclient.execute(httpget);
         HttpEntity entity = response.getEntity();
         InputStream instream = entity.getContent();
-        log.info("===========================================================");
     }
 
     private BrooklynWebServer buildWebServer() throws Exception {
         Map flags = new HashMap();
         flags.put("httpsEnabled", true);
-        //flags.put("keystorePath", getFile("server.ks"));
+        flags.put("keystorePath", getFile("server.ks"));
         flags.put("keystorePassword", "password");
         flags.put("truststorePath", getFile("server.ts"));
         flags.put("trustStorePassword", "password");

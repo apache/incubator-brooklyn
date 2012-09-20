@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jetty.http.ssl.SslContextFactory;
 import org.eclipse.jetty.server.Connector;
@@ -194,9 +193,9 @@ public class BrooklynWebServer {
             }
 
             SslContextFactory sslContextFactory = new SslContextFactory();
-            sslContextFactory.setKeyStore(verifyExists(keystorePath,"keystore"));
+            sslContextFactory.setKeyStore(checkFileExists(keystorePath, "keystore"));
             sslContextFactory.setKeyStorePassword(keystorePassword);
-            sslContextFactory.setTrustStore(verifyExists(truststorePath,"truststore"));
+            sslContextFactory.setTrustStore(checkFileExists(truststorePath, "truststore"));
             sslContextFactory.setTrustStorePassword(trustStorePassword);
 
             SslSocketConnector sslSocketConnector = new SslSocketConnector(sslContextFactory);
@@ -226,9 +225,9 @@ public class BrooklynWebServer {
         }
     }
 
-    private String verifyExists(String path, String name) {
+    private String checkFileExists(String path, String name) {
         if(!new File(path).exists()){
-            throw new IllegalArgumentException("Could not find "+name+": "+keystorePath);
+            throw new IllegalArgumentException("Could not find "+name+": "+path);
         }
         return path;
     }
