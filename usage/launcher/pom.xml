@@ -92,6 +92,13 @@
           <artifactId>concurrentlinkedhashmap-lru</artifactId>
           <version>1.0_jdk5</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.2.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
