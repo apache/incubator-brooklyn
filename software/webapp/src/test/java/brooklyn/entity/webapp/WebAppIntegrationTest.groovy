@@ -413,7 +413,7 @@ public class WebAppIntegrationTest {
         executeUntilSucceeds(abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity
             assertTrue urlRespondsWithStatusCode200(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname/"+urlSubPathToPageToQuery)
-            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("myartifactname.war"))
+            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/myartifactname"))
             true
         }
         

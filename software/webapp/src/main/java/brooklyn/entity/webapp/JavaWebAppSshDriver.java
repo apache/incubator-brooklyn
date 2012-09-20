@@ -62,8 +62,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
 
     /** deploys a URL as a webapp at the appserver;
      * returns a token which can be used as an argument to undeploy,
-     * typically the web application archive (eg WAR, EAR, JAR) filename (if copying files)
-     * or the web context (if using an API to manage).
+     * typically the web context with leading slash where the app can be reached (just "/" for ROOT)
      * <p>
      * see {@link JavaWebAppSoftwareProcess#deploy(String, String)} for details of how input filenames are handled */
     @Override
