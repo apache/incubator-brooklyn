@@ -1,7 +1,6 @@
 package brooklyn.event.basic;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
@@ -15,8 +14,10 @@ import brooklyn.util.flags.TypeCoercions;
 * The {@link ConfigKey} will have the same name and description as the sensor but not necessarily the same type.
 * Conversion to set the sensor value from the config key must be supplied in a subclass.
 */
+// TODO replace entity.ConfigKey with config.ConfigKey
+@SuppressWarnings("deprecation")
 public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends BasicAttributeSensor<SensorType> 
-        implements HasConfigKey<ConfigType> {
+        implements brooklyn.entity.ConfigKey.HasConfigKey<ConfigType> {
     private static final long serialVersionUID = -3103809215973264600L;
 
     private ConfigKey<ConfigType> configKey;

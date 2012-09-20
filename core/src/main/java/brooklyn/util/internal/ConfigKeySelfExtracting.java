@@ -2,13 +2,14 @@ package brooklyn.util.internal;
 
 import java.util.Map;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 
 /** Interface for resolving key values; typically implemented by the config key,
  * but discouraged for external usage.
  */
-public interface ConfigKeySelfExtracting<T> extends ConfigKey<T> {
+// TODO replace by brooklyn.config.ConfigKey, when we removed the deprecated one
+@SuppressWarnings("deprecation")
+public interface ConfigKeySelfExtracting<T> extends brooklyn.entity.ConfigKey<T> {
     /**
      * Extracts the value for this config key from the given map.
      */
