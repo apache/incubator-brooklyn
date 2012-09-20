@@ -418,7 +418,7 @@ public class WebAppIntegrationTest {
         }
         
         // And undeploying
-        entity.undeploy("myartifactname.war")
+        entity.undeploy("/myartifactname")
         executeUntilSucceeds(abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity
             assertEquals(urlRespondsStatusCode(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname"+urlSubPathToPageToQuery), 404);
