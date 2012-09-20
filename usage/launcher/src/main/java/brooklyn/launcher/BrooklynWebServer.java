@@ -5,8 +5,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
+import org.eclipse.jetty.http.ssl.SslContextFactory;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +42,9 @@ public class BrooklynWebServer {
 
     @SetFromFlag
     protected PortRange port = PortRanges.fromString("8081+");
-    protected int actualPort = -1;
+    @SetFromFlag
+    protected PortRange httpsPort = PortRanges.fromString("8443+");
+    protected volatile int actualPort = -1;
 
     @SetFromFlag
     protected String war = BROOKLYN_WAR_URL;
@@ -57,6 +63,22 @@ public class BrooklynWebServer {
     public BrooklynWebServer(ManagementContext managementContext) {
         this(new LinkedHashMap(), managementContext);
     }
+
+    @SetFromFlag(defaultVal = "false")
+    private boolean httpsEnabled;
+
+    @SetFromFlag
+    private String keystorePath;
+
+    @SetFromFlag
+    private String keystorePassword;
+
+    @SetFromFlag
+    private String truststorePath;
+
+    @SetFromFlag
+    private String trustStorePassword;
+
 
     /**
      * accepts flags:  port,
@@ -94,7 +116,7 @@ public class BrooklynWebServer {
     public int getActualPort() {
         return actualPort;
     }
-    
+
     /** interface/address where this server binds */
     public InetAddress getAddress() {
         try {
@@ -106,13 +128,15 @@ public class BrooklynWebServer {
     
     /** URL for accessing this web server (root context) */
     public String getRootUrl() {
-        if (getActualPort()>0)
-            return "http://"+getAddress().getHostName()+":"+getActualPort()+"/";
-        else
+        if (getActualPort()>0){
+            String protocol = httpsEnabled?"https":"http";
+            return protocol+"://"+getAddress().getHostName()+":"+getActualPort()+"/";
+        }else{
             return null;
+        }
     }
-    
-    /** sets the WAR to use as the root context (only if server not yet started);
+
+      /** sets the WAR to use as the root context (only if server not yet started);
      * cf deploy("/", url) */
     public BrooklynWebServer setWar(String url) {
         this.war = url;
@@ -150,12 +174,36 @@ public class BrooklynWebServer {
      */
     public synchronized void start() throws Exception {
         if (server!=null) throw new IllegalStateException(""+this+" already running");
-        if (actualPort==-1)
-            actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), port);
-        log.info("Starting Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
+        if (actualPort==-1){
+            actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), httpsEnabled?httpsPort:port);
+        }
 
-        
+        if(httpsEnabled){
+            log.info("Starting secured Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
+        } else{
+            log.info("Starting unsecured Brooklyn console at " + getRootUrl() + ", running " + war + (wars != null ? " and " + wars.values() : ""));
+        }
+
         server = new Server(actualPort);
+
+        if(httpsEnabled){
+            //by default the server is configured with a http connector, this needs to be removed since we are going
+            //to provide https
+            for(Connector c: server.getConnectors()){
+                server.removeConnector(c);
+            }
+
+            SslContextFactory sslContextFactory = new SslContextFactory();
+            sslContextFactory.setKeyStore(verifyExists(keystorePath,"keystore"));
+            sslContextFactory.setKeyStorePassword(keystorePassword);
+            sslContextFactory.setTrustStore(verifyExists(truststorePath,"truststore"));
+            sslContextFactory.setTrustStorePassword(trustStorePassword);
+
+            SslSocketConnector sslSocketConnector = new SslSocketConnector(sslContextFactory);
+            sslSocketConnector.setPort(actualPort);
+            server.addConnector(sslSocketConnector);
+        }
+
         addShutdownHook();
 
         for (Map.Entry<String, String> entry : wars.entrySet()) {
@@ -171,7 +219,18 @@ public class BrooklynWebServer {
         //reinit required because grails wipes our language extension bindings
         BrooklynLanguageExtensions.reinit();
 
-        log.info("Started Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
+        if(httpsEnabled){
+            log.info("Started secured Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
+        }else{
+            log.info("Started unsecured Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
+        }
+    }
+
+    private String verifyExists(String path, String name) {
+        if(!new File(path).exists()){
+            throw new IllegalArgumentException("Could not find "+name+": "+keystorePath);
+        }
+        return path;
     }
 
     /**
@@ -182,6 +241,7 @@ public class BrooklynWebServer {
         String root = getRootUrl();
         ResourceUtils.removeShutdownHook(shutdownHook);
         log.info("Stopping Brooklyn web console at "+root+ " (" + war + (wars != null ? " and " + wars.values() : "") + ")");
+
         server.stop();
         try {
             server.join();
