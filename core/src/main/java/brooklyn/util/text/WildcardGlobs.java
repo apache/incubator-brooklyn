@@ -49,7 +49,10 @@ public class WildcardGlobs {
         return (pi==globPattern.length() && ti==target.length());
     }   
 
-    /** returns a list with no curly braces in any entries; e.g. given a{,b} gives a and ab; no special treatment of numeric ranges, quotes, or parentheses */
+    /** returns a list with no curly braces in any entries,
+     * and guaranteeing order such that any {..,X,..,Y,..} will result in X being before Y in the resulting list;
+     * e.g. given a{,b,c} gives a ab and ac; no special treatment of numeric ranges, quotes, or parentheses 
+     * (see SpecialistGlobExpander for that) */
     public static List<String> getGlobsAfterBraceExpansion(String pattern) throws InvalidPatternException {
         return getGlobsAfterBraceExpansion(pattern, false, PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR);
     }
@@ -80,6 +83,10 @@ public class WildcardGlobs {
             this.resultSoFar = resultSoFar;
             this.todo = todo;
             this.operatorStack = operatorStack;
+        }
+        @Override
+        public String toString() {
+            return "ExpressionToExpand["+todo+":"+resultSoFar+"/"+operatorStack+"]";
         }
     }
     /** returns a list with no curly braces in any entries; e.g. given a{,b} gives a and ab; 
@@ -250,6 +257,7 @@ public class WildcardGlobs {
 
                 String suffix = cs.todo.substring(i+1);
 
+                List<ExpressionToExpand> newPatterns = new ArrayList<ExpressionToExpand>();
                 for (String token : tokens) {
                     //System.out.println("adding: "+pre+token+post);
                     if (allowNumericRanges && token.matches("\\s*[0-9]+\\s*-\\s*[0-9]+\\s*")) {
@@ -269,12 +277,15 @@ public class WildcardGlobs {
                             String tokenI = ""+Math.abs(ti);
                             while (tokenI.length()<minLen) tokenI = "0"+tokenI;
                             if (ti<0) tokenI = "-"+tokenI;
-                            patterns.add(new ExpressionToExpand(resultSoFar.toString(), tokenI+suffix, operatorStackBeforeExpansion));                              
+                            newPatterns.add(new ExpressionToExpand(resultSoFar.toString(), tokenI+suffix, operatorStackBeforeExpansion));                              
                         }
                     } else {
-                        patterns.add(new ExpressionToExpand(resultSoFar.toString(), token+suffix, operatorStackBeforeExpansion));
+                        newPatterns.add(new ExpressionToExpand(resultSoFar.toString(), token+suffix, operatorStackBeforeExpansion));
                     }
                 }
+                // insert new patterns at the start, so we continue to expand them next
+                patterns.addAll(0, newPatterns);
+                
                 break;
             }
             if (!expanded) {
@@ -296,11 +307,17 @@ public class WildcardGlobs {
     }
 
     
-    /** expands globs _and_ numeric ranges, e.g. machine-{0-3}-{a,b} returns 8 values,
-     * machine-0-a machine-0-b machine-1-a ... machine-3-b; leading zeroes are meaningful,
-     * so {00-03} expands as 00, 01, 02, 03
+    /** expands globs as per #getGlobsAfterBraceExpansion, 
+     * but also handles numeric ranges, 
+     * and optionally allows customized treatment of quoted regions and/or parentheses.
      * <p>
-     * also permits customisation to handle quotes and parenthetical groups 
+     * simple example:  machine-{0-3}-{a,b} returns 8 values,
+     * machine-0-a machine-0-b machine-1-a ... machine-3-b; 
+     * NB leading zeroes are meaningful, so {00-03} expands as 00, 01, 02, 03
+     * <p>
+     * quote INTERIOR_NOT_EXPANDABLE example: a{b,"c,d"} return ab ac,d
+     * <p>
+     * for more detail on special treatment of quote and parentheses see PhraseTreatment and WildcardGlobsTest 
      */
     public static class SpecialistGlobExpander {
 
