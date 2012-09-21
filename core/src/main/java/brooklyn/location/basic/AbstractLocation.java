@@ -10,9 +10,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.BasicLocationMemento;
 import brooklyn.location.Location;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.mementos.BrooklynMemento;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;
@@ -195,5 +197,14 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
             if (!truth(getLocationProperty("longitude"))) leftoverProperties.put("longitude", hostGeoInfo.longitude);
         } 
     }
-       
+    
+    @Override
+    public BasicLocationMemento getMemento() {
+        return new BasicLocationMemento(this);
+    }
+
+    @Override
+    public void rebind(BrooklynMemento brooklynMemento, String id) {
+        throw new UnsupportedOperationException("Cannot rebind entity of type "+getClass()+"; id="+id);
+    }
 }

@@ -15,6 +15,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
+import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.RebindContext;
 
 import com.google.common.base.Predicate;
 
@@ -54,6 +56,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child
      */
+    @Override
     public void addMember(Entity member) {
         synchronized (_members) {
 	        member.addGroup(this);
@@ -68,6 +71,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     /**
      * Returns <code>true</code> if the group was changed as a result of the call.
      */
+    @Override
     public boolean removeMember(Entity member) {
         synchronized (_members) {
             boolean changed = (member != null && _members.remove(member));
@@ -102,21 +106,32 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
  
     // Declared so can be overridden (the default auto-generated getter is final!)
+    @Override
     public Collection<Entity> getMembers() {
         synchronized (_members) {
             return _members.get();
         }
     }
 
+    @Override
     public boolean hasMember(Entity e) {
         synchronized (_members) {
             return _members.contains(e);
         }
     }
 
+    @Override
     public Integer getCurrentSize() {
         synchronized (_members) {
             return _members.size();
+        }
+    }
+    
+    @Override
+    protected void rebindMembers(RebindContext rebindContext, EntityMemento memento) {
+        for (String memberId : memento.getMembers()) {
+            Entity member = rebindContext.getEntity(memberId);
+            addMember(member);
         }
     }
 }

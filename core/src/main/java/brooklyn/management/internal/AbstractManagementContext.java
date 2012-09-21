@@ -1,5 +1,11 @@
 package brooklyn.management.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -10,24 +16,35 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
+import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EffectorUtils;
 import brooklyn.entity.drivers.BasicEntityDriverFactory;
 import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.rebind.BrooklynMementoImpl;
+import brooklyn.entity.rebind.RebindContextImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExpirationPolicy;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
+import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.EntityMemento;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicExecutionManager;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public abstract class AbstractManagementContext implements ManagementContext  {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
@@ -222,5 +239,73 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     @Override
     public StringConfigMap getConfig() {
         return configMap;
+    }
+
+    public BrooklynMemento getMemento() {
+        return new BrooklynMementoImpl(this, getApplications());
+    }
+
+    public List<Application> rebind(final BrooklynMemento memento) {
+        return rebind(memento, getClass().getClassLoader());
+    }
+    
+    private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
+        for (Object[] args : possibleArgs) {
+            Constructor<T> constructor = Reflections.findCallabaleConstructor(clazz, args);
+            if (constructor != null) {
+                return reflections.loadInstance(constructor, args);
+            }
+        }
+        throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
+    }
+    
+    public List<Application> rebind(final BrooklynMemento memento, ClassLoader classLoader) {
+        // TODO Need the application's classloader
+        Reflections reflections = new Reflections(classLoader);
+        Map<String,Entity> entities = Maps.newLinkedHashMap();
+        List<Application> result = Lists.newArrayList();
+        
+        final RebindContextImpl rebindContext = new RebindContextImpl(memento);
+
+        for (String entityId : memento.getEntityIds()) {
+            EntityMemento entityMemento = checkNotNull(memento.getEntityMemento(entityId), "memento of "+entityId);
+            String entityType = checkNotNull(entityMemento.getType(), "entityType of "+entityId);
+            Class<?> entityClazz = reflections.loadClass(entityType);
+
+            Map flags = (AbstractApplication.class.isAssignableFrom(entityClazz)) ? MutableMap.of("mgmt", this) : MutableMap.of();
+            
+            // There are several possibilities for the constructor; find one that works.
+            // Prefer passing in the flags because required for Application to set the management context
+            // TODO Feels very hacky!
+            Entity entity = (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
+            
+            entity.reconstruct(entityMemento);
+            entities.put(entityId,  entity);
+            rebindContext.registerEntity(entityId, entity);
+        }
+        
+        for (String appId : memento.getApplicationIds()) {
+            Application app = (Application) entities.get(appId);
+            result.add(app);
+            depthFirst(app, new Function<Entity, Void>() {
+                    @Override public Void apply(Entity input) {
+                        EntityMemento entityMemento = memento.getEntityMemento(input.getId());
+                        input.rebind(rebindContext, entityMemento);
+                        return null;
+                    }});
+        }
+        
+        return result;
+    }
+    
+    private void depthFirst(Entity entity, Function<Entity, Void> visitor) {
+        Deque<Entity> tovisit = new ArrayDeque<Entity>();
+        tovisit.addFirst(entity);
+        
+        while (tovisit.size() > 0) {
+            Entity current = tovisit.pop();
+            visitor.apply(current);
+            for (Entity child : current.getOwnedChildren()) tovisit.push(child);
+        }
     }
 }

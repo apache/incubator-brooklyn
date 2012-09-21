@@ -16,10 +16,14 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.flags.SetFromFlag;
 
 public abstract class AbstractApplication extends AbstractEntity implements Startable, Application {
     public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
-    private volatile AbstractManagementContext mgmt = null;
+    
+    @SetFromFlag("mgmt")
+    private volatile AbstractManagementContext mgmt;
+    
     private boolean deployed = false;
 
     BrooklynProperties brooklynProperties = null;

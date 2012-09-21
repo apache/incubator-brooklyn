@@ -18,6 +18,7 @@ import brooklyn.entity.EntityType
 import brooklyn.entity.Group
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
 import brooklyn.entity.basic.EntityReferences.EntityReference
+import brooklyn.entity.rebind.BasicEntityMemento
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
@@ -32,6 +33,9 @@ import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
 import brooklyn.management.internal.SubscriptionTracker
+import brooklyn.mementos.BrooklynMemento
+import brooklyn.mementos.EntityMemento
+import brooklyn.mementos.RebindContext
 import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
@@ -67,7 +71,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.removed", "Sensor dynamically removed from entity")
 
-    final String id = Identifiers.makeRandomId(8);
+    private String id = Identifiers.makeRandomId(8);
     String displayName
     
     EntityReference<Entity> owner
@@ -154,6 +158,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
 
+    public String getId() {
+        return id;
+    }
+    
     public void setBeingManaged() {
         hasEverBeenManaged = true;
     }
@@ -727,5 +735,58 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         
         execution = null;
         subscription = null;
+    }
+
+    @Override
+    public EntityMemento getMemento() {
+        return getMementoWithProperties(Collections.emptyMap())
+    }
+
+    protected EntityMemento getMementoWithProperties(Map<String,?> props) {
+        return new BasicEntityMemento(this, props);
+    }
+
+    @Override
+    public void reconstruct(EntityMemento memento) {
+        id = memento.getId();
+        displayName = memento.getDisplayName();
+
+        for (Map.Entry<ConfigKey, Object> entry : memento.getConfig()) {
+            setConfig(entry.getKey(), entry.getValue());
+        }
+    }
+    
+    @Override
+    public void rebind(RebindContext rebindContext, EntityMemento memento) {
+        rebindParent(rebindContext, memento);
+        rebindChildren(rebindContext, memento);
+        rebindMembers(rebindContext, memento);
+        doRebind(rebindContext, memento);
+    }
+
+    protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
+        throw new UnsupportedOperationException("Cannot rebind entity of type "+getClass()+"; id="+id);
+    }
+    
+    // TODO Can we move this logic out of the too-big AbstractEntity, into a Rebinder or something?
+    
+    protected void rebindMembers(RebindContext rebindContext, EntityMemento memento) {
+        if (memento.getMembers().size() > 0) {
+            throw new UnsupportedOperationException("Entity with members should be a group, and override rebindMembers: entity="+this+"; members="+memento.getMembers());
+        }
+    }
+    
+    protected void rebindChildren(RebindContext rebindContext, EntityMemento memento) {
+        for (String childId : memento.getChildren()) {
+            Entity child = rebindContext.getEntity(childId);
+            addOwnedChild(child);
+        }
+    }
+
+    protected void rebindParent(RebindContext rebindContext, EntityMemento memento) {
+        Entity parent = (memento.getParent() != null) ? rebindContext.getEntity(memento.getParent()) : null;
+        if (parent != null) {
+            setOwner(parent);
+        }
     }
 }

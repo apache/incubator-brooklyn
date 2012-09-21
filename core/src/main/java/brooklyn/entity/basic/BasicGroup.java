@@ -3,8 +3,12 @@ package brooklyn.entity.basic;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
+import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.RebindContext;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.collect.ImmutableMap;
 
 public class BasicGroup extends AbstractGroup {
     
@@ -43,5 +47,15 @@ public class BasicGroup extends AbstractGroup {
             removeMember(child);
         }
         return result;
+    }
+    
+    @Override
+    public EntityMemento getMemento() {
+        return super.getMementoWithProperties(ImmutableMap.of("childrenAsMembers", childrenAsMembers));
+    }
+    
+    @Override
+    protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
+        childrenAsMembers = (Boolean) memento.getProperty("childrenAsMembers");
     }
 }
