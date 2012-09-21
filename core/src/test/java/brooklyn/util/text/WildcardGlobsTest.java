@@ -1,5 +1,6 @@
 package brooklyn.util.text;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.testng.Assert;
@@ -52,6 +53,19 @@ public class WildcardGlobsTest extends Assert {
 		assertFalse(newGlobExpander().isGlobMatchedNumeric("a{01-03,05}", "a3"));
 	}
 
+	@Test
+	public void testOrder() throws InvalidPatternException {
+	    List<String> result;
+	    result = newGlobExpander().expand("{a,b}");
+	    assertEquals(result, Arrays.asList("a","b"), "Expansion was "+result);
+	    result = newGlobExpander().expand("{{a},b}");
+	    assertEquals(result, Arrays.asList("a","b"), "Expansion was "+result);
+        result = newGlobExpander().expand("{a,b}{1,2}");
+        assertEquals(result, Arrays.asList("a1","a2","b1","b2"), "Expansion was "+result);
+	    result = newGlobExpander().expand("{80{8{1,2},90},8000+}");
+	    assertEquals(result, Arrays.asList("8081","8082","8090","8000+"), "Expansion was "+result);
+	}
+	   
 	@Test
 	public void testQuotes() throws InvalidPatternException {
 		List<String> result;
