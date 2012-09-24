@@ -107,6 +107,7 @@ port            = ${port}
 socket          = /tmp/mysql.sock.${socketUid}.${port}
 basedir         = ${basedir}
 datadir         = .
+"""+getMySqlServerOptionsString()+"""
 
 """+"END_MYSQL_CONF_${entity.id}\n",
                 "${basedir}/scripts/mysql_install_db "+
@@ -123,6 +124,14 @@ datadir         = .
                 "echo terminating mysql on customization complete",
                 "kill \$MYSQL_PID"
             ).execute();
+    }
+    
+    protected String getMySqlServerOptionsString() {
+        Map options = entity.getConfig(MySqlNode.MYSQL_SERVER_CONF);
+        if (!options) return "";
+        String result = "";
+        options.each { k,v -> result += ""+k+" = "+v+"\n" }
+        return result;
     }
 
     @Override
