@@ -47,7 +47,7 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
     }
     // it is not possible to supply default values
     public ConfigKey<V> subKey(String subName, String description) {
-        return new SubElementConfigKey<V>(this, subType, description, null);
+        return new SubElementConfigKey<V>(this, subType, getName() + "." + subName, description, null);
     }
 
     public boolean isSubKey(Object contender) {
