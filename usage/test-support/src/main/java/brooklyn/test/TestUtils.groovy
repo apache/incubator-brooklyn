@@ -1,5 +1,9 @@
 package brooklyn.test
 
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLSession
+
 import static org.testng.Assert.*
 import groovy.time.TimeDuration
 
@@ -68,7 +72,13 @@ public class TestUtils {
         URL url = [u]
         URLConnection connection = url.openConnection()
         TrustingSslSocketFactory.configure(connection)
+        HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+            boolean verify(String s, SSLSession sslSession) {
+                return true;
+            }
+        });
         connection.connect()
+
         connection.getContentLength() // Make sure the connection is made.
         return connection
     }
