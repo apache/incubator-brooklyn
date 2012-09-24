@@ -25,6 +25,7 @@ public class WebAppMonitor implements Runnable {
     Object problem = null; 
     String url;
     long delayMillis = 500;
+    int expectedResponseCode = 200;
     
     public WebAppMonitor(String url) {
         this.url = url;
@@ -37,6 +38,10 @@ public class WebAppMonitor implements Runnable {
     }
     public WebAppMonitor delayMillis(long val) {
         this.delayMillis = val;
+        return this;
+    }
+    public WebAppMonitor expectedResponseCode(int val) {
+        this.expectedResponseCode = val;
         return this;
     }
     public WebAppMonitor url(String val) {
@@ -88,7 +93,7 @@ public class WebAppMonitor implements Runnable {
     }
     
     public boolean isResponseOkay(Object code) {
-        return code!=null && new Integer(200).equals(code);
+        return code!=null && new Integer(expectedResponseCode).equals(code);
     }
     
     public void setDelayMillis(long delayMillis) {

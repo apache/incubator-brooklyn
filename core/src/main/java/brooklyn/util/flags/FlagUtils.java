@@ -51,6 +51,13 @@ public class FlagUtils {
         return setFieldsFromFlagsInternal(flags, o, getAllFields(o.getClass()));
     }
 	
+    /** get all fields (including private and static) on the given object and all supertypes, 
+     * that are annotated with SetFromFlags. 
+     */
+    public static Map<String, ? extends Object> getFieldsWithFlags(Object o) {
+        return getFieldsWithFlagsInternal(o, getAllFields(o.getClass()));
+    }
+	
     // TODO Don't want to use class AbstractEntity here...
     public static Map<String, ? extends Object> setConfigKeysFromFlags(Map<String, ? extends Object> flags, AbstractEntity entity) {
         return setConfigKeysFromFlagsInternal(flags, entity, getAllFields(entity.getClass()));
@@ -108,6 +115,22 @@ public class FlagUtils {
 		return classes;
 	}
 	
+    private static Map<String, ? extends Object> getFieldsWithFlagsInternal(Object o, Collection<Field> fields) {
+        Map<String, Object> result = Maps.newLinkedHashMap();
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf != null) {
+                String flagName = elvis(cf.value(), f.getName());
+                if (truth(flagName)) {
+                	result.put(flagName, getField(o, f));
+                } else {
+                	log.warn("Ignoring field {} of object {} as no flag name available", f, o);
+                }
+            }
+        }
+        return result;
+    }
+
     private static Map<String, ? extends Object> setFieldsFromFlagsInternal(Map<String,? extends Object> flags, Object o, Collection<Field> fields) {
         Map<String, Object> remaining = Maps.newLinkedHashMap();
 		if (truth(flags)) remaining.putAll(flags);

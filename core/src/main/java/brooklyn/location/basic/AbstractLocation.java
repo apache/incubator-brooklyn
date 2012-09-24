@@ -19,6 +19,7 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Objects;
@@ -36,7 +37,7 @@ import com.google.common.io.Closeables;
  * 
  * Override {@link #configure(Map)} to add special initialization logic.
  */
-public abstract class AbstractLocation implements Location, HasHostGeoInfo {
+public abstract class AbstractLocation implements Location, HasHostGeoInfo, RebindableLocation {
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
 
     @SetFromFlag
@@ -78,7 +79,10 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     }
     public AbstractLocation(Map properties) {
         configure(properties);
-        FlagUtils.checkRequiredFields(this);
+        boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
+        if (!deferConstructionChecks) {
+        	FlagUtils.checkRequiredFields(this);
+        }
     }
 
     /** will set fields from flags, and put the remaining ones into the 'leftovers' map.

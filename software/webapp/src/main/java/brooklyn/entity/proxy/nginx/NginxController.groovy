@@ -13,10 +13,12 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
+import brooklyn.entity.rebind.RebindSupport
 import brooklyn.event.SensorEventListener
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.HttpSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.mementos.EntityMemento
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras

@@ -127,6 +127,7 @@ public class RebindManagerImpl implements RebindManager {
 
         Map<String,Object> flags = Maps.newLinkedHashMap();
         flags.put("id", locationId);
+        flags.put("deferConstructionChecks", true);
         
         // There are several possibilities for the constructor; find one that works.
         // Prefer passing in the flags because required for Application to set the management context

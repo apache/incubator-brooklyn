@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +21,9 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
+import brooklyn.entity.rebind.BasicEntityRebindSupport;
+import brooklyn.entity.rebind.RebindContext;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.AttributeSensor;
@@ -26,10 +31,15 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.mementos.EntityMemento;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -335,4 +345,38 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
                 new Object[] {member, ip, port, this});
         return null;
     }
+	
+    @Override
+    public RebindSupport<EntityMemento> getRebindSupport() {
+        return new BasicEntityRebindSupport(this) {
+            @Override public EntityMemento getMemento() {
+                // Note: using MutableMap so accepts nulls
+            	Map<String, Object> flags = Maps.newLinkedHashMap();
+            	flags.put("serverPool", (serverPool != null ? serverPool.getId() : null));
+            	flags.put("addresses", addresses);
+            	flags.put("targets", Iterables.transform(targets, entityIdFunction));
+            	flags.put("isActive", isActive);
+                return super.getMementoWithProperties(flags);
+            }
+            @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
+            	super.doRebind(rebindContext, memento);
+            	String serverPoolId = (String) memento.getProperty("serverPool");
+				serverPool = (Group) (serverPoolId != null ? rebindContext.getEntity(serverPoolId) : null);
+				addresses.addAll((Set<String>) memento.getProperty("addresses"));
+				for (String targetId : (Set<String>)memento.getProperty("targets")) {
+					targets.add(rebindContext.getEntity(targetId));
+				}
+				isActive = (Boolean) memento.getProperty("isActive");
+            }
+        };
+    }
+    
+    private final Function<Entity, String> entityIdFunction = new Function<Entity, String>() {
+		@Override
+		@Nullable
+		public String apply(@Nullable Entity input) {
+			return (input != null) ? input.getId() : null;
+		}
+    	
+	};
 }

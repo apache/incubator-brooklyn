@@ -20,6 +20,7 @@ import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
 import brooklyn.entity.basic.EntityReferences.EntityReference
 import brooklyn.entity.rebind.BasicEntityRebindSupport
 import brooklyn.entity.rebind.RebindSupport
+import brooklyn.entity.rebind.Rebindable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.SensorEvent
@@ -61,7 +62,7 @@ import com.google.common.collect.Iterables
  * by children, whereas the fields are not. (Attributes cannot be so accessed,
  * nor are they inherited.)
  */
-public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, GroovyInterceptable {
+public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, GroovyInterceptable, Rebindable {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
     static { BrooklynLanguageExtensions.init(); }

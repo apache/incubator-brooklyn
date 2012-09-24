@@ -177,13 +177,13 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             releasePort(null, p);
     }
     
-    private static class LocalhostMachine extends SshMachineLocation {
+    public static class LocalhostMachine extends SshMachineLocation {
         private final Set<Integer> portsObtained = Sets.newLinkedHashSet();
         
-        private LocalhostMachine() {
+        public LocalhostMachine() {
             this(MutableMap.of());
         }
-        private LocalhostMachine(Map properties) {
+        public LocalhostMachine(Map properties) {
             super(properties);
         }
         public boolean obtainSpecificPort(int portNumber) {

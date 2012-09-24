@@ -7,9 +7,12 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.drivers.DriverDependentEntity
+import brooklyn.entity.rebind.BasicEntityRebindSupport
+import brooklyn.entity.rebind.RebindContext
+import brooklyn.entity.rebind.RebindSupport
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.ConfigSensorAdapter
@@ -24,6 +27,7 @@ import brooklyn.location.PortRange
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
+import brooklyn.mementos.EntityMemento
 import brooklyn.util.MutableMap
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
@@ -31,6 +35,7 @@ import brooklyn.util.task.Tasks
 
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
+import com.google.common.base.Predicates
 import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
 
@@ -121,6 +126,21 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     protected void postActivation() {
     }
     
+	protected void doRebind() {
+		Lifecycle serviceState = getAttribute(SERVICE_STATE);
+		if (serviceState == Lifecycle.RUNNING) {
+			if (!sensorRegistry) sensorRegistry = new SensorRegistry(this);
+			postStart();
+			sensorRegistry.activateAdapters();
+			postActivation();
+		}
+		
+		Iterable<SshMachineLocation> sshMachineLocations = Iterables.filter(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
+		if (!Iterables.isEmpty(sshMachineLocations)) {
+			initDriver(Iterables.get(sshMachineLocations, 0));
+		}
+	}
+	
 	/** lifecycle message for connecting sensors to registry;
 	 * typically overridden by subclasses */
 	protected void connectSensors() {
@@ -372,6 +392,16 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
 	}
 
+	@Override
+    public RebindSupport<EntityMemento> getRebindSupport() {
+        return new BasicEntityRebindSupport(this) {
+			@Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
+				// FIXME What to do if the entity is in a "starting" state from when it was serialized?
+				super.doRebind(rebindContext, memento);
+				doRebind();
+			}
+		};
+	}
 }
 
 
