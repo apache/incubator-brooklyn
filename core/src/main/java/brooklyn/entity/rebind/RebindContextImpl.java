@@ -5,7 +5,6 @@ import java.util.Map;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.RebindContext;
 
 import com.google.common.collect.Maps;
 
@@ -33,6 +32,10 @@ public class RebindContextImpl implements RebindContext {
 
     public void registerEntity(String id, Entity entity) {
         entities.put(id, entity);
+    }
+    
+    public void registerLocation(String id, Location location) {
+        locations.put(id, location);
     }
     
     @Override

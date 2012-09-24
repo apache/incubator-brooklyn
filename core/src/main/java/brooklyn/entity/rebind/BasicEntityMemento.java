@@ -11,10 +11,11 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.mementos.EntityMemento;
-
-import com.google.common.collect.ImmutableMap;
+import brooklyn.util.MutableMap;
 
 /**
  * Represents the state of an entity, so that it can be reconstructed (e.g. after restarting brooklyn).
@@ -34,6 +35,7 @@ public class BasicEntityMemento implements EntityMemento, Serializable {
     private String id;
     private String displayName;
     private Map<ConfigKey, Object> config;
+    private Map<AttributeSensor, Object> attributes;
     private List<String> locations;
     private String parent;
     private List<String> children;
@@ -48,13 +50,22 @@ public class BasicEntityMemento implements EntityMemento, Serializable {
         id = entity.getId();
         displayName = entity.getDisplayName();
         type = entity.getClass().getName();
-        this.properties = (properties != null) ? ImmutableMap.copyOf(properties) : Collections.<String,Object>emptyMap();
+        
+        this.properties = (properties != null) ? MutableMap.copyOf(properties) : Collections.<String,Object>emptyMap();
         
         config = new LinkedHashMap<ConfigKey,Object>(entity.getEntityType().getConfigKeys().size());
         for (ConfigKey<?> key : entity.getEntityType().getConfigKeys()) {
             config.put(key, entity.getConfig(key)); 
         }
         config = Collections.unmodifiableMap(config);
+        
+        attributes = new LinkedHashMap<AttributeSensor,Object>(entity.getEntityType().getSensors().size());
+        for (Sensor<?> key : entity.getEntityType().getSensors()) {
+            if (key instanceof AttributeSensor) {
+                attributes.put((AttributeSensor<?>)key, entity.getAttribute((AttributeSensor<?>)key));
+            }
+        }
+        attributes = Collections.unmodifiableMap(attributes);
         
         locations = new ArrayList<String>(entity.getLocations().size());
         for (Location location : entity.getLocations()) {
@@ -101,6 +112,11 @@ public class BasicEntityMemento implements EntityMemento, Serializable {
     }
     
     @Override
+    public Map<AttributeSensor, Object> getAttributes() {
+        return attributes;
+    }
+    
+    @Override
     public String getParent() {
         // TODO Auto-generated method stub
         return null;
@@ -125,4 +141,8 @@ public class BasicEntityMemento implements EntityMemento, Serializable {
     public Object getProperty(String name) {
         return properties.get(name);
     }
+    
+	public Map<String, ? extends Object> getProperties() {
+		return properties;
+	}
 }

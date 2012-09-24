@@ -2,19 +2,20 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.RebindContext;
+import brooklyn.entity.rebind.Rebindable;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
-import com.google.common.collect.ImmutableMap;
+public class BasicGroup extends AbstractGroup implements Rebindable {
+    
+    @SetFromFlag("childrenAsMembers")
+    public static final ConfigKey<Boolean> CHILDREN_AS_MEMBERS = new BasicConfigKey<Boolean>(
+            Boolean.class, "brooklyn.BasicGroup.childrenAsMembers", 
+            "Whether children are automatically added as group members", false);
 
-public class BasicGroup extends AbstractGroup {
-    
-    @SetFromFlag
-    private boolean childrenAsMembers;
-    
     public BasicGroup() {
         super(MutableMap.of(), null);
     }
@@ -34,7 +35,7 @@ public class BasicGroup extends AbstractGroup {
     @Override
     public Entity addOwnedChild(Entity child) {
         Entity result = super.addOwnedChild(child);
-        if (childrenAsMembers) {
+        if (getConfig(CHILDREN_AS_MEMBERS)) {
             addMember(child);
         }
         return result;
@@ -43,19 +44,9 @@ public class BasicGroup extends AbstractGroup {
     @Override
     public boolean removeOwnedChild(Entity child) {
         boolean result = super.removeOwnedChild(child);
-        if (childrenAsMembers) {
+        if (getConfig(CHILDREN_AS_MEMBERS)) {
             removeMember(child);
         }
         return result;
-    }
-    
-    @Override
-    public EntityMemento getMemento() {
-        return super.getMementoWithProperties(ImmutableMap.of("childrenAsMembers", childrenAsMembers));
-    }
-    
-    @Override
-    protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
-        childrenAsMembers = (Boolean) memento.getProperty("childrenAsMembers");
     }
 }

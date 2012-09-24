@@ -31,11 +31,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
             applicationIds.add(app.getId());
         }
         for (Entity entity : managementContext.getEntities()) {
-            entities.put(entity.getId(), entity.getMemento());
+            entities.put(entity.getId(), ((Rebindable)entity).getRebindSupport().getMemento());
             
             for (Location location : entity.getLocations()) {
                 if (!locations.containsKey(location.getId())) {
-                    locations.put(location.getId(), location.getMemento());
+                    locations.put(location.getId(), ((RebindableLocation)location).getRebindSupport().getMemento());
                 }
             }
         }

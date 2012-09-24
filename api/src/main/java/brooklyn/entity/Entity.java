@@ -5,11 +5,11 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.rebind.RebindContext;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.RebindContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
@@ -132,29 +132,4 @@ public interface Entity extends Serializable {
      * Invokes the given effector, with the given parameters to that effector.
      */
     <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters);
-
-    /**
-     * Creates a memento representing this entity's current state. This is useful for when restarting brooklyn.
-     * 
-     * @see rebind(BrooklynMemento, String)
-     */
-    public EntityMemento getMemento();
-
-    /**
-     * Reconstructs this entity, given a memento of its state. Sets only the internal state (including id and config keys),
-     * but does not set up any wiring between entities or attempt to touch the outside world.
-     * 
-     * @see Entity.getMemento()
-     * @see Entity.rebind()
-     */
-    public void reconstruct(EntityMemento memento);
-
-    /**
-     * Rebinds a re-constructed entity, to restore its state and connectivity to as it was when the memento was created.
-     * 
-     * @see Entity.getMemento()
-     * @see Entity.reconstruct()
-     * @see BrooklynMemento.getEntityMemento(String)
-     */
-    public void rebind(RebindContext rebindContext, EntityMemento memento);
 }

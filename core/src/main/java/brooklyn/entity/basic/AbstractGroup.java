@@ -15,8 +15,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
-import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.RebindContext;
 
 import com.google.common.base.Predicate;
 
@@ -124,14 +122,6 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     public Integer getCurrentSize() {
         synchronized (_members) {
             return _members.size();
-        }
-    }
-    
-    @Override
-    protected void rebindMembers(RebindContext rebindContext, EntityMemento memento) {
-        for (String memberId : memento.getMembers()) {
-            Entity member = rebindContext.getEntity(memberId);
-            addMember(member);
         }
     }
 }

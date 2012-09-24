@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.event.AttributeSensor;
 
 /**
  * Represents the state of an entity, so that it can be reconstructed (e.g. after restarting brooklyn).
@@ -13,7 +14,7 @@ import brooklyn.config.ConfigKey;
  * 
  * @author aled
  */
-public interface EntityMemento {
+public interface EntityMemento extends Memento {
 
     // TODO Think about which sensors; how would sub-class supply that (given that super-constructor is doing work)
     
@@ -24,6 +25,8 @@ public interface EntityMemento {
     public String getDisplayName();
     
     public Map<ConfigKey, Object> getConfig();
+
+    public Map<AttributeSensor, Object> getAttributes();
 
     /**
      * The id of the parent entity, or null if none (e.g. if top-level app).
@@ -54,4 +57,6 @@ public interface EntityMemento {
      * These can be used to avoid sub-classing the entity memento, but developers can sub-class to get strong typing if desired.
      */
     public Object getProperty(String name);
+
+	public Map<String, ? extends Object> getProperties();
 }

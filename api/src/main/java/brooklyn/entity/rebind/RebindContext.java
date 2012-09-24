@@ -1,4 +1,4 @@
-package brooklyn.mementos;
+package brooklyn.entity.rebind;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;

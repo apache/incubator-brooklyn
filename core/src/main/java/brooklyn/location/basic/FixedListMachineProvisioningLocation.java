@@ -97,7 +97,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     }   
      
     @Override
-    protected void addChildLocation(Location child) {
+    public void addChildLocation(Location child) {
         super.addChildLocation(child);
         machines.add((T)child);
     }

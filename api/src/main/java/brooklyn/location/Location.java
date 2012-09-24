@@ -3,9 +3,6 @@ package brooklyn.location;
 import java.io.Serializable;
 import java.util.Collection;
 
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.LocationMemento;
-
 /**
  *  Location.
  */
@@ -80,20 +77,4 @@ public interface Location extends Serializable {
      * the parent hierarchy until it is found, or the root is reached (when this method will return <code>null</code>).
      */
     Object findLocationProperty(String key);
-
-    /**
-     * Creates a memento representing this location. This is useful for when restarting brooklyn.
-     * 
-     * @see Location.rebind(BrooklynMemento, String)
-     */
-    public LocationMemento getMemento();
-
-    /**
-     * Reconstructs this location, given a memento of its state; rebinds to the location to restore the connection to the state 
-     * it was in when the memento was created.
-     * 
-     * @see Location.getMemento()
-     * @see BrooklynMemento.getLocationMemento(String)
-     */
-    public void rebind(BrooklynMemento brooklynMemento, String id);
 }

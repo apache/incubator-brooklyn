@@ -10,11 +10,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.rebind.BasicLocationMemento;
+import brooklyn.entity.rebind.BasicLocationRebindSupport;
+import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.entity.rebind.RebindableLocation;
 import brooklyn.location.Location;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.LocationMemento;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;
@@ -118,6 +120,10 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public boolean equals(Object o) {
         if (! (o instanceof Location)) {
             return false;
@@ -140,7 +146,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
         return false;
     }
     
-    protected void addChildLocation(Location child) {
+    public void addChildLocation(Location child) {
         childLocations.add(child); 
     }
     
@@ -198,13 +204,10 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
         } 
     }
     
-    @Override
-    public BasicLocationMemento getMemento() {
-        return new BasicLocationMemento(this);
-    }
-
-    @Override
-    public void rebind(BrooklynMemento brooklynMemento, String id) {
-        throw new UnsupportedOperationException("Cannot rebind entity of type "+getClass()+"; id="+id);
+    /**
+     * Convenience for sub-classes that implement {@link RebindableLocation}.
+     */
+    public RebindSupport<LocationMemento> getRebindSupport() {
+        return new BasicLocationRebindSupport(this);
     }
 }

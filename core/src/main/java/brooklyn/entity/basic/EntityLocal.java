@@ -26,6 +26,11 @@ public interface EntityLocal extends Entity {
     // Separate out what is specific to "local jvm", and what is here for an SPI rather than API.
 
     /**
+     * Sets the entity's display name.
+     */
+    void setDisplayName(String displayName);
+
+    /**
      * Sets the {@link Sensor} data for the given attribute to the specified value.
      * 
      * This can be used to "enrich" the entity, such as adding aggregated information, 
