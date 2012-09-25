@@ -2,12 +2,16 @@ package brooklyn.location.basic
 
 import static org.testng.Assert.*
 
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
-import brooklyn.test.TestUtils;
+import brooklyn.test.TestUtils
+import brooklyn.util.MutableMap
+
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 
 /**
  * Provisions {@link SshMachineLocation}s in a specific location from a list of known machines
@@ -18,6 +22,15 @@ public class FixedListMachineProvisioningLocationTest {
     public void createProvisioner() {
         provisioner = new FixedListMachineProvisioningLocation<SshMachineLocation>(
                 machines:[ new SshMachineLocation(address:Inet4Address.getByName('192.168.144.200')) ]);
+    }
+
+    @Test
+    public void testSetsChildLocations() {
+        SshMachineLocation machine = new SshMachineLocation(MutableMap.of("address", "192.168.144.200"));
+		FixedListMachineProvisioningLocation<SshMachineLocation> provisioner2 = new FixedListMachineProvisioningLocation<SshMachineLocation>(
+			machines:[ machine ]);
+		assertEquals(provisioner2.getAvailable(), ImmutableSet.of(machine));
+		assertEquals(ImmutableList.copyOf(provisioner2.getChildLocations()), ImmutableList.of(machine));
     }
 
     @Test

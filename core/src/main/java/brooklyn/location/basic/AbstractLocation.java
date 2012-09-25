@@ -151,13 +151,32 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Rebi
     }
     
     public void addChildLocation(Location child) {
-        childLocations.add(child); 
+    	// Previously, setParentLocation delegated to addChildLocation and we sometimes ended up with
+    	// duplicate entries here. Instead this now uses a similar scheme to 
+    	// AbstractEntity.setOwner/addOwnedChild (with any weaknesses for distribution that such a 
+    	// scheme might have...).
+    	// 
+    	// We continue to use a list to allow identical-looking locations, but they must be different 
+    	// instances.
+    	
+    	for (Location contender : childLocations) {
+    		if (contender == child) {
+    			// don't re-add; no-op
+    			return;
+    		}
+    	}
+    	
+        childLocations.add(child);
+        child.setParentLocation(this);
     }
     
     protected boolean removeChildLocation(Location child) {
         boolean removed = childLocations.remove(child);
-        if (removed && child instanceof Closeable) {
-            Closeables.closeQuietly((Closeable)child);
+        if (removed) {
+            if (child instanceof Closeable) {
+                Closeables.closeQuietly((Closeable)child);
+            }
+            child.setParentLocation(null);
         }
         return removed;
     }
@@ -180,14 +199,24 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Rebi
         }
     }
     
+    @Override
     public boolean hasLocationProperty(String key) { return leftoverProperties.containsKey(key); }
+    
+    @Override
     public Object getLocationProperty(String key) { return leftoverProperties.get(key); }
+    
+    @Override
     public Object findLocationProperty(String key) {
         if (hasLocationProperty(key)) return getLocationProperty(key);
         if (parentLocation != null) return parentLocation.findLocationProperty(key);
         return null;
     }
     
+    @Override
+    public Map<String,?> getLocationProperties() {
+    	return Collections.<String,Object>unmodifiableMap(leftoverProperties);
+    }
+
     /** Default String representation is simplified name of class, together with selected fields. */
     @Override
     public String toString() {
@@ -208,6 +237,14 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Rebi
         } 
     }
     
+    /**
+     * Exposed only for rebind; do not call otherwise!
+     */
+    // TODO Would like to use a nicer pattern than this
+	public void addLeftoverProperties(Map<String, ?> locationProperties) {
+		leftoverProperties.putAll(locationProperties);
+	}
+	
     /**
      * Convenience for sub-classes that implement {@link RebindableLocation}.
      */

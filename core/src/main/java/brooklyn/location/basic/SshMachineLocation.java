@@ -37,7 +37,6 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ReaderInputStream;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.SshTool;
@@ -93,6 +92,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag
     Map config;
 
+    @SetFromFlag
+    transient WithMutexes mutexSupport;
+    
     /** any property that should be passed as ssh config (connection-time) 
      *  can be prefixed with this and . and will be passed through (with the prefix removed),
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
@@ -153,6 +155,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
         // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields
         // Yikes, dangerous code for accessing fields of sub-class in super-class' constructor! But getting away with it so far!
+        
+        if (mutexSupport == null) {
+        	mutexSupport = new MutexSupport();
+        }
         
         boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
         if (!deferConstructionChecks) {
@@ -636,8 +642,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     protected WithMutexes newMutexSupport() { return new MutexSupport(); }
-    
-    WithMutexes mutexSupport = newMutexSupport();
     
     @Override
     public void acquireMutex(String mutexId, String description) throws InterruptedException {

@@ -178,13 +178,15 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     }
     
     public static class LocalhostMachine extends SshMachineLocation {
-        private final Set<Integer> portsObtained = Sets.newLinkedHashSet();
+        private static final WithMutexes mutexSupport = new MutexSupport();
         
+        private final Set<Integer> portsObtained = Sets.newLinkedHashSet();
+
         public LocalhostMachine() {
-            this(MutableMap.of());
+            this(MutableMap.of("mutexSupport", mutexSupport));
         }
         public LocalhostMachine(Map properties) {
-            super(properties);
+            super(MutableMap.builder().putAll(properties).put("mutexSupport", mutexSupport).build());
         }
         public boolean obtainSpecificPort(int portNumber) {
             return LocalhostMachineProvisioningLocation.obtainSpecificPort(getAddress(), portNumber);
@@ -207,9 +209,5 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         public OsDetails getOsDetails() {
             return new BasicOsDetails.Factory().newLocalhostInstance();
         }
-        
-        private static WithMutexes mutexSupport = new MutexSupport();
-        protected WithMutexes newMutexSupport() { return mutexSupport; }
-        
     }
 }
