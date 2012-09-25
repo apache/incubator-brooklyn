@@ -17,6 +17,8 @@ import brooklyn.location.Location;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.util.MutableMap;
 
+import com.google.common.base.Objects;
+
 /**
  * Represents the state of an entity, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
@@ -145,4 +147,9 @@ public class BasicEntityMemento implements EntityMemento, Serializable {
 	public Map<String, ? extends Object> getProperties() {
 		return properties;
 	}
+	
+    @Override
+    public String toString() {
+    	return Objects.toStringHelper(this).add("type", type).add("id", id).toString();
+    }
 }

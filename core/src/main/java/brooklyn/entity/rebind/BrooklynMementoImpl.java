@@ -1,10 +1,13 @@
 package brooklyn.entity.rebind;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -17,6 +20,7 @@ import brooklyn.mementos.LocationMemento;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
 
@@ -35,7 +39,9 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
             
             for (Location location : entity.getLocations()) {
                 if (!locations.containsKey(location.getId())) {
-                    locations.put(location.getId(), ((RebindableLocation)location).getRebindSupport().getMemento());
+                	for (Location locationInHierarchy : findLocationsInHierarchy(location)) {
+                		locations.put(locationInHierarchy.getId(), ((RebindableLocation)locationInHierarchy).getRebindSupport().getMemento());
+                	}
                 }
             }
         }
@@ -64,5 +70,24 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     @Override
     public Collection<String> getLocationIds() {
         return Collections.unmodifiableSet(locations.keySet());
+    }
+    
+    private Collection<Location> findLocationsInHierarchy(Location root) {
+    	Set<Location> result = Sets.newLinkedHashSet();
+    	
+        Deque<Location> tovisit = new ArrayDeque<Location>();
+        tovisit.addFirst(root);
+        
+        while (tovisit.size() > 0) {
+            Location current = tovisit.pop();
+            result.add(current);
+            for (Location child : current.getChildLocations()) {
+            	if (child != null) {
+            		tovisit.push(child);
+            	}
+            }
+        }
+        
+        return result;
     }
 }

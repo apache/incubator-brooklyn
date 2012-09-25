@@ -1,5 +1,6 @@
 package brooklyn.location.geo;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 
@@ -15,17 +16,19 @@ import brooklyn.util.internal.BrooklynSystemProperties;
 /**
  * Encapsulates geo-IP information for a given host.
  */
-public class HostGeoInfo {
+public class HostGeoInfo implements Serializable {
     
-    /** the IP address */
+	private static final long serialVersionUID = -5866759901535266181L;
+
+    public static final Logger log = LoggerFactory.getLogger(HostGeoInfo.class);
+
+	/** the IP address */
     public final String address;
     
     public final String displayName;
     
     public final double latitude;
     public final double longitude;
-
-    public static final Logger log = LoggerFactory.getLogger(HostGeoInfo.class);
 
     public static HostGeoInfo fromIpAddress(InetAddress address) {
         try {

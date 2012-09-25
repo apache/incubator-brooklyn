@@ -8,6 +8,9 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -16,6 +19,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.util.MutableMap;
 import brooklyn.util.javalang.Reflections;
 
 import com.google.common.base.Function;
@@ -25,6 +29,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class RebindManagerImpl implements RebindManager {
+
+    public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
     private final ManagementContext managementContext;
 
@@ -52,8 +58,11 @@ public class RebindManagerImpl implements RebindManager {
         final RebindContextImpl rebindContext = new RebindContextImpl(memento);
 
         // Instantiate locations
+        LOG.info("RebindManager constructing locations: {}", memento.getLocationIds());
         for (String locationId : memento.getLocationIds()) {
             LocationMemento locationMemento = checkNotNull(memento.getLocationMemento(locationId), "memento of "+locationId);
+            if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating location {}", memento);
+            
             RebindableLocation location = newLocation(locationMemento, reflections);
             location.getRebindSupport().reconstruct(locationMemento);
             
@@ -62,6 +71,7 @@ public class RebindManagerImpl implements RebindManager {
         }
         
         // Rebind locations
+        LOG.info("RebindManager rebinding locations: {}", memento.getLocationIds());
         for (String locationId : memento.getLocationIds()) {
             Iterable<String> topLevelLocationIds = Iterables.filter(memento.getLocationIds(), new Predicate<String>() {
                     @Override public boolean apply(String input) {
@@ -74,6 +84,8 @@ public class RebindManagerImpl implements RebindManager {
                 depthFirst(topLevelLocation, new Function<Location, Void>() {
                         @Override public Void apply(Location input) {
                             LocationMemento locationMemento = memento.getLocationMemento(input.getId());
+                            if (LOG.isDebugEnabled()) LOG.debug("RebindManager rebinding location {}", memento);
+                            
                             ((RebindableLocation)input).getRebindSupport().rebind(rebindContext, locationMemento);
                             return null;
                         }});
@@ -81,8 +93,11 @@ public class RebindManagerImpl implements RebindManager {
         }
         
         // Instantiate entities
+        LOG.info("RebindManager instantiating entities: {}", memento.getEntityIds());
         for (String entityId : memento.getEntityIds()) {
             EntityMemento entityMemento = checkNotNull(memento.getEntityMemento(entityId), "memento of "+entityId);
+            if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", memento);
+            
             Rebindable entity = newEntity(entityMemento, reflections);
             entity.getRebindSupport().reconstruct(entityMemento);
             
@@ -91,12 +106,15 @@ public class RebindManagerImpl implements RebindManager {
         }
         
         // Rebind entities
+        LOG.info("RebindManager rebinding entities for apps {}: {}", memento.getApplicationIds(), memento.getEntityIds());
         for (String appId : memento.getApplicationIds()) {
             Application app = (Application) entities.get(appId);
             result.add(app);
             depthFirst(app, new Function<Entity, Void>() {
                     @Override public Void apply(Entity input) {
                         EntityMemento entityMemento = memento.getEntityMemento(input.getId());
+                        if (LOG.isDebugEnabled()) LOG.debug("RebindManager rebinding entity {}", memento);
+                        
                         ((Rebindable)input).getRebindSupport().rebind(rebindContext, entityMemento);
                         return null;
                     }});
@@ -120,21 +138,23 @@ public class RebindManagerImpl implements RebindManager {
         return (Rebindable) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
     }
     
+    /**
+     * Constructs a new location, passing to its constructor the location id and all of memento.getFlags().
+     */
     private RebindableLocation newLocation(LocationMemento memento, Reflections reflections) {
         String locationId = memento.getId();
         String locationType = checkNotNull(memento.getType(), "locationType of "+locationId);
         Class<?> locationClazz = reflections.loadClass(locationType);
 
-        Map<String,Object> flags = Maps.newLinkedHashMap();
-        flags.put("id", locationId);
-        flags.put("deferConstructionChecks", true);
-        
-        // There are several possibilities for the constructor; find one that works.
-        // Prefer passing in the flags because required for Application to set the management context
-        // TODO Feels very hacky!
-        return (RebindableLocation) invokeConstructor(reflections, locationClazz, new Object[] {flags}, new Object[0]);
+        Map<String, Object> flags = MutableMap.<String, Object>builder()
+        		.put("id", locationId)
+        		.putAll(memento.getFlags())
+        		.removeAll(memento.getLocationReferenceFlags())
+        		.build();
+
+        return (RebindableLocation) invokeConstructor(reflections, locationClazz, new Object[] {flags});
     }
-    
+
     private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
         for (Object[] args : possibleArgs) {
             Constructor<T> constructor = Reflections.findCallabaleConstructor(clazz, args);
@@ -166,8 +186,14 @@ public class RebindManagerImpl implements RebindManager {
             Location current = tovisit.pop();
             visitor.apply(current);
             for (Location child : current.getChildLocations()) {
-                tovisit.push(child);
+            	if (child != null) {
+            		tovisit.push(child);
+            	}
             }
         }
+    }
+    
+    private <K,V> Map<K,V> union(Map<? extends K, ? extends V> m1, Map<? extends K, ? extends V> m2) {
+    	return MutableMap.<K,V>builder().putAll(m1).putAll(m2).build();
     }
 }
