@@ -1,5 +1,7 @@
 package brooklyn.entity.proxy.nginx;
 
+import java.io.Serializable;
+
 /** records a rewrite rule for use in URL rewriting such as by nginx;
  * from and to are expected to be usual regex replacement strings,
  * with the convention here (for portability) that:
@@ -9,8 +11,10 @@ package brooklyn.entity.proxy.nginx;
  * </li>
  * so eg use from = (.*)A(.*)  and to = $1B$2 to change all occurrences of A to B
  */
-public class UrlRewriteRule {
-
+public class UrlRewriteRule implements Serializable {
+    
+    private static final long serialVersionUID = -8457441487467968553L;
+    
     String from, to;
     boolean isBreak;
     

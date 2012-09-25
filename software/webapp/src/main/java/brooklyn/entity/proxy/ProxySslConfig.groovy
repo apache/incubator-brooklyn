@@ -1,6 +1,8 @@
 package brooklyn.entity.proxy;
 
-public class ProxySslConfig {
+import com.google.common.base.Objects;
+
+public class ProxySslConfig implements Serializable {
 
     /** 
      * url's for the SSL certificates required at the server
@@ -34,14 +36,7 @@ public class ProxySslConfig {
     
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                + ((certificate == null) ? 0 : certificate.hashCode());
-        result = prime * result + ((key == null) ? 0 : key.hashCode());
-        result = prime * result + (reuseSessions ? 1231 : 1237);
-        result = prime * result + (targetIsSsl ? 1231 : 1237);
-        return result;
+		return Objects.hashCode(certificate, key, reuseSessions, targetIsSsl);
     }
 
     @Override
@@ -53,21 +48,10 @@ public class ProxySslConfig {
         if (getClass() != obj.getClass())
             return false;
         ProxySslConfig other = (ProxySslConfig) obj;
-        if (certificate == null) {
-            if (other.certificate != null)
-                return false;
-        } else if (!certificate.equals(other.certificate))
-            return false;
-        if (key == null) {
-            if (other.key != null)
-                return false;
-        } else if (!key.equals(other.key))
-            return false;
-        if (reuseSessions != other.reuseSessions)
-            return false;
-        if (targetIsSsl != other.targetIsSsl)
-            return false;
-        return true;
+		
+		return Objects.equal(certificate, other.certificate) &&
+				Objects.equal(key, other.key) &&
+				Objects.equal(reuseSessions, other.reuseSessions) &&
+				Objects.equal(targetIsSsl, other.targetIsSsl);
     }
-
 }
