@@ -23,7 +23,6 @@ import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
 
-import com.google.common.base.Predicates
 import com.google.common.collect.Iterables
 import com.google.common.collect.LinkedHashMultimap
 import com.google.common.collect.Multimap
@@ -107,8 +106,6 @@ public class NginxController extends AbstractController {
     public void connectSensors() {
         super.connectSensors();
         
-        makeUrl();
-        
         sensorRegistry.register(new ConfigSensorAdapter());
         
         HttpSensorAdapter http = sensorRegistry.register(
@@ -134,11 +131,6 @@ public class NginxController extends AbstractController {
         setAttribute(SERVICE_UP, false);
     }
     
-    protected void makeUrl() {
-        super.makeUrl();
-        setAttribute(ROOT_URL, url);
-    }
-    
     @Override
     public Class getDriverInterface() {
         return NginxDriver.class;
@@ -150,6 +142,7 @@ public class NginxController extends AbstractController {
     
     protected void preStart() {
         super.preStart();
+        setAttribute(ROOT_URL, getUrl());
     }
     
     protected void reconfigureService() {
