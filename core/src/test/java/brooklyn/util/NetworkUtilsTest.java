@@ -10,6 +10,8 @@ import java.net.UnknownHostException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.util.text.Identifiers;
+
 public class NetworkUtilsTest {
 
     @Test
@@ -64,6 +66,11 @@ public class NetworkUtilsTest {
     public void test172_16_x_xSubnetPrivate() throws UnknownHostException {
         InetAddress address = InetAddress.getByAddress(new byte[] { (byte)172, 31, (byte)255, (byte)255 });
         Assert.assertTrue(NetworkUtils.isPrivateSubnet(address));
+    }
+
+    @Test(groups="Integration")
+    public void testBogusHostnameUnresolvable() {
+        Assert.assertEquals(NetworkUtils.resolve("bogus-hostname-"+Identifiers.makeRandomId(8)), null);
     }
 
 }
