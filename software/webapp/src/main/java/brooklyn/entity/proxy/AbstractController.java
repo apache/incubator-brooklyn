@@ -1,5 +1,6 @@
 package brooklyn.entity.proxy;
 
+import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -20,6 +21,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -30,7 +32,6 @@ import brooklyn.location.MachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -53,21 +54,16 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "proxy.protocol", "Main URL protocol this proxy answers (typically http or https)", null);
     
-    //does this have special meaning to nginx/others? or should we just take the hostname ?
-    public static final String ANONYMOUS = "anonymous";
-    
     @SetFromFlag("domain")
     public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.domainName", "Domain name that this controller responds to", ANONYMOUS);
+            String.class, "proxy.domainName", "Domain name that this controller responds to", null);
         
-    @SetFromFlag("url")
-    public static final BasicAttributeSensorAndConfigKey<String> SPECIFIED_URL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.url", "Main URL this proxy listens at");
-    
     @SetFromFlag("ssl")
     public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = 
         new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
 
+    public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
+    
     public static final BasicAttributeSensor<Set> TARGETS = new BasicAttributeSensor<Set>(
             Set.class, "proxy.targets", "Main set of downstream targets");
     
@@ -136,6 +132,10 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     	return isActive;
     }
     
+    public String getProtocol() {
+        return getAttribute(PROTOCOL);
+    }
+
     public String getDomain() {
         return getAttribute(DOMAIN_NAME);
     }
@@ -144,12 +144,8 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         return getAttribute(PROXY_HTTP_PORT);
     }
 
-    public String getProtocol() {
-        return getAttribute(PROTOCOL);
-    }
-
     public String getUrl() {
-        return getAttribute(SPECIFIED_URL);
+        return getAttribute(ROOT_URL);
     }
 
     public AttributeSensor getPortNumberSensor() {
@@ -159,34 +155,15 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     @Description("Forces reload of the configuration")
     public abstract void reload();
 
-    protected String inferProtocol(String url) {
-    	if (url!=null && !url.startsWith("null:")) {
-    		return url.substring(0, url.indexOf(':'));
-    	} else {
-    		return inferProtocol();
-    	}
-    }
-    
     protected String inferProtocol() {
-    	return getConfig(SSL_CONFIG)!=null ? "https" : "http";
-    }
-    
-    protected String inferHostname() {
-        String hostname = getDomain();
-        // use 'hostname' instead of domain if domain is anonymous
-        if (hostname==null || hostname.equals(ANONYMOUS)) {
-            hostname = getAttribute(HOSTNAME);
-            if (hostname == null) {
-                LOG.warn("Unable to determine domain/hostname for {}", this);
-            }
-        }
-        if (hostname==null) hostname = ANONYMOUS;
-        
-        return hostname;
+        return getConfig(SSL_CONFIG)!=null ? "https" : "http";
     }
     
     protected String inferUrl() {
-        return getProtocol()+"://"+getDomain()+":"+getPort()+"/";
+        String protocol = checkNotNull(getProtocol(), "protocol must not be null");
+        String domain = checkNotNull(getDomain(), "domain must not be null");
+        Integer port = checkNotNull(getPort(), "port must not be null");
+        return protocol+"://"+domain+":"+port+"/";
     }
     
     @Override
@@ -199,25 +176,11 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     protected void preStart() {
         super.preStart();
         
-        // use http port by default
+        setAttribute(PROTOCOL, inferProtocol());
+        setAttribute(DOMAIN_NAME, elvis(getConfig(DOMAIN_NAME), getAttribute(HOSTNAME)));
+        setAttribute(ROOT_URL, inferUrl());
+        
         checkNotNull(getPortNumberSensor(), "port number sensor must not be null");
-        
-        if (groovyTruth(getConfig(SPECIFIED_URL))) {
-            // previously we would attempt to infer values from a specified URL, but now we don't
-            // as that specified URL might be for another machine with port-forwarding
-            setAttribute(PROTOCOL, inferProtocol(getConfig(SPECIFIED_URL)));
-            setAttribute(HOSTNAME, inferHostname());
-            setAttribute(DOMAIN_NAME, getAttribute(HOSTNAME));
-            setAttribute(SPECIFIED_URL, getConfig(SPECIFIED_URL));
-
-        } else {
-            setAttribute(PROTOCOL, inferProtocol());
-            setAttribute(HOSTNAME, inferHostname());
-            setAttribute(DOMAIN_NAME, getAttribute(HOSTNAME));
-            setAttribute(SPECIFIED_URL, inferUrl());
-        }
-        
-        Preconditions.checkNotNull(getDomain(), "Domain must be set for controller");
     }
     
     public void checkEntity(Entity member) {

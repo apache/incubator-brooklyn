@@ -13,11 +13,9 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
-import brooklyn.entity.webapp.WebAppService
 import brooklyn.event.SensorEventListener
 import brooklyn.event.adapter.ConfigSensorAdapter
 import brooklyn.event.adapter.HttpSensorAdapter
-import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
@@ -57,8 +55,6 @@ public class NginxController extends AbstractController {
     @SetFromFlag("sticky")
     public static final BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
-    
-    public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
     
     public NginxController(Entity owner) {
         this(new LinkedHashMap(), owner);
@@ -109,7 +105,7 @@ public class NginxController extends AbstractController {
         sensorRegistry.register(new ConfigSensorAdapter());
         
         HttpSensorAdapter http = sensorRegistry.register(
-            new HttpSensorAdapter(getAttribute(AbstractController.SPECIFIED_URL), 
+            new HttpSensorAdapter(getAttribute(AbstractController.ROOT_URL), 
                 period: 1000*TimeUnit.MILLISECONDS));
         
         // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
@@ -138,11 +134,6 @@ public class NginxController extends AbstractController {
 
     public void doExtraConfigurationDuringStart() {
         reconfigureService();
-    }
-    
-    protected void preStart() {
-        super.preStart();
-        setAttribute(ROOT_URL, getUrl());
     }
     
     protected void reconfigureService() {
