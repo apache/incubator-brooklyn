@@ -32,6 +32,7 @@ import net.schmizz.sshj.userauth.password.PasswordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.internal.ssh.SshjTool.SshAction;
 
 import com.google.common.base.Objects;
@@ -176,11 +177,17 @@ public class SshjClientConnection implements SshAction<SSHClient> {
             ssh.authPassword(username, password);
         } else if (privateKeyData != null) {
             OpenSSHKeyFile key = new OpenSSHKeyFile();
-            key.init(privateKeyData, null, PasswordUtils.createOneOff(privateKeyPassphrase.toCharArray()));
+            key.init(privateKeyData, null, 
+                    GroovyJavaMethods.truth(privateKeyPassphrase) ? 
+                            PasswordUtils.createOneOff(privateKeyPassphrase.toCharArray())
+                            : null);
             ssh.authPublickey(username, key);
         } else if (privateKeyFile != null) {
             OpenSSHKeyFile key = new OpenSSHKeyFile();
-            key.init(privateKeyFile, PasswordUtils.createOneOff(privateKeyPassphrase.toCharArray()));
+            key.init(privateKeyFile, 
+                    GroovyJavaMethods.truth(privateKeyPassphrase) ? 
+                            PasswordUtils.createOneOff(privateKeyPassphrase.toCharArray())
+                            : null);
             ssh.authPublickey(username, key);
         } else {
             // Accept defaults (in ~/.ssh)
