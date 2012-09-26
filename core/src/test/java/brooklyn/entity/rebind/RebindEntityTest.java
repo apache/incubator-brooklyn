@@ -242,7 +242,7 @@ public class RebindEntityTest {
                     return new BasicEntityMemento(MyEntity2.this, MutableMap.<String,Object>of("myfield", myfield));
                 }
                 @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
-                    myfield = (String) memento.getProperty("myfield");
+                    myfield = (String) memento.getCustomProperty("myfield");
                     
                     if (getConfig(SUBSCRIBE)) {
                         subscribe(getApplication(), MyApplication.MY_SENSOR, new SensorEventListener<String>() {

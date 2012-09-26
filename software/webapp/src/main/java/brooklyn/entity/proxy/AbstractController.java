@@ -22,6 +22,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.rebind.BasicEntityRebindSupport;
+import brooklyn.entity.rebind.MementoTransformer;
 import brooklyn.entity.rebind.RebindContext;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
@@ -36,9 +37,7 @@ import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -352,21 +351,16 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
             @Override public EntityMemento getMemento() {
                 // Note: using MutableMap so accepts nulls
             	Map<String, Object> flags = Maps.newLinkedHashMap();
-            	flags.put("serverPool", (serverPool != null ? serverPool.getId() : null));
-            	flags.put("addresses", addresses);
-            	flags.put("targets", Iterables.transform(targets, entityIdFunction));
+            	flags.put("serverPoolAddresses", serverPoolAddresses);
+            	flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
             	flags.put("isActive", isActive);
                 return super.getMementoWithProperties(flags);
             }
             @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
             	super.doRebind(rebindContext, memento);
-            	String serverPoolId = (String) memento.getProperty("serverPool");
-				serverPool = (Group) (serverPoolId != null ? rebindContext.getEntity(serverPoolId) : null);
-				addresses.addAll((Set<String>) memento.getProperty("addresses"));
-				for (String targetId : (Set<String>)memento.getProperty("targets")) {
-					targets.add(rebindContext.getEntity(targetId));
-				}
-				isActive = (Boolean) memento.getProperty("isActive");
+            	serverPoolAddresses.addAll((Collection<String>) memento.getCustomProperty("serverPoolAddresses"));
+				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomProperty("serverPoolTargets"), Collection.class));
+				isActive = (Boolean) memento.getCustomProperty("isActive");
             }
         };
     }

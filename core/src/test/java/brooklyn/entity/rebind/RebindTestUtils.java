@@ -12,6 +12,8 @@ import brooklyn.entity.Application;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 
+import com.google.common.io.Closeables;
+
 public class RebindTestUtils {
 
     // Serialize, and de-serialize with a different management context
@@ -34,19 +36,26 @@ public class RebindTestUtils {
     
     @SuppressWarnings("unchecked")
 	public static <T> T serializeAndDeserialize(T memento) throws Exception {
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	ObjectOutputStream oos = new ObjectOutputStream(baos);
-    	oos.writeObject(memento);
-    	oos.close();
-    	
-    	ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-    	ObjectInputStream ois = new ObjectInputStream(bais);
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
     	try {
+    	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	    oos = new ObjectOutputStream(baos);
+    	    oos.writeObject(memento);
+    	    oos.close();
+    	    
+    	    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    	    ois = new ObjectInputStream(bais);
     		return (T) ois.readObject();
     	} catch (Exception e) {
-    		throw e; // FIXME just for breakpointing
+    	    try {
+    	        Dumpers.deepDumpSerializableness(memento);
+    	    } finally {
+    	        throw e;
+    	    }
     	} finally {
-    		ois.close();
+    	    Closeables.closeQuietly(oos);
+    		Closeables.closeQuietly(ois);
     	}
     }
     

@@ -2,6 +2,7 @@ package brooklyn.mementos;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.AttributeSensor;
@@ -27,6 +28,10 @@ public interface EntityMemento extends Memento {
     public Map<ConfigKey, Object> getConfig();
 
     public Map<AttributeSensor, Object> getAttributes();
+
+    public Set<AttributeSensor> getEntityReferenceAttributes();
+    
+    public Set<ConfigKey> getEntityReferenceConfigs();
 
     /**
      * The id of the parent entity, or null if none (e.g. if top-level app).
@@ -56,7 +61,7 @@ public interface EntityMemento extends Memento {
      * A (weakly-typed) property set for this memento.
      * These can be used to avoid sub-classing the entity memento, but developers can sub-class to get strong typing if desired.
      */
-    public Object getProperty(String name);
+    public Object getCustomProperty(String name);
 
-	public Map<String, ? extends Object> getProperties();
+	public Map<String, ? extends Object> getCustomProperties();
 }

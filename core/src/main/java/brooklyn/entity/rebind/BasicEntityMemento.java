@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -18,6 +19,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 
 /**
  * Represents the state of an entity, so that it can be reconstructed (e.g. after restarting brooklyn).
@@ -38,36 +40,53 @@ public class BasicEntityMemento implements EntityMemento, Serializable {
     private String displayName;
     private Map<ConfigKey, Object> config;
     private Map<AttributeSensor, Object> attributes;
+    private Set<ConfigKey> entityReferenceConfigs;
+    private Set<AttributeSensor> entityReferenceAttributes;
     private List<String> locations;
     private String parent;
     private List<String> children;
     private List<String> members;
-    private Map<String,Object> properties;
+    private Map<String,Object> customProperties;
     
     public BasicEntityMemento(Entity entity) {
         this(entity, Collections.<String,Object>emptyMap());
     }
     
-    public BasicEntityMemento(Entity entity, Map<String,?> properties) {
+    public BasicEntityMemento(Entity entity, Map<String,?> customProperties) {
         id = entity.getId();
         displayName = entity.getDisplayName();
         type = entity.getClass().getName();
         
-        this.properties = (properties != null) ? MutableMap.copyOf(properties) : Collections.<String,Object>emptyMap();
+        this.customProperties = (customProperties != null) ? MutableMap.copyOf(customProperties) : Collections.<String,Object>emptyMap();
         
         config = new LinkedHashMap<ConfigKey,Object>(entity.getEntityType().getConfigKeys().size());
+        entityReferenceConfigs = Sets.newLinkedHashSet();
         for (ConfigKey<?> key : entity.getEntityType().getConfigKeys()) {
-            config.put(key, entity.getConfig(key)); 
+            Object value = entity.getConfig(key);
+            Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
+            if (transformedValue != value) {
+                entityReferenceConfigs.add(key);
+            }
+            config.put(key, transformedValue); 
         }
         config = Collections.unmodifiableMap(config);
+        entityReferenceConfigs = Collections.unmodifiableSet(entityReferenceConfigs);
         
         attributes = new LinkedHashMap<AttributeSensor,Object>(entity.getEntityType().getSensors().size());
+        entityReferenceAttributes = Sets.newLinkedHashSet();
         for (Sensor<?> key : entity.getEntityType().getSensors()) {
             if (key instanceof AttributeSensor) {
-                attributes.put((AttributeSensor<?>)key, entity.getAttribute((AttributeSensor<?>)key));
+                Object value = entity.getAttribute((AttributeSensor<?>)key);
+                Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
+                if (transformedValue != value) {
+                    entityReferenceAttributes.add((AttributeSensor<?>)key);
+                }
+                attributes.put((AttributeSensor<?>)key, transformedValue);
+
             }
         }
         attributes = Collections.unmodifiableMap(attributes);
+        entityReferenceAttributes = Collections.unmodifiableSet(entityReferenceAttributes);
         
         locations = new ArrayList<String>(entity.getLocations().size());
         for (Location location : entity.getLocations()) {
@@ -119,9 +138,18 @@ public class BasicEntityMemento implements EntityMemento, Serializable {
     }
     
     @Override
+    public Set<AttributeSensor> getEntityReferenceAttributes() {
+        return entityReferenceAttributes;
+    }
+    
+    @Override
+    public Set<ConfigKey> getEntityReferenceConfigs() {
+        return entityReferenceConfigs;
+    }
+    
+    @Override
     public String getParent() {
-        // TODO Auto-generated method stub
-        return null;
+        return parent;
     }
     
     @Override
@@ -140,12 +168,12 @@ public class BasicEntityMemento implements EntityMemento, Serializable {
     }
 
     @Override
-    public Object getProperty(String name) {
-        return properties.get(name);
+    public Object getCustomProperty(String name) {
+        return customProperties.get(name);
     }
     
-	public Map<String, ? extends Object> getProperties() {
-		return properties;
+	public Map<String, ? extends Object> getCustomProperties() {
+		return customProperties;
 	}
 	
     @Override
