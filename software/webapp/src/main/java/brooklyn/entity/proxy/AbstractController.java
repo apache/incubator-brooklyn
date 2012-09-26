@@ -1,5 +1,6 @@
 package brooklyn.entity.proxy;
 
+import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -20,6 +21,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -30,7 +32,6 @@ import brooklyn.location.MachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -41,7 +42,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
 
     /** sensor for port to forward to on target entities */
     @SetFromFlag("portNumberSensor")
-    public static final BasicConfigKey<AttributeSensor> PORT_NUMBER_SENSOR = new BasicConfigKey<AttributeSensor>(
+    public static final BasicAttributeSensorAndConfigKey<AttributeSensor> PORT_NUMBER_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
             AttributeSensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port)", Attributes.HTTP_PORT);
 
     @SetFromFlag("port")
@@ -53,34 +54,24 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "proxy.protocol", "Main URL protocol this proxy answers (typically http or https)", null);
     
-    //does this have special meaning to nginx/others? or should we just take the hostname ?
-    public static final String ANONYMOUS = "anonymous";
-    
     @SetFromFlag("domain")
     public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.domainName", "Domain name that this controller responds to", ANONYMOUS);
+            String.class, "proxy.domainName", "Domain name that this controller responds to", null);
         
-    @SetFromFlag("url")
-    public static final BasicAttributeSensorAndConfigKey<String> SPECIFIED_URL = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.url", "Main URL this proxy listens at");
-    
     @SetFromFlag("ssl")
     public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = 
         new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
 
+    public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
+    
     public static final BasicAttributeSensor<Set> TARGETS = new BasicAttributeSensor<Set>(
             Set.class, "proxy.targets", "Main set of downstream targets");
     
     public static final MethodEffector<Void> RELOAD = new MethodEffector(AbstractController.class, "reload");
     
-    protected String domain;
-    protected Integer port;
-    protected String protocol;
-    protected String url;
-    protected AttributeSensor<Integer> portNumber;
-    protected boolean isActive = false;
-    protected boolean updateNeeded = true;
     protected Group serverPool;
+    protected boolean isActive;
+    protected boolean updateNeeded = true;
 
     AbstractMembershipTrackingPolicy policy;
     protected Set<String> addresses = new LinkedHashSet<String>();
@@ -137,47 +128,42 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         }
     }
 
+    public boolean isActive() {
+    	return isActive;
+    }
+    
+    public String getProtocol() {
+        return getAttribute(PROTOCOL);
+    }
+
     public String getDomain() {
-        return domain;
+        return getAttribute(DOMAIN_NAME);
     }
     
     public Integer getPort() {
-        return port;
-    }
-
-    public String getProtocol() {
-        return protocol;
+        return getAttribute(PROXY_HTTP_PORT);
     }
 
     public String getUrl() {
-        return url;
+        return getAttribute(ROOT_URL);
+    }
+
+    public AttributeSensor getPortNumberSensor() {
+        return getAttribute(PORT_NUMBER_SENSOR);
     }
 
     @Description("Forces reload of the configuration")
     public abstract void reload();
+
+    protected String inferProtocol() {
+        return getConfig(SSL_CONFIG)!=null ? "https" : "http";
+    }
     
-    protected void makeUrl() {
-        if (url==null || url.contains("://"+ANONYMOUS+":")) {
-            String hostname = domain;
-            // use 'hostname' instead of domain if domain is anonymous
-            if (hostname==null || hostname==ANONYMOUS) {
-                hostname = getAttribute(HOSTNAME);
-                if (hostname!=null) {
-                    domain = hostname;
-                    setConfigEvenIfOwned(DOMAIN_NAME, hostname);
-                    setAttribute(DOMAIN_NAME, hostname);
-                } else {
-                    LOG.warn("Unable to determine domain/hostname for "+this);
-                }
-            }
-            if (hostname==null) hostname = ANONYMOUS;
-            if (protocol==null) {
-                if (url!=null && !url.startsWith("null:")) protocol = url.substring(0, url.indexOf(':'));
-                else protocol = getConfig(SSL_CONFIG)!=null ? "https" : "http";
-            }
-            url = protocol+"://"+hostname+":"+port+"/";
-            setAttribute(SPECIFIED_URL, url);
-        }
+    protected String inferUrl() {
+        String protocol = checkNotNull(getProtocol(), "protocol must not be null");
+        String domain = checkNotNull(getDomain(), "domain must not be null");
+        Integer port = checkNotNull(getPort(), "port must not be null");
+        return protocol+"://"+domain+":"+port+"/";
     }
     
     @Override
@@ -190,25 +176,11 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     protected void preStart() {
         super.preStart();
         
-        // use http port by default
-        portNumber = checkNotNull(getConfig(PORT_NUMBER_SENSOR));
-
-        port = getAttribute(PROXY_HTTP_PORT);
-        Preconditions.checkNotNull(port, "Port must be set for controller");
+        setAttribute(PROTOCOL, inferProtocol());
+        setAttribute(DOMAIN_NAME, elvis(getConfig(DOMAIN_NAME), getAttribute(HOSTNAME)));
+        setAttribute(ROOT_URL, inferUrl());
         
-        protocol = getConfig(PROTOCOL);
-        domain = getConfig(DOMAIN_NAME);
-
-        if (!groovyTruth(getConfig(SPECIFIED_URL))) {
-            // previously we would attempt to infer values from a specified URL, but now we don't
-            // as that specified URL might be for another machine with port-forwarding
-        } else {
-            makeUrl();
-        }
-        setAttribute(PROTOCOL, protocol);
-        setAttribute(DOMAIN_NAME, domain);
-        
-        Preconditions.checkNotNull(domain, "Domain must be set for controller");
+        checkNotNull(getPortNumberSensor(), "port number sensor must not be null");
     }
     
     public void checkEntity(Entity member) {
@@ -247,7 +219,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
             MachineLocation machine = (MachineLocation) loc;
             //use hostname as this is more portable (eg in amazon, ip doesn't resolve)
             String ip = machine.getAddress().getHostName();
-            Integer port = member.getAttribute(portNumber);
+            Integer port = member.getAttribute(getPortNumberSensor());
             if (ip==null || port==null) {
                 LOG.warn("Missing ip/port for web controller {} target {}, skipping", this, member);
             } else {
@@ -260,9 +232,6 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         }
         LOG.info("Adding to {}, new member {} in locations {}", new Object[] {getDisplayName(), member.getDisplayName(), member.getLocations()});
         
-        // TODO shouldn't need to do this here? (no harm though)
-        makeUrl();
-        
         update();
         targets.add(member);
     }
@@ -274,7 +243,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         for (Location loc : member.getLocations()) {
             MachineLocation machine = (MachineLocation) loc;
             String ip = machine.getAddress().getHostAddress();
-            int port = member.getAttribute(portNumber);
+            int port = member.getAttribute(getPortNumberSensor());
             addresses.remove(ip+":"+port);
         }
         if (addresses==oldAddresses) {
@@ -304,7 +273,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     protected abstract void reconfigureService();
     
     public void update() {
-        if (!isActive) updateNeeded = true;
+        if (!isActive()) updateNeeded = true;
         else {
             updateNeeded = false;
             LOG.debug("Updating {} in response to changes", this);

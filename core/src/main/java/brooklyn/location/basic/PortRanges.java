@@ -1,5 +1,6 @@
 package brooklyn.location.basic;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,8 +21,10 @@ public class PortRanges {
     public static final int MAX_PORT = 65535;
     public static final PortRange ANY_HIGH_PORT = new LinearPortRange(1024, MAX_PORT);
     
-    public static class SinglePort implements PortRange {
-        final int port;
+    public static class SinglePort implements PortRange, Serializable {
+		private static final long serialVersionUID = 7446781416534230401L;
+		
+		final int port;
         private SinglePort(int port) { this.port = port; }
         
         @Override
@@ -52,7 +55,8 @@ public class PortRanges {
 
     @Deprecated
     public static class BasicPortRange extends LinearPortRange {
-        public static final int MAX_PORT = PortRanges.MAX_PORT;
+		private static final long serialVersionUID = 2604690520893353582L;
+		public static final int MAX_PORT = PortRanges.MAX_PORT;
         public static final PortRange ANY_HIGH_PORT = PortRanges.ANY_HIGH_PORT;
         public BasicPortRange(int start, int end) { super(start, end); }
         @Override
@@ -70,8 +74,10 @@ public class PortRanges {
         }
     }
     
-    public static class LinearPortRange implements PortRange {
-        final int start, end, delta;
+    public static class LinearPortRange implements PortRange, Serializable {
+		private static final long serialVersionUID = -9165280509363743508L;
+		
+		final int start, end, delta;
         private LinearPortRange(int start, int end, int delta) {
             this.start = start;
             this.end = end;
@@ -135,8 +141,10 @@ public class PortRanges {
         }
     }
     
-    public static class AggregatePortRange implements PortRange {
-        final List<PortRange> ranges;
+    public static class AggregatePortRange implements PortRange, Serializable {
+		private static final long serialVersionUID = 7332682500816739660L;
+		
+		final List<PortRange> ranges;
         private AggregatePortRange(List<PortRange> ranges) {
             this.ranges = ImmutableList.copyOf(ranges);
         }
