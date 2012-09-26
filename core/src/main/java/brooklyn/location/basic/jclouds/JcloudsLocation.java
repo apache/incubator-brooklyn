@@ -434,7 +434,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     MutableMap.builder()
                             .put("address", vmHostname) 
                             .put("displayName", vmHostname)
-                            .put("username", setup.allconf.get("userName"))
+                            .put("user", setup.allconf.get("userName"))
                             .put("config", sshConfig)
                             .build(),
                     this, 
@@ -564,7 +564,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     MutableMap.builder()
                             .put("address", hostname) 
                             .put("displayName", hostname)
-                            .put("username", username)
+                            .put("user", username)
                             .put("config", sshConfig)
                             .build(),
                     this, 
@@ -872,7 +872,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             if (truth(allconf.get("privateKeyPassphrase"))) 
                 sshConfig.put("privateKeyPassphrase", allconf.get("privateKeyPassphrase"));
             // TODO messy way to get an SSH session 
-            SshMachineLocation sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "username", allconf.get("userName"), "config", sshConfig));
+            SshMachineLocation sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", allconf.get("userName"), "config", sshConfig));
             
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
