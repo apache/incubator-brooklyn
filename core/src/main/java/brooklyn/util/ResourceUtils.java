@@ -75,8 +75,16 @@ public class ResourceUtils {
                     throw new IOException("Error accessing "+orig+": "+e, e);
                 }
             }
-            if (url.matches("[A-Za-z]+:.*")) {
-                //looks like a URL
+            if (url.matches("[A-Za-z][A-Za-z]+:.*")) {
+                //looks like a URL - require two letters so we don't think e.g. c:/path/ is a url
+                if (url.matches("file://[A-Za-z]:[/\\\\].*")) {
+                    // file://c:/path/to/x is sometimes mistakenly supplied
+                    // where file:///c:/path/to/x is the correct syntax.
+                    // treat the former as the latter since the former doesn't have any other interpretation
+                    if (log.isDebugEnabled())
+                        log.debug("silently changing "+url+" to file:/// prefix");
+                    url = "file:///"+url.substring(7);
+                }
                 return new URL(url).openStream();
             }
 

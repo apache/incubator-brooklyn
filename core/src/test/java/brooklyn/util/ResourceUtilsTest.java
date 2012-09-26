@@ -39,9 +39,11 @@ public class ResourceUtilsTest {
         InputStream stream = utils.getResourceFromUrl("/brooklyn/config/sample.properties");
         assertNotNull(stream);
     }
-    
+
     @Test
     public void testGetResourceViaFileWithPrefix() throws Exception {
+        // on windows the correct syntax is  file:///c:/path  (note the extra /);
+        // however our routines also accept file://c:/path so the following is portable
         InputStream stream = utils.getResourceFromUrl("file://"+tempFile.getAbsolutePath());
         assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
     }
