@@ -7,8 +7,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.text.Identifiers;
+
 public class NetworkUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(NetworkUtils.class);
+    
     public static final int MIN_PORT_NUMBER = 1;
     public static final int MAX_PORT_NUMBER = 65535;
     
@@ -92,6 +99,41 @@ public class NetworkUtils {
         if (bytes[0]==127 && bytes[1]==0 && bytes[2]==0 && bytes[3]==1) return true;
         
         return false;
+    }
+
+    private static boolean triedUnresolvableHostname = false;
+    private static String cachedAddressOfUnresolvableHostname = null;
+    
+    /** returns null in a sane DNS environment, but if DNS provides a bogus address for made-up hostnames, this returns that address */
+    public synchronized static String getAddressOfUnresolvableHostname() {
+        if (triedUnresolvableHostname) return cachedAddressOfUnresolvableHostname;
+        String h = "noexistent-machine-"+Identifiers.makeRandomBase64Id(8);
+        try {
+            cachedAddressOfUnresolvableHostname = InetAddress.getByName(h).getHostAddress();
+            log.info("NetworkUtils detected "+cachedAddressOfUnresolvableHostname+" being returned by DNS for bogus hostnames ("+h+")");
+        } catch (Exception e) {
+            log.debug("NetworkUtils detected failure on DNS resolution of unknown hostname ("+h+" throws "+e+")");
+            cachedAddressOfUnresolvableHostname = null;
+        }
+        triedUnresolvableHostname = true;
+        return cachedAddressOfUnresolvableHostname;
+    }
+    
+    /** resolves the given hostname to an IP address, returning null if unresolvable or 
+     * if the resolution is bogus (eg 169.* subnet or a "catch-all" IP resolution supplied by some miscreant DNS services) */
+    public static InetAddress resolve(String hostname) {
+        try {
+            InetAddress a = InetAddress.getByName(hostname);
+            if (a==null) return null;
+            String ha = a.getHostAddress();
+            if (log.isDebugEnabled()) log.debug("NetworkUtils resolved "+hostname+" as "+a);
+            if (ha.equals(getAddressOfUnresolvableHostname())) return null;
+            if (ha.startsWith("169.")) return null;
+            return a;
+        } catch (Exception e) {
+            if (log.isDebugEnabled()) log.debug("NetworkUtils failed to resolve "+hostname+", threw "+e);
+            return null;
+        }
     }
     
 }
