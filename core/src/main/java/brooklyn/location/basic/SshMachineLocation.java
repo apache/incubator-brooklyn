@@ -335,8 +335,16 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         PipedOutputStream outE = null;
         StreamGobbler gO=null, gE=null;
         try {
-            String logPrefix = (flags.get("logPrefix") != null) ? ""+flags.get("logPrefix") : getAddress().getHostName();
-            
+        	String logPrefix;
+        	if (flags.get("logPrefix") != null) {
+        		logPrefix = ""+flags.get("logPrefix"); 
+        	} else {
+        		String hostname = getAddress().getHostName();
+        		Object port = config.get("sshconfig.port");
+        		if (port == null) port = leftoverProperties.get("sshconfig.port");
+        		logPrefix = (user != null ? user+"@" : "") + hostname + (port != null ? ":"+port : "");
+        	}
+        	
             if (!truth(flags.get("noStdoutLogging"))) {
                 PipedInputStream insO = new PipedInputStream();
                 outO = new PipedOutputStream(insO);
