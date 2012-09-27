@@ -33,7 +33,9 @@ public class NginxHttpsSslIntegrationTest {
     private NginxController nginx
     private DynamicCluster cluster
 
-    private static String WAR_URL = "classpath://hello-world.war";
+    private static final String WAR_URL = "classpath://hello-world.war";
+    private static final String CERTIFICATE_URL = "classpath://ssl/certs/localhost/server.crt";
+    private static final String KEY_URL = "classpath://ssl/certs/localhost/server.key";
     
     @BeforeMethod(groups = "Integration")
     public void setup() {
@@ -54,7 +56,7 @@ public class NginxHttpsSslIntegrationTest {
         cluster = new DynamicCluster(owner:app, factory:template, initialSize:1)
         cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
         
-        ProxySslConfig ssl = new ProxySslConfig(certificate:"classpath://ssl/certs/localhost/server.crt", key:"classpath://ssl/certs/localhost/server.key");
+        ProxySslConfig ssl = new ProxySslConfig(certificate:CERTIFICATE_URL, key:KEY_URL);
         nginx = new NginxController(app,
 	            cluster: cluster,
 	            domain : "localhost",

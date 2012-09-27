@@ -5,7 +5,6 @@ import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,12 +26,11 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
@@ -64,18 +62,22 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
 
     public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
     
-    public static final BasicAttributeSensor<Set> TARGETS = new BasicAttributeSensor<Set>(
+    public static final BasicAttributeSensor<Set<String>> SERVER_POOL_TARGETS = new BasicAttributeSensor(
             Set.class, "proxy.targets", "Main set of downstream targets");
+    
+    /**
+     * @deprecated Use SERVER_POOL_TARGETS
+     */
+    public static final BasicAttributeSensor<Set<String>> TARGETS = SERVER_POOL_TARGETS;
     
     public static final MethodEffector<Void> RELOAD = new MethodEffector(AbstractController.class, "reload");
     
-    protected Group serverPool;
     protected boolean isActive;
     protected boolean updateNeeded = true;
 
-    AbstractMembershipTrackingPolicy policy;
-    protected Set<String> addresses = new LinkedHashSet<String>();
-    protected Set<Entity> targets = new LinkedHashSet<Entity>();
+    protected AbstractMembershipTrackingPolicy serverPoolMemberTrackerPolicy;
+    protected Set<String> serverPoolAddresses = Sets.newLinkedHashSet();
+    protected Set<Entity> serverPoolTargets = Sets.newLinkedHashSet();
     
     public AbstractController() {
         this(MutableMap.of(), null, null);
@@ -95,10 +97,10 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     public AbstractController(Map properties, Entity owner, Cluster cluster) {
         super(properties, owner);
 
-        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Controller targets tracker")) {
-            protected void onEntityChange(Entity member) { checkEntity(member); }
-            protected void onEntityAdded(Entity member) { addEntity(member); }
-            protected void onEntityRemoved(Entity member) { removeEntity(member); }
+        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Controller targets tracker")) {
+            protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }
+            protected void onEntityAdded(Entity member) { onServerPoolMemberChanged(member); }
+            protected void onEntityRemoved(Entity member) { onServerPoolMemberChanged(member); }
         };
     }
 
@@ -123,11 +125,19 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
      * Can pass in the 'cluster'.
      */
     public void bind(Map flags) {
-        if (flags.containsKey("cluster")) {
+        if (flags.containsKey("serverPool")) {
+            setConfig(SERVER_POOL, (Group) flags.get("serverPool"));
+            
+        } else if (flags.containsKey("cluster")) {
+            LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, flags.get("cluster"));
             setConfig(SERVER_POOL, (Group) flags.get("cluster"));
         }
     }
 
+    private Group getServerPool() {
+        return getConfig(SERVER_POOL);
+    }
+    
     public boolean isActive() {
     	return isActive;
     }
@@ -173,6 +183,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         return result;
     }
 
+    @Override
     protected void preStart() {
         super.preStart();
         
@@ -183,19 +194,88 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         checkNotNull(getPortNumberSensor(), "port number sensor must not be null");
     }
     
-    public void checkEntity(Entity member) {
+    @Override
+    protected void postStart() {
+        super.postStart();
+        LOG.info("Adding policy {} to {} on AbstractController.start", serverPoolMemberTrackerPolicy, this);
+        addPolicy(serverPoolMemberTrackerPolicy);
+        reset();
+        isActive = true;
+        update();
+    }
+    
+    protected void preStop() {
+        super.preStop();
+        serverPoolMemberTrackerPolicy.reset();
+    }
+
+    /** 
+     * Implementations should update the configuration so that 'addresses' are targeted.
+     * The caller will subsequently call reload if reconfigureService returned true.
+     * 
+     * @return True if the configuration has been modified (i.e. required reload); false otherwise.
+     */
+    protected abstract boolean reconfigureService();
+    
+    public void update() {
+        if (!isActive()) updateNeeded = true;
+        else {
+            updateNeeded = false;
+            LOG.debug("Updating {} in response to changes", this);
+            boolean modified = reconfigureService();
+            if (modified) {
+                LOG.debug("Reloading {} in response to changes", this);
+                invokeFromJava(RELOAD);
+            } else {
+                LOG.debug("Reconfiguration made no change, so skipping reload", this);
+            }
+        }
+        setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
+    }
+
+    protected synchronized void reset() {
+        serverPoolMemberTrackerPolicy.reset();
+        serverPoolAddresses.clear();
+        serverPoolTargets.clear();
+        if (groovyTruth(getServerPool())) {
+            serverPoolMemberTrackerPolicy.setGroup(getServerPool());
+            
+            // Initialize ourselves immediately with the latest set of members; don't wait for
+            // listener notifications because then will be out-of-date for short period (causing 
+            // problems for rebind)
+            for (Entity member : getServerPool().getMembers()) {
+                if (belongsInServerPool(member)) {
+                    if (LOG.isTraceEnabled()) LOG.trace("Done {} checkEntity {}", this, member);
+                    serverPoolTargets.add(member);
+                    String address = getAddressOfEntity(member);
+                    if (address != null) {
+                        serverPoolAddresses.add(address);
+                    }
+                }
+            }
+            
+            LOG.info("Resetting {}, members {} with address {}", new Object[] {this, serverPoolTargets, serverPoolAddresses});
+        }
+        
+        setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
+    }
+
+    protected void onServerPoolMemberChanged(Entity member) {
         if (LOG.isTraceEnabled()) LOG.trace("Start {} checkEntity {}", this, member);
-        if (belongs(member)) addEntity(member);
-        else removeEntity(member);
+        if (belongsInServerPool(member)) {
+            addServerPoolMember(member);
+        } else {
+            removeServerPoolMember(member);
+        }
         if (LOG.isTraceEnabled()) LOG.trace("Done {} checkEntity {}", this, member);
     }
     
-    public boolean belongs(Entity member) {
-        if (!member.getAttribute(Startable.SERVICE_UP)) {
+    protected boolean belongsInServerPool(Entity member) {
+        if (!groovyTruth(member.getAttribute(Startable.SERVICE_UP))) {
             LOG.debug("Members of {}, checking {}, eliminating because not up", getDisplayName(), member.getDisplayName());
             return false;
         }
-        if (!serverPool.getMembers().contains(member)) {
+        if (!getServerPool().getMembers().contains(member)) {
             LOG.debug("Members of {}, checking {}, eliminating because not member", getDisplayName(), member.getDisplayName());
             return false;
         }
@@ -203,101 +283,45 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         return true;
     }
     
-    //FIXME members locations might be remote?
-    public synchronized void addEntity(Entity member) {
+    protected synchronized void addServerPoolMember(Entity member) {
         if (LOG.isTraceEnabled()) LOG.trace("Considering to add to {}, new member {} in locations {} - "+
-                "waiting for service to be up", new Object[] {getDisplayName(), member.getDisplayName(), member.getLocations()});
-        if (targets.contains(member)) return;
+                "waiting for service to be up", new Object[] {this, member, member.getLocations()});
+        if (serverPoolTargets.contains(member)) return;
         
-        if (!groovyTruth(member.getAttribute(Startable.SERVICE_UP))) {
-            LOG.debug("Members of {}, not adding {} because not yet up", getDisplayName(), member.getDisplayName());
-            return;
+        String address = getAddressOfEntity(member);
+        if (address != null) {
+            serverPoolAddresses.add(address);
         }
-        
-        Set oldAddresses = new LinkedHashSet(addresses);
-        for (Location loc : member.getLocations()) {
-            MachineLocation machine = (MachineLocation) loc;
-            //use hostname as this is more portable (eg in amazon, ip doesn't resolve)
-            String ip = machine.getAddress().getHostName();
-            Integer port = member.getAttribute(getPortNumberSensor());
-            if (ip==null || port==null) {
-                LOG.warn("Missing ip/port for web controller {} target {}, skipping", this, member);
-            } else {
-                addresses.add(ip+":"+port);
-            }
-        }
-        if (addresses==oldAddresses) {
-            if (LOG.isTraceEnabled()) LOG.trace("invocation of {}.addEntity({}) causes no change", this, member);
-            return;
-        }
-        LOG.info("Adding to {}, new member {} in locations {}", new Object[] {getDisplayName(), member.getDisplayName(), member.getLocations()});
+
+        LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, address});
         
         update();
-        targets.add(member);
+        serverPoolTargets.add(member);
     }
     
-    public synchronized void removeEntity(Entity member) {
-        if (!targets.contains(member)) return;
+    protected synchronized void removeServerPoolMember(Entity member) {
+        if (LOG.isTraceEnabled()) LOG.trace("Considering to remove from {}, member {} in locations {} - "+
+                "waiting for service to be up", new Object[] {this, member, member.getLocations()});
+        if (!serverPoolTargets.contains(member)) return;
         
-        Set oldAddresses = new LinkedHashSet(addresses);
-        for (Location loc : member.getLocations()) {
-            MachineLocation machine = (MachineLocation) loc;
-            String ip = machine.getAddress().getHostAddress();
-            int port = member.getAttribute(getPortNumberSensor());
-            addresses.remove(ip+":"+port);
-        }
-        if (addresses==oldAddresses) {
-            LOG.debug("when removing from {}, member {}, not found (already removed?)", getDisplayName(), member.getDisplayName());
-            return;
+        String address = getAddressOfEntity(member);
+        if (address != null) {
+            serverPoolAddresses.remove(address);
         }
         
-        LOG.info("Removing from {}, member {} previously in locations {}", 
-                new Object[] {getDisplayName(), member.getDisplayName(), member.getLocations()});
+        LOG.info("Removing from {}, member {} with address {}", new Object[] {this, member, address});
+        
         update();
-        targets.remove(member);
+        serverPoolTargets.remove(member);
     }
     
-    public void start(Collection<? extends Location> locations) {
-        // TODO Should not add policy before NginxController is properly started; otherwise
-        // get callbacks for addEntity when fields like portNumber are still null.
-        serverPool = getConfig(SERVER_POOL);
-        LOG.info("Adding policy {} to {} on AbstractController.start", policy, this);
-        addPolicy(policy);
-        reset();
-        super.start(locations);
-        isActive = true;
-        update();
-    }
-
-    /** should set up so that 'addresses' are targeted */
-    protected abstract void reconfigureService();
-    
-    public void update() {
-        if (!isActive()) updateNeeded = true;
-        else {
-            updateNeeded = false;
-            LOG.debug("Updating {} in response to changes", this);
-            reconfigureService();
-            LOG.debug("Submitting restart for update to {}", this);
-            invokeFromJava(RELOAD);
+    protected String getAddressOfEntity(Entity member) {
+        String ip = member.getAttribute(Attributes.HOSTNAME);
+        Integer port = member.getAttribute(Attributes.HTTP_PORT);
+        if (ip!=null && port!=null) {
+            return ip+":"+port;
         }
-        setAttribute(TARGETS, addresses);
-    }
-
-    public void reset() {
-        policy.reset();
-        addresses.clear();
-        if (groovyTruth(serverPool)) {
-            policy.setGroup(serverPool);
-        }
-        setAttribute(TARGETS, addresses);
-    }
-
-	
-	protected void preStop() {
-		super.preStop();
-        policy.reset();
-        addresses.clear();
-        setAttribute(TARGETS, addresses);
+        LOG.error("Unable to construct hostname:port representation for "+member+"; skipping in "+this);
+        return null;
     }
 }

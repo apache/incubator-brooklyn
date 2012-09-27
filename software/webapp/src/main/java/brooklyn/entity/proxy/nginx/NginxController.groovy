@@ -136,11 +136,13 @@ public class NginxController extends AbstractController {
         reconfigureService();
     }
     
-    protected void reconfigureService() {
+    @Override
+    protected boolean reconfigureService() {
 
         String cfg = getConfigFile();
-        if (cfg==null) return;
-        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", this, addresses, findUrlMappings());
+        if (cfg==null) return false;
+        
+        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", this, serverPoolAddresses, findUrlMappings());
         if (LOG.isTraceEnabled()) LOG.trace("Reconfiguring {}, config file:\n{}", this, cfg);
         
         NginxSshDriver driver = (NginxSshDriver)getDriver();
@@ -153,6 +155,8 @@ public class NginxController extends AbstractController {
             //cache ensures only the first is installed, which is what is assumed below
             installSslKeys(mapping.getDomain(), mapping.getConfig(UrlMapping.SSL_CONFIG));
         }
+        
+        return true;
     }
     
     Set<String> installedKeysCache = [];
@@ -199,12 +203,12 @@ public class NginxController extends AbstractController {
         config.append("  }\n");
         
         // For basic round-robin across the server-pool
-        if (addresses) {
+        if (serverPoolAddresses) {
             config.append(format("  upstream "+getId()+" {\n"))
             if (sticky){
                 config.append("    sticky;\n");
             }
-            for (String address: addresses){
+            for (String address: serverPoolAddresses){
                 config.append("    server "+address+";\n")
             }
             config.append("  }\n")

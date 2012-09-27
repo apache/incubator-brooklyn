@@ -98,7 +98,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         
         addOwnedChild(controller);
         this.locations.addAll(locations);
-        controller.bind(cluster:cluster);
+        controller.bind(serverPool:cluster);
         Entities.invokeEffectorList(this, [cluster, controller], Startable.START, [locations:locations]).get();
         
         connectSensors();
