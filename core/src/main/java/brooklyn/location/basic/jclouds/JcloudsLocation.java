@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.callables.RunScriptOnNode;
 import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
 import org.jclouds.compute.domain.OsFamily;
@@ -55,6 +57,7 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.util.MutableMap;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.text.Identifiers;
 
@@ -650,11 +653,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static final Map<String,CustomizeTemplateBuilder> SUPPORTED_TEMPLATE_BUILDER_PROPERTIES = ImmutableMap.<String,CustomizeTemplateBuilder>builder()
             .put("minRam", new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, Map props, Object v) {
-                        tb.minRam((Integer)v);
+                        tb.minRam(TypeCoercions.coerce(v, Integer.class));
                     }})
             .put("minCores", new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, Map props, Object v) {
-                        tb.minCores(toDouble(v));
+                        tb.minCores(TypeCoercions.coerce(v, Double.class));
                     }})
             .put("hardwareId", new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, Map props, Object v) {
@@ -748,6 +751,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     }})
             .build();
 
+    private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;
+    
     private Template buildTemplate(ComputeService computeService, String providerLocationId, BrooklynJcloudsSetupHolder setup) {
         Map<String,? extends Object> properties = setup.allconf;
         Map unusedConf = setup.unusedConf;
@@ -779,19 +784,42 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
         }
 
-        Template template = templateBuilder.build();
-        if (template.getImage().getName().contains(".rc-")) {
-            // release candidates might break things :(
-            if (templateBuilder instanceof PortableTemplateBuilder) {
-                if (((PortableTemplateBuilder)templateBuilder).getOsFamily()==null) {
-                    templateBuilder.osFamily(OsFamily.UBUNTU);
-                    Template template2 = templateBuilder.build();
-                    if (template2!=null) {
-                        LOG.debug("preferring template {} over {}", template2, template);
-                        template = template2;
+        Template template;
+        try {
+            template = templateBuilder.build();
+            if (template.getImage().getName().contains(".rc-")) {
+                // release candidates might break things :(
+                if (templateBuilder instanceof PortableTemplateBuilder) {
+                    if (((PortableTemplateBuilder)templateBuilder).getOsFamily()==null) {
+                        templateBuilder.osFamily(OsFamily.UBUNTU);
+                        Template template2 = templateBuilder.build();
+                        if (template2!=null) {
+                            LOG.debug(""+this+" preferring template {} over {}", template2, template);
+                            template = template2;
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            synchronized (this) {
+                // delay subsequent log.warns (put in synch block) so the "Loading..." message is obvious
+                LOG.warn("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+" (rethrowing): "+e);
+                if (!listedAvailableTemplatesOnNoSuchTemplate) {
+                    listedAvailableTemplatesOnNoSuchTemplate = true;
+                    LOG.info("Loading available images at "+this+" for reference...");
+                    Map m1 = new LinkedHashMap(setup.allconf);
+                    if (m1.remove("imageId")!=null)
+                        // don't apply default filters if user has tried to specify an image ID
+                        m1.put("anyOwner", true);
+                    ComputeService computeServiceLessRestrictive = JcloudsUtil.buildOrFindComputeService(m1, new MutableMap());
+                    Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
+                    LOG.info(""+imgs.size()+" available images at "+this);
+                    for (Image img: imgs) {
+                        LOG.info(" Image: "+img);
+                    }
+                }
+            }
+            throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+". See list of images in log.");
         }
         TemplateOptions options = template.getOptions();
         
@@ -824,7 +852,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         LOG.debug("jclouds using template {} to provision machine in {} for {}", new Object[] {template, this, setup.getCallerContext()});
         return template;
     }
-    
+
     private String getPublicHostname(NodeMetadata node, Map allconf) {
         if ("aws-ec2".equals(allconf != null ? allconf.get("provider") : null)) {
             String vmIp = null;

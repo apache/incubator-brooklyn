@@ -63,15 +63,18 @@ Configuration is typically set in `~/.brooklyn/brooklyn.properties` using keys s
     brooklyn.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST      
     brooklyn.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
 
-    # define a "named" location which uses a special set of AWS credentials (deploy to named:company-aws)
-    brooklyn.location.named.company-aws=jclouds:aws-ec2:us-west-1
-    brooklyn.location.named.company-aws.identity=BCDEFGHIJKLMNOPQRSTU      
-    brooklyn.location.named.company-aws.privateKeyFile=~/.ssh/public_clouds/company_aws_id_rsa
+    # define a "named" location which uses a special set of AWS credentials (deploy to named:company-jungle)
+    # note you can use many of the jclouds TemplateBuilder fields such as imageId, imageNameRegex, minRam
+    brooklyn.location.named.company-jungle=jclouds:aws-ec2:us-west-1
+    brooklyn.location.named.company-jungle.identity=BCDEFGHIJKLMNOPQRSTU      
+    brooklyn.location.named.company-jungle.privateKeyFile=~/.ssh/public_clouds/company_aws_id_rsa
+    brooklyn.location.named.company-jungle.imageId=ami-12345
+    brooklyn.location.named.company-jungle.minRam=2048
 
-    # and a "named" location which uses a fixed set of machines (deploy to named:prod1)
+    # and defining a fixed set of machines (deploy to named:prod1)
     # note powerful byon syntax, optionally including globs and per-machine user override
-    brooklyn.location.named.prod1=byon:(hosts="10.9.0.1,10.9.0.2,produser2@10.9.1.{10,11,20-29}")
-    brooklyn.location.named.prod1.user=produser      
+    brooklyn.location.named.prod1=byon:(hosts="10.9.1.1,10.9.1.2,produser2@10.9.2.{10,11,20-29}")
+    brooklyn.location.named.prod1.user=produser1
     brooklyn.location.named.prod1.privateKeyFile=~/.ssh/produser_id_rsa
     brooklyn.location.named.prod1.privateKeyPassphrase=s3cr3tCOMPANYpassphrase
     
