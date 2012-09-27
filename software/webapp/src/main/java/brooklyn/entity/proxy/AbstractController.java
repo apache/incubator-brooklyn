@@ -36,6 +36,13 @@ import com.google.common.collect.Sets;
  * Represents a controller mechanism for a {@link Cluster}.
  */
 public abstract class AbstractController extends SoftwareProcessEntity implements LoadBalancer {
+    
+    // TODO Should review synchronization model. Currently, all changes to the serverPoolTargets
+    // (and checking for potential changes) is done while synchronized on this. That means it 
+    // will also call update/reload while holding the lock. This is "conservative", but means
+    // sub-classes need to be extremely careful about any additional synchronization and of
+    // their implementations of update/reconfigureService/reload.
+    
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractController.class);
 
     /** sensor for port to forward to on target entities */
@@ -63,7 +70,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
     
     public static final BasicAttributeSensor<Set<String>> SERVER_POOL_TARGETS = new BasicAttributeSensor(
-            Set.class, "proxy.targets", "Main set of downstream targets");
+            Set.class, "proxy.serverpool.targets", "The downstream targets in the server pool");
     
     /**
      * @deprecated Use SERVER_POOL_TARGETS
@@ -72,8 +79,8 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     
     public static final MethodEffector<Void> RELOAD = new MethodEffector(AbstractController.class, "reload");
     
-    protected boolean isActive;
-    protected boolean updateNeeded = true;
+    protected volatile boolean isActive;
+    protected volatile boolean updateNeeded = true;
 
     protected AbstractMembershipTrackingPolicy serverPoolMemberTrackerPolicy;
     protected Set<String> serverPoolAddresses = Sets.newLinkedHashSet();
@@ -210,14 +217,14 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     }
 
     /** 
-     * Implementations should update the configuration so that 'addresses' are targeted.
+     * Implementations should update the configuration so that 'serverPoolAddresses' are targeted.
      * The caller will subsequently call reload if reconfigureService returned true.
      * 
      * @return True if the configuration has been modified (i.e. required reload); false otherwise.
      */
     protected abstract boolean reconfigureService();
     
-    public void update() {
+    public synchronized void update() {
         if (!isActive()) updateNeeded = true;
         else {
             updateNeeded = false;
@@ -260,8 +267,9 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
     }
 
-    protected void onServerPoolMemberChanged(Entity member) {
-        if (LOG.isTraceEnabled()) LOG.trace("Start {} checkEntity {}", this, member);
+    protected synchronized void onServerPoolMemberChanged(Entity member) {
+        if (LOG.isTraceEnabled()) LOG.trace("For {}, considering membership of {} which is in locations {}", 
+                new Object[] {this, member, member.getLocations()});
         if (belongsInServerPool(member)) {
             addServerPoolMember(member);
         } else {
@@ -272,21 +280,22 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     
     protected boolean belongsInServerPool(Entity member) {
         if (!groovyTruth(member.getAttribute(Startable.SERVICE_UP))) {
-            LOG.debug("Members of {}, checking {}, eliminating because not up", getDisplayName(), member.getDisplayName());
+            if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, eliminating because not up", getDisplayName(), member.getDisplayName());
             return false;
         }
         if (!getServerPool().getMembers().contains(member)) {
-            LOG.debug("Members of {}, checking {}, eliminating because not member", getDisplayName(), member.getDisplayName());
+            if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, eliminating because not member", getDisplayName(), member.getDisplayName());
             return false;
         }
-        LOG.debug("Members of {}, checking {}, approving", getDisplayName(), member.getDisplayName());
+        if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, approving", getDisplayName(), member.getDisplayName());
         return true;
     }
     
     protected synchronized void addServerPoolMember(Entity member) {
-        if (LOG.isTraceEnabled()) LOG.trace("Considering to add to {}, new member {} in locations {} - "+
-                "waiting for service to be up", new Object[] {this, member, member.getLocations()});
-        if (serverPoolTargets.contains(member)) return;
+        if (serverPoolTargets.contains(member)) {
+            if (LOG.isTraceEnabled()) LOG.trace("For {}, not adding as already have member {}", new Object[] {this, member});
+            return;
+        }
         
         String address = getAddressOfEntity(member);
         if (address != null) {
@@ -300,9 +309,10 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     }
     
     protected synchronized void removeServerPoolMember(Entity member) {
-        if (LOG.isTraceEnabled()) LOG.trace("Considering to remove from {}, member {} in locations {} - "+
-                "waiting for service to be up", new Object[] {this, member, member.getLocations()});
-        if (!serverPoolTargets.contains(member)) return;
+        if (!serverPoolTargets.contains(member)) {
+            if (LOG.isTraceEnabled()) LOG.trace("For {}, not removing as don't have member {}", new Object[] {this, member});
+            return;
+        }
         
         String address = getAddressOfEntity(member);
         if (address != null) {
@@ -321,7 +331,8 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         if (ip!=null && port!=null) {
             return ip+":"+port;
         }
-        LOG.error("Unable to construct hostname:port representation for "+member+"; skipping in "+this);
+        LOG.error("Unable to construct hostname:port representation for {} ({}:{}); skipping in {}", 
+                new Object[] {member, ip, port, this});
         return null;
     }
 }
