@@ -14,6 +14,9 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
 import brooklyn.location.LocationResolver;
 import brooklyn.util.MutableMap;
+import brooklyn.util.text.QuotedStringTokenizer;
+import brooklyn.util.text.WildcardGlobs;
+import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 public class LocationRegistry {
 
@@ -63,6 +66,8 @@ public class LocationRegistry {
     
     /**
      * Expects a collection of strings being the spec for locations, returns a list of locations.
+     * Also allows single elements which are comma-separated lists of locations.
+     * <p>
      * For legacy compatibility this also accepts nested lists, but that is deprecated
      * (and triggers a warning).
      */
@@ -70,9 +75,15 @@ public class LocationRegistry {
         List<Location> result = new ArrayList<Location>();
         for (Object id : ids) {
             if (id instanceof String) {
-                result.add(resolve((String) id));
+                // if it as comma-separated list -- TODO with no comma in the brackets
+                List<String> l = expandCommaSeparateLocationList((String)id);
+                if (l.size()>1) id = l;
             } else if (id instanceof Iterable) {
                 log.warn("LocationRegistry got list of list of location strings, "+ids+"; flattening");
+            }
+            if (id instanceof String) {
+                result.add(resolve((String) id));
+            } else if (id instanceof Iterable) {
                 result.addAll(getLocationsById((Iterable<?>) id));
             } else if (id instanceof Location) {
                 result.add((Location) id);
@@ -84,6 +95,12 @@ public class LocationRegistry {
         return result;
     }
 
+    private List<String> expandCommaSeparateLocationList(String id) {
+        return WildcardGlobs.getGlobsAfterBraceExpansion("{"+id+"}", false, PhraseTreatment.INTERIOR_NOT_EXPANDABLE, PhraseTreatment.INTERIOR_NOT_EXPANDABLE);
+        // don't do this, it tries to expand commas inside parentheses which is not good!
+//        QuotedStringTokenizer.builder().addDelimiterChars(",").tokenizeAll((String)id);
+    }
+    
     public Map getProperties() {
         return properties;
     }

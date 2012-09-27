@@ -67,10 +67,21 @@ public class LocationResolverTest {
     public void testAcceptsList() {
         new LocationRegistry().getLocationsById(["localhost"]);
     }
-    
+
+    @Test
+    public void testRegistryCommaResolution() {
+        List<Location> l;
+        l = new LocationRegistry().getLocationsById(["byon:(hosts=\"192.168.1.{1,2}\")"]);
+        Assert.assertEquals(1, l.size());
+        l = new LocationRegistry().getLocationsById(["aws-ec2:us-west,byon:(hosts=\"192.168.1.{1,2}\"),aws-ec2:us-east"]);
+        Assert.assertEquals(3, l.size());
+        l = new LocationRegistry().getLocationsById(["aws-ec2:us-west,byon:(hosts=\"192.168.1.{1,2}\",user=bob),aws-ec2:us-east"]);
+        Assert.assertEquals(3, l.size());
+    }
+
     @Test
     public void testAcceptsListOLists() {
-        //accidental, but if inner list has a single item it automatically gets coerced correctly to string
+        //if inner list has a single item it automatically gets coerced correctly to string
         //preserve for compatibility with older CommandLineLocations (since 0.4.0) [but log warning]
         new LocationRegistry().getLocationsById([["localhost"]]);
     }
@@ -82,9 +93,9 @@ public class LocationResolverTest {
     
     @Test
     public void testLegacyCommandLineAcceptsListOLists() {
-        //accidental, but if inner list has a single item it automatically gets coerced correctly to string
+        //if inner list has a single item it automatically gets coerced correctly to string
         //preserve for compatibility (since 0.4.0)
         CommandLineLocations.getLocationsById([["localhost"]]);
     }
-
+    
 }
