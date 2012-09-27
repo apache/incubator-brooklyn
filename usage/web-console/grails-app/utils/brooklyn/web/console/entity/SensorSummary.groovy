@@ -40,7 +40,7 @@ public class SensorSummary {
         for (NamedActionWithUrl h: RendererHints.getHintsFor(sensor, NamedActionWithUrl)) {
             String target = h.getUrlFromValue(value);
             if (target)
-                actions << [name: h.actionName, url: target]
+                actions << [name: h.getActionName(), url: target]
         }
     }
 
