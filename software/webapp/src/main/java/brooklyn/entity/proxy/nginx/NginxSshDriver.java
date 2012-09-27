@@ -45,6 +45,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     @Override
+    public void rebind() {
+        customizationCompleted = true;
+    }
+
+    @Override
     public void postLaunch() {
         entity.setAttribute(Attributes.HTTP_PORT, getHttpPort());
         super.postLaunch();

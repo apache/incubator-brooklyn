@@ -33,7 +33,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
 
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
         LocationMemento memento = new BasicLocationMemento(location, props);
-    	if (LOG.isDebugEnabled()) LOG.debug("Creating memento for location {}({}): displayName={}; locationProperties={}; " +
+    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; locationProperties={}; " +
     			"flags={}; customProperties={}; parent={}; children={}",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getLocationProperties(), 
 				memento.getFlags(), memento.getCustomProperties(), memento.getParent(), memento.getChildren()});
@@ -42,43 +42,42 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
 
     @Override
     public void reconstruct(LocationMemento memento) {
-    	if (LOG.isDebugEnabled()) LOG.debug("Reconstructing location {}({}): displayName={}; locationProperties={}; " +
+    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location {}({}): displayName={}; locationProperties={}; " +
     			"flags={}; customProperties={}",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getLocationProperties(), 
 				memento.getFlags(), memento.getCustomProperties()});
 
-    	// Note that the id should have been set in the constructor; it is immutable
+    	// Note that the flags have been set in the constructor
         location.setName(memento.getDisplayName());
         location.addLeftoverProperties(memento.getLocationProperties());
     }
-    
+
     @Override
-    public void rebind(RebindContext rebindContext, LocationMemento memento) {
-    	if (LOG.isDebugEnabled()) LOG.debug("Rebinding location {}({}): locationReferenceFlags={}; parent={}; children={}", 
-    			new Object[] {memento.getType(), memento.getId(), memento.getLocationReferenceFlags(), memento.getParent(), 
-    			memento.getChildren()});
-    	
-    	// Do late-binding of flags that are references to other locations
+    public void rewire(RebindContext rebindContext, LocationMemento memento) {
+        if (LOG.isTraceEnabled()) LOG.trace("Rewiring location {}({}): locationReferenceFlags={}; parent={}; children={}", 
+                new Object[] {memento.getType(), memento.getId(), memento.getLocationReferenceFlags(), memento.getParent(), 
+                memento.getChildren()});
+        
+        // Do late-binding of flags that are references to other locations
         for (String flagName : memento.getLocationReferenceFlags()) {
-        	Field field = FlagUtils.findFieldForFlag(flagName, location);
-        	Class<?> fieldType = field.getType();
-        	Object transformedValue = memento.getFlags().get(flagName);
-        	Object restoredValue = MementoTransformer.transformIdsToLocations(rebindContext, transformedValue, fieldType);
+            Field field = FlagUtils.findFieldForFlag(flagName, location);
+            Class<?> fieldType = field.getType();
+            Object transformedValue = memento.getFlags().get(flagName);
+            Object restoredValue = MementoTransformer.transformIdsToLocations(rebindContext, transformedValue, fieldType);
             FlagUtils.setFieldsFromFlags(ImmutableMap.of(flagName, restoredValue), location);
         }
 
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
+    }
+    
+    @Override
+    public void rebind(RebindContext rebindContext, LocationMemento memento) {
+    	if (LOG.isTraceEnabled()) LOG.trace("Rebinding location {}({})");
+    	
         doRebind(rebindContext, memento);
     }
 
-    /**
-     * For overriding, to give custom rebind behaviour.
-     */
-    protected void doRebind(RebindContext rebindContext, LocationMemento memento) {
-        // default is no-op
-    }
-    
     protected void addChildren(RebindContext rebindContext, LocationMemento memento) {
         for (String childId : memento.getChildren()) {
             Location child = rebindContext.getLocation(childId);
@@ -97,5 +96,12 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         } else if (memento.getParent() != null) {
         	LOG.warn("Ignoring parent {} of location {}({}), as cannot be found", new Object[] {memento.getParent(), memento.getType(), memento.getId()});
         }
+    }
+    
+    /**
+     * For overriding, to give custom rebind behaviour.
+     */
+    protected void doRebind(RebindContext rebindContext, LocationMemento memento) {
+        // default is no-op
     }
 }

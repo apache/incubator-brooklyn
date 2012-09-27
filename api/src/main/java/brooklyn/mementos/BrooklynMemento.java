@@ -9,6 +9,8 @@ public interface BrooklynMemento {
     public LocationMemento getLocationMemento(String id);
     
     public Collection<String> getApplicationIds();
+    
+    public Collection<String> getTopLevelLocationIds();
 
     public Collection<String> getEntityIds();
     

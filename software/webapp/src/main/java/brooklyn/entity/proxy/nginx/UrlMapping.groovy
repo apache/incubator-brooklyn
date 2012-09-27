@@ -8,6 +8,9 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
+import brooklyn.entity.rebind.BasicEntityRebindSupport;
+import brooklyn.entity.rebind.RebindContext;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.WebAppServiceConstants;
@@ -16,6 +19,7 @@ import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.management.SubscriptionHandle
+import brooklyn.mementos.EntityMemento;
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -107,6 +111,11 @@ public class UrlMapping extends AbstractGroup {
         recompute();
     }
 
+    protected void doRebind() {
+        if (log.isDebugEnabled()) log.debug("Rebinding {}", this);
+        recompute();
+    }
+    
     /** defines how address string, ie  hostname:port, is constructed from a given entity.
      * returns null if not possible.
      * <p>
@@ -175,4 +184,13 @@ public class UrlMapping extends AbstractGroup {
         recomputeAddresses();
     }
     
+    @Override
+    public RebindSupport<EntityMemento> getRebindSupport() {
+        return new BasicEntityRebindSupport(this) {
+            @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
+                super.doRebind(rebindContext, memento);
+                doRebind();
+            }
+        };
+    }
 }

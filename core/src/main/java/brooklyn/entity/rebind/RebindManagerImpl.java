@@ -4,9 +4,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +25,6 @@ import brooklyn.mementos.LocationMemento;
 import brooklyn.util.MutableMap;
 import brooklyn.util.javalang.Reflections;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -53,74 +53,79 @@ public class RebindManagerImpl implements RebindManager {
         Reflections reflections = new Reflections(classLoader);
         Map<String,Rebindable> entities = Maps.newLinkedHashMap();
         Map<String,RebindableLocation> locations = Maps.newLinkedHashMap();
-        List<Application> result = Lists.newArrayList();
         
         final RebindContextImpl rebindContext = new RebindContextImpl(memento);
 
         // Instantiate locations
-        LOG.info("RebindManager constructing locations: {}", memento.getLocationIds());
+        LOG.info("RebindManager instantiating locations: {}", memento.getLocationIds());
         for (String locationId : memento.getLocationIds()) {
             LocationMemento locationMemento = checkNotNull(memento.getLocationMemento(locationId), "memento of "+locationId);
-            if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating location {}", memento);
+            if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", memento);
             
             RebindableLocation location = newLocation(locationMemento, reflections);
-            location.getRebindSupport().reconstruct(locationMemento);
-            
             locations.put(locationId, location);
             rebindContext.registerLocation(locationId, (Location) location);
         }
         
+        // Reconstruct locations
+        LOG.info("RebindManager constructing locations: {}", memento.getLocationIds());
+        depthFirst(memento, rebindContext, new LocationVisitor("constructing") {
+                @Override public void visit(Location location, LocationMemento memento) {
+                    ((RebindableLocation)location).getRebindSupport().reconstruct(memento);
+                }});
+
+        // Rewiring locations
+        LOG.info("RebindManager rewiring locations");
+        depthFirst(memento, rebindContext, new LocationVisitor("rewiring") {
+                @Override public void visit(Location location, LocationMemento memento) {
+                    ((RebindableLocation)location).getRebindSupport().rewire(rebindContext, memento);
+                }});
+        
         // Rebind locations
-        LOG.info("RebindManager rebinding locations: {}", memento.getLocationIds());
-        for (String locationId : memento.getLocationIds()) {
-            Iterable<String> topLevelLocationIds = Iterables.filter(memento.getLocationIds(), new Predicate<String>() {
-                    @Override public boolean apply(String input) {
-                        LocationMemento locationMemento = memento.getLocationMemento(input);
-                        return locationMemento.getParent() == null;
-                    }});
-            
-            for (String topLevelLocationId : topLevelLocationIds) {
-                Location topLevelLocation = (Location) locations.get(topLevelLocationId);
-                depthFirst(topLevelLocation, new Function<Location, Void>() {
-                        @Override public Void apply(Location input) {
-                            LocationMemento locationMemento = memento.getLocationMemento(input.getId());
-                            if (LOG.isDebugEnabled()) LOG.debug("RebindManager rebinding location {}", memento);
-                            
-                            ((RebindableLocation)input).getRebindSupport().rebind(rebindContext, locationMemento);
-                            return null;
-                        }});
-            }
-        }
+        LOG.info("RebindManager rebinding locations");
+        depthFirst(memento, rebindContext, new LocationVisitor("rebinding") {
+            @Override public void visit(Location location, LocationMemento memento) {
+                ((RebindableLocation)location).getRebindSupport().rebind(rebindContext, memento);
+            }});
         
         // Instantiate entities
-        LOG.info("RebindManager instantiating entities: {}", memento.getEntityIds());
+        LOG.info("RebindManager instantiating entities");
         for (String entityId : memento.getEntityIds()) {
             EntityMemento entityMemento = checkNotNull(memento.getEntityMemento(entityId), "memento of "+entityId);
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating entity {}", memento);
             
             Rebindable entity = newEntity(entityMemento, reflections);
-            entity.getRebindSupport().reconstruct(entityMemento);
-            
             entities.put(entityId, entity);
             rebindContext.registerEntity(entityId, (Entity) entity);
         }
         
-        // Rebind entities
-        LOG.info("RebindManager rebinding entities for apps {}: {}", memento.getApplicationIds(), memento.getEntityIds());
-        for (String appId : memento.getApplicationIds()) {
-            Application app = (Application) entities.get(appId);
-            result.add(app);
-            depthFirst(app, new Function<Entity, Void>() {
-                    @Override public Void apply(Entity input) {
-                        EntityMemento entityMemento = memento.getEntityMemento(input.getId());
-                        if (LOG.isDebugEnabled()) LOG.debug("RebindManager rebinding entity {}", memento);
-                        
-                        ((Rebindable)input).getRebindSupport().rebind(rebindContext, entityMemento);
-                        return null;
-                    }});
-        }
+        // Reconstruct entities
+        LOG.info("RebindManager constructing entities");
+        depthFirst(memento, rebindContext, new EntityVisitor("constructing") {
+                @Override public void visit(Entity entity, EntityMemento memento) {
+                    ((Rebindable)entity).getRebindSupport().reconstruct(memento);
+                }});
+
+        // Rewiring entities
+        LOG.info("RebindManager rewiring entities");
+        depthFirst(memento, rebindContext, new EntityVisitor("rewiring") {
+                @Override public void visit(Entity entity, EntityMemento memento) {
+                    ((Rebindable)entity).getRebindSupport().rewire(rebindContext, memento);
+                }});
         
-        return result;
+        // Rebind entities
+        LOG.info("RebindManager rebinding entities");
+        depthFirst(memento, rebindContext, new EntityVisitor("rebinding") {
+            @Override public void visit(Entity entity, EntityMemento memento) {
+                ((Rebindable)entity).getRebindSupport().rebind(rebindContext, memento);
+            }});
+        
+        // Return the top-level applications
+        List<Application> apps = Lists.newArrayList();
+        for (String appId : memento.getApplicationIds()) {
+            apps.add((Application)rebindContext.getEntity(appId));
+        }
+        return apps;
     }
     
     private Rebindable newEntity(EntityMemento memento, Reflections reflections) {
@@ -159,37 +164,116 @@ public class RebindManagerImpl implements RebindManager {
         for (Object[] args : possibleArgs) {
             Constructor<T> constructor = Reflections.findCallabaleConstructor(clazz, args);
             if (constructor != null) {
+                constructor.setAccessible(true);
                 return reflections.loadInstance(constructor, args);
             }
         }
         throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
     }
     
-    private void depthFirst(Entity entity, Function<Entity, Void> visitor) {
-        Deque<Entity> tovisit = new ArrayDeque<Entity>();
-        tovisit.addFirst(entity);
-        
-        while (tovisit.size() > 0) {
-            Entity current = tovisit.pop();
-            visitor.apply(current);
-            for (Entity child : current.getOwnedChildren()) {
-                tovisit.push(child);
+    private void depthFirst(BrooklynMemento memento, RebindContext rebindContext, LocationVisitor visitor) {
+        List<String> orderedIds = depthFirstLocationOrder(memento);
+
+        for (String id : orderedIds) {
+            Location loc = rebindContext.getLocation(id);
+            LocationMemento locMemento = memento.getLocationMemento(id);
+            
+            if (loc != null) {
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} location {}", visitor.getActivityName(), memento);
+                visitor.visit(loc, locMemento);
+            } else {
+                LOG.warn("No location found for id {}; so not {}", id, visitor.getActivityName());
             }
         }
     }
-    
-    private void depthFirst(Location location, Function<Location, Void> visitor) {
-        Deque<Location> tovisit = new ArrayDeque<Location>();
-        tovisit.addFirst(location);
+
+    private void depthFirst(BrooklynMemento memento, RebindContext rebindContext, EntityVisitor visitor) {
+        List<String> orderedIds = depthFirstEntityOrder(memento);
+
+        for (String id : orderedIds) {
+            Entity loc = rebindContext.getEntity(id);
+            EntityMemento locMemento = memento.getEntityMemento(id);
+            
+            if (loc != null) {
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} entity {}", visitor.getActivityName(), memento);
+                visitor.visit(loc, locMemento);
+            } else {
+                LOG.warn("No entity found for id {}; so not {}", id, visitor.getActivityName());
+            }
+        }
+    }
+
+    private List<String> depthFirstLocationOrder(BrooklynMemento memento) {
+        Set<String> visited = new HashSet<String>();
+        Deque<String> tovisit = new ArrayDeque<String>();
+        List<String> result = new ArrayList<String>(memento.getLocationIds().size());
+        
+        tovisit.addAll(memento.getTopLevelLocationIds());
         
         while (tovisit.size() > 0) {
-            Location current = tovisit.pop();
-            visitor.apply(current);
-            for (Location child : current.getChildLocations()) {
-            	if (child != null) {
-            		tovisit.push(child);
-            	}
+            String current = tovisit.pop();
+            if (visited.add(current)) {
+                result.add(current);
+                for (String child : memento.getLocationMemento(current).getChildren()) {
+                    if (child != null) {
+                        tovisit.push(child);
+                    }
+                }
+            } else {
+                LOG.warn("Cycle detected in locations (id="+current+")");
             }
+        }
+        
+        return result;
+    }
+
+    private List<String> depthFirstEntityOrder(BrooklynMemento memento) {
+        Set<String> visited = new HashSet<String>();
+        Deque<String> tovisit = new ArrayDeque<String>();
+        List<String> result = new ArrayList<String>(memento.getEntityIds().size());
+        
+        tovisit.addAll(memento.getApplicationIds());
+        
+        while (tovisit.size() > 0) {
+            String current = tovisit.pop();
+            if (visited.add(current)) {
+                result.add(current);
+                for (String child : memento.getEntityMemento(current).getChildren()) {
+                    if (child != null) {
+                        tovisit.push(child);
+                    }
+                }
+            } else {
+                LOG.warn("Cycle detected in entity hierarchy (id="+current+")");
+            }
+        }
+        
+        return result;
+    }
+
+    private static abstract class LocationVisitor {
+        private final String activityName;
+
+        public LocationVisitor(String activityName) {
+            this.activityName = activityName;
+        }
+        public abstract void visit(Location location, LocationMemento memento);
+        
+        public String getActivityName() {
+            return activityName;
+        }
+    }
+    
+    private static abstract class EntityVisitor {
+        private final String activityName;
+
+        public EntityVisitor(String activityName) {
+            this.activityName = activityName;
+        }
+        public abstract void visit(Entity location, EntityMemento memento);
+        
+        public String getActivityName() {
+            return activityName;
         }
     }
     

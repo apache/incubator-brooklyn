@@ -27,6 +27,7 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     private static final long serialVersionUID = -5848083830410137654L;
     
     private final List<String> applicationIds = Lists.newArrayList();
+    private final List<String> topLevelLocationIds = Lists.newArrayList();
     private final Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
     private final Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
     
@@ -43,6 +44,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
                 		locations.put(locationInHierarchy.getId(), ((RebindableLocation)locationInHierarchy).getRebindSupport().getMemento());
                 	}
                 }
+            }
+        }
+        for (LocationMemento memento : locations.values()) {
+            if (memento.getParent() == null) {
+                topLevelLocationIds.add(memento.getId());
             }
         }
     }
@@ -72,6 +78,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         return Collections.unmodifiableSet(locations.keySet());
     }
     
+    @Override
+    public Collection<String> getTopLevelLocationIds() {
+        return Collections.unmodifiableList(topLevelLocationIds);
+    }
+
     private Collection<Location> findLocationsInHierarchy(Location root) {
     	Set<Location> result = Sets.newLinkedHashSet();
     	

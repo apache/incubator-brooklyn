@@ -30,14 +30,14 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
 
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
         EntityMemento memento = new BasicEntityMemento(entity, props);
-    	if (LOG.isDebugEnabled()) LOG.debug("Creating memento for entity {}({}): config={}; attributes={}; properties={}; parent={}; children={}; locations={}", 
+    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity {}({}): config={}; attributes={}; properties={}; parent={}; children={}; locations={}", 
     			new Object[] {memento.getType(), memento.getId(), memento.getConfig(), memento.getAttributes(), memento.getCustomProperties(), memento.getParent(), memento.getChildren(), memento.getLocations()});
     	return memento;
     }
 
     @Override
     public void reconstruct(EntityMemento memento) {
-    	if (LOG.isDebugEnabled()) LOG.debug("Reconstructing entity {}({}): config={}; attributes={}; properties={}", new Object[] {memento.getType(), memento.getId(), memento.getConfig(), memento.getAttributes(), memento.getCustomProperties()});
+    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity {}({}): config={}; attributes={}; properties={}", new Object[] {memento.getType(), memento.getId(), memento.getConfig(), memento.getAttributes(), memento.getCustomProperties()});
     	
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());
@@ -59,8 +59,8 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     }
     
     @Override
-    public void rebind(RebindContext rebindContext, EntityMemento memento) {
-    	if (LOG.isDebugEnabled()) LOG.debug("Rebinding entity {}({}): parent={}; children={}; locations={}", new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), memento.getLocations()});
+    public void rewire(RebindContext rebindContext, EntityMemento memento) {
+    	if (LOG.isTraceEnabled()) LOG.trace("Rewiring entity {}({}): parent={}; children={}; locations={}", new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), memento.getLocations()});
     	
         for (ConfigKey key : memento.getEntityReferenceConfigs()) {
             Object transformedValue = memento.getConfig().get(key);
@@ -77,6 +77,12 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         addChildren(rebindContext, memento);
         addMembers(rebindContext, memento);
         addLocations(rebindContext, memento);
+    }
+
+    @Override
+    public void rebind(RebindContext rebindContext, EntityMemento memento) {
+        if (LOG.isTraceEnabled()) LOG.trace("Rebinding entity {}({})", new Object[] {memento.getType(), memento.getId()});
+        
         doRebind(rebindContext, memento);
     }
 

@@ -150,6 +150,13 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         }
     }
 
+    @Override
+    public void onManagementNoLongerMaster() {
+        super.onManagementNoLongerMaster();
+        isActive = false;
+        serverPoolMemberTrackerPolicy.reset();
+    }
+
     private Group getServerPool() {
         return getConfig(SERVER_POOL);
     }
@@ -361,6 +368,8 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
             	serverPoolAddresses.addAll((Collection<String>) memento.getCustomProperty("serverPoolAddresses"));
 				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomProperty("serverPoolTargets"), Collection.class));
 				isActive = (Boolean) memento.getCustomProperty("isActive");
+				
+				AbstractController.this.doRebind();
             }
         };
     }

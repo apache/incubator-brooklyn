@@ -48,7 +48,6 @@ import com.google.common.collect.Maps
  */
 public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable, DriverDependentEntity {
 	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
-
     
     @SetFromFlag("startLatch")
     public static final ConfigKey<String> START_LATCH = ConfigKeys.START_LATCH
@@ -127,17 +126,26 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     }
     
 	protected void doRebind() {
+        Iterable<SshMachineLocation> sshMachineLocations = Iterables.filter(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
+        if (!Iterables.isEmpty(sshMachineLocations)) {
+            initDriver(Iterables.get(sshMachineLocations, 0));
+            driver.rebind();
+            if (LOG.isDebugEnabled()) LOG.debug("On rebind of {}, re-created driver {}", this, driver);
+        } else {
+            if (LOG.isDebugEnabled()) LOG.debug("On rebind of {}, no SshMachineLocation found (with locations {}) so not generating driver",
+                    this, getLocations());
+        }
+        
+        // FIXME What to do about things in STARTING or STOPPING state?
 		Lifecycle serviceState = getAttribute(SERVICE_STATE);
 		if (serviceState == Lifecycle.RUNNING) {
+            if (LOG.isDebugEnabled()) LOG.debug("On rebind of {}, reconnecting", this);
 			if (!sensorRegistry) sensorRegistry = new SensorRegistry(this);
 			postStart();
 			sensorRegistry.activateAdapters();
 			postActivation();
-		}
-		
-		Iterable<SshMachineLocation> sshMachineLocations = Iterables.filter(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-		if (!Iterables.isEmpty(sshMachineLocations)) {
-			initDriver(Iterables.get(sshMachineLocations, 0));
+		} else {
+            LOG.info("On rebind of {}, not reconnecting because state is {}", this, serviceState);
 		}
 	}
 	
