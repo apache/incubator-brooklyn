@@ -203,7 +203,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         boolean running = isRunning();
 
         if (!running) {
-            log.debug("Ignoring reload of nginx "+entity+", becausing service is not running (state "+lifecycle+")");
+            log.debug("Ignoring reload of nginx "+entity+", because service is not running (state "+lifecycle+")");
             return;
         }
         
