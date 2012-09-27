@@ -218,24 +218,18 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
 
     /** 
      * Implementations should update the configuration so that 'serverPoolAddresses' are targeted.
-     * The caller will subsequently call reload if reconfigureService returned true.
-     * 
-     * @return True if the configuration has been modified (i.e. required reload); false otherwise.
+     * The caller will subsequently call reload to apply the new configuration.
      */
-    protected abstract boolean reconfigureService();
+    protected abstract void reconfigureService();
     
     public synchronized void update() {
         if (!isActive()) updateNeeded = true;
         else {
             updateNeeded = false;
             LOG.debug("Updating {} in response to changes", this);
-            boolean modified = reconfigureService();
-            if (modified) {
-                LOG.debug("Reloading {} in response to changes", this);
-                invokeFromJava(RELOAD);
-            } else {
-                LOG.debug("Reconfiguration made no change, so skipping reload", this);
-            }
+            reconfigureService();
+            LOG.debug("Reloading {} in response to changes", this);
+            invokeFromJava(RELOAD);
         }
         setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
     }

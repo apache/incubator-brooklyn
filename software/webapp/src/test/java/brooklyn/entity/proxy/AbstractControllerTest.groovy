@@ -59,13 +59,10 @@ class AbstractControllerTest {
                 domain:"mydomain") {
 
             @Override
-            protected boolean reconfigureService() {
+            protected void reconfigureService() {
                 log.info "test controller reconfigure, addresses $serverPoolAddresses"
                 if ((serverPoolAddresses && !updates) || (updates && serverPoolAddresses!=updates.last())) {
                     updates.add(serverPoolAddresses)
-                    return true;
-                } else {
-                    return false;
                 }
             }
 
