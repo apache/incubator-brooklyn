@@ -18,6 +18,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
@@ -378,6 +380,31 @@ public class TypeCoercions {
             @Override
             public TimeDuration apply(final Object input) {
                 return JavaGroovyEquivalents.toTimeDuration(input);
+            }
+        });
+        registerAdapter(Integer.class, AtomicLong.class, new Function<Integer,AtomicLong>() {
+            @Override public AtomicLong apply(final Integer input) {
+                return new AtomicLong(input);
+            }
+        });
+        registerAdapter(Long.class, AtomicLong.class, new Function<Long,AtomicLong>() {
+            @Override public AtomicLong apply(final Long input) {
+                return new AtomicLong(input);
+            }
+        });
+        registerAdapter(String.class, AtomicLong.class, new Function<String,AtomicLong>() {
+            @Override public AtomicLong apply(final String input) {
+                return new AtomicLong(Long.parseLong(input));
+            }
+        });
+        registerAdapter(Integer.class, AtomicInteger.class, new Function<Integer,AtomicInteger>() {
+            @Override public AtomicInteger apply(final Integer input) {
+                return new AtomicInteger(input);
+            }
+        });
+        registerAdapter(String.class, AtomicInteger.class, new Function<String,AtomicInteger>() {
+            @Override public AtomicInteger apply(final String input) {
+                return new AtomicInteger(Integer.parseInt(input));
             }
         });
     }
