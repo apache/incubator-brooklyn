@@ -21,7 +21,7 @@ import java.util.Map;
 
 public class BrooklynWebServerTest {
 
-    public static final Logger log = LoggerFactory.getLogger(WebAppRunnerTest.class);
+    public static final Logger log = LoggerFactory.getLogger(BrooklynWebServer.class);
 
     @Test
     public void verifyHttp() throws Exception {
