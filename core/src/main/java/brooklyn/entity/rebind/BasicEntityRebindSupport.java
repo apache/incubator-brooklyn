@@ -56,6 +56,8 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 entity.setAttribute(entry.getKey(), entry.getValue());
             }
         }
+        
+        doReconstruct(memento);
     }
     
     @Override
@@ -77,6 +79,8 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         addChildren(rebindContext, memento);
         addMembers(rebindContext, memento);
         addLocations(rebindContext, memento);
+        
+        doRewire(rebindContext, memento);
     }
 
     @Override
@@ -84,6 +88,20 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         if (LOG.isTraceEnabled()) LOG.trace("Rebinding entity {}({})", new Object[] {memento.getType(), memento.getId()});
         
         doRebind(rebindContext, memento);
+    }
+
+    /**
+     * For overriding, to reconstruct other fields
+     */
+    protected void doReconstruct(EntityMemento memento) {
+        // default is no-op
+    }
+    
+    /**
+     * For overriding, to rewire other fields etc (that are not sensors/config)
+     */
+    protected void doRewire(RebindContext rebindContext, EntityMemento memento) {
+        // default is no-op
     }
 
     /**
