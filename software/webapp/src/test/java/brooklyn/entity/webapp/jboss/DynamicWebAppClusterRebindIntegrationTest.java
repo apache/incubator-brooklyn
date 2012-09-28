@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.jboss;
 
-import static brooklyn.entity.rebind.RebindTestUtils.serializeRebindAndManage;
+import static brooklyn.entity.rebind.RebindTestUtils.serializeAndRebind;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
 import static brooklyn.test.HttpTestUtils.assertUrlUnreachableEventually;
@@ -88,7 +88,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         WebAppMonitor monitor = newWebAppMonitor(jbossUrl);
         
         // Rebind
-        newApp = (TestApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        newApp = (TestApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         DynamicWebAppCluster newCluster = (DynamicWebAppCluster) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(DynamicWebAppCluster.class));
 
         assertHttpStatusCodeEquals(jbossUrl, 200);

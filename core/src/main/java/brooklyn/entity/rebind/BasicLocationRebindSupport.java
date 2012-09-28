@@ -41,22 +41,16 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     }
 
     @Override
-    public void reconstruct(LocationMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location {}({}): displayName={}; locationProperties={}; " +
-    			"flags={}; customProperties={}",
-    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getLocationProperties(), 
-				memento.getFlags(), memento.getCustomProperties()});
+    public void reconstruct(RebindContext rebindContext, LocationMemento memento) {
+    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location {}({}): displayName={}; parent={}; children={}; " +
+    			"locationProperties={}; flags={}; locationReferenceFlags={}; customProperties={}",
+    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
+    			memento.getChildren(), memento.getLocationProperties(), 
+				memento.getFlags(), memento.getLocationReferenceFlags(), memento.getCustomProperties()});
 
     	// Note that the flags have been set in the constructor
         location.setName(memento.getDisplayName());
         location.addLeftoverProperties(memento.getLocationProperties());
-    }
-
-    @Override
-    public void rewire(RebindContext rebindContext, LocationMemento memento) {
-        if (LOG.isTraceEnabled()) LOG.trace("Rewiring location {}({}): locationReferenceFlags={}; parent={}; children={}", 
-                new Object[] {memento.getType(), memento.getId(), memento.getLocationReferenceFlags(), memento.getParent(), 
-                memento.getChildren()});
         
         // Do late-binding of flags that are references to other locations
         for (String flagName : memento.getLocationReferenceFlags()) {
@@ -69,13 +63,20 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
 
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
+        
+        doReconsruct(rebindContext, memento);
     }
-    
+
     @Override
     public void rebind(RebindContext rebindContext, LocationMemento memento) {
     	if (LOG.isTraceEnabled()) LOG.trace("Rebinding location {}({})");
     	
         doRebind(rebindContext, memento);
+    }
+
+    @Override
+    public void managed() {
+        if (LOG.isTraceEnabled()) LOG.trace("Managed entity {}({})", new Object[] {location.getClass(), location.getId()});
     }
 
     protected void addChildren(RebindContext rebindContext, LocationMemento memento) {
@@ -96,6 +97,13 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         } else if (memento.getParent() != null) {
         	LOG.warn("Ignoring parent {} of location {}({}), as cannot be found", new Object[] {memento.getParent(), memento.getType(), memento.getId()});
         }
+    }
+    
+    /**
+     * For overriding, to give custom reconsruct behaviour.
+     */
+    protected void doReconsruct(RebindContext rebindContext, LocationMemento memento) {
+        // default is no-op
     }
     
     /**

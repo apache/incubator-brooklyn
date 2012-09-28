@@ -17,20 +17,19 @@ import com.google.common.io.Closeables;
 public class RebindTestUtils {
 
     // Serialize, and de-serialize with a different management context
-    public static Application serializeRebindAndManage(Application app, ClassLoader classLoader) throws Exception {
+    public static Application serializeAndRebind(Application app, ClassLoader classLoader) throws Exception {
     	BrooklynMemento memento = serialize(app);
-    	return rebindAndManage(memento, classLoader);
+    	return rebind(memento, classLoader);
     }
 
     public static BrooklynMemento serialize(Application app) throws Exception {
     	return serializeAndDeserialize(app.getManagementContext().getRebindManager().getMemento());
     }
     
-    public static Application rebindAndManage(BrooklynMemento memento, ClassLoader classLoader) throws Exception {
+    public static Application rebind(BrooklynMemento memento, ClassLoader classLoader) throws Exception {
         LocalManagementContext managementContext = new LocalManagementContext();
     	List<Application> newApps = managementContext.getRebindManager().rebind(memento, classLoader);
         assertEquals(newApps.size(), 1, "apps="+newApps);
-        managementContext.manage(newApps.get(0));
         return newApps.get(0);
     }
     
@@ -57,10 +56,5 @@ public class RebindTestUtils {
     	    Closeables.closeQuietly(oos);
     		Closeables.closeQuietly(ois);
     	}
-    }
-    
-    public static List<Application> rebind(BrooklynMemento memento, ClassLoader classLoader) {
-        LocalManagementContext managementContext = new LocalManagementContext();
-        return managementContext.getRebindManager().rebind(memento, classLoader);
     }
 }

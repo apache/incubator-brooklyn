@@ -1,6 +1,6 @@
 package brooklyn.entity.rebind;
 
-import static brooklyn.entity.rebind.RebindTestUtils.serializeRebindAndManage;
+import static brooklyn.entity.rebind.RebindTestUtils.serializeAndRebind;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -47,7 +47,7 @@ public class RebindLocationTest {
         origApp.invoke(MyApplication.START, ImmutableMap.of("locations", ImmutableList.of(origLoc)))
         		.blockUntilEnded();
 
-        MyApplication newApp = (MyApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
 
         assertEquals(newApp.getLocations().size(), 1, "locs="+newE.getLocations());
@@ -64,7 +64,7 @@ public class RebindLocationTest {
         origApp.invoke(MyApplication.START, ImmutableMap.of("locations", ImmutableList.of(origLoc)))
         		.blockUntilEnded();
         
-        MyApplication newApp = (MyApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.getId(), origLoc.getId());
@@ -77,7 +77,7 @@ public class RebindLocationTest {
         origApp.invoke(MyApplication.START, ImmutableMap.of("locations", ImmutableList.of(origLoc)))
         		.blockUntilEnded();
 
-        MyApplication newApp = (MyApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocation2 newLoc2 = (MyLocation2) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc2.getId(), origLoc.getId());
@@ -92,7 +92,7 @@ public class RebindLocationTest {
         origApp.start(ImmutableList.of(origLoc));
         origApp.getManagementContext().manage(origApp);
 
-        MyApplication newApp = (MyApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.myfield, "myval");
@@ -104,7 +104,7 @@ public class RebindLocationTest {
         origApp.start(ImmutableList.of(origLoc));
         origApp.getManagementContext().manage(origApp);
 
-        MyApplication newApp = (MyApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.myTransientField, null);
@@ -118,7 +118,7 @@ public class RebindLocationTest {
 
         BrooklynMemento brooklynMemento = RebindTestUtils.serialize(origApp);
         MyLocation.myStaticField = "mynewval";
-        MyApplication newApp = (MyApplication) RebindTestUtils.rebindAndManage(brooklynMemento, getClass().getClassLoader());
+        MyApplication newApp = (MyApplication) RebindTestUtils.rebind(brooklynMemento, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.myStaticField, "mynewval");
@@ -133,7 +133,7 @@ public class RebindLocationTest {
         origApp.start(ImmutableList.of(origLoc));
         origApp.getManagementContext().manage(origApp);
 
-        Application newApp = serializeRebindAndManage(origApp, getClass().getClassLoader());
+        Application newApp = serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocationReffingOthers newLoc = (MyLocationReffingOthers) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.getChildLocations().size(), 1);

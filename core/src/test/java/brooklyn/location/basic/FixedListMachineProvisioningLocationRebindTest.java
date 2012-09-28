@@ -39,7 +39,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
 
     @Test
     public void testRebindPreservesConfig() throws Exception {
-    	TestApplication newApp = (TestApplication) RebindTestUtils.serializeRebindAndManage(origApp, getClass().getClassLoader());
+    	TestApplication newApp = (TestApplication) RebindTestUtils.serializeAndRebind(origApp, getClass().getClassLoader());
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
     	
     	assertEquals(newLoc.getId(), origLoc.getId());
@@ -53,7 +53,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
 
     @Test
     public void testRebindParentRelationship() throws Exception {
-    	TestApplication newApp = (TestApplication) RebindTestUtils.serializeRebindAndManage(origApp, getClass().getClassLoader());
+    	TestApplication newApp = (TestApplication) RebindTestUtils.serializeAndRebind(origApp, getClass().getClassLoader());
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
     	
     	assertLocationIdsEqual(newLoc.getChildLocations(), origLoc.getChildLocations());
@@ -65,7 +65,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
     public void testRebindPreservesInUseMachines() throws Exception {
     	SshMachineLocation inuseMachine = origLoc.obtain();
     	
-    	TestApplication newApp = (TestApplication) RebindTestUtils.serializeRebindAndManage(origApp, getClass().getClassLoader());
+    	TestApplication newApp = (TestApplication) RebindTestUtils.serializeAndRebind(origApp, getClass().getClassLoader());
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
     	
     	assertLocationIdsEqual(newLoc.getInUse(), origLoc.getInUse());

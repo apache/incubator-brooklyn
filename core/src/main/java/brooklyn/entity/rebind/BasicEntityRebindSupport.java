@@ -36,53 +36,40 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     }
 
     @Override
-    public void reconstruct(EntityMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity {}({}): config={}; attributes={}; properties={}", new Object[] {memento.getType(), memento.getId(), memento.getConfig(), memento.getAttributes(), memento.getCustomProperties()});
-    	
+    public void reconstruct(RebindContext rebindContext, EntityMemento memento) {
+    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity {}({}): parent={}; children={}; locations={}; " +
+    			"config={}; attributes={}; customProperties={}", 
+    	        new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
+    	        memento.getLocations(), memento.getConfig(), memento.getAttributes(), memento.getCustomProperties()});
+
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());
 
         for (Map.Entry<ConfigKey, Object> entry : memento.getConfig().entrySet()) {
+            ConfigKey key = entry.getKey();
+            Object value = entry.getValue();
             if (memento.getEntityReferenceConfigs().contains(entry.getKey())) {
-                // defer setting this until rebind
-            } else {
-                entity.setConfig(entry.getKey(), entry.getValue());
+                value = MementoTransformer.transformIdsToEntities(rebindContext, value, key.getType());
             }
+            entity.setConfig(key, value);
         }
         for (Map.Entry<AttributeSensor, Object> entry : memento.getAttributes().entrySet()) {
+            AttributeSensor key = entry.getKey();
+            Object value = entry.getValue();
             if (memento.getEntityReferenceAttributes().contains(entry.getKey())) {
-                // defer setting this until rebind
-            } else {
-                entity.setAttribute(entry.getKey(), entry.getValue());
+                value = MementoTransformer.transformIdsToEntities(rebindContext, value, key.getType());
             }
-        }
-        
-        doReconstruct(memento);
-    }
-    
-    @Override
-    public void rewire(RebindContext rebindContext, EntityMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Rewiring entity {}({}): parent={}; children={}; locations={}", new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), memento.getLocations()});
-    	
-        for (ConfigKey key : memento.getEntityReferenceConfigs()) {
-            Object transformedValue = memento.getConfig().get(key);
-            Object restoredValue = MementoTransformer.transformIdsToEntities(rebindContext, transformedValue, key.getType());
-            entity.setConfig(key, restoredValue);
-        }
-        for (AttributeSensor key : memento.getEntityReferenceAttributes()) {
-            Object transformedValue = memento.getConfig().get(key);
-            Object restoredValue = MementoTransformer.transformIdsToEntities(rebindContext, transformedValue, key.getType());
-            entity.setAttribute(key, restoredValue);
+            entity.setAttribute(key, value);
         }
         
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
         addMembers(rebindContext, memento);
         addLocations(rebindContext, memento);
-        
-        doRewire(rebindContext, memento);
-    }
 
+        doReconstruct(rebindContext, memento);
+    }
+    
     @Override
     public void rebind(RebindContext rebindContext, EntityMemento memento) {
         if (LOG.isTraceEnabled()) LOG.trace("Rebinding entity {}({})", new Object[] {memento.getType(), memento.getId()});
@@ -90,20 +77,18 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         doRebind(rebindContext, memento);
     }
 
+    @Override
+    public void managed() {
+        if (LOG.isTraceEnabled()) LOG.trace("Managed entity {}({})", new Object[] {entity.getClass(), entity.getId()});
+    }
+
     /**
-     * For overriding, to reconstruct other fields
+     * For overriding, to reconstruct other fields.
      */
-    protected void doReconstruct(EntityMemento memento) {
+    protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
         // default is no-op
     }
     
-    /**
-     * For overriding, to rewire other fields etc (that are not sensors/config)
-     */
-    protected void doRewire(RebindContext rebindContext, EntityMemento memento) {
-        // default is no-op
-    }
-
     /**
      * For overriding, to give custom rebind behaviour.
      */
@@ -127,6 +112,10 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     protected void addChildren(RebindContext rebindContext, EntityMemento memento) {
         for (String childId : memento.getChildren()) {
             Entity child = rebindContext.getEntity(childId);
+            if (child == null) {
+                String msg = String.format("Child entity %s not found for entity %s (with children %s}", child, memento, memento.getChildren());
+                throw new IllegalStateException(msg);
+            }
             entity.addOwnedChild(child);
         }
     }

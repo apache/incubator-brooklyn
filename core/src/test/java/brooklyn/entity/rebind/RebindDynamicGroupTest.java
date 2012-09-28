@@ -1,6 +1,6 @@
 package brooklyn.entity.rebind;
 
-import static brooklyn.entity.rebind.RebindTestUtils.serializeRebindAndManage;
+import static brooklyn.entity.rebind.RebindTestUtils.serializeAndRebind;
 import static org.testng.Assert.assertEquals;
 
 import java.util.Collection;
@@ -34,7 +34,7 @@ public class RebindDynamicGroupTest {
         DynamicGroup origG = new DynamicGroup(origApp, Predicates.instanceOf(MyEntity.class));
         origApp.getManagementContext().manage(origApp);
         
-        TestApplication newApp = (TestApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        TestApplication newApp = (TestApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         final DynamicGroup newG = (DynamicGroup) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(DynamicGroup.class));
         final MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
 

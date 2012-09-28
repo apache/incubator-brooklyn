@@ -1,6 +1,5 @@
 package brooklyn.entity.proxy;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -363,12 +362,14 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
             	flags.put("isActive", isActive);
                 return super.getMementoWithProperties(flags);
             }
-            @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
-            	super.doRebind(rebindContext, memento);
+            @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
+            	super.doReconstruct(rebindContext, memento);
             	serverPoolAddresses.addAll((Collection<String>) memento.getCustomProperty("serverPoolAddresses"));
 				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomProperty("serverPoolTargets"), Collection.class));
 				isActive = (Boolean) memento.getCustomProperty("isActive");
-				
+            }
+            @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
+                super.doRebind(rebindContext, memento);
 				AbstractController.this.doRebind();
             }
         };

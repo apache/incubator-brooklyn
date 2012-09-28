@@ -50,6 +50,9 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public List<Application> rebind(final BrooklynMemento memento, ClassLoader classLoader) {
+        checkNotNull(memento, "memento");
+        checkNotNull(classLoader, "classLoader");
+        
         Reflections reflections = new Reflections(classLoader);
         Map<String,Rebindable> entities = Maps.newLinkedHashMap();
         Map<String,RebindableLocation> locations = Maps.newLinkedHashMap();
@@ -71,16 +74,9 @@ public class RebindManagerImpl implements RebindManager {
         LOG.info("RebindManager constructing locations: {}", memento.getLocationIds());
         depthFirst(memento, rebindContext, new LocationVisitor("constructing") {
                 @Override public void visit(Location location, LocationMemento memento) {
-                    ((RebindableLocation)location).getRebindSupport().reconstruct(memento);
+                    ((RebindableLocation)location).getRebindSupport().reconstruct(rebindContext, memento);
                 }});
 
-        // Rewiring locations
-        LOG.info("RebindManager rewiring locations");
-        depthFirst(memento, rebindContext, new LocationVisitor("rewiring") {
-                @Override public void visit(Location location, LocationMemento memento) {
-                    ((RebindableLocation)location).getRebindSupport().rewire(rebindContext, memento);
-                }});
-        
         // Rebind locations
         LOG.info("RebindManager rebinding locations");
         depthFirst(memento, rebindContext, new LocationVisitor("rebinding") {
@@ -103,21 +99,26 @@ public class RebindManagerImpl implements RebindManager {
         LOG.info("RebindManager constructing entities");
         depthFirst(memento, rebindContext, new EntityVisitor("constructing") {
                 @Override public void visit(Entity entity, EntityMemento memento) {
-                    ((Rebindable)entity).getRebindSupport().reconstruct(memento);
+                    ((Rebindable)entity).getRebindSupport().reconstruct(rebindContext, memento);
                 }});
 
-        // Rewiring entities
-        LOG.info("RebindManager rewiring entities");
-        depthFirst(memento, rebindContext, new EntityVisitor("rewiring") {
-                @Override public void visit(Entity entity, EntityMemento memento) {
-                    ((Rebindable)entity).getRebindSupport().rewire(rebindContext, memento);
-                }});
-        
         // Rebind entities
         LOG.info("RebindManager rebinding entities");
         depthFirst(memento, rebindContext, new EntityVisitor("rebinding") {
             @Override public void visit(Entity entity, EntityMemento memento) {
                 ((Rebindable)entity).getRebindSupport().rebind(rebindContext, memento);
+            }});
+        
+        // Manage the top-level apps (causing everything under them to become managed)
+        LOG.info("RebindManager managing entities");
+        for (String appId : memento.getApplicationIds()) {
+            managementContext.manage((Application)rebindContext.getEntity(appId));
+        }
+        
+        LOG.info("RebindManager notifying entities of all being managed");
+        depthFirst(memento, rebindContext, new EntityVisitor("managed") {
+            @Override public void visit(Entity entity, EntityMemento memento) {
+                ((Rebindable)entity).getRebindSupport().managed();
             }});
         
         // Return the top-level applications
@@ -171,6 +172,20 @@ public class RebindManagerImpl implements RebindManager {
         throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
     }
     
+    private void visitAllLocations(BrooklynMemento memento, RebindContext rebindContext, LocationVisitor visitor) {
+        for (String id : memento.getLocationIds()) {
+            Location loc = rebindContext.getLocation(id);
+            LocationMemento locMemento = memento.getLocationMemento(id);
+            
+            if (loc != null) {
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} location {}", visitor.getActivityName(), memento);
+                visitor.visit(loc, locMemento);
+            } else {
+                LOG.warn("No location found for id {}; so not {}", id, visitor.getActivityName());
+            }
+        }
+    }
+
     private void depthFirst(BrooklynMemento memento, RebindContext rebindContext, LocationVisitor visitor) {
         List<String> orderedIds = depthFirstLocationOrder(memento);
 
@@ -212,10 +227,19 @@ public class RebindManagerImpl implements RebindManager {
         
         while (tovisit.size() > 0) {
             String current = tovisit.pop();
-            if (visited.add(current)) {
+            LocationMemento locationMemento = memento.getLocationMemento(current);
+            
+            if (locationMemento == null) {
+                LOG.warn("No memento for location id {}", current);
+                
+            } else if (visited.add(current)) {
                 result.add(current);
-                for (String child : memento.getLocationMemento(current).getChildren()) {
-                    if (child != null) {
+                for (String child : locationMemento.getChildren()) {
+                    if (child == null) {
+                        LOG.warn("Null child location id in location {}", locationMemento);
+                    } else if (memento.getLocationMemento(child) == null) {
+                        LOG.warn("Unknown child location id {} in location {}", child, locationMemento);
+                    } else {
                         tovisit.push(child);
                     }
                 }
@@ -236,10 +260,19 @@ public class RebindManagerImpl implements RebindManager {
         
         while (tovisit.size() > 0) {
             String current = tovisit.pop();
-            if (visited.add(current)) {
+            EntityMemento entityMemento = memento.getEntityMemento(current);
+            
+            if (entityMemento == null) {
+                LOG.warn("No memento for entity id {}", current);
+                
+            } else if (visited.add(current)) {
                 result.add(current);
-                for (String child : memento.getEntityMemento(current).getChildren()) {
-                    if (child != null) {
+                for (String child : entityMemento.getChildren()) {
+                    if (child == null) {
+                        LOG.warn("Null child entity id in entity {}", entityMemento);
+                    } else if (memento.getEntityMemento(child) == null) {
+                        LOG.warn("Unknown child entity id {} in entity {}", child, entityMemento);
+                    } else {
                         tovisit.push(child);
                     }
                 }

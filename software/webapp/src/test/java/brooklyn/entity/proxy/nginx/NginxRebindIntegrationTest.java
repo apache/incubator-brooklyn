@@ -262,6 +262,6 @@ public class NginxRebindIntegrationTest {
             origManagementContext.unmanage(origNginx);
         }
         
-        return RebindTestUtils.rebindAndManage(brooklynMemento, classLoader);
+        return RebindTestUtils.rebind(brooklynMemento, classLoader);
     }
 }

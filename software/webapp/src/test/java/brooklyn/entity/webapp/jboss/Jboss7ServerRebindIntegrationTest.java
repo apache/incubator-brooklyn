@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.jboss;
 
-import static brooklyn.entity.rebind.RebindTestUtils.serializeRebindAndManage;
+import static brooklyn.entity.rebind.RebindTestUtils.serializeAndRebind;
 import static brooklyn.test.TestUtils.assertAttributeEventually;
 import static brooklyn.test.TestUtils.assertUrlStatusCodeEventually;
 import static org.testng.Assert.assertEquals;
@@ -85,7 +85,7 @@ public class Jboss7ServerRebindIntegrationTest {
         WebAppMonitor monitor = newWebAppMonitor(origServer.getAttribute(JBoss7Server.ROOT_URL));
         
         // Rebind
-        newApp = (TestApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        newApp = (TestApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         JBoss7Server newServer = (JBoss7Server) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));
 
         assertEquals(newServer.getAttribute(JBoss7Server.ROOT_URL), origServer.getAttribute(JBoss7Server.ROOT_URL));
