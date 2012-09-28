@@ -1,10 +1,9 @@
 package brooklyn.entity.webapp.jboss;
 
 import static brooklyn.entity.rebind.RebindTestUtils.serializeRebindAndManage;
-import static brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static brooklyn.test.HttpTestUtils.assertUrlUnreachableEventually;
 import static org.testng.Assert.assertEquals;
 
 import java.net.URL;
@@ -20,9 +19,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
-import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
@@ -33,8 +30,8 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class ControlledDynamicWebAppClusterRebindIntegrationTest {
-    private static final Logger LOG = LoggerFactory.getLogger(ControlledDynamicWebAppClusterRebindIntegrationTest.class);
+public class DynamicWebAppClusterRebindIntegrationTest {
+    private static final Logger LOG = LoggerFactory.getLogger(DynamicWebAppClusterRebindIntegrationTest.class);
     
     static { TimeExtras.init(); }
 
@@ -48,7 +45,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     @BeforeMethod(groups = "Integration")
     public void setUp() {
     	String warPath = "hello-world.war";
-        warUrl = checkNotNull(getClass().getClassLoader().getResource(warPath), "warUrl");
+        warUrl = getClass().getClassLoader().getResource(warPath);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         origApp = new TestApplication();
@@ -74,51 +71,44 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     	return monitor;
     }
     
-    // FIXME Fails due to RebindEntityTest.testRebindPreservesGetConfigWithDefault problem
-    @Test(groups = {"Integration", "WIP"})
+    @Test(groups = "Integration")
     public void testRebindsToRunningCluster() throws Exception {
-        NginxController origNginx = new NginxController(MutableMap.of("domain", "localhost"), origApp);
-
-    	new ControlledDynamicWebAppCluster(
+        DynamicWebAppCluster origCluster = new DynamicWebAppCluster(
     			MutableMap.builder()
     					.put("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
-    					.put("initialSize", "1")
-    					.put("controller", origNginx)
+    					.put("initialSize", 1)
     					.build(),
     			origApp);
     	
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
-        String rootUrl = origNginx.getAttribute(JBoss7Server.ROOT_URL);
+        JBoss7Server origJboss = (JBoss7Server) Iterables.find(origCluster.getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));
+        String jbossUrl = origJboss.getAttribute(JBoss7Server.ROOT_URL);
         
-        assertHttpStatusCodeEventuallyEquals(rootUrl, 200);
-        WebAppMonitor monitor = newWebAppMonitor(rootUrl);
+        assertHttpStatusCodeEventuallyEquals(jbossUrl, 200);
+        WebAppMonitor monitor = newWebAppMonitor(jbossUrl);
         
         // Rebind
         newApp = (TestApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
-        NginxController newNginx = (NginxController) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(NginxController.class));
-        ControlledDynamicWebAppCluster newCluster = (ControlledDynamicWebAppCluster) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(ControlledDynamicWebAppCluster.class));
+        DynamicWebAppCluster newCluster = (DynamicWebAppCluster) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(DynamicWebAppCluster.class));
 
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
-        assertHttpStatusCodeEquals(rootUrl, 200);
+        assertHttpStatusCodeEquals(jbossUrl, 200);
 
         // Confirm the cluster is usable: we can scale-up
         assertEquals(newCluster.getCurrentSize(), (Integer)1);
         newCluster.resize(2);
-        
+
         Iterable<Entity> newJbosses = Iterables.filter(newCluster.getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));
         assertEquals(Iterables.size(newJbosses), 2);
-        
-        Thread.sleep(1000);
-        for (int i = 0; i < 10; i++) {
-            assertHttpStatusCodeEquals(rootUrl, 200);
+        for (Entity j : newJbosses) {
+            assertHttpStatusCodeEventuallyEquals(j.getAttribute(JBoss7Server.ROOT_URL), 200);
         }
-        
+
         // Ensure while doing all of this the original jboss server remained reachable
         assertEquals(monitor.getFailures(), 0);
         
         // Ensure cluster is usable: we can scale back to stop the original jboss server
         newCluster.resize(0);
         
-        assertHttpStatusCodeEventuallyEquals(rootUrl, 404);
+        assertUrlUnreachableEventually(jbossUrl);
     }
 }

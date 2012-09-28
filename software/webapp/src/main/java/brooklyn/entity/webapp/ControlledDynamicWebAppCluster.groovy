@@ -90,22 +90,35 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         log.debug("creating cluster child for {}", this);
         cachedCluster = new DynamicWebAppCluster(this,
             factory: factory,
-            initialSize: { getConfig(INITIAL_SIZE) });
+            // FIXME Establish if definitely want to change how we treat closures like this
+            //initialSize: { getConfig(INITIAL_SIZE) } );
+            initialSize: getConfig(INITIAL_SIZE));
     }
     
     public void start(Collection<? extends Location> locations) {
         Iterables.getOnlyElement(locations); //assert just one
-        
-        addOwnedChild(controller);
         this.locations.addAll(locations);
+        
         controller.bind(serverPool:cluster);
-        Entities.invokeEffectorList(this, [cluster, controller], Startable.START, [locations:locations]).get();
+
+        // Set controller as child of cluster, if it is not already owned
+        List<Entity> childrenToStart;        
+        if (controller.getOwner() == null) {
+            addOwnedChild(controller);
+            childrenToStart = [cluster, controller];
+        } else {
+            childrenToStart = [cluster];
+        }
+                
+        Entities.invokeEffectorList(this, childrenToStart, Startable.START, [locations:locations]).get();
         
         connectSensors();
     }
     
     public void stop() {
-        controller.stop()
+        if (this.equals(controller.getOwner())) {
+            controller.stop()
+        }
         cluster.stop()
 
         locations.clear();

@@ -49,8 +49,8 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresEntityHierarchy() throws Exception {
-        MyEntity origE = new MyEntity(MutableMap.of("myfield", "myval"), origApp);
-        MyEntity origE2 = new MyEntity(MutableMap.of("myfield", "myval2"), origE);
+        MyEntity origE = new MyEntity(origApp);
+        MyEntity origE2 = new MyEntity(origE);
         origApp.getManagementContext().manage(origApp);
         
         MyApplication newApp = (MyApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
@@ -95,8 +95,8 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresGroupMembers() throws Exception {
-        MyEntity origE = new MyEntity(MutableMap.of("myfield", "myval"), origApp);
-        MyEntity origE2 = new MyEntity(MutableMap.of("myfield", "myval2"), origApp);
+        MyEntity origE = new MyEntity(origApp);
+        MyEntity origE2 = new MyEntity(origApp);
         BasicGroup origG = new BasicGroup(origApp);
         origG.addMember(origE);
         origG.addMember(origE2);
@@ -197,6 +197,22 @@ public class RebindEntityTest {
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_PLAIN), origE.getConfig(TestEntity.CONF_MAP_PLAIN));
         assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), origE.getConfig(TestEntity.CONF_LIST_THING));
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_THING), origE.getConfig(TestEntity.CONF_MAP_THING));
+    }
+
+    // FIXME Fails because newE has the config explicitly set to null, rather than no entry for the config key
+    @Test(groups="WIP")
+    public void testRebindPreservesGetConfigWithDefault() throws Exception {
+        MyEntity origE = new MyEntity(origApp);
+        origApp.getManagementContext().manage(origApp);
+
+        assertNull(origE.getConfig(MyEntity.MY_CONFIG));
+        assertEquals(origE.getConfig(MyEntity.MY_CONFIG, "mydefault"), "mydefault");
+        
+        MyApplication newApp = (MyApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        
+        assertNull(newE.getConfig(MyEntity.MY_CONFIG));
+        assertEquals(newE.getConfig(MyEntity.MY_CONFIG, "mydefault"), "mydefault");
     }
 
     public static class MyApplication extends AbstractApplication implements Rebindable {

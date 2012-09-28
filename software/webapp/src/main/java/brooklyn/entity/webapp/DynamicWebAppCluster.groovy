@@ -1,9 +1,5 @@
 package brooklyn.entity.webapp
 
-import groovy.lang.MetaClass
-
-import java.util.Map
-
 import brooklyn.enricher.CustomAggregatingEnricher
 import brooklyn.entity.Entity
 import brooklyn.entity.group.DynamicCluster
@@ -51,8 +47,11 @@ class DynamicWebAppCluster extends DynamicCluster implements WebAppService {
      */
     public DynamicWebAppCluster(Map properties=[:], Entity owner=null) {
         super(properties, owner)
-        
-        // Enricher attribute setup.  A way of automatically discovering these (but avoiding 
+    }
+    
+    @Override
+    public void onManagementBecomingMaster() {
+        // Enricher attribute setup.  A way of automatically discovering these (but avoiding
         // averaging things like HTTP port and response codes) would be neat.
         List<List<BasicAttributeSensor>> enricherSetup = [
             [WebAppService.REQUEST_COUNT, TOTAL_REQUEST_COUNT, AVERAGE_REQUEST_COUNT],

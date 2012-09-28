@@ -102,8 +102,9 @@ public class Tasks {
                 } else {
                     v = vfuture.get();
                 }
-            } else if (v instanceof Closure) {
-                v = ((Closure) v).call();
+// FIXME Confirm we really want to remove this
+//            } else if (v instanceof Closure) {
+//                v = ((Closure) v).call();
             } else if (v instanceof Map) {
                 //and if a map or list we look inside
                 Map result = Maps.newLinkedHashMap();
