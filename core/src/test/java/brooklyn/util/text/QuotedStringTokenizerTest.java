@@ -52,23 +52,23 @@ public class QuotedStringTokenizerTest {
 
     @Test
     public void testTokenizingBuilder() throws Exception {
-        Assert.assertEquals(Arrays.asList("foo", "bar"), QuotedStringTokenizer.builder().tokenizeAll("foo bar"));
-        Assert.assertEquals(Arrays.asList("foo,bar"), QuotedStringTokenizer.builder().tokenizeAll("foo,bar"));
-        Assert.assertEquals(Arrays.asList("foo", "bar"), QuotedStringTokenizer.builder().delimiterChars(",").tokenizeAll("foo,bar"));
-        Assert.assertEquals(Arrays.asList("foo", " bar"), QuotedStringTokenizer.builder().delimiterChars(",").tokenizeAll("foo, bar"));
-        Assert.assertEquals(Arrays.asList("foo", "bar"), QuotedStringTokenizer.builder().addDelimiterChars(",").tokenizeAll("foo, bar"));
+        Assert.assertEquals(Arrays.asList("foo", "bar"), QuotedStringTokenizer.builder().buildList("foo bar"));
+        Assert.assertEquals(Arrays.asList("foo,bar"), QuotedStringTokenizer.builder().buildList("foo,bar"));
+        Assert.assertEquals(Arrays.asList("foo", "bar"), QuotedStringTokenizer.builder().delimiterChars(",").buildList("foo,bar"));
+        Assert.assertEquals(Arrays.asList("foo", " bar"), QuotedStringTokenizer.builder().delimiterChars(",").buildList("foo, bar"));
+        Assert.assertEquals(Arrays.asList("foo", "bar"), QuotedStringTokenizer.builder().addDelimiterChars(",").buildList("foo, bar"));
     }
 
     @Test
     public void testCommaInQuotes() throws Exception {
-        List<String> l = QuotedStringTokenizer.builder().addDelimiterChars(",").tokenizeAll("location1,byon:(hosts=\"loc2,loc3\"),location4");
+        List<String> l = QuotedStringTokenizer.builder().addDelimiterChars(",").buildList("location1,byon:(hosts=\"loc2,loc3\"),location4");
         Assert.assertEquals(Arrays.asList("location1", "byon:(hosts=\"loc2,loc3\")", "location4"), l);
     }
 
     /** not implemented yet */
     @Test(enabled=false)
     public void testCommaInParentheses() throws Exception {
-        List<String> l = QuotedStringTokenizer.builder().addDelimiterChars(",").tokenizeAll("location1, byon:(hosts=\"loc2,loc3\",user=foo),location4");
+        List<String> l = QuotedStringTokenizer.builder().addDelimiterChars(",").buildList("location1, byon:(hosts=\"loc2,loc3\",user=foo),location4");
         Assert.assertEquals(Arrays.asList("location1", "byon:(hosts=\"loc2,loc3\",user=foo)", "location4"), l);
     }
 

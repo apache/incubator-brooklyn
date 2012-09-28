@@ -58,7 +58,7 @@ public class QuotedStringTokenizer {
 	    public QuotedStringTokenizer build(String stringToTokenize) {
 	        return new QuotedStringTokenizer(stringToTokenize, quoteChars, includeQuotes, delimiterChars, includeDelimiters);
 	    }
-        public List<String> tokenizeAll(String stringToTokenize) {
+        public List<String> buildList(String stringToTokenize) {
             return new QuotedStringTokenizer(stringToTokenize, quoteChars, includeQuotes, delimiterChars, includeDelimiters).remainderAsList();
         }
         

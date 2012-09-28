@@ -98,7 +98,7 @@ public class LocationRegistry {
     private List<String> expandCommaSeparateLocationList(String id) {
         return WildcardGlobs.getGlobsAfterBraceExpansion("{"+id+"}", false, PhraseTreatment.INTERIOR_NOT_EXPANDABLE, PhraseTreatment.INTERIOR_NOT_EXPANDABLE);
         // don't do this, it tries to expand commas inside parentheses which is not good!
-//        QuotedStringTokenizer.builder().addDelimiterChars(",").tokenizeAll((String)id);
+//        QuotedStringTokenizer.builder().addDelimiterChars(",").buildList((String)id);
     }
     
     public Map getProperties() {
