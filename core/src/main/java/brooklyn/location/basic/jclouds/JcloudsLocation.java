@@ -801,25 +801,29 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 }
             }
         } catch (Exception e) {
-            synchronized (this) {
-                // delay subsequent log.warns (put in synch block) so the "Loading..." message is obvious
-                LOG.warn("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+" (rethrowing): "+e);
-                if (!listedAvailableTemplatesOnNoSuchTemplate) {
-                    listedAvailableTemplatesOnNoSuchTemplate = true;
-                    LOG.info("Loading available images at "+this+" for reference...");
-                    Map m1 = new LinkedHashMap(setup.allconf);
-                    if (m1.remove("imageId")!=null)
-                        // don't apply default filters if user has tried to specify an image ID
-                        m1.put("anyOwner", true);
-                    ComputeService computeServiceLessRestrictive = JcloudsUtil.buildOrFindComputeService(m1, new MutableMap());
-                    Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
-                    LOG.info(""+imgs.size()+" available images at "+this);
-                    for (Image img: imgs) {
-                        LOG.info(" Image: "+img);
+            try {
+                synchronized (this) {
+                    // delay subsequent log.warns (put in synch block) so the "Loading..." message is obvious
+                    LOG.warn("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+" (rethrowing): "+e);
+                    if (!listedAvailableTemplatesOnNoSuchTemplate) {
+                        listedAvailableTemplatesOnNoSuchTemplate = true;
+                        LOG.info("Loading available images at "+this+" for reference...");
+                        Map m1 = new LinkedHashMap(setup.allconf);
+                        if (m1.remove("imageId")!=null)
+                            // don't apply default filters if user has tried to specify an image ID
+                            m1.put("anyOwner", true);
+                        ComputeService computeServiceLessRestrictive = JcloudsUtil.buildOrFindComputeService(m1, new MutableMap());
+                        Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
+                        LOG.info(""+imgs.size()+" available images at "+this);
+                        for (Image img: imgs) {
+                            LOG.info(" Image: "+img);
+                        }
                     }
                 }
+            } catch (Exception e2) {
+                LOG.warn("Error loading available images to report (following original error matching template which will be rethrown): "+e2, e2);
             }
-            throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+". See list of images in log.");
+            throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+". See list of images in log.", e);
         }
         TemplateOptions options = template.getOptions();
         
