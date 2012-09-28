@@ -27,6 +27,8 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.TestUtils;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -182,6 +184,21 @@ public class RebindEntityTest {
         TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(newE.events), Predicates.equalTo(Collections.emptyList()));
     }
     
+    // FIXME Fails for setting config
+    @Test(groups="WIP")
+    public void testRestoresComplexConfigKeys() throws Exception {
+        TestEntity origE = new TestEntity(origApp);
+        origApp.getManagementContext().manage(origApp);
+        
+        TestApplication newApp = (TestApplication) serializeRebindAndManage(origApp, getClass().getClassLoader());
+        final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
+
+        assertEquals(newE.getConfig(TestEntity.CONF_LIST_PLAIN), origE.getConfig(TestEntity.CONF_LIST_PLAIN));
+        assertEquals(newE.getConfig(TestEntity.CONF_MAP_PLAIN), origE.getConfig(TestEntity.CONF_MAP_PLAIN));
+        assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), origE.getConfig(TestEntity.CONF_LIST_THING));
+        assertEquals(newE.getConfig(TestEntity.CONF_MAP_THING), origE.getConfig(TestEntity.CONF_MAP_THING));
+    }
+
     public static class MyApplication extends AbstractApplication implements Rebindable {
         private static final long serialVersionUID = 1L;
         
