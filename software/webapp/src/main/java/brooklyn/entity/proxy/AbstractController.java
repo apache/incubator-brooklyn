@@ -61,7 +61,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     
     @SetFromFlag("domain")
     public static final BasicAttributeSensorAndConfigKey<String> DOMAIN_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "proxy.domainName", "Domain name that this controller responds to", null);
+            String.class, "proxy.domainName", "Domain name that this controller responds to, or null if it responds to all domains", null);
         
     @SetFromFlag("ssl")
     public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = 
@@ -153,6 +153,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         return getAttribute(PROTOCOL);
     }
 
+    /** returns primary domain this controller responds to, or null if it responds to all domains */
     public String getDomain() {
         return getAttribute(DOMAIN_NAME);
     }
@@ -161,6 +162,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         return getAttribute(PROXY_HTTP_PORT);
     }
 
+    /** primary URL this controller serves, if one can / has been inferred */
     public String getUrl() {
         return getAttribute(ROOT_URL);
     }
@@ -176,9 +178,12 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         return getConfig(SSL_CONFIG)!=null ? "https" : "http";
     }
     
+    /** returns URL, if it can be inferred; null otherwise */
     protected String inferUrl() {
         String protocol = checkNotNull(getProtocol(), "protocol must not be null");
-        String domain = checkNotNull(getDomain(), "domain must not be null");
+        String domain = getDomain();
+        if (domain==null) domain = getAttribute(HOSTNAME);
+        if (domain==null) return null;
         Integer port = checkNotNull(getPort(), "port must not be null");
         return protocol+"://"+domain+":"+port+"/";
     }
@@ -195,7 +200,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         super.preStart();
         
         setAttribute(PROTOCOL, inferProtocol());
-        setAttribute(DOMAIN_NAME, elvis(getConfig(DOMAIN_NAME), getAttribute(HOSTNAME)));
+        setAttribute(DOMAIN_NAME);
         setAttribute(ROOT_URL, inferUrl());
         
         checkNotNull(getPortNumberSensor(), "port number sensor must not be null");
@@ -206,6 +211,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         super.postStart();
         LOG.info("Adding policy {} to {} on AbstractController.start", serverPoolMemberTrackerPolicy, this);
         addPolicy(serverPoolMemberTrackerPolicy);
+        if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
         reset();
         isActive = true;
         update();

@@ -203,10 +203,12 @@ public class NginxController extends AbstractController {
         
         // If no servers, then defaults to returning 404
         // TODO Give nicer page back 
-        config.append("  server {\n");
-        config.append("    listen "+getPort()+";\n")
-        config.append("    return 404;\n")
-        config.append("  }\n");
+        if (getDomain()!=null || serverPoolAddresses==null || serverPoolAddresses.isEmpty()) {
+            config.append("  server {\n");
+            config.append("    listen "+getPort()+";\n")
+            config.append("    return 404;\n")
+            config.append("  }\n");
+        }
         
         // For basic round-robin across the server-pool
         if (serverPoolAddresses) {
@@ -220,7 +222,8 @@ public class NginxController extends AbstractController {
             config.append("  }\n")
             config.append("  server {\n");
             config.append("    listen "+getPort()+";\n")
-            config.append("    server_name "+getDomain()+";\n")
+            if (getDomain()!=null)
+                config.append("    server_name "+getDomain()+";\n")
             config.append("    location / {\n");
             config.append("      proxy_pass "+(globalSslConfig && globalSslConfig.targetIsSsl ? "https" : "http")+"://"+getId()+";\n");
             config.append("    }\n");
@@ -360,4 +363,5 @@ public class NginxController extends AbstractController {
             return Collections.<UrlMapping>emptyList();
         }
     }
+
 }

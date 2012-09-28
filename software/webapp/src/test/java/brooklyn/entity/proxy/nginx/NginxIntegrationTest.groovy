@@ -110,6 +110,49 @@ public class NginxIntegrationTest {
         }
     }
     
+    /**
+     * Test that the Nginx proxy works, serving all domains, if no domain is set
+     */
+    @Test(groups = "Integration")
+    public void testDomainless() {
+        def template = { Map properties -> new JBoss7Server(properties) }
+        URL war = getClass().getClassLoader().getResource("hello-world.war")
+        Preconditions.checkState war != null, "Unable to locate resource $war"
+        
+        serverPool = new DynamicCluster(owner:app, factory:template, initialSize:1)
+        serverPool.setConfig(JavaWebAppService.ROOT_WAR, war.path)
+        
+        nginx = new NginxController([
+                "owner" : app,
+                "serverPool" : serverPool,
+                "portNumberSensor" : WebAppService.HTTP_PORT,
+            ])
+        
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+        
+        // App-servers and nginx has started
+        assertAttributeEventually(serverPool, SoftwareProcessEntity.SERVICE_UP, true);
+        serverPool.members.each {
+            assertAttributeEventually(it, SoftwareProcessEntity.SERVICE_UP, true);
+        }
+        assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
+
+        // URLs reachable
+        assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 200);
+        serverPool.members.each {
+            assertUrlStatusCodeEventually(it.getAttribute(WebAppService.ROOT_URL), 200);
+        }
+
+        app.stop();
+
+        // Services have stopped
+        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        serverPool.members.each {
+            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        }
+    }
+    
     @Test(groups = "Integration")
     public void testTwoNginxesGetDifferentPorts() {
         def serverFactory = { throw new UnsupportedOperationException(); }

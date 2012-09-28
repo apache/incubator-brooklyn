@@ -48,6 +48,30 @@ public class QuotedStringTokenizer {
 		this.includeDelimiters = includeDelimiters;
 		updateNextToken();
 	}
+	
+	public static class Builder {
+	    private String quoteChars = DEFAULT_QUOTE_CHARS;
+	    private boolean includeQuotes=true;
+	    private String delimiterChars=DEFAULT_DELIMITERS;
+	    private boolean includeDelimiters=false;
+
+	    public QuotedStringTokenizer build(String stringToTokenize) {
+	        return new QuotedStringTokenizer(stringToTokenize, quoteChars, includeQuotes, delimiterChars, includeDelimiters);
+	    }
+        public List<String> buildList(String stringToTokenize) {
+            return new QuotedStringTokenizer(stringToTokenize, quoteChars, includeQuotes, delimiterChars, includeDelimiters).remainderAsList();
+        }
+        
+        public Builder quoteChars(String quoteChars) { this.quoteChars = quoteChars; return this; }
+        public Builder addQuoteChars(String quoteChars) { this.quoteChars = this.quoteChars + quoteChars; return this; }
+        public Builder includeQuotes(boolean includeQuotes) { this.includeQuotes = includeQuotes; return this; } 
+        public Builder delimiterChars(String delimiterChars) { this.delimiterChars = delimiterChars; return this; }
+        public Builder addDelimiterChars(String delimiterChars) { this.delimiterChars = this.delimiterChars + delimiterChars; return this; }
+        public Builder includeDelimiters(boolean includeDelimiters) { this.includeDelimiters = includeDelimiters; return this; } 
+	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
 	String peekedNextToken = null;
 	
@@ -105,23 +129,19 @@ public class QuotedStringTokenizer {
 			//skip delimeters
 		} while (!includeDelimiters && token.matches("["+delimiters+"]+"));
 		
-		if (token.indexOf('"')<0 && token.indexOf('\'')<0) {
-			//no quote
-			peekedNextToken = token;
-			return;
-		}
-		
 		StringBuffer nextToken = new StringBuffer(token);
-		
-		while (hasOpenQuote(nextToken.toString(), quoteChars) && delegate.hasMoreTokens()) {
-			//keep appending until the quote is ended or there are no more quotes
-			nextToken.append(delegate.nextToken());
-		}
-		
+		pullUntilValid(nextToken);
 		peekedNextToken = nextToken.toString();
 	}
 
-	public static boolean hasOpenQuote(String stringToCheck) {
+	private void pullUntilValid(StringBuffer nextToken) {
+        while (hasOpenQuote(nextToken.toString(), quoteChars) && delegate.hasMoreTokens()) {
+            //keep appending until the quote is ended or there are no more quotes
+            nextToken.append(delegate.nextToken());
+        }
+    }
+
+    public static boolean hasOpenQuote(String stringToCheck) {
 		return hasOpenQuote(stringToCheck, DEFAULT_QUOTE_CHARS);
 	}
 

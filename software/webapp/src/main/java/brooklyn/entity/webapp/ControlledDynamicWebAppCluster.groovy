@@ -102,7 +102,6 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         Entities.invokeEffectorList(this, [cluster, controller], Startable.START, [locations:locations]).get();
         
         connectSensors();
-        setAttribute(SERVICE_UP, true);
     }
     
     public void stop() {
@@ -121,33 +120,12 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         stop();
         start(locations);
     }
-
-    void updateHostnameFromController() {
-        String url = controller.getAttribute(NginxController.ROOT_URL);
-        if (url==null) url = controller.getAttribute(AbstractController.ROOT_URL);
-        if (url==null || url.contains("://"+AbstractController.ANONYMOUS+":") || url.contains("://"+AbstractController.ANONYMOUS+"/")) {
-            //probably isn't necessary, as is done in Nginx?
-            String hostname = controller.getAttribute(HOSTNAME);
-            Object port = controller.getAttribute(AbstractController.PROXY_HTTP_PORT);
-            if (hostname==null || port==null) return;
-            url = "http://"+hostname+":"+port+"/";
-            LOG.warn("Building URL for $this from $controller: $url");
-        }
-        setAttribute(ROOT_URL, url);
-    }
     
     void connectSensors() {
         SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(cluster, SERVICE_UP, ROOT_URL).
             addToEntityAndEmitAll(this);
-        
-        //following 3 lines (and updateHostname method) unnecessary if above is working, I think
-        controller.subscribe(controller, NginxController.ROOT_URL, { updateHostnameFromController() } as SensorEventListener);
-        controller.subscribe(controller, NginxController.ROOT_URL, { updateHostnameFromController() } as SensorEventListener);
-        controller.subscribe(controller, AbstractController.HOSTNAME, { updateHostnameFromController() } as SensorEventListener);
-        updateHostnameFromController();
-        
-        SensorPropagatingEnricher.newInstanceListeningTo(controller, AbstractController.HOSTNAME, SERVICE_UP).
-        addToEntityAndEmitAll(this);
+        SensorPropagatingEnricher.newInstanceListeningTo(controller, AbstractController.HOSTNAME, SERVICE_UP, ROOT_URL).
+            addToEntityAndEmitAll(this);
     }
 
     public Integer resize(Integer desiredSize) {
