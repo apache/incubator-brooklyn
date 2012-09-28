@@ -73,9 +73,9 @@ public class LocationResolverTest {
         List<Location> l;
         l = new LocationRegistry().getLocationsById(["byon:(hosts=\"192.168.1.{1,2}\")"]);
         Assert.assertEquals(1, l.size());
-        l = new LocationRegistry().getLocationsById(["aws-ec2:us-west,byon:(hosts=\"192.168.1.{1,2}\"),aws-ec2:us-east"]);
+        l = new LocationRegistry().getLocationsById(["byon:(hosts=192.168.0.1),byon:(hosts=\"192.168.1.{1,2}\"),byon:(hosts=192.168.0.2)"]);
         Assert.assertEquals(3, l.size());
-        l = new LocationRegistry().getLocationsById(["aws-ec2:us-west,byon:(hosts=\"192.168.1.{1,2}\",user=bob),aws-ec2:us-east"]);
+        l = new LocationRegistry().getLocationsById(["byon:(hosts=192.168.0.1),byon:(hosts=\"192.168.1.{1,2}\",user=bob),byon:(hosts=192.168.0.2)"]);
         Assert.assertEquals(3, l.size());
     }
 
