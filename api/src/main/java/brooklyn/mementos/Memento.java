@@ -1,4 +1,6 @@
 package brooklyn.mementos;
 
-public interface Memento {
+import java.io.Serializable;
+
+public interface Memento extends Serializable {
 }

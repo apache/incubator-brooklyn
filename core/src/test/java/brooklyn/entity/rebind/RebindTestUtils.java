@@ -2,17 +2,12 @@ package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.List;
 
 import brooklyn.entity.Application;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
-
-import com.google.common.io.Closeables;
+import brooklyn.util.Serializers;
 
 public class RebindTestUtils {
 
@@ -35,26 +30,15 @@ public class RebindTestUtils {
     
     @SuppressWarnings("unchecked")
 	public static <T> T serializeAndDeserialize(T memento) throws Exception {
-        ObjectOutputStream oos = null;
-        ObjectInputStream ois = null;
     	try {
-    	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	    oos = new ObjectOutputStream(baos);
-    	    oos.writeObject(memento);
-    	    oos.close();
-    	    
-    	    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-    	    ois = new ObjectInputStream(bais);
-    		return (T) ois.readObject();
+    	    return Serializers.reconstitute(memento);
     	} catch (Exception e) {
     	    try {
-    	        Dumpers.deepDumpSerializableness(memento);
+    	        Dumpers.logUnserializableChains(memento);
+    	        //Dumpers.deepDumpSerializableness(memento);
     	    } finally {
     	        throw e;
     	    }
-    	} finally {
-    	    Closeables.closeQuietly(oos);
-    		Closeables.closeQuietly(ois);
     	}
     }
 }

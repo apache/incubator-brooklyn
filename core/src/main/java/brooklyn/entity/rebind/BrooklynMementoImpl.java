@@ -42,7 +42,7 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
             
             for (Location location : entity.getLocations()) {
                 if (!locations.containsKey(location.getId())) {
-                	for (Location locationInHierarchy : findLocationsInHierarchy(location)) {
+                	for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
                 		locations.put(locationInHierarchy.getId(), ((RebindableLocation)locationInHierarchy).getRebindSupport().getMemento());
                 	}
                 }
@@ -53,51 +53,8 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
                 topLevelLocationIds.add(memento.getId());
             }
         }
-        
-        validateMemento();
     }
 
-    private void validateMemento() {
-        // TODO Could also validate integrity of entityReferenceAttributes and entityReferenceConfig
-        
-        // Ensure every entity's parent/children/locations exists
-        for (Map.Entry<String,EntityMemento> entry : entities.entrySet()) {
-            EntityMemento memento = entry.getValue();
-            if (memento.getParent() != null && !entities.containsKey(memento.getParent())) {
-                throw new IllegalStateException("Parent entity "+memento.getParent()+" missing, for entity "+memento);
-            }
-            for (String child : memento.getChildren()) {
-                if (child == null) {
-                    throw new IllegalStateException("Null child entity, for entity "+memento);
-                }
-                if (!entities.containsKey(child)) {
-                    throw new IllegalStateException("Child entity "+child+" missing, for entity "+memento);
-                }
-            }
-            for (String location : memento.getLocations()) {
-                if (!locations.containsKey(location)) {
-                    throw new IllegalStateException("Location "+location+" missing, for entity "+memento);
-                }
-            }
-        }
-        
-        // Ensure every location's parent/children exists
-        for (Map.Entry<String,LocationMemento> entry : locations.entrySet()) {
-            LocationMemento memento = entry.getValue();
-            if (memento.getParent() != null && !locations.containsKey(memento.getParent())) {
-                throw new IllegalStateException("Parent location "+memento.getParent()+" missing, for location "+memento);
-            }
-            for (String child : memento.getChildren()) {
-                if (child == null) {
-                    throw new IllegalStateException("Null child location, for location "+memento);
-                }
-                if (!locations.containsKey(child)) {
-                    throw new IllegalStateException("Child location  "+child+" missing, for location "+memento);
-                }
-            }
-        }
-    }
-    
     @Override
     public EntityMemento getEntityMemento(String id) {
         return entities.get(id);
@@ -135,24 +92,5 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     @Override
     public Map<String, LocationMemento> getLocationMementos() {
         return Collections.unmodifiableMap(locations);
-    }
-    
-    private Collection<Location> findLocationsInHierarchy(Location root) {
-    	Set<Location> result = Sets.newLinkedHashSet();
-    	
-        Deque<Location> tovisit = new ArrayDeque<Location>();
-        tovisit.addFirst(root);
-        
-        while (tovisit.size() > 0) {
-            Location current = tovisit.pop();
-            result.add(current);
-            for (Location child : current.getChildLocations()) {
-            	if (child != null) {
-            		tovisit.push(child);
-            	}
-            }
-        }
-        
-        return result;
     }
 }

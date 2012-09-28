@@ -370,7 +370,7 @@ public class RebindEntityTest {
             return new BasicEntityRebindSupport(this) {
                 @Override public EntityMemento getMemento() {
                     // Note: using MutableMap so accepts nulls
-                    return new BasicEntityMemento(MyEntity2.this, MutableMap.<String,Object>of("myfield", myfield));
+                    return BasicEntityMemento.builder().from(MyEntity2.this).customProperties(MutableMap.<String,Object>of("myfield", myfield)).build();
                 }
                 @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
                     super.doReconstruct(rebindContext, memento);

@@ -6,6 +6,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -21,12 +22,15 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.BrooklynMementoPersister.Delta;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.TreeNode;
 import brooklyn.util.MutableMap;
 import brooklyn.util.javalang.Reflections;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -36,13 +40,37 @@ public class RebindManagerImpl implements RebindManager {
 
     private final ManagementContext managementContext;
 
+    private final ChangeListener changeListener;
+    
+    private volatile BrooklynMementoPersister persister;
+
+    private volatile boolean running = true;
+    
     public RebindManagerImpl(ManagementContext managementContext) {
         this.managementContext = managementContext;
+        this.changeListener = new CheckpointingChangeListener();
+    }
+    
+    @Override
+    public void setPersister(BrooklynMementoPersister val) {
+        if (persister != null && persister != val) {
+            throw new IllegalStateException("Dynamically changing persister is not supported: old="+persister+"; new="+val);
+        }
+        this.persister = checkNotNull(val, "persister");
+    }
+
+    public void stop() {
+        running = false;
+    }
+    
+    @Override
+    public ChangeListener getChangeListener() {
+        return changeListener;
     }
     
     @Override
     public BrooklynMemento getMemento() {
-        return new BrooklynMementoImpl(managementContext, managementContext.getApplications());
+        return BrooklynMementos.newMemento(managementContext);
     }
 
     @Override
@@ -74,7 +102,7 @@ public class RebindManagerImpl implements RebindManager {
         
         // Reconstruct locations
         LOG.info("RebindManager constructing locations: {}", memento.getLocationIds());
-        depthFirst(memento, rebindContext, new LocationVisitor("constructing") {
+        depthFirst(memento, rebindContext, new LocationVisitor("reconstructing") {
                 @Override public void visit(Location location, LocationMemento memento) {
                     ((RebindableLocation)location).getRebindSupport().reconstruct(rebindContext, memento);
                 }});
@@ -99,7 +127,7 @@ public class RebindManagerImpl implements RebindManager {
         
         // Reconstruct entities
         LOG.info("RebindManager constructing entities");
-        depthFirst(memento, rebindContext, new EntityVisitor("constructing") {
+        depthFirst(memento, rebindContext, new EntityVisitor("reconstructing") {
                 @Override public void visit(Entity entity, EntityMemento memento) {
                     ((Rebindable)entity).getRebindSupport().reconstruct(rebindContext, memento);
                 }});
@@ -182,7 +210,7 @@ public class RebindManagerImpl implements RebindManager {
             LocationMemento locMemento = memento.getLocationMemento(id);
             
             if (loc != null) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} location {}", visitor.getActivityName(), memento);
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} location {}", visitor.getActivityName(), locMemento);
                 visitor.visit(loc, locMemento);
             } else {
                 LOG.warn("No location found for id {}; so not {}", id, visitor.getActivityName());
@@ -194,12 +222,12 @@ public class RebindManagerImpl implements RebindManager {
         List<String> orderedIds = depthFirstOrder(memento.getApplicationIds(), memento.getEntityMementos());
 
         for (String id : orderedIds) {
-            Entity loc = rebindContext.getEntity(id);
-            EntityMemento locMemento = memento.getEntityMemento(id);
+            Entity entity = rebindContext.getEntity(id);
+            EntityMemento entityMemento = memento.getEntityMemento(id);
             
-            if (loc != null) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} entity {}", visitor.getActivityName(), memento);
-                visitor.visit(loc, locMemento);
+            if (entity != null) {
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} entity {}", visitor.getActivityName(), entityMemento);
+                visitor.visit(entity, entityMemento);
             } else {
                 LOG.warn("No entity found for id {}; so not {}", id, visitor.getActivityName());
             }
@@ -267,5 +295,100 @@ public class RebindManagerImpl implements RebindManager {
     
     private <K,V> Map<K,V> union(Map<? extends K, ? extends V> m1, Map<? extends K, ? extends V> m2) {
     	return MutableMap.<K,V>builder().putAll(m1).putAll(m2).build();
+    }
+    
+    private static class DeltaImpl implements Delta {
+        Collection<LocationMemento> locations = Collections.emptyList();
+        Collection<EntityMemento> entities = Collections.emptyList();
+        Collection <String> removedLocationIds = Collections.emptyList();
+        Collection <String> removedEntityIds = Collections.emptyList();
+        
+        @Override
+        public Collection<LocationMemento> locationMementos() {
+            return locations;
+        }
+
+        @Override
+        public Collection<EntityMemento> entityMementos() {
+            return entities;
+        }
+
+        @Override
+        public Collection<String> removedLocationIds() {
+            return removedLocationIds;
+        }
+
+        @Override
+        public Collection<String> removedEntityIds() {
+            return removedEntityIds;
+        }
+    }
+    
+    private class CheckpointingChangeListener implements ChangeListener {
+
+        @Override
+        public void onManaged(Entity entity) {
+            if (running && persister != null) {
+                // TODO Currently, we get an onManaged call for every entity (rather than just the root of a sub-tree)
+                // Also, we'll be told about an entity before its children are officially managed.
+                // So it's really the same as "changed".
+                onChanged(entity);
+            }
+        }
+
+        @Override
+        public void onManaged(Location location) {
+            if (running && persister != null) {
+                onChanged(location);
+            }
+        }
+        
+        @Override
+        public void onChanged(Entity entity) {
+            if (running && persister != null) {
+                DeltaImpl delta = new DeltaImpl();
+                delta.entities = ImmutableList.of(((Rebindable)entity).getRebindSupport().getMemento());
+
+                // TODO Should we be told about locations in a different way?
+                Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
+                for (Location location : entity.getLocations()) {
+                    if (!locations.containsKey(location.getId())) {
+                        for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
+                            locations.put(locationInHierarchy.getId(), ((RebindableLocation)locationInHierarchy).getRebindSupport().getMemento());
+                        }
+                    }
+                }
+                delta.locations = locations.values();
+
+                persister.delta(delta);
+            }
+        }
+        
+        @Override
+        public void onUnmanaged(Entity entity) {
+            if (running && persister != null) {
+                DeltaImpl delta = new DeltaImpl();
+                delta.removedEntityIds = ImmutableList.of(entity.getId());
+                persister.delta(delta);
+            }
+        }
+
+        @Override
+        public void onUnmanaged(Location location) {
+            if (running && persister != null) {
+                DeltaImpl delta = new DeltaImpl();
+                delta.removedLocationIds = ImmutableList.of(location.getId());
+                persister.delta(delta);
+            }
+        }
+
+        @Override
+        public void onChanged(Location location) {
+            if (running && persister != null) {
+                DeltaImpl delta = new DeltaImpl();
+                delta.locations = ImmutableList.of(((RebindableLocation)location).getRebindSupport().getMemento());
+                persister.delta(delta);
+            }
+        }
     }
 }

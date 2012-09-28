@@ -32,7 +32,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     }
 
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
-        LocationMemento memento = new BasicLocationMemento(location, props);
+        LocationMemento memento = BasicLocationMemento.builder().from(location).customProperties(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; locationProperties={}; " +
     			"flags={}; customProperties={}; parent={}; children={}",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getLocationProperties(), 

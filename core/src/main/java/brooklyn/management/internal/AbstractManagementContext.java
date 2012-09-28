@@ -97,6 +97,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         for (Entity ei : e.getOwnedChildren()) {
             manage(ei);
         }
+        rebindManager.getChangeListener().onManaged(e);
     }
 
     /**
@@ -126,6 +127,8 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         }
         if (unmanageNonRecursive(e))
             ((AbstractEntity)e).onManagementNoLongerMaster();
+        
+        rebindManager.getChangeListener().onUnmanaged(e);
     }
 
     /**

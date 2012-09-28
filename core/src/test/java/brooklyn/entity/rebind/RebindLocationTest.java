@@ -240,7 +240,7 @@ public class RebindLocationTest {
             return new BasicLocationRebindSupport(this) {
                 @Override public LocationMemento getMemento() {
                     // Note: using MutableMap so accepts nulls
-                    return new BasicLocationMemento(MyLocation2.this, MutableMap.<String,Object>of("myfield", myfield));
+                    return BasicLocationMemento.builder().from(MyLocation2.this).customProperties(MutableMap.<String,Object>of("myfield", myfield)).build();
                 }
                 @Override protected void doRebind(RebindContext rebindContext, LocationMemento memento) {
                 	super.doRebind(rebindContext, memento);

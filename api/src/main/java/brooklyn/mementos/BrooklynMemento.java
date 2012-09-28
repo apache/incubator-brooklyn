@@ -1,8 +1,10 @@
 package brooklyn.mementos;
 
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 
-public interface BrooklynMemento {
+public interface BrooklynMemento extends Serializable {
 
     public EntityMemento getEntityMemento(String id);
 

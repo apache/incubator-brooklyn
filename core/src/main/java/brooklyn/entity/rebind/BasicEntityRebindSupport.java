@@ -31,7 +31,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     }
 
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
-        EntityMemento memento = new BasicEntityMemento(entity, props);
+        EntityMemento memento = BasicEntityMemento.builder().from(entity).customProperties(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity {}({}): config={}; attributes={}; properties={}; parent={}; children={}; locations={}", 
     			new Object[] {memento.getType(), memento.getId(), memento.getConfig(), memento.getAttributes(), memento.getCustomProperties(), memento.getParent(), memento.getChildren(), memento.getLocations()});
     	return memento;
@@ -125,7 +125,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         for (String childId : memento.getChildren()) {
             Entity child = rebindContext.getEntity(childId);
             if (child == null) {
-                String msg = String.format("Child entity %s not found for entity %s (with children %s}", child, memento, memento.getChildren());
+                String msg = String.format("Child entity %s not found for entity %s (with children %s}", childId, memento, memento.getChildren());
                 throw new IllegalStateException(msg);
             }
             entity.addOwnedChild(child);
