@@ -98,7 +98,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         
         addOwnedChild(controller);
         this.locations.addAll(locations);
-        controller.bind(cluster:cluster);
+        controller.bind(serverPool:cluster);
         Entities.invokeEffectorList(this, [cluster, controller], Startable.START, [locations:locations]).get();
         
         connectSensors();
@@ -124,7 +124,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
 
     void updateHostnameFromController() {
         String url = controller.getAttribute(NginxController.ROOT_URL);
-        if (url==null) url = controller.getAttribute(AbstractController.SPECIFIED_URL);
+        if (url==null) url = controller.getAttribute(AbstractController.ROOT_URL);
         if (url==null || url.contains("://"+AbstractController.ANONYMOUS+":") || url.contains("://"+AbstractController.ANONYMOUS+"/")) {
             //probably isn't necessary, as is done in Nginx?
             String hostname = controller.getAttribute(HOSTNAME);
@@ -142,7 +142,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         
         //following 3 lines (and updateHostname method) unnecessary if above is working, I think
         controller.subscribe(controller, NginxController.ROOT_URL, { updateHostnameFromController() } as SensorEventListener);
-        controller.subscribe(controller, NginxController.SPECIFIED_URL, { updateHostnameFromController() } as SensorEventListener);
+        controller.subscribe(controller, NginxController.ROOT_URL, { updateHostnameFromController() } as SensorEventListener);
         controller.subscribe(controller, AbstractController.HOSTNAME, { updateHostnameFromController() } as SensorEventListener);
         updateHostnameFromController();
         

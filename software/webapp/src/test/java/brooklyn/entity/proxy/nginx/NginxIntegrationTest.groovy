@@ -34,7 +34,7 @@ public class NginxIntegrationTest {
 
     private TestApplication app
     private NginxController nginx
-    private DynamicCluster cluster
+    private DynamicCluster serverPool
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
@@ -52,11 +52,11 @@ public class NginxIntegrationTest {
     @Test(groups = "Integration")
     public void testWhenNoServersReturns404() {
         def serverFactory = { throw new UnsupportedOperationException(); }
-        cluster = new DynamicCluster(owner:app, factory:serverFactory, initialSize:0)
+        serverPool = new DynamicCluster(owner:app, factory:serverFactory, initialSize:0)
         
         nginx = new NginxController([
                 "owner" : app,
-                "cluster" : cluster,
+                "serverPool" : serverPool,
                 "domain" : "localhost"
             ])
         
@@ -75,12 +75,12 @@ public class NginxIntegrationTest {
         URL war = getClass().getClassLoader().getResource("hello-world.war")
         Preconditions.checkState war != null, "Unable to locate resource $war"
         
-        cluster = new DynamicCluster(owner:app, factory:template, initialSize:1)
-        cluster.setConfig(JavaWebAppService.ROOT_WAR, war.path)
+        serverPool = new DynamicCluster(owner:app, factory:template, initialSize:1)
+        serverPool.setConfig(JavaWebAppService.ROOT_WAR, war.path)
         
         nginx = new NginxController([
 	            "owner" : app,
-	            "cluster" : cluster,
+	            "serverPool" : serverPool,
 	            "domain" : "localhost",
 	            "portNumberSensor" : WebAppService.HTTP_PORT,
             ])
@@ -88,15 +88,15 @@ public class NginxIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
         // App-servers and nginx has started
-        assertAttributeEventually(cluster, SoftwareProcessEntity.SERVICE_UP, true);
-        cluster.members.each {
+        assertAttributeEventually(serverPool, SoftwareProcessEntity.SERVICE_UP, true);
+        serverPool.members.each {
             assertAttributeEventually(it, SoftwareProcessEntity.SERVICE_UP, true);
         }
         assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
 
         // URLs reachable        
         assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 200);
-        cluster.members.each {
+        serverPool.members.each {
             assertUrlStatusCodeEventually(it.getAttribute(WebAppService.ROOT_URL), 200);
         }
 
@@ -104,8 +104,8 @@ public class NginxIntegrationTest {
 
         // Services have stopped
         assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
-        assertFalse(cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP));
-        cluster.members.each {
+        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        serverPool.members.each {
             assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
         }
     }
@@ -113,17 +113,17 @@ public class NginxIntegrationTest {
     @Test(groups = "Integration")
     public void testTwoNginxesGetDifferentPorts() {
         def serverFactory = { throw new UnsupportedOperationException(); }
-        cluster = new DynamicCluster(owner:app, factory:serverFactory, initialSize:0)
+        serverPool = new DynamicCluster(owner:app, factory:serverFactory, initialSize:0)
         
         def nginx1 = new NginxController([
                 "owner" : app,
-                "cluster" : cluster,
+                "serverPool" : serverPool,
                 "domain" : "localhost",
                 "port" : "14000+"
             ]);
         def nginx2 = new NginxController([
             "owner" : app,
-            "cluster" : cluster,
+            "serverPool" : serverPool,
             "domain" : "localhost",
             "port" : "14000+"
         ])

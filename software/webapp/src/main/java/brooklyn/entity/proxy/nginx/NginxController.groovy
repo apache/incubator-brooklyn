@@ -136,15 +136,21 @@ public class NginxController extends AbstractController {
         reconfigureService();
     }
     
+    @Override
     protected void reconfigureService() {
 
         String cfg = getConfigFile();
         if (cfg==null) return;
-        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", this, addresses, findUrlMappings());
+        
+        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", this, serverPoolAddresses, findUrlMappings());
         if (LOG.isTraceEnabled()) LOG.trace("Reconfiguring {}, config file:\n{}", this, cfg);
         
         NginxSshDriver driver = (NginxSshDriver)getDriver();
-        if (!driver.isCustomizationCompleted()) return;
+        if (!driver.isCustomizationCompleted()) {
+            if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, but driver's customization not yet complete so aborting");
+            return;
+        }
+        
         driver.machine.copyTo(new ByteArrayInputStream(cfg.getBytes()), driver.getRunDir()+"/conf/server.conf");
         
         installSslKeys("global", getConfig(SSL_CONFIG));
@@ -177,8 +183,12 @@ public class NginxController extends AbstractController {
         // TODO should refactor this method to a new class with methods e.g. NginxConfigFileGenerator...
         
         NginxSshDriver driver = (NginxSshDriver)getDriver();
-        if (driver==null) return null;
-                
+        if (driver==null) {
+            if (LOG.isDebugEnabled()) LOG.debug("No driver for {}, so not generating config file (is entity stopping? state={})", 
+                this, getAttribute(NginxController.SERVICE_STATE));
+            return null;
+        }
+        
         StringBuilder config = new StringBuilder();
         config.append("\n")
         config.append(format("pid %s/logs/nginx.pid;\n",driver.getRunDir()));
@@ -199,12 +209,12 @@ public class NginxController extends AbstractController {
         config.append("  }\n");
         
         // For basic round-robin across the server-pool
-        if (addresses) {
+        if (serverPoolAddresses) {
             config.append(format("  upstream "+getId()+" {\n"))
             if (sticky){
                 config.append("    sticky;\n");
             }
-            for (String address: addresses){
+            for (String address: serverPoolAddresses){
                 config.append("    server "+address+";\n")
             }
             config.append("  }\n")
