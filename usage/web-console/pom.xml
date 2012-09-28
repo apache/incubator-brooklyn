@@ -49,6 +49,26 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.directory.server</groupId>
+            <artifactId>apacheds-all</artifactId>
+            <version>2.0.0-M7</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                <artifactId>slf4j-api</artifactId>
+                            <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- dependency>
+            <artifactId>slf4j-api</artifactId>
+            <groupId>org.slf4j</groupId>
+            <version>1.5.11</version>
+            <scope>test</scope>
+        </dependency -->
+
+        <dependency>
             <groupId>org.grails</groupId>
             <artifactId>grails-bootstrap</artifactId>
             <version>${grails.version}</version>
