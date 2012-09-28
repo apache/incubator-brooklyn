@@ -150,10 +150,14 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(flags, LAUNCHING).
                 body.append(
                 format("cd %s", getRunDir()),
-                format("nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir())
+                sudoIfPrivilegedPort(getHttpPort(), format("nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir()))
         ).execute();
     }
 
+    public static String sudoIfPrivilegedPort(int port, String command) {
+        return port < 1024 ? CommonCommands.sudo(command) : command;
+    }
+    
     @Override
     public boolean isRunning() {
         Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
@@ -171,7 +175,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 format("cd %s", getRunDir()),
                 format("export PID=`cat %s`", pidFile),
                 "[[ -n \"$PID\" ]] || exit 0",
-                "kill $PID"
+                sudoIfPrivilegedPort(getHttpPort(), "kill $PID")
         ).execute();
     }
 
@@ -211,7 +215,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(flags, RESTARTING).
                 body.append(
                 format("cd %s", getRunDir()),
-                format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir())
+                sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
         ).execute();
     }
 }
