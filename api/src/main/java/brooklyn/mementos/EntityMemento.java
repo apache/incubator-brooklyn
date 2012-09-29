@@ -15,13 +15,11 @@ import brooklyn.event.AttributeSensor;
  * 
  * @author aled
  */
-public interface EntityMemento extends Memento {
+public interface EntityMemento extends TreeNode, Memento {
 
     // TODO Think about which sensors; how would sub-class supply that (given that super-constructor is doing work)
     
     public String getType();
-    
-    public String getId();
     
     public String getDisplayName();
     
@@ -32,18 +30,6 @@ public interface EntityMemento extends Memento {
     public Set<AttributeSensor> getEntityReferenceAttributes();
     
     public Set<ConfigKey> getEntityReferenceConfigs();
-
-    /**
-     * The id of the parent entity, or null if none (e.g. if top-level app).
-     */
-    public String getParent();
-    
-    /**
-     * The ids of the child entities.
-     * 
-     * @see Entity.getOwnedChildren()
-     */
-    public List<String> getChildren();
 
     /**
      * The ids of the member entities, if this is a Group; otherwise empty.

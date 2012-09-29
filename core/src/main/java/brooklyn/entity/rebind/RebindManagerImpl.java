@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.mementos.TreeNode;
 import brooklyn.util.MutableMap;
 import brooklyn.util.javalang.Reflections;
 
@@ -171,23 +173,9 @@ public class RebindManagerImpl implements RebindManager {
         }
         throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
     }
-    
-    private void visitAllLocations(BrooklynMemento memento, RebindContext rebindContext, LocationVisitor visitor) {
-        for (String id : memento.getLocationIds()) {
-            Location loc = rebindContext.getLocation(id);
-            LocationMemento locMemento = memento.getLocationMemento(id);
-            
-            if (loc != null) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} location {}", visitor.getActivityName(), memento);
-                visitor.visit(loc, locMemento);
-            } else {
-                LOG.warn("No location found for id {}; so not {}", id, visitor.getActivityName());
-            }
-        }
-    }
 
     private void depthFirst(BrooklynMemento memento, RebindContext rebindContext, LocationVisitor visitor) {
-        List<String> orderedIds = depthFirstLocationOrder(memento);
+        List<String> orderedIds = depthFirstOrder(memento.getTopLevelLocationIds(), memento.getLocationMementos());
 
         for (String id : orderedIds) {
             Location loc = rebindContext.getLocation(id);
@@ -203,7 +191,7 @@ public class RebindManagerImpl implements RebindManager {
     }
 
     private void depthFirst(BrooklynMemento memento, RebindContext rebindContext, EntityVisitor visitor) {
-        List<String> orderedIds = depthFirstEntityOrder(memento);
+        List<String> orderedIds = depthFirstOrder(memento.getApplicationIds(), memento.getEntityMementos());
 
         for (String id : orderedIds) {
             Entity loc = rebindContext.getEntity(id);
@@ -218,66 +206,33 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
 
-    private List<String> depthFirstLocationOrder(BrooklynMemento memento) {
+    private List<String> depthFirstOrder(Collection<String> roots, Map<String, ? extends TreeNode> nodes) {
         Set<String> visited = new HashSet<String>();
         Deque<String> tovisit = new ArrayDeque<String>();
-        List<String> result = new ArrayList<String>(memento.getLocationIds().size());
+        List<String> result = new ArrayList<String>(nodes.size());
         
-        tovisit.addAll(memento.getTopLevelLocationIds());
+        tovisit.addAll(roots);
         
         while (tovisit.size() > 0) {
-            String current = tovisit.pop();
-            LocationMemento locationMemento = memento.getLocationMemento(current);
+            String currentId = tovisit.pop();
+            TreeNode node = nodes.get(currentId);
             
-            if (locationMemento == null) {
-                LOG.warn("No memento for location id {}", current);
+            if (node == null) {
+                LOG.warn("No memento for id {}", currentId);
                 
-            } else if (visited.add(current)) {
-                result.add(current);
-                for (String child : locationMemento.getChildren()) {
-                    if (child == null) {
-                        LOG.warn("Null child location id in location {}", locationMemento);
-                    } else if (memento.getLocationMemento(child) == null) {
-                        LOG.warn("Unknown child location id {} in location {}", child, locationMemento);
+            } else if (visited.add(currentId)) {
+                result.add(currentId);
+                for (String childId : node.getChildren()) {
+                    if (childId == null) {
+                        LOG.warn("Null child entity id in entity {}", node);
+                    } else if (!nodes.containsKey(childId)) {
+                        LOG.warn("Unknown child id {} in {}", childId, node);
                     } else {
-                        tovisit.push(child);
+                        tovisit.push(childId);
                     }
                 }
             } else {
-                LOG.warn("Cycle detected in locations (id="+current+")");
-            }
-        }
-        
-        return result;
-    }
-
-    private List<String> depthFirstEntityOrder(BrooklynMemento memento) {
-        Set<String> visited = new HashSet<String>();
-        Deque<String> tovisit = new ArrayDeque<String>();
-        List<String> result = new ArrayList<String>(memento.getEntityIds().size());
-        
-        tovisit.addAll(memento.getApplicationIds());
-        
-        while (tovisit.size() > 0) {
-            String current = tovisit.pop();
-            EntityMemento entityMemento = memento.getEntityMemento(current);
-            
-            if (entityMemento == null) {
-                LOG.warn("No memento for entity id {}", current);
-                
-            } else if (visited.add(current)) {
-                result.add(current);
-                for (String child : entityMemento.getChildren()) {
-                    if (child == null) {
-                        LOG.warn("Null child entity id in entity {}", entityMemento);
-                    } else if (memento.getEntityMemento(child) == null) {
-                        LOG.warn("Unknown child entity id {} in entity {}", child, entityMemento);
-                    } else {
-                        tovisit.push(child);
-                    }
-                }
-            } else {
-                LOG.warn("Cycle detected in entity hierarchy (id="+current+")");
+                LOG.warn("Cycle detected in hierarchy (id="+currentId+")");
             }
         }
         
@@ -303,7 +258,7 @@ public class RebindManagerImpl implements RebindManager {
         public EntityVisitor(String activityName) {
             this.activityName = activityName;
         }
-        public abstract void visit(Entity location, EntityMemento memento);
+        public abstract void visit(Entity entity, EntityMemento memento);
         
         public String getActivityName() {
             return activityName;

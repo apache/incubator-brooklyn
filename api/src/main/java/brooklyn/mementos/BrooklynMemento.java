@@ -15,4 +15,8 @@ public interface BrooklynMemento {
     public Collection<String> getEntityIds();
     
     public Collection<String> getLocationIds();
+
+    public Map<String, EntityMemento> getEntityMementos();
+
+    public Map<String, LocationMemento> getLocationMementos();
 }

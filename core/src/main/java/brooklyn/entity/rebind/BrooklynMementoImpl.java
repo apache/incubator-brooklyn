@@ -128,6 +128,15 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         return Collections.unmodifiableList(topLevelLocationIds);
     }
 
+    @Override
+    public Map<String, EntityMemento> getEntityMementos() {
+        return Collections.unmodifiableMap(entities);
+    }
+    @Override
+    public Map<String, LocationMemento> getLocationMementos() {
+        return Collections.unmodifiableMap(locations);
+    }
+    
     private Collection<Location> findLocationsInHierarchy(Location root) {
     	Set<Location> result = Sets.newLinkedHashSet();
     	

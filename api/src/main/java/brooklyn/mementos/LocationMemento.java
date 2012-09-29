@@ -1,22 +1,15 @@
 package brooklyn.mementos;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 
-public interface LocationMemento extends Memento {
+public interface LocationMemento extends TreeNode, Memento {
 
     String getType();
     
-    String getId();
-    
     String getDisplayName();
 
-    String getParent();
-    
-    List<String> getChildren();
-    
 	Map<String, Object> getLocationProperties();
 	
     Map<String, Object> getFlags();
