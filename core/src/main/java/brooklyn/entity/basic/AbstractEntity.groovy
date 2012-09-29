@@ -279,6 +279,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     @Override
     public Entity addOwnedChild(Entity child) {
         synchronized (ownedChildren) {
+            if (child == null) throw new NullPointerException("child must not be null (for entity "+this+")")
 	        if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
 	        child.setOwner(this)
 	        ownedChildren.add(child)
