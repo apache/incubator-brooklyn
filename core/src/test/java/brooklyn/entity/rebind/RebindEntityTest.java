@@ -31,7 +31,6 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
@@ -39,11 +38,14 @@ import brooklyn.util.flags.SetFromFlag;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class RebindEntityTest {
 
+    // FIXME Add test about dependent configuration serialization?!
+    
     private MyApplication origApp;
 
     @BeforeMethod
@@ -228,23 +230,49 @@ public class RebindEntityTest {
         TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(newE.events), Predicates.equalTo(Collections.emptyList()));
     }
     
-    // FIXME Fails for setting config
-    @Test(groups="WIP")
-    public void testRestoresComplexConfigKeys() throws Exception {
+    @Test
+    public void testRestoresConfigKeys() throws Exception {
         TestEntity origE = new TestEntity(origApp);
+        origE.setConfig(TestEntity.CONF_LIST_PLAIN, ImmutableList.of("val1", "val2"));
+        origE.setConfig(TestEntity.CONF_MAP_PLAIN, ImmutableMap.of("akey", "aval"));
         origApp.getManagementContext().manage(origApp);
         
-        TestApplication newApp = (TestApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
 
-        assertEquals(newE.getConfig(TestEntity.CONF_LIST_PLAIN), origE.getConfig(TestEntity.CONF_LIST_PLAIN));
-        assertEquals(newE.getConfig(TestEntity.CONF_MAP_PLAIN), origE.getConfig(TestEntity.CONF_MAP_PLAIN));
-        assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), origE.getConfig(TestEntity.CONF_LIST_THING));
-        assertEquals(newE.getConfig(TestEntity.CONF_MAP_THING), origE.getConfig(TestEntity.CONF_MAP_THING));
+        assertEquals(newE.getConfig(TestEntity.CONF_LIST_PLAIN), ImmutableList.of("val1", "val2"));
+        assertEquals(newE.getConfig(TestEntity.CONF_MAP_PLAIN), ImmutableMap.of("akey", "aval"));
+    }
+
+    
+    @Test
+    public void testRestoresListConfigKey() throws Exception {
+        TestEntity origE = new TestEntity(origApp);
+        origE.setConfig(TestEntity.CONF_LIST_THING.subKey(), "val1");
+        origE.setConfig(TestEntity.CONF_LIST_THING.subKey(), "val2");
+        origApp.getManagementContext().manage(origApp);
+        
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
+
+        assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("val1", "val2"));
+    }
+
+    @Test
+    public void testRestoresMapConfigKey() throws Exception {
+        TestEntity origE = new TestEntity(origApp);
+        origE.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval");
+        origE.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval");
+        origApp.getManagementContext().manage(origApp);
+        
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
+
+        assertEquals(newE.getConfig(TestEntity.CONF_MAP_THING), ImmutableMap.of("akey", "aval", "bkey", "bval"));
     }
 
     // FIXME Fails because newE has the config explicitly set to null, rather than no entry for the config key
-    @Test(groups="WIP")
+    @Test
     public void testRebindPreservesGetConfigWithDefault() throws Exception {
         MyEntity origE = new MyEntity(origApp);
         origApp.getManagementContext().manage(origApp);

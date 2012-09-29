@@ -55,7 +55,7 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
     }
     
     public boolean isSubKey(ConfigKey<?> contender) {
-        return (contender instanceof SubElementConfigKey && this == ((SubElementConfigKey<?>) contender).parent);
+        return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey<?>) contender).parent));
     }
 
     public String extractSubKeyName(ConfigKey<?> subKey) {
@@ -92,6 +92,8 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Object applyValueToMap(Object value, Map target) {
+        if (value == null)
+            return null;
         if (value instanceof StructuredModification)
             return ((StructuredModification)value).applyToKeyInMap(this, target);
         if (value instanceof Map.Entry)

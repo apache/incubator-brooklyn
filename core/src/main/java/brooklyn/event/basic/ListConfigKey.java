@@ -55,7 +55,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
     }
     
     public boolean isSubKey(ConfigKey<?> contender) {
-        return (contender instanceof SubElementConfigKey && this == ((SubElementConfigKey<?>) contender).parent);
+        return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey<?>) contender).parent));
     }
 
     @SuppressWarnings("unchecked")
