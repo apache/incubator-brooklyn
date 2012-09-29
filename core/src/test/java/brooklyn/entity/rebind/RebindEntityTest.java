@@ -1,6 +1,8 @@
 package brooklyn.entity.rebind;
 
 import static brooklyn.entity.rebind.RebindTestUtils.serializeAndRebind;
+import static brooklyn.test.EntityTestUtils.assertAttributeEquals;
+import static brooklyn.test.EntityTestUtils.assertConfigEquals;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotSame;
 import static org.testng.Assert.assertNull;
@@ -18,11 +20,13 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.rebind.RebindLocationTest.MyLocation;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
@@ -146,6 +150,45 @@ public class RebindEntityTest {
         TestUtils.assertEventually(Suppliers.ofInstance(newE.events), Predicates.equalTo(ImmutableList.of("mysensorval")));
     }
     
+    @Test
+    public void testHandlesReferencingOtherEntities() throws Exception {
+        MyEntity origOtherE = new MyEntity(origApp);
+        MyEntityReffingOthers origE = new MyEntityReffingOthers(
+                MutableMap.builder()
+                        .put("entityRef", origOtherE)
+                        .build(),
+                origApp);
+        origE.setAttribute(MyEntityReffingOthers.ENTITY_REF_SENSOR, origOtherE);
+        origApp.getManagementContext().manage(origApp);
+        
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
+        MyEntity newOtherE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        
+        assertAttributeEquals(newE, MyEntityReffingOthers.ENTITY_REF_SENSOR, newOtherE);
+        assertConfigEquals(newE, MyEntityReffingOthers.ENTITY_REF_CONFIG, newOtherE);
+    }
+    
+    @Test
+    public void testHandlesReferencingOtherLocations() throws Exception {
+        MyLocation origLoc = new MyLocation();
+        MyEntityReffingOthers origE = new MyEntityReffingOthers(
+                MutableMap.builder()
+                        .put("locationRef", origLoc)
+                        .build(),
+                origApp);
+        origE.setAttribute(MyEntityReffingOthers.LOCATION_REF_SENSOR, origLoc);
+        origApp.getManagementContext().manage(origApp);
+        origApp.start(ImmutableList.of(origLoc));
+        
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
+        MyLocation newLoc = (MyLocation) Iterables.getOnlyElement(newApp.getLocations());
+        
+        assertAttributeEquals(newE, MyEntityReffingOthers.LOCATION_REF_SENSOR, newLoc);
+        assertConfigEquals(newE, MyEntityReffingOthers.LOCATION_REF_CONFIG, newLoc);
+    }
+
     // FIXME Test is broken, because RebindManager now calls manage
     @Test(enabled=false)
     public void testEntityUnmanagedDuringRebind() throws Exception {
@@ -242,6 +285,32 @@ public class RebindEntityTest {
         }
         
         public MyEntity(Map flags, Entity owner) {
+            super(flags, owner);
+        }
+    }
+    
+    public static class MyEntityReffingOthers extends AbstractEntity implements Rebindable {
+        private static final long serialVersionUID = 1L;
+        
+        @SetFromFlag("entityRef")
+        public static final ConfigKey<Entity> ENTITY_REF_CONFIG = new BasicConfigKey<Entity>(
+                        Entity.class, "test.config.entityref", "Ref to other entity");
+
+        @SetFromFlag("locationRef")
+        public static final ConfigKey<Location> LOCATION_REF_CONFIG = new BasicConfigKey<Location>(
+                Location.class, "test.config.locationref", "Ref to other location");
+        
+        public static final AttributeSensor<Entity> ENTITY_REF_SENSOR = new BasicAttributeSensor<Entity>(
+                Entity.class, "test.attribute.entityref", "Ref to other entity");
+        
+        public static final AttributeSensor<Location> LOCATION_REF_SENSOR = new BasicAttributeSensor<Location>(
+                Location.class, "test.attribute.locationref", "Ref to other location");
+        
+        public MyEntityReffingOthers(Entity owner) {
+            super(owner);
+        }
+        
+        public MyEntityReffingOthers(Map flags, Entity owner) {
             super(flags, owner);
         }
     }

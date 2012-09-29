@@ -1,5 +1,7 @@
 package brooklyn.event.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
@@ -39,17 +41,17 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     
     public BasicConfigKey(Class<T> type, String name, String description, T defaultValue) {
         this.description = description;
-        this.name = name;
-        this.type = type;
+        this.name = checkNotNull(name, "name");
+        this.type = checkNotNull(type, "type");
         this.typeName = type.getName();
         this.defaultValue = defaultValue;
     }
 
     public BasicConfigKey(ConfigKey<T> key, T defaultValue) {
         this.description = key.getDescription();
-        this.name = key.getName();
-        this.type = key.getType();
-        this.typeName = key.getTypeName();
+        this.name = checkNotNull(key.getName(), "name");
+        this.type = checkNotNull(key.getType(), "type");
+        this.typeName = checkNotNull(key.getTypeName(), "typeName");
         this.defaultValue = defaultValue;
     }
     

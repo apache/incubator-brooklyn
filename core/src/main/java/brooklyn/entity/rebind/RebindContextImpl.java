@@ -13,21 +13,11 @@ public class RebindContextImpl implements RebindContext {
     private final Map<String, Entity> entities = Maps.newLinkedHashMap();
     private final Map<String, Location> locations = Maps.newLinkedHashMap();
     private final BrooklynMemento memento;
+    private final ClassLoader classLoader;
     
-    public RebindContextImpl(BrooklynMemento memento) {
+    public RebindContextImpl(BrooklynMemento memento, ClassLoader classLoader) {
         this.memento = memento;
-//        for (Application app : applications) {
-//            applicationIds.add(app.getId());
-//        }
-//        for (Entity entity : managementContext.getEntities()) {
-//            entities.put(entity.getId(), entity.getMemento());
-//            
-//            for (Location location : entity.getLocations()) {
-//                if (!locations.containsKey(location.getId())) {
-//                    locations.put(location.getId(), location.getMemento());
-//                }
-//            }
-//        }
+        this.classLoader = classLoader;
     }
 
     public void registerEntity(String id, Entity entity) {
@@ -46,5 +36,10 @@ public class RebindContextImpl implements RebindContext {
     @Override
     public Location getLocation(String id) {
         return locations.get(id);
+    }
+    
+    @Override
+    public Class<?> loadClass(String className) throws ClassNotFoundException {
+        return classLoader.loadClass(className);
     }
 }

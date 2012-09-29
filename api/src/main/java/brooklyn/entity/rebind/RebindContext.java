@@ -8,4 +8,6 @@ public interface RebindContext {
     public Entity getEntity(String id);
 
     public Location getLocation(String id);
+
+    public Class<?> loadClass(String typeName) throws ClassNotFoundException;
 }

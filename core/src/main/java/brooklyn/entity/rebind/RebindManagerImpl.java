@@ -57,7 +57,7 @@ public class RebindManagerImpl implements RebindManager {
         Map<String,Rebindable> entities = Maps.newLinkedHashMap();
         Map<String,RebindableLocation> locations = Maps.newLinkedHashMap();
         
-        final RebindContextImpl rebindContext = new RebindContextImpl(memento);
+        final RebindContextImpl rebindContext = new RebindContextImpl(memento, classLoader);
 
         // Instantiate locations
         LOG.info("RebindManager instantiating locations: {}", memento.getLocationIds());

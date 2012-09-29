@@ -1,5 +1,7 @@
 package brooklyn.event.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -37,9 +39,9 @@ public class BasicSensor<T> implements Sensor<T> {
     }
     
     public BasicSensor(Class<T> type, String name, String description) {
-        this.type = type;
+        this.type = checkNotNull(type, "type");
         this.typeName = type.getName();
-        this.name = name;
+        this.name = checkNotNull(name, "name");
         this.description = description;
         this.nameParts = ImmutableList.copyOf(dots.split(name));
     }

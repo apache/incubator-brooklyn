@@ -13,6 +13,8 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.mementos.EntityMemento;
 
+import com.google.common.base.Throwables;
+
 public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BasicEntityRebindSupport.class);
@@ -46,20 +48,30 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         entity.setDisplayName(memento.getDisplayName());
 
         for (Map.Entry<ConfigKey, Object> entry : memento.getConfig().entrySet()) {
-            ConfigKey key = entry.getKey();
-            Object value = entry.getValue();
-            if (memento.getEntityReferenceConfigs().contains(entry.getKey())) {
-                value = MementoTransformer.transformIdsToEntities(rebindContext, value, key.getType());
+            try {
+                ConfigKey key = entry.getKey();
+                Object value = entry.getValue();
+                Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
+                if (memento.getEntityReferenceConfigs().contains(entry.getKey())) {
+                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type);
+                }
+                entity.setConfig(key, value);
+            } catch (ClassNotFoundException e) {
+                throw Throwables.propagate(e);
             }
-            entity.setConfig(key, value);
         }
         for (Map.Entry<AttributeSensor, Object> entry : memento.getAttributes().entrySet()) {
-            AttributeSensor key = entry.getKey();
-            Object value = entry.getValue();
-            if (memento.getEntityReferenceAttributes().contains(entry.getKey())) {
-                value = MementoTransformer.transformIdsToEntities(rebindContext, value, key.getType());
+            try {
+                AttributeSensor key = entry.getKey();
+                Object value = entry.getValue();
+                Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
+                if (memento.getEntityReferenceAttributes().contains(entry.getKey())) {
+                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type);
+                }
+                entity.setAttribute(key, value);
+            } catch (ClassNotFoundException e) {
+                throw Throwables.propagate(e);
             }
-            entity.setAttribute(key, value);
         }
         
         setParent(rebindContext, memento);
