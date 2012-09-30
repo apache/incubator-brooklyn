@@ -10,6 +10,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.event.AttributeSensor;
 import brooklyn.mementos.EntityMemento;
 
@@ -31,18 +32,22 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     }
 
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
-        EntityMemento memento = BasicEntityMemento.builder().from(entity).customProperties(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity {}({}): config={}; attributes={}; properties={}; parent={}; children={}; locations={}", 
-    			new Object[] {memento.getType(), memento.getId(), memento.getConfig(), memento.getAttributes(), memento.getCustomProperties(), memento.getParent(), memento.getChildren(), memento.getLocations()});
+        EntityMemento memento = MementosGenerators.newEntityMementoBuilder(entity).customProperties(props).build();
+    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity {}({}): parent={}; children={}; locations={}; "+
+    	        "config={}; attributes={}; entityReferenceConfigs={}; entityReferenceAttributes={}; customProperties={}", 
+    			new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
+                memento.getLocations(), memento.getConfig(), memento.getAttributes(), memento.getEntityReferenceConfigs(), 
+                memento.getEntityReferenceAttributes(), memento.getCustomProperties()});
     	return memento;
     }
 
     @Override
     public void reconstruct(RebindContext rebindContext, EntityMemento memento) {
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity {}({}): parent={}; children={}; locations={}; " +
-    			"config={}; attributes={}; customProperties={}", 
+    			"config={}; attributes={}; entityReferenceConfigs={}; entityReferenceAttributes={}; customProperties={}", 
     	        new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
-    	        memento.getLocations(), memento.getConfig(), memento.getAttributes(), memento.getCustomProperties()});
+    	        memento.getLocations(), memento.getConfig(), memento.getAttributes(), memento.getEntityReferenceConfigs(), 
+    	        memento.getEntityReferenceAttributes(), memento.getCustomProperties()});
 
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());

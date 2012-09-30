@@ -96,6 +96,7 @@
         <slf4j.version>1.5.11</slf4j.version>
         <!-- NB: slf4j 1.6.x seems to change some signatures which breaks e.g. grails 1.3; grails may ask for 1.5.8 but that's okay -->
         <xstream.version>1.3.1</xstream.version>
+        <jackson.version>1.9.10</jackson.version>
         <jansi.version>1.2.1</jansi.version>
         <guava.version>12.0.1</guava.version>
         <ivy.version>2.2.0</ivy.version>

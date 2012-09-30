@@ -1,4 +1,4 @@
-package brooklyn.entity.rebind;
+package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -31,6 +31,21 @@ public class AbstractMemento implements Memento, TreeNode, Serializable {
             children.addAll(other.getChildren());
             return self();
         }
+        public B id(String val) {
+            id = val; return self();
+        }
+        public B parent(String val) {
+            parent = val; return self();
+        }
+        public B children(List<String> val) {
+            children = val; return self();
+        }
+        public B displayName(String val) {
+            displayName = val; return self();
+        }
+        public B displayName(Map<String, Object> val) {
+            customProperties = val; return self();
+        }
         public B addChild(String id) {
             children.add(id); return self();
         }
@@ -48,6 +63,11 @@ public class AbstractMemento implements Memento, TreeNode, Serializable {
     private List<String> children;
     private Map<String,Object> customProperties;
     
+    // for de-serialization
+    @SuppressWarnings("unused")
+    protected AbstractMemento() {
+    }
+
     // Trusts the builder to not mess around with mutability after calling build()
     protected AbstractMemento(Builder builder) {
         id = builder.id;

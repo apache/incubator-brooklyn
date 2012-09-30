@@ -1,17 +1,14 @@
-package brooklyn.entity.rebind;
+package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
-import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.location.Location;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.TreeNode;
-import brooklyn.util.flags.FlagUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -32,46 +29,11 @@ public class BasicLocationMemento extends AbstractMemento implements LocationMem
     }
 
     public static class Builder extends AbstractMemento.Builder<Builder> {
-        private String type;
-        private String displayName;
-        private Map<String,Object> locationProperties = Maps.newLinkedHashMap();
-        private Map<String,Object> flags = Maps.newLinkedHashMap();
-        private Set<String> locationReferenceFlags = Sets.newLinkedHashSet();
+        protected String type;
+        protected Map<String,Object> locationProperties = Maps.newLinkedHashMap();
+        protected Map<String,Object> flags = Maps.newLinkedHashMap();
+        protected Set<String> locationReferenceFlags = Sets.newLinkedHashSet();
         
-        /**
-         * Given a location, extracts its state for serialization.
-         * 
-         * For bits of state that are references to other locations, these are treated in a special way:
-         * the location reference is replaced by the location id.
-         * TODO When we have a cleaner separation of constructor/config for entities and locations, then
-         * we will remove this code!
-         */
-        public Builder from(Location location) {
-            type = location.getClass().getName();
-            id = location.getId();
-            displayName = location.getName();
-            locationProperties.putAll(location.getLocationProperties());
-
-            flags.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT));
-            for (Map.Entry<String, Object> entry : flags.entrySet()) {
-                String key = entry.getKey();
-                Object value = entry.getValue();
-                Object transformedValue = MementoTransformer.transformLocationsToIds(value);
-                if (transformedValue != value) {
-                    entry.setValue(transformedValue);
-                    locationReferenceFlags.add(key);
-                }
-            }
-            
-            Location parentLocation = location.getParentLocation();
-            parent = (parentLocation != null) ? parentLocation.getId() : null;
-            
-            for (Location child : location.getChildLocations()) {
-                children.add(child.getId()); 
-            }
-            
-            return this;
-        }
         public Builder from(LocationMemento other) {
             super.from((TreeNode)other);
             type = other.getType();
@@ -80,7 +42,7 @@ public class BasicLocationMemento extends AbstractMemento implements LocationMem
             flags.putAll(other.getFlags());
             locationReferenceFlags.addAll(other.getLocationReferenceFlags());
             customProperties.putAll(other.getCustomProperties());
-            return this;
+            return self();
         }
         public LocationMemento build() {
             return new BasicLocationMemento(this);

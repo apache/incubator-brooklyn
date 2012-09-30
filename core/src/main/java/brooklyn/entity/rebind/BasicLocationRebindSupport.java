@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
@@ -32,11 +33,12 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     }
 
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
-        LocationMemento memento = BasicLocationMemento.builder().from(location).customProperties(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; locationProperties={}; " +
-    			"flags={}; customProperties={}; parent={}; children={}",
-    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getLocationProperties(), 
-				memento.getFlags(), memento.getCustomProperties(), memento.getParent(), memento.getChildren()});
+        LocationMemento memento = MementosGenerators.newLocationMementoBuilder(location).customProperties(props).build();
+    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; parent={}; children={}; "+
+    	        "locationProperties={}; flags={}; locationReferenceFlags={}; customProperties={}; ",
+    			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
+                memento.getChildren(),memento.getLocationProperties(), memento.getFlags(), memento.getLocationReferenceFlags(),
+                memento.getCustomProperties()});
     	return memento;
     }
 

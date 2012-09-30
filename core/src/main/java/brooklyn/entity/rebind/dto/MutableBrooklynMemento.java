@@ -1,4 +1,4 @@
-package brooklyn.entity.rebind;
+package brooklyn.entity.rebind.dto;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -8,6 +8,9 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
@@ -20,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+@JsonAutoDetect(fieldVisibility=Visibility.ANY, getterVisibility=Visibility.NONE)
 public class MutableBrooklynMemento implements BrooklynMemento {
 
     private static final long serialVersionUID = -442895028005849060L;

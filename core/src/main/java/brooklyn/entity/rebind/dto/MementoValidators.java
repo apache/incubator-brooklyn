@@ -1,30 +1,17 @@
-package brooklyn.entity.rebind;
+package brooklyn.entity.rebind.dto;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.TreeNode;
 
-public class BrooklynMementos {
+public class MementoValidators {
 
-    private static final BrooklynMemento EMPTY_MEMENTO = new EmptyBrooklynMemento();
-
-    private BrooklynMementos() {}
-    
-    public static BrooklynMemento emptyMemento() {
-        return EMPTY_MEMENTO;
-    }
-
-    public static BrooklynMemento newMemento(ManagementContext managementContext) {
-        BrooklynMementoImpl result = new BrooklynMementoImpl(managementContext, managementContext.getApplications());
-        BrooklynMementos.validateMemento(result);
-        return result;
-    }
+    private MementoValidators() {}
     
     public static void validateMemento(BrooklynMemento memento) {
         // TODO Could also validate integrity of entityReferenceAttributes and entityReferenceConfig

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
@@ -70,7 +71,7 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public BrooklynMemento getMemento() {
-        return BrooklynMementos.newMemento(managementContext);
+        return MementosGenerators.newBrooklynMemento(managementContext);
     }
 
     @Override

@@ -1,18 +1,11 @@
-package brooklyn.entity.rebind;
+package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
-import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
-import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -20,7 +13,6 @@ import brooklyn.mementos.LocationMemento;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
 
@@ -28,31 +20,43 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     
     private static final long serialVersionUID = -5848083830410137654L;
     
-    private final List<String> applicationIds = Lists.newArrayList();
-    private final List<String> topLevelLocationIds = Lists.newArrayList();
-    private final Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
-    private final Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
+    public static Builder builder() {
+        return new Builder();
+    }
     
-    public BrooklynMementoImpl(ManagementContext managementContext, Collection<Application> applications) {
-        for (Application app : applications) {
-            applicationIds.add(app.getId());
+    public static class Builder {
+        protected List<String> applicationIds = Lists.newArrayList();
+        protected List<String> topLevelLocationIds = Lists.newArrayList();
+        protected Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
+        protected Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
+        
+        public Builder applicationIds(List<String> vals) {
+            applicationIds.addAll(vals); return this;
         }
-        for (Entity entity : managementContext.getEntities()) {
-            entities.put(entity.getId(), ((Rebindable)entity).getRebindSupport().getMemento());
-            
-            for (Location location : entity.getLocations()) {
-                if (!locations.containsKey(location.getId())) {
-                	for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
-                		locations.put(locationInHierarchy.getId(), ((RebindableLocation)locationInHierarchy).getRebindSupport().getMemento());
-                	}
-                }
-            }
+        public Builder topLevelLocationIds(List<String> vals) {
+            topLevelLocationIds.addAll(vals); return this;
         }
-        for (LocationMemento memento : locations.values()) {
-            if (memento.getParent() == null) {
-                topLevelLocationIds.add(memento.getId());
-            }
+        public Builder entities(Map<String, EntityMemento> vals) {
+            entities.putAll(vals); return this;
         }
+        public Builder locations(Map<String, LocationMemento> vals) {
+            locations.putAll(vals); return this;
+        }
+        public BrooklynMemento build() {
+            return new BrooklynMementoImpl(this);
+        }
+    }
+
+    private List<String> applicationIds;
+    private List<String> topLevelLocationIds;
+    private Map<String, EntityMemento> entities;
+    private Map<String, LocationMemento> locations;
+    
+    private BrooklynMementoImpl(Builder builder) {
+        applicationIds = Collections.unmodifiableList(builder.applicationIds);
+        topLevelLocationIds = Collections.unmodifiableList(builder.topLevelLocationIds);
+        entities = Collections.unmodifiableMap(builder.entities);
+        locations = Collections.unmodifiableMap(builder.locations);
     }
 
     @Override
