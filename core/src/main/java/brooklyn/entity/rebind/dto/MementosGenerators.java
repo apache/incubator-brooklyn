@@ -7,6 +7,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.rebind.MementoTransformer;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.entity.rebind.RebindableLocation;
@@ -69,8 +70,9 @@ public class MementosGenerators {
         builder.displayName = entity.getDisplayName();
         builder.type = entity.getClass().getName();
         
-        for (ConfigKey<?> key : entity.getEntityType().getConfigKeys()) {
-            Object value = entity.getConfig(key);
+        for (Map.Entry<ConfigKey, Object> entry : ((AbstractEntity)entity).getAllConfig().entrySet()) {
+            ConfigKey<?> key = entry.getKey();
+            Object value = entry.getValue();
             Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
             if (transformedValue != value) {
                 builder.entityReferenceConfigs.add(key);

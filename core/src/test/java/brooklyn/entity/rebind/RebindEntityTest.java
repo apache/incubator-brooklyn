@@ -273,6 +273,27 @@ public class RebindEntityTest {
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_THING), ImmutableMap.of("akey", "aval", "bkey", "bval"));
     }
 
+    @Test
+    public void testRebindPreservesInheritedConfig() throws Exception {
+        MyEntity origE = new MyEntity(origApp);
+        origApp.setConfig(MyEntity.MY_CONFIG, "myValInSuper");
+        origApp.getManagementContext().manage(origApp);
+
+        // rebind: inherited config is preserved
+        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        
+        assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
+        assertEquals(newApp.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
+        
+        // This config should be inherited by dynamically-added children of app
+        MyEntity newE2 = new MyEntity(origApp);
+        newApp.getManagementContext().manage(newE2);
+        
+        assertEquals(newE2.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
+        
+    }
+
     // FIXME Fails because newE has the config explicitly set to null, rather than no entry for the config key
     @Test(enabled=false, groups="WIP")
     public void testRebindPreservesGetConfigWithDefault() throws Exception {

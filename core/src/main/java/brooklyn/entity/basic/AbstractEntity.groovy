@@ -108,7 +108,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
      */
-    protected final brooklyn.config.ConfigMap configsInternal = new EntityConfigMap(this)
+    protected final EntityConfigMap configsInternal = new EntityConfigMap(this)
 
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
