@@ -59,6 +59,8 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
                 if (memento.getEntityReferenceConfigs().contains(entry.getKey())) {
                     value = MementoTransformer.transformIdsToEntities(rebindContext, value, type);
+                } else if (memento.getLocationReferenceConfigs().contains(entry.getKey())) {
+                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type);
                 }
                 entity.setConfig(key, value);
             } catch (ClassNotFoundException e) {
@@ -72,6 +74,8 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
                 if (memento.getEntityReferenceAttributes().contains(entry.getKey())) {
                     value = MementoTransformer.transformIdsToEntities(rebindContext, value, type);
+                } else if (memento.getLocationReferenceAttributes().contains(entry.getKey())) {
+                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type);
                 }
                 entity.setAttribute(key, value);
             } catch (ClassNotFoundException e) {

@@ -74,6 +74,11 @@ public class MementosGenerators {
             Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
             if (transformedValue != value) {
                 builder.entityReferenceConfigs.add(key);
+            } else {
+                transformedValue = MementoTransformer.transformLocationsToIds(value);
+                if (transformedValue != value) {
+                    builder.locationReferenceConfigs.add(key);
+                }
             }
             builder.config.put(key, transformedValue); 
         }
@@ -84,6 +89,11 @@ public class MementosGenerators {
                 Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
                 if (transformedValue != value) {
                     builder.entityReferenceAttributes.add((AttributeSensor<?>)key);
+                } else {
+                    transformedValue = MementoTransformer.transformLocationsToIds(value);
+                    if (transformedValue != value) {
+                        builder.locationReferenceAttributes.add((AttributeSensor) key);
+                    }
                 }
                 builder.attributes.put((AttributeSensor<?>)key, transformedValue);
 

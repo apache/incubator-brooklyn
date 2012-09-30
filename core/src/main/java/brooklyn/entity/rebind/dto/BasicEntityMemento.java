@@ -45,30 +45,11 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
         protected Map<AttributeSensor, Object> attributes = Maps.newLinkedHashMap();
         protected Set<ConfigKey> entityReferenceConfigs = Sets.newLinkedHashSet();
         protected Set<AttributeSensor> entityReferenceAttributes = Sets.newLinkedHashSet();
+        protected Set<ConfigKey> locationReferenceConfigs = Sets.newLinkedHashSet();
+        protected Set<AttributeSensor> locationReferenceAttributes = Sets.newLinkedHashSet();
         protected List<String> locations = Lists.newArrayList();
         protected List<String> members = Lists.newArrayList();
         
-        public Builder type(String val) {
-            type = val; return this;
-        }
-        public Builder config(Map<ConfigKey, Object> val) {
-            config = val; return this;
-        }
-        public Builder attributes(Map<AttributeSensor, Object> val) {
-            attributes = val; return this;
-        }
-        public Builder entityReferenceConfigs(Set<ConfigKey> val) {
-            entityReferenceConfigs = val; return this;
-        }
-        public Builder entityReferenceAttributes(Set<AttributeSensor> val) {
-            entityReferenceAttributes = val; return this;
-        }
-        public Builder locations(List<String> val) {
-            locations = val; return this;
-        }
-        public Builder  members(List<String> val) {
-            members = val; return this;
-        }
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
             type = other.getType();
@@ -77,6 +58,8 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
             attributes.putAll(other.getAttributes());
             entityReferenceConfigs.addAll(other.getEntityReferenceConfigs());
             entityReferenceAttributes.addAll(other.getEntityReferenceAttributes());
+            locationReferenceConfigs.addAll(other.getLocationReferenceConfigs());
+            locationReferenceAttributes.addAll(other.getLocationReferenceAttributes());
             locations.addAll(other.getLocations());
             members.addAll(other.getMembers());
             customProperties.putAll(other.getCustomProperties());
@@ -92,6 +75,8 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     private Map<String, Object> attributes;
     private Set<String> entityReferenceConfigs;
     private Set<String> entityReferenceAttributes;
+    private Set<String> locationReferenceConfigs;
+    private Set<String> locationReferenceAttributes;
     private List<String> locations;
     private List<String> members;
     private Map<String, ConfigKey> configKeys;
@@ -101,6 +86,8 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     private transient Map<AttributeSensor, Object> attributesByKey;
     private transient Set<ConfigKey> entityReferenceConfigsByKey;
     private transient Set<AttributeSensor> entityReferenceAttributesByKey;
+    private transient Set<ConfigKey> locationReferenceConfigsByKey;
+    private transient Set<AttributeSensor> locationReferenceAttributesByKey;
 
     // for de-serialization
     @SuppressWarnings("unused")
@@ -117,6 +104,8 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
         attributesByKey = Collections.unmodifiableMap(builder.attributes);
         entityReferenceConfigsByKey = Collections.unmodifiableSet(builder.entityReferenceConfigs);
         entityReferenceAttributesByKey = Collections.unmodifiableSet(builder.entityReferenceAttributes);
+        locationReferenceConfigsByKey = Collections.unmodifiableSet(builder.locationReferenceConfigs);
+        locationReferenceAttributesByKey = Collections.unmodifiableSet(builder.locationReferenceAttributes);
         
         configKeys = Maps.newLinkedHashMap();
         config = Maps.newLinkedHashMap();
@@ -142,6 +131,16 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
         entityReferenceAttributes = Sets.newLinkedHashSet();
         for (AttributeSensor key : entityReferenceAttributesByKey) {
             entityReferenceAttributes.add(key.getName());
+        }
+        
+        locationReferenceConfigs = Sets.newLinkedHashSet();
+        for (ConfigKey key : locationReferenceConfigsByKey) {
+            locationReferenceConfigs.add(key.getName());
+        }
+        
+        locationReferenceAttributes = Sets.newLinkedHashSet();
+        for (AttributeSensor key : locationReferenceAttributesByKey) {
+            locationReferenceAttributes.add(key.getName());
         }
     }
 
@@ -169,6 +168,18 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
             entityReferenceAttributesByKey.add(attributeKeys.get(key));
         }
         entityReferenceAttributesByKey = Collections.unmodifiableSet(entityReferenceAttributesByKey);
+        
+        locationReferenceConfigsByKey = Sets.newLinkedHashSet();
+        for (String key : locationReferenceConfigs) {
+            locationReferenceConfigsByKey.add(configKeys.get(key));
+        }
+        locationReferenceConfigsByKey = Collections.unmodifiableSet(locationReferenceConfigsByKey);
+
+        locationReferenceAttributesByKey = Sets.newLinkedHashSet();
+        for (String key : locationReferenceAttributes) {
+            locationReferenceAttributesByKey.add(attributeKeys.get(key));
+        }
+        locationReferenceAttributesByKey = Collections.unmodifiableSet(locationReferenceAttributesByKey);
     }
     
     @Override
@@ -198,6 +209,18 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     public Set<ConfigKey> getEntityReferenceConfigs() {
         if (entityReferenceConfigsByKey == null) postDeserialize();
         return entityReferenceConfigsByKey;
+    }
+    
+    @Override
+    public Set<AttributeSensor> getLocationReferenceAttributes() {
+        if (locationReferenceAttributesByKey == null) postDeserialize();
+        return locationReferenceAttributesByKey;
+    }
+    
+    @Override
+    public Set<ConfigKey> getLocationReferenceConfigs() {
+        if (locationReferenceConfigsByKey == null) postDeserialize();
+        return locationReferenceConfigsByKey;
     }
     
     @Override

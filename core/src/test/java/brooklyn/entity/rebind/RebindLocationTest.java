@@ -4,7 +4,6 @@ import static brooklyn.entity.rebind.RebindTestUtils.serializeAndRebind;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -12,10 +11,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.trait.Startable;
+import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
@@ -44,10 +41,10 @@ public class RebindLocationTest {
         MyLocation origLoc = new MyLocation(MutableMap.of("name", "mylocname"));
         MyEntity origE = new MyEntity(MutableMap.of("myfield", "myval"), origApp);
         MyEntity origE2 = new MyEntity(MutableMap.of("myfield", "myval2"), origE);
-        origApp.invoke(MyApplication.START, ImmutableMap.of("locations", ImmutableList.of(origLoc)))
-        		.blockUntilEnded();
+        origApp.getManagementContext().manage(origApp);
+        origApp.start(ImmutableList.of(origLoc));
 
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = (MyApplication) RebindTestUtils.serializeAndRebind(origApp, getClass().getClassLoader());
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
 
         assertEquals(newApp.getLocations().size(), 1, "locs="+newE.getLocations());
@@ -141,51 +138,19 @@ public class RebindLocationTest {
         assertEquals(newLoc.otherLocs, ImmutableList.copyOf(newLoc.getChildLocations()));
     }
     
-    @Test
-    public void testFoo() throws Exception {
-    	MyLocation origOtherLoc = new MyLocation();
-    	MyLocationReffingOthers loc = new MyLocationReffingOthers(MutableMap.of("otherLocs", ImmutableList.of(origOtherLoc)));
-    	MyLocationReffingOthers loc2 = RebindTestUtils.serializeAndDeserialize(loc);
-    }
-    
     public static class MyApplication extends AbstractApplication implements Rebindable {
         private static final long serialVersionUID = 1L;
         
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
                         String.class, "test.mysensor", "My test sensor");
         
+        private final Object dummy = new Object(); // so not serializable
+
         public MyApplication() {
         }
 
         public MyApplication(Map flags) {
             super(flags);
-        }
-    }
-    
-    public static class MyEntity extends AbstractEntity implements Startable, Rebindable {
-        private static final long serialVersionUID = 1L;
-        
-        public MyEntity(Entity owner) {
-            super(owner);
-        }
-        
-        public MyEntity(Map flags, Entity owner) {
-            super(flags, owner);
-        }
-
-        @Override
-        public void start(Collection<? extends Location> locations) {
-            getLocations().addAll(locations);
-        }
-
-        @Override
-        public void stop() {
-            // no-op
-        }
-
-        @Override
-        public void restart() {
-            // no-op
         }
     }
     
@@ -195,6 +160,8 @@ public class RebindLocationTest {
         @SetFromFlag
         String myfield;
 
+        private final Object dummy = new Object(); // so not serializable
+        
         @SetFromFlag
         transient String myTransientField;
         
@@ -215,6 +182,8 @@ public class RebindLocationTest {
         @SetFromFlag
         List<Location> otherLocs;
 
+        private final Object dummy = new Object(); // so not serializable
+
         public MyLocationReffingOthers(Map flags) {
             super(flags);
         }
@@ -225,6 +194,8 @@ public class RebindLocationTest {
         
         String myfield;
         boolean rebound;
+
+        private final Object dummy = new Object(); // so not serializable
 
         public MyLocation2() {
         }

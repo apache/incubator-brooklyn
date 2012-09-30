@@ -1,5 +1,6 @@
 package brooklyn.mementos;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,4 +51,8 @@ public interface EntityMemento extends TreeNode, Memento {
     public Object getCustomProperty(String name);
 
 	public Map<String, ? extends Object> getCustomProperties();
+
+    public Collection<? extends ConfigKey> getLocationReferenceConfigs();
+
+    public Collection<? extends AttributeSensor> getLocationReferenceAttributes();
 }

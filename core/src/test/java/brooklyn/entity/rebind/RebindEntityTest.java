@@ -7,6 +7,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotSame;
 import static org.testng.Assert.assertNull;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.rebind.RebindLocationTest.MyLocation;
+import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -301,7 +303,7 @@ public class RebindEntityTest {
         }
     }
     
-    public static class MyEntity extends AbstractEntity implements Rebindable {
+    public static class MyEntity extends AbstractEntity implements Rebindable, Startable {
         private static final long serialVersionUID = 1L;
         
         @SetFromFlag("myconfig")
@@ -311,12 +313,27 @@ public class RebindEntityTest {
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
                 String.class, "test.mysensor", "My test sensor");
         
+        private final Object dummy = new Object(); // so not serializable
+
         public MyEntity(Entity owner) {
             super(owner);
         }
         
         public MyEntity(Map flags, Entity owner) {
             super(flags, owner);
+        }
+
+        @Override
+        public void start(Collection<? extends Location> locations) {
+            getLocations().addAll(locations);
+        }
+
+        @Override
+        public void stop() {
+        }
+
+        @Override
+        public void restart() {
         }
     }
     
@@ -337,6 +354,8 @@ public class RebindEntityTest {
         public static final AttributeSensor<Location> LOCATION_REF_SENSOR = new BasicAttributeSensor<Location>(
                 Location.class, "test.attribute.locationref", "Ref to other location");
         
+        private final Object dummy = new Object(); // so not serializable
+
         public MyEntityReffingOthers(Entity owner) {
             super(owner);
         }
@@ -363,7 +382,9 @@ public class RebindEntityTest {
         boolean rebound;
 
         final List<String> events = new CopyOnWriteArrayList<String>();
-        
+
+        private final Object dummy = new Object(); // so not serializable
+
         public MyEntity2(Map flags, Entity owner) {
             super(flags, owner);
         }
