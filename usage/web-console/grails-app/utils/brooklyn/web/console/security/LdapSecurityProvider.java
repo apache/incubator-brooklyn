@@ -1,5 +1,6 @@
 package brooklyn.web.console.security;
 
+import brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,8 @@ import javax.servlet.http.HttpSession;
 import java.util.Hashtable;
 
 public class LdapSecurityProvider implements SecurityProvider {
-
+    public final static String KEY_LDAP_URL = "brooklyn.security.ldap.url";
+    public final static String KEY_LDAP_REALM = "brooklyn.security.ldap.realm";
 
     public static final Logger LOG = LoggerFactory.getLogger(LdapSecurityProvider.class);
 
@@ -20,8 +22,14 @@ public class LdapSecurityProvider implements SecurityProvider {
     private final String ldapRealm;
 
     public LdapSecurityProvider() {
-        //TODO: The correct settings need to be used
-        this(System.getProperty(""), System.getProperty(""));
+        ldapUrl = (String) ConfigLoader.getConfig(KEY_LDAP_URL);
+        if (Strings.isEmpty(ldapUrl)) {
+            throw new IllegalArgumentException(String.format("%s is not defined in brooklyn.properties", KEY_LDAP_URL));
+        }
+        ldapRealm = (String) ConfigLoader.getConfig(KEY_LDAP_REALM);
+        if (Strings.isEmpty(ldapUrl)) {
+            throw new IllegalArgumentException(String.format("%s is not defined in brooklyn.properties", KEY_LDAP_REALM));
+        }
     }
 
     public LdapSecurityProvider(String ldapUrl, String ldapRealm) {
@@ -43,27 +51,29 @@ public class LdapSecurityProvider implements SecurityProvider {
             new InitialDirContext(env);
             authenticated = true;
         } catch (NamingException e) {
-            LOG.warn("Failed to authenticate user: " + user, e);
+            LOG.warn("Failed to authenticate user: " + user);
         }
 
-        session.setAttribute(AUTHENTICATED_SESSION_TOKEN_NAME, authenticated);
+        if (session != null)
+            session.setAttribute(AUTHENTICATED_SESSION_TOKEN_NAME, authenticated);
         return authenticated;
     }
 
     private String getUserDN(String user) {
-        String m_usersDn = "cn=Users,your realm";
-        return "cn=" + user + "," + m_usersDn;
+        return "cn=" + user + "," + ldapRealm;
     }
 
     @Override
     public boolean isAuthenticated(HttpSession session) {
+        if (session == null) return false;
         Boolean authenticatedToken = (Boolean) session.getAttribute(AUTHENTICATED_SESSION_TOKEN_NAME);
         return authenticatedToken == null ? false : authenticatedToken;
     }
 
     @Override
     public boolean logout(HttpSession session) {
-        session.setAttribute(AUTHENTICATED_SESSION_TOKEN_NAME, null);
+        if (session != null)
+            session.setAttribute(AUTHENTICATED_SESSION_TOKEN_NAME, null);
         return true;
     }
 }
