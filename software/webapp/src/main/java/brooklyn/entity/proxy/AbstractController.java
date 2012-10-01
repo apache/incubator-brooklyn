@@ -227,14 +227,20 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         LOG.info("Adding policy {} to {}, during start", serverPoolMemberTrackerPolicy, this);
         addPolicy(serverPoolMemberTrackerPolicy);
         if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
-        reset();
+        
+        resetServerPoolMemberTrackerPolicy();
         isActive = true;
-        update();
     }
     
     protected void preStop() {
         super.preStop();
         serverPoolMemberTrackerPolicy.reset();
+    }
+
+    @Override
+    protected void postActivation() {
+        super.postActivation();
+        update();
     }
 
     /** 
@@ -255,7 +261,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
     }
 
-    protected synchronized void reset() {
+    protected synchronized void resetServerPoolMemberTrackerPolicy() {
         serverPoolMemberTrackerPolicy.reset();
         serverPoolAddresses.clear();
         serverPoolTargets.clear();

@@ -132,7 +132,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             driver.rebind();
             if (LOG.isDebugEnabled()) LOG.debug("On rebind of {}, re-created driver {}", this, driver);
         } else {
-            if (LOG.isDebugEnabled()) LOG.debug("On rebind of {}, no SshMachineLocation found (with locations {}) so not generating driver",
+            LOG.info("On rebind of {}, no SshMachineLocation found (with locations {}) so not generating driver",
                     this, getLocations());
         }
         
@@ -149,6 +149,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		}
 	}
 	
+    protected void doPostRebind() {
+        postActivation();
+    }
+    
 	/** lifecycle message for connecting sensors to registry;
 	 * typically overridden by subclasses */
 	protected void connectSensors() {
@@ -408,10 +412,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 				super.doRebind(rebindContext, memento);
 				doRebind();
 			}
+            @Override public void doManaged() {
+                super.doManaged();
+                doPostRebind();
+            }
 		};
 	}
 }
-
-
-
-

@@ -101,6 +101,8 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     @Override
     public void managed() {
         if (LOG.isTraceEnabled()) LOG.trace("Managed entity {}({})", new Object[] {entity.getClass(), entity.getId()});
+        
+        doManaged();
     }
 
     /**
@@ -114,6 +116,14 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
      * For overriding, to give custom rebind behaviour.
      */
     protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
+        // default is no-op
+    }
+    
+    /**
+     * For overriding, to give custom behaviour when this entity (and all the other entities) have completed
+     * being rebound and are managed.
+     */
+    protected void doManaged() {
         // default is no-op
     }
     

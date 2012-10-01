@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
+import brooklyn.entity.basic.Lifecycle
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy
 import brooklyn.entity.proxy.AbstractController
@@ -90,7 +91,10 @@ public class NginxController extends AbstractController {
     @Override
     public void reload() {
         NginxSshDriver driver = (NginxSshDriver)getDriver();
-        if (driver==null) throw new IllegalStateException("Cannot reload (no driver instance; stopped?)");
+        if (driver==null) {
+            Lifecycle state = getAttribute(NginxController.SERVICE_STATE);
+            throw new IllegalStateException("Cannot reload (no driver instance; stopped? (state="+state+")");
+        }
         
         driver.reload();
     }
