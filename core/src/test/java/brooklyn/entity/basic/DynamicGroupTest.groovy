@@ -34,7 +34,7 @@ public class DynamicGroupTest {
         group = new DynamicGroup(owner:app)
         e1 = new TestEntity(owner:app)
         e2 = new TestEntity(owner:app)
-        app.getManagementContext().manage(app)
+        app.startManagement();
     }
     
     @Test
@@ -71,6 +71,7 @@ public class DynamicGroupTest {
     @Test
     public void testGroupDetectsNewlyManagedMatchingMember() {
         Entity e3 = new AbstractEntity() {}
+        app.manage(e3);
         group.setEntityFilter( { it.getId().equals(e3.getId()) } )
         
         e3.setOwner(app)

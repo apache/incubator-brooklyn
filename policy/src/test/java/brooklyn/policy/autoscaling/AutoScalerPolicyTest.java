@@ -15,7 +15,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.util.MutableMap;
@@ -41,12 +40,12 @@ public class AutoScalerPolicyTest {
     @BeforeMethod(alwaysRun=true)
     public void before() throws Exception {
         TestApplication app = new TestApplication();
-        cluster = new TestCluster(1);
-        resizable = new LocallyResizableEntity(cluster);
+        cluster = new TestCluster(app, 1);
+        resizable = new LocallyResizableEntity(cluster, cluster);
         policy = new AutoScalerPolicy();
         resizable.addPolicy(policy);
         
-        new LocalManagementContext().manage(app);
+        app.startManagement();
     }
 
     @Test
@@ -397,6 +396,7 @@ public class AutoScalerPolicyTest {
     public void testResizeDownStabilizationDelayTakesMinSustainedDesired() throws Exception {
         long resizeDownStabilizationDelay = 1100L;
         long minPeriodBetweenExecs = 0;
+        policy.suspend();
         resizable.removePolicy(policy);
         
         policy = AutoScalerPolicy.builder()

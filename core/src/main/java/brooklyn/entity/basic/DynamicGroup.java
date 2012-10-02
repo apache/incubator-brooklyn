@@ -169,7 +169,7 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     public synchronized void rescanEntities() {
-        if (!isRunning()) {
+        if (!isRunning() || !getManagementSupport().isDeployed()) {
             if (log.isDebugEnabled()) log.debug("{} not scanning for children: stopped", this);
             return;
         }

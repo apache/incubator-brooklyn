@@ -35,8 +35,10 @@ public class EntityTypeTest {
         entity = new SimpleEntity(app);
         
         listener = new EntitySubscriptionTest.RecordingSensorEventListener();
-        app.getManagementContext().getSubscriptionManager().subscribe(entity, SENSOR_ADDED, listener);
-        app.getManagementContext().getSubscriptionManager().subscribe(entity, SENSOR_REMOVED, listener);
+        app.getSubscriptionContext().subscribe(entity, SENSOR_ADDED, listener);
+        app.getSubscriptionContext().subscribe(entity, SENSOR_REMOVED, listener);
+        
+        app.startManagement();
     }
 
     @Test

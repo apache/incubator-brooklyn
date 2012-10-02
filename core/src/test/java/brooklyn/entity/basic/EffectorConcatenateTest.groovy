@@ -13,6 +13,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Effector
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.Tasks
 
@@ -74,6 +75,7 @@ public class EffectorConcatenateTest {
     public void testCanInvokeEffector() {
         AbstractApplication app = new AbstractApplication() {}
         MyEntity e = new MyEntity([owner:app])
+        new LocalManagementContext().manage(app);
         
         // invocation map syntax
         Task<String> task = e.invoke(MyEntity.CONCATENATE, [first:"a",second:"b"])
@@ -87,6 +89,8 @@ public class EffectorConcatenateTest {
     public void testTaskReporting() {
         AbstractApplication app = new AbstractApplication() {}
         MyEntity e = new MyEntity([owner:app]);
+        new LocalManagementContext().manage(app);
+        
         final AtomicReference<String> result = new AtomicReference<String>();
 
         Thread bg = new Thread({

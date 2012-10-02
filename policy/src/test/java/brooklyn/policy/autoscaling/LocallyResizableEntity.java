@@ -2,6 +2,7 @@ package brooklyn.policy.autoscaling;
 
 import java.util.List;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
@@ -22,6 +23,10 @@ public class LocallyResizableEntity extends AbstractEntity implements Resizable 
     long resizeSleepTime = 0;
     
     public LocallyResizableEntity (TestCluster tc) {
+        this(null, tc);
+    }
+    public LocallyResizableEntity (Entity owner, TestCluster tc) {
+        super(owner);
         this.cluster = tc;
         setAttribute(Startable.SERVICE_UP, true);
     }
