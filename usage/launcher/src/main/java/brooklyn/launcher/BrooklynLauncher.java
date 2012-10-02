@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.config.BrooklynProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ import brooklyn.util.flags.SetFromFlag;
 public class BrooklynLauncher {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BrooklynLauncher.class);
+    private BrooklynProperties brooklynProperties;
 
     /** Launches the web console on port 8081, and a Brooklyn application, with a single command,
      * in such a way that the web console is launched and the application is shutdown on server termination.
@@ -62,13 +64,13 @@ public class BrooklynLauncher {
         return new BrooklynLauncher();
     }
     
-    ManagementContext context = null;
-    List<Application> appsToManage = new ArrayList<Application>();
+    private ManagementContext context = null;
+    private List<Application> appsToManage = new ArrayList<Application>();
     
-    boolean startWebApps = true;
-    PortRange port = PortRanges.fromString("8081+");
-    Map<String,String> webApps = new LinkedHashMap<String,String>();
-    Map<String, Object> attributes = new LinkedHashMap<String, Object>();
+    private boolean startWebApps = true;
+    private PortRange port = PortRanges.fromString("8081+");
+    private Map<String,String> webApps = new LinkedHashMap<String,String>();
+    private Map<String, Object> attributes = new LinkedHashMap<String, Object>();
 
     /** Specifies the management context this launcher should use. 
      * If not specified a new {@link LocalManagementContext} is used. */
@@ -96,15 +98,22 @@ public class BrooklynLauncher {
     public BrooklynLauncher webconsolePort(int port) {
         return webconsolePort(PortRanges.fromInteger(port));
     }
-    /** Specifies the port where the web console (and any additional webapps specified) will listed; 
+
+    /** Specifies the port where the web console (and any additional webapps specified) will listed;
      * default "8081+" being the first available >= 8081. */ 
     public BrooklynLauncher webconsolePort(String port) {
         return webconsolePort(PortRanges.fromString(port));
     }
-    /** Specifies the port where the web console (and any additional webapps specified) will listed; 
+
+    /** Specifies the port where the web console (and any additional webapps specified) will listed;
      * default "8081+" being the first available >= 8081. */ 
     public BrooklynLauncher webconsolePort(PortRange port) {
         this.port = port;
+        return this;
+    }
+
+    public BrooklynLauncher brooklynProperties(BrooklynProperties brooklynProperties){
+        this.brooklynProperties = brooklynProperties;
         return this;
     }
     
@@ -128,11 +137,14 @@ public class BrooklynLauncher {
     /** Starts the web server (with web console) and Brooklyn applications, as per the specifications configured. 
      * @return An object containing details of the web server and the management context. */
     public BrooklynServerDetails launch() {
+        BrooklynProperties p = brooklynProperties==null?BrooklynProperties.Factory.newDefault():brooklynProperties;
+
         for (Application app: appsToManage) {
             if (context==null) context = app.getManagementContext();
             context.manage(app);
         }
-        if (context==null) context = new LocalManagementContext();
+
+        if (context==null) context = new LocalManagementContext(p);
         
         BrooklynWebServer webServer = null;
         if (startWebApps) {

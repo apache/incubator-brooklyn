@@ -2,6 +2,7 @@ package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.drivers.BasicEntityDriverFactory;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import groovy.util.ObservableList;
@@ -43,6 +44,10 @@ public class LocalManagementContext extends AbstractManagementContext {
     protected Set<Application> applications = Sets.newLinkedHashSet();
 
     private static final Object MANAGED_LOCALLY = new Object();
+
+    public LocalManagementContext(BrooklynProperties brooklynProperties){
+       super(brooklynProperties);
+    }
 
     protected synchronized boolean manageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = MANAGED_LOCALLY;

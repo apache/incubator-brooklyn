@@ -1,11 +1,9 @@
 package brooklyn.location.basic.jclouds
 
-import static org.testng.Assert.*
+import brooklyn.config.BrooklynProperties
 
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test;
-
-import brooklyn.test.entity.TestApplication;
 
 //FIXME get Greenhouse working
 
@@ -23,7 +21,9 @@ class GreenhouseDataLocationLiveTest extends AbstractJcloudsLocationTest {
     }
     
     protected CredentialsFromEnv getCredentials() {
-        return CredentialsFromEnv.newInstance(PROVIDER, identity:"thejuggler", credential:"alistair");
+        Map<String,? extends Object> properties = [identity:"thejuggler", credential:"alistair"]
+        properties.putAll(BrooklynProperties.Factory.newDefault())
+        return CredentialsFromEnv.newInstance(properties, PROVIDER);
     }
     
     @Override

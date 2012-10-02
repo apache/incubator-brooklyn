@@ -6,12 +6,12 @@ import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpSession;
 
+import brooklyn.web.console.BrooklynWebconsoleProperties;
 import org.codehaus.groovy.grails.web.context.ServletContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServiceAttributes;
-import brooklyn.util.internal.BrooklynSystemProperties;
 
 public class ExplicitUsersSecurityProvider implements SecurityProvider {
 
@@ -35,7 +35,7 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
     private synchronized void initialize() {
         if (allowedUsers!=null) return;
         allowedUsers = new LinkedHashSet<String>();
-        Object users = ConfigLoader.getConfig(BrooklynSystemProperties.SECURITY_PROVIDER_EXPLICIT__USERS.getPropertyName());
+        Object users = ConfigLoader.getConfig(BrooklynWebconsoleProperties.SECURITY_PROVIDER_EXPLICIT__USERS.getPropertyName());
         if (users==null) {
             LOG.info("Web console allowing default user (admin)");
             allowDefaultUsers = true;
@@ -72,7 +72,7 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
                 return false;                
             }
         }
-        Object actualP = ConfigLoader.getConfig(BrooklynSystemProperties.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getPropertyName());
+        Object actualP = ConfigLoader.getConfig(BrooklynWebconsoleProperties.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getPropertyName());
         if (actualP==null) {
             LOG.info("Web console rejecting passwordless user "+user);
             return false;

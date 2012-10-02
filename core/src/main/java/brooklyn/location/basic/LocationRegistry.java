@@ -21,9 +21,6 @@ public class LocationRegistry {
     
     private final Map properties;
     
-    public LocationRegistry() {
-        this(BrooklynProperties.Factory.newDefault());
-    }
     public LocationRegistry(Map properties) {
         this.properties = properties;
         findServices();

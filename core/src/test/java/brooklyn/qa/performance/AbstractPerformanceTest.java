@@ -9,7 +9,7 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.internal.BrooklynSystemProperties.DoubleSystemProperty;
+import brooklyn.util.internal.DoubleSystemProperty;
 
 import com.google.common.base.Stopwatch;
 
