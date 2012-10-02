@@ -19,9 +19,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementTransitionInfo;
+import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.Delta;
@@ -130,6 +133,7 @@ public class RebindManagerImpl implements RebindManager {
         LOG.info("RebindManager constructing entities");
         depthFirst(memento, rebindContext, new EntityVisitor("reconstructing") {
                 @Override public void visit(Entity entity, EntityMemento memento) {
+                    ((EntityLocal)entity).getManagementSupport().onRebind(new ManagementTransitionInfo(null, ManagementTransitionMode.REBIND));
                     ((Rebindable)entity).getRebindSupport().reconstruct(rebindContext, memento);
                 }});
 
@@ -146,11 +150,11 @@ public class RebindManagerImpl implements RebindManager {
             managementContext.manage((Application)rebindContext.getEntity(appId));
         }
         
-        LOG.info("RebindManager notifying entities of all being managed");
-        depthFirst(memento, rebindContext, new EntityVisitor("managed") {
-            @Override public void visit(Entity entity, EntityMemento memento) {
-                ((Rebindable)entity).getRebindSupport().managed();
-            }});
+//        LOG.info("RebindManager notifying entities of all being managed");
+//        depthFirst(memento, rebindContext, new EntityVisitor("managed") {
+//            @Override public void visit(Entity entity, EntityMemento memento) {
+//                ((Rebindable)entity).getRebindSupport().managed();
+//            }});
         
         // Return the top-level applications
         List<Application> apps = Lists.newArrayList();

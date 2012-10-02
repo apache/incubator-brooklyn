@@ -125,7 +125,28 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     protected void postActivation() {
     }
     
-	protected void doRebind() {
+    // TODO Only do this when first being managed; not when moving
+    @Override 
+    public void onManagementStarting() {
+        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) {
+            rebind();
+    	}
+    }
+	
+    @Override 
+    public void onManagementStarted() {
+        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) {
+            postRebind();
+        }
+    }
+    
+    // FIXME Better name for this? If more general than "rebind on restart"?
+    protected void rebind() {
+        // e.g. rebinding to a running instance
+        // FIXME For rebind, what to do about things in STARTING or STOPPING state?
+        // FIXME What if location not set?
+        LOG.info("Connecting to pre-running service: {}", this);
+        
         Iterable<SshMachineLocation> sshMachineLocations = Iterables.filter(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
         if (!Iterables.isEmpty(sshMachineLocations)) {
             initDriver(Iterables.get(sshMachineLocations, 0));
@@ -136,20 +157,12 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                     this, getLocations());
         }
         
-        // FIXME What to do about things in STARTING or STOPPING state?
-		Lifecycle serviceState = getAttribute(SERVICE_STATE);
-		if (serviceState == Lifecycle.RUNNING) {
-            if (LOG.isDebugEnabled()) LOG.debug("On rebind of {}, reconnecting", this);
-			if (!sensorRegistry) sensorRegistry = new SensorRegistry(this);
-			postStart();
-			sensorRegistry.activateAdapters();
-			postActivation();
-		} else {
-            LOG.info("On rebind of {}, not reconnecting because state is {}", this, serviceState);
-		}
-	}
-	
-    protected void doPostRebind() {
+        if (!sensorRegistry) sensorRegistry = new SensorRegistry(this);
+        postStart();
+        sensorRegistry.activateAdapters();
+    }
+    
+    protected void postRebind() {
         postActivation();
     }
     
@@ -410,11 +423,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 			@Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
 				// FIXME What to do if the entity is in a "starting" state from when it was serialized?
 				super.doRebind(rebindContext, memento);
-				doRebind();
+//				doRebind();
 			}
             @Override public void doManaged() {
                 super.doManaged();
-                doPostRebind();
+//                doPostRebind();
             }
 		};
 	}

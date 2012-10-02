@@ -229,18 +229,18 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
         
         resetServerPoolMemberTrackerPolicy();
-        isActive = true;
     }
     
-    protected void preStop() {
-        super.preStop();
-        serverPoolMemberTrackerPolicy.reset();
-    }
-
     @Override
     protected void postActivation() {
         super.postActivation();
+        isActive = true;
         update();
+    }
+
+    protected void preStop() {
+        super.preStop();
+        serverPoolMemberTrackerPolicy.reset();
     }
 
     /** 
@@ -365,18 +365,16 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
             	Map<String, Object> flags = Maps.newLinkedHashMap();
             	flags.put("serverPoolAddresses", serverPoolAddresses);
             	flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
-            	flags.put("isActive", isActive);
                 return super.getMementoWithProperties(flags);
             }
             @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
             	super.doReconstruct(rebindContext, memento);
             	serverPoolAddresses.addAll((Collection<String>) memento.getCustomProperty("serverPoolAddresses"));
 				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomProperty("serverPoolTargets"), Collection.class));
-				isActive = (Boolean) memento.getCustomProperty("isActive");
             }
             @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
                 super.doRebind(rebindContext, memento);
-				AbstractController.this.doRebind();
+				//AbstractController.this.doRebind();
             }
         };
     }

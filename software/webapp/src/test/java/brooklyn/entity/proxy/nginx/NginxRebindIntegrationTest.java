@@ -28,7 +28,7 @@ import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
@@ -97,6 +97,7 @@ public class NginxRebindIntegrationTest {
                 .put("serverPool", origServerPool)
                 .put("domain", "localhost")
                 .build());
+        new LocalManagementContext().manage(origApp);
         
         // Start the app, and ensure reachable; start polling the URL
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
@@ -138,7 +139,8 @@ public class NginxRebindIntegrationTest {
                 .put("domain", "localhost")
                 .put("serverPool", origServerPool)
                 .build());
-        
+        new LocalManagementContext().manage(origApp);
+
         // Start the app, and ensure reachable; start polling the URL
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         
@@ -151,7 +153,7 @@ public class NginxRebindIntegrationTest {
         
         // Rebind
         newApp = (TestApplication) serializeRebindManageAndDisconnectOldNginx(origApp, getClass().getClassLoader());
-        AbstractManagementContext newManagementContext = newApp.getManagementContext();
+        ManagementContext newManagementContext = newApp.getManagementContext();
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(NginxController.class));
         DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntity(origServerPool.getId());
         
@@ -208,7 +210,8 @@ public class NginxRebindIntegrationTest {
                 .put("domain", "localhost")
                 .put("urlMappings", origUrlMappingsGroup)
                 .build());
-        
+        new LocalManagementContext().manage(origApp);
+
         // Start the app, and ensure reachable; start polling the URL
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         
@@ -221,7 +224,7 @@ public class NginxRebindIntegrationTest {
         
         // Create a rebinding
         newApp = (TestApplication) serializeRebindManageAndDisconnectOldNginx(origApp, getClass().getClassLoader());
-        AbstractManagementContext newManagementContext = newApp.getManagementContext();
+        ManagementContext newManagementContext = newApp.getManagementContext();
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(NginxController.class));
         DynamicCluster newMappingPool = (DynamicCluster) newManagementContext.getEntity(origMappingPool.getId());
         

@@ -17,6 +17,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.MutableMap;
@@ -30,18 +31,18 @@ import com.google.common.collect.Iterables;
 public class RebindLocationTest {
 
     private MyApplication origApp;
+    private MyEntity origE;
     
     @BeforeMethod
     public void setUp() throws Exception {
         origApp = new MyApplication();
+        origE = new MyEntity(origApp);
+        new LocalManagementContext().manage(origApp);
     }
     
     @Test
     public void testSetsLocationOnEntities() throws Exception {
         MyLocation origLoc = new MyLocation(MutableMap.of("name", "mylocname"));
-        MyEntity origE = new MyEntity(MutableMap.of("myfield", "myval"), origApp);
-        MyEntity origE2 = new MyEntity(MutableMap.of("myfield", "myval2"), origE);
-        origApp.getManagementContext().manage(origApp);
         origApp.start(ImmutableList.of(origLoc));
 
         MyApplication newApp = (MyApplication) RebindTestUtils.serializeAndRebind(origApp, getClass().getClassLoader());
@@ -57,9 +58,7 @@ public class RebindLocationTest {
     @Test
     public void testRestoresLocationIdAndDisplayName() throws Exception {
         MyLocation origLoc = new MyLocation(MutableMap.of("name", "mylocname"));
-        MyEntity origE = new MyEntity(MutableMap.of("displayName", "mydisplayname"), origApp);
-        origApp.invoke(MyApplication.START, ImmutableMap.of("locations", ImmutableList.of(origLoc)))
-        		.blockUntilEnded();
+        origApp.start(ImmutableList.of(origLoc));
         
         MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
@@ -87,7 +86,6 @@ public class RebindLocationTest {
     public void testRestoresFieldsWithSetFromFlag() throws Exception {
     	MyLocation origLoc = new MyLocation(MutableMap.of("myfield", "myval"));
         origApp.start(ImmutableList.of(origLoc));
-        origApp.getManagementContext().manage(origApp);
 
         MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
@@ -99,7 +97,6 @@ public class RebindLocationTest {
     public void testIgnoresTransientFields() throws Exception {
     	MyLocation origLoc = new MyLocation(MutableMap.of("myTransientField", "myval"));
         origApp.start(ImmutableList.of(origLoc));
-        origApp.getManagementContext().manage(origApp);
 
         MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
@@ -111,7 +108,6 @@ public class RebindLocationTest {
     public void testIgnoresStaticFields() throws Exception {
     	MyLocation origLoc = new MyLocation(MutableMap.of("myStaticField", "myval"));
         origApp.start(ImmutableList.of(origLoc));
-        origApp.getManagementContext().manage(origApp);
 
         BrooklynMemento brooklynMemento = RebindTestUtils.serialize(origApp);
         MyLocation.myStaticField = "mynewval";
@@ -128,7 +124,6 @@ public class RebindLocationTest {
     	origOtherLoc.setParentLocation(origLoc);
     	
         origApp.start(ImmutableList.of(origLoc));
-        origApp.getManagementContext().manage(origApp);
 
         Application newApp = serializeAndRebind(origApp, getClass().getClassLoader());
         MyLocationReffingOthers newLoc = (MyLocationReffingOthers) Iterables.get(newApp.getLocations(), 0);

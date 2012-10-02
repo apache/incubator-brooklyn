@@ -128,11 +128,15 @@ public class EntityDynamicType {
     }
     
     public void addSensorIfAbsent(Sensor<?> newSensor) {
-        Sensor<?> prev = sensors.putIfAbsent(newSensor.getName(), newSensor);
+        Sensor<?> prev = addSensorIfAbsentWithoutPublishing(newSensor);
         if (prev == null) {
             snapshotValid.set(false);
             entity.emit(AbstractEntity.SENSOR_ADDED, newSensor);
         }
+    }
+    
+    public Sensor<?> addSensorIfAbsentWithoutPublishing(Sensor<?> newSensor) {
+        return sensors.putIfAbsent(newSensor.getName(), newSensor);
     }
 
     /**

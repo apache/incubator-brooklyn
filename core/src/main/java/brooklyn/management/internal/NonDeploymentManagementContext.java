@@ -5,11 +5,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.config.ConfigMap.StringConfigMap;
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.rebind.RebindManager;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
@@ -21,16 +22,21 @@ public class NonDeploymentManagementContext implements ManagementContext {
 
     public enum NonDeploymentManagementContextMode {
         PRE_MANAGEMENT,
+        MANAGEMENT_REBINDING,
         MANAGEMENT_STARTING,
         MANAGEMENT_STARTED,
         MANAGEMENT_STOPPING,
-        MANAGEMENT_STOPPED,
+        MANAGEMENT_STOPPED;
+        
+        public boolean isPreManaged() {
+            return this == PRE_MANAGEMENT || this == MANAGEMENT_REBINDING;
+        }
     }
     
-    AbstractEntity entity;
+    private final AbstractEntity entity;
     NonDeploymentManagementContextMode mode;
 
-    QueueingSubscriptionManager qsm = new QueueingSubscriptionManager();
+    private final QueueingSubscriptionManager qsm = new QueueingSubscriptionManager();
     BasicSubscriptionContext subcon;
     
     public NonDeploymentManagementContext(AbstractEntity entity, NonDeploymentManagementContextMode mode) {
@@ -102,7 +108,7 @@ public class NonDeploymentManagementContext implements ManagementContext {
             
             @Override
             protected <T> Task<T> submitInternal(@SuppressWarnings("rawtypes") Map properties, Object task) {
-                throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+                throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
             }
         };
     }
@@ -127,4 +133,8 @@ public class NonDeploymentManagementContext implements ManagementContext {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
     }
 
+    @Override
+    public RebindManager getRebindManager() {
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+    }
 }

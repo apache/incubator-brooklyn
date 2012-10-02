@@ -70,7 +70,11 @@ public class NginxController extends AbstractController {
         super(properties, owner);
     }
 
-    public void onManagementBecomingMaster() {
+    //public void onManagementBecomingMaster() {
+    @Override
+    protected void postStart() {
+        super.postStart();
+        
         // Now can guarantee that owner/managementContext has been set
         Group urlMappings = getConfig(URL_MAPPINGS);
         if (urlMappings != null) {

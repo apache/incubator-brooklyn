@@ -73,6 +73,12 @@ public final class AttributeMap implements Serializable {
     }
 
     public <T> T update(AttributeSensor<T> attribute, T newValue) {
+        T oldValue = updateWithoutPublishing(attribute, newValue);
+        ((AbstractEntity)entity).emitInternal(attribute, newValue);
+        return oldValue;
+    }
+    
+    public <T> T updateWithoutPublishing(AttributeSensor<T> attribute, T newValue) {
         if (log.isDebugEnabled()) {
             Object oldValue = getValue(attribute);
             if ((oldValue == null && newValue != null) || (oldValue != null && !oldValue.equals(newValue))) {
@@ -83,7 +89,6 @@ public final class AttributeMap implements Serializable {
         }
 
         T oldValue = (T) update(attribute.getNameParts(), newValue);
-        ((AbstractEntity)entity).emitInternal(attribute, newValue);
         
         return (isNull(oldValue)) ? null : oldValue;
     }

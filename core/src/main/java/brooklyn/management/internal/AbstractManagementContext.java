@@ -104,6 +104,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
             it.getManagementSupport().onManagementStarted(info);
             it.setBeingManaged();
+            rebindManager.getChangeListener().onManaged(it);
             return true; 
         } });
     }
@@ -120,7 +121,6 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 recursively( entity, action );
             }
         }
-        rebindManager.getChangeListener().onManaged(e);
     }
 
     /**

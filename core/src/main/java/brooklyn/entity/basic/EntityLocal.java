@@ -40,7 +40,13 @@ public interface EntityLocal extends Entity {
      * @return the old value for the attribute (possibly <code>null</code>)
      */
     <T> T setAttribute(AttributeSensor<T> sensor, T val);
-    
+
+    /**
+     * 
+     * Like {@link setAttribute(AttributeSensor, T)}, except does not publish an attribute-change event.
+     */
+    <T> T setAttributeWithoutPublishing(AttributeSensor<T> sensor, T val);
+
     // ??? = policy which detects a group is too hot and want the entity to fire a TOO_HOT event
     
     <T> T getConfig(ConfigKey<T> key, T defaultValue);

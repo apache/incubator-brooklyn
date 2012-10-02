@@ -77,7 +77,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 } else if (memento.getLocationReferenceAttributes().contains(entry.getKey())) {
                     value = MementoTransformer.transformIdsToLocations(rebindContext, value, type);
                 }
-                entity.setAttribute(key, value);
+                entity.setAttributeWithoutPublishing(key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);
             }

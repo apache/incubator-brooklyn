@@ -349,10 +349,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     /** @deprecated since 0.4.0 should not be needed / leaked outwith brooklyn internals? */
     @Override
+    @Deprecated
     public synchronized ManagementContext getManagementContext() {
         return getManagementSupport().getManagementContext(false);
     }
-
 
     @Override
     public EntityType getEntityType() {
@@ -394,6 +394,16 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         if (result == null) {
             // could be this is a new sensor
             entityType.addSensorIfAbsent(attribute);
+        }
+        return result;
+    }
+
+    @Override
+    public <T> T setAttributeWithoutPublishing(AttributeSensor<T> attribute, T val) {
+        T result = attributesInternal.updateWithoutPublishing(attribute, val);
+        if (result == null) {
+            // could be this is a new sensor
+            entityType.addSensorIfAbsentWithoutPublishing(attribute);
         }
         return result;
     }
@@ -726,6 +736,18 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         mgmtCtx.invokeEffector(this, eff, parameters);
     }
 
+    /**
+     * Invoked by {@link EntityManagementSupport} when this entity is becoming managed (i.e. it has a working
+     * management context, but before the entity is visible to other entities).
+     */
+    public void onManagementStarting() {}
+    
+    /**
+     * Invoked by {@link EntityManagementSupport} when this entity is fully managed and visible to other entities 
+     * through the management context.
+     */
+    public void onManagementStarted() {}
+    
     /**
      * Invoked by {@link ManagementContext} when this entity becomes managed at a particular management node,
      * including the initial management started and subsequent management node master-change for this entity.
