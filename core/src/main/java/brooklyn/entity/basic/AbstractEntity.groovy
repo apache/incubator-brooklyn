@@ -34,6 +34,7 @@ import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
+import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.EntityManagementSupport
 import brooklyn.management.internal.SubscriptionTracker
 import brooklyn.mementos.EntityMemento
@@ -43,7 +44,6 @@ import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.text.Identifiers
 
 import com.google.common.base.Objects
@@ -675,7 +675,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
                     if (!mgmt.isDeployed()) {
                         mgmt.attemptLegacyAutodeployment(name);
                     }
-                    return mgmt.getManagementContext(false).invokeEffectorMethodSync(this, eff, args);
+                    AbstractManagementContext mgctx = mgmt.getManagementContext(false);
+                    if (mgctx==null) {
+                        throw new ExecutionException("Execution of effector "+name+" on entity "+id+" not permitted: not in managed state");
+                    }
+                    return mgctx.invokeEffectorMethodSync(this, eff, args);
                 }
             } catch (CancellationException ce) {
 	            LOG.info "Execution of effector {} on entity {} was cancelled", name, id
@@ -683,7 +687,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             } catch (ExecutionException ee) {
                 LOG.info "Execution of effector {} on entity {} failed with {}", name, id, ee
                 // Exceptions thrown in Futures are wrapped
-                throw ee.getCause()
+                if (ee.getCause()) throw ee.getCause();
+                else throw ee;
             } finally { this.@skipInvokeMethodEffectorInterception.set(false); }
         }
         if (metaClass==null) 
@@ -715,7 +720,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * @see #invoke(Effector)
      */
     public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
-        getManagementContext().invokeEffector(this, eff, parameters);
+        ManagementContext mgmtCtx = getManagementContext();
+        if (mgmtCtx==null) 
+            throw new IllegalStateException("Cannot invoke "+eff+" on "+this+" when not managed"); 
+        mgmtCtx.invokeEffector(this, eff, parameters);
     }
 
     /**

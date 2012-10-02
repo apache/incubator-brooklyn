@@ -264,6 +264,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         
         for (int i = 0; i < (delta*-1); i++) { removedEntities.add(pickAndRemoveMember()); }
 
+        // FIXME symmetry in order of added as child, managed, started, and added to group
+        // FIXME assume stoppable; use logic of grow?
         Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
         try {
             invoke.get();
@@ -310,7 +312,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             } catch (InterruptedException e) {
                 throw Exceptions.propagate(e);
             } catch (Throwable t) {
-                logger.error("Cluster "+this+" failed to start entity "+entity, t);
+                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+t, t);
                 errors.put(entity, unwrapException(t));
             }
         }
@@ -373,7 +375,9 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     
     protected void discardNode(Entity entity) {
         removeMember(entity);
-        getManagementSupport().getManagementContext(true).unmanage(entity);
+        if (getManagementSupport().isDeployed()) {
+            getManagementSupport().getManagementContext(true).unmanage(entity);
+        }
     }
     
     protected void stopAndRemoveNode(Entity member) {

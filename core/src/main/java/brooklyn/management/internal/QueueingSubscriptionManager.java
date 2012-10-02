@@ -36,6 +36,7 @@ public class QueueingSubscriptionManager extends AbstractSubscriptionManager {
         
         QueuedSubscription<T> qs = new QueuedSubscription<T>();
         qs.flags = flags;
+        s.subscriber = getSubscriber(flags, s);
         qs.s = s;
         queuedSubscriptions.add(qs);
         return s;
@@ -85,6 +86,9 @@ public class QueueingSubscriptionManager extends AbstractSubscriptionManager {
 
     @Override
     public synchronized boolean unsubscribe(SubscriptionHandle subscriptionId) {
+        if (useDelegateForSubscribing)
+            return delegate.unsubscribe(subscriptionId);
+        
         Iterator<QueuedSubscription> qi = queuedSubscriptions.iterator();
         while (qi.hasNext()) {
             QueuedSubscription q = qi.next();
@@ -99,6 +103,9 @@ public class QueueingSubscriptionManager extends AbstractSubscriptionManager {
     @SuppressWarnings("unchecked")
     @Override
     public synchronized Set<SubscriptionHandle> getSubscriptionsForSubscriber(Object subscriber) {
+        if (useDelegateForSubscribing)
+            return delegate.getSubscriptionsForSubscriber(subscriber);
+        
         Set<SubscriptionHandle> result = new LinkedHashSet<SubscriptionHandle>();
         for (QueuedSubscription q: queuedSubscriptions) {
             if (Objects.equal(subscriber, getSubscriber(q.flags, q.s))) result.add(q.s);
@@ -108,6 +115,9 @@ public class QueueingSubscriptionManager extends AbstractSubscriptionManager {
 
     @Override
     public synchronized Set<SubscriptionHandle> getSubscriptionsForEntitySensor(Entity source, Sensor<?> sensor) {
+        if (useDelegateForSubscribing)
+            return delegate.getSubscriptionsForEntitySensor(source, sensor);
+        
         Set<SubscriptionHandle> result = new LinkedHashSet<SubscriptionHandle>();
         for (QueuedSubscription q: queuedSubscriptions) {
             if ((q.s.sensor==null || Objects.equal(q.s.sensor, sensor)) &&

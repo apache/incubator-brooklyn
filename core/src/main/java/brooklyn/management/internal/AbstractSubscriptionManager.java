@@ -115,7 +115,7 @@ public abstract class AbstractSubscriptionManager implements SubscriptionManager
     }
 
     protected <T> Object getSubscriber(Map<String, Object> flags, Subscription<T> s) {
-        return flags.containsKey("subscriber") ? flags.remove("subscriber") : s.listener;
+        return s.subscriber!=null ? s.subscriber : flags.containsKey("subscriber") ? flags.remove("subscriber") : s.listener;
     }
 
 }

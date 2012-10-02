@@ -130,6 +130,7 @@ public class EntityManagementSupport {
         // TODO custom stopping activities
         // TODO framework stopping events - no more sensors, executions, etc
         
+        if (entity.getOwner()!=null) entity.getOwner().removeOwnedChild(entity);
         // new subscriptions will be queued / not allowed
         nonDeploymentManagementContext.getSubscriptionManager().stopDelegatingForSubscribing();
         // new publications will be queued / not allowed
