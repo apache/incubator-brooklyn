@@ -16,9 +16,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.util.flags.SetFromFlag;
 
 public class BrooklynLauncher {
 
@@ -42,7 +40,7 @@ public class BrooklynLauncher {
      * For readability and flexibility, clients may prefer the {@link #newLauncher()} builder-style syntax. */
     public static ManagementContext manage(final AbstractApplication app, int port, boolean shutdownApp, boolean startWebConsole) {
         // Locate the management context
-        AbstractManagementContext context = app.getManagementContext();
+        LocalManagementContext context = new LocalManagementContext();
         context.manage(app);
 
         if (startWebConsole) {

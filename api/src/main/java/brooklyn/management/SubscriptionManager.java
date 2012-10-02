@@ -42,7 +42,7 @@ public interface SubscriptionManager {
     <T> SubscriptionHandle subscribe(Map<String, Object> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
     /** @see #subscribe(Map, Entity, Sensor, SensorEventListener) */
-    <T> SubscriptionHandle subscribe(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
+    <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
 
     /**
      * Subscribe to {@link Sensor} data changes and events on all children of a given {@link Entity}, supplying the

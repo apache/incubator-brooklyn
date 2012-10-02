@@ -9,9 +9,10 @@ import java.util.concurrent.Future
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.LocallyManagedEntity
+import brooklyn.entity.SimpleEntity
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.management.internal.LocalManagementContext
 
 public class AttributeMapTest {
 
@@ -20,8 +21,10 @@ public class AttributeMapTest {
 
     @BeforeMethod
     public void setUp() {
-        LocallyManagedEntity e = []
+        SimpleEntity e = []
         map = new AttributeMap(e)
+        
+        new LocalManagementContext().manage(e);
     }
     
     // See ENGR-2111

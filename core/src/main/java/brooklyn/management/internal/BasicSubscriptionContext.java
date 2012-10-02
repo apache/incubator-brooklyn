@@ -115,7 +115,7 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     @Override
     public boolean unsubscribe(SubscriptionHandle subscriptionId) {
         Preconditions.checkNotNull(subscriptionId, "subscriptionId must not be null");
-        Preconditions.checkArgument(Objects.equal(subscriber, ((Subscription) subscriptionId).subscriber), "The subscriptionId is for a different "+subscriber);
+        Preconditions.checkArgument(Objects.equal(subscriber, ((Subscription) subscriptionId).subscriber), "The subscriptionId is for a different "+subscriber+"; expected "+((Subscription) subscriptionId).subscriber);
         return manager.unsubscribe(subscriptionId);
     }
 

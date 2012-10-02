@@ -34,6 +34,7 @@ import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
+import brooklyn.management.internal.EntityManagementSupport
 import brooklyn.management.internal.SubscriptionTracker
 import brooklyn.mementos.EntityMemento
 import brooklyn.policy.Enricher
@@ -100,10 +101,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     private final EntityDynamicType entityType;
     
-    protected transient ExecutionContext execution
-    protected transient SubscriptionContext subscription
-    protected transient ManagementContext managementContext
-
+    protected transient EntityManagementSupport managementSupport;
+    
     /**
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
@@ -165,10 +164,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return id;
     }
     
+    /** @deprecated since 0.4.0 now handled by EntityMangementSupport */
     public void setBeingManaged() {
         hasEverBeenManaged = true;
     }
     
+    /** @deprecated since 0.4.0 now handled by EntityMangementSupport */
     public boolean hasEverBeenManaged() {
         return hasEverBeenManaged;
     }
@@ -312,6 +313,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     @Override
     public Collection<Entity> getOwnedChildren() { ownedChildren.get() }
     
+    public EntityCollectionReference getOwnedChildrenReference() { this.@ownedChildren }
+    
     @Override
     public Collection<Group> getGroups() { groups.get() }
 
@@ -328,6 +331,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         app
     }
 
+    /** @deprecated since 0.4.0 should not be needed / leaked outwith brooklyn internals / mgmt support? */
     protected synchronized void setApplication(Application app) {
         if (application) {
             if (this.@application.id!=app.id) {
@@ -343,11 +347,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         getApplication()?.id
     }
 
+    /** @deprecated since 0.4.0 should not be needed / leaked outwith brooklyn internals? */
     @Override
     public synchronized ManagementContext getManagementContext() {
-        ManagementContext m = managementContext
-        if (m) return m
-        managementContext = getApplication()?.getManagementContext()
+        return getManagementSupport().getManagementContext(false);
     }
 
 
@@ -525,8 +528,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
    }
 
     public synchronized SubscriptionContext getSubscriptionContext() {
-        if (subscription) return subscription
-        subscription = getManagementContext()?.getSubscriptionContext(this);
+        return getManagementSupport().getSubscriptionContext();
     }
 
     protected synchronized SubscriptionTracker getSubscriptionTracker() {
@@ -535,10 +537,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
     
     public synchronized ExecutionContext getExecutionContext() {
-        if (execution) return execution;
-		def execMgr = getManagementContext()?.executionManager;
-		if (!execMgr) return null
-        execution = new BasicExecutionContext(tag:this, execMgr)
+        return getManagementSupport().getExecutionContext();
     }
 
     /** Default String representation is simplified name of class, together with selected fields. */
@@ -672,7 +671,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
                 Effector eff = entityType.getEffector(name);
                 if (eff) {
                     if (LOG.isDebugEnabled()) LOG.debug("Invoking effector {} on {} with args {}", name, this, args)
-                    return getManagementContext().invokeEffectorMethodSync(this, eff, args);
+                    EntityManagementSupport mgmt = getManagementSupport();
+                    if (!mgmt.isDeployed()) {
+                        mgmt.attemptLegacyAutodeployment(name);
+                    }
+                    return mgmt.getManagementContext(false).invokeEffectorMethodSync(this, eff, args);
                 }
             } catch (CancellationException ce) {
 	            LOG.info "Execution of effector {} on entity {} was cancelled", name, id
@@ -718,12 +721,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     /**
      * Invoked by {@link ManagementContext} when this entity becomes managed at a particular management node,
      * including the initial management started and subsequent management node master-change for this entity.
+     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStarting if customization needed
      */
     public void onManagementBecomingMaster() {}
     
     /**
      * Invoked by {@link ManagementContext} when this entity becomes mastered at a particular management node,
      * including the final management end and subsequent management node master-change for this entity.
+     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStopping if customization needed
      */
     public void onManagementNoLongerMaster() {}
 
@@ -731,14 +736,22 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public Object managementData = null;
 
     /** For use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */
-    public void invalidate() {
-        this.@owner.invalidate();
+    public void invalidateReferences() {
+        // TODO move this to EntityMangementSupport,
+        // when hierarchy fields can also be moved there
+        this.@owner?.invalidate();
         this.@application.invalidate();
-        ownedChildren.get().each { it.invalidate() }
-        groups.get().each { it.invalidate() }
-        
-        execution = null;
-        subscription = null;
+        this.@ownedChildren.invalidate();
+        this.@groups.invalidate();
+    }
+    
+    public final synchronized EntityManagementSupport getManagementSupport() {
+        if (managementSupport) return managementSupport;
+        managementSupport = createManagementSupport();
+        return managementSupport;
+    }
+    protected EntityManagementSupport createManagementSupport() {
+        return new EntityManagementSupport(this);
     }
 
     /**
@@ -747,4 +760,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public RebindSupport<EntityMemento> getRebindSupport() {
         return new BasicEntityRebindSupport(this);
     }
+
+    protected void finalize() throws Throwable {
+        super.finalize();
+        if (!getManagementSupport().wasDeployed())
+            LOG.warn("Entity "+this+" was never deployed -- explicit call to manage(Entity) required."); 
+    }
+    
 }

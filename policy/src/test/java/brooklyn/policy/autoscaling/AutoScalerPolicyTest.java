@@ -15,6 +15,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.TimeExtras;
@@ -38,10 +40,13 @@ public class AutoScalerPolicyTest {
     
     @BeforeMethod(alwaysRun=true)
     public void before() throws Exception {
-        policy = new AutoScalerPolicy();
+        TestApplication app = new TestApplication();
         cluster = new TestCluster(1);
         resizable = new LocallyResizableEntity(cluster);
+        policy = new AutoScalerPolicy();
         resizable.addPolicy(policy);
+        
+        new LocalManagementContext().manage(app);
     }
 
     @Test

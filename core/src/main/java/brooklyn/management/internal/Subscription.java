@@ -20,14 +20,14 @@ class Subscription<T> implements SubscriptionHandle {
     public boolean subscriberExecutionManagerTagSupplied;
     public Entity producer;
     public Sensor<T> sensor;
-    public SensorEventListener<T> listener;
+    public SensorEventListener<? super T> listener;
     public Map<String,Object> flags;
     public Predicate<SensorEvent<T>> eventFilter;
 
     public Subscription() {
     }
     
-    public Subscription(Entity producer, Sensor<T> sensor, SensorEventListener<T> listener) {
+    public Subscription(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         this.producer = producer;
         this.sensor = sensor;
         this.listener = listener;

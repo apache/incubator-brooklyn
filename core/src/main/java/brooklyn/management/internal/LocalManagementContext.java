@@ -16,9 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
@@ -71,7 +69,6 @@ public class LocalManagementContext extends AbstractManagementContext {
             if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
             if (e instanceof Application) {
                 applications.add((Application)e);
-                ((AbstractApplication)e).setManagementContext(this);
             }
             entities.add(e);
             return true;
@@ -123,9 +120,9 @@ public class LocalManagementContext extends AbstractManagementContext {
         return execution;
     }
     	
-    public <T> Task<T> runAtEntity(Map flags, Entity entity, Callable<T> c) {
+    public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, (elvis(flags.get("displayName"), flags.get("description"), flags, c)));
-        return ((EntityLocal)entity).getExecutionContext().submit(flags, c);
+        return getExecutionContext(entity).submit(flags, c);
     }
 
     public boolean isManagedLocally(Entity e) {

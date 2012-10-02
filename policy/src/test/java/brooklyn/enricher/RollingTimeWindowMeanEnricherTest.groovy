@@ -7,12 +7,13 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.enricher.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
-import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.SubscriptionContext
+import brooklyn.management.internal.LocalManagementContext
 
 class RollingTimeWindowMeanEnricherTest {
     
@@ -32,8 +33,8 @@ class RollingTimeWindowMeanEnricherTest {
     @BeforeMethod
     public void before() {
         app = new AbstractApplication() {}
-
-        producer = new LocallyManagedEntity(owner:app)
+        producer = new AbstractEntity(app) {}
+        new LocalManagementContext().manage(app);
 
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
         deltaSensor = new BasicAttributeSensor<Integer>(Integer.class, "delta sensor")

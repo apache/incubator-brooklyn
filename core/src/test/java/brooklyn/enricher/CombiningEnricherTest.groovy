@@ -10,36 +10,37 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.enricher.basic.AbstractCombiningEnricher;
-import brooklyn.entity.LocallyManagedEntity;
-import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.SimpleApp;
+import brooklyn.entity.SimpleEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.util.MutableMap;
-
-public class CombiningEnricherTest {
+class CombiningEnricherTest {
 
     public static final Logger log = LoggerFactory.getLogger(CombiningEnricherTest.class);
             
     private static final long TIMEOUT_MS = 10*1000;
 //    private static final long SHORT_WAIT_MS = 250;
     
-    AbstractApplication app;
-
+    SimpleApp app;
     EntityLocal producer;
     AttributeSensor<Integer> intSensorA, intSensorB, intSensorC;
     AttributeSensor<Long> target;
 
-    @BeforeMethod()
+    @BeforeMethod(alwaysRun=true)
     public void before() {
-        app = new AbstractApplication() {};
-        producer = new LocallyManagedEntity(app);
+        app = new SimpleApp();
+        producer = new SimpleEntity(app);
         intSensorA = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.a");
         intSensorB = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.b");
         intSensorC = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.c");
         target = new BasicAttributeSensor<Long>(Long.class, "long.sensor.target");
+        
+        new LocalManagementContext().manage(app);
         
         app.start(Arrays.asList(new SimulatedLocation()));
     }

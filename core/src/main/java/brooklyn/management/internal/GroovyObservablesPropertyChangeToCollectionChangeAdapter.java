@@ -6,12 +6,14 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 public class GroovyObservablesPropertyChangeToCollectionChangeAdapter implements PropertyChangeListener {
+    @SuppressWarnings("rawtypes")
     private final CollectionChangeListener delegate;
 
-    public GroovyObservablesPropertyChangeToCollectionChangeAdapter(CollectionChangeListener delegate) {
+    public GroovyObservablesPropertyChangeToCollectionChangeAdapter(@SuppressWarnings("rawtypes") CollectionChangeListener delegate) {
         this.delegate = delegate;
     }
 
+    @SuppressWarnings("unchecked")
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt instanceof ObservableList.ElementAddedEvent) {
             delegate.onItemAdded(evt.getNewValue());

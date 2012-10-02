@@ -373,7 +373,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     
     protected void discardNode(Entity entity) {
         removeMember(entity);
-        managementContext.unmanage(entity);
+        getManagementSupport().getManagementContext(true).unmanage(entity);
     }
     
     protected void stopAndRemoveNode(Entity member) {
@@ -388,6 +388,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             }
         }
         
-        managementContext.unmanage(member);
+        if (getManagementSupport().isDeployed()) {
+            getManagementSupport().getManagementContext(true).unmanage(member);
+        }
     }
 }

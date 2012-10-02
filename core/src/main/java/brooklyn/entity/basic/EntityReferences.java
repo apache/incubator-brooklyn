@@ -1,10 +1,12 @@
 package brooklyn.entity.basic;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +56,7 @@ public class EntityReferences {
             return referrer;
         }
         
+        @SuppressWarnings("unchecked")
         protected synchronized T find() {
             if (entity != null) return entity;
             if (referrer == null)
@@ -73,6 +76,8 @@ public class EntityReferences {
 
 
     public static class SelfEntityReference<T extends Entity> extends EntityReference<T> {
+        private static final long serialVersionUID = 1594197133246032704L;
+        
         private final T self;
         public SelfEntityReference(T self) {
             super(self, self);
@@ -89,7 +94,7 @@ public class EntityReferences {
         protected Entity referrer;
         
         Collection<String> entityRefs = new LinkedHashSet<String>();
-        transient Collection<T> entities = null;
+        transient Map<String,T> entities = null;
         
         public EntityCollectionReference(Entity referrer) {
             this.referrer = referrer;
@@ -101,19 +106,23 @@ public class EntityReferences {
         
         public synchronized boolean add(T e) {
             if (entityRefs.add(e.getId())) {
-                Collection<T> e2 = new LinkedHashSet<T>(entities!=null?entities:Collections.<T>emptySet());
-                e2.add(e);
+                Map<String,T> e2 = new LinkedHashMap<String,T>(entities!=null?entities:Collections.<String,T>emptyMap());
+                e2.put(e.getId(), e);
                 entities = e2;
                 return true;
             } else {
                 return false;
             }
+        }
+        
+        public synchronized void invalidate() {
+            entities = null;
         }
 
         public synchronized boolean remove(Entity e) {
             if (entityRefs.remove(e.getId()) && entities!=null) {
-                Collection<T> e2 = new LinkedHashSet<T>(entities);
-                e2.remove(e);
+                Map<String,T> e2 = new LinkedHashMap<String,T>(entities);
+                e2.remove(e.getId());
                 entities = e2;
                 return true;
             } else {
@@ -121,8 +130,17 @@ public class EntityReferences {
             }
         }
 
+        /** returns the entity knwon here with the given id, if there is one, null otherwise;
+         * makes no attempt to resolve */
+        public synchronized Entity peek(String entityId) {
+            if (entities!=null) return entities.get(entityId);
+            return null;
+        }
+
+        public synchronized Collection<String> getIds() { return new ArrayList<String>(entityRefs); }
+        
         public synchronized Collection<T> get() {
-            Collection<T> result = entities;
+            Collection<T> result = entities==null ? null : entities.values();
             if (result==null) {
                 result = find();
             }
@@ -142,21 +160,22 @@ public class EntityReferences {
             return entityRefs.contains(e.getId());
         }
 
+        @SuppressWarnings("unchecked")
         protected synchronized Collection<T> find() {
-            if (entities!=null) return entities;
+            if (entities!=null) return entities.values();
             if (referrer == null)
                 throw new IllegalStateException("EntityReference should have been initialised with a reference owner");
-            Collection<T> result = new CopyOnWriteArrayList<T>();
+            Map<String,T> result = new LinkedHashMap<String,T>();
             for (String it : entityRefs) {
-                Entity e = ((AbstractEntity)referrer).getManagementContext().getEntity(it); 
+                Entity e = ((AbstractEntity)referrer).getManagementSupport().getManagementContext(true).getEntity(it); 
                 if (e==null) { 
                     LOG.warn("unable to find {}, referred to by {}", it, referrer);
                 } else {
-                    result.add((T)e);
+                    result.put(e.getId(), (T)e);
                 }
             }
             entities = result;
-            return entities;
+            return entities.values();
         }
     }
 }

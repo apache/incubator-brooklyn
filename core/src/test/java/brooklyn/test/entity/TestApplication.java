@@ -5,11 +5,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionHandle;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.MutableMap;
 
 /**
@@ -35,5 +37,13 @@ public class TestApplication extends AbstractApplication {
         return "Application["+id.substring(Math.max(0, id.length()-8))+"]";
     }
 
-    // TODO add more mock methods
+    /** convenience for wiring in management during testing */
+    public void startManagement() {
+        new LocalManagementContext().manage(this);
+    }
+    /** convenience for wiring in management during testing */
+    public <T extends Entity> T manage(T entity) {
+        getManagementSupport().getManagementContext(false).manage(entity);
+        return entity;
+    }
 }

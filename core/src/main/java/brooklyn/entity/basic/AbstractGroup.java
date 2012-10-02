@@ -15,6 +15,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
+import brooklyn.util.MutableMap;
 
 import com.google.common.base.Predicate;
 
@@ -40,7 +41,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
     
     public AbstractGroup() {
-        this(Collections.emptyMap(), null);
+        this(new MutableMap(), null);
     }
     
     public AbstractGroup(Map<?,?> props) {
@@ -48,7 +49,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
     
     public AbstractGroup(Entity owner) {
-        this(Collections.emptyMap(), owner);
+        this(new MutableMap(), owner);
     }
 
     /**

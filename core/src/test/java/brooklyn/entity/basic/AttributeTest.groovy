@@ -4,7 +4,7 @@ import static org.testng.Assert.*
 
 import org.testng.annotations.Test
 
-import brooklyn.entity.LocallyManagedEntity
+import brooklyn.entity.SimpleEntity
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 
@@ -13,20 +13,20 @@ public class AttributeTest {
 
     @Test
     public void canGetAndSetAttribute() {
-        LocallyManagedEntity e = []
+        SimpleEntity e = []
         e.setAttribute(COLOR, "red")
         assertEquals(e.getAttribute(COLOR), "red")
     }
     
     @Test
     public void missingAttributeIsNull() {
-        LocallyManagedEntity e = []
+        SimpleEntity e = []
         assertEquals(e.getAttribute(COLOR), null)
     }
     
     @Test
     public void canGetAttributeByNameParts() {
-        LocallyManagedEntity e = []
+        SimpleEntity e = []
         
         // Initially null
         assertNull(e.getAttributeByNameParts(COLOR.nameParts))
