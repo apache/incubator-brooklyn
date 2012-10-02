@@ -2,6 +2,7 @@ package brooklyn.entity;
 
 import java.util.Map;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
@@ -10,7 +11,7 @@ import brooklyn.util.MutableMap;
 /** An entity for testing which has a local management context (not associated with an application) */
 public class LocallyManagedEntity extends AbstractEntity {
 
-    ManagementContext mgmt = new LocalManagementContext();
+    ManagementContext mgmt = new LocalManagementContext(BrooklynProperties.Factory.newDefault());
     
     public LocallyManagedEntity() {
         this(MutableMap.of(), null);

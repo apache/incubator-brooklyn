@@ -1,7 +1,7 @@
 package brooklyn.config;
 
 import brooklyn.management.ManagementContext;
-import brooklyn.util.internal.BrooklynSystemProperties.StringSystemProperty;
+import brooklyn.util.internal.StringSystemProperty;
 
 /** attributes which callers can set and a service application
  * (such as servlet or osgi) will pay attention to,

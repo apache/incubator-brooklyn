@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigMap.StringConfigMap;
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
@@ -35,8 +35,12 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
-    protected BrooklynProperties configMap = BrooklynProperties.Factory.newDefault();
-    
+    protected BrooklynProperties configMap;
+
+    public AbstractManagementContext(BrooklynProperties brooklynProperties){
+       this.configMap = brooklynProperties;
+    }
+
     public long getTotalEffectorInvocations() {
         return totalEffectorInvocationCount.get();
     }
@@ -143,26 +147,28 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         return GroovyJavaMethods.invokeMethodOnMetaClass(entity, eff.getName(), transformedArgs);
     }
 
-	/** activates management when effector invoked, warning unless context is acceptable
-	 * (currently only acceptable context is "start") */
-	protected void manageIfNecessary(Entity entity, Object context) {
-        if (((AbstractEntity)entity).hasEverBeenManaged()) {
+    /**
+     * activates management when effector invoked, warning unless context is acceptable
+     * (currently only acceptable context is "start")
+     */
+    protected void manageIfNecessary(Entity entity, Object context) {
+        if (((AbstractEntity) entity).hasEverBeenManaged()) {
             return;
         } else if (!isManaged(entity)) {
-			Entity rootUnmanaged = entity;
-			while (true) {
-				Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();
-				if (candidateUnmanagedOwner == null || getEntity(candidateUnmanagedOwner.getId()) != null)
-					break;
-				rootUnmanaged = candidateUnmanagedOwner;
-			}
-			if (context==Startable.START.getName())
-				log.info("Activating local management for {} on start", rootUnmanaged);
-			else
-				log.warn("Activating local management for {} due to effector invocation on {}: {}", new Object[] {rootUnmanaged, entity, context});
-			manage(rootUnmanaged);
-		}
-	}
+            Entity rootUnmanaged = entity;
+            while (true) {
+                Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();
+                if (candidateUnmanagedOwner == null || getEntity(candidateUnmanagedOwner.getId()) != null)
+                    break;
+                rootUnmanaged = candidateUnmanagedOwner;
+            }
+            if (context == Startable.START.getName())
+                log.info("Activating local management for {} on start", rootUnmanaged);
+            else
+                log.warn("Activating local management for {} due to effector invocation on {}: {}", new Object[]{rootUnmanaged, entity, context});
+            manage(rootUnmanaged);
+        }
+    }
 
     /**
      * Method for entity to make effector happen with correct semantics (right place, right task context),
@@ -173,7 +179,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         try {
             Task current = BasicExecutionManager.getCurrentTask();
             if (current == null || !current.getTags().contains(entity) || !isManagedLocally(entity)) {
-    			manageIfNecessary(entity, eff.getName());
+                manageIfNecessary(entity, eff.getName());
                 // Wrap in a task if we aren't already in a task that is tagged with this entity
                 Task<T> task = runAtEntity(
                         MutableMap.builder()

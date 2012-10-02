@@ -309,7 +309,13 @@
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
-    </dependencies>
+          <dependency>
+              <groupId>com.google.guava</groupId>
+              <artifactId>guava</artifactId>
+              <version>${guava.version}</version>
+          </dependency>
+
+      </dependencies>
 
     <repositories>
         <!-- Required to get hold of javassist:javassist -->

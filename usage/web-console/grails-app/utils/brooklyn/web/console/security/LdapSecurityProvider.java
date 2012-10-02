@@ -1,6 +1,8 @@
 package brooklyn.web.console.security;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.util.text.Strings;
+import brooklyn.web.console.BrooklynWebconsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,8 +13,6 @@ import javax.servlet.http.HttpSession;
 import java.util.Hashtable;
 
 public class LdapSecurityProvider implements SecurityProvider {
-    public final static String KEY_LDAP_URL = "brooklyn.security.ldap.url";
-    public final static String KEY_LDAP_REALM = "brooklyn.security.ldap.realm";
 
     public static final Logger LOG = LoggerFactory.getLogger(LdapSecurityProvider.class);
 
@@ -21,14 +21,14 @@ public class LdapSecurityProvider implements SecurityProvider {
     private final String ldapUrl;
     private final String ldapRealm;
 
-    public LdapSecurityProvider() {
-        ldapUrl = (String) ConfigLoader.getConfig(KEY_LDAP_URL);
+    public LdapSecurityProvider(BrooklynProperties properties) {
+        ldapUrl = properties.getFirst(BrooklynWebconsoleProperties.LDAP_URL.getPropertyName());
         if (Strings.isEmpty(ldapUrl)) {
-            throw new IllegalArgumentException(String.format("%s is not defined in brooklyn.properties", KEY_LDAP_URL));
+            throw new IllegalArgumentException(String.format("property %s is not defined", BrooklynWebconsoleProperties.LDAP_URL.getPropertyName()));
         }
-        ldapRealm = (String) ConfigLoader.getConfig(KEY_LDAP_REALM);
+        ldapRealm = properties.getFirst(BrooklynWebconsoleProperties.LDAP_REALM.getPropertyName());
         if (Strings.isEmpty(ldapUrl)) {
-            throw new IllegalArgumentException(String.format("%s is not defined in brooklyn.properties", KEY_LDAP_REALM));
+            throw new IllegalArgumentException(String.format("property %s is not defined", BrooklynWebconsoleProperties.LDAP_REALM.getPropertyName()));
         }
     }
 

@@ -1,6 +1,8 @@
 package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
+
+import brooklyn.config.BrooklynProperties;
 import groovy.util.ObservableList;
 
 import java.util.ArrayList;
@@ -43,6 +45,10 @@ public class LocalManagementContext extends AbstractManagementContext {
     protected final Set<Application> applications = Sets.newLinkedHashSet();
 
     private final String tostring = "LocalManagementContext("+Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5)+")";
+
+    public LocalManagementContext(BrooklynProperties brooklynProperties){
+       super(brooklynProperties);
+    }
 
     protected synchronized boolean manageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = MANAGED_LOCALLY;

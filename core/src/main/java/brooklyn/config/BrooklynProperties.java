@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.config.ConfigMap.StringConfigMap;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
@@ -28,8 +27,8 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 
 /** utils for accessing command-line and system-env properties;
- * doesn't resolve anything (unless an execution context is supplied) 
- * and treats ConfigKeys as of type object when in doubt, 
+ * doesn't resolve anything (unless an execution context is supplied)
+ * and treats ConfigKeys as of type object when in doubt,
  * or string when that is likely wanted (e.g. {@link #getFirst(Map, String...)}
  * <p>
  * TODO methods in this class are not thread safe.
@@ -39,7 +38,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
 
     private static final long serialVersionUID = -945875483083108978L;
     protected static final Logger LOG = LoggerFactory.getLogger(BrooklynProperties.class);
-    
+
     public static class Factory {
         public static BrooklynProperties newEmpty() {
             return new BrooklynProperties();
@@ -48,17 +47,32 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         public static BrooklynProperties newWithSystemAndEnvironment() {
             return newDefault();
         }
+
         public static BrooklynProperties newDefault() {
-            BrooklynProperties p = new BrooklynProperties().addEnvironmentVars().addSystemProperties();
-            File f = new File(p.getFirst(MutableMap.of("defaultIfNone", "/"), "user.home", "HOME")+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
-            if (f.exists()) p.addFrom(f);
-            return p;
+            BrooklynProperties properties = new BrooklynProperties();
+
+            addGlobalProperties(properties);
+
+            properties.addEnvironmentVars();
+
+            properties.addSystemProperties();
+
+            return properties;
+        }
+
+        private static void addGlobalProperties(BrooklynProperties p) {
+            File globalPropertiesFile = new File(
+                    p.getFirst(MutableMap.of("defaultIfNone", "/"), "user.home", "HOME")+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
+
+            if (globalPropertiesFile.exists()) {
+                p.addFrom(globalPropertiesFile);
+            }
         }
     }
-    
+
     protected BrooklynProperties() {
     }
-    
+
     @SuppressWarnings("unchecked")
     public BrooklynProperties addEnvironmentVars() {
         putAll(System.getenv());
@@ -69,7 +83,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         putAll(System.getProperties());
         return this;
     }
-    
+
     @SuppressWarnings("unchecked")
     public BrooklynProperties addFrom(InputStream i) {
         Properties p = new Properties();
@@ -102,7 +116,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     }
     /**
      * @see ResourceUtils#getResourceFromUrl(String)
-     * 
+     *
      * of the form form file:///home/... or http:// or classpath://xx ;
      * for convenience if not starting with xxx: it is treated as a classpath reference or a file;
      * throws if not found (but does nothing if argument is null)
@@ -115,7 +129,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
             throw new RuntimeException("Error reading properties from ${url}: "+e, e);
         }
     }
-    
+
     /** expects a property already set in scope, whose value is acceptable to {@link #addFromUrl(String)};
      * if property not set, does nothing */
     public BrooklynProperties addFromUrlProperty(String urlProperty) {
@@ -141,7 +155,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     }
 
    /** @deprecated attempts to call get with this syntax are probably mistakes; get(key, defaultValue) is fine but
-    * Map is unlikely the key, much more likely they meant getFirst(flags, key).   
+    * Map is unlikely the key, much more likely they meant getFirst(flags, key).
     */
    @Deprecated
    public String get(Map flags, String key) {
@@ -150,11 +164,11 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
            new Throwable("Arguments: "+flags+" "+key));
        return getFirst(flags, key);
    }
-       
+
     /** returns the value of the first key which is defined
      * <p>
      * takes the following flags:
-     * 'warnIfNone', 'failIfNone' (both taking a boolean (to use default message) or a string (which is the message)); 
+     * 'warnIfNone', 'failIfNone' (both taking a boolean (to use default message) or a string (which is the message));
      * and 'defaultIfNone' (a default value to return if there is no such property); defaults to no warning and null response */
     @Override
     public String getFirst(String ...keys) {
@@ -186,7 +200,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         }
         return null;
     }
-    
+
     @Override
     public String toString() {
         return "BrooklynProperties["+size()+"]";
@@ -199,7 +213,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         if (key instanceof ConfigKey) key = ((ConfigKey)key).getName();
         return super.put(key, value);
     }
-    
+
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
         return getConfig(key, null);
