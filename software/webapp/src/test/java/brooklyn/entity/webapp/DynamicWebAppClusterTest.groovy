@@ -27,11 +27,12 @@ public class DynamicWebAppClusterTest {
     
     @Test
     public void testRequestCountAggregation() {
-        Application app = new TestApplication()
+        TestApplication app = new TestApplication()
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
             initialSize: 2,
             factory: { properties -> new TestJavaWebAppEntity(properties) },
             owner:app)
+        app.startManagement();
         cluster.start([new SimulatedLocation()])
         
         cluster.members.each { it.spoofRequest() }
@@ -48,13 +49,14 @@ public class DynamicWebAppClusterTest {
     
     @Test
     public void testPropertiesToChildren() {
-        Application app = new TestApplication()
+        TestApplication app = new TestApplication()
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
             factory: { properties -> new TestJavaWebAppEntity(properties + ["a": 1]) },
             owner:app) {
                 protected Map getCustomChildFlags() { ["c":3] }
         }
         cluster.factory.configure(b: 2);
+        app.startManagement();
         
         cluster.start([new SimulatedLocation()])
         assertEquals 1, cluster.members.size()

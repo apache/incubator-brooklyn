@@ -12,7 +12,6 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.driver.MockSshBasedSoftwareSetup
@@ -25,6 +24,7 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.flags.SetFromFlag
 
@@ -32,7 +32,7 @@ class AbstractControllerTest {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractControllerTest)
     
-    AbstractApplication app
+    TestApplication app
     Cluster cluster
     AbstractController controller
     
@@ -48,7 +48,7 @@ class AbstractControllerTest {
         loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines:machines)
         updates = new CopyOnWriteArrayList();
         
-        app = new AbstractApplication() {}
+        app = new TestApplication()
         cluster = new DynamicCluster(owner:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
         
         final AtomicInteger invokeCountForStart = new AtomicInteger(0);
@@ -74,7 +74,7 @@ class AbstractControllerTest {
                 // no-op
             }
         }
-        app.getManagementContext().manage(app)
+        app.startManagement();
         app.start([loc])
     }
     

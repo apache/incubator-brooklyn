@@ -1,15 +1,16 @@
 package brooklyn.entity.basic;
 
+import groovy.transform.InheritConstructors;
+
 import org.testng.Assert
 import org.testng.annotations.Test
 
-import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey
 import brooklyn.entity.Application
-import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.management.Task;
+import brooklyn.test.entity.TestApplication
 
 
 public class SoftwareProcessEntityTest {
@@ -20,8 +21,9 @@ public class SoftwareProcessEntityTest {
     public void testBasicSoftwareProcessEntityLifecycle() {
         SshMachineLocation machine = new SshMachineLocation(address:"localhost");
         def loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
-        Application app = new AbstractApplication() {}
-        MyService entity = new MyService(owner:app)
+        TestApplication app = new TestApplication();
+        MyService entity = new MyService(app)
+        app.startManagement();
         entity.start([loc]);
         SimulatedDriver d = entity.getDriver();
         Assert.assertTrue(d.isRunning());
@@ -34,13 +36,16 @@ public class SoftwareProcessEntityTest {
     public void testShutdownIsIdempotent() {
         SshMachineLocation machine = new SshMachineLocation(address:"localhost");
         def loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
-        Application app = new AbstractApplication() {}
-        MyService entity = new MyService(owner:app)
+        TestApplication app = new TestApplication();
+        MyService entity = new MyService(app)
+        app.startManagement();
         entity.start([loc]);
         entity.stop();
+        
         entity.stop();
     }
     
+    @InheritConstructors
     private static class MyService extends SoftwareProcessEntity {
         @Override
         public <T> T getConfig(ConfigKey<T> key, T defaultValue=null) {
