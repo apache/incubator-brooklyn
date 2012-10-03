@@ -2,7 +2,6 @@ package brooklyn.entity.group
 
 import static org.testng.AssertJUnit.*
 
-import java.util.Collection
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
@@ -17,7 +16,6 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Resizable
 import brooklyn.event.EntityStartException
@@ -25,11 +23,11 @@ import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
-import brooklyn.test.entity.NoopStartable
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.TimeExtras
 
+import com.google.common.base.Predicates
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 
@@ -240,13 +238,14 @@ class DynamicClusterTest {
      */
     @Test
     public void failingEntitiesDontBreakClusterActions() {
-        TestEntity entity
         final int failNum = 2
         final AtomicInteger counter = new AtomicInteger(0)
-        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> 
+        DynamicCluster cluster = new DynamicCluster(app,  
+                initialSize:0,
+                factory:{ properties -> 
                     int num = counter.incrementAndGet();
                     return new FailingEntity(properties, (num==failNum)) 
-                }, initialSize:0 ], app)
+                })
         
         cluster.start([loc])
         cluster.resize(3)
@@ -254,6 +253,33 @@ class DynamicClusterTest {
         assertEquals(cluster.ownedChildren.size(), 2)
         cluster.ownedChildren.each {
             assertEquals(((FailingEntity)it).fail, false)
+        }
+    }
+    
+    @Test
+    public void testCanQuarantineFailedEntities() {
+        final int failNum = 2
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = new DynamicCluster(app,  
+                quarantineFailedEntities:true,
+                initialSize:0,
+                factory:{ properties -> 
+                    int num = counter.incrementAndGet();
+                    return new FailingEntity(properties, (num==failNum)) 
+                })
+        
+        cluster.start([loc])
+        cluster.resize(3)
+        assertEquals(cluster.currentSize, 2)
+        assertEquals(cluster.members.size, 2)
+        assertEquals(Iterables.size(Iterables.filter(cluster.ownedChildren, Predicates.instanceOf(FailingEntity.class))), 3)
+        cluster.members.each {
+            assertEquals(((FailingEntity)it).fail, false)
+        }
+        
+        assertEquals(cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).members.size(), 1)
+        cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).members.each {
+            assertEquals(((FailingEntity)it).fail, true)
         }
     }
     
@@ -416,16 +442,23 @@ class DynamicClusterTest {
 }
 
 class FailingEntity extends TestEntity {
-    boolean fail
+    boolean fail;
+    Class<? extends Exception> exceptionClazz;
     
     FailingEntity(Map flags, boolean fail) {
+        this(flags, fail, EntityStartException.class);
+    }
+    FailingEntity(Map flags, boolean fail, Class<? extends Exception> exceptionClazz) {
         super(flags)
         this.fail = fail
+        this.exceptionClazz = exceptionClazz;
     }
     
     @Override
     public void start(Collection<? extends Location> locs) {
         if (fail) {
+            Exception e = exceptionClazz.getConstructor(String.class).newInstance("Simulating entity start failure for test");
+            throw e;
             throw new EntityStartException("Simulating entity start failure for test")
         }
     }

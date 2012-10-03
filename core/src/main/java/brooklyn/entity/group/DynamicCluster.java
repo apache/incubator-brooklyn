@@ -9,25 +9,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.EntityStartException;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
@@ -45,8 +50,16 @@ import com.google.common.collect.Maps;
 public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster.class);
 
+    @SetFromFlag("quarantineFailedEntities")
+    public static final ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = new BasicConfigKey<Boolean>(
+            Boolean.class, "dynamiccluster.quarantineFailedEntities", "Whether to guarantine entities that fail to start, or to try to clean them up", false);
+
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 
+    public static final BasicNotificationSensor<Entity> ENTITY_QUARANTINED = new BasicNotificationSensor<Entity>(Entity.class, "dynamiccluster.entityQuarantined", "Entity failed to start, and has been quarantined");
+
+    public static final AttributeSensor<Group> QUARANTINE_GROUP = new BasicAttributeSensor<Group>(Group.class, "dynamiccluster.quarantineGroup", "Group of quarantined entities that failed to start");
+    
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
     
@@ -113,13 +126,30 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         this.factory = factory;
     }
     
+    private boolean isQuarantineEnabled() {
+        return getConfig(QUARANTINE_FAILED_ENTITIES);
+    }
+    
+    private Group getQuarantineGroup() {
+        return getAttribute(QUARANTINE_GROUP);
+    }
+    
     public void start(Collection<? extends Location> locs) {
+        if (isQuarantineEnabled()) {
+            Group quarantineGroup = new BasicGroup(MutableMap.of("displayName", "quarantine"), this);
+            getManagementContext().manage(quarantineGroup);
+            setAttribute(QUARANTINE_GROUP, quarantineGroup);
+        }
+        
         Preconditions.checkNotNull(locs, "locations must be supplied");
         Preconditions.checkArgument(locs.size() == 1, "Exactly one location must be supplied");
         location = Iterables.getOnlyElement(locs);
         getLocations().add(location);
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         resize(getConfig(INITIAL_SIZE));
+        if (getCurrentSize() != getConfig(INITIAL_SIZE)) {
+            throw new IllegalStateException("On start of cluster "+this+", failed to get to initial size of "+getConfig(INITIAL_SIZE)+"; size is "+getCurrentSize());
+        }
         for (Policy it : getPolicies()) { it.resume(); }
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         setAttribute(SERVICE_UP, calculateServiceUp());
@@ -137,7 +167,10 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public void restart() {
         throw new UnsupportedOperationException();
     }
-
+    
+//    public Integer resize(Integer desiredSize) {
+//    }
+    
     public Integer resize(Integer desiredSize) {
         synchronized (mutex) {
             int currentSize = getCurrentSize();
@@ -148,29 +181,10 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 if (logger.isDebugEnabled()) logger.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
             }
     
-            Collection<Entity> addedEntities = Lists.newArrayList();
-            Collection<Entity> removedEntities = Lists.newArrayList();
-
             if (delta > 0) {
-                for (int i = 0; i < delta; i++) { addedEntities.add(addNode()); }
-                Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
-                for (Entity entity: addedEntities) {
-                    Map<String,?> args = ImmutableMap.of("locations", ImmutableList.of(location));
-                    tasks.put(entity, entity.invoke(Startable.START, args));
-                }
-                waitForTasksOnEntityStart(tasks);                
+                grow(delta);
             } else if (delta < 0) {
-                for (int i = 0; i < (delta*-1); i++) { removedEntities.add(removeNode()); }
-
-                Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
-                try {
-                    invoke.get();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw Throwables.propagate(e);
-                } catch (ExecutionException e) {
-                    throw Throwables.propagate(e);
-                }
+                shrink(delta);
             } else {
                 setAttribute(Changeable.GROUP_SIZE, currentSize);
             }
@@ -179,15 +193,71 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     }
 
     /**
+     * Increases the cluster size by the given number.
+     */
+    private void grow(int delta) {
+        Collection<Entity> addedEntities = Lists.newArrayList();
+        for (int i = 0; i < delta; i++) {
+            addedEntities.add(addNode());
+        }
+        Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
+        for (Entity entity: addedEntities) {
+            Map<String,?> args = ImmutableMap.of("locations", ImmutableList.of(location));
+            tasks.put(entity, entity.invoke(Startable.START, args));
+        }
+        Map<Entity, Throwable> errors = waitForTasksOnEntityStart(tasks);
+        
+        if (!errors.isEmpty()) {
+            if (isQuarantineEnabled()) {
+                quarantineFailedNodes(errors.keySet());
+            } else {
+                cleanupFailedNodes(errors.keySet());
+            }
+        }
+    }
+    
+    private void shrink(int delta) {
+        Collection<Entity> removedEntities = Lists.newArrayList();
+        
+        for (int i = 0; i < (delta*-1); i++) { removedEntities.add(removeNode()); }
+
+        Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
+        try {
+            invoke.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw Throwables.propagate(e);
+        } catch (ExecutionException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+    
+    private void quarantineFailedNodes(Collection<Entity> failedEntities) {
+        for (Entity entity : failedEntities) {
+            emit(ENTITY_QUARANTINED, entity);
+            getQuarantineGroup().addMember(entity);
+            removeMember(entity);
+        }
+    }
+    
+    private void cleanupFailedNodes(Collection<Entity> failedEntities) {
+        // TODO Could also call stop on them?
+        for (Entity entity : failedEntities) {
+            removeNode(entity);
+        }
+    }
+    
+    /**
      * Default impl is to be up when running, and !up otherwise.
      */
     protected boolean calculateServiceUp() {
         return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
     }
     
-    protected void waitForTasksOnEntityStart(Map<Entity,Task<?>> tasks) {
+    protected Map<Entity, Throwable> waitForTasksOnEntityStart(Map<Entity,Task<?>> tasks) {
         // TODO Could have CompoundException, rather than propagating first
-        Throwable toPropagate = null;
+        Map<Entity, Throwable> errors = Maps.newLinkedHashMap();
+        
         for (Map.Entry<Entity,Task<?>> entry : tasks.entrySet()) {
             Entity entity = entry.getKey();
             Task<?> task = entry.getValue();
@@ -198,18 +268,15 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                     throw unwrapException(t);
                 }
             } catch (InterruptedException e) {
+                // TODO This interrupt could have come from the task's thread, so don't want to interrupt this thread!
                 Thread.currentThread().interrupt();
                 throw Throwables.propagate(e);
             } catch (Throwable t) {
-                if (Throwables2.getFirstThrowableOfType(t, EntityStartException.class) != null) {
-                    logger.error("Cluster "+this+" failed to start entity "+entity, t);
-                    removeNode(entity);
-                } else {
-                    if (toPropagate == null) toPropagate = t;
-                }
+                logger.error("Cluster "+this+" failed to start entity "+entity, t);
+                errors.put(entity, t);
             }
         }
-        if (toPropagate != null) throw Throwables.propagate(toPropagate);
+        return errors;
     }
     
     protected Throwable unwrapException(Throwable e) {
