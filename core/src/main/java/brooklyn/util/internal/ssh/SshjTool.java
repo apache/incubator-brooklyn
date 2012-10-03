@@ -68,6 +68,7 @@ import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -139,13 +140,31 @@ public class SshjTool implements SshTool {
         return new Builder();
     }
     
+    private static void warnOnDeprecated(Map<String, ?> props, String deprecatedKey, String correctKey) {
+        if (props.containsKey(deprecatedKey)) {
+            if (correctKey != null && props.containsKey(correctKey)) {
+                Object dv = props.get(deprecatedKey);
+                Object cv = props.get(correctKey);
+                if (!Objects.equal(cv, dv)) {
+                    LOG.warn("SshjTool detected deprecated key '"+deprecatedKey+"' with different value ("+dv+") "+
+                            "than new key '"+correctKey+"' ("+cv+"); ambiguous which will be used");
+                } else {
+                    // ignore, the deprecated key populated for legacy reasons
+                }
+            } else {
+                Object dv = props.get(deprecatedKey);
+                LOG.warn("SshjTool detected deprecated key '"+deprecatedKey+"' used, with value ("+dv+")");     
+            }
+        }
+    }
+
     public static class Builder {
         private String host;
+        private int port = 22;
         private String user = System.getProperty("user.name");
         private String password;
-        private int port = 22;
-        public String privateKeyPassphrase;
         private String privateKeyData;
+        public String privateKeyPassphrase;
         private Set<String> privateKeyFiles = Sets.newLinkedHashSet();
         private boolean strictHostKeyChecking = false;
         private boolean allocatePTY = false;
@@ -159,23 +178,27 @@ public class SshjTool implements SshTool {
             host = getMandatoryVal(props, "host", String.class);
             port = getOptionalVal(props, "port", Integer.class, port);
             user = getOptionalVal(props, "user", String.class, user);
+            
             password = getOptionalVal(props, "password", String.class, password);
+            
+            warnOnDeprecated(props, "privateKey", "privateKeyData");
+            privateKeyData = getOptionalVal(props, "privateKey", String.class, privateKeyData);
+            privateKeyData = getOptionalVal(props, "privateKeyData", String.class, privateKeyData);
+            privateKeyPassphrase = getOptionalVal(props, "privateKeyPassphrase", String.class, privateKeyPassphrase);
+            
+            // for backwards compatibility accept keyFiles and privateKey
+            // but sshj accepts only a single privateKeyFile; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)
+            warnOnDeprecated(props, "keyFiles", null);
+            privateKeyFiles.addAll(getOptionalVal(props, "keyFiles", List.class, Collections.emptyList()));
+            String privateKeyFile = getOptionalVal(props, "privateKeyFile", String.class, null);
+            if (privateKeyFile != null) privateKeyFiles.add(privateKeyFile);
+            
             strictHostKeyChecking = getOptionalVal(props, "strictHostKeyChecking", Boolean.class, strictHostKeyChecking);
             allocatePTY = getOptionalVal(props, "allocatePTY", Boolean.class, allocatePTY);
             connectTimeout = getOptionalVal(props, "connectTimeout", Integer.class, connectTimeout);
             sessionTimeout = getOptionalVal(props, "sessionTimeout", Integer.class, sessionTimeout);
             sshTries = getOptionalVal(props, "sshTries", Integer.class, sshTries);
             sshRetryDelay = getOptionalVal(props, "sshRetryDelay", Long.class, sshRetryDelay);
-
-            privateKeyPassphrase = getOptionalVal(props, "privateKeyPassphrase", String.class, privateKeyPassphrase);
-            privateKeyData = getOptionalVal(props, "privateKey", String.class, privateKeyData);
-            privateKeyData = getOptionalVal(props, "privateKeyData", String.class, privateKeyData);
-
-            // for backwards compatibility accept keyFiles and privateKey
-            // but sshj accepts only a single privateKeyFile; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)
-            privateKeyFiles.addAll(getOptionalVal(props, "keyFiles", List.class, Collections.emptyList()));
-            String privateKeyFile = getOptionalVal(props, "privateKeyFile", String.class, null);
-            if (privateKeyFile != null) privateKeyFiles.add(privateKeyFile);
 
             return this;
         }

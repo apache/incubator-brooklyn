@@ -12,6 +12,7 @@ import static org.jclouds.scriptbuilder.domain.Statements.newStatementList;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.jclouds.Constants;
+import org.jclouds.ContextBuilder;
 import org.jclouds.aws.ec2.AWSEC2Client;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
@@ -227,7 +229,18 @@ public class JcloudsUtil {
                 new SshjSshClientModule(), 
                 new SLF4JLoggingModule(),
                 new BouncyCastleCryptoModule());
-        
+
+        // TODO update to new (jclouds 1.5) syntax
+        // this is the syntax, it's kinda hard to figure out,
+        // but nice enough once you know it!
+//        ComputeServiceContext computeServiceContext = ContextBuilder.newBuilder("aws-ec2").
+//                modules(Arrays.asList(new SshjSshClientModule(), new SLF4JLoggingModule())).
+//                credentials(identity, credential).
+//                overrides(properties).
+//                build(ComputeServiceContext.class);
+//        
+//        final ComputeService computeService = computeServiceContext.getComputeService();
+
         ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
         
         ComputeService computeService = computeServiceFactory
