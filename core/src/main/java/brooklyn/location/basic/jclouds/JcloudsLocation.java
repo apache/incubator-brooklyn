@@ -386,6 +386,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         public String setPrivateKeyData(String privateKeyData) {
             String oldPrivateKeyData = this.privateKeyData;
             this.privateKeyData = privateKeyData;
+            allconf.put("privateKeyData", privateKeyData);
             allconf.put("sshPrivateKeyData", privateKeyData);
             return oldPrivateKeyData;
         }
@@ -520,10 +521,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 } else {
                     LoginCredentials.Builder expectedCredentialsBuilder = LoginCredentials.builder().
                             user(user);
-                    if (pkd!=null) expectedCredentialsBuilder.noPassword().privateKey(pkd);
-                    else expectedCredentialsBuilder.noPrivateKey().password(pwd);
+                    if (pkd!=null) expectedCredentialsBuilder.privateKey(pkd);
+                    if (pwd!=null) expectedCredentialsBuilder.password(pwd);
                     expectedCredentials = expectedCredentialsBuilder.build();        
-//                            LoginCredentials.fromCredentials(new Credentials(user, pkd!=null ? pkd : pwd));
                 }
             }
             if (expectedCredentials != null)
@@ -724,35 +724,30 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
     private Map generateSshConfig(BrooklynJcloudsSetupHolder setup, NodeMetadata node) throws IOException {
         Map sshConfig = Maps.newLinkedHashMap();
-        if (truth(setup.allconf.get("sshPrivateKeyData"))) {
-            sshConfig.put("privateKey", setup.privateKeyData);
-            //                    sshConfig.put("privateKeyData", setup.allconf.get("sshPrivateKeyData"));
-            //                    sshConfig.put("sshPrivateKeyData", setup.allconf.get("sshPrivateKeyData"));
-        } else if (truth(getPrivateKeyFile())) {
-            sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
-        } else if (truth(getPrivateKeyFile())) {
-            sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
-        } else if (setup.password != null) {
+        
+        if (setup.password != null) {
             sshConfig.put("password", setup.password);
         } else if (node!=null && node.getCredentials().getPassword() != null) {
             sshConfig.put("password", node.getCredentials().getPassword());
         }
         
+        if (truth(setup.privateKeyData)) {
+            sshConfig.put("privateKeyData", setup.privateKeyData);
+        } else if (truth(setup.allconf.get("sshPrivateKeyData"))) {
+            LOG.warn("Using legacy sshPrivateKeyData but not privateKeyData");
+            Object d = setup.allconf.get("sshPrivateKeyData");
+            sshConfig.put("privateKeyData", d);
+            sshConfig.put("privateKey", d);
+            sshConfig.put("sshPrivateKeyData", d);
+        } else if (truth(getPrivateKeyFile())) {
+            LOG.warn("Using legacy keyFiles but not privateKeyData");
+            sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
+        }
+        
         if (truth(setup.allconf.get("privateKeyPassphrase"))) {
-            // TODO do we set this up correctly for jclouds to use?
+            // NB: not supported in jclouds
             sshConfig.put("privateKeyPassphrase", setup.privateKeyPassphrase);
         }
-
-//                if (truth(setup.allconf.get("sshPublicKeyData"))) {
-//                    sshConfig.put("sshPublicKeyData", setup.allconf.get("sshPublicKeyData"));
-//                }
-        
-//      if (truth(setup.allconf.get("sshPrivateKeyData"))) 
-//      sshLocByHostname.configure(MutableMap.of("sshPrivateKeyData", setup.allconf.get("sshPrivateKeyData")));
-//  if (truth(setup.allconf.get("sshPublicKeyData"))) 
-//      sshLocByHostname.configure(MutableMap.of("sshPublicKeyData", setup.allconf.get("sshPublicKeyData")));
-//      if (truth(setup.allconf.get("password"))) 
-//          sshLocByHostname.configure(MutableMap.of("password", setup.allconf.get("password")));
 
         return sshConfig;
     }
@@ -1088,16 +1083,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     
     private String getPublicHostnameAws(String ip, BrooklynJcloudsSetupHolder setup) {
         try {
-            Map sshConfig = Maps.newLinkedHashMap();
-            // TODO combine with above
-            if (truth(setup.password)) 
-                sshConfig.put("password", setup.password);
-            if (truth(setup.privateKeyData)) 
-                sshConfig.put("privateKeyData", setup.privateKeyData);
-            if (truth(setup.privateKeyPassphrase)) 
-                sshConfig.put("privateKeyPassphrase", setup.privateKeyPassphrase);
-            if (truth(getPrivateKeyFile())) 
-                sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
+            Map sshConfig = generateSshConfig(setup, null);
             
             // TODO messy way to get an SSH session 
             SshMachineLocation sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", setup.user, "config", sshConfig));

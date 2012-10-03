@@ -92,8 +92,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             "noStdoutLogging", "noStderrLogging", "logPrefix", "out", "err", "password", 
             "permissions", "sshTries", "env", "allocatePTY",
             "privateKeyPassphrase", "privateKeyFile", "privateKeyData", 
-            // would like to deprecate these -- prefer privateKeyData/privateKeyFile (confusion about whether other holds a file or data)
-            // hard to warn for these however ... perhaps just remove early in 0.5.0 ?
+            // deprecated in 0.4.0 -- prefer privateKeyData/privateKeyFile 
+            // (confusion about whether other holds a file or data; and public not useful here)
+            // they generate a warning where used 
             "keyFiles", "publicKey", "privateKey");
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");
