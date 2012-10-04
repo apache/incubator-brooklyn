@@ -65,6 +65,9 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         String saveAs  = "${basename}.tar.gz"
         List<String> commands = new LinkedList<String>();
         commands.add(CommonCommands.INSTALL_TAR);
+        commands.add(CommonCommands.installPackage("libgcc_s.so.1"))                   ;
+        commands.add(CommonCommands.installPackage("libaio.so.1"))
+        commands.add(CommonCommands.installPackage("libncurses.so.5"))
         commands.add("(which apt-get && "+CommonCommands.sudo("apt-get install libaio1")+") || echo skipping libaio installation");
         commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
         commands.add("tar xfvz ${saveAs}");
