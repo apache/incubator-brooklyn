@@ -49,38 +49,35 @@ public class TestUtils {
         }
     }
 
-    /** Connects to the given HTTP URL and asserts that the response had status code 200. */
+    /**
+     * Connects to the given HTTP URL and asserts that the response had status code 200.
+     * @deprecated Use HttpTestUtils.getHttpStatusCode(url) == 200
+     */
+    @Deprecated
     public static boolean urlRespondsWithStatusCode200(String url) {
-        def connection = connectToURL(url)
-        int status = ((HttpURLConnection) connection).getResponseCode()
+        int status = HttpTestUtils.getHttpStatusCode(url);
         log.debug "connection to {} gives {}", url, status
         if (status == 404)
             throw new Exception("Connection to $url gave 404");
         return status == 200
     }
     
-    /** Connects to the given HTTP URL and asserts that the response had status code 200. */
+    /** 
+     * Connects to the given HTTP URL and asserts that the response had status code 200.
+     * @deprecated Use HttpTestUtils.getHttpStatusCode(url)
+     */
+    @Deprecated
     public static int urlRespondsStatusCode(String url) {
-        def connection = connectToURL(url)
-        int status = ((HttpURLConnection) connection).getResponseCode()
-        log.debug "connection to {} gives {}", url, status
-        return status;
+        return HttpTestUtils.getHttpStatusCode(url);
     }
     
-    /** Connects to the given url and returns the connection. */
-    public static URLConnection connectToURL(String u) {
-        URL url = [u]
-        URLConnection connection = url.openConnection()
-        TrustingSslSocketFactory.configure(connection)
-        HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-            boolean verify(String s, SSLSession sslSession) {
-                return true;
-            }
-        });
-        connection.connect()
-
-        connection.getContentLength() // Make sure the connection is made.
-        return connection
+    /** 
+     * Connects to the given url and returns the connection.
+     * @deprecated Use HttpTestUtils.connectToUrl(url)
+     */
+    @Deprecated
+    public static URLConnection connectToURL(String url) {
+        return HttpTestUtils.connectToUrl(url);
     }
     
     // TODO calling groovy from java doesn't cope with generics here; stripping them :-( 
@@ -326,6 +323,10 @@ public class TestUtils {
         String contents;
         TimeDuration timeout = flags.timeout in Number ? flags.timeout*TimeUnit.MILLISECONDS : flags.timeout ?: 30*TimeUnit.SECONDS
         executeUntilSucceeds(timeout:timeout, maxAttempts:50) {
+            //URLConnection connection = connectToURL(url);
+            //connection.getContent();
+            //int status = ((HttpURLConnection) connection).getResponseCode()
+            def connection = connectToURL(url);
             contents = new URL(url).openStream().getText();
             assertTrue(contents!=null && contents.length()>0)
         }

@@ -1,7 +1,9 @@
 package brooklyn.entity.webapp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.util.List;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
@@ -17,15 +19,48 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         return (JavaWebAppSoftwareProcess) super.getEntity();
     }
 
+    protected boolean isProtocolEnabled(String protocol) {
+        List<String> protocols = getEnabledProtocols();
+        for (String contender : protocols) {
+            if (protocol.toLowerCase().equals(contender.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public List<String> getEnabledProtocols() {
+        return entity.getAttribute(JavaWebAppSoftwareProcess.ENABLED_PROTOCOLS);
+    }
+    
     @Override
     public Integer getHttpPort() {
         return entity.getAttribute(Attributes.HTTP_PORT);
     }
 
     @Override
+    public Integer getHttpsPort() {
+        return entity.getAttribute(Attributes.HTTPS_PORT);
+    }
+
+    protected String inferRootUrl() {
+        if (isProtocolEnabled("https")) {
+            int port = getHttpsPort();
+            checkNotNull(port, "HTTPS_PORT sensors not set; is an acceptable port available?");
+            return String.format("https://%s:%s/", getHostname(), port);
+        } else if (isProtocolEnabled("http")) {
+            int port = getHttpPort();
+            checkNotNull(port, "HTTP_PORT sensors not set; is an acceptable port available?");
+            return String.format("http://%s:%s/", getHostname(), port);
+        } else {
+            throw new IllegalStateException("HTTP and HTTPS protocols not enabled for "+entity+"; enabled protocols are "+getEnabledProtocols());
+        }
+    }
+    
+    @Override
     public void postLaunch() {
-        assert getHttpPort() != null : "HTTP_PORT sensor not set; is an acceptable port available?";
-        String rootUrl = String.format("http://%s:%s/", getHostname(), getHttpPort());
+        String rootUrl = inferRootUrl();
         entity.setAttribute(WebAppService.ROOT_URL, rootUrl);
     }
 

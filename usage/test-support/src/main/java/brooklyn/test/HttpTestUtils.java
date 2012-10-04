@@ -7,8 +7,18 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Map;
 import java.util.NoSuchElementException;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -24,9 +34,32 @@ public class HttpTestUtils {
 
 	// TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
 	// and deprecate methods in TestUtils until deleted).
-	
-    public static int getHttpStatusCode(String url) {
-        return TestUtils.urlRespondsStatusCode(url);
+
+    protected static final Logger LOG = LoggerFactory.getLogger(HttpTestUtils.class);
+
+    /**
+     * Connects to the given url and returns the connection.
+     */
+    public static URLConnection connectToUrl(String u) throws Exception {
+        URL url = new URL(u);
+        URLConnection connection = url.openConnection();
+        TrustingSslSocketFactory.configure(connection);
+        HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+            @Override public boolean verify(String s, SSLSession sslSession) {
+                return true;
+            }
+        });
+        connection.connect();
+
+        connection.getContentLength(); // Make sure the connection is made.
+        return connection;
+    }
+
+    public static int getHttpStatusCode(String url) throws Exception {
+        URLConnection connection = connectToUrl(url);
+        int status = ((HttpURLConnection) connection).getResponseCode();
+        LOG.debug("connection to {} gives {}", url, status);
+        return status;
     }
 
     public static void assertUrlUnreachable(String url) {
@@ -118,10 +151,10 @@ public class HttpTestUtils {
     // TODO Part-duplicated from jclouds Throwables2
     @SuppressWarnings("unchecked")
     private static <T extends Throwable> T getFirstThrowableOfType(Throwable from, Class<T> clazz) {
-       try {
-          return (T) find(getCausalChain(from), instanceOf(clazz));
-       } catch (NoSuchElementException e) {
-          return null;
-       }
+        try {
+            return (T) find(getCausalChain(from), instanceOf(clazz));
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 }
