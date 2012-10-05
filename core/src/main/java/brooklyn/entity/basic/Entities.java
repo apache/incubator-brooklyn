@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -135,6 +136,7 @@ public class Entities {
                 out.append("\n");
             }
 		}
+		
 		for (Sensor<?> it : sortSensors(e.getEntityType().getSensors())) {
 			if (it instanceof AttributeSensor) {
                 Object v = e.getAttribute((AttributeSensor<?>)it);
@@ -147,9 +149,19 @@ public class Entities {
                 }
 			}
 		}
+		
+		if (e instanceof Group) {
+		    StringBuilder members = new StringBuilder();
+    		for (Entity it : ((Group)e).getMembers()) {
+                members.append(it.getId()+", ");
+            }
+    		out.append(currentIndentation+tab+tab+"Members: "+members.toString()+"\n");
+		}
+		
 		for (Entity it : e.getOwnedChildren()) {
 			dumpInfo(it, out, currentIndentation+tab, tab);
 		}
+		
 		out.flush();
 	}
 

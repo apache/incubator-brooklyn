@@ -45,6 +45,11 @@ public interface EntityMemento extends TreeNode, Memento {
     public List<String> getLocations();
 
     /**
+     * The ids of the policies of this entity.
+     */
+    public Collection<String> getPolicies();
+
+    /**
      * A (weakly-typed) property set for this memento.
      * These can be used to avoid sub-classing the entity memento, but developers can sub-class to get strong typing if desired.
      */

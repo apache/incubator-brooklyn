@@ -15,10 +15,12 @@ import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -32,7 +34,11 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     private final Collection<String> topLevelLocationIds = Sets.newLinkedHashSet();
     private final Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
     private final Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
+    private final Map<String, PolicyMemento> policies = Maps.newLinkedHashMap();
 
+    // FIXME Delete this if definitely not needed
+    private final boolean maintainIntegrity = false;
+    
     public MutableBrooklynMemento() {
     }
     
@@ -51,29 +57,43 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         }
     }
 
+    public void updateEntityMemento(EntityMemento memento) {
+        updateEntityMementos(ImmutableSet.of(memento));
+    }
+    
+    public void updateLocationMemento(LocationMemento memento) {
+        updateLocationMementos(ImmutableSet.of(memento));
+    }
+    
+    public void updatePolicyMemento(PolicyMemento memento) {
+        updatePolicyMementos(ImmutableSet.of(memento));
+    }
+    
     public void updateEntityMementos(Collection<EntityMemento> mementos) {
         // TODO Could check parents exist etc before making modifications, rather than throwing to leave in inconsistent state!
         
-        for (EntityMemento entityMemento : mementos) {
-            entities.put(entityMemento.getId(), entityMemento);
+        for (EntityMemento memento : mementos) {
+            entities.put(memento.getId(), memento);
             
-            if (entityMemento.getParent() == null) {
+            if (memento.getParent() == null) {
                 // FIXME assume it's an app?!
-                applicationIds.add(entityMemento.getId());
+                applicationIds.add(memento.getId());
             }
         }
         
         // Maintains referential integrity: if adding new mementos, ensure parent refs are updated
-        for (EntityMemento entityMemento : mementos) {
-            String entityId = entityMemento.getId();
-            String parentId = entityMemento.getParent();
-            EntityMemento parentMemento = entities.get(parentId);
-            
-            if (parentId == null) continue;
-            if (parentMemento == null) continue; // rely on subsequent validation (or more mods being made)
-            if (!parentMemento.getChildren().contains(entityId)) {
-                EntityMemento updatedParent = BasicEntityMemento.builder().from(parentMemento).addChild(entityId).build();
-                entities.put(parentId, updatedParent);
+        if (maintainIntegrity) {
+            for (EntityMemento entityMemento : mementos) {
+                String entityId = entityMemento.getId();
+                String parentId = entityMemento.getParent();
+                EntityMemento parentMemento = entities.get(parentId);
+                
+                if (parentId == null) continue;
+                if (parentMemento == null) continue; // rely on subsequent validation (or more mods being made)
+                if (!parentMemento.getChildren().contains(entityId)) {
+                    EntityMemento updatedParent = BasicEntityMemento.builder().from(parentMemento).addChild(entityId).build();
+                    entities.put(parentId, updatedParent);
+                }
             }
         }
     }
@@ -88,17 +108,25 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         }
         
         // Maintains referential integrity: if adding new mementos, ensure parent refs are updated
-        for (LocationMemento locationMemento : mementos) {
-            String locationId = locationMemento.getId();
-            String parentId = locationMemento.getParent();
-            LocationMemento parentMemento = locations.get(parentId);
-            
-            if (parentId == null) continue;
-            if (parentMemento == null) continue; // rely on subsequent validation (or more mods being made)
-            if (!parentMemento.getChildren().contains(locationId)) {
-                LocationMemento updatedParent = BasicLocationMemento.builder().from(parentMemento).addChild(locationId).build();
-                locations.put(parentId, updatedParent);
+        if (maintainIntegrity) {
+            for (LocationMemento memento : mementos) {
+                String locationId = memento.getId();
+                String parentId = memento.getParent();
+                LocationMemento parentMemento = locations.get(parentId);
+                
+                if (parentId == null) continue;
+                if (parentMemento == null) continue; // rely on subsequent validation (or more mods being made)
+                if (!parentMemento.getChildren().contains(locationId)) {
+                    LocationMemento updatedParent = BasicLocationMemento.builder().from(parentMemento).addChild(locationId).build();
+                    locations.put(parentId, updatedParent);
+                }
             }
+        }
+    }
+    
+    public void updatePolicyMementos(Collection<PolicyMemento> mementos) {
+        for (PolicyMemento memento : mementos) {
+            policies.put(memento.getId(), memento);
         }
     }
     
@@ -118,16 +146,18 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         }
         
         // Maintains referential integrity: for parent of each removed entity, remove it as a child
-        for (EntityMemento entityMemento : removedMementos) {
-            String entityId = entityMemento.getId();
-            String parentId = entityMemento.getParent();
-            EntityMemento parentMemento = entities.get(parentId);
-            
-            if (parentId == null) continue;
-            if (parentMemento == null) continue;
-            if (parentMemento.getChildren().contains(entityId)) {
-                EntityMemento updatedParent = BasicEntityMemento.builder().from(parentMemento).removeChild(entityId).build();
-                entities.put(parentId, updatedParent);
+        if (maintainIntegrity) {
+            for (EntityMemento entityMemento : removedMementos) {
+                String entityId = entityMemento.getId();
+                String parentId = entityMemento.getParent();
+                EntityMemento parentMemento = entities.get(parentId);
+                
+                if (parentId == null) continue;
+                if (parentMemento == null) continue;
+                if (parentMemento.getChildren().contains(entityId)) {
+                    EntityMemento updatedParent = BasicEntityMemento.builder().from(parentMemento).removeChild(entityId).build();
+                    entities.put(parentId, updatedParent);
+                }
             }
         }
     }
@@ -148,17 +178,28 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         }
         
         // Maintains referential integrity: for parent of each removed location, remove it as a child
-        for (LocationMemento locationMemento : removedMementos) {
-            String locationyId = locationMemento.getId();
-            String parentId = locationMemento.getParent();
-            LocationMemento parentMemento = locations.get(parentId);
-            
-            if (parentId == null) continue;
-            if (parentMemento == null) continue;
-            if (parentMemento.getChildren().contains(locationyId)) {
-                LocationMemento updatedParent = BasicLocationMemento.builder().from(parentMemento).removeChild(locationyId).build();
-                locations.put(parentId, updatedParent);
+        if (maintainIntegrity) {
+            for (LocationMemento locationMemento : removedMementos) {
+                String locationyId = locationMemento.getId();
+                String parentId = locationMemento.getParent();
+                LocationMemento parentMemento = locations.get(parentId);
+                
+                if (parentId == null) continue;
+                if (parentMemento == null) continue;
+                if (parentMemento.getChildren().contains(locationyId)) {
+                    LocationMemento updatedParent = BasicLocationMemento.builder().from(parentMemento).removeChild(locationyId).build();
+                    locations.put(parentId, updatedParent);
+                }
             }
+        }
+    }
+
+    /**
+     * Removes the entities with the given ids, and for each entity also removes all descendents.
+     */
+    public void removePolicies(Collection<String> ids) {
+        for (String id : ids) {
+            policies.remove(id);
         }
     }
 
@@ -198,6 +239,11 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     }
     
     @Override
+    public PolicyMemento getPolicyMemento(String id) {
+        return policies.get(id);
+    }
+    
+    @Override
     public Collection<String> getApplicationIds() {
         return ImmutableList.copyOf(applicationIds);
     }
@@ -213,6 +259,11 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     }
     
     @Override
+    public Collection<String> getPolicyIds() {
+        return Collections.unmodifiableSet(policies.keySet());
+    }
+    
+    @Override
     public Collection<String> getTopLevelLocationIds() {
         return Collections.unmodifiableCollection(topLevelLocationIds);
     }
@@ -225,5 +276,10 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     @Override
     public Map<String, LocationMemento> getLocationMementos() {
         return ImmutableMap.copyOf(locations);
+    }
+
+    @Override
+    public Map<String, PolicyMemento> getPolicyMementos() {
+        return ImmutableMap.copyOf(policies);
     }
 }

@@ -40,7 +40,6 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     }
 
     public static class Builder extends AbstractMemento.Builder<Builder> {
-        protected String type;
         protected Map<ConfigKey, Object> config = Maps.newLinkedHashMap();
         protected Map<AttributeSensor, Object> attributes = Maps.newLinkedHashMap();
         protected Set<ConfigKey> entityReferenceConfigs = Sets.newLinkedHashSet();
@@ -48,11 +47,11 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
         protected Set<ConfigKey> locationReferenceConfigs = Sets.newLinkedHashSet();
         protected Set<AttributeSensor> locationReferenceAttributes = Sets.newLinkedHashSet();
         protected List<String> locations = Lists.newArrayList();
+        protected List<String> policies = Lists.newArrayList();
         protected List<String> members = Lists.newArrayList();
         
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
-            type = other.getType();
             displayName = other.getDisplayName();
             config.putAll(other.getConfig());
             attributes.putAll(other.getAttributes());
@@ -61,6 +60,7 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
             locationReferenceConfigs.addAll(other.getLocationReferenceConfigs());
             locationReferenceAttributes.addAll(other.getLocationReferenceAttributes());
             locations.addAll(other.getLocations());
+            policies.addAll(other.getPolicies());
             members.addAll(other.getMembers());
             customProperties.putAll(other.getCustomProperties());
             return this;
@@ -78,6 +78,7 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     private Set<String> locationReferenceConfigs;
     private Set<String> locationReferenceAttributes;
     private List<String> locations;
+    private List<String> policies;
     private List<String> members;
     private Map<String, ConfigKey> configKeys;
     private Map<String, AttributeSensor> attributeKeys;
@@ -99,6 +100,7 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
         super(builder);
         type = builder.type;
         locations = Collections.unmodifiableList(builder.locations);
+        policies = Collections.unmodifiableList(builder.policies);
         members = Collections.unmodifiableList(builder.members);
         configByKey = Collections.unmodifiableMap(builder.config);
         attributesByKey = Collections.unmodifiableMap(builder.attributes);
@@ -221,6 +223,11 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     public Set<ConfigKey> getLocationReferenceConfigs() {
         if (locationReferenceConfigsByKey == null) postDeserialize();
         return locationReferenceConfigsByKey;
+    }
+    
+    @Override
+    public List<String> getPolicies() {
+        return policies;
     }
     
     @Override

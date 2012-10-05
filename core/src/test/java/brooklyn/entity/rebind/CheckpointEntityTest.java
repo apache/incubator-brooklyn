@@ -1,6 +1,5 @@
 package brooklyn.entity.rebind;
 
-import static brooklyn.entity.rebind.RebindTestUtils.rebind;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
@@ -11,6 +10,7 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -18,41 +18,41 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 public class CheckpointEntityTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(CheckpointEntityTest.class);
 
-    private ManagementContext origManagementContext;
-    private BrooklynMementoPersister persister;
+    private ClassLoader classLoader = getClass().getClassLoader();
+    private ManagementContext managementContext;
+    private File mementoDir;
     private MyApplication origApp;
     private MyEntity origE;
     
     @BeforeMethod
     public void setUp() throws Exception {
-        File file = File.createTempFile("brooklyn-memento", ".xml");
-        LOG.info("Writing brooklyn memento to "+file);
-        persister = new BrooklynMementoPersisterToFile(file, getClass().getClassLoader());
-//        persister = new BrooklynMementoPersisterInMemory(getClass().getClassLoader());
-        
-        origManagementContext = new LocalManagementContext();
-        origManagementContext.getRebindManager().setPersister(persister);
+        mementoDir = Files.createTempDir();
+        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
         origApp = new MyApplication();
         origE = new MyEntity(MutableMap.of("myconfig", "myval"), origApp);
-        origManagementContext.manage(origApp);
+        managementContext.manage(origApp);
     }
-    
+
+    @AfterMethod
+    public void tearDown() throws Exception {
+        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+    }
+
     @Test
     public void testAutoCheckpointsOnManageApp() throws Exception {
-        MyApplication newApp = (MyApplication) rebind(persister.loadMemento(), getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
         
         // Assert has expected entities and config
@@ -65,9 +65,9 @@ public class CheckpointEntityTest {
     @Test
     public void testAutoCheckpointsOnManageDynamicEntity() throws Exception {
         final MyEntity origE2 = new MyEntity(MutableMap.of("myconfig", "myval2"), origApp);
-        origManagementContext.manage(origE2);
+        managementContext.manage(origE2);
         
-        MyApplication newApp = (MyApplication) rebind(persister.loadMemento(), getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity newE2 = (MyEntity) Iterables.find(newApp.getOwnedChildren(), new Predicate<Entity>() {
                 @Override public boolean apply(@Nullable Entity input) {
                     return origE2.getId().equals(input.getId());
@@ -81,9 +81,9 @@ public class CheckpointEntityTest {
     
     @Test
     public void testAutoCheckpointsOnUnmanageEntity() throws Exception {
-        origManagementContext.unmanage(origE);
+        managementContext.unmanage(origE);
         
-        MyApplication newApp = (MyApplication) rebind(persister.loadMemento(), getClass().getClassLoader());
+        MyApplication newApp = rebind();
         
         // Assert does not container unmanaged entity
         assertEquals(ImmutableList.copyOf(newApp.getOwnedChildren()), Collections.emptyList());
@@ -94,13 +94,17 @@ public class CheckpointEntityTest {
     public void testPersistsOnExplicitCheckpointOfEntity() throws Exception {
         origE.setConfig(MyEntity.MY_CONFIG, "mynewval");
         origE.setAttribute(MyEntity.MY_SENSOR, "mysensorval");
-        origE.getManagementSupport().getManagementContext(false).getRebindManager().getChangeListener().onChanged(origE);
         
         // Assert persisted the modified config/attributes
-        MyApplication newApp = (MyApplication) rebind(persister.loadMemento(), getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "mynewval");
         assertEquals(newE.getAttribute(MyEntity.MY_SENSOR), "mysensorval");
+    }
+    
+    private MyApplication rebind() throws Exception {
+        RebindTestUtils.waitForPersisted(origApp);
+        return (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
 }

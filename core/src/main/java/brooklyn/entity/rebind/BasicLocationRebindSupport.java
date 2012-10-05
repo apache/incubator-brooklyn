@@ -69,18 +69,6 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         doReconsruct(rebindContext, memento);
     }
 
-    @Override
-    public void rebind(RebindContext rebindContext, LocationMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Rebinding location {}({})");
-    	
-        doRebind(rebindContext, memento);
-    }
-
-    @Override
-    public void managed() {
-        if (LOG.isTraceEnabled()) LOG.trace("Managed entity {}({})", new Object[] {location.getClass(), location.getId()});
-    }
-
     protected void addChildren(RebindContext rebindContext, LocationMemento memento) {
         for (String childId : memento.getChildren()) {
             Location child = rebindContext.getLocation(childId);
@@ -105,13 +93,6 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
      * For overriding, to give custom reconsruct behaviour.
      */
     protected void doReconsruct(RebindContext rebindContext, LocationMemento memento) {
-        // default is no-op
-    }
-    
-    /**
-     * For overriding, to give custom rebind behaviour.
-     */
-    protected void doRebind(RebindContext rebindContext, LocationMemento memento) {
         // default is no-op
     }
 }

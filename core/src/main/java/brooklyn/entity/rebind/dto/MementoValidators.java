@@ -1,12 +1,10 @@
 package brooklyn.entity.rebind.dto;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.TreeNode;
 
 public class MementoValidators {
@@ -47,37 +45,6 @@ public class MementoValidators {
                     throw new IllegalStateException("Child "+childId+" missing, for "+node);
                 }
             }
-        }
-    }
-
-    private static class EmptyBrooklynMemento implements BrooklynMemento {
-        private static final long serialVersionUID = 6869933736999244363L;
-
-        @Override public EntityMemento getEntityMemento(String id) {
-            return null;
-        }
-        @Override public LocationMemento getLocationMemento(String id) {
-            return null;
-        }
-        @Override public Collection<String> getApplicationIds() {
-            return Collections.emptySet();
-        }
-        @Override public Collection<String> getTopLevelLocationIds() {
-            return Collections.emptySet();
-        }
-        @Override public Collection<String> getEntityIds() {
-            return Collections.emptySet();
-        }
-        @Override public Collection<String> getLocationIds() {
-            return Collections.emptySet();
-        }
-        @Override
-        public Map<String, EntityMemento> getEntityMementos() {
-            return Collections.emptyMap();
-        }
-        @Override
-        public Map<String, LocationMemento> getLocationMementos() {
-            return Collections.emptyMap();
         }
     }
 }

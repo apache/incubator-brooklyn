@@ -4,10 +4,13 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.entity.rebind.Rebindable;
+import brooklyn.mementos.LocationMemento;
+
 /**
  *  Location.
  */
-public interface Location extends Serializable {
+public interface Location extends Serializable, Rebindable<LocationMemento> {
 
     /**
      * A unique id for this location.

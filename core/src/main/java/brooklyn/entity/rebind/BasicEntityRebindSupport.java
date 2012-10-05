@@ -13,6 +13,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.event.AttributeSensor;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.policy.basic.AbstractPolicy;
 
 import com.google.common.base.Throwables;
 
@@ -34,9 +35,11 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
         EntityMemento memento = MementosGenerators.newEntityMementoBuilder(entity).customProperties(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity {}({}): parent={}; children={}; locations={}; "+
-    	        "config={}; attributes={}; entityReferenceConfigs={}; entityReferenceAttributes={}; customProperties={}", 
+    	        "policies={}; members={}; config={}; attributes={}; entityReferenceConfigs={}; " +
+    	        "entityReferenceAttributes={}; customProperties={}", 
     			new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
-                memento.getLocations(), memento.getConfig(), memento.getAttributes(), memento.getEntityReferenceConfigs(), 
+                memento.getLocations(), memento.getPolicies(), memento.getMembers(), memento.getConfig(), 
+                memento.getAttributes(), memento.getEntityReferenceConfigs(), 
                 memento.getEntityReferenceAttributes(), memento.getCustomProperties()});
     	return memento;
     }
@@ -44,9 +47,11 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     @Override
     public void reconstruct(RebindContext rebindContext, EntityMemento memento) {
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity {}({}): parent={}; children={}; locations={}; " +
-    			"config={}; attributes={}; entityReferenceConfigs={}; entityReferenceAttributes={}; customProperties={}", 
+    	        "policies={}; members={}; config={}; attributes={}; entityReferenceConfigs={}; " +
+    	        "entityReferenceAttributes={}; customProperties={}", 
     	        new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
-    	        memento.getLocations(), memento.getConfig(), memento.getAttributes(), memento.getEntityReferenceConfigs(), 
+    	        memento.getLocations(), memento.getPolicies(), memento.getMembers(), memento.getConfig(), 
+    	        memento.getAttributes(), memento.getEntityReferenceConfigs(), 
     	        memento.getEntityReferenceAttributes(), memento.getCustomProperties()});
 
         // Note that the id should have been set in the constructor; it is immutable
@@ -85,45 +90,17 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
+        addPolicies(rebindContext, memento);
         addMembers(rebindContext, memento);
         addLocations(rebindContext, memento);
 
         doReconstruct(rebindContext, memento);
     }
     
-    @Override
-    public void rebind(RebindContext rebindContext, EntityMemento memento) {
-        if (LOG.isTraceEnabled()) LOG.trace("Rebinding entity {}({})", new Object[] {memento.getType(), memento.getId()});
-        
-        doRebind(rebindContext, memento);
-    }
-
-    @Override
-    public void managed() {
-        if (LOG.isTraceEnabled()) LOG.trace("Managed entity {}({})", new Object[] {entity.getClass(), entity.getId()});
-        
-        doManaged();
-    }
-
     /**
      * For overriding, to reconstruct other fields.
      */
     protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
-        // default is no-op
-    }
-    
-    /**
-     * For overriding, to give custom rebind behaviour.
-     */
-    protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
-        // default is no-op
-    }
-    
-    /**
-     * For overriding, to give custom behaviour when this entity (and all the other entities) have completed
-     * being rebound and are managed.
-     */
-    protected void doManaged() {
         // default is no-op
     }
     
@@ -161,6 +138,17 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     protected void addLocations(RebindContext rebindContext, EntityMemento memento) {
         for (String locationId : memento.getLocations()) {
             entity.getLocations().add(rebindContext.getLocation(locationId));
+        }
+    }
+    
+    protected void addPolicies(RebindContext rebindContext, EntityMemento memento) {
+        for (String policyId : memento.getPolicies()) {
+            AbstractPolicy policy = (AbstractPolicy) rebindContext.getPolicy(policyId);
+            if (policy == null) {
+                String msg = String.format("Policy %s not found for entity %s (with policies %s}", policyId, memento, memento.getPolicies());
+                throw new IllegalStateException(msg);
+            }
+            entity.addPolicy(policy);
         }
     }
 }

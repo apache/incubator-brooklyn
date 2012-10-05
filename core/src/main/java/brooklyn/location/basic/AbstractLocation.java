@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.rebind.RebindableLocation;
 import brooklyn.location.Location;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
@@ -37,7 +36,7 @@ import com.google.common.io.Closeables;
  * 
  * Override {@link #configure(Map)} to add special initialization logic.
  */
-public abstract class AbstractLocation implements Location, HasHostGeoInfo, RebindableLocation {
+public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
 
     @SetFromFlag
@@ -245,9 +244,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Rebi
 		leftoverProperties.putAll(locationProperties);
 	}
 	
-    /**
-     * Convenience for sub-classes that implement {@link RebindableLocation}.
-     */
+	@Override
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this);
     }

@@ -4,7 +4,6 @@ import groovy.transform.InheritConstructors;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -63,6 +62,8 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
                 log.debug("Group {} got new member {}", this, member);
 	            emit(MEMBER_ADDED, member);
 	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
+	            
+	            getManagementSupport().getEntityChangeListener().onMembersChanged();
 	        }
 	    }
     }
@@ -78,7 +79,10 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
                 log.debug("Group {} lost member {}", this, member);
 	            emit(MEMBER_REMOVED, member);
 	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
+	            
+	            getManagementSupport().getEntityChangeListener().onMembersChanged();
 	        }
+            
 	        return changed;
         }
     }
@@ -101,6 +105,8 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
                     addMember(m);
                 }
             }
+            
+            getManagementSupport().getEntityChangeListener().onMembersChanged();
         }
     }
  

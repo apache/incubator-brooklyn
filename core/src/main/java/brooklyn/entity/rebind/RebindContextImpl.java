@@ -4,7 +4,7 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
-import brooklyn.mementos.BrooklynMemento;
+import brooklyn.policy.Policy;
 
 import com.google.common.collect.Maps;
 
@@ -12,20 +12,23 @@ public class RebindContextImpl implements RebindContext {
 
     private final Map<String, Entity> entities = Maps.newLinkedHashMap();
     private final Map<String, Location> locations = Maps.newLinkedHashMap();
-    private final BrooklynMemento memento;
+    private final Map<String, Policy> policies = Maps.newLinkedHashMap();
     private final ClassLoader classLoader;
     
-    public RebindContextImpl(BrooklynMemento memento, ClassLoader classLoader) {
-        this.memento = memento;
+    public RebindContextImpl(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
 
-    public void registerEntity(String id, Entity entity) {
-        entities.put(id, entity);
+    public void registerEntity(Entity entity) {
+        entities.put(entity.getId(), entity);
     }
     
-    public void registerLocation(String id, Location location) {
-        locations.put(id, location);
+    public void registerLocation(Location location) {
+        locations.put(location.getId(), location);
+    }
+    
+    public void registerPolicy(Policy policy) {
+        policies.put(policy.getId(), policy);
     }
     
     @Override
@@ -36,6 +39,11 @@ public class RebindContextImpl implements RebindContext {
     @Override
     public Location getLocation(String id) {
         return locations.get(id);
+    }
+    
+    @Override
+    public Policy getPolicy(String id) {
+        return policies.get(id);
     }
     
     @Override

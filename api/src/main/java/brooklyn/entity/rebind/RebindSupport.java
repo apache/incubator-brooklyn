@@ -24,20 +24,4 @@ public interface RebindSupport<T extends Memento> {
      * Called before rebind.
      */
     public void reconstruct(RebindContext rebindContext, T memento);
-
-    /**
-     * Rebinds a re-constructed entity, to restore its state and connectivity, as it was when 
-     * the memento was created.
-     * 
-     * Called after reconstruct.
-     */
-    public void rebind(RebindContext rebindContext, T memento);
-    
-    /**
-     * Called after this entity (and all other entities/locations in the RebindContext) have completed 
-     * their rebind.
-     * 
-     * TODO Relationship with AbstractEntity.onManagementBecomingMaster
-     */
-    public void managed();
 }

@@ -11,6 +11,7 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 
 public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractConfigurableEntityFactory<T> {
@@ -45,5 +46,10 @@ public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractCo
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         s.defaultReadObject();
         clazz = (Class<T>) getClass().getClassLoader().loadClass(clazzName);
+    }
+    
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("type", clazzName).toString();
     }
 }

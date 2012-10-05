@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory
 import brooklyn.config.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.drivers.DriverDependentEntity
-import brooklyn.entity.rebind.BasicEntityRebindSupport
-import brooklyn.entity.rebind.RebindContext
 import brooklyn.entity.rebind.RebindSupport
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
@@ -415,20 +413,5 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		else throw new IllegalStateException("entity "+this+" not set up for operations (restart)")
         //if successfully restarts
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
-	}
-
-	@Override
-    public RebindSupport<EntityMemento> getRebindSupport() {
-        return new BasicEntityRebindSupport(this) {
-			@Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
-				// FIXME What to do if the entity is in a "starting" state from when it was serialized?
-				super.doRebind(rebindContext, memento);
-//				doRebind();
-			}
-            @Override public void doManaged() {
-                super.doManaged();
-//                doPostRebind();
-            }
-		};
 	}
 }

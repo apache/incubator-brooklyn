@@ -1,9 +1,9 @@
 package brooklyn.entity.rebind;
 
-import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.Memento;
 
-public interface Rebindable {
+public interface Rebindable<T extends Memento> {
 
-    public RebindSupport<EntityMemento> getRebindSupport();
+    public RebindSupport<T> getRebindSupport();
     
 }

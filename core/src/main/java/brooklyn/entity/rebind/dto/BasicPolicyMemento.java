@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.mementos.LocationMemento;
-import brooklyn.mementos.TreeNode;
+import brooklyn.mementos.PolicyMemento;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -20,7 +20,7 @@ import com.google.common.collect.Sets;
  * 
  * @author aled
  */
-public class BasicLocationMemento extends AbstractMemento implements LocationMemento, Serializable {
+public class BasicPolicyMemento implements PolicyMemento, Serializable {
 
     private static final long serialVersionUID = -4025337943126838761L;
     
@@ -28,37 +28,44 @@ public class BasicLocationMemento extends AbstractMemento implements LocationMem
         return new Builder();
     }
 
-    public static class Builder extends AbstractMemento.Builder<Builder> {
-        protected Map<String,Object> locationProperties = Maps.newLinkedHashMap();
+    public static class Builder {
+        protected String id;
+        protected String parent;
+        protected List<String> children = Lists.newArrayList();
+        protected String displayName;
+        protected String type;
         protected Map<String,Object> flags = Maps.newLinkedHashMap();
-        protected Set<String> locationReferenceFlags = Sets.newLinkedHashSet();
+        protected Map<String,Object> customProperties = Maps.newLinkedHashMap();
         
         public Builder from(LocationMemento other) {
-            super.from((TreeNode)other);
+            id = other.getId();
+            type = other.getType();
             displayName = other.getDisplayName();
-            locationProperties.putAll(other.getLocationProperties());
             flags.putAll(other.getFlags());
-            locationReferenceFlags.addAll(other.getLocationReferenceFlags());
             customProperties.putAll(other.getCustomProperties());
-            return self();
+            return this;
         }
-        public LocationMemento build() {
-            return new BasicLocationMemento(this);
+        public Builder customProperties(Map<String,?> vals) {
+            customProperties.putAll(vals); return this;
+        }
+        public PolicyMemento build() {
+            return new BasicPolicyMemento(this);
         }
     }
     
+    private String id;
     private String type;
-    private Map<String,Object> locationProperties;
+    private String displayName;
 	private Map<String,Object> flags;
-	private Set<String> locationReferenceFlags;
+    private Map<String,Object> customProperties;
 
     // Trusts the builder to not mess around with mutability after calling build()
-	protected BasicLocationMemento(Builder builder) {
-	    super(builder);
-	    type = builder.type;
-	    locationProperties = Collections.unmodifiableMap(builder.locationProperties);
+	protected BasicPolicyMemento(Builder builder) {
+        id = builder.id;
+        type = builder.type;
+        displayName = builder.displayName;
 	    flags = Collections.unmodifiableMap(builder.flags);
-	    locationReferenceFlags = Collections.unmodifiableSet(builder.locationReferenceFlags);
+	    customProperties = Collections.unmodifiableMap(builder.customProperties );
 	}
 	
     private <K,V> Map<K,V> createOfSameType(Map<K,V> orig) {
@@ -75,26 +82,36 @@ public class BasicLocationMemento extends AbstractMemento implements LocationMem
     	}
     }
     
+    @Override
+    public String getId() {
+        return id;
+    }
+    
 	@Override
     public String getType() {
         return type;
     }
     
     @Override
-    public Map<String,Object> getLocationProperties() {
-		return locationProperties;
-	}
-	
+    public String getDisplayName() {
+        return displayName;
+    }
+    
     @Override
     public Map<String, Object> getFlags() {
 		return flags;
 	}
     
     @Override
-    public Set<String> getLocationReferenceFlags() {
-    	return locationReferenceFlags;
+    public Object getCustomProperty(String name) {
+        return customProperties.get(name);
     }
     
+    @Override
+    public Map<String, ? extends Object> getCustomProperties() {
+        return customProperties;
+    }
+
     @Override
     public String toString() {
     	return Objects.toStringHelper(this).add("type", type).add("id", getId()).toString();

@@ -10,6 +10,8 @@ public interface BrooklynMemento extends Serializable {
 
     public LocationMemento getLocationMemento(String id);
     
+    public PolicyMemento getPolicyMemento(String id);
+    
     public Collection<String> getApplicationIds();
     
     public Collection<String> getTopLevelLocationIds();
@@ -18,7 +20,11 @@ public interface BrooklynMemento extends Serializable {
     
     public Collection<String> getLocationIds();
 
+    public Collection<String> getPolicyIds();
+
     public Map<String, EntityMemento> getEntityMementos();
 
     public Map<String, LocationMemento> getLocationMementos();
+
+    public Map<String, PolicyMemento> getPolicyMementos();
 }

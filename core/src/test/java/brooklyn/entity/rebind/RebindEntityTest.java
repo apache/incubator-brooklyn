@@ -1,18 +1,18 @@
 package brooklyn.entity.rebind;
 
-import static brooklyn.entity.rebind.RebindTestUtils.serializeAndRebind;
 import static brooklyn.test.EntityTestUtils.assertAttributeEquals;
 import static brooklyn.test.EntityTestUtils.assertConfigEquals;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotSame;
 import static org.testng.Assert.assertNull;
 
+import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -29,8 +29,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.mementos.BrooklynMemento;
+import brooklyn.management.ManagementContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestEntity;
@@ -43,23 +42,34 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 public class RebindEntityTest {
 
     // FIXME Add test about dependent configuration serialization?!
     
+    private ClassLoader classLoader = getClass().getClassLoader();
+    private ManagementContext managementContext;
     private MyApplication origApp;
-
+    private File mementoDir;
+    
     @BeforeMethod
     public void setUp() throws Exception {
+        mementoDir = Files.createTempDir();
+        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
         origApp = new MyApplication();
     }
-    
+
+    @AfterMethod
+    public void tearDown() throws Exception {
+        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+    }
+
     @Test
     public void testRestoresSimpleApp() throws Exception {
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         assertNotSame(newApp, origApp);
         assertEquals(newApp.getId(), origApp.getId());
     }
@@ -68,9 +78,9 @@ public class RebindEntityTest {
     public void testRestoresEntityHierarchy() throws Exception {
         MyEntity origE = new MyEntity(origApp);
         MyEntity origE2 = new MyEntity(origE);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
 
         // Assert has expected config/fields
         assertEquals(newApp.getId(), origApp.getId());
@@ -96,9 +106,9 @@ public class RebindEntityTest {
         BasicGroup origG = new BasicGroup(origApp);
         origG.addMember(origE);
         origG.addMember(origE2);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         
         BasicGroup newG = (BasicGroup) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(BasicGroup.class));
         Iterable<Entity> newEs = Iterables.filter(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
@@ -108,9 +118,9 @@ public class RebindEntityTest {
     @Test
     public void testRestoresEntityConfig() throws Exception {
         MyEntity origE = new MyEntity(MutableMap.of("myconfig", "myval"), origApp);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myval");
     }
@@ -120,10 +130,10 @@ public class RebindEntityTest {
         AttributeSensor<String> myCustomAttribute = new BasicAttributeSensor<String>(String.class, "my.custom.attribute");
         
         MyEntity origE = new MyEntity(origApp);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         origE.setAttribute(myCustomAttribute, "myval");
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getAttribute(myCustomAttribute), "myval");
     }
@@ -132,9 +142,9 @@ public class RebindEntityTest {
     public void testRestoresEntityIdAndDisplayName() throws Exception {
         MyEntity origE = new MyEntity(MutableMap.of("displayName", "mydisplayname"), origApp);
         String eId = origE.getId();
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getId(), eId);
         assertEquals(newE.getDisplayName(), "mydisplayname");
@@ -143,20 +153,20 @@ public class RebindEntityTest {
     @Test
     public void testCanCustomizeRebind() throws Exception {
         MyEntity2 origE = new MyEntity2(MutableMap.of("myfield", "myval"), origApp);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
+        
         MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity2.class));
-        assertEquals(newE.rebound, true);
         assertEquals(newE.myfield, "myval");
     }
     
     @Test
     public void testRebindsSubscriptions() throws Exception {
         MyEntity2 origE = new MyEntity2(MutableMap.of("subscribe", true), origApp);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity2.class));
         
         newApp.setAttribute(MyApplication.MY_SENSOR, "mysensorval");
@@ -172,9 +182,9 @@ public class RebindEntityTest {
                         .build(),
                 origApp);
         origE.setAttribute(MyEntityReffingOthers.ENTITY_REF_SENSOR, origOtherE);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
         MyEntity newOtherE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
         
@@ -191,10 +201,10 @@ public class RebindEntityTest {
                         .build(),
                 origApp);
         origE.setAttribute(MyEntityReffingOthers.LOCATION_REF_SENSOR, origLoc);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         origApp.start(ImmutableList.of(origLoc));
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
         MyLocation newLoc = (MyLocation) Iterables.getOnlyElement(newApp.getLocations());
         
@@ -203,52 +213,52 @@ public class RebindEntityTest {
     }
 
     // FIXME Test is broken, because RebindManager now calls manage
-    @Test(enabled=false)
-    public void testEntityUnmanagedDuringRebind() throws Exception {
-        MyEntity origE = new MyEntity(MutableMap.of("subscribe", true), origApp);
-        new LocalManagementContext().manage(origApp);
-
-        // Serialize and rebind, but don't yet manage the app
-        BrooklynMemento memento = origApp.getManagementContext().getRebindManager().getMemento();
-        LocalManagementContext managementContext = new LocalManagementContext();
-        MyApplication newApp = (MyApplication) managementContext.getRebindManager().rebind(memento, getClass().getClassLoader()).get(0);
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
-        
-        // Entities should not be available yet (i.e. not managed)
-        assertNull(managementContext.getEntity(origApp.getId()));
-        assertNull(managementContext.getEntity(origE.getId()));
-
-        // When we manage the app, then the entities will be available
-        managementContext.manage(newApp);
-        assertEquals(managementContext.getEntity(origApp.getId()), newApp);
-        assertEquals(managementContext.getEntity(origE.getId()), newE);
-    }
-    
-    // FIXME Alex is looking at the "brooklyn management start sequence"
-    @Test(enabled=false, groups="WIP")
-    public void testSubscriptionAndPublishingNotActiveUntilAppIsManaged() throws Exception {
-        MyEntity2 origE = new MyEntity2(MutableMap.of("subscribe", true), origApp);
-        new LocalManagementContext().manage(origApp);
-        
-        // Serialize and rebind, but don't yet manage the app
-        BrooklynMemento memento = origApp.getManagementContext().getRebindManager().getMemento();
-        LocalManagementContext managementContext = new LocalManagementContext();
-        MyApplication newApp = (MyApplication) managementContext.getRebindManager().rebind(memento, getClass().getClassLoader()).get(0);
-        MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity2.class));
-
-        // Publishing before managed: should not be received by subscriber
-        newApp.setAttribute(MyApplication.MY_SENSOR, "mysensorval");
-        TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(newE.events), Predicates.equalTo(Collections.emptyList()));
-    }
+//    @Test(enabled=false)
+//    public void testEntityUnmanagedDuringRebind() throws Exception {
+//        MyEntity origE = new MyEntity(MutableMap.of("subscribe", true), origApp);
+//        managementContext.manage(origApp);
+//
+//        // Serialize and rebind, but don't yet manage the app
+//        BrooklynMemento memento = origApp.getManagementContext().getRebindManager().getMemento();
+//        LocalManagementContext managementContext = new LocalManagementContext();
+//        MyApplication newApp = (MyApplication) managementContext.getRebindManager().rebind(memento, getClass().getClassLoader()).get(0);
+//        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+//        
+//        // Entities should not be available yet (i.e. not managed)
+//        assertNull(managementContext.getEntity(origApp.getId()));
+//        assertNull(managementContext.getEntity(origE.getId()));
+//
+//        // When we manage the app, then the entities will be available
+//        managementContext.manage(newApp);
+//        assertEquals(managementContext.getEntity(origApp.getId()), newApp);
+//        assertEquals(managementContext.getEntity(origE.getId()), newE);
+//    }
+//    
+//    // FIXME Alex is looking at the "brooklyn management start sequence"
+//    @Test(enabled=false, groups="WIP")
+//    public void testSubscriptionAndPublishingNotActiveUntilAppIsManaged() throws Exception {
+//        MyEntity2 origE = new MyEntity2(MutableMap.of("subscribe", true), origApp);
+//        managementContext.manage(origApp);
+//        
+//        // Serialize and rebind, but don't yet manage the app
+//        BrooklynMemento memento = origApp.getManagementContext().getRebindManager().getMemento();
+//        LocalManagementContext managementContext = new LocalManagementContext();
+//        MyApplication newApp = (MyApplication) managementContext.getRebindManager().rebind(memento, getClass().getClassLoader()).get(0);
+//        MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity2.class));
+//
+//        // Publishing before managed: should not be received by subscriber
+//        newApp.setAttribute(MyApplication.MY_SENSOR, "mysensorval");
+//        TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(newE.events), Predicates.equalTo(Collections.emptyList()));
+//    }
     
     @Test
     public void testRestoresConfigKeys() throws Exception {
         TestEntity origE = new TestEntity(origApp);
         origE.setConfig(TestEntity.CONF_LIST_PLAIN, ImmutableList.of("val1", "val2"));
         origE.setConfig(TestEntity.CONF_MAP_PLAIN, ImmutableMap.of("akey", "aval"));
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_LIST_PLAIN), ImmutableList.of("val1", "val2"));
@@ -261,9 +271,9 @@ public class RebindEntityTest {
         TestEntity origE = new TestEntity(origApp);
         origE.setConfig(TestEntity.CONF_LIST_THING.subKey(), "val1");
         origE.setConfig(TestEntity.CONF_LIST_THING.subKey(), "val2");
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("val1", "val2"));
@@ -274,9 +284,9 @@ public class RebindEntityTest {
         TestEntity origE = new TestEntity(origApp);
         origE.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval");
         origE.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval");
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_THING), ImmutableMap.of("akey", "aval", "bkey", "bval"));
@@ -286,10 +296,10 @@ public class RebindEntityTest {
     public void testRebindPreservesInheritedConfig() throws Exception {
         MyEntity origE = new MyEntity(origApp);
         origApp.setConfig(MyEntity.MY_CONFIG, "myValInSuper");
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
 
         // rebind: inherited config is preserved
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
@@ -303,23 +313,42 @@ public class RebindEntityTest {
         
     }
 
-    // FIXME Fails because newE has the config explicitly set to null, rather than no entry for the config key
-    @Test(enabled=false, groups="WIP")
+    @Test
     public void testRebindPreservesGetConfigWithDefault() throws Exception {
         MyEntity origE = new MyEntity(origApp);
-        new LocalManagementContext().manage(origApp);
+        managementContext.manage(origApp);
 
         assertNull(origE.getConfig(MyEntity.MY_CONFIG));
         assertEquals(origE.getConfig(MyEntity.MY_CONFIG, "mydefault"), "mydefault");
         
-        MyApplication newApp = (MyApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        MyApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertNull(newE.getConfig(MyEntity.MY_CONFIG));
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG, "mydefault"), "mydefault");
     }
 
-    public static class MyApplication extends AbstractApplication implements Rebindable {
+    @Test
+    public void testRebindPersistsNullAttribute() throws Exception {
+        MyEntity origE = new MyEntity(origApp);
+        origE.setAttribute(MyEntity.MY_SENSOR, null);
+        managementContext.manage(origApp);
+
+        assertNull(origE.getAttribute(MyEntity.MY_SENSOR));
+
+        MyApplication newApp = rebind();
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        
+        assertNull(newE.getAttribute(MyEntity.MY_SENSOR));
+    }
+
+    private MyApplication rebind() throws Exception {
+        RebindTestUtils.waitForPersisted(origApp);
+        RebindTestUtils.checkCurrentMementoSerializable(origApp);
+        return (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+    }
+    
+    public static class MyApplication extends AbstractApplication {
         private static final long serialVersionUID = 1L;
         
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
@@ -333,7 +362,7 @@ public class RebindEntityTest {
         }
     }
     
-    public static class MyEntity extends AbstractEntity implements Rebindable, Startable {
+    public static class MyEntity extends AbstractEntity implements Startable {
         private static final long serialVersionUID = 1L;
         
         @SetFromFlag("myconfig")
@@ -367,7 +396,7 @@ public class RebindEntityTest {
         }
     }
     
-    public static class MyEntityReffingOthers extends AbstractEntity implements Rebindable {
+    public static class MyEntityReffingOthers extends AbstractEntity {
         private static final long serialVersionUID = 1L;
         
         @SetFromFlag("entityRef")
@@ -395,7 +424,7 @@ public class RebindEntityTest {
         }
     }
     
-    public static class MyEntity2 extends AbstractEntity implements Rebindable {
+    public static class MyEntity2 extends AbstractEntity {
         private static final long serialVersionUID = 1L;
         
         @SetFromFlag("myconfig")
@@ -409,14 +438,23 @@ public class RebindEntityTest {
         @SetFromFlag
         String myfield;
         
-        boolean rebound;
-
         final List<String> events = new CopyOnWriteArrayList<String>();
 
         private final Object dummy = new Object(); // so not serializable
 
         public MyEntity2(Map flags, Entity owner) {
             super(flags, owner);
+        }
+        
+        @Override
+        public void onManagementStarting() {
+            if (getConfig(SUBSCRIBE)) {
+                subscribe(getApplication(), MyApplication.MY_SENSOR, new SensorEventListener<String>() {
+                    @Override public void onEvent(SensorEvent<String> event) {
+                        events.add(event.getValue());
+                    }
+                });
+            }
         }
         
         @Override
@@ -429,19 +467,6 @@ public class RebindEntityTest {
                 @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
                     super.doReconstruct(rebindContext, memento);
                     myfield = (String) memento.getCustomProperty("myfield");
-                }
-                @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
-                    super.doRebind(rebindContext, memento);
-                    
-                    if (getConfig(SUBSCRIBE)) {
-                        subscribe(getApplication(), MyApplication.MY_SENSOR, new SensorEventListener<String>() {
-                            @Override public void onEvent(SensorEvent<String> event) {
-                                events.add(event.getValue());
-                            }
-                        });
-                    }
-                    
-                    rebound = true;
                 }
             };
         }

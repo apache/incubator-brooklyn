@@ -16,6 +16,7 @@ public class AbstractMemento implements Memento, TreeNode, Serializable {
 
     protected static abstract class Builder<B extends Builder> {
         protected String id;
+        protected String type;
         protected String parent;
         protected List<String> children = Lists.newArrayList();
         protected String displayName;
@@ -34,6 +35,9 @@ public class AbstractMemento implements Memento, TreeNode, Serializable {
         public B id(String val) {
             id = val; return self();
         }
+        public B type(String val) {
+            type = val; return self();
+        }
         public B parent(String val) {
             parent = val; return self();
         }
@@ -42,9 +46,6 @@ public class AbstractMemento implements Memento, TreeNode, Serializable {
         }
         public B displayName(String val) {
             displayName = val; return self();
-        }
-        public B displayName(Map<String, Object> val) {
-            customProperties = val; return self();
         }
         public B addChild(String id) {
             children.add(id); return self();

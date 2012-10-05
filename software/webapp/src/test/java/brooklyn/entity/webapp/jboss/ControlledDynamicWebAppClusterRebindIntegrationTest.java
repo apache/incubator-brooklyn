@@ -1,12 +1,12 @@
 package brooklyn.entity.webapp.jboss;
 
-import static brooklyn.entity.rebind.RebindTestUtils.serializeAndRebind;
 import static brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -22,8 +22,10 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.proxy.nginx.NginxController;
+import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.MutableMap;
@@ -32,6 +34,7 @@ import brooklyn.util.internal.TimeExtras;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(ControlledDynamicWebAppClusterRebindIntegrationTest.class);
@@ -45,10 +48,17 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     private List<WebAppMonitor> webAppMonitors = new CopyOnWriteArrayList<WebAppMonitor>();
 	private ExecutorService executor;
     
+    private ClassLoader classLoader = getClass().getClassLoader();
+    private LocalManagementContext origManagementContext;
+    private File mementoDir;
+    
     @BeforeMethod(groups = "Integration")
     public void setUp() {
     	String warPath = "hello-world.war";
         warUrl = checkNotNull(getClass().getClassLoader().getResource(warPath), "warUrl");
+
+        mementoDir = Files.createTempDir();
+        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         origApp = new TestApplication();
@@ -62,7 +72,17 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         }
         if (executor != null) executor.shutdownNow();
         if (newApp != null) newApp.stop();
-        if (origApp != null) origApp.stop();
+        if (origApp != null && origApp.getManagementSupport().getManagementContext(true).isManaged(origApp)) origApp.stop();
+        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+    }
+
+    private TestApplication rebind() throws Exception {
+        RebindTestUtils.waitForPersisted(origApp);
+        
+        // Stop the old management context, so original nginx won't interfere
+        origManagementContext.terminate();
+        
+        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
 
     private WebAppMonitor newWebAppMonitor(String url) {
@@ -94,7 +114,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         WebAppMonitor monitor = newWebAppMonitor(rootUrl);
         
         // Rebind
-        newApp = (TestApplication) serializeAndRebind(origApp, getClass().getClassLoader());
+        newApp = rebind();
         NginxController newNginx = (NginxController) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(NginxController.class));
         ControlledDynamicWebAppCluster newCluster = (ControlledDynamicWebAppCluster) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(ControlledDynamicWebAppCluster.class));
 

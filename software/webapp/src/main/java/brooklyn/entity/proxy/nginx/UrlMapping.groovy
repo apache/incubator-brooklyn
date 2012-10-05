@@ -8,8 +8,6 @@ import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
-import brooklyn.entity.rebind.BasicEntityRebindSupport
-import brooklyn.entity.rebind.RebindContext
 import brooklyn.entity.rebind.RebindSupport
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.WebAppService
@@ -184,15 +182,5 @@ public class UrlMapping extends AbstractGroup {
         }
         
         recomputeAddresses();
-    }
-    
-    @Override
-    public RebindSupport<EntityMemento> getRebindSupport() {
-        return new BasicEntityRebindSupport(this) {
-            @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
-                super.doRebind(rebindContext, memento);
-                //doRebind();
-            }
-        };
     }
 }

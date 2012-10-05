@@ -9,16 +9,15 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.rebind.MementoTransformer;
-import brooklyn.entity.rebind.Rebindable;
-import brooklyn.entity.rebind.RebindableLocation;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.mementos.PolicyMemento;
+import brooklyn.policy.Policy;
 import brooklyn.util.flags.FlagUtils;
 
 public class MementosGenerators {
@@ -35,12 +34,12 @@ public class MementosGenerators {
             builder.applicationIds.add(app.getId());
         }
         for (Entity entity : managementContext.getEntities()) {
-            builder.entities.put(entity.getId(), ((Rebindable)entity).getRebindSupport().getMemento());
+            builder.entities.put(entity.getId(), entity.getRebindSupport().getMemento());
             
             for (Location location : entity.getLocations()) {
                 if (!builder.locations.containsKey(location.getId())) {
                     for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
-                        builder.locations.put(locationInHierarchy.getId(), ((RebindableLocation)locationInHierarchy).getRebindSupport().getMemento());
+                        builder.locations.put(locationInHierarchy.getId(), locationInHierarchy.getRebindSupport().getMemento());
                     }
                 }
             }
@@ -85,21 +84,19 @@ public class MementosGenerators {
             builder.config.put(key, transformedValue); 
         }
         
-        for (Sensor<?> key : entity.getEntityType().getSensors()) {
-            if (key instanceof AttributeSensor) {
-                Object value = entity.getAttribute((AttributeSensor<?>)key);
-                Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
+        for (Map.Entry<AttributeSensor, Object> entry : ((AbstractEntity)entity).getAllAttributes().entrySet()) {
+            AttributeSensor<?> key = entry.getKey();
+            Object value = entry.getValue();
+            Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
+            if (transformedValue != value) {
+                builder.entityReferenceAttributes.add((AttributeSensor<?>)key);
+            } else {
+                transformedValue = MementoTransformer.transformLocationsToIds(value);
                 if (transformedValue != value) {
-                    builder.entityReferenceAttributes.add((AttributeSensor<?>)key);
-                } else {
-                    transformedValue = MementoTransformer.transformLocationsToIds(value);
-                    if (transformedValue != value) {
-                        builder.locationReferenceAttributes.add((AttributeSensor) key);
-                    }
+                    builder.locationReferenceAttributes.add((AttributeSensor) key);
                 }
-                builder.attributes.put((AttributeSensor<?>)key, transformedValue);
-
             }
+            builder.attributes.put((AttributeSensor<?>)key, transformedValue);
         }
         
         for (Location location : entity.getLocations()) {
@@ -109,6 +106,14 @@ public class MementosGenerators {
         for (Entity child : entity.getOwnedChildren()) {
             builder.children.add(child.getId()); 
         }
+        
+        // FIXME Not including policies, because lots of places regiser anonymous inner class policies
+        // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
+        // Also, the entity constructor often re-creates the policy
+        // Also see RebindManagerImpl.CheckpointingChangeListener.onChanged(Entity)
+//        for (Policy policy : entity.getPolicies()) {
+//            builder.policies.add(policy.getId()); 
+//        }
         
         Entity parentEntity = entity.getOwner();
         builder.parent = (parentEntity != null) ? parentEntity.getId() : null;
@@ -159,6 +164,25 @@ public class MementosGenerators {
         for (Location child : location.getChildLocations()) {
             builder.children.add(child.getId()); 
         }
+        
+        return builder;
+    }
+    
+    /**
+     * Given a policy, extracts its state for serialization.
+     */
+    public static PolicyMemento newPolicyMemento(Policy policy) {
+        return newPolicyMementoBuilder(policy).build();
+    }
+    
+    public static BasicPolicyMemento.Builder newPolicyMementoBuilder(Policy policy) {
+        BasicPolicyMemento.Builder builder = BasicPolicyMemento.builder();
+        
+        builder.type = policy.getClass().getName();
+        builder.id = policy.getId();
+        builder.displayName = policy.getName();
+
+        builder.flags.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(policy, Modifier.STATIC ^ Modifier.TRANSIENT));
         
         return builder;
     }

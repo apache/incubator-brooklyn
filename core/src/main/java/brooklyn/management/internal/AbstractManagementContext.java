@@ -52,6 +52,13 @@ public abstract class AbstractManagementContext implements ManagementContext  {
        this.configMap = brooklynProperties;
     }
     
+    public void terminate() {
+        rebindManager.stop();
+        for (Application app : getApplications()) {
+            unmanage(app);
+        }
+    }
+    
     @Override
     public RebindManager getRebindManager() {
         return rebindManager;

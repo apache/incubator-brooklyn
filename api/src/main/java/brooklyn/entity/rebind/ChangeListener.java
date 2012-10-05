@@ -2,6 +2,7 @@ package brooklyn.entity.rebind;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
+import brooklyn.policy.Policy;
 
 public interface ChangeListener {
 
@@ -16,4 +17,6 @@ public interface ChangeListener {
     void onUnmanaged(Location location);
 
     void onChanged(Location location);
+    
+    void onChanged(Policy policy);
 }

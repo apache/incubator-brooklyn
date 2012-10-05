@@ -15,11 +15,13 @@ public interface RebindManager {
     
     public void setPersister(BrooklynMementoPersister persister);
 
-    public BrooklynMemento getMemento();
+    public BrooklynMementoPersister getPersister();
 
     public List<Application> rebind(final BrooklynMemento memento);
     
     public List<Application> rebind(final BrooklynMemento memento, ClassLoader classLoader);
 
     public ChangeListener getChangeListener();
+
+    public void stop();
 }

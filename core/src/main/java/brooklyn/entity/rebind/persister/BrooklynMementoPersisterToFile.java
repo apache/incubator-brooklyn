@@ -1,4 +1,4 @@
-package brooklyn.entity.rebind;
+package brooklyn.entity.rebind.persister;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -52,9 +52,14 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     @Override
     public BrooklynMemento loadMemento() {
         try {
+            Stopwatch stopwatch = new Stopwatch().start();
             List<String> lines = Files.readLines(file, Charsets.UTF_8);
             String xml = Joiner.on("\n").join(lines);
-            return serializer.fromString(xml);
+            BrooklynMemento result = serializer.fromString(xml);
+            
+            if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; total={}ms", stopwatch.elapsedMillis()); 
+
+            return result;
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

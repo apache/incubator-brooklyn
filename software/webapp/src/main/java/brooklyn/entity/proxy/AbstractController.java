@@ -372,10 +372,6 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
             	serverPoolAddresses.addAll((Collection<String>) memento.getCustomProperty("serverPoolAddresses"));
 				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomProperty("serverPoolTargets"), Collection.class));
             }
-            @Override protected void doRebind(RebindContext rebindContext, EntityMemento memento) {
-                super.doRebind(rebindContext, memento);
-				//AbstractController.this.doRebind();
-            }
         };
     }
     

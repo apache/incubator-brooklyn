@@ -35,7 +35,7 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     private static final Object MANAGED_LOCALLY = new Object();
     
-    private ExecutionManager execution;
+    private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
 
     protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
@@ -119,7 +119,13 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
         return execution;
     }
-    	
+    
+    @Override
+    public void terminate() {
+        super.terminate();
+        if (execution != null) execution.shutdownNow();
+    }
+    
     public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, (elvis(flags.get("displayName"), flags.get("description"), flags, c)));
         return getExecutionContext(entity).submit(flags, c);

@@ -56,7 +56,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      * calling preStart(locations) first and postStart(locations) afterwards.
      */
     public void start(Collection<? extends Location> locations) {
-        this.getLocations().addAll(locations);
+        this.addLocations(locations);
 
         preStart(locations);
         StartableMethods.start(this, locations);

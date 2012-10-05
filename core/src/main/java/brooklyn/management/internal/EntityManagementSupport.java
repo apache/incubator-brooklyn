@@ -4,8 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.event.AttributeSensor;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
@@ -38,7 +40,7 @@ public class EntityManagementSupport {
         this.entity = entity;
         nonDeploymentManagementContext = new NonDeploymentManagementContext(entity, NonDeploymentManagementContextMode.PRE_MANAGEMENT);
     }
-    
+
     protected transient AbstractEntity entity;
     NonDeploymentManagementContext nonDeploymentManagementContext;
     
@@ -52,6 +54,8 @@ public class EntityManagementSupport {
     protected boolean currentlyDeployed = false;
     protected boolean everDeployed = false;
     
+    private volatile EntityChangeListener entityChangeListener = EntityChangeListener.NOOP;
+
     public boolean isDeployed() { return currentlyDeployed; }
     public boolean isNoLongerManaged() {
         return wasDeployed() && !isDeployed();
@@ -73,6 +77,34 @@ public class EntityManagementSupport {
             nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForSubscribing();
 
             managementContextUsable = true;
+            
+            entityChangeListener = new EntityChangeListener() {
+                @Override
+                public void onChildrenChanged() {
+                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+                }
+                @Override
+                public void onLocationsChanged() {
+                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+                }
+                @Override
+                public void onMembersChanged() {
+                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+                }
+                @Override
+                public void onPoliciesChanged() {
+                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+                }
+                @Override public void onAttributeChanged(AttributeSensor<?> attribute) {
+                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+                }
+                @Override public void onEffectorStarting(Effector<?> effector) {
+                    // ignore
+                }
+                @Override public void onEffectorCompleted(Effector<?> effector) {
+                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+                }
+            };
         }
         
         // TODO framework starting events - phase 1, including rebind
@@ -153,6 +185,7 @@ public class EntityManagementSupport {
     public void onManagementStopped(ManagementTransitionInfo info) {
         synchronized (this) {
             assert managementContext == info.getManagementContext();
+            entityChangeListener = EntityChangeListener.NOOP;
             managementContextUsable = false;
             currentlyDeployed = false;
             executionContext = null;
@@ -213,5 +246,9 @@ public class EntityManagementSupport {
             }
         }
         log.warn("Autodeployment not available for "+entity+"."+effectorName);
+    }
+    
+    public EntityChangeListener getEntityChangeListener() {
+        return entityChangeListener;
     }
 }

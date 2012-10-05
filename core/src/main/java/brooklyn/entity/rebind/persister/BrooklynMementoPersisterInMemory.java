@@ -1,4 +1,4 @@
-package brooklyn.entity.rebind;
+package brooklyn.entity.rebind.persister;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

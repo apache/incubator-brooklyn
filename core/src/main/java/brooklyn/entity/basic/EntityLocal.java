@@ -1,5 +1,6 @@
 package brooklyn.entity.basic;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
@@ -10,6 +11,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
@@ -30,6 +32,10 @@ public interface EntityLocal extends Entity {
      * Sets the entity's display name.
      */
     void setDisplayName(String displayName);
+
+    void addLocations(Collection<? extends Location> locations);
+
+    void removeLocations(Collection<? extends Location> locations);
 
     /**
      * Sets the {@link Sensor} data for the given attribute to the specified value.

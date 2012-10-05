@@ -4,12 +4,11 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
-public class BasicGroup extends AbstractGroup implements Rebindable {
+public class BasicGroup extends AbstractGroup {
     
     @SetFromFlag("childrenAsMembers")
     public static final ConfigKey<Boolean> CHILDREN_AS_MEMBERS = new BasicConfigKey<Boolean>(

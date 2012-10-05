@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.rebind.RebindContext;
+import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
@@ -18,7 +18,7 @@ import brooklyn.policy.Policy;
  * 
  * @see AbstractEntity
  */
-public interface Entity extends Serializable {
+public interface Entity extends Serializable, Rebindable<EntityMemento> {
     /**
      * The unique identifier for this entity.
      */
