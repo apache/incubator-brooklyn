@@ -1,9 +1,13 @@
 package brooklyn.entity.rebind;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
@@ -32,28 +36,64 @@ import com.google.common.collect.Sets;
  */
 public class MementoTransformer {
 
-    public static <T> T transformIdsToLocations(RebindContext rebindContext, Object value, Class<T> requiredType) {
-        if (Location.class.isAssignableFrom(requiredType)) {
-            return (T) rebindContext.getLocation((String)value);
+    protected static final Logger LOG = LoggerFactory.getLogger(MementoTransformer.class);
+    
+    public static <T> T transformIdsToLocations(RebindContext rebindContext, Object value, Class<T> requiredType, boolean removeDanglingRefs) {
+        if (value == null) {
+            return (T) value;
             
-        } else if (Set.class.isAssignableFrom(requiredType)) {
-            Set<Location> result = Sets.newLinkedHashSet();
-            for (String id : (Iterable<String>)value) {
-                result.add(rebindContext.getLocation(id));
+        } else if (Location.class.isAssignableFrom(requiredType)) {
+            Location loc = rebindContext.getLocation((String)value);
+            if (loc == null) {
+                if (removeDanglingRefs) {
+                    LOG.warn("No location found for "+value+"; returning null for "+requiredType.getSimpleName());
+                } else {
+                    throw new IllegalStateException("No location found for "+value);
+                }
             }
-            return (T) result;
+            return (T) loc;
             
-        } else if (List.class.isAssignableFrom(requiredType) || Collection.class.isAssignableFrom(requiredType) || Iterable.class.isAssignableFrom(requiredType)) {
-            List<Location> result = Lists.newArrayList();
+        } else if (Iterable.class.isAssignableFrom(requiredType)) {
+            Collection<Location> result = Lists.newArrayList();
             for (String id : (Iterable<String>)value) {
-                result.add(rebindContext.getLocation(id));
+                Location loc = rebindContext.getLocation(id);
+                if (loc == null) {
+                    if (removeDanglingRefs) {
+                        LOG.warn("No location found for "+id+"; discarding reference from "+requiredType.getSimpleName());
+                    } else {
+                        throw new IllegalStateException("No location found for "+id);
+                    }
+                } else {
+                    result.add(loc);
+                }
+            }
+            
+            if (Set.class.isAssignableFrom(requiredType)) {
+                result = Sets.newLinkedHashSet(result);
+            }
+            if (!requiredType.isAssignableFrom(result.getClass())) {
+                LOG.warn("Cannot transform ids to locations of type "+requiredType+"; returning "+result.getClass());
             }
             return (T) result;
             
         } else if (value instanceof Map) {
-            Map<Object,Location> result = Maps.newLinkedHashMap();
+            LinkedHashMap<Object,Location> result = Maps.newLinkedHashMap();
             for (Map.Entry<?, String> entry : ((Map<?,String>)value).entrySet()) {
-                result.put(entry.getKey(), rebindContext.getLocation(entry.getValue()));
+                String id = entry.getValue();
+                Location loc = rebindContext.getLocation(id);
+                if (loc == null) {
+                    if (removeDanglingRefs) {
+                        LOG.warn("No location found for "+id+"; discarding reference from "+requiredType.getSimpleName());
+                    } else {
+                        throw new IllegalStateException("No location found for "+id);
+                    }
+                } else {
+                    result.put(entry.getKey(), loc);
+                }
+            }
+            
+            if (!requiredType.isAssignableFrom(LinkedHashMap.class)) {
+                LOG.warn("Cannot transform ids to locations of type "+requiredType+"; returning LinkedHashMap!");
             }
             return (T) result;
             
@@ -62,28 +102,62 @@ public class MementoTransformer {
         }
     }
     
-    public static <T> T transformIdsToEntities(RebindContext rebindContext, Object value, Class<T> requiredType) {
-        if (Entity.class.isAssignableFrom(requiredType)) {
-            return (T) rebindContext.getEntity((String)value);
+    public static <T> T transformIdsToEntities(RebindContext rebindContext, Object value, Class<T> requiredType, boolean removeDanglingRefs) {
+        if (value == null) {
+            return null;
             
-        } else if (Set.class.isAssignableFrom(requiredType)) {
-            Set<Entity> result = Sets.newLinkedHashSet();
+        } else if (Entity.class.isAssignableFrom(requiredType)) {
+            Entity entity = rebindContext.getEntity((String)value);
+            if (entity == null) {
+                if (removeDanglingRefs) {
+                    LOG.warn("No entity found for "+value+"; return null for "+requiredType.getSimpleName());
+                } else {
+                    throw new IllegalStateException("No entity found for "+value);
+                }
+            }
+            return (T) entity;
+            
+        } else if (Iterable.class.isAssignableFrom(requiredType)) {
+            Collection<Entity> result = Lists.newArrayList();
             for (String id : (Iterable<String>)value) {
-                result.add(rebindContext.getEntity(id));
+                Entity entity = rebindContext.getEntity(id);
+                if (entity == null) {
+                    if (removeDanglingRefs) {
+                        LOG.warn("No entity found for "+id+"; discarding reference from "+requiredType.getSimpleName());
+                    } else {
+                        throw new IllegalStateException("No entity found for "+id);
+                    }
+                } else {
+                    result.add(entity);
+                }
+            }
+
+            if (Set.class.isAssignableFrom(requiredType)) {
+                result = Sets.newLinkedHashSet(result);
+            }
+            if (!requiredType.isAssignableFrom(result.getClass())) {
+                LOG.warn("Cannot transform ids to entities of type "+requiredType+"; returning "+result.getClass());
             }
             return (T) result;
-            
-        } else if (List.class.isAssignableFrom(requiredType) || Collection.class.isAssignableFrom(requiredType) || Iterable.class.isAssignableFrom(requiredType)) {
-            List<Entity> result = Lists.newArrayList();
-            for (String id : (Iterable<String>)value) {
-                result.add(rebindContext.getEntity(id));
-            }
-            return (T) result;
-            
+                
         } else if (value instanceof Map) {
             Map<Object,Entity> result = Maps.newLinkedHashMap();
             for (Map.Entry<?, String> entry : ((Map<?,String>)value).entrySet()) {
-                result.put(entry.getKey(), rebindContext.getEntity(entry.getValue()));
+                String id = entry.getValue();
+                Entity entity = rebindContext.getEntity(id);
+                if (entity == null) {
+                    if (removeDanglingRefs) {
+                        LOG.warn("No entity found for "+id+"; discarding reference from "+requiredType.getSimpleName());
+                    } else {
+                        throw new IllegalStateException("No entity found for "+id);
+                    }
+                } else {
+                    result.put(entry.getKey(), entity);
+                }
+            }
+            
+            if (!requiredType.isAssignableFrom(LinkedHashMap.class)) {
+                LOG.warn("Cannot transform ids to entities of type "+requiredType+"; returning LinkedHashMap!");
             }
             return (T) result;
             

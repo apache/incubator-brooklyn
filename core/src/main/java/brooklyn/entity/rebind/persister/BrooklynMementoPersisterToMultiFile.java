@@ -43,12 +43,15 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
 
     private final ListeningExecutorService executor;
 
+    private static final int MAX_SERIALIZATION_ATTEMPTS = 5;
+    
     private volatile boolean running = true;
     
     public BrooklynMementoPersisterToMultiFile(File dir, ClassLoader classLoader) {
         this.dir = checkNotNull(dir, "dir");
-        this.serializer = new XmlMementoSerializer<Object>(classLoader);
+        MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
 //        this.serializer = new JsonMementoSerializer(classLoader);
+        this.serializer = new RetryingMementoSerializer<Object>(rawSerializer, MAX_SERIALIZATION_ATTEMPTS);
         
         checkArgument(dir.isDirectory() && dir.canWrite(), "dir "+dir+" is not a writable directory");
         

@@ -1,5 +1,7 @@
 package brooklyn.entity.rebind;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collections;
 import java.util.Map;
 
@@ -12,10 +14,12 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.event.AttributeSensor;
+import brooklyn.location.Location;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.basic.AbstractPolicy;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 
 public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
 
@@ -24,7 +28,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     private final EntityLocal entity;
     
     public BasicEntityRebindSupport(EntityLocal entity) {
-        this.entity = entity;
+        this.entity = checkNotNull(entity, "entity");
     }
     
     @Override
@@ -63,9 +67,9 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 Object value = entry.getValue();
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
                 if (memento.getEntityReferenceConfigs().contains(entry.getKey())) {
-                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type);
+                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type, true);
                 } else if (memento.getLocationReferenceConfigs().contains(entry.getKey())) {
-                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type);
+                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
                 }
                 entity.setConfig(key, value);
             } catch (ClassNotFoundException e) {
@@ -78,9 +82,9 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 Object value = entry.getValue();
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
                 if (memento.getEntityReferenceAttributes().contains(entry.getKey())) {
-                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type);
+                    value = MementoTransformer.transformIdsToEntities(rebindContext, value, type, true);
                 } else if (memento.getLocationReferenceAttributes().contains(entry.getKey())) {
-                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type);
+                    value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
                 }
                 entity.setAttributeWithoutPublishing(key, value);
             } catch (ClassNotFoundException e) {
@@ -109,10 +113,15 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
             if (entity instanceof Group) {
                 for (String memberId : memento.getMembers()) {
                     Entity member = rebindContext.getEntity(memberId);
-                    ((Group)entity).addMember(member);
+                    if (member != null) {
+                        ((Group)entity).addMember(member);
+                    } else {
+                        LOG.warn("Entity not found; discarding member {} of group {}({})",
+                                new Object[] {memberId, memento.getType(), memento.getId()});
+                    }
                 }
             } else {
-                throw new UnsupportedOperationException("Entity with members should be a group, and override rebindMembers: entity="+entity+"; members="+memento.getMembers());
+                throw new UnsupportedOperationException("Entity with members should be a group: entity="+entity+"; type="+entity.getClass()+"; members="+memento.getMembers());
             }
         }
     }
@@ -120,11 +129,12 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     protected void addChildren(RebindContext rebindContext, EntityMemento memento) {
         for (String childId : memento.getChildren()) {
             Entity child = rebindContext.getEntity(childId);
-            if (child == null) {
-                String msg = String.format("Child entity %s not found for entity %s (with children %s}", childId, memento, memento.getChildren());
-                throw new IllegalStateException(msg);
+            if (child != null) {
+                entity.addOwnedChild(child);
+            } else {
+                LOG.warn("Entity not found; discarding child {} of entity {}({})",
+                        new Object[] {childId, memento.getType(), memento.getId()});
             }
-            entity.addOwnedChild(child);
         }
     }
 
@@ -132,23 +142,33 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         Entity parent = (memento.getParent() != null) ? rebindContext.getEntity(memento.getParent()) : null;
         if (parent != null) {
             entity.setOwner(parent);
+        } else if (memento.getParent() != null){
+            LOG.warn("Entity not found; discarding parent {} of entity {}({}), so entity will be orphaned and unmanaged",
+                    new Object[] {memento.getParent(), memento.getType(), memento.getId()});
         }
     }
     
     protected void addLocations(RebindContext rebindContext, EntityMemento memento) {
-        for (String locationId : memento.getLocations()) {
-            entity.getLocations().add(rebindContext.getLocation(locationId));
+        for (String id : memento.getLocations()) {
+            Location loc = rebindContext.getLocation(id);
+            if (loc != null) {
+                entity.addLocations(ImmutableList.of(loc));
+            } else {
+                LOG.warn("Location not found; discarding location {} of entity {}({})",
+                        new Object[] {id, memento.getType(), memento.getId()});
+            }
         }
     }
     
     protected void addPolicies(RebindContext rebindContext, EntityMemento memento) {
         for (String policyId : memento.getPolicies()) {
             AbstractPolicy policy = (AbstractPolicy) rebindContext.getPolicy(policyId);
-            if (policy == null) {
-                String msg = String.format("Policy %s not found for entity %s (with policies %s}", policyId, memento, memento.getPolicies());
-                throw new IllegalStateException(msg);
+            if (policy != null) {
+                entity.addPolicy(policy);
+            } else {
+                LOG.warn("Policy not found; discarding policy {} of entity {}({})",
+                        new Object[] {policyId, memento.getType(), memento.getId()});
             }
-            entity.addPolicy(policy);
         }
     }
 }

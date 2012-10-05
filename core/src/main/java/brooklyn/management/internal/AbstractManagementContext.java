@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
@@ -42,7 +41,6 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
-<<<<<<< HEAD
     protected BrooklynProperties configMap;
 
     // TODO leaking "this" reference; yuck
@@ -52,11 +50,15 @@ public abstract class AbstractManagementContext implements ManagementContext  {
        this.configMap = brooklynProperties;
     }
     
+    private volatile boolean running = true;
+    
     public void terminate() {
+        running = false;
         rebindManager.stop();
-        for (Application app : getApplications()) {
-            unmanage(app);
-        }
+        
+        // Don't unmanage everything; different entities get given their events at different times 
+        // so can cause problems (e.g. a group finds out that a member is unmanaged, before the
+        // group itself has been told that it is unmanaged).
     }
     
     @Override
@@ -84,7 +86,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     }
     
     public boolean isManaged(Entity e) {
-        return (getEntity(e.getId())!=null);
+        return (running && getEntity(e.getId())!=null);
     }
     
     /**
@@ -210,7 +212,9 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * (currently only acceptable context is "start")
      */
     protected void manageIfNecessary(Entity entity, Object context) {
-        if (((AbstractEntity) entity).hasEverBeenManaged()) {
+        if (!running) {
+            return; // TODO Still a race for terminate being called, and then isManaged below returning false
+        } else if (((AbstractEntity)entity).hasEverBeenManaged()) {
             return;
         } else if (!isManaged(entity)) {
             Entity rootUnmanaged = entity;

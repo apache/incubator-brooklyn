@@ -369,8 +369,10 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
             }
             @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
             	super.doReconstruct(rebindContext, memento);
+            	// TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
+            	// will be out-of-sync (for ever more?)
             	serverPoolAddresses.addAll((Collection<String>) memento.getCustomProperty("serverPoolAddresses"));
-				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomProperty("serverPoolTargets"), Collection.class));
+				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomProperty("serverPoolTargets"), Collection.class, true));
             }
         };
     }

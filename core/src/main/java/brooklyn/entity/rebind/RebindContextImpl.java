@@ -19,16 +19,16 @@ public class RebindContextImpl implements RebindContext {
         this.classLoader = classLoader;
     }
 
-    public void registerEntity(Entity entity) {
-        entities.put(entity.getId(), entity);
+    public void registerEntity(String id, Entity entity) {
+        entities.put(id, entity);
     }
     
-    public void registerLocation(Location location) {
-        locations.put(location.getId(), location);
+    public void registerLocation(String id, Location location) {
+        locations.put(id, location);
     }
     
-    public void registerPolicy(Policy policy) {
-        policies.put(policy.getId(), policy);
+    public void registerPolicy(String id, Policy policy) {
+        policies.put(id, policy);
     }
     
     @Override

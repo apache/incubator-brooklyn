@@ -3,15 +3,10 @@ package brooklyn.entity.rebind;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +22,6 @@ import brooklyn.mementos.BrooklynMementoPersister.Delta;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
-import brooklyn.mementos.TreeNode;
 import brooklyn.policy.Policy;
 import brooklyn.util.MutableMap;
 import brooklyn.util.javalang.Reflections;
@@ -50,7 +44,7 @@ public class RebindManagerImpl implements RebindManager {
     
     public RebindManagerImpl(ManagementContext managementContext) {
         this.managementContext = managementContext;
-        this.changeListener = new CheckpointingChangeListener();
+        this.changeListener = new SafeChangeListener(new PersistingChangeListener());
     }
     
     @Override
@@ -101,7 +95,7 @@ public class RebindManagerImpl implements RebindManager {
             
             Location location = newLocation(locMemento, reflections);
             locations.put(locMemento.getId(), location);
-            rebindContext.registerLocation((Location) location);
+            rebindContext.registerLocation(locMemento.getId(), (Location) location);
         }
         
         // Instantiate entities
@@ -111,7 +105,7 @@ public class RebindManagerImpl implements RebindManager {
             
             Entity entity = newEntity(entityMemento, reflections);
             entities.put(entityMemento.getId(), entity);
-            rebindContext.registerEntity((Entity) entity);
+            rebindContext.registerEntity(entityMemento.getId(), (Entity) entity);
         }
         
         // Instantiate policies
@@ -120,12 +114,12 @@ public class RebindManagerImpl implements RebindManager {
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
             
             Policy policy = newPolicy(policyMemento, reflections);
-            policies.put(policy.getId(), policy);
-            rebindContext.registerPolicy(policy);
+            policies.put(policyMemento.getId(), policy);
+            rebindContext.registerPolicy(policyMemento.getId(), policy);
         }
         
         // Reconstruct locations
-        LOG.info("RebindManager constructing locations");
+        LOG.info("RebindManager reconstructing locations");
         for (LocationMemento locMemento : memento.getLocationMementos().values()) {
             Location location = rebindContext.getLocation(locMemento.getId());
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
@@ -134,7 +128,7 @@ public class RebindManagerImpl implements RebindManager {
         }
 
         // Reconstruct policies
-        LOG.info("RebindManager constructing policies");
+        LOG.info("RebindManager reconstructing policies");
         for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
             Policy policy = rebindContext.getPolicy(policyMemento.getId());
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
@@ -143,7 +137,7 @@ public class RebindManagerImpl implements RebindManager {
         }
 
         // Reconstruct entities
-        LOG.info("RebindManager constructing entities");
+        LOG.info("RebindManager reconstructing entities");
         for (EntityMemento entityMemento : memento.getEntityMementos().values()) {
             Entity entity = rebindContext.getEntity(entityMemento.getId());
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
@@ -226,97 +220,6 @@ public class RebindManagerImpl implements RebindManager {
         throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
     }
 
-    private void depthFirst(BrooklynMemento memento, RebindContext rebindContext, LocationVisitor visitor) {
-        List<String> orderedIds = depthFirstOrder(memento.getTopLevelLocationIds(), memento.getLocationMementos());
-
-        for (String id : orderedIds) {
-            Location loc = rebindContext.getLocation(id);
-            LocationMemento locMemento = memento.getLocationMemento(id);
-            
-            if (loc != null) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} location {}", visitor.getActivityName(), locMemento);
-                visitor.visit(loc, locMemento);
-            } else {
-                LOG.warn("No location found for id {}; so not {}", id, visitor.getActivityName());
-            }
-        }
-    }
-
-    private void depthFirst(BrooklynMemento memento, RebindContext rebindContext, EntityVisitor visitor) {
-        List<String> orderedIds = depthFirstOrder(memento.getApplicationIds(), memento.getEntityMementos());
-
-        for (String id : orderedIds) {
-            Entity entity = rebindContext.getEntity(id);
-            EntityMemento entityMemento = memento.getEntityMemento(id);
-            
-            if (entity != null) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager {} entity {}", visitor.getActivityName(), entityMemento);
-                visitor.visit(entity, entityMemento);
-            } else {
-                LOG.warn("No entity found for id {}; so not {}", id, visitor.getActivityName());
-            }
-        }
-    }
-
-    private List<String> depthFirstOrder(Collection<String> roots, Map<String, ? extends TreeNode> nodes) {
-        Set<String> visited = new HashSet<String>();
-        Deque<String> tovisit = new ArrayDeque<String>();
-        List<String> result = new ArrayList<String>(nodes.size());
-        
-        tovisit.addAll(roots);
-        
-        while (tovisit.size() > 0) {
-            String currentId = tovisit.pop();
-            TreeNode node = nodes.get(currentId);
-            
-            if (node == null) {
-                LOG.warn("No memento for id {}", currentId);
-                
-            } else if (visited.add(currentId)) {
-                result.add(currentId);
-                for (String childId : node.getChildren()) {
-                    if (childId == null) {
-                        LOG.warn("Null child entity id in entity {}", node);
-                    } else if (!nodes.containsKey(childId)) {
-                        LOG.warn("Unknown child id {} in {}", childId, node);
-                    } else {
-                        tovisit.push(childId);
-                    }
-                }
-            } else {
-                LOG.warn("Cycle detected in hierarchy (id="+currentId+")");
-            }
-        }
-        
-        return result;
-    }
-
-    private static abstract class LocationVisitor {
-        private final String activityName;
-
-        public LocationVisitor(String activityName) {
-            this.activityName = activityName;
-        }
-        public abstract void visit(Location location, LocationMemento memento);
-        
-        public String getActivityName() {
-            return activityName;
-        }
-    }
-    
-    private static abstract class EntityVisitor {
-        private final String activityName;
-
-        public EntityVisitor(String activityName) {
-            this.activityName = activityName;
-        }
-        public abstract void visit(Entity entity, EntityMemento memento);
-        
-        public String getActivityName() {
-            return activityName;
-        }
-    }
-    
     private static class DeltaImpl implements Delta {
         Collection<LocationMemento> locations = Collections.emptyList();
         Collection<EntityMemento> entities = Collections.emptyList();
@@ -356,7 +259,7 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
     
-    private class CheckpointingChangeListener implements ChangeListener {
+    private class PersistingChangeListener implements ChangeListener {
 
         @Override
         public void onManaged(Entity entity) {
@@ -440,6 +343,87 @@ public class RebindManagerImpl implements RebindManager {
                 DeltaImpl delta = new DeltaImpl();
                 delta.policies = ImmutableList.of(policy.getRebindSupport().getMemento());
                 persister.delta(delta);
+            }
+        }
+    }
+    
+    /**
+     * Wraps a ChangeListener, to log and never propagate any exceptions that it throws.
+     * 
+     * Catches Throwable, because really don't want a problem to propagate up to user code,
+     * to cause business-level operations to fail. For example, if there is a linkage error
+     * due to some problem in the serialization dependencies then just log it. For things
+     * more severe (e.g. OutOfMemoryError) then the catch+log means we'll report that we
+     * failed to persist, and we'd expect other threads to throw the OutOfMemoryError so
+     * we shouldn't lose anything.
+     */
+    private static class SafeChangeListener implements ChangeListener {
+        private final ChangeListener delegate;
+        
+        public SafeChangeListener(ChangeListener delegate) {
+            this.delegate = delegate;
+        }
+        
+        @Override
+        public void onManaged(Entity entity) {
+            try {
+                delegate.onManaged(entity);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onManaged("+entity+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onManaged(Location location) {
+            try {
+                delegate.onManaged(location);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onManaged("+location+"); continuing.", t);
+            }
+        }
+        
+        @Override
+        public void onChanged(Entity entity) {
+            try {
+                delegate.onChanged(entity);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onChanged("+entity+"); continuing.", t);
+            }
+        }
+        
+        @Override
+        public void onUnmanaged(Entity entity) {
+            try {
+                delegate.onUnmanaged(entity);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onUnmanaged("+entity+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onUnmanaged(Location location) {
+            try {
+                delegate.onUnmanaged(location);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onUnmanaged("+location+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onChanged(Location location) {
+            try {
+                delegate.onChanged(location);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onChanged("+location+"); continuing.", t);
+            }
+        }
+        
+        @Override
+        public void onChanged(Policy policy) {
+            try {
+                delegate.onChanged(policy);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onChanged("+policy+"); continuing.", t);
             }
         }
     }
