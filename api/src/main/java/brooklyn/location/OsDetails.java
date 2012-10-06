@@ -9,6 +9,7 @@ public interface OsDetails {
     String getName();
     String getArch();
     String getVersion();
+    boolean is64bit();
     
 //    * <tr><td><code>os.name</code></td>
 //    *     <td>Operating system name</td></tr>
