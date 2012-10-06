@@ -18,6 +18,11 @@ public class JmxObjectNameAdapter {
 		this.adapter = adapter;
 		this.objectName = objectName;
 	}
+    
+    JmxReachableAdapter reachable(Map flags=[:]) {
+        adapter.registry.register(new JmxReachableAdapter(flags, adapter, objectName));
+    }
+
 	JmxAttributeAdapter attribute(Map flags=[:], String attributeName) {
 		adapter.registry.register(new JmxAttributeAdapter(flags, adapter, objectName, attributeName));
 	}

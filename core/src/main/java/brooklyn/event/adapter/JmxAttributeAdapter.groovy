@@ -1,5 +1,6 @@
 package brooklyn.event.adapter;
 
+import groovy.time.TimeDuration
 import groovy.transform.InheritConstructors
 
 import javax.management.ObjectName
@@ -65,11 +66,15 @@ public class JmxAttributeAdapter extends AbstractSensorAdapter {
     @Override
     protected void activateAdapter() {
         super.activateAdapter();
-        if (adapter.checkObjectNameExists(objectName)) {
-            if (log.isDebugEnabled()) 
-                log.debug("For $entity ${adapter.helper.url}, MBean ${objectName} exists");
-        } else {
-            log.warn("For $entity ${adapter.helper.url}, MBean ${objectName} does not yet exist; continuing...");
+        try {
+            if (adapter.checkObjectNameExists(objectName, new TimeDuration(0, 0, 0, 0))) {
+                if (log.isDebugEnabled()) 
+                    log.debug("For $entity ${adapter.helper.url}, MBean ${objectName} exists");
+            } else {
+                log.warn("For $entity ${adapter.helper.url}, MBean ${objectName} does not yet exist; continuing...");
+            }
+        } catch (Exception e) {
+            log.warn("For $entity ${adapter.helper.url}, not reachable for MBean ${objectName}; continuing...", e);
         }
     }
 }

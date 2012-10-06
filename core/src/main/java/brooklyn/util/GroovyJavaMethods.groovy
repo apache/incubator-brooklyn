@@ -13,8 +13,8 @@ import com.google.common.base.Predicate
 public class GroovyJavaMethods {
 
     //TODO use named subclasses, would that be more efficient?
-    
-    // TODO xFromY nethods not in correct class: they are not "handy method available in groovy"?
+
+    // TODO xFromY methods not in correct class: they are not "handy method available in groovy"?
     public static Closure closureFromRunnable(final Runnable job) {
         return {
             if (job in Callable) { return job.call() }

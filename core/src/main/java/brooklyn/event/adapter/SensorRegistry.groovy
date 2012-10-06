@@ -81,20 +81,20 @@ public class SensorRegistry {
 	
 	boolean activated = false;
 	
-	private List<Closure> activationListeners = []
-	private List<Closure> deactivationListeners = []
-	void addActivationLifecycleListeners(Closure onUp, Closure onDown) {
+	private List<Runnable> activationListeners = []
+	private List<Runnable> deactivationListeners = []
+	void addActivationLifecycleListeners(Runnable onUp, Runnable onDown) {
 		activationListeners << onUp
 		deactivationListeners << onDown
 	}
 	public void activateAdapters() {
 		if (log.isDebugEnabled()) log.debug "activating adapters at sensor registry for {}", this, entity
 		activated = true;
-		activationListeners.each { it.call() }
+		activationListeners.each { it.run() }
 	}
 	public void deactivateAdapters() {
 		if (log.isDebugEnabled()) log.debug "deactivating adapters at sensor registry for {}", this, entity
-		deactivationListeners.each { it.call() }
+		deactivationListeners.each { it.run() }
 	}
 
 	public void close() {
