@@ -1,7 +1,6 @@
 package brooklyn.entity.proxy.nginx;
 
 import static brooklyn.test.TestUtils.*
-import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import org.slf4j.Logger
@@ -56,11 +55,11 @@ public class NginxHttpsSslIntegrationTest {
         cluster = new DynamicCluster(owner:app, factory:template, initialSize:1)
         cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
         
-        ProxySslConfig ssl = new ProxySslConfig(certificate:CERTIFICATE_URL, key:KEY_URL);
+        ProxySslConfig ssl = new ProxySslConfig(sourceCertificateUrl:CERTIFICATE_URL, sourceKeyUrl:KEY_URL);
         nginx = new NginxController(app,
-	            cluster: cluster,
-	            domain : "localhost",
-	            port: "8443+",
+                cluster: cluster,
+                domain : "localhost",
+                port: "8443+",
                 ssl: ssl 
             );
         
@@ -81,7 +80,7 @@ public class NginxHttpsSslIntegrationTest {
 
             // Web-server URL is available
             cluster.members.each {
-	            assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
+                assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
             }
         }
         
