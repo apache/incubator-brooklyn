@@ -59,6 +59,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	public abstract void customize();
 	public abstract void launch();
     
+    @Override
+    public void kill() {
+        stop();
+    }
+    
     /**
      * Implement this method in child classes to add some post-launch behavior
      */

@@ -146,6 +146,11 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
     }
 
     @Override
+    public void kill() {
+        stop(); // TODO No pid file to easily do a `kill -9`
+    }
+        
+    @Override
     protected List<String> getCustomJavaConfigOptions() {
         List<String> options = new LinkedList<String>();
         options.addAll(super.getCustomJavaConfigOptions());

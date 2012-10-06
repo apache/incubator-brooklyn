@@ -74,6 +74,12 @@ public class SimulatedDriver extends AbstractSoftwareProcessDriver {
     }
 
     @Override
+    public void kill() {
+        events.add("kill");
+        launched = false;
+    }
+
+    @Override
     public void install() {
         events.add("install");
     }

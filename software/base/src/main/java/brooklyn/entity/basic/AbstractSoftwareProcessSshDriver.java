@@ -107,6 +107,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     protected final static String LAUNCHING = "launching";
     protected final static String CHECK_RUNNING = "check-running";
     protected final static String STOPPING = "stopping";
+    protected final static String KILLING = "killing";
     protected final static String RESTARTING = "restarting";
     
     public final static String PID_FILENAME = "pid.txt";
@@ -136,7 +137,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                         "date > $INSTALL_DIR/BROOKLYN"
                         );
             }
-            if (ImmutableSet.of(CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING, RESTARTING).contains(phase)) {
+            if (ImmutableSet.of(CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING, KILLING, RESTARTING).contains(phase)) {
                 s.header.append(
                         "export RUN_DIR=\""+getRunDir()+"\"",
                         "mkdir -p $RUN_DIR",
@@ -147,7 +148,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
         if (ImmutableSet.of(CUSTOMIZING).contains(phase))
             s.skipIfBodyEmpty();
-        if (ImmutableSet.of(CHECK_RUNNING, LAUNCHING, STOPPING, RESTARTING).contains(phase))
+        if (ImmutableSet.of(CHECK_RUNNING, LAUNCHING, STOPPING, KILLING, RESTARTING).contains(phase))
             s.failIfBodyEmpty();
         if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase))
             s.updateTaskAndFailOnNonZeroResultCode();
@@ -173,6 +174,14 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                         "export PID=`cat "+pidFile+"`",
                         "[[ -n \"$PID\" ]] || exit 0",
                         "kill $PID",
+                        "kill -9 $PID",
+                        "rm "+pidFile
+                        );
+                
+            else if (KILLING.equals(phase))
+                s.body.append(
+                        "export PID=`cat "+pidFile+"`",
+                        "[[ -n \"$PID\" ]] || exit 0",
                         "kill -9 $PID",
                         "rm "+pidFile
                         );

@@ -96,6 +96,11 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
                 .execute()
     }
 
+    @Override
+    public void kill() {
+        stop(); // TODO No pid file to easily do `kill -9`
+    }
+
     public Map<String, String> getShellEnvironment() {
         Map result = super.getShellEnvironment()
         result << [
