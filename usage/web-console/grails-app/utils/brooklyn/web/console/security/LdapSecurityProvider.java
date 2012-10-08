@@ -12,6 +12,11 @@ import javax.naming.directory.InitialDirContext;
 import javax.servlet.http.HttpSession;
 import java.util.Hashtable;
 
+/**
+ * A {@link SecurityProvider} implementation that relies on LDAP to authenticate.
+ *
+ * @author Peter Veentjer.
+ */
 public class LdapSecurityProvider implements SecurityProvider {
 
     public static final Logger LOG = LoggerFactory.getLogger(LdapSecurityProvider.class);
