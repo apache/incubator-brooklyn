@@ -23,7 +23,6 @@ import brooklyn.util.flags.SetFromFlag;
 public class BrooklynLauncher {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BrooklynLauncher.class);
-    private BrooklynProperties brooklynProperties;
 
     /** Launches the web console on port 8081, and a Brooklyn application, with a single command,
      * in such a way that the web console is launched and the application is shutdown on server termination.
@@ -66,11 +65,11 @@ public class BrooklynLauncher {
     
     private ManagementContext context = null;
     private List<Application> appsToManage = new ArrayList<Application>();
-    
+    private BrooklynProperties brooklynProperties;
     private boolean startWebApps = true;
     private PortRange port = PortRanges.fromString("8081+");
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
-    private Map<String, Object> attributes = new LinkedHashMap<String, Object>();
+    //private Map<String, Object> attributes = new LinkedHashMap<String, Object>();
 
     /** Specifies the management context this launcher should use. 
      * If not specified a new {@link LocalManagementContext} is used. */
@@ -116,8 +115,8 @@ public class BrooklynLauncher {
         this.brooklynProperties = brooklynProperties;
         return this;
     }
-    
-    /** Specifies an additional webapp to host on the webconsole port. 
+
+    /** Specifies an additional webapp to host on the webconsole port.
      * @param contextPath The context path (e.g. "/hello", or equivalently just "hello") where the webapp will be hosted.
      *      "/" will override the brooklyn console webapp.
      * @param warUrl The URL from which the WAR should be loaded, supporting classpath:// protocol in addition to file:// and http(s)://.
@@ -130,28 +129,37 @@ public class BrooklynLauncher {
     /** Specifies an attribute passed to deployed webapps 
      * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT} */
     public BrooklynLauncher setAttribute(String field, Object value) {
-        attributes.put(field, value);
+        if(brooklynProperties == null){
+            brooklynProperties = BrooklynProperties.Factory.newDefault();
+        }
+        brooklynProperties.put(field, value);
         return this;        
     }
 
     /** Starts the web server (with web console) and Brooklyn applications, as per the specifications configured. 
      * @return An object containing details of the web server and the management context. */
     public BrooklynServerDetails launch() {
-        BrooklynProperties p = brooklynProperties==null?BrooklynProperties.Factory.newDefault():brooklynProperties;
+        if(brooklynProperties == null){
+            brooklynProperties = BrooklynProperties.Factory.newDefault();
+        }
 
         for (Application app: appsToManage) {
-            if (context==null) context = app.getManagementContext();
+            if (context==null) {
+                context = app.getManagementContext();
+            }
             context.manage(app);
         }
 
-        if (context==null) context = new LocalManagementContext(p);
+        if (context==null) {
+            context = new LocalManagementContext(brooklynProperties);
+        }
         
         BrooklynWebServer webServer = null;
         if (startWebApps) {
             try {
                 webServer = new BrooklynWebServer(context);
                 webServer.setPort(port);
-                webServer.putAttributes(attributes);
+                webServer.putAttributes(brooklynProperties);
                 
                 for (Map.Entry<String, String> webapp : webApps.entrySet())
                     webServer.deploy(webapp.getKey(), webapp.getValue());

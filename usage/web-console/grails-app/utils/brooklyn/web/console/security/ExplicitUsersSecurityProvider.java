@@ -6,8 +6,8 @@ import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpSession;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.web.console.BrooklynWebconsoleProperties;
-import org.codehaus.groovy.grails.web.context.ServletContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +34,11 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
     private Set<String> allowedUsers = null;
     private synchronized void initialize() {
         if (allowedUsers!=null) return;
+
+        BrooklynProperties properties = (BrooklynProperties) ManagementContextLocator.getManagementContext().getConfig();
+
         allowedUsers = new LinkedHashSet<String>();
-        Object users = ConfigLoader.getConfig(BrooklynWebconsoleProperties.SECURITY_PROVIDER_EXPLICIT__USERS.getPropertyName());
+        Object users = properties.get(BrooklynWebconsoleProperties.SECURITY_PROVIDER_EXPLICIT__USERS.getPropertyName());
         if (users==null) {
             LOG.info("Web console allowing default user (admin)");
             allowDefaultUsers = true;
@@ -50,7 +53,7 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
             }
         }       
 
-        if (ServletContextHolder.getServletContext().getAttribute(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME)!=null) {
+        if (properties.get(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME)!=null) {
             LOG.warn("Use of legacy AUTOLOGIN; replace with setting BrooklynSystemProperties.SECURITY_PROVIDER to "+AnyoneSecurityProvider.class.getCanonicalName());
             allowAnyUser = true;
         }
@@ -72,7 +75,9 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
                 return false;                
             }
         }
-        Object actualP = ConfigLoader.getConfig(BrooklynWebconsoleProperties.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getPropertyName());
+
+        BrooklynProperties properties = (BrooklynProperties) ManagementContextLocator.getManagementContext().getConfig();
+        Object actualP = properties.get(BrooklynWebconsoleProperties.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getPropertyName());
         if (actualP==null) {
             LOG.info("Web console rejecting passwordless user "+user);
             return false;

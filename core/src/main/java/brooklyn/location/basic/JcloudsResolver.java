@@ -41,6 +41,11 @@ public class JcloudsResolver implements RegistryLocationResolver {
             "eu-west-1","us-east-1","us-west-1","us-west-2","ap-southeast-1","ap-northeast-1","sa-east-1");
          
 
+    public static JcloudsLocation resolve(String spec) {
+        BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
+        return (JcloudsLocation) new LocationRegistry(properties).resolve(JCLOUDS+":"+spec);
+    }
+
     public JcloudsLocation newLocationFromString(String spec) {
         return newLocationFromString(new LinkedHashMap(), spec);
     }
