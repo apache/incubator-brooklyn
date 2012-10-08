@@ -45,6 +45,13 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     private static final Object MANAGED_LOCALLY = new Object();
 
+    /**
+     * Creates a LocalManagement with default BrooklynProperties.
+     */
+    public LocalManagementContext(){
+        this(BrooklynProperties.Factory.newDefault());
+    }
+
     public LocalManagementContext(BrooklynProperties brooklynProperties){
        super(brooklynProperties);
     }
