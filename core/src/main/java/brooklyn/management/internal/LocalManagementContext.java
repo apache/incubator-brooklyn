@@ -46,6 +46,13 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     private final String tostring = "LocalManagementContext("+Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5)+")";
 
+    /**
+     * Creates a LocalManagement with default BrooklynProperties.
+     */
+    public LocalManagementContext(){
+        this(BrooklynProperties.Factory.newDefault());
+    }
+
     public LocalManagementContext(BrooklynProperties brooklynProperties){
        super(brooklynProperties);
     }

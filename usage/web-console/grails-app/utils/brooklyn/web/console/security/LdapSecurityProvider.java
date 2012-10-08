@@ -1,6 +1,9 @@
 package brooklyn.web.console.security;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.StringConfigMap;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.text.Strings;
 import brooklyn.web.console.BrooklynWebconsoleProperties;
 import org.slf4j.Logger;
@@ -26,7 +29,9 @@ public class LdapSecurityProvider implements SecurityProvider {
     private final String ldapUrl;
     private final String ldapRealm;
 
-    public LdapSecurityProvider(BrooklynProperties properties) {
+    public LdapSecurityProvider() {
+        ManagementContext managementContext = ManagementContextLocator.getManagementContext();
+        StringConfigMap properties = managementContext.getConfig();
         ldapUrl = properties.getFirst(BrooklynWebconsoleProperties.LDAP_URL.getPropertyName());
         if (Strings.isEmpty(ldapUrl)) {
             throw new IllegalArgumentException(String.format("property %s is not defined", BrooklynWebconsoleProperties.LDAP_URL.getPropertyName()));

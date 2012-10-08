@@ -7,6 +7,7 @@ import java.util.StringTokenizer;
 import javax.servlet.http.HttpSession;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.StringConfigMap;
 import brooklyn.web.console.BrooklynWebconsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +36,10 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
     private synchronized void initialize() {
         if (allowedUsers!=null) return;
 
-        BrooklynProperties properties = (BrooklynProperties) ManagementContextLocator.getManagementContext().getConfig();
+        StringConfigMap properties = ManagementContextLocator.getManagementContext().getConfig();
 
         allowedUsers = new LinkedHashSet<String>();
-        Object users = properties.get(BrooklynWebconsoleProperties.SECURITY_PROVIDER_EXPLICIT__USERS.getPropertyName());
+        Object users = properties.getFirst(BrooklynWebconsoleProperties.SECURITY_PROVIDER_EXPLICIT__USERS.getPropertyName());
         if (users==null) {
             LOG.info("Web console allowing default user (admin)");
             allowDefaultUsers = true;
@@ -53,7 +54,7 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
             }
         }       
 
-        if (properties.get(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME)!=null) {
+        if (properties.getFirst(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME)!=null) {
             LOG.warn("Use of legacy AUTOLOGIN; replace with setting BrooklynSystemProperties.SECURITY_PROVIDER to "+AnyoneSecurityProvider.class.getCanonicalName());
             allowAnyUser = true;
         }
