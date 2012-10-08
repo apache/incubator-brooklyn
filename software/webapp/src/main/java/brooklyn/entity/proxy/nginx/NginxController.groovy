@@ -50,7 +50,7 @@ public class NginxController extends AbstractController {
        
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-        new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "1.3.0");
+        new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "1.3.7");
 
     @SetFromFlag("sticky")
     public static final BasicConfigKey<Boolean> STICKY =
@@ -210,7 +210,11 @@ public class NginxController extends AbstractController {
         
         ProxySslConfig globalSslConfig = getConfig(SSL_CONFIG);
         boolean ssl = globalSslConfig != null;
-        if (ssl) appendSslConfig("global", config, "    ", globalSslConfig, true, true);
+
+        if (ssl) {
+            verifyConfig(globalSslConfig)
+            appendSslConfig("global", config, "    ", globalSslConfig, true, true)
+        };
         
         // If no servers, then defaults to returning 404
         // TODO Give nicer page back 
@@ -277,6 +281,7 @@ public class NginxController extends AbstractController {
             for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
                 ProxySslConfig sslConfig = mappingInDomain.getConfig(UrlMapping.SSL_CONFIG);
                 if (sslConfig!=null) {
+                    verifyConfig(sslConfig)
                     if (localSslConfig!=null) {
                         if (localSslConfig.equals(sslConfig)) {
                             //ignore identical config specified on multiple mappings
@@ -339,6 +344,16 @@ public class NginxController extends AbstractController {
         config.append("}\n");
 
         return config.toString();
+    }
+
+    void verifyConfig(ProxySslConfig proxySslConfig) {
+        if (proxySslConfig.keyDestination == null &&  proxySslConfig.sourceKeyUrl == null){
+            throw new IllegalStateException("ProxySslConfig can't have a null keyDestination and null sourceKeyUrl. One or both need to be set")
+        }
+
+        if(proxySslConfig.certificateDestination == null && proxySslConfig.sourceCertificateUrl == null){
+            throw new IllegalStateException("ProxySslConfig can't have a null certificateDestination and null sourceCertificateUrl. One or both need to be set")
+        }
     }
 
     public boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl,

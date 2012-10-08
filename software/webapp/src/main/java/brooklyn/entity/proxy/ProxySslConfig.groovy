@@ -27,17 +27,23 @@ public class ProxySslConfig implements Serializable {
     String sourceKeyUrl;
 
     /**
-     * Sets the ssl_certificate path to be used. If set to null, Brooklyn will take control. If explicitly set
-     * this value will be placed in the ssl_certificate. Setting this field is useful if there is a certificate on the
-     * nginx machine you want to make use of.
+     * Sets the ssl_certificate path to be used within the generated LoadBalancer configuration. If set to null,
+     * Brooklyn will use an auto generated path.
+     *
+     * If sourceCertificateUrl, then Brooklyn will copy the certificate the certificateDestination.
+     *
+     * Setting this field is useful if there is a certificate on the nginx machine you want to make use of.
      */
     String certificateDestination;
 
     /**
-      * Sets the ssl_certificate_key path to be used. If set to null, Brooklyn will take control. If explicitly set
-      * this value will be placed in the ssl_certificate_key. Setting this field is useful if there is a certificate_key
-     * on the nginx machine you want to make use of.
-      */
+     * Sets the ssl_certificate_key path to be used within the generated LoadBalancer configuration. If set to null,
+     * Brooklyn will use an auto generated path.
+     *
+     * If sourceKeyUrl, then Brooklyn will copy the certificate the keyDestination.
+     *
+     * Setting this field is useful if there is a certificate_key on the nginx machine you want to make use of.
+     */
     String keyDestination;
 
     /** whether the downstream server (if mapping) also expects https; default false */
