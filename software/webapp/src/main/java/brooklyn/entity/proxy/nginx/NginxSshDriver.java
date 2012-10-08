@@ -150,10 +150,14 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(flags, LAUNCHING).
                 body.append(
                 format("cd %s", getRunDir()),
-                format("nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir())
+                sudoIfPrivilegedPort(getHttpPort(), format("nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir()))
         ).execute();
     }
 
+    public static String sudoIfPrivilegedPort(int port, String command) {
+        return port < 1024 ? CommonCommands.sudo(command) : command;
+    }
+    
     @Override
     public boolean isRunning() {
         Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
@@ -171,7 +175,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 format("cd %s", getRunDir()),
                 format("export PID=`cat %s`", pidFile),
                 "[[ -n \"$PID\" ]] || exit 0",
-                "kill $PID"
+                sudoIfPrivilegedPort(getHttpPort(), "kill $PID")
         ).execute();
     }
 
@@ -188,22 +192,22 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
     
     public void reload() {
-        // FIXME There is a race on stop()+reload(). Nginx can simultaneously be stopping and also reconfiguring 
-        // (e.g. due to a cluster-resize). The restart() call below means that nginx can be restarted after stop 
-        // has executed. Looking at lifecycle reduces the race, but we need some proper synchronization...
+        // Note that previously, if serviceUp==false then we'd restart nginx.
+        // That caused a race on stop()+reload(): nginx could simultaneously be stopping and also reconfiguring 
+        // (e.g. due to a cluster-resize), the restart() would leave nginx running even after stop() had returned.
+        //
+        // Now we rely on NginxController always calling update (and thus reload) once it has started. This is
+        // done in AbstractController.postStart().
+        //
+        // If our blocking check sees that !isRunning() (and if a separate thread is starting it, and subsequently
+        // calling waitForEntityStart()), we can guarantee that the start-thread's call to update will happen after 
+        // this call to reload. So we this can be a no-op, and just rely on that subsequent call to update.
         
         Lifecycle lifecycle = entity.getAttribute(NginxController.SERVICE_STATE);
-        Boolean serviceUp = entity.getAttribute(Startable.SERVICE_UP);
+        boolean running = isRunning();
 
-        if (lifecycle==Lifecycle.STOPPING || lifecycle==Lifecycle.STOPPED || lifecycle==Lifecycle.DESTROYED) {
-            log.debug("Ignoring reload of nginx "+entity+", becausing in state "+lifecycle);
-            return;
-        }
-        
-        if (serviceUp == null || serviceUp == false) {
-            //if it hasn't come up completely then do restart instead
-            log.debug("Reload of nginx "+entity+" is doing restart because has not come up");
-            restart();
+        if (!running) {
+            log.debug("Ignoring reload of nginx "+entity+", because service is not running (state "+lifecycle+")");
             return;
         }
         
@@ -211,7 +215,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(flags, RESTARTING).
                 body.append(
                 format("cd %s", getRunDir()),
-                format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir())
+                sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
         ).execute();
     }
 }

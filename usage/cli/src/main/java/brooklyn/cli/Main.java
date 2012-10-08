@@ -37,7 +37,6 @@ import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class Main {
 
@@ -153,10 +152,6 @@ public class Main {
             if (verbose) {
                 System.out.println("Launching brooklyn app: "+app+" in "+locations);
             }
-            if (locations==null) {
-                log.warn("Locations parameter not supplied. Assuming empty list.");
-                locations = "";
-            }
             BrooklynLauncher launcher = BrooklynLauncher.newLauncher();
             
             ResourceUtils utils = new ResourceUtils(this);
@@ -174,6 +169,13 @@ public class Main {
             launcher.webconsolePort(port);
             launcher.webconsole(!noConsole);
             
+            if (locations==null || locations.isEmpty()) {
+                log.warn("Locations parameter not supplied: assuming localhost");
+                locations = "localhost";
+            }
+            // lean on getLocationsById to do parsing
+            List<Location> brooklynLocations = new LocationRegistry().getLocationsById(Arrays.asList(locations));
+            
             // Create the instance of the brooklyn app
             AbstractApplication application = null;
             if (app!=null) {
@@ -181,13 +183,6 @@ public class Main {
                 application = loadApplicationFromClasspathOrParse(utils, loader, app);
                 launcher.managing(application);
             }
-            
-            // Figure out the brooklyn location(s) where to launch the application
-            Iterable<String> parsedLocations = new QuotedStringTokenizer(locations).remainderAsList();
-            log.info("Parsed user provided location(s): {}",Lists.newArrayList(parsedLocations));
-            List<Location> brooklynLocations = new LocationRegistry().getLocationsById(
-                    (parsedLocations==null || Iterables.isEmpty(parsedLocations)) ?
-                            ImmutableSet.of(CommandLineLocations.LOCALHOST) : parsedLocations);
             
             // Launch server
             log.info("Launching Brooklyn web console management");

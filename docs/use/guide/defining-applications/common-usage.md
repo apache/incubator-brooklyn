@@ -35,45 +35,34 @@ including appropriate sensors and effectors, and in some cases include Cluster a
  
 These include:
 
-- **Web**: Tomcat, JBoss; nginx; GeoScaling; cluster and fabric
-- **Relational Databases**: MySQL, Derby
-- **NoSQL**: Infinispan, Redis, GemFire
-- **Messaging**: ActiveMQ, Qpid
-
-See [Extras](../extras/) for a full list of systems available out of the box.
+- **Web**: Tomcat, JBoss, Jetty (external), Play (external); nginx; GeoScaling
+- **Data**: MySQL, Redis, Infinispan, GemFire (external)
+- **Containers**: Karaf
+- **Messaging**: ActiveMQ, Qpid, Rabbit MQ
+- **PaaS**: Cloud Foundry, Stackato; OpenShift
 
 
 ### Off-the-Shelf Locations
 
-- SSH: any machine or set of machines to which you can ssh
-- Clouds: Amazon, GoGrid, vCloud, and many more (using jclouds)
+Brooklyn supports deploying to any machine which admits SSH access, as well as to
+a huge variety of external and on-premise clouds.  You can also connect to services,
+or use whatever technique for deployment suits you best (such as Xebia Overthere, in development!).
 
 Configuration is typically set in `~/.brooklyn/brooklyn.properties` using keys such as the following:
 
 {% highlight java %}
     # use this key for localhost (this is the default, although if you have a passphrase you must set it)
     brooklyn.localhost.privateKeyFile=~/.ssh/id_rsa
+    
     brooklyn.localhost.privateKeyPassphrase=s3cr3tPASSPHRASE
        
-    # use a special key when connecting to public clouds, and a special one for AWS
+    # use a special key when connecting to public clouds, and a particularly special one for AWS
     brooklyn.jclouds.privateKeyFile=~/.ssh/public_clouds/id_rsa
     brooklyn.jclouds.aws-ec2.privateKeyFile=~/.ssh/public_clouds/aws_id_rsa
         
     # AWS credentials (when deploying to location jclouds:aws-ec2)
     brooklyn.jclouds.aws-ec2.identity=ABCDEFGHIJKLMNOPQRST      
     brooklyn.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
-
-    # define a "named" location which uses a special set of AWS credentials (deploy to named:company-aws)
-    brooklyn.location.named.company-aws=jclouds:aws-ec2:us-west-1
-    brooklyn.location.named.company-aws.identity=BCDEFGHIJKLMNOPQRSTU      
-    brooklyn.location.named.company-aws.privateKeyFile=~/.ssh/public_clouds/company_aws_id_rsa
-
-    # and a "named" location which uses a fixed set of machines (deploy to named:prod1)
-    # note powerful byon syntax, optionally including globs and per-machine user override
-    brooklyn.location.named.prod1=byon:(hosts="10.9.0.1,10.9.0.2,produser2@10.9.1.{10,11,20-29}")
-    brooklyn.location.named.prod1.user=produser      
-    brooklyn.location.named.prod1.privateKeyFile=~/.ssh/produser_id_rsa
-    brooklyn.location.named.prod1.privateKeyPassphrase=s3cr3tCOMPANYpassphrase
     
     # credentials for 'geoscaling' service
     brooklyn.geoscaling.username=cloudsoft                      
@@ -83,12 +72,63 @@ Configuration is typically set in `~/.brooklyn/brooklyn.properties` using keys s
 These can also be set as environment variables (in the shell) or system properties (java command line).
 (There are also ``BROOKLYN_JCLOUDS_PRIVATE_KEY_FILE`` variants accepted.)
 
-For any provider you will typically need to set ``identity`` and ``credential``
+For any jclouds provider you will typically need to set ``identity`` and ``credential``
 in the ``brooklyn.jclouds.provider`` namespace.
-Other fields may be available (from brooklyn or jclouds).
 
-Public keys can also be specified, using ``brooklyn.jclouds.publicKeyFile``, 
-but these can usually be omitted 
-(it will be inferred by adding the suffix ``.pub`` to the private key).
-If there is a passphrase on the key file being used, you must supply it to Brooklyn for it to work, of course!
+To deploy to sets of machines with known IP's, assuming you have the credentials,
+use the syntax ``byon:(hosts="user@10.9.1.1,user@10.9.1.2,user@10.9.1.3")``
+(this requires your default private key to have access; 
+see the ``prod1`` example below for specifying other credentials). 
+
+A wide range of other fields is available, because in the real world sometimes things do get complicated.
+The following is supported from the configuration file (with whatever customization you might want available in code): 
+
+- If there is a passphrase on the key file being used, you must supply it to Brooklyn for it to work, of course!
+  ``privateKeyPassphrase`` does the trick (as in ``brooklyn.jclouds.privateKeyPassphrase``, or other places
+  where ``privateKeyFile`` is valid).  If you don't like keys, you can just use a plain old ``password``.
+
+- Hardware requirements such as ``minRam`` and ``minCores`` can be supplied, or a ``hardwareId``  (jclouds only)
+
+- Specific VM images can be specified using ``imageId`` or ``imageNameRegex`` (jclouds only)
+
+- User metadata can be attached, using the syntax ``userMetadata=key=value,key2="value 2"`` (jclouds only)
+
+- A ``user`` can be specified, with the property that -- in a jclouds world -- the user will be *created* on the machine,
+  with admin rights, authorizing the relevant public key (corresponding to the private key, or as described below). 
+  Login for the root account will be disabled, as will login by password if a public key is supplied. 
+  (This is skipped if ``user`` is the ``root`` or other initial login user.)
+  
+- You can specify the user account to use to login to jclouds initially with the ``loginUser`` property.
+  Typically this is auto-detected by jclouds
+  (often ``root``, or ``ubuntu`` or ``ec2-user`` for known Ubuntu or Amazon Linux images), 
+  but the strategy isn't foolproof, particularly in some private cloud setups. (jclouds only)
+
+- Public keys can be specified using ``publicKeyFile``, 
+  although these can usually be omitted if they follow the common pattern of being
+  the private key file with the suffix ``.pub`` appended.
+  (It is useful in the case of ``loginUser.publicKeyFile``, where you shouldn't need,
+  or might not even have, the private key of the ``root`` user in order to log in.)
+
+You can also define named locations for commonly used groups of properties, 
+with the syntax ``brooklyn.location.named.your-group-name.``
+followed by the relevant properties.
+These can be accessed at runtime using the syntax ``named:your-group-name`` as the deployment location.
+
+Some more advanced examples showing the syntax and properties above are as follows:
+
+{% highlight java %}
+    # Production pool of machines for my application (deploy to named:prod1)
+    brooklyn.location.named.prod1=byon:(hosts="10.9.1.1,10.9.1.2,produser2@10.9.2.{10,11,20-29}")
+    brooklyn.location.named.prod1.user=produser1
+    brooklyn.location.named.prod1.privateKeyFile=~/.ssh/produser_id_rsa
+    brooklyn.location.named.prod1.privateKeyPassphrase=s3cr3tCOMPANYpassphrase
+    
+    # AWS using my company's credentials and image standard, then labelling images so others know they're mine
+    brooklyn.location.named.company-jungle=jclouds:aws-ec2:us-west-1
+    brooklyn.location.named.company-jungle.identity=BCDEFGHIJKLMNOPQRSTU      
+    brooklyn.location.named.company-jungle.privateKeyFile=~/.ssh/public_clouds/company_aws_id_rsa
+    brooklyn.location.named.company-jungle.imageId=ami-12345
+    brooklyn.location.named.company-jungle.minRam=2048
+    brooklyn.location.named.company-jungle.userMetadata=application=my-jungle-app,owner="Bob Johnson"
+{% endhighlight %}
 

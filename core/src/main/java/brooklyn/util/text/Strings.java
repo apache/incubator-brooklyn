@@ -481,4 +481,9 @@ public class Strings {
         return ("a"+s).trim().substring(1);
     }
 
+    /** returns up to maxlen characters from the start of s */
+    public static String maxlen(String s, int maxlen) {
+        return s.substring(0, Math.min(s.length(), maxlen));
+    }
+
 }

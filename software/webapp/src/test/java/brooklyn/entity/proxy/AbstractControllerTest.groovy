@@ -13,19 +13,20 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.entity.driver.MockSshBasedSoftwareSetup
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.trait.Startable
-import brooklyn.event.Sensor
-import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.AttributeSensor
 import brooklyn.location.Location
+import brooklyn.location.MachineLocation
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestEntity
+import brooklyn.util.flags.SetFromFlag
 
 class AbstractControllerTest {
 
@@ -53,14 +54,16 @@ class AbstractControllerTest {
         final AtomicInteger invokeCountForStart = new AtomicInteger(0);
         controller = new AbstractController(
                 owner:app, 
-                cluster:cluster, 
-                portNumberSensor:ClusteredEntity.MY_PORT,
+                serverPool:cluster, 
+                portNumberSensor:ClusteredEntity.HTTP_PORT,
                 domain:"mydomain") {
 
             @Override
             protected void reconfigureService() {
-                log.info "test controller reconfigure, addresses $addresses"
-                if ((addresses && !updates) || (updates && addresses!=updates.last())) updates.add(addresses)
+                log.info "test controller reconfigure, addresses $serverPoolAddresses"
+                if ((serverPoolAddresses && !updates) || (updates && serverPoolAddresses!=updates.last())) {
+                    updates.add(serverPoolAddresses)
+                }
             }
 
             @Override
@@ -84,7 +87,7 @@ class AbstractControllerTest {
         def u = new ArrayList(updates);
         assertEquals(u, [], "expected empty list but got $u")
         
-        child.setAttribute(ClusteredEntity.MY_PORT, 1234)
+        child.setAttribute(ClusteredEntity.HTTP_PORT, 1234)
         child.setAttribute(Startable.SERVICE_UP, true)
         assertEventuallyAddressesMatchCluster()
 
@@ -93,7 +96,7 @@ class AbstractControllerTest {
         executeUntilSucceeds { cluster.ownedChildren.size() == 2 }
         EntityLocal child2 = cluster.ownedChildren.asList().get(1)
         
-        child2.setAttribute(ClusteredEntity.MY_PORT, 1234)
+        child2.setAttribute(ClusteredEntity.HTTP_PORT, 1234)
         child2.setAttribute(Startable.SERVICE_UP, true)
         assertEventuallyAddressesMatchCluster()
     }
@@ -119,7 +122,7 @@ class AbstractControllerTest {
         // Get some children, so we can remove one...
         cluster.resize(2)
         cluster.ownedChildren.each {
-            it.setAttribute(ClusteredEntity.MY_PORT, 1234)
+            it.setAttribute(ClusteredEntity.HTTP_PORT, 1234)
             it.setAttribute(Startable.SERVICE_UP, true)
         }
         assertEventuallyAddressesMatchCluster()
@@ -156,13 +159,19 @@ class ClusteredEntity extends TestEntity {
     public ClusteredEntity(Map flags=[:], Entity owner=null) { super(flags,owner) }
     public ClusteredEntity(Entity owner) { this([:],owner) }
     
-    public static final Sensor<Integer> MY_PORT = new BasicAttributeSensor<Integer>(Integer.class, "port", "My port");
+    @SetFromFlag("hostname")
+    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
+    
+    @SetFromFlag("port")
+    public static final AttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT;
     
     MachineProvisioningLocation provisioner
     
     public void start(Collection<? extends Location> locs) {
         provisioner = locs.first()
-        locations << provisioner.obtain([:])
+        MachineLocation machine = provisioner.obtain([:]);
+        locations << machine
+        setAttribute(HOSTNAME, machine.address.hostName);
     }
     public void stop() {
         provisioner?.release(firstLocation())

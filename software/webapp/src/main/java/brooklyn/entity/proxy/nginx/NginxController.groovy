@@ -136,15 +136,21 @@ public class NginxController extends AbstractController {
         reconfigureService();
     }
     
+    @Override
     protected void reconfigureService() {
 
         String cfg = getConfigFile();
         if (cfg==null) return;
-        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", this, addresses, findUrlMappings());
+        
+        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", this, serverPoolAddresses, findUrlMappings());
         if (LOG.isTraceEnabled()) LOG.trace("Reconfiguring {}, config file:\n{}", this, cfg);
         
         NginxSshDriver driver = (NginxSshDriver)getDriver();
-        if (!driver.isCustomizationCompleted()) return;
+        if (!driver.isCustomizationCompleted()) {
+            if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, but driver's customization not yet complete so aborting");
+            return;
+        }
+        
         driver.machine.copyTo(new ByteArrayInputStream(cfg.getBytes()), driver.getRunDir()+"/conf/server.conf");
         
         installSslKeys("global", getConfig(SSL_CONFIG));
@@ -177,8 +183,12 @@ public class NginxController extends AbstractController {
         // TODO should refactor this method to a new class with methods e.g. NginxConfigFileGenerator...
         
         NginxSshDriver driver = (NginxSshDriver)getDriver();
-        if (driver==null) return null;
-                
+        if (driver==null) {
+            if (LOG.isDebugEnabled()) LOG.debug("No driver for {}, so not generating config file (is entity stopping? state={})", 
+                this, getAttribute(NginxController.SERVICE_STATE));
+            return null;
+        }
+        
         StringBuilder config = new StringBuilder();
         config.append("\n")
         config.append(format("pid %s/logs/nginx.pid;\n",driver.getRunDir()));
@@ -193,24 +203,27 @@ public class NginxController extends AbstractController {
         
         // If no servers, then defaults to returning 404
         // TODO Give nicer page back 
-        config.append("  server {\n");
-        config.append("    listen "+getPort()+";\n")
-        config.append("    return 404;\n")
-        config.append("  }\n");
+        if (getDomain()!=null || serverPoolAddresses==null || serverPoolAddresses.isEmpty()) {
+            config.append("  server {\n");
+            config.append("    listen "+getPort()+";\n")
+            config.append("    return 404;\n")
+            config.append("  }\n");
+        }
         
         // For basic round-robin across the server-pool
-        if (addresses) {
+        if (serverPoolAddresses) {
             config.append(format("  upstream "+getId()+" {\n"))
             if (sticky){
                 config.append("    sticky;\n");
             }
-            for (String address: addresses){
+            for (String address: serverPoolAddresses){
                 config.append("    server "+address+";\n")
             }
             config.append("  }\n")
             config.append("  server {\n");
             config.append("    listen "+getPort()+";\n")
-            config.append("    server_name "+getDomain()+";\n")
+            if (getDomain()!=null)
+                config.append("    server_name "+getDomain()+";\n")
             config.append("    location / {\n");
             config.append("      proxy_pass "+(globalSslConfig && globalSslConfig.targetIsSsl ? "https" : "http")+"://"+getId()+";\n");
             config.append("    }\n");
@@ -350,4 +363,5 @@ public class NginxController extends AbstractController {
             return Collections.<UrlMapping>emptyList();
         }
     }
+
 }

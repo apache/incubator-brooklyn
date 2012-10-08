@@ -96,10 +96,43 @@ public class JcloudsLocationRebindTest {
         String id = machine.getJcloudsId()
         InetAddress address = machine.getAddress()
         String hostname = address.getHostName()
+        String user = machine.getUser()
+        
+        // Create a new jclouds location, and re-bind the existing VM to that
+        JcloudsLocation loc2 = locFactory.newLocation(EUWEST_REGION_NAME)
+        SshMachineLocation machine2 = loc2.rebindMachine(id:id, hostname:hostname, user:user)
+        
+        // Confirm the re-bound machine is wired up
+        assertTrue(machine2.isSshable())
+        assertEquals(ImmutableSet.copyOf(loc2.getChildLocations()), ImmutableSet.of(machine2))
+        
+        // Confirm can release the re-bound machine via the new jclouds location
+        loc2.release(machine2)
+        assertFalse(machine2.isSshable())
+        assertEquals(ImmutableSet.copyOf(loc2.getChildLocations()), Collections.emptySet())
+    }
+    
+    @Test(groups = [ "Live" ])
+    public void testRebindVmDeprecated() {
+        loc = locFactory.newLocation(EUWEST_REGION_NAME)
+        loc.setTagMapping([MyEntityType:[
+            imageId:EUWEST_IMAGE_ID,
+            imageOwner:IMAGE_OWNER
+        ]])
+
+        // Create a VM through jclouds
+        Map flags = loc.getProvisioningFlags(["MyEntityType"])
+        JcloudsSshMachineLocation machine = obtainMachine(flags)
+        assertTrue(machine.isSshable())
+
+        String id = machine.getJcloudsId()
+        InetAddress address = machine.getAddress()
+        String hostname = address.getHostName()
         String username = machine.getUser()
         
         // Create a new jclouds location, and re-bind the existing VM to that
         JcloudsLocation loc2 = locFactory.newLocation(EUWEST_REGION_NAME)
+        // pass deprecated userName
         SshMachineLocation machine2 = loc2.rebindMachine(id:id, hostname:hostname, userName:username)
         
         // Confirm the re-bound machine is wired up

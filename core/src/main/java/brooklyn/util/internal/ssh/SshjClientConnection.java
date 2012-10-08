@@ -255,7 +255,7 @@ public class SshjClientConnection implements SshAction<SSHClient> {
     @Override
     public String toString() {
         return Objects.toStringHelper("").add("hostAndPort", hostAndPort).add("user", username)
-                .add("ssh", ssh != null ? ssh.hashCode() : null).add("password", password)
+                .add("ssh", ssh != null ? ssh.hashCode() : null).add("password", "xxxxxx")
                 .add("privateKeyFile", privateKeyFile).add("privateKey", (privateKeyData != null ? null : "xxxxxx"))
                 .add("connectTimeout", connectTimeout).add("sessionTimeout", sessionTimeout).toString();
     }

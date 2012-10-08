@@ -45,7 +45,7 @@ public class CommonCommands {
      * <p/>
      * Ensuring non-blocking if password not set by using {@code -S} which reads
      * from stdin routed to {@code /dev/null} and {@code -E} passes the parent
-     * environment in. If already root, simplem runs the command.
+     * environment in. If already root, simply runs the command, wrapped in brackets in case it is backgrounded.
      * <p/>
      * The command is not quoted or escaped in any ways. 
      * If you are doing privileged redirect you may need to pass e.g. "bash -c 'echo hi > file'".
@@ -54,7 +54,7 @@ public class CommonCommands {
      */
     public static String sudo(String command) {
         if (command==null) return null;
-        return format("(test $UID -eq 0 && %s || sudo -E -n -s -- %s)", command, command);
+        return format("(test $UID -eq 0 && ( %s ) || sudo -E -n -s -- %s )", command, command);
     }
 
     /**

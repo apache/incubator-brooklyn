@@ -11,8 +11,10 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +32,7 @@ import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.callables.RunScriptOnNode;
 import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
 import org.jclouds.compute.domain.OsFamily;
@@ -44,7 +47,7 @@ import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.scriptbuilder.domain.InterpretableStatement;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
-import org.jclouds.scriptbuilder.statements.login.UserAdd;
+import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +57,13 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder;
+import brooklyn.util.KeyValueParser;
 import brooklyn.util.MutableMap;
+import brooklyn.util.Time;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
@@ -73,18 +80,26 @@ import com.google.common.util.concurrent.ListenableFuture;
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
  * 
  * Configuration flags include the following:
- *  - userName (defaults to "root")
+ *  - provider (e.g. "aws-ec2")
+ *  - providerLocationId (e.g. "eu-west-1")
+ *  - defaultImageId
+ *  
+ *  - user (defaults to "root" or other known superuser)
  *  - publicKeyFile
  *  - privateKeyFile
+ *  - privateKeyPasspharse
+ *  
+ *  - loginUser (if should initially login as someone other that root / default VM superuser)
+ *  - loginUser.privateKeyFile
+ *  - loginUser.privateKeyPasspharse
+ *  
+ *  // deprecated
  *  - sshPublicKey
  *  - sshPrivateKey
  *  - rootSshPrivateKey (@Beta)
  *  - rootSshPublicKey (@Beta)
  *  - rootSshPublicKeyData (@Beta; calls templateOptions.authorizePublicKey())
  *  - dontCreateUser (otherwise if user != root, then creates this user)
- *  - provider (e.g. "aws-ec2")
- *  - providerLocationId (e.g. "eu-west-1")
- *  - defaultImageId
  * 
  * The flags can also includes values passed straight through to jclouds; to the TemplateBuilder:
  *  - minRam
@@ -118,6 +133,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
      *  where root@ is not allowed to log in */  
     public static final List<String> ROOT_ALIASES = ImmutableList.of("ubuntu", "ec2-user");
     public static final List<String> NON_ADDABLE_USERS = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).build();
+    
     public static final int START_SSHABLE_TIMEOUT = 5*60*1000;
 
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
@@ -196,45 +212,141 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             useConfig(instance.getConf());
         }
         
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         BrooklynJcloudsSetupHolder useConfig(Map flags) {
             allconf.putAll(flags);
             unusedConf.putAll(flags);
             return this;
         }
         
+        
+        private Object get(String key) {
+            unusedConf.remove(key);
+            return allconf.get(key);
+        }
+        private boolean use(String key) {
+            unusedConf.remove(key);
+            return truth(allconf.get(key));
+        }
+
+        @SuppressWarnings("unchecked")
+        private boolean setKeyFromKey(String targetKey, String key) {
+            if (!use(key)) return false;
+            Object value = get(key);
+            allconf.put(targetKey, value);
+            return true;
+        }
+
+        @SuppressWarnings("unchecked")
+        private <T> T setKeyToValue(String key, T value) {
+            allconf.put(key, value);
+            return value;
+        }
+
+        String provider;
+        String providerLocationId;
+        
+        String user;
+        String privateKeyData, privateKeyPassphrase, publicKeyData, password;
+        /** @deprecated */
+        String sshPublicKeyData, sshPrivateKeyData;
+
+        String loginUser;
+        String loginUser_privateKeyData, loginUser_privateKeyPassphrase, loginUser_password;
+        
         BrooklynJcloudsSetupHolder apply() {
             try {
-                if (truth(unusedConf.remove("callerContext"))) _callerContext = allconf.get("callerContext");
+                if (use("provider"))
+                    provider = ""+get("provider");
+                if (use("providerLocationId"))
+                    providerLocationId = ""+get("providerLocationId");
                 
-                // this _creates_ the indicated userName (not a good API...)
-                if (!truth(unusedConf.remove("userName"))) allconf.put("userName", ROOT_USERNAME);
+                if (use("callerContext"))
+                    _callerContext = get("callerContext");
+                
+                // align user (brooklyn standard) and userName (jclouds standard) fields
+                // TODO don't default to root --> default later to what jclouds says
+                if (!use("user") && use("userName"))
+                    setKeyFromKey("user", "userName");
+                if (use("user"))
+                    user = (String) get("user");
                 
                 // perhaps deprecate supply of data (and of different root key?) to keep it simpler?
-                if (truth(unusedConf.remove("publicKeyFile"))) 
-                    allconf.put("sshPublicKeyData", Files.toString(instance.getPublicKeyFile(allconf), Charsets.UTF_8));
-                if (truth(unusedConf.remove("privateKeyFile"))) 
-                    allconf.put("sshPrivateKeyData", Files.toString(instance.getPrivateKeyFile(allconf), Charsets.UTF_8));
-                if (truth(unusedConf.remove("sshPublicKey"))) 
-                    allconf.put("sshPublicKeyData", Files.toString(asFile(allconf.get("sshPublicKey")), Charsets.UTF_8));
-                if (truth(unusedConf.remove("sshPrivateKey"))) 
-                    allconf.put("sshPrivateKeyData", Files.toString(asFile(allconf.get("sshPrivateKey")), Charsets.UTF_8));
-                if (truth(unusedConf.remove("rootSshPrivateKey"))) 
-                    allconf.put("rootSshPrivateKeyData", Files.toString(asFile(allconf.get("rootSshPrivateKey")), Charsets.UTF_8));
-                if (truth(unusedConf.remove("rootSshPublicKey"))) 
-                    allconf.put("rootSshPublicKeyData", Files.toString(asFile(allconf.get("rootSshPublicKey")), Charsets.UTF_8));
-                if (truth(unusedConf.remove("dontCreateUser"))) 
-                    allconf.put("dontCreateUser", true);
+                if (truth(unusedConf.remove("publicKeyData")))
+                    publicKeyData = sshPublicKeyData = ""+get("publicKeyData");
+                if (truth(unusedConf.remove("privateKeyData")))
+                    privateKeyData = sshPrivateKeyData = ""+get("privateKeyData");
+                if (use("privateKeyFile")) {
+                    if (truth(privateKeyData)) LOG.warn("privateKeyData and privateKeyFile both specified; preferring the former");
+                    else
+                        privateKeyData = sshPublicKeyData = setKeyToValue("sshPrivateKeyData", Files.toString(instance.getPrivateKeyFile(allconf), Charsets.UTF_8));
+                }
+                if (truth(unusedConf.remove("publicKeyFile"))) {
+                    if (truth(publicKeyData)) LOG.warn("publicKeyData and publicKeyFile both specified; preferring the former");
+                    else
+                        publicKeyData = sshPublicKeyData = setKeyToValue("sshPublicKeyData", Files.toString(instance.getPublicKeyFile(allconf), Charsets.UTF_8));
+                } else if (!truth(publicKeyData) && truth(get("privateKeyFile"))) {
+                    File f = new File(""+get("privateKeyFile")+".pub");
+                    if (f.exists()) {
+                        LOG.debug("Loading publicKeyData from privateKeyFile + .pub");
+                        publicKeyData = sshPublicKeyData = setKeyToValue("sshPublicKeyData", Files.toString(f, Charsets.UTF_8));
+                    }
+                }
+                // deprecated:
+                if (use("sshPublicKey")) 
+                    publicKeyData = sshPublicKeyData = setKeyToValue("sshPublicKeyData", Files.toString(asFile(allconf.get("sshPublicKey")), Charsets.UTF_8));
+                if (use("sshPrivateKey")) 
+                    privateKeyData = sshPrivateKeyData = setKeyToValue("sshPrivateKeyData", Files.toString(asFile(allconf.get("sshPrivateKey")), Charsets.UTF_8));
+                
+                // are these two ever used:
+                if (use("rootSshPrivateKey")) {
+                    LOG.warn("Using deprecated property rootSshPrivateKey; use loginUser{,.privateKeyFile,...} instead");
+                    setKeyToValue("rootSshPrivateKeyData", Files.toString(asFile(allconf.get("rootSshPrivateKey")), Charsets.UTF_8));
+                }
+                if (use("rootSshPublicKey")) {
+                    LOG.warn("Using deprecated property rootSshPublicKey; use loginUser{,.publicKeyFile} instead (though public key often not needed)");
+                    setKeyToValue("rootSshPublicKeyData", Files.toString(asFile(allconf.get("rootSshPublicKey")), Charsets.UTF_8));
+                }
+                // above replaced with below
+                if (use("loginUser")) {
+                    loginUser = ""+get("loginUser");
+                    if (use("loginUser.privateKeyData")) {
+                        loginUser_privateKeyData = ""+get("loginUser.privateKeyData");
+                    }
+                    if (use("loginUser.privateKeyFile")) {
+                        if (loginUser_privateKeyData!=null) 
+                            LOG.warn("loginUser private key data and private key file specified; preferring from file");
+                        loginUser_privateKeyData = setKeyToValue("loginUser.privateKeyData", Files.toString(asFile(allconf.get("loginUser.privateKeyFile")), Charsets.UTF_8));
+                    }
+                    if (use("loginUser.privateKeyPassphrase")) {
+                        LOG.warn("loginUser.privateKeyPassphrase not supported by jclouds; use a key which does not have a passphrase for the loginUser");
+                        loginUser_privateKeyPassphrase = ""+get("loginUser.privateKeyPassphrase");
+                    }
+                    if (use("loginUser.password")) {
+                        loginUser_password = ""+get("loginUser.password");
+                    }
+                    // these we ignore
+                    use("loginUser.publicKeyData");
+                    use("loginUser.publicKeyFile");
+                    
+                    if (loginUser.equals(user)) {
+                        LOG.debug("Detected that jclouds loginUser is the same as regular user; we don't create this user");
+                    }
+                }
+                
+                if (use("dontCreateUser")) {
+                    LOG.warn("Using deprecated property dontCreateUser; use login.user instead, set equal to the user to run as");
+                    setKeyToValue("dontCreateUser", true);
+                }
                 // allows specifying a LoginCredentials object, for use by jclouds, if known for the VM (ie it is non-standard);
-                if (truth(unusedConf.remove("customCredentials"))) 
-                    customCredentials = (LoginCredentials) allconf.get("customCredentials");
+                if (use("customCredentials")) 
+                    customCredentials = (LoginCredentials) get("customCredentials");
          
                 // following values are copies pass-through, no change
-                unusedConf.remove("privateKeyPassphrase");
-                unusedConf.remove("password");
+                use("privateKeyPassphrase");
+                use("password");
+                use("noDefaultSshKeys");
                 
-                unusedConf.remove("provider");
-                unusedConf.remove("providerLocationId");
-                unusedConf.remove("noDefaultSshKeys");
                 return this;
             } catch (IOException e) {
                 throw Throwables.propagate(e);
@@ -255,7 +367,42 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             if (truth(_callerContext)) return _callerContext.toString();
             return "thread "+Thread.currentThread().getId();
         }
-        
+
+        public String setUser(String u) {
+            String oldUser = user;
+            user = u;
+            allconf.put("user", u);
+            allconf.put("userName", u);
+            return oldUser;
+        }
+
+        public String setPassword(String password) {
+            String oldPassword = this.password;
+            this.password = password;
+            allconf.put("password", password);
+            return oldPassword;
+        }
+
+        public String setPrivateKeyData(String privateKeyData) {
+            String oldPrivateKeyData = this.privateKeyData;
+            this.privateKeyData = privateKeyData;
+            allconf.put("privateKeyData", privateKeyData);
+            allconf.put("sshPrivateKeyData", privateKeyData);
+            return oldPrivateKeyData;
+        }
+
+        public void set(String key, String value) {
+            allconf.put(key, value);
+        }
+
+        public boolean isDontCreateUser() {
+            if (!use("dontCreateUser")) return false;
+            Object v = get("dontCreateUser");
+            if (v==null) return false;
+            if (v instanceof Boolean) return ((Boolean)v).booleanValue();
+            if (v instanceof CharSequence) return Boolean.parseBoolean(((CharSequence)v).toString());
+            throw new IllegalArgumentException("dontCreateUser does not accept value '"+v+"' of type "+v.getClass());
+        }
     }
     
     public static final Set<String> getAllSupportedProperties() {
@@ -270,9 +417,14 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     //also, we need a way to define imageId (and others?) with a specific location
         
     public static final Collection<String> SUPPORTED_BASIC_PROPERTIES = ImmutableSet.of(
-        "provider", "identity", "credential", "userName", "publicKeyFile", "privateKeyFile", "privateKeyPassphrase", 
-        "sshPublicKey", "sshPrivateKey", "rootSshPrivateKey", "rootSshPublicKey", "groupId", 
-        "providerLocationId", "provider");
+        "provider", "identity", "credential", "groupId", "providerLocationId", 
+        "userName", "user", 
+        "publicKeyFile", "privateKeyFile", "publicKeyData", "privateKeyData", "privateKeyPassphrase", 
+        "loginUser", "loginUser.password", "loginUser.publicKeyFile", "loginUser.privateKeyFile", "loginUser.publicKeyData", "loginUser.privateKeyData", "loginUser.privateKeyPassphrase", 
+        // deprecated:
+        "sshPublicKey", "sshPrivateKey", 
+        "rootSshPrivateKey", "rootSshPublicKey"
+        );
     
     /** returns public key file, if one has been configured */
     public File getPublicKeyFile() { return getPublicKeyFile(getConf()); }
@@ -323,10 +475,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         NodeMetadata node = null;
         try {
             LOG.info("Creating VM in "+
-                    elvis(setup.allconf.get("providerLocationId"), setup.allconf.get("provider"))+
-                    " for "+setup.getCallerContext());
+                    elvis(setup.providerLocationId, setup.provider)+" for "+setup.getCallerContext());
 
-            Template template = buildTemplate(computeService, (String)setup.allconf.get("providerLocationId"), setup);
+            Template template = buildTemplate(computeService, setup);
 
             setup.warnIfUnused("JcloudsLocation.obtain");            
     
@@ -334,50 +485,70 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             node = Iterables.getOnlyElement(nodes, null);
             LOG.debug("jclouds created {} for {}", node, setup.getCallerContext());
             if (node == null) {
-                throw new IllegalStateException("No nodes returned by jclouds create-nodes in location "
-                        +setup.allconf.get("providerLocationId")+" for "+setup.getCallerContext());
+                throw new IllegalStateException("No nodes returned by jclouds create-nodes in "
+                        +setup.provider+"/"+setup.providerLocationId+" for "+setup.getCallerContext());
             }
 
             LoginCredentials expectedCredentials = setup.customCredentials;
             if (expectedCredentials!=null) {
                 //set userName and other data, from these credentials
-                Object oldUsername = setup.allconf.put("userName", expectedCredentials.getUser());
+                Object oldUsername = setup.setUser(expectedCredentials.getUser());
                 LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, expectedCredentials.getUser(), oldUsername });
-                if (truth(expectedCredentials.getPassword())) setup.allconf.put("password", expectedCredentials.getPassword());
-                if (truth(expectedCredentials.getPrivateKey())) setup.allconf.put("sshPrivateKeyData", expectedCredentials.getPrivateKey());
+                if (truth(expectedCredentials.getPassword())) setup.setPassword(expectedCredentials.getPassword());
+                if (truth(expectedCredentials.getPrivateKey())) setup.setPrivateKeyData(expectedCredentials.getPrivateKey());
             }
-            if (expectedCredentials==null && truth(setup.allconf.get("sshPrivateKeyData"))) {
+            if (expectedCredentials==null) {
                 expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
-                String userName = (String) setup.allconf.get("userName");
-                LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, userName, expectedCredentials.getUser() });
+                String user = setup.user;
+                LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, user, expectedCredentials.getUser() });
                 if (truth(expectedCredentials.getUser())) {
-                    if ("root".equals(userName) && ROOT_ALIASES.contains(expectedCredentials.getUser())) {
-                        // FIXME should use 'null' as username then learn it from jclouds
-                        // (or use AdminAccess!)
-                        LOG.debug("overriding username 'root' in favour of '"+expectedCredentials.getUser()+"' at {}", node);
-                        setup.allconf.put("userName", expectedCredentials.getUser());
-                        userName = expectedCredentials.getUser();
+                    if (user==null) {
+                        setup.setUser(user = expectedCredentials.getUser());
+                    } else if ("root".equals(user) && ROOT_ALIASES.contains(expectedCredentials.getUser())) {
+                        // deprecated, we used to default username to 'root'; now we leave null, then use autodetected credentials if no user specified
+                        // 
+                        LOG.warn("overriding username 'root' in favour of '"+expectedCredentials.getUser()+"' at {}; this behaviour may be removed in future", node);
+                        setup.setUser(user = expectedCredentials.getUser());
                     }
                 }
-                expectedCredentials = LoginCredentials.fromCredentials(new Credentials(userName, (String)setup.allconf.get("sshPrivateKeyData")));
                 //override credentials
+                String pkd = elvis(setup.privateKeyData, expectedCredentials.getPrivateKey());
+                String pwd = elvis(setup.password, expectedCredentials.getPassword());
+                if (user==null || (pkd==null && pwd==null)) {
+                    String missing = (user==null ? "user" : "credential");
+                    LOG.warn("Not able to determine "+missing+" for "+this+" at "+node+"; will likely fail subsequently");
+                    expectedCredentials = null;
+                } else {
+                    LoginCredentials.Builder expectedCredentialsBuilder = LoginCredentials.builder().
+                            user(user);
+                    if (pkd!=null) expectedCredentialsBuilder.privateKey(pkd);
+                    if (pwd!=null) expectedCredentialsBuilder.password(pwd);
+                    expectedCredentials = expectedCredentialsBuilder.build();        
+                }
             }
             if (expectedCredentials != null)
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
             else
+                // only happens if something broke above...
                 expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
             
             // Wait for the VM to be reachable over SSH
-            if (setup.allconf.get("waitForSshable") != null ? truth(setup.allconf.get("waitForSshable")) : true) {
+            if (setup.get("waitForSshable") != null ? truth(setup.get("waitForSshable")) : true) {
                 String vmIp = JcloudsUtil.getFirstReachableAddress(node);
                 final NodeMetadata nodeRef = node;
                 final LoginCredentials expectedCredentialsRef = expectedCredentials;
                 
+                long delayMs = -1;
+                try {
+                    delayMs = Time.parseTimeString(""+setup.get("waitForSshable"));
+                } catch (Exception e) {}
+                if (delayMs<=0) delayMs = START_SSHABLE_TIMEOUT;
+                
                 LOG.info("Started VM in {} for {}; waiting for it to be sshable on {}@{}",
                         new Object[] {
-                                elvis(setup.allconf.get("providerLocationId"), setup.allconf.get("provider")),
+                                elvis(setup.get("providerLocationId"), setup.get("provider")),
                                 setup.getCallerContext(), 
-                                setup.allconf.get("userName"), 
+                                setup.user, 
                                 vmIp
                         });
                 boolean reachable = new Repeater()
@@ -386,46 +557,29 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     .until(new Callable<Boolean>() {
                         public Boolean call() {
                             Statement statement = Statements.newStatementList(exec("hostname"));
+                            // NB this assumes passwordless sudo !
                             ExecResponse response = computeService.runScriptOnNode(nodeRef.getId(), statement, 
                                     overrideLoginCredentials(expectedCredentialsRef));
-                            return response.getExitCode() == 0;
+                            return response.getExitStatus() == 0;
                         }})
-                    .limitTimeTo(START_SSHABLE_TIMEOUT,MILLISECONDS)
+                    .limitTimeTo(delayMs, MILLISECONDS)
                     .run();
 
                 if (!reachable) {
                     throw new IllegalStateException("SSH failed for "+
-                            setup.allconf.get("userName")+"@"+vmIp+" (for "+setup.getCallerContext()+") after waiting "+
-                            START_SSHABLE_TIMEOUT+"ms");
+                            setup.user+"@"+vmIp+" (for "+setup.getCallerContext()+") after waiting "+
+                            Time.makeTimeString(delayMs));
                 }
             }
             
-            String vmHostname = getPublicHostname(node, setup.allconf);
+            String vmHostname = getPublicHostname(node, setup);
             
-            Map sshConfig = Maps.newLinkedHashMap();
+            Map sshConfig = generateSshConfig(setup, node);
 
-            if (truth(getPrivateKeyFile())) sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
-            if (truth(setup.allconf.get("sshPrivateKeyData"))) {
-                sshConfig.put("privateKey", setup.allconf.get("sshPrivateKeyData"));
-                sshConfig.put("privateKeyData", setup.allconf.get("sshPrivateKeyData"));
-                sshConfig.put("sshPrivateKeyData", setup.allconf.get("sshPrivateKeyData"));
-            } else if (truth(getPrivateKeyFile())) {
-                sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
-            } else if (node.getCredentials().getPassword() != null) {
-                sshConfig.put("password", node.getCredentials().getPassword());
-            }
-            if (truth(setup.allconf.get("privateKeyPassphrase"))) {
-                // not sure jclouds supports this, but we try, and our ssh routines should use it
-                sshConfig.put("privateKeyPassphrase", setup.allconf.get("privateKeyPassphrase"));
-            }
-            if (truth(setup.allconf.get("sshPublicKeyData"))) {
-                sshConfig.put("sshPublicKeyData", setup.allconf.get("sshPublicKeyData"));
-            }
-    
             if (LOG.isDebugEnabled())
                 LOG.debug("creating JcloudsSshMachineLocation for {}@{} for {} with {}", 
                         new Object[] {
-                                setup.allconf.get("userName"), 
+                                setup.user, 
                                 vmHostname, 
                                 setup.getCallerContext(), 
                                 Entities.sanitize(sshConfig)
@@ -434,18 +588,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     MutableMap.builder()
                             .put("address", vmHostname) 
                             .put("displayName", vmHostname)
-                            .put("user", setup.allconf.get("userName"))
+                            .put("user", setup.user)
                             .put("config", sshConfig)
                             .build(),
                     this, 
                     node);
-            if (truth(setup.allconf.get("sshPrivateKeyData"))) 
-                sshLocByHostname.configure(MutableMap.of("sshPrivateKeyData", setup.allconf.get("sshPrivateKeyData")));
-            if (truth(setup.allconf.get("sshPublicKeyData"))) 
-                sshLocByHostname.configure(MutableMap.of("sshPublicKeyData", setup.allconf.get("sshPublicKeyData")));
-            if (truth(setup.allconf.get("password"))) 
-                sshLocByHostname.configure(MutableMap.of("password", setup.allconf.get("password")));
-            
+                        
             sshLocByHostname.setParentLocation(this);
             vmInstanceIds.put(sshLocByHostname, node.getId());
             
@@ -472,61 +620,73 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
     public JcloudsSshMachineLocation rebindMachine(Map flags, NodeMetadata metadata) throws NoMachinesAvailableException {
         BrooklynJcloudsSetupHolder setup = new BrooklynJcloudsSetupHolder(this).useConfig(flags).apply();
-        
-        Map newFlags = setup.allconf;
-        newFlags.put("id", metadata.getId());
-        LoginCredentials credentials = metadata.getCredentials();
-        if (truth(credentials)) {
-            if (truth(credentials.getUser())) newFlags.put("userName", credentials.getUser());
-            if (truth(credentials.getPrivateKey())) newFlags.put("sshPrivateKeyData", credentials.getPrivateKey());
-        } else {
-            //username should already be set
-            if (!truth(newFlags.get("privateKeyFile")))
-                newFlags.put("privateKeyFile", getPrivateKeyFile());
-        }
-        try {
-            newFlags.put("hostname", getPublicHostname(metadata, newFlags));
-        } catch (Exception e) {
-            // TODO this logic should be placed somewhere more useful/shared
-            //try again with user ubuntu, then root
-            newFlags.put("userName", "ubuntu");
-            try {
-                newFlags.put("hostname", getPublicHostname(metadata, newFlags));
-            } catch (Exception e2) {
-                newFlags.put("userName", "root");
-                try {
-                    newFlags.put("hostname", getPublicHostname(metadata, newFlags));
-                } catch (Exception e3) {
-                    LOG.warn("couldn't access "+metadata+" to discover hostname (rethrowing): "+e);
-                    throw Throwables.propagate(e);
-                }
-            }
-            LOG.info("remapping username at "+metadata+" to "+newFlags.get("userName")+" (this username works)");
-        }
-        return rebindMachine(newFlags);
+        if (!setup.use("id")) setup.set("id", metadata.getId());
+        setHostnameUpdatingCredentials(setup, metadata);
+        return rebindMachine(setup.allconf);
     }
     
+    protected void setHostnameUpdatingCredentials(BrooklynJcloudsSetupHolder setup, NodeMetadata metadata) {
+        List<String> usersTried = new ArrayList<String>();
+        
+        if (truth(setup.user)) {
+            if (setHostname(setup, metadata, false)) return;
+            usersTried.add(setup.user);
+        }
+        
+        LoginCredentials credentials = metadata.getCredentials();
+        if (truth(credentials)) {
+            if (truth(credentials.getUser())) setup.setUser(credentials.getUser());
+            if (truth(credentials.getPrivateKey())) setup.setPrivateKeyData(credentials.getPrivateKey());
+            if (setHostname(setup, metadata, false)) return;
+            usersTried.add(setup.user);
+        }
+        
+        for (String u: NON_ADDABLE_USERS) {
+            setup.setUser(u);
+            if (setHostname(setup, metadata, false)) {
+                LOG.warn("Auto-detected user at "+metadata+" as "+setup.user+" (other attempted users "+usersTried+" cannot access it)");
+                return;
+            }
+            usersTried.add(setup.user);
+        }
+        // just repeat, so we throw exception
+        LOG.warn("Failed to log in to "+metadata+", tried as users "+usersTried+" (throwing original exception)");
+        setHostname(setup, metadata, true);
+    }
+    
+    protected boolean setHostname(BrooklynJcloudsSetupHolder setup, NodeMetadata metadata, boolean rethrow) {
+        try {
+            setup.set("hostname", getPublicHostname(metadata, setup));
+            return true;
+        } catch (Exception e) {
+            if (rethrow) {
+                LOG.warn("couldn't connect to "+metadata+" when trying to discover hostname (rethrowing): "+e);
+                throw Throwables.propagate(e);                
+            }
+            return false;
+        }
+    }
+
     /**
      * Brings an existing machine with the given details under management.
      * <p>
      * Required fields are:
      * <ul>
-     *   <li>id: the jclouds VM id, e.g. "eu-west-1/i-5504f21d"
+     *   <li>id: the jclouds VM id, e.g. "eu-west-1/i-5504f21d" (NB this is @see JcloudsSshMachineLocation#getJcloudsId() not #getId())
      *   <li>hostname: the public hostname or IP of the machine, e.g. "ec2-176-34-93-58.eu-west-1.compute.amazonaws.com"
      *   <li>userName: the username for ssh'ing into the machine
      * <ul>
      */
     public JcloudsSshMachineLocation rebindMachine(Map flags) throws NoMachinesAvailableException {
         try {
-            String id = (String) checkNotNull(flags.get("id"), "id");
-            String hostname = (String) checkNotNull(flags.get("hostname"), "hostname");
-            String username = (String) checkNotNull(flags.get("userName"), "userName");
-            String password = (String) flags.get("password");
+            BrooklynJcloudsSetupHolder setup = new BrooklynJcloudsSetupHolder(this).useConfig(flags).apply();
+            String id = (String) checkNotNull(setup.get("id"), "id");
+            String hostname = (String) checkNotNull(setup.get("hostname"), "hostname");
+            String user = (String) checkNotNull(setup.user, "user");
             
             LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}", 
-                    new Object[] {id, username, hostname, getProvider()});
+                    new Object[] {id, user, hostname, getProvider()});
             
-            BrooklynJcloudsSetupHolder setup = new BrooklynJcloudsSetupHolder(this).useConfig(flags).apply();
                     
             ComputeService computeService = JcloudsUtil.buildComputeService(setup.allconf, setup.unusedConf);
             NodeMetadata node = computeService.getNodeMetadata(id);
@@ -534,47 +694,25 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 throw new IllegalArgumentException("Node not found with id "+id);
             }
     
-            if (truth(setup.allconf.get("sshPrivateKeyData"))) {
-                LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(new Credentials((String)setup.allconf.get("userName"), (String)setup.allconf.get("sshPrivateKeyData")));
+            if (truth(setup.privateKeyData)) {
+                LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(new Credentials(setup.user, setup.privateKeyData));
                 //override credentials
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
             }
             // TODO confirm we can SSH ?
-    
-            Map sshConfig = Maps.newLinkedHashMap();
-            if (password != null) {
-                sshConfig.put("password", password);
-            } else {
-                if (truth(getPrivateKeyFile())) sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
-                if (truth(setup.allconf.get("sshPrivateKeyData"))) {
-                    sshConfig.put("privateKey", setup.allconf.get("sshPrivateKeyData"));
-                    sshConfig.put("privateKeyData", setup.allconf.get("sshPrivateKeyData"));
-                    sshConfig.put("sshPrivateKeyData", setup.allconf.get("sshPrivateKeyData"));
-                } else if (truth(getPrivateKeyFile())) {
-                    sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
-                } else if (node.getCredentials().getPassword() != null) {
-                    sshConfig.put("password", node.getCredentials().getPassword());
-                }
-                if (truth(setup.allconf.get("sshPublicKeyData"))) {
-                    sshConfig.put("sshPublicKeyData", setup.allconf.get("sshPublicKeyData"));
-                }
-            }
+
+            Map sshConfig = generateSshConfig(setup, node);
             
             JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(
                     MutableMap.builder()
                             .put("address", hostname) 
                             .put("displayName", hostname)
-                            .put("user", username)
+                            .put("user", user)
                             .put("config", sshConfig)
                             .build(),
                     this, 
                     node);
-                
-            if (truth(setup.allconf.get("sshPrivateKeyData"))) 
-                sshLocByHostname.configure(MutableMap.of("sshPrivateKeyData", setup.allconf.get("sshPrivateKeyData")));
-            if (truth(setup.allconf.get("sshPublicKeyData"))) 
-                sshLocByHostname.configure(MutableMap.of("sshPublicKeyData", setup.allconf.get("sshPublicKeyData")));
-            
+                            
             sshLocByHostname.setParentLocation(this);
             vmInstanceIds.put(sshLocByHostname, node.getId());
                 
@@ -583,12 +721,43 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             throw Throwables.propagate(e);
         }
     }
+
+    private Map generateSshConfig(BrooklynJcloudsSetupHolder setup, NodeMetadata node) throws IOException {
+        Map sshConfig = Maps.newLinkedHashMap();
+        
+        if (setup.password != null) {
+            sshConfig.put("password", setup.password);
+        } else if (node!=null && node.getCredentials().getPassword() != null) {
+            sshConfig.put("password", node.getCredentials().getPassword());
+        }
+        
+        if (truth(setup.privateKeyData)) {
+            sshConfig.put("privateKeyData", setup.privateKeyData);
+        } else if (truth(setup.allconf.get("sshPrivateKeyData"))) {
+            LOG.warn("Using legacy sshPrivateKeyData but not privateKeyData");
+            Object d = setup.allconf.get("sshPrivateKeyData");
+            sshConfig.put("privateKeyData", d);
+            sshConfig.put("privateKey", d);
+            sshConfig.put("sshPrivateKeyData", d);
+        } else if (truth(getPrivateKeyFile())) {
+            LOG.warn("Using legacy keyFiles but not privateKeyData");
+            sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath()));
+        }
+        
+        if (truth(setup.allconf.get("privateKeyPassphrase"))) {
+            // NB: not supported in jclouds
+            sshConfig.put("privateKeyPassphrase", setup.privateKeyPassphrase);
+        }
+
+        return sshConfig;
+    }
     
     public static String generateGroupId() {
         // In jclouds 1.5, there are strict rules for group id: it must be DNS compliant, and no more than 15 characters
+        // TODO surely this can be overridden!  it's so silly being so short in common places ... or at least set better metadata?
         String user = System.getProperty("user.name");
-        String rand = Identifiers.makeRandomId(2);
-        String result = "br-"+(user.substring(0,Math.min(user.length(),5)))+"-"+rand;
+        String rand = Identifiers.makeRandomId(6);
+        String result = "br-"+Strings.maxlen(user, 4)+"-"+rand;
         return result.toLowerCase();
     }
 
@@ -650,11 +819,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public static final Map<String,CustomizeTemplateBuilder> SUPPORTED_TEMPLATE_BUILDER_PROPERTIES = ImmutableMap.<String,CustomizeTemplateBuilder>builder()
             .put("minRam", new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, Map props, Object v) {
-                        tb.minRam((Integer)v);
+                        tb.minRam(TypeCoercions.coerce(v, Integer.class));
                     }})
             .put("minCores", new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, Map props, Object v) {
-                        tb.minCores(toDouble(v));
+                        tb.minCores(TypeCoercions.coerce(v, Double.class));
                     }})
             .put("hardwareId", new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, Map props, Object v) {
@@ -742,91 +911,142 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     public void apply(TemplateOptions t, Map props, Object v) {
                         t.runAsRoot((Boolean)v);
                     }})
+            .put("loginUser", new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, Map props, Object v) {
+                        t.overrideLoginUser(((CharSequence)v).toString());
+                    }})
+            .put("loginUser.password", new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, Map props, Object v) {
+                        t.overrideLoginPassword(((CharSequence)v).toString());
+                    }})
+            .put("loginUser.privateKeyData", new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, Map props, Object v) {
+                        t.overrideLoginPrivateKey(((CharSequence)v).toString());
+                    }})
             .put("overrideLoginUser", new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, Map props, Object v) {
+                        LOG.warn("Using deprecated property overrideLoginUser; use loginUser instead");
                         t.overrideLoginUser(((CharSequence)v).toString());
                     }})
             .build();
 
-    private Template buildTemplate(ComputeService computeService, String providerLocationId, BrooklynJcloudsSetupHolder setup) {
-        Map<String,? extends Object> properties = setup.allconf;
-        Map unusedConf = setup.unusedConf;
-        TemplateBuilder templateBuilder = (TemplateBuilder) unusedConf.remove("templateBuilder");
+    private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;
+    
+    private Template buildTemplate(ComputeService computeService, BrooklynJcloudsSetupHolder setup) {
+        TemplateBuilder templateBuilder = (TemplateBuilder) setup.get("templateBuilder");
         if (templateBuilder==null)
             templateBuilder = new PortableTemplateBuilder();
         else
             LOG.debug("jclouds using templateBuilder {} as base for provisioning in {} for {}", new Object[] {templateBuilder, this, setup.getCallerContext()});
  
-        if (providerLocationId!=null) {
-            templateBuilder.locationId(providerLocationId);
+        if (setup.providerLocationId!=null) {
+            templateBuilder.locationId(setup.providerLocationId);
         }
         
         for (Map.Entry<String, CustomizeTemplateBuilder> entry : SUPPORTED_TEMPLATE_BUILDER_PROPERTIES.entrySet()) {
             String name = entry.getKey();
             CustomizeTemplateBuilder code = entry.getValue();
-            if (unusedConf.remove(name)!=null)
-                code.apply(templateBuilder, properties, properties.get(name));
+            if (setup.use(name))
+                code.apply(templateBuilder, setup.allconf, setup.get(name));
         }
 
         if (templateBuilder instanceof PortableTemplateBuilder) {
             ((PortableTemplateBuilder)templateBuilder).attachComputeService(computeService);
             // do the default last, and only if nothing else specified (guaranteed to be a PTB if nothing else specified)
-            if (truth(unusedConf.remove("defaultImageId"))) {
+            if (setup.use("defaultImageId")) {
                 if (((PortableTemplateBuilder)templateBuilder).isBlank()) {
-                    CharSequence defaultImageId = (CharSequence) properties.get("defaultImageId");
+                    CharSequence defaultImageId = (CharSequence) setup.get("defaultImageId");
                     templateBuilder.imageId(defaultImageId.toString());
                 }
             }
         }
 
-        Template template = templateBuilder.build();
-        if (template.getImage().getName().contains(".rc-")) {
-            // release candidates might break things :(
-            if (templateBuilder instanceof PortableTemplateBuilder) {
-                if (((PortableTemplateBuilder)templateBuilder).getOsFamily()==null) {
-                    templateBuilder.osFamily(OsFamily.UBUNTU);
-                    Template template2 = templateBuilder.build();
-                    if (template2!=null) {
-                        LOG.debug("preferring template {} over {}", template2, template);
-                        template = template2;
+        Template template;
+        try {
+            template = templateBuilder.build();
+            if (template.getImage().getName().contains(".rc-")) {
+                // release candidates might break things :(
+                if (templateBuilder instanceof PortableTemplateBuilder) {
+                    if (((PortableTemplateBuilder)templateBuilder).getOsFamily()==null) {
+                        templateBuilder.osFamily(OsFamily.UBUNTU);
+                        Template template2 = templateBuilder.build();
+                        if (template2!=null) {
+                            LOG.debug(""+this+" preferring template {} over {}", template2, template);
+                            template = template2;
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            try {
+                synchronized (this) {
+                    // delay subsequent log.warns (put in synch block) so the "Loading..." message is obvious
+                    LOG.warn("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+" (rethrowing): "+e);
+                    if (!listedAvailableTemplatesOnNoSuchTemplate) {
+                        listedAvailableTemplatesOnNoSuchTemplate = true;
+                        LOG.info("Loading available images at "+this+" for reference...");
+                        Map m1 = new LinkedHashMap(setup.allconf);
+                        if (m1.remove("imageId")!=null)
+                            // don't apply default filters if user has tried to specify an image ID
+                            m1.put("anyOwner", true);
+                        ComputeService computeServiceLessRestrictive = JcloudsUtil.buildOrFindComputeService(m1, new MutableMap());
+                        Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
+                        LOG.info(""+imgs.size()+" available images at "+this);
+                        for (Image img: imgs) {
+                            LOG.info(" Image: "+img);
+                        }
+                    }
+                }
+            } catch (Exception e2) {
+                LOG.warn("Error loading available images to report (following original error matching template which will be rethrown): "+e2, e2);
+            }
+            throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+". See list of images in log.", e);
         }
         TemplateOptions options = template.getOptions();
         
         for (Map.Entry<String, CustomizeTemplateOptions> entry : SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.entrySet()) {
             String name = entry.getKey();
             CustomizeTemplateOptions code = entry.getValue();
-            if (unusedConf.remove(name)!=null)
-                code.apply(options, properties, properties.get(name));
+            if (setup.use(name))
+                code.apply(options, setup.allconf, setup.get(name));
         }
+                
+        // Setup the user
         
-        if (NON_ADDABLE_USERS.contains(properties.get("userName")) && truth(properties.get("sshPublicKeyData"))) {
-            String keyData = (String) properties.get("sshPublicKeyData");
-            options.authorizePublicKey(keyData);
-        }
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
         //also, it may not be valid for first login (it is created before login e.g. on amazon, so valid there;
         //but not elsewhere, e.g. on rackspace)
-        
-        // Setup the user
-        if (truth(properties.get("userName")) && !NON_ADDABLE_USERS.contains(properties.get("userName")) && 
-                !truth(properties.get("dontCreateUser"))) {
-            UserAdd.Builder userBuilder = UserAdd.builder();
-            userBuilder.login((String)properties.get("userName"));
-            String publicKeyData = (String) properties.get("sshPublicKeyData");
-            userBuilder.authorizeRSAPublicKey(publicKeyData);
-            Statement userBuilderStatement = userBuilder.build();
-            options.runScript(userBuilderStatement);
+        if (truth(setup.user) && !NON_ADDABLE_USERS.contains(setup.user) && 
+                !setup.user.equals(setup.loginUser) && !truth(setup.isDontCreateUser())) {
+            // create the user, if it's not the login user and not a known root-level user
+            // by default we now give these users sudo privileges.
+            // if you want something else, that can be specified manually, 
+            // e.g. using jclouds UserAdd.Builder, with RunScriptOnNode, or template.options.runScript(xxx)
+            // (if that is a common use case, we could expose a property here)
+            // note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
+            AdminAccess.Builder adminBuilder = AdminAccess.builder().
+                    adminUsername(setup.user).
+                    grantSudoToAdminUser(true);
+            adminBuilder.adminPassword(setup.use("password") ? setup.password : Identifiers.makeRandomId(12));
+            if (setup.publicKeyData!=null)
+                adminBuilder.authorizeAdminPublicKey(true).adminPublicKey(setup.publicKeyData);
+            else
+                adminBuilder.authorizeAdminPublicKey(false).adminPublicKey("ignored").lockSsh(true);
+            adminBuilder.installAdminPrivateKey(false).adminPrivateKey("ignored");
+            adminBuilder.resetLoginPassword(true).loginPassword(Identifiers.makeRandomId(12));
+            adminBuilder.lockSsh(true);
+            options.runScript(adminBuilder.build());
+        } else if (truth(setup.publicKeyData)) {
+            // don't create the user, but authorize the public key for the default user
+            options.authorizePublicKey(setup.publicKeyData);
         }
         
-        LOG.debug("jclouds using template {} to provision machine in {} for {}", new Object[] {template, this, setup.getCallerContext()});
+        LOG.debug("jclouds using template {} / options {} to provision machine in {} for {}", new Object[] {template, options, this, setup.getCallerContext()});
         return template;
     }
-    
-    private String getPublicHostname(NodeMetadata node, Map allconf) {
-        if ("aws-ec2".equals(allconf != null ? allconf.get("provider") : null)) {
+
+    private String getPublicHostname(NodeMetadata node, BrooklynJcloudsSetupHolder setup) {
+        if ("aws-ec2".equals(setup != null ? setup.get("provider") : null)) {
             String vmIp = null;
             try {
                 vmIp = JcloudsUtil.getFirstReachableAddress(node);
@@ -835,7 +1055,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
             if (vmIp != null) {
                 try {
-                    return getPublicHostnameAws(vmIp, allconf);
+                    return getPublicHostnameAws(vmIp, setup);
                 } catch (Exception e) {
                     LOG.warn("Error querying aws-ec2 instance over ssh for its hostname; falling back to first reachable IP", e);
                     return vmIp;
@@ -843,12 +1063,13 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
         }
         
-        return getPublicHostnameGeneric(node, allconf);
+        return getPublicHostnameGeneric(node, setup);
     }
     
-    private String getPublicHostnameGeneric(NodeMetadata node, @Nullable Map allconf) {
+    private String getPublicHostnameGeneric(NodeMetadata node, @Nullable BrooklynJcloudsSetupHolder setup) {
         //prefer the public address to the hostname because hostname is sometimes wrong/abbreviated
         //(see that javadoc; also e.g. on rackspace, the hostname lacks the domain)
+        //TODO would it be better to prefer hostname, but first check that it is resolvable? 
         if (truth(node.getPublicAddresses())) {
             return node.getPublicAddresses().iterator().next();
         } else if (truth(node.getHostname())) {
@@ -860,19 +1081,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
     }
     
-    private String getPublicHostnameAws(String ip, Map allconf) {
+    private String getPublicHostnameAws(String ip, BrooklynJcloudsSetupHolder setup) {
         try {
-            Map sshConfig = Maps.newLinkedHashMap();
-            if (truth(allconf.get("password"))) 
-                sshConfig.put("password", allconf.get("password"));
-            if (truth(getPrivateKeyFile())) 
-                sshConfig.put("keyFiles", ImmutableList.of(getPrivateKeyFile().getCanonicalPath())); 
-            if (truth(allconf.get("sshPrivateKeyData"))) 
-                sshConfig.put("privateKeyData", allconf.get("sshPrivateKeyData"));
-            if (truth(allconf.get("privateKeyPassphrase"))) 
-                sshConfig.put("privateKeyPassphrase", allconf.get("privateKeyPassphrase"));
+            Map sshConfig = generateSshConfig(setup, null);
+            
             // TODO messy way to get an SSH session 
-            SshMachineLocation sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", allconf.get("userName"), "config", sshConfig));
+            SshMachineLocation sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", setup.user, "config", sshConfig));
             
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
@@ -1047,6 +1261,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 result.put(key, value);
             }
             return result;
+        } else if (v instanceof CharSequence) {
+            return KeyValueParser.parseMap(v.toString());
         } else {
             throw new IllegalArgumentException("Invalid type for Map<String,String>: "+v+" of type "+v.getClass());
         }

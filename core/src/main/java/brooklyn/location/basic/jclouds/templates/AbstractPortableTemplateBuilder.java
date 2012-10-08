@@ -357,7 +357,7 @@ public abstract class AbstractPortableTemplateBuilder<T extends AbstractPortable
     public boolean isBlank() {
         if (commands.isEmpty()) return true;
         //also "blank" if we've blanked it
-        if (commands.size()==1 && minRam==1) return true;
+        if (commands.size()==1 && (minRam!=null && minRam==1)) return true;
         return false;
     }
     

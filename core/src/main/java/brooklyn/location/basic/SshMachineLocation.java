@@ -90,9 +90,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     /** properties which are passed to ssh */
     public static final Collection<String> SSH_PROPS = ImmutableSet.of(
             "noStdoutLogging", "noStderrLogging", "logPrefix", "out", "err", "password", 
-            "keyFiles", "publicKey", "privateKey", "privateKeyPassphrase", "privateKeyFile", "privateKeyData", 
-            //TODO prefer privateKeyData/privateKeyFile (confusion about whether other holds a file or data)
-            "permissions", "sshTries", "env", "allocatePTY");
+            "permissions", "sshTries", "env", "allocatePTY",
+            "privateKeyPassphrase", "privateKeyFile", "privateKeyData", 
+            // deprecated in 0.4.0 -- prefer privateKeyData/privateKeyFile 
+            // (confusion about whether other holds a file or data; and public not useful here)
+            // they generate a warning where used 
+            "keyFiles", "publicKey", "privateKey");
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");
     
