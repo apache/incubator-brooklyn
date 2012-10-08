@@ -39,7 +39,7 @@ public class CheckpointEntityTest {
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = new MyApplication();
         origE = new MyEntity(MutableMap.of("myconfig", "myval"), origApp);
         managementContext.manage(origApp);

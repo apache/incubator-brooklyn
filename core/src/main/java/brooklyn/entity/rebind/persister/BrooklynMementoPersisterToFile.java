@@ -21,6 +21,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.mementos.BrooklynMemento;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
@@ -49,6 +50,14 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
 //        this.serializer = new JsonMementoSerializer(classLoader);
     }
     
+    @VisibleForTesting
+    @Override
+    public void waitForWritesCompleted() throws InterruptedException {
+        // TODO Could wait for concurrent checkpoint/delta, but don't need to for tests
+        // because first waits for checkpoint/delta to have been called by RebindManagerImpl.
+        return;
+    }
+
     @Override
     public BrooklynMemento loadMemento() {
         try {

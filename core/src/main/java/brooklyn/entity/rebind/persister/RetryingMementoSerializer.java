@@ -26,7 +26,8 @@ public class RetryingMementoSerializer<T> implements MementoSerializer<T> {
             try {
                 return delegate.toString(memento);
             } catch (RuntimeException e) {
-                LOG.warn("Error serializing memento (attempt "+attempt+" of "+maxAttempts+") for "+memento, e);
+                LOG.warn("Error serializing memento (attempt "+attempt+" of "+maxAttempts+") for "+memento+
+                        "; expected sometimes if attribute value modified", e);
                 lastException = e;
             }
         } while (attempt < maxAttempts);

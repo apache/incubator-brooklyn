@@ -6,6 +6,8 @@ import brooklyn.entity.Application;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public interface RebindManager {
     
     // FIXME Should we be calling managementContext.getRebindManager().rebind, using a
@@ -24,4 +26,7 @@ public interface RebindManager {
     public ChangeListener getChangeListener();
 
     public void stop();
+
+    @VisibleForTesting
+    public void waitForPendingComplete() throws InterruptedException;
 }

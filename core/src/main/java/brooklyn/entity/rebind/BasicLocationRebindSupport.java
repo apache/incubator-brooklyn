@@ -60,7 +60,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
             Class<?> fieldType = field.getType();
             Object transformedValue = memento.getFlags().get(flagName);
             Object restoredValue = MementoTransformer.transformIdsToLocations(rebindContext, transformedValue, fieldType, true);
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of(flagName, restoredValue), location);
+            FlagUtils.setFieldFromFlag(flagName, restoredValue, location);
         }
 
         setParent(rebindContext, memento);

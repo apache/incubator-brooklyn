@@ -26,33 +26,53 @@ import brooklyn.policy.Policy;
 import brooklyn.util.MutableMap;
 import brooklyn.util.javalang.Reflections;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class RebindManagerImpl implements RebindManager {
 
+    // TODO Use ImmediateDeltaChangeListener if the period is set to 0?
+    // But for MultiFile persister, that is still async
+    
     public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
+    // FIXME Make configurable
+    private volatile long periodicPersistPeriod = 1000;
+    
+    private volatile boolean running = true;
+    
     private final ManagementContext managementContext;
 
-    private final ChangeListener changeListener;
+    private volatile PeriodicDeltaChangeListener realChangeListener;
+    private volatile ChangeListener changeListener;
     
     private volatile BrooklynMementoPersister persister;
 
-    private volatile boolean running = true;
-    
     public RebindManagerImpl(ManagementContext managementContext) {
         this.managementContext = managementContext;
-        this.changeListener = new SafeChangeListener(new PersistingChangeListener());
+        this.changeListener = ChangeListener.NOOP;
     }
-    
+
+    /**
+     * Must be called before setPerister()
+     */
+    @VisibleForTesting
+    public void setPeriodicPersistPeriod(long periodMillis) {
+        this.periodicPersistPeriod = periodMillis;
+    }
+
     @Override
     public void setPersister(BrooklynMementoPersister val) {
         if (persister != null && persister != val) {
             throw new IllegalStateException("Dynamically changing persister is not supported: old="+persister+"; new="+val);
         }
         this.persister = checkNotNull(val, "persister");
+        
+        if (running) {
+            this.realChangeListener = new PeriodicDeltaChangeListener(managementContext.getExecutionManager(), persister, periodicPersistPeriod);
+            this.changeListener = new SafeChangeListener(realChangeListener);
+        }
     }
 
     @Override
@@ -63,7 +83,15 @@ public class RebindManagerImpl implements RebindManager {
     @Override
     public void stop() {
         running = false;
-        persister.stop();
+        if (realChangeListener != null) realChangeListener.stop();
+        if (persister != null) persister.stop();
+    }
+    
+    @Override
+    @VisibleForTesting
+    public void waitForPendingComplete() throws InterruptedException {
+        realChangeListener.waitForPendingComplete();
+        if (persister != null) persister.waitForWritesCompleted();
     }
     
     @Override
@@ -256,94 +284,6 @@ public class RebindManagerImpl implements RebindManager {
         @Override
         public Collection<String> removedPolicyIds() {
             return removedPolicyIds;
-        }
-    }
-    
-    private class PersistingChangeListener implements ChangeListener {
-
-        @Override
-        public void onManaged(Entity entity) {
-            if (running && persister != null) {
-                // TODO Currently, we get an onManaged call for every entity (rather than just the root of a sub-tree)
-                // Also, we'll be told about an entity before its children are officially managed.
-                // So it's really the same as "changed".
-                onChanged(entity);
-            }
-        }
-
-        @Override
-        public void onManaged(Location location) {
-            if (running && persister != null) {
-                onChanged(location);
-            }
-        }
-        
-        @Override
-        public void onChanged(Entity entity) {
-            if (running && persister != null) {
-                DeltaImpl delta = new DeltaImpl();
-                delta.entities = ImmutableList.of(entity.getRebindSupport().getMemento());
-
-                // FIXME How to let the policy/location tell us about changes?
-                // Don't do this every time!
-                Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
-                for (Location location : entity.getLocations()) {
-                    if (!locations.containsKey(location.getId())) {
-                        for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
-                            locations.put(locationInHierarchy.getId(), locationInHierarchy.getRebindSupport().getMemento());
-                        }
-                    }
-                }
-                delta.locations = locations.values();
-
-                // FIXME Not including policies, because lots of places regiser anonymous inner class policies
-                // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
-                // Also, the entity constructor often re-creates the policy.
-                // Also see MementosGenerator.newEntityMementoBuilder()
-//                List<PolicyMemento> policies = Lists.newArrayList();
-//                for (Policy policy : entity.getPolicies()) {
-//                    policies.add(policy.getRebindSupport().getMemento());
-//                }
-//                delta.policies = policies;
-
-                persister.delta(delta);
-            }
-        }
-        
-        @Override
-        public void onUnmanaged(Entity entity) {
-            if (running && persister != null) {
-                DeltaImpl delta = new DeltaImpl();
-                delta.removedEntityIds = ImmutableList.of(entity.getId());
-                persister.delta(delta);
-            }
-        }
-
-        @Override
-        public void onUnmanaged(Location location) {
-            if (running && persister != null) {
-                DeltaImpl delta = new DeltaImpl();
-                delta.removedLocationIds = ImmutableList.of(location.getId());
-                persister.delta(delta);
-            }
-        }
-
-        @Override
-        public void onChanged(Location location) {
-            if (running && persister != null) {
-                DeltaImpl delta = new DeltaImpl();
-                delta.locations = ImmutableList.of(location.getRebindSupport().getMemento());
-                persister.delta(delta);
-            }
-        }
-        
-        @Override
-        public void onChanged(Policy policy) {
-            if (running && persister != null) {
-                DeltaImpl delta = new DeltaImpl();
-                delta.policies = ImmutableList.of(policy.getRebindSupport().getMemento());
-                persister.delta(delta);
-            }
         }
     }
     

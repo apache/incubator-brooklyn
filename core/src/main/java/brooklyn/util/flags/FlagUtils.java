@@ -1,5 +1,7 @@
 package brooklyn.util.flags;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 import groovy.lang.Closure;
@@ -52,6 +54,17 @@ public class FlagUtils {
         return setFieldsFromFlagsInternal(flags, o, getAllFields(o.getClass()));
     }
 	
+    /**
+     * Sets the field with the given flag (if it exists) to the given value.
+     * Will attempt to coerce the value to the required type.
+     * Will respect "nullable" on the SetFromFlag annotation.
+     * 
+     * @throws IllegalArgumentException If fieldVal is null and the SetFromFlag annotation set nullable=false
+     */
+    public static void setFieldFromFlag(String flagName, Object fieldVal, Object o) {
+        setFieldFromFlagInternal(checkNotNull(flagName, "flagName"), fieldVal, o, getAllFields(o.getClass()));
+    }
+    
     /** get all fields (including private and static) on the given object and all supertypes, 
      * that are annotated with SetFromFlags. 
      */
@@ -163,6 +176,16 @@ public class FlagUtils {
             }
         }
         throw new NoSuchElementException("Field with flag "+flagName+" not found on "+o+" of type "+(o != null ? o.getClass() : null));
+    }
+
+    private static void setFieldFromFlagInternal(String flagName, Object fieldVal, Object o, Collection<Field> fields) {
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf != null && flagName.equals(elvis(cf.value(), f.getName()))) {
+                setField(o, f, fieldVal, cf);
+                break;
+            }
+        }
     }
 
     private static Map<String, ? extends Object> setFieldsFromFlagsInternal(Map<String,? extends Object> flags, Object o, Collection<Field> fields) {

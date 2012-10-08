@@ -20,6 +20,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
@@ -139,8 +140,8 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento; updating {} entities, {} locations and {} policies; " +
         		"removing {} entities, {} locations and {} policies", 
-                new Object[] {delta.entities().size(), delta.locations().size(), delta.policies().size(),
-                delta.removedEntityIds().size(), delta.removedLocationIds().size(), delta.removedPolicyIds().size()});
+                new Object[] {delta.entities(), delta.locations(), delta.policies(),
+                delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds()});
         
         for (EntityMemento entity : delta.entities()) {
             persist(entity);
@@ -161,7 +162,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             deletePolicy(id);
         }
     }
-    
+
+    @Override
+    @VisibleForTesting
     public void waitForWritesCompleted() throws InterruptedException {
         for (MementoFileWriter<?> writer : entityWriters.values()) {
             writer.waitForWriteCompleted();

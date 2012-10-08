@@ -832,7 +832,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         // TODO move this to EntityMangementSupport,
         // when hierarchy fields can also be moved there
         this.@owner?.invalidate();
-        this.@application.invalidate();
+        this.@application?.invalidate();
         this.@ownedChildren.invalidate();
         this.@groups.invalidate();
     }

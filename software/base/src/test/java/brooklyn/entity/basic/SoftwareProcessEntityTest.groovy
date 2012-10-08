@@ -1,12 +1,12 @@
 package brooklyn.entity.basic;
 
-import groovy.transform.InheritConstructors;
+import groovy.transform.InheritConstructors
 
 import org.testng.Assert
 import org.testng.annotations.Test
 
 import brooklyn.config.ConfigKey
-import brooklyn.entity.Application
+import brooklyn.entity.Entity
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -46,7 +46,13 @@ public class SoftwareProcessEntityTest {
     }
     
     @InheritConstructors
-    private static class MyService extends SoftwareProcessEntity {
+    public static class MyService extends SoftwareProcessEntity {
+        public MyService(Entity owner) {
+            super(owner);
+        }
+        public MyService(Map flags, Entity owner) {
+            super(flags, owner);
+        }
         @Override
         public <T> T getConfig(ConfigKey<T> key, T defaultValue=null) {
             return super.getConfig(key, defaultValue)

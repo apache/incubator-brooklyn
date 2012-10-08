@@ -6,6 +6,7 @@ import static org.testng.Assert.assertTrue;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -37,7 +38,7 @@ public class RebindLocationTest {
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = new MyApplication();
         origE = new MyEntity(origApp);
         managementContext.manage(origApp);
@@ -101,6 +102,21 @@ public class RebindLocationTest {
     }
     
     @Test
+    public void testRestoresAtomicLongWithSetFromFlag() throws Exception {
+        MyLocation origLoc = new MyLocation(MutableMap.of("myAtomicLong", "123"));
+        origApp.start(ImmutableList.of(origLoc));
+
+        origLoc.myAtomicLong.incrementAndGet();
+        assertEquals(origLoc.myAtomicLong.get(), 124L);
+        origApp.getManagementSupport().getManagementContext(false).getRebindManager().getChangeListener().onChanged(origLoc);
+        
+        MyApplication newApp = (MyApplication) rebind();
+        MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
+        
+        assertEquals(newLoc.myAtomicLong.get(), 124L);
+    }
+    
+    @Test
     public void testIgnoresTransientFields() throws Exception {
     	MyLocation origLoc = new MyLocation(MutableMap.of("myTransientField", "myval"));
         origApp.start(ImmutableList.of(origLoc));
@@ -127,7 +143,7 @@ public class RebindLocationTest {
     @Test
     public void testHandlesFieldReferencingOtherLocations() throws Exception {
     	MyLocation origOtherLoc = new MyLocation();
-    	MyLocationReffingOthers origLoc = new MyLocationReffingOthers(MutableMap.of("otherLocs", ImmutableList.of(origOtherLoc)));
+    	MyLocationReffingOthers origLoc = new MyLocationReffingOthers(MutableMap.of("otherLocs", ImmutableList.of(origOtherLoc), "myfield", "myval"));
     	origOtherLoc.setParentLocation(origLoc);
     	
         origApp.start(ImmutableList.of(origLoc));
@@ -138,6 +154,9 @@ public class RebindLocationTest {
         assertEquals(newLoc.getChildLocations().size(), 1);
         assertTrue(Iterables.get(newLoc.getChildLocations(), 0) instanceof MyLocation, "children="+newLoc.getChildLocations());
         assertEquals(newLoc.otherLocs, ImmutableList.copyOf(newLoc.getChildLocations()));
+        
+        // Confirm this didn't override other values (e.g. setting other fields back to their defaults, as was once the case!)
+        assertEquals(newLoc.myfield, "myval");
     }
 
     private MyApplication rebind() throws Exception {
@@ -150,6 +169,9 @@ public class RebindLocationTest {
         
         @SetFromFlag
         String myfield;
+
+        @SetFromFlag(defaultVal="1")
+        AtomicLong myAtomicLong;
 
         private final Object dummy = new Object(); // so not serializable
         
@@ -170,6 +192,9 @@ public class RebindLocationTest {
     public static class MyLocationReffingOthers extends AbstractLocation {
         private static final long serialVersionUID = 1L;
         
+        @SetFromFlag(defaultVal="a")
+        String myfield;
+
         @SetFromFlag
         List<Location> otherLocs;
 

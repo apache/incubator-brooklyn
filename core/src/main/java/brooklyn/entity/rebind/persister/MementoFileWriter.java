@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -103,8 +104,13 @@ public class MementoFileWriter<T> {
     private void deleteAsync() {
         ListenableFuture<Void> future = executor.submit(new Callable<Void>() {
             @Override public Void call() throws IOException {
-                deleteNow();
-                return null;
+                try {
+                    deleteNow();
+                    return null;
+                } catch (Throwable t) {
+                    LOG.error("Error deleting "+file, t);
+                    throw Throwables.propagate(t);
+                }
             }});
         addPostExecListener(future);
     }
@@ -112,9 +118,14 @@ public class MementoFileWriter<T> {
     private void writeAsync() {
         ListenableFuture<Void> future = executor.submit(new Callable<Void>() {
             @Override public Void call() throws IOException {
-                writeNow();
-                return null;
-            }});
+                try {
+                    writeNow();
+                    return null;
+                } catch (Throwable t) {
+                    LOG.error("Error writing to "+file, t);
+                    throw Throwables.propagate(t);
+                }
+             }});
         addPostExecListener(future);
     }
     
@@ -123,24 +134,29 @@ public class MementoFileWriter<T> {
                 new Runnable() {
                     @Override public void run() {
                         if (LOG.isTraceEnabled()) LOG.trace("Write complete for {}", file);
-                        executing.set(false);
-                        if (requireDelete.get()) {
-                            if (executing.compareAndSet(false, true)) {
-                                if (LOG.isTraceEnabled()) LOG.trace("Submitting delete-task for {} (in post-exec) due to recorded delete-requirement", file);
-                                deleteAsync();
+                        try {
+                            executing.set(false);
+                            if (requireDelete.get()) {
+                                if (executing.compareAndSet(false, true)) {
+                                    if (LOG.isTraceEnabled()) LOG.trace("Submitting delete-task for {} (in post-exec) due to recorded delete-requirement", file);
+                                    deleteAsync();
+                                } else {
+                                    if (LOG.isTraceEnabled()) LOG.trace("Delete-requirement for {} (in post-exec) handled by other thread; returning", file);
+                                }
+                                
+                            } else if (requireWrite.get() != null) {
+                                if (executing.compareAndSet(false, true)) {
+                                    if (LOG.isTraceEnabled()) LOG.trace("Submitting write task for {} (in post-exec) due to recorded write-requirement", file);
+                                    writeAsync();
+                                } else {
+                                    if (LOG.isTraceEnabled()) LOG.trace("Write-requirement for {} (in post-exec) handled by other thread; returning", file);
+                                }
                             } else {
-                                if (LOG.isTraceEnabled()) LOG.trace("Delete-requirement for {} (in post-exec) handled by other thread; returning", file);
+                                if (LOG.isTraceEnabled()) LOG.trace("No pending exec-requirements for {}", file);
                             }
-                            
-                        } else if (requireWrite.get() != null) {
-                            if (executing.compareAndSet(false, true)) {
-                                if (LOG.isTraceEnabled()) LOG.trace("Submitting write task for {} (in post-exec) due to recorded write-requirement", file);
-                                writeAsync();
-                            } else {
-                                if (LOG.isTraceEnabled()) LOG.trace("Write-requirement for {} (in post-exec) handled by other thread; returning", file);
-                            }
-                        } else {
-                            if (LOG.isTraceEnabled()) LOG.trace("No pending exec-requirements for {}", file);
+                        } catch (Throwable t) {
+                            LOG.error("Error in post-exec for "+file, t);
+                            throw Throwables.propagate(t);
                         }
                     }
                 }, 

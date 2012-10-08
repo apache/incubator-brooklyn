@@ -78,9 +78,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
 	public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
 
+    public static final AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = new BasicAttributeSensor<MachineProvisioningLocation>(
+            MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
+        
 	public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE
 	
-	private MachineProvisioningLocation provisioningLoc
 	private SoftwareProcessDriver driver
 	protected transient SensorRegistry sensorRegistry
 
@@ -96,12 +98,12 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     }
 
     protected void setProvisioningLocation(MachineProvisioningLocation val) {
-        if (provisioningLoc) throw new IllegalStateException("Cannot change provisioning location: existing="+provisioningLoc+"; new="+val)
-        provisioningLoc = val
+        if (getAttribute(PROVISIONING_LOCATION) != null) throw new IllegalStateException("Cannot change provisioning location: existing="+getAttribute(PROVISIONING_LOCATION)+"; new="+val)
+        setAttribute(PROVISIONING_LOCATION, val);
     }
     
     protected MachineProvisioningLocation getProvisioningLocation() {
-        return provisioningLoc
+        return getAttribute(PROVISIONING_LOCATION);
     }
     
 	public SoftwareProcessDriver getDriver() { driver }
@@ -255,7 +257,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		Map<String,Object> flags = obtainProvisioningFlags(location);
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("Starting {}, obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
-		provisioningLoc = location;
+		setAttribute(PROVISIONING_LOCATION, location);
         SshMachineLocation machine;
         Tasks.withBlockingDetails("Provisioning machine in "+location) {
             machine = location.obtain(flags);
@@ -403,7 +405,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		if (driver) driver.stop()
 
 		// Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
-		provisioningLoc?.release(machine)
+		getAttribute(PROVISIONING_LOCATION)?.release(machine)
 
 		driver = null;
 	}

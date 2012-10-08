@@ -32,7 +32,7 @@ public class RebindDynamicGroupTest {
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = new TestApplication();
     }
 
@@ -47,7 +47,7 @@ public class RebindDynamicGroupTest {
         DynamicGroup origG = new DynamicGroup(origApp, Predicates.instanceOf(MyEntity.class));
         managementContext.manage(origApp);
         
-        TestApplication newApp = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        TestApplication newApp = rebind();
         ManagementContext newManagementContext = newApp.getManagementSupport().getManagementContext(false);
         final DynamicGroup newG = (DynamicGroup) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(DynamicGroup.class));
         final MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
@@ -68,5 +68,10 @@ public class RebindDynamicGroupTest {
     private void assertGroupMemebers(DynamicGroup group, Collection<? extends Entity> expected) {
         assertEquals(Sets.newHashSet(group.getMembers()), ImmutableSet.copyOf(expected));
         assertEquals(group.getMembers().size(), expected.size(), "members="+group.getMembers());
+    }
+    
+    private TestApplication rebind() throws Exception {
+        RebindTestUtils.waitForPersisted(origApp);
+        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
 }

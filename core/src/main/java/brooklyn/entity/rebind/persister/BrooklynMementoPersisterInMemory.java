@@ -7,26 +7,41 @@ import java.io.IOException;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.util.Serializers;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 
 public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPersister {
 
     private final ClassLoader classLoader;
+    private final boolean checkPersistable;
     
-    BrooklynMementoPersisterInMemory(ClassLoader classLoader) {
-        this.classLoader = checkNotNull(classLoader, "classLoader");
+    public BrooklynMementoPersisterInMemory(ClassLoader classLoader) {
+        this(classLoader, true);
     }
     
+    public BrooklynMementoPersisterInMemory(ClassLoader classLoader, boolean checkPersistable) {
+        this.classLoader = checkNotNull(classLoader, "classLoader");
+        this.checkPersistable = checkPersistable;
+    }
+    
+    @VisibleForTesting
+    @Override
+    public void waitForWritesCompleted() throws InterruptedException {
+        // TODO Could wait for concurrent checkpoint/delta, but don't need to for tests
+        // because first waits for checkpoint/delta to have been called by RebindManagerImpl.
+        return;
+    }
+
     @Override
     public void checkpoint(BrooklynMemento newMemento) {
         super.checkpoint(newMemento);
-        reserializeMemento();
+        if (checkPersistable) reserializeMemento();
     }
 
     @Override
     public void delta(Delta delta) {
         super.delta(delta);
-        reserializeMemento();
+        if (checkPersistable) reserializeMemento();
     }
     
     private void reserializeMemento() {

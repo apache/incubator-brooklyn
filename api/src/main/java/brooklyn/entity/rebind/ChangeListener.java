@@ -6,6 +6,16 @@ import brooklyn.policy.Policy;
 
 public interface ChangeListener {
 
+    public static final ChangeListener NOOP = new ChangeListener() {
+        @Override public void onManaged(Entity entity) {}
+        @Override public void onUnmanaged(Entity entity) {}
+        @Override public void onChanged(Entity entity) {}
+        @Override public void onManaged(Location location) {}
+        @Override public void onUnmanaged(Location location) {}
+        @Override public void onChanged(Location location) {}
+        @Override public void onChanged(Policy policy) {}
+    };
+    
     void onManaged(Entity entity);
     
     void onUnmanaged(Entity entity);

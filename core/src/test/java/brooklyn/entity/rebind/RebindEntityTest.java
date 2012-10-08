@@ -29,7 +29,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestEntity;
@@ -49,19 +49,20 @@ public class RebindEntityTest {
     // FIXME Add test about dependent configuration serialization?!
     
     private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext managementContext;
+    private LocalManagementContext managementContext;
     private MyApplication origApp;
     private File mementoDir;
     
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = new MyApplication();
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
+        managementContext.terminate();
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 

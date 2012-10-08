@@ -1,5 +1,7 @@
 package brooklyn.entity.rebind;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.File;
 import java.util.List;
 
@@ -8,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterInMemory;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
@@ -62,10 +63,19 @@ public class RebindTestUtils {
         BrooklynMemento memento = MementosGenerators.newBrooklynMemento(app.getManagementContext());
         serializeAndDeserialize(memento);
     }
-    
+
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader) {
         LocalManagementContext result = new LocalManagementContext();
         BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
+        result.getRebindManager().setPersister(newPersister);
+        return result;
+    }
+    
+    public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader, long persistPeriodMillis) {
+        checkArgument(persistPeriodMillis > 0, "persistPeriodMillis must be greater than 0; was "+persistPeriodMillis);
+        LocalManagementContext result = new LocalManagementContext();
+        BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
+        ((RebindManagerImpl)result.getRebindManager()).setPeriodicPersistPeriod(persistPeriodMillis);
         result.getRebindManager().setPersister(newPersister);
         return result;
     }
@@ -80,20 +90,7 @@ public class RebindTestUtils {
     }
 
     public static void waitForPersisted(Application origApp) throws InterruptedException {
-        BrooklynMementoPersister persister = origApp.getManagementContext().getRebindManager().getPersister();
-        if (persister == null) {
-            throw new IllegalStateException("No persister set for "+origApp);
-            
-        } else if (persister instanceof BrooklynMementoPersisterInMemory) {
-            // ops are blocking; nothing to wait for
-            
-        } else if (persister instanceof BrooklynMementoPersisterToMultiFile) {
-            BrooklynMementoPersisterToMultiFile p = (BrooklynMementoPersisterToMultiFile) persister;
-            p.waitForWritesCompleted();
-            
-        } else {
-            throw new IllegalStateException("Unhandled persister type: "+persister.getClass()+"; "+persister); 
-        }
+        origApp.getManagementContext().getRebindManager().waitForPendingComplete();
     }
     
     public static void checkCurrentMementoSerializable(Application app) throws Exception {

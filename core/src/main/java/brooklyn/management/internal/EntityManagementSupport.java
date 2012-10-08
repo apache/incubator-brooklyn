@@ -77,6 +77,8 @@ public class EntityManagementSupport {
             nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForSubscribing();
 
             managementContextUsable = true;
+            currentlyDeployed = true;
+            everDeployed = true;
             
             entityChangeListener = new EntityChangeListener() {
                 @Override
@@ -147,8 +149,6 @@ public class EntityManagementSupport {
         
         synchronized (this) {
             nonDeploymentManagementContext = null;
-            currentlyDeployed = true;
-            everDeployed = true;
         }
     }
     
