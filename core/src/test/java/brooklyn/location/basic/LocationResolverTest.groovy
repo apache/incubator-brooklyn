@@ -1,7 +1,6 @@
-package brooklyn.location.basic;
+package brooklyn.location.basic
 
-import java.util.Map;
-import java.util.NoSuchElementException;
+import brooklyn.config.BrooklynProperties;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -65,17 +64,21 @@ public class LocationResolverTest {
     
     @Test
     public void testAcceptsList() {
-        new LocationRegistry().getLocationsById(["localhost"]);
+        buildLocationRegistry().getLocationsById(["localhost"]);
+    }
+
+    private static LocationRegistry buildLocationRegistry() {
+        new LocationRegistry(BrooklynProperties.Factory.newDefault())
     }
 
     @Test
     public void testRegistryCommaResolution() {
         List<Location> l;
-        l = new LocationRegistry().getLocationsById(["byon:(hosts=\"192.168.1.{1,2}\")"]);
+        l = buildLocationRegistry().getLocationsById(["byon:(hosts=\"192.168.1.{1,2}\")"]);
         Assert.assertEquals(1, l.size());
-        l = new LocationRegistry().getLocationsById(["byon:(hosts=192.168.0.1),byon:(hosts=\"192.168.1.{1,2}\"),byon:(hosts=192.168.0.2)"]);
+        l = buildLocationRegistry().getLocationsById(["byon:(hosts=192.168.0.1),byon:(hosts=\"192.168.1.{1,2}\"),byon:(hosts=192.168.0.2)"]);
         Assert.assertEquals(3, l.size());
-        l = new LocationRegistry().getLocationsById(["byon:(hosts=192.168.0.1),byon:(hosts=\"192.168.1.{1,2}\",user=bob),byon:(hosts=192.168.0.2)"]);
+        l = buildLocationRegistry().getLocationsById(["byon:(hosts=192.168.0.1),byon:(hosts=\"192.168.1.{1,2}\",user=bob),byon:(hosts=192.168.0.2)"]);
         Assert.assertEquals(3, l.size());
     }
 
@@ -83,7 +86,7 @@ public class LocationResolverTest {
     public void testAcceptsListOLists() {
         //if inner list has a single item it automatically gets coerced correctly to string
         //preserve for compatibility with older CommandLineLocations (since 0.4.0) [but log warning]
-        new LocationRegistry().getLocationsById([["localhost"]]);
+        buildLocationRegistry().getLocationsById([["localhost"]]);
     }
 
     @Test

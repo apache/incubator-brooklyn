@@ -3,8 +3,6 @@ package brooklyn.web.console.security;
 import javax.servlet.http.HttpSession;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigMap;
-import brooklyn.config.StringConfigMap;
 import brooklyn.web.console.BrooklynWebconsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,14 +14,21 @@ public class DelegatingSecurityProvider implements SecurityProvider {
     public static final Logger log = LoggerFactory.getLogger(DelegatingSecurityProvider.class);
     
     private SecurityProvider targetProvider;
-    private final BrooklynProperties brooklynProperties;
-
-    public DelegatingSecurityProvider(BrooklynProperties brooklynProperties) {
-        this.brooklynProperties = brooklynProperties;
-    }
 
     public synchronized SecurityProvider getTargetProvider() {
-        if (this.targetProvider!=null) return targetProvider;
+        if (this.targetProvider!=null) {
+            return targetProvider;
+        }
+
+        BrooklynProperties brooklynProperties = (BrooklynProperties) ManagementContextLocator.getManagementContext().getConfig();
+
+        log.info("==================== DelegatingSecurityProvider =============================");
+        for(Object key: brooklynProperties.keySet()){
+            log.info(key+" "+brooklynProperties.get(key));
+        }
+        log.info("==================== DelegatingSecurityProvider =============================");
+
+
         String className = brooklynProperties.getFirst(BrooklynWebconsoleProperties.SECURITY_PROVIDER.getPropertyName());
         if (className==null) {
             className = ExplicitUsersSecurityProvider.class.getCanonicalName();
@@ -38,16 +43,13 @@ public class DelegatingSecurityProvider implements SecurityProvider {
             //if that fails, we are going to call the no arg constructor.
             try{
                 Constructor<? extends SecurityProvider> c= clazz.getConstructor(BrooklynProperties.class);
-                if(brooklynProperties == null){
-                    throw new IllegalStateException(String.format("brooklynProperties has not been set on %s",WebConsoleSecurity.class.getName()));
-                }
                 return targetProvider = c.newInstance(brooklynProperties);
-            }catch(NoSuchMethodError ex){
+            }catch(NoSuchMethodException ex){
                 //the class didn't have a constructor with argment BrooklynProperties, so we are going to make use of the no-arg constructor
                 targetProvider = clazz.newInstance();
             }
         } catch (Exception e) {
-            log.warn("Web console unable to instantiate security provider "+className+"; all logins are being disallowed");
+            log.warn("Web console unable to instantiate security provider "+className+"; all logins are being disallowed",e);
             targetProvider = new BlackholeSecurityProvider();
         }
         return targetProvider;

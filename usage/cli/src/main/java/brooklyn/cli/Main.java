@@ -1,5 +1,6 @@
 package brooklyn.cli;
 
+import brooklyn.config.BrooklynProperties;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
@@ -173,8 +174,13 @@ public class Main {
                 log.warn("Locations parameter not supplied: assuming localhost");
                 locations = "localhost";
             }
+
+            //todo: in the future we can load application level properties
+            //also when an application is created/localmanagementcontext is created the same
+            //brooklynproperties need to be injected.
+            BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
             // lean on getLocationsById to do parsing
-            List<Location> brooklynLocations = new LocationRegistry().getLocationsById(Arrays.asList(locations));
+            List<Location> brooklynLocations = new LocationRegistry(brooklynProperties).getLocationsById(Arrays.asList(locations));
             
             // Create the instance of the brooklyn app
             AbstractApplication application = null;

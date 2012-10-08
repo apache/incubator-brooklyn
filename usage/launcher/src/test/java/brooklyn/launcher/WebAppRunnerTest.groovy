@@ -1,5 +1,7 @@
 package brooklyn.launcher
 
+import brooklyn.config.BrooklynProperties
+
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
@@ -34,8 +36,11 @@ public class WebAppRunnerTest {
             attributes = [:] + attributes; //copy map, don't change what was supplied
         }
         bigProps.attributes = attributes;
-        attributes.put('brooklyn.webconsole.security.provider', 'brooklyn.web.console.security.AnyoneSecurityProvider');
-        return new BrooklynWebServer(bigProps, new LocalManagementContext());
+
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        brooklynProperties.putAll(bigProps);
+        brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.web.console.security.AnyoneSecurityProvider")
+        return new BrooklynWebServer(bigProps, new LocalManagementContext(brooklynProperties));
     }
     /** @deprecated since 0.4.0. user createWebServer, or better, use BrooklynLauncher.newLauncher() */
     public static BrooklynWebServer createLauncher(Map properties) {
@@ -120,7 +125,7 @@ public class WebAppRunnerTest {
     @Test
     public void testStartWithLauncher() {
         BrooklynServerDetails details = BrooklynLauncher.newLauncher().
-            setAttribute(BrooklynSecurityProperties.SECURITY_PROVIDER.getPropertyName(), 'brooklyn.web.console.security.AnyoneSecurityProvider').
+            setAttribute("brooklyn.webconsole.security.provider",'brooklyn.web.console.security.AnyoneSecurityProvider').
             webapp("/hello", "hello-world.war").launch();
         
         try {
