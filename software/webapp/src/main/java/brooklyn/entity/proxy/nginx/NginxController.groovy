@@ -50,7 +50,7 @@ public class NginxController extends AbstractController {
        
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-        new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "1.3.0");
+        new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "1.3.7");
 
     @SetFromFlag("sticky")
     public static final BasicConfigKey<Boolean> STICKY =
@@ -162,20 +162,31 @@ public class NginxController extends AbstractController {
     }
     
     Set<String> installedKeysCache = [];
-    /** installs SSL keys named as  ID.{crt,key}  where nginx can find them; 
+
+    /** installs SSL keys named as  ID.{crt,key}  where nginx can find them;
      * currently skips re-installs (does not support changing)
      */
     protected void installSslKeys(String id, ProxySslConfig ssl) {
-        if (ssl==null) return;
+        if (ssl == null) return;
+
         if (installedKeysCache.contains(id)) return;
-        NginxSshDriver driver = (NginxSshDriver)getDriver();
-        driver.machine.copyTo(permissions: "0400", 
-            new ResourceUtils(this).getResourceFromUrl(ssl.certificate),
-            driver.getRunDir()+"/conf/"+id+".crt");
-        if (ssl.key!=null)
-            driver.machine.copyTo(permissions: "0400", 
-                new ResourceUtils(this).getResourceFromUrl(ssl.key),
-                driver.getRunDir()+"/conf/"+id+".key");
+
+        NginxSshDriver driver = (NginxSshDriver) getDriver();
+
+        if (ssl.sourceCertificateUrl != null) {
+            String certificateDestination = ssl.certificateDestination == null ? driver.getRunDir() + "/conf/" + id + ".crt" : ssl.certificateDestination;
+            driver.machine.copyTo(permissions: "0400",
+                    new ResourceUtils(this).getResourceFromUrl(ssl.sourceCertificateUrl),
+                    certificateDestination);
+        }
+
+        if (ssl.sourceKeyUrl != null) {
+            String keyDestination = ssl.keyDestination == null ? driver.getRunDir() + "/conf/" + id + ".key" : ssl.keyDestination;
+            driver.machine.copyTo(permissions: "0400",
+                    new ResourceUtils(this).getResourceFromUrl(ssl.sourceKeyUrl),
+                    keyDestination);
+        }
+
         installedKeysCache.add(id);
     }
 
@@ -199,7 +210,11 @@ public class NginxController extends AbstractController {
         
         ProxySslConfig globalSslConfig = getConfig(SSL_CONFIG);
         boolean ssl = globalSslConfig != null;
-        if (ssl) appendSslConfig("global", config, "    ", globalSslConfig, true, true);
+
+        if (ssl) {
+            verifyConfig(globalSslConfig)
+            appendSslConfig("global", config, "    ", globalSslConfig, true, true)
+        };
         
         // If no servers, then defaults to returning 404
         // TODO Give nicer page back 
@@ -266,6 +281,7 @@ public class NginxController extends AbstractController {
             for (UrlMapping mappingInDomain : mappingsByDomain.get(domain)) {
                 ProxySslConfig sslConfig = mappingInDomain.getConfig(UrlMapping.SSL_CONFIG);
                 if (sslConfig!=null) {
+                    verifyConfig(sslConfig)
                     if (localSslConfig!=null) {
                         if (localSslConfig.equals(sslConfig)) {
                             //ignore identical config specified on multiple mappings
@@ -329,10 +345,16 @@ public class NginxController extends AbstractController {
 
         return config.toString();
     }
-    
+
+    void verifyConfig(ProxySslConfig proxySslConfig) {
+        if(proxySslConfig.certificateDestination == null && proxySslConfig.sourceCertificateUrl == null){
+            throw new IllegalStateException("ProxySslConfig can't have a null certificateDestination and null sourceCertificateUrl. One or both need to be set")
+        }
+    }
+
     public boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl,
-            boolean sslBlock, boolean certificateBlock) {
-        if (ssl==null) return false;
+                                   boolean sslBlock, boolean certificateBlock) {
+        if (ssl == null) return false;
         if (sslBlock) {
             out.append(prefix);
             out.append("ssl on;\n");
@@ -342,13 +364,28 @@ public class NginxController extends AbstractController {
             out.append("proxy_ssl_session_reuse on;");
         }
         if (certificateBlock) {
-            String cert = ""+id+".crt";
+            String cert;
+            if (ssl.certificateDestination != null) {
+                cert = ssl.certificateDestination;
+            } else {
+                cert = "" + id + ".crt";
+            }
+
             out.append(prefix);
-            out.append("ssl_certificate "+cert+";\n");
-            if (ssl.key!=null) {
-                String key = ""+id+".key";
+            out.append("ssl_certificate " + cert + ";\n");
+
+            String key;
+            if (ssl.keyDestination != null) {
+                key = ssl.keyDestination;
+            } else if (ssl.sourceKeyUrl != null) {
+                key = "" + id + ".key";
+            } else {
+                key = null;
+            }
+
+            if (key != null) {
                 out.append(prefix);
-                out.append("ssl_certificate_key "+key+";\n");
+                out.append("ssl_certificate_key " + key + ";\n");
             }
         }
         return true;

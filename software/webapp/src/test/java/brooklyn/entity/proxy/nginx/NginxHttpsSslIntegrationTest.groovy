@@ -1,7 +1,6 @@
 package brooklyn.entity.proxy.nginx;
 
 import static brooklyn.test.TestUtils.*
-import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import org.slf4j.Logger
@@ -51,17 +50,18 @@ public class NginxHttpsSslIntegrationTest {
      * Test that the Nginx proxy starts up and sets SERVICE_UP correctly.
      */
     @Test(groups = "Integration")
-    public void testStartsWithGlobalSsl() {
+    public void testStartsWithGlobalSsl_withCertificateAndKeyCopy() {
         def template = { Map properties -> new JBoss7Server(properties) }
         cluster = new DynamicCluster(owner:app, factory:template, initialSize:1)
         cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
         
-        ProxySslConfig ssl = new ProxySslConfig(certificate:CERTIFICATE_URL, key:KEY_URL);
+        ProxySslConfig ssl = new ProxySslConfig(sourceCertificateUrl:CERTIFICATE_URL, sourceKeyUrl:KEY_URL);
         nginx = new NginxController(app,
-	            cluster: cluster,
-	            domain : "localhost",
-	            port: "8443+",
-                ssl: ssl 
+                sticky: false,
+                cluster: cluster,
+                domain : "localhost",
+                port: "8443+",
+                ssl: ssl
             );
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
@@ -81,7 +81,7 @@ public class NginxHttpsSslIntegrationTest {
 
             // Web-server URL is available
             cluster.members.each {
-	            assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
+                assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
             }
         }
         
@@ -92,4 +92,55 @@ public class NginxHttpsSslIntegrationTest {
         assertFalse cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
         cluster.members.each { assertFalse it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
     }
+
+    private String getFile(String file) {
+           return new File(getClass().getResource("/" + file).getFile()).getAbsolutePath();
+       }
+
+    @Test(groups = "Integration")
+    public void testStartsWithGlobalSsl_withPreinstalledCertificateAndKey() {
+           def template = { Map properties -> new JBoss7Server(properties) }
+           cluster = new DynamicCluster(owner:app, factory:template, initialSize:1)
+           cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
+
+           ProxySslConfig ssl = new ProxySslConfig(
+                   certificateDestination: getFile("ssl/certs/localhost/server.crt"),
+                   keyDestination: getFile("ssl/certs/localhost/server.key"));
+
+           nginx = new NginxController(app,
+                   sticky: false,
+                   cluster: cluster,
+                   domain : "localhost",
+                   port: "8443+",
+                   ssl: ssl
+               );
+
+           app.start([ new LocalhostMachineProvisioningLocation() ])
+
+           String url = nginx.getAttribute(WebAppService.ROOT_URL);
+           if (!url.startsWith("https://")) Assert.fail("URL should be https: "+url);
+
+           executeUntilSucceeds() {
+               // Services are running
+               assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+               cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+
+               assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+
+               // Nginx URL is available
+               assertTrue urlRespondsWithStatusCode200(url)
+
+               // Web-server URL is available
+               cluster.members.each {
+                   assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
+               }
+           }
+
+           app.stop()
+
+           // Services have stopped
+           assertFalse nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+           assertFalse cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+           cluster.members.each { assertFalse it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+       }
 }
