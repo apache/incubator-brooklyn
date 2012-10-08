@@ -347,10 +347,6 @@ public class NginxController extends AbstractController {
     }
 
     void verifyConfig(ProxySslConfig proxySslConfig) {
-        if (proxySslConfig.keyDestination == null &&  proxySslConfig.sourceKeyUrl == null){
-            throw new IllegalStateException("ProxySslConfig can't have a null keyDestination and null sourceKeyUrl. One or both need to be set")
-        }
-
         if(proxySslConfig.certificateDestination == null && proxySslConfig.sourceCertificateUrl == null){
             throw new IllegalStateException("ProxySslConfig can't have a null certificateDestination and null sourceCertificateUrl. One or both need to be set")
         }
