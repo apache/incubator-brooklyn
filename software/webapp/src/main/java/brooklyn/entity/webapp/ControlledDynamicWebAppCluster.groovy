@@ -70,6 +70,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         if (cachedController!=null) return cachedController;
         log.debug("creating default controller for {}", this);
         cachedController = new NginxController(this);
+        getManagementSupport().getManagementContext(false).manage(cachedController);
     }
     
     private ConfigurableEntityFactory<WebAppService> cachedWebServerFactory;
@@ -93,6 +94,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
             // FIXME Establish if definitely want to change how we treat closures like this
             //initialSize: { getConfig(INITIAL_SIZE) } );
             initialSize: getConfig(INITIAL_SIZE));
+        getManagementSupport().getManagementContext(false).manage(cachedCluster);
     }
     
     public void start(Collection<? extends Location> locations) {

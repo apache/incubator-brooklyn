@@ -17,8 +17,6 @@ import com.google.common.collect.Maps;
 
 public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
 
-    // FIXME There are race conditions for constructing the memento while entities are modifying their parent-child relationships
-    
     private static final long serialVersionUID = -5848083830410137654L;
     
     public static Builder builder() {

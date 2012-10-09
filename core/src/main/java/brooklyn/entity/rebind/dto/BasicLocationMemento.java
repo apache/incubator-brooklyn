@@ -1,17 +1,13 @@
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.TreeNode;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -20,7 +16,7 @@ import com.google.common.collect.Sets;
  * 
  * @author aled
  */
-public class BasicLocationMemento extends AbstractMemento implements LocationMemento, Serializable {
+public class BasicLocationMemento extends AbstractTreeNodeMemento implements LocationMemento, Serializable {
 
     private static final long serialVersionUID = -4025337943126838761L;
     
@@ -28,7 +24,7 @@ public class BasicLocationMemento extends AbstractMemento implements LocationMem
         return new Builder();
     }
 
-    public static class Builder extends AbstractMemento.Builder<Builder> {
+    public static class Builder extends AbstractTreeNodeMemento.Builder<Builder> {
         protected Map<String,Object> locationProperties = Maps.newLinkedHashMap();
         protected Map<String,Object> flags = Maps.newLinkedHashMap();
         protected Set<String> locationReferenceFlags = Sets.newLinkedHashSet();
@@ -47,7 +43,6 @@ public class BasicLocationMemento extends AbstractMemento implements LocationMem
         }
     }
     
-    private String type;
     private Map<String,Object> locationProperties;
 	private Map<String,Object> flags;
 	private Set<String> locationReferenceFlags;
@@ -55,31 +50,11 @@ public class BasicLocationMemento extends AbstractMemento implements LocationMem
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicLocationMemento(Builder builder) {
 	    super(builder);
-	    type = builder.type;
 	    locationProperties = Collections.unmodifiableMap(builder.locationProperties);
 	    flags = Collections.unmodifiableMap(builder.flags);
 	    locationReferenceFlags = Collections.unmodifiableSet(builder.locationReferenceFlags);
 	}
 	
-    private <K,V> Map<K,V> createOfSameType(Map<K,V> orig) {
-    	return Maps.newLinkedHashMap();
-    }
-    
-    private Collection<Object> createOfSameType(Iterable<?> orig) {
-    	if (orig instanceof List) {
-    		return Lists.newArrayList();
-    	} else if (orig instanceof Set) {
-    		return Sets.newLinkedHashSet();
-    	} else {
-    		return Lists.newArrayList();
-    	}
-    }
-    
-	@Override
-    public String getType() {
-        return type;
-    }
-    
     @Override
     public Map<String,Object> getLocationProperties() {
 		return locationProperties;
@@ -93,10 +68,5 @@ public class BasicLocationMemento extends AbstractMemento implements LocationMem
     @Override
     public Set<String> getLocationReferenceFlags() {
     	return locationReferenceFlags;
-    }
-    
-    @Override
-    public String toString() {
-    	return Objects.toStringHelper(this).add("type", type).add("id", getId()).toString();
     }
 }

@@ -33,9 +33,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 /**
- * This tests the operation of the {@link TomcatServer} entity.
- * 
- * FIXME this test is largely superseded by WebApp*IntegrationTest which tests inter alia Tomcat
+ * TODO re-write this like WebAppIntegrationTest, rather than being jboss7 specific.
  */
 public class Jboss7ServerRebindIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(Jboss7ServerRebindIntegrationTest.class);
@@ -57,13 +55,13 @@ public class Jboss7ServerRebindIntegrationTest {
     public void setUp() {
     	String warPath = "hello-world.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
+        executor = Executors.newCachedThreadPool();
 
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         origApp = new TestApplication();
-        executor = Executors.newCachedThreadPool();
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
@@ -97,8 +95,10 @@ public class Jboss7ServerRebindIntegrationTest {
     
     @Test(groups = "Integration")
     public void testRebindsToRunningServer() throws Exception {
-    	// Start a jboss, and wait for it to be fully up
+    	// Start an app-server, and wait for it to be fully up
         JBoss7Server origServer = new JBoss7Server(MutableMap.of("war", warUrl.toString()), origApp);
+        origManagementContext.manage(origApp);
+        
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         
         assertUrlStatusCodeEventually(origServer.getAttribute(JBoss7Server.ROOT_URL), 200);

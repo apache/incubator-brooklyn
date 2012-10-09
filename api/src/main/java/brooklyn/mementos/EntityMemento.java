@@ -16,13 +16,9 @@ import brooklyn.event.AttributeSensor;
  * 
  * @author aled
  */
-public interface EntityMemento extends TreeNode, Memento {
+public interface EntityMemento extends Memento, TreeNode {
 
-    // TODO Think about which sensors; how would sub-class supply that (given that super-constructor is doing work)
-    
-    public String getType();
-    
-    public String getDisplayName();
+    public boolean isTopLevelApp();
     
     public Map<ConfigKey, Object> getConfig();
 
@@ -48,14 +44,6 @@ public interface EntityMemento extends TreeNode, Memento {
      * The ids of the policies of this entity.
      */
     public Collection<String> getPolicies();
-
-    /**
-     * A (weakly-typed) property set for this memento.
-     * These can be used to avoid sub-classing the entity memento, but developers can sub-class to get strong typing if desired.
-     */
-    public Object getCustomProperty(String name);
-
-	public Map<String, ? extends Object> getCustomProperties();
 
     public Collection<? extends ConfigKey> getLocationReferenceConfigs();
 

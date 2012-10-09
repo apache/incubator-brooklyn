@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Application;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -85,6 +86,15 @@ public class RebindTestUtils {
         
         LocalManagementContext newManagementContext = newPersistingManagementContext(mementoDir, classLoader);
         BrooklynMementoPersister newPersister = newManagementContext.getRebindManager().getPersister();
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(newPersister.loadMemento(), classLoader);
+        return newApps.get(0);
+    }
+
+    public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader) throws Exception {
+        LOG.info("Rebinding app, using directory "+mementoDir);
+        
+        BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
+        newManagementContext.getRebindManager().setPersister(newPersister);
         List<Application> newApps = newManagementContext.getRebindManager().rebind(newPersister.loadMemento(), classLoader);
         return newApps.get(0);
     }

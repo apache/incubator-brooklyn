@@ -68,6 +68,7 @@ public class MementosGenerators {
         builder.id = entity.getId();
         builder.displayName = entity.getDisplayName();
         builder.type = entity.getClass().getName();
+        builder.isTopLevelApp = (entity instanceof Application && entity.getOwner() == null);
         
         for (Map.Entry<ConfigKey, Object> entry : ((AbstractEntity)entity).getAllConfig().entrySet()) {
             ConfigKey<?> key = entry.getKey();

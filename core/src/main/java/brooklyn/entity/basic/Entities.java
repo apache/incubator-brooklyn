@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +34,7 @@ import brooklyn.util.task.ParallelTask;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 
@@ -85,9 +85,9 @@ public class Entities {
                 (v instanceof CharSequence&& ((CharSequence)v).length() == 0);
     }
     
-    public static Map<Object,Object> sanitize(Map<?,?> input) {
-        Map<Object,Object> result = new LinkedHashMap<Object,Object>();
-        for (Map.Entry<?,?> e: input.entrySet()) {
+    public static <K> Map<K,Object> sanitize(Map<K,?> input) {
+        Map<K,Object> result = Maps.newLinkedHashMap();
+        for (Map.Entry<K,?> e: input.entrySet()) {
             if (isSecret(""+e.getKey())) result.put(e.getKey(), "xxxxxxxx");
             else result.put(e.getKey(), e.getValue());
         }

@@ -48,7 +48,6 @@ public class SoftwareProcessEntityRebindTest {
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
     
-    // FIXME Use SoftwareProcessEntity; so move test to software/base or webapps
     @Test
     public void testReleasesLocationOnStopAfterRebinding() throws Exception {
         origE = new MyService(MutableMap.of(), origApp);

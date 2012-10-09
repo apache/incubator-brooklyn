@@ -56,13 +56,13 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     public void setUp() {
     	String warPath = "hello-world.war";
         warUrl = checkNotNull(getClass().getClassLoader().getResource(warPath), "warUrl");
+        executor = Executors.newCachedThreadPool();
 
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         origApp = new TestApplication();
-        executor = Executors.newCachedThreadPool();
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
@@ -71,7 +71,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         	monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
-        if (newApp != null) newApp.stop();
+        if (newApp != null && newApp.getManagementSupport().getManagementContext(true).isManaged(newApp)) newApp.stop();
         if (origApp != null && origApp.getManagementSupport().getManagementContext(true).isManaged(origApp)) origApp.stop();
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
@@ -94,18 +94,19 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     	return monitor;
     }
     
-    // FIXME Fails due to RebindEntityTest.testRebindPreservesGetConfigWithDefault problem
+    // FIXME Fails before rebind (getting 404 from nginx)! Need to investigate this more.
     @Test(groups = {"Integration", "WIP"})
     public void testRebindsToRunningCluster() throws Exception {
         NginxController origNginx = new NginxController(MutableMap.of("domain", "localhost"), origApp);
 
-    	new ControlledDynamicWebAppCluster(
+        new ControlledDynamicWebAppCluster(
     			MutableMap.builder()
     					.put("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
     					.put("initialSize", "1")
     					.put("controller", origNginx)
     					.build(),
     			origApp);
+    	origManagementContext.manage(origApp);
     	
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         String rootUrl = origNginx.getAttribute(JBoss7Server.ROOT_URL);

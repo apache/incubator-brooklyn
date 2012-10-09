@@ -3,14 +3,20 @@ package brooklyn.entity.rebind;
 import static brooklyn.test.EntityTestUtils.assertAttributeEquals;
 import static brooklyn.test.EntityTestUtils.assertConfigEquals;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNotSame;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -28,16 +34,19 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,6 +56,8 @@ import com.google.common.io.Files;
 public class RebindEntityTest {
 
     // FIXME Add test about dependent configuration serialization?!
+
+    private static final long TIMEOUT_MS = 10*1000;
     
     private ClassLoader classLoader = getClass().getClassLoader();
     private LocalManagementContext managementContext;
@@ -213,44 +224,122 @@ public class RebindEntityTest {
         assertConfigEquals(newE, MyEntityReffingOthers.LOCATION_REF_CONFIG, newLoc);
     }
 
-    // FIXME Test is broken, because RebindManager now calls manage
-//    @Test(enabled=false)
-//    public void testEntityUnmanagedDuringRebind() throws Exception {
-//        MyEntity origE = new MyEntity(MutableMap.of("subscribe", true), origApp);
-//        managementContext.manage(origApp);
-//
-//        // Serialize and rebind, but don't yet manage the app
-//        BrooklynMemento memento = origApp.getManagementContext().getRebindManager().getMemento();
-//        LocalManagementContext managementContext = new LocalManagementContext();
-//        MyApplication newApp = (MyApplication) managementContext.getRebindManager().rebind(memento, getClass().getClassLoader()).get(0);
-//        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
-//        
-//        // Entities should not be available yet (i.e. not managed)
-//        assertNull(managementContext.getEntity(origApp.getId()));
-//        assertNull(managementContext.getEntity(origE.getId()));
-//
-//        // When we manage the app, then the entities will be available
-//        managementContext.manage(newApp);
-//        assertEquals(managementContext.getEntity(origApp.getId()), newApp);
-//        assertEquals(managementContext.getEntity(origE.getId()), newE);
-//    }
-//    
-//    // FIXME Alex is looking at the "brooklyn management start sequence"
-//    @Test(enabled=false, groups="WIP")
-//    public void testSubscriptionAndPublishingNotActiveUntilAppIsManaged() throws Exception {
-//        MyEntity2 origE = new MyEntity2(MutableMap.of("subscribe", true), origApp);
-//        managementContext.manage(origApp);
-//        
-//        // Serialize and rebind, but don't yet manage the app
-//        BrooklynMemento memento = origApp.getManagementContext().getRebindManager().getMemento();
-//        LocalManagementContext managementContext = new LocalManagementContext();
-//        MyApplication newApp = (MyApplication) managementContext.getRebindManager().rebind(memento, getClass().getClassLoader()).get(0);
-//        MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity2.class));
-//
-//        // Publishing before managed: should not be received by subscriber
-//        newApp.setAttribute(MyApplication.MY_SENSOR, "mysensorval");
-//        TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(newE.events), Predicates.equalTo(Collections.emptyList()));
-//    }
+    @Test
+    public void testEntityManagementLifecycleAndVisibilityDuringRebind() throws Exception {
+        MyLatchingEntity.latching = false;
+        MyLatchingEntity origE = new MyLatchingEntity(origApp);
+        managementContext.manage(origApp);
+        MyLatchingEntity.reset(); // after origE has been managed
+        MyLatchingEntity.latching = true;
+        
+        // Serialize and rebind, but don't yet manage the app
+        RebindTestUtils.waitForPersisted(origApp);
+        RebindTestUtils.checkCurrentMementoSerializable(origApp);
+        final LocalManagementContext newManagementContext = new LocalManagementContext();
+        Thread thread = new Thread() {
+            public void run() {
+                try {
+                    RebindTestUtils.rebind(newManagementContext, mementoDir, getClass().getClassLoader());
+                } catch (Exception e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        };
+        try {
+            thread.start();
+            
+            assertTrue(MyLatchingEntity.reconstructStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            assertNull(newManagementContext.getEntity(origApp.getId()));
+            assertNull(newManagementContext.getEntity(origE.getId()));
+            assertTrue(MyLatchingEntity.managingStartedLatch.getCount() > 0);
+            
+            MyLatchingEntity.reconstructContinuesLatch.countDown();
+            assertTrue(MyLatchingEntity.managingStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            assertNotNull(newManagementContext.getEntity(origApp.getId()));
+            assertNull(newManagementContext.getEntity(origE.getId()));
+            assertTrue(MyLatchingEntity.managedStartedLatch.getCount() > 0);
+            
+            MyLatchingEntity.managingContinuesLatch.countDown();
+            assertTrue(MyLatchingEntity.managedStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            assertNotNull(newManagementContext.getEntity(origApp.getId()));
+            assertNotNull(newManagementContext.getEntity(origE.getId()));
+            MyLatchingEntity.managedContinuesLatch.countDown();
+
+            thread.join(TIMEOUT_MS);
+            assertFalse(thread.isAlive());
+            
+        } finally {
+            thread.interrupt();
+            MyLatchingEntity.reset();
+        }
+    }
+    
+    @Test(groups="Integration") // takes more than 4 seconds, due to assertContinually calls
+    public void testSubscriptionAndPublishingOnlyActiveWhenEntityIsManaged() throws Exception {
+        MyLatchingEntity.latching = false;
+        MyLatchingEntity origE = new MyLatchingEntity(MutableMap.of("subscribe", MyApplication.MY_SENSOR, "publish", "myvaltopublish"), origApp);
+        managementContext.manage(origApp);
+        MyLatchingEntity.reset(); // after origE has been managed
+        MyLatchingEntity.latching = true;
+
+        // Serialize and rebind, but don't yet manage the app
+        RebindTestUtils.waitForPersisted(origApp);
+        RebindTestUtils.checkCurrentMementoSerializable(origApp);
+        final LocalManagementContext newManagementContext = new LocalManagementContext();
+        Thread thread = new Thread() {
+            public void run() {
+                try {
+                    RebindTestUtils.rebind(newManagementContext, mementoDir, getClass().getClassLoader());
+                } catch (Exception e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        };
+        try {
+            thread.start();
+            final List<Object> events = new CopyOnWriteArrayList<Object>();
+            
+            newManagementContext.getSubscriptionManager().subscribe(null, MyLatchingEntity.MY_SENSOR, new SensorEventListener<Object>() {
+                @Override public void onEvent(SensorEvent<Object> event) {
+                    events.add(event.getValue());
+                }});
+
+            // In entity's reconstruct, publishes events are queued, and subscriptions don't yet take effect
+            assertTrue(MyLatchingEntity.reconstructStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            newManagementContext.getSubscriptionManager().publish(new BasicSensorEvent<String>(MyApplication.MY_SENSOR, null, "myvaltooearly"));
+            
+            TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(MyLatchingEntity.events), Predicates.equalTo(Collections.emptyList()));
+            TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(events), Predicates.equalTo(Collections.emptyList()));
+            
+
+            // When the entity is notified of "managing", then subscriptions take effect (but missed events not delivered); 
+            // published events remain queued
+            MyLatchingEntity.reconstructContinuesLatch.countDown();
+            assertTrue(MyLatchingEntity.managingStartedLatch.getCount() > 0);
+
+            TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(events), Predicates.equalTo(Collections.emptyList()));
+            TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(MyLatchingEntity.events), Predicates.equalTo(Collections.emptyList()));
+
+            newManagementContext.getSubscriptionManager().publish(new BasicSensorEvent<String>(MyApplication.MY_SENSOR, null, "myvaltoreceive"));
+            TestUtils.assertEventually(Suppliers.ofInstance(MyLatchingEntity.events), Predicates.equalTo(ImmutableList.of("myvaltoreceive")));
+
+            // When the entity is notified of "managed", its events are only then delivered
+            MyLatchingEntity.managingContinuesLatch.countDown();
+            assertTrue(MyLatchingEntity.managedStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+            TestUtils.assertEventually(Suppliers.ofInstance(MyLatchingEntity.events), Predicates.equalTo(ImmutableList.of("myvaltoreceive")));
+            
+            MyLatchingEntity.managedContinuesLatch.countDown();
+            
+            thread.join(TIMEOUT_MS);
+            assertFalse(thread.isAlive());
+            
+        } finally {
+            thread.interrupt();
+            MyLatchingEntity.reset();
+        }
+
+    }
     
     @Test
     public void testRestoresConfigKeys() throws Exception {
@@ -353,7 +442,7 @@ public class RebindEntityTest {
         private static final long serialVersionUID = 1L;
         
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
-                        String.class, "test.mysensor", "My test sensor");
+                        String.class, "test.app.mysensor", "My test sensor");
         
         public MyApplication() {
         }
@@ -368,10 +457,10 @@ public class RebindEntityTest {
         
         @SetFromFlag("myconfig")
         public static final ConfigKey<String> MY_CONFIG = new BasicConfigKey<String>(
-                        String.class, "test.myconfig", "My test config");
+                        String.class, "test.myentity.myconfig", "My test config");
 
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
-                String.class, "test.mysensor", "My test sensor");
+                String.class, "test.myentity.mysensor", "My test sensor");
         
         private final Object dummy = new Object(); // so not serializable
 
@@ -468,6 +557,105 @@ public class RebindEntityTest {
                 @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
                     super.doReconstruct(rebindContext, memento);
                     myfield = (String) memento.getCustomProperty("myfield");
+                }
+            };
+        }
+    }
+    
+    public static class MyLatchingEntity extends AbstractEntity {
+        private static final long serialVersionUID = 1L;
+        static volatile CountDownLatch reconstructStartedLatch;
+        static volatile CountDownLatch reconstructContinuesLatch;
+        static volatile CountDownLatch managingStartedLatch;
+        static volatile CountDownLatch managingContinuesLatch;
+        static volatile CountDownLatch managedStartedLatch;
+        static volatile CountDownLatch managedContinuesLatch;
+
+        static volatile boolean latching = false;
+        static volatile List<Object> events;
+
+        @SetFromFlag("subscribe")
+        public static final ConfigKey<AttributeSensor<?>> SUBSCRIBE = new BasicConfigKey(
+                AttributeSensor.class, "test.mylatchingentity.subscribe", "Sensor to subscribe to (or null means don't)", null);
+        
+        @SetFromFlag("publish")
+        public static final ConfigKey<String> PUBLISH = new BasicConfigKey<String>(
+                String.class, "test.mylatchingentity.publish", "Value to publish (or null means don't)", null);
+
+        public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
+                String.class, "test.mylatchingentity.mysensor", "My test sensor");
+
+        static void reset() {
+            latching = false;
+            events = new CopyOnWriteArrayList<Object>();
+
+            reconstructStartedLatch = new CountDownLatch(1);
+            reconstructContinuesLatch = new CountDownLatch(1);
+            managingStartedLatch = new CountDownLatch(1);
+            managingContinuesLatch = new CountDownLatch(1);
+            managedStartedLatch = new CountDownLatch(1);
+            managedContinuesLatch = new CountDownLatch(1);
+        }
+
+        public MyLatchingEntity(Entity owner) {
+            super(owner);
+        }
+        
+        public MyLatchingEntity(Map flags, Entity owner) {
+            super(flags, owner);
+        }
+
+        private void onReconstruct() {
+            if (getConfig(SUBSCRIBE) != null) {
+                getManagementSupport().getSubscriptionContext().subscribe(null, getConfig(SUBSCRIBE), new SensorEventListener<Object>() {
+                        @Override public void onEvent(SensorEvent<Object> event) {
+                            events.add(event.getValue());
+                        }});
+            }
+
+            if (getConfig(PUBLISH) != null) {
+                setAttribute(MY_SENSOR, getConfig(PUBLISH));
+            }
+
+            if (latching) {
+                reconstructStartedLatch.countDown();
+                try {
+                    reconstructContinuesLatch.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeInterruptedException(e);
+                }
+            }
+        }
+        
+        @Override
+        public void onManagementStarting() {
+            if (latching) {
+                managingStartedLatch.countDown();
+                try {
+                    managingContinuesLatch.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeInterruptedException(e);
+                }
+            }
+        }
+        
+        @Override
+        public void onManagementStarted() {
+            if (latching) {
+                managedStartedLatch.countDown();
+                try {
+                    managedContinuesLatch.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeInterruptedException(e);
+                }
+            }
+        }
+        
+        @Override
+        public RebindSupport<EntityMemento> getRebindSupport() {
+            return new BasicEntityRebindSupport(this) {
+                @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
+                    MyLatchingEntity.this.onReconstruct();
                 }
             };
         }

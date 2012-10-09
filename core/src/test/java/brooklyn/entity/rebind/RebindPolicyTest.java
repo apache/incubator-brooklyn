@@ -22,8 +22,6 @@ import com.google.common.io.Files;
 
 public class RebindPolicyTest {
 
-    // FIXME Add test about dependent configuration serialization?!
-    
     private ClassLoader classLoader = getClass().getClassLoader();
     private ManagementContext managementContext;
     private TestApplication origApp;

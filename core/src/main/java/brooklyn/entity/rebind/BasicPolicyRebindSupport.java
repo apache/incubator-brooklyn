@@ -1,5 +1,7 @@
 package brooklyn.entity.rebind;
 
+import static brooklyn.entity.basic.Entities.sanitize;
+
 import java.util.Collections;
 import java.util.Map;
 
@@ -12,8 +14,6 @@ import brooklyn.policy.basic.AbstractPolicy;
 
 public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
 
-	// FIXME Filter passwords from log messages!
-	
     protected static final Logger LOG = LoggerFactory.getLogger(BasicPolicyRebindSupport.class);
     
     private final AbstractPolicy policy;
@@ -32,7 +32,7 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for policy {}({}): displayName={}; flags={}; " +
     			"customProperties={}; ",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(),  
-                memento.getFlags(), memento.getCustomProperties()});
+                sanitize(memento.getFlags()), sanitize(memento.getCustomProperties())});
     	return memento;
     }
 
@@ -41,7 +41,7 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing policy {}({}): displayName={}; flags={}; " +
     			"customProperties={}",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(),  
-				memento.getFlags(), memento.getCustomProperties()});
+				sanitize(memento.getFlags()), sanitize(memento.getCustomProperties())});
 
     	// Note that the flags have been set in the constructor
         policy.setName(memento.getDisplayName());

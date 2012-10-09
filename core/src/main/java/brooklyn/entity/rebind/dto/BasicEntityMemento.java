@@ -15,7 +15,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.TreeNode;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -29,17 +28,16 @@ import com.google.common.collect.Sets;
  * @author aled
  */
 @JsonAutoDetect(fieldVisibility=Visibility.ANY, getterVisibility=Visibility.NONE)
-public class BasicEntityMemento extends AbstractMemento implements EntityMemento, Serializable {
+public class BasicEntityMemento extends AbstractTreeNodeMemento implements EntityMemento, Serializable {
 
-    // TODO Think about which sensors - is all of them the right thing?
-    
     private static final long serialVersionUID = 8642959541121050126L;
     
     public static Builder builder() {
         return new Builder();
     }
 
-    public static class Builder extends AbstractMemento.Builder<Builder> {
+    public static class Builder extends AbstractTreeNodeMemento.Builder<Builder> {
+        protected boolean isTopLevelApp;
         protected Map<ConfigKey, Object> config = Maps.newLinkedHashMap();
         protected Map<AttributeSensor, Object> attributes = Maps.newLinkedHashMap();
         protected Set<ConfigKey> entityReferenceConfigs = Sets.newLinkedHashSet();
@@ -52,6 +50,7 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
         
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
+            isTopLevelApp = other.isTopLevelApp();
             displayName = other.getDisplayName();
             config.putAll(other.getConfig());
             attributes.putAll(other.getAttributes());
@@ -70,7 +69,7 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
         }
     }
     
-    private String type;
+    private boolean isTopLevelApp;
     private Map<String, Object> config;
     private Map<String, Object> attributes;
     private Set<String> entityReferenceConfigs;
@@ -98,7 +97,7 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     // Trusts the builder to not mess around with mutability after calling build()
     protected BasicEntityMemento(Builder builder) {
         super(builder);
-        type = builder.type;
+        isTopLevelApp = builder.isTopLevelApp;
         locations = Collections.unmodifiableList(builder.locations);
         policies = Collections.unmodifiableList(builder.policies);
         members = Collections.unmodifiableList(builder.members);
@@ -146,6 +145,14 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
         }
     }
 
+    /**
+     * Creates the appropriate data-structures for the getters, from the serialized forms.
+     * The serialized form is string->object (e.g. using attribute sensor name), whereas 
+     * the getters return Map<AttributeSensor,Object> for example.
+     * 
+     * TODO Really don't like this pattern. Should we clean it up? But deferring until 
+     * everything else is working.
+     */
     private void postDeserialize() {
         configByKey = Maps.newLinkedHashMap();
         for (Map.Entry<String, Object> entry : config.entrySet()) {
@@ -185,10 +192,10 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     }
     
     @Override
-    public String getType() {
-        return type;
+    public boolean isTopLevelApp() {
+        return isTopLevelApp;
     }
-    
+
     @Override
     public Map<ConfigKey, Object> getConfig() {
         if (configByKey == null) postDeserialize();
@@ -238,10 +245,5 @@ public class BasicEntityMemento extends AbstractMemento implements EntityMemento
     @Override
     public List<String> getLocations() {
         return locations;
-    }
-
-    @Override
-    public String toString() {
-    	return Objects.toStringHelper(this).add("type", type).add("id", getId()).toString();
     }
 }

@@ -98,7 +98,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         for (File file : entityFiles) {
             EntityMemento memento = (EntityMemento) serializer.fromString(readFile(file));
             builder.entity(memento);
-            if (memento.getParent() == null) {
+            if (memento.isTopLevelApp()) {
                 builder.applicationId(memento.getId());
             }
         }

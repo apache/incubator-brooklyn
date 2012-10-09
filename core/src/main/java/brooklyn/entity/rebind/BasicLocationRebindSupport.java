@@ -1,5 +1,7 @@
 package brooklyn.entity.rebind;
 
+import static brooklyn.entity.basic.Entities.sanitize;
+
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Map;
@@ -13,12 +15,8 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.flags.FlagUtils;
 
-import com.google.common.collect.ImmutableMap;
-
 public class BasicLocationRebindSupport implements RebindSupport<LocationMemento> {
 
-	// FIXME Filter passwords from log messages!
-	
     protected static final Logger LOG = LoggerFactory.getLogger(BasicLocationRebindSupport.class);
     
     private final AbstractLocation location;
@@ -37,8 +35,8 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; parent={}; children={}; "+
     	        "locationProperties={}; flags={}; locationReferenceFlags={}; customProperties={}; ",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
-                memento.getChildren(),memento.getLocationProperties(), memento.getFlags(), memento.getLocationReferenceFlags(),
-                memento.getCustomProperties()});
+                memento.getChildren(), sanitize(memento.getLocationProperties()), sanitize(memento.getFlags()), 
+                memento.getLocationReferenceFlags(), sanitize(memento.getCustomProperties())});
     	return memento;
     }
 
@@ -47,8 +45,9 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location {}({}): displayName={}; parent={}; children={}; " +
     			"locationProperties={}; flags={}; locationReferenceFlags={}; customProperties={}",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
-    			memento.getChildren(), memento.getLocationProperties(), 
-				memento.getFlags(), memento.getLocationReferenceFlags(), memento.getCustomProperties()});
+    			memento.getChildren(), sanitize(memento.getLocationProperties()), 
+    			sanitize(memento.getFlags()), memento.getLocationReferenceFlags(), 
+    			sanitize(memento.getCustomProperties())});
 
     	// Note that the flags have been set in the constructor
         location.setName(memento.getDisplayName());

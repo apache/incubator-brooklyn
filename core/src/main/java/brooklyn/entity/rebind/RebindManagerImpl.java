@@ -37,7 +37,6 @@ public class RebindManagerImpl implements RebindManager {
     
     public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
-    // FIXME Make configurable
     private volatile long periodicPersistPeriod = 1000;
     
     private volatile boolean running = true;
@@ -57,7 +56,6 @@ public class RebindManagerImpl implements RebindManager {
     /**
      * Must be called before setPerister()
      */
-    @VisibleForTesting
     public void setPeriodicPersistPeriod(long periodMillis) {
         this.periodicPersistPeriod = periodMillis;
     }

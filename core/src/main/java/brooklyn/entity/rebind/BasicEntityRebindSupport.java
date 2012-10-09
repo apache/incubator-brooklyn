@@ -1,5 +1,6 @@
 package brooklyn.entity.rebind;
 
+import static brooklyn.entity.basic.Entities.sanitize;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collections;
@@ -42,9 +43,9 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     	        "policies={}; members={}; config={}; attributes={}; entityReferenceConfigs={}; " +
     	        "entityReferenceAttributes={}; customProperties={}", 
     			new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
-                memento.getLocations(), memento.getPolicies(), memento.getMembers(), memento.getConfig(), 
-                memento.getAttributes(), memento.getEntityReferenceConfigs(), 
-                memento.getEntityReferenceAttributes(), memento.getCustomProperties()});
+                memento.getLocations(), memento.getPolicies(), memento.getMembers(), sanitize(memento.getConfig()), 
+                sanitize(memento.getAttributes()), memento.getEntityReferenceConfigs(), 
+                memento.getEntityReferenceAttributes(), sanitize(memento.getCustomProperties())});
     	return memento;
     }
 
@@ -54,9 +55,9 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     	        "policies={}; members={}; config={}; attributes={}; entityReferenceConfigs={}; " +
     	        "entityReferenceAttributes={}; customProperties={}", 
     	        new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
-    	        memento.getLocations(), memento.getPolicies(), memento.getMembers(), memento.getConfig(), 
-    	        memento.getAttributes(), memento.getEntityReferenceConfigs(), 
-    	        memento.getEntityReferenceAttributes(), memento.getCustomProperties()});
+    	        memento.getLocations(), memento.getPolicies(), memento.getMembers(), sanitize(memento.getConfig()), 
+    	        sanitize(memento.getAttributes()), memento.getEntityReferenceConfigs(), 
+    	        memento.getEntityReferenceAttributes(), sanitize(memento.getCustomProperties())});
 
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());

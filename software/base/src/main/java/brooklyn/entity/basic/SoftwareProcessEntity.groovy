@@ -140,7 +140,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         }
     }
     
-    // FIXME Better name for this? If more general than "rebind on restart"?
     protected void rebind() {
         // e.g. rebinding to a running instance
         // FIXME For rebind, what to do about things in STARTING or STOPPING state?
