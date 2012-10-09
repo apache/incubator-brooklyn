@@ -25,6 +25,8 @@ import com.google.common.collect.Iterables
 import com.google.common.collect.LinkedHashMultimap
 import com.google.common.collect.Multimap
 
+import brooklyn.util.text.Strings
+
 /**
  * An entity that represents an Nginx proxy (e.g. for routing requests to servers in a cluster).
  * <p>
@@ -173,17 +175,17 @@ public class NginxController extends AbstractController {
 
         NginxSshDriver driver = (NginxSshDriver) getDriver();
 
-        if (ssl.sourceCertificateUrl != null) {
+        if (!Strings.isEmpty(ssl.certificateSourceUrl)) {
             String certificateDestination = ssl.certificateDestination == null ? driver.getRunDir() + "/conf/" + id + ".crt" : ssl.certificateDestination;
             driver.machine.copyTo(permissions: "0400",
-                    new ResourceUtils(this).getResourceFromUrl(ssl.sourceCertificateUrl),
+                    new ResourceUtils(this).getResourceFromUrl(ssl.certificateSourceUrl),
                     certificateDestination);
         }
 
-        if (ssl.sourceKeyUrl != null) {
+        if (!Strings.isEmpty(ssl.keySourceUrl)) {
             String keyDestination = ssl.keyDestination == null ? driver.getRunDir() + "/conf/" + id + ".key" : ssl.keyDestination;
             driver.machine.copyTo(permissions: "0400",
-                    new ResourceUtils(this).getResourceFromUrl(ssl.sourceKeyUrl),
+                    new ResourceUtils(this).getResourceFromUrl(ssl.keySourceUrl),
                     keyDestination);
         }
 
@@ -347,8 +349,8 @@ public class NginxController extends AbstractController {
     }
 
     void verifyConfig(ProxySslConfig proxySslConfig) {
-        if(proxySslConfig.certificateDestination == null && proxySslConfig.sourceCertificateUrl == null){
-            throw new IllegalStateException("ProxySslConfig can't have a null certificateDestination and null sourceCertificateUrl. One or both need to be set")
+          if(Strings.isEmpty(proxySslConfig.certificateDestination) && Strings.isEmpty(proxySslConfig.certificateSourceUrl)){
+            throw new IllegalStateException("ProxySslConfig can't have a null certificateDestination and null certificateSourceUrl. One or both need to be set")
         }
     }
 
@@ -365,19 +367,19 @@ public class NginxController extends AbstractController {
         }
         if (certificateBlock) {
             String cert;
-            if (ssl.certificateDestination != null) {
-                cert = ssl.certificateDestination;
-            } else {
+            if (Strings.isEmpty(ssl.certificateDestination)) {
                 cert = "" + id + ".crt";
+            } else {
+                cert = ssl.certificateDestination;
             }
 
             out.append(prefix);
             out.append("ssl_certificate " + cert + ";\n");
 
             String key;
-            if (ssl.keyDestination != null) {
+            if (!Strings.isEmpty(ssl.keyDestination)) {
                 key = ssl.keyDestination;
-            } else if (ssl.sourceKeyUrl != null) {
+            } else if (!Strings.isEmpty(ssl.keySourceUrl)) {
                 key = "" + id + ".key";
             } else {
                 key = null;
