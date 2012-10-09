@@ -188,14 +188,14 @@ public class TestUtils {
         TimeDuration fixedPeriod = toTimeDuration(flags.period) ?: null
         TimeDuration minPeriod = fixedPeriod ?: toTimeDuration(flags.minPeriod) ?: new TimeDuration(0,0,0,1)
         TimeDuration maxPeriod = fixedPeriod ?: toTimeDuration(flags.maxPeriod) ?: new TimeDuration(0,0,0,500)
-        int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE
+        int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE;
+        int attempt = 0;
+        long startTime = System.currentTimeMillis();
         try {
             Throwable lastException = null;
             Object result;
             long lastAttemptTime = 0;
-            long startTime = System.currentTimeMillis()
-            long expireTime = startTime+duration.toMilliseconds()
-            int attempt = 0;
+            long expireTime = startTime+duration.toMilliseconds();
             long sleepTimeBetweenAttempts = minPeriod.toMilliseconds();
             
             while (attempt<maxAttempts && lastAttemptTime<expireTime) {
@@ -229,7 +229,9 @@ public class TestUtils {
                 throw lastException
             fail "invalid result: $result"
         } catch (Throwable t) {
-			if (logException) log.info("failed execute-until-succeeds (rethrowing): "+t)
+			if (logException) log.info("failed execute-until-succeeds, "+attempt+" attempts, "+
+                (System.currentTimeMillis()-startTime)+"ms elapsed "+
+                "(rethrowing): "+t);
 			throw t
         } finally {
             finallyBlock.call()
@@ -319,6 +321,9 @@ public class TestUtils {
         }
     }
     
+    /** @deprecated since 0.4.0 use HttpTestUtils.assertUrlEventuallyHasText or HttpTestUtils.assertUrlHasText 
+     * (NB: this method has "eventually" logic, with default timeout of 30s, despite the absence of that in the name) */
+    @Deprecated
     public static void assertUrlHasText(Map flags=[:], String url, String ...phrases) {
         String contents;
         TimeDuration timeout = flags.timeout in Number ? flags.timeout*TimeUnit.MILLISECONDS : flags.timeout ?: 30*TimeUnit.SECONDS

@@ -7,14 +7,17 @@ import groovy.util.XmlParser;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
+
+import com.google.common.base.Throwables;
 
 public class UtraceHostGeoLookup implements HostGeoLookup {
 
@@ -51,11 +54,49 @@ Beyond this you get blacklisted and requests may time out, or return none.
         return "http://xml.utrace.de/?query="+ip.trim();
     }
 
-    static String localExternalIp;
+    static AtomicBoolean retrievingLocalExternalIp = new AtomicBoolean(false); 
+    volatile static String localExternalIp;
     /** returns public IP of localhost */
-    public synchronized static String getLocalhostExternalIp() {
+    public static synchronized String getLocalhostExternalIp() {
         if (localExternalIp!=null) return localExternalIp;
-        localExternalIp = new ResourceUtils(HostGeoLookup.class).getResourceAsString("http://api.externalip.net/ip/").trim();
+
+        // do in private thread, otherwise blocks for 30s+ on dodgy network!
+        // (we can skip it if someone else is doing it, we have synch lock so we'll get notified)
+        if (!retrievingLocalExternalIp.get())
+            new Thread(new Runnable() {
+                public void run() {
+                    if (retrievingLocalExternalIp.getAndSet(true))
+                        // someone else already trying to retrieve; caller can safely just wait,
+                        // as they will get notified by the someone else
+                        return;
+                    try {
+                        if (localExternalIp!=null)
+                            // someone else succeeded
+                            return;
+                        log.debug("Looking up external IP of this host in private thread "+Thread.currentThread());
+                        localExternalIp = new ResourceUtils(HostGeoLookup.class).getResourceAsString("http://api.externalip.net/ip/").trim();
+                        log.debug("Finished looking up external IP of this host in private thread, result "+localExternalIp);
+                    } catch (Throwable t) {
+                        log.debug("Not able to look up external IP of this host in private thread, probably offline ("+t+")");
+                    } finally {
+                        synchronized (UtraceHostGeoLookup.class) {
+                            UtraceHostGeoLookup.class.notifyAll();        
+                            retrievingLocalExternalIp.set(false);
+                        }
+                    }
+                }
+            }).start();
+        
+        try {
+            // only wait 2s, so startup is fast
+            UtraceHostGeoLookup.class.wait(2000);
+        } catch (InterruptedException e) {
+            throw Throwables.propagate(e);
+        }
+        if (localExternalIp==null) throw 
+            Throwables.propagate(new IOException("Unable to discover external IP of local machine; response to server timed out (thread may be ongoing)"));
+        
+        log.debug("Looked up external IP of this host, result is: "+localExternalIp);
         return localExternalIp;
     }
     public String getLookupUrlForLocalhost() {

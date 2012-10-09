@@ -147,6 +147,7 @@ public class Time {
 		return result;
 	}
 
+	/** sleep which propagates Interrupted as unchecked */
 	public static void sleep(long millis) {
 		try {
 			Thread.sleep(millis);
@@ -275,4 +276,5 @@ public class Time {
 			return d*multiplier + dd;
 		}
 	}
+	
 }
