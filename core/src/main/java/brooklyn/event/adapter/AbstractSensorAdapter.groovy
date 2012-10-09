@@ -44,22 +44,22 @@ public abstract class AbstractSensorAdapter {
 		registry.addActivationLifecycleListeners({ activateAdapter() }, { deactivateAdapter() })
 	}
 	
-	private List<Closure> activationListeners = []
-	private List<Closure> deactivationListeners = []
-	protected void addActivationLifecycleListeners(Closure onUp, Closure onDown) {
+	private List<Runnable> activationListeners = []
+	private List<Runnable> deactivationListeners = []
+	protected void addActivationLifecycleListeners(Runnable onUp, Runnable onDown) {
 		activationListeners << onUp
 		deactivationListeners << onDown
 	}
 	protected void activateAdapter() {
         if (activated) return; //prevent double activation
 		if (log.isDebugEnabled()) log.debug "activating adapter {} for {}", this, entity
-		activationListeners.each { it.call() }
+		activationListeners.each { it.run() }
 		activated = true;
 	}
 	protected void deactivateAdapter() {
 		if (log.isDebugEnabled()) log.debug "deactivating adapter {} for {}", this, entity
 		activated = false;
-		deactivationListeners.each { it.call() }
+		deactivationListeners.each { it.run() }
 	}
 
 	protected boolean isConnected() { isActivated() }

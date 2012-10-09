@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
@@ -135,6 +136,11 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
         Map flags = new HashMap();
         flags.put("usePidFile", true);
         newScript(flags, STOPPING).execute();
+    }
+
+    @Override
+    public void kill() {
+        newScript(MutableMap.of("usePidFile", true), KILLING).execute();
     }
 
     @Override

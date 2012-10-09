@@ -76,6 +76,9 @@ public class EntityPollingTest {
                     @Override public void stop() {
                         // no-op
                     }
+                    @Override public void kill() {
+                        // no-op
+                    }
                 }
             }
         };        

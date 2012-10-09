@@ -153,4 +153,8 @@ datadir         = .
         newScript(STOPPING, usePidFile: true).execute();
     }
 
+    @Override
+    public void kill() {
+        newScript(KILLING, usePidFile: true).execute();
+    }
 }

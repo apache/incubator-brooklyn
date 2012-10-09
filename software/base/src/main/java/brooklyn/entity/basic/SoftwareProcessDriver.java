@@ -1,7 +1,9 @@
 package brooklyn.entity.basic;
 
-import brooklyn.entity.basic.EntityLocal;
+import java.util.Collection;
+
 import brooklyn.entity.drivers.EntityDriver;
+import brooklyn.entity.trait.Startable;
 
 /**
  * The {@link EntityDriver} for a {@link SoftwareProcessEntity}.
@@ -39,4 +41,9 @@ public interface SoftwareProcessDriver extends EntityDriver {
      * @see Startable#restart()
      */
     void restart();
+    
+    /**
+     * Kills the process, ungracefully and immediately where possible (e.g. with `kill -9`).
+     */
+    void kill();
 }

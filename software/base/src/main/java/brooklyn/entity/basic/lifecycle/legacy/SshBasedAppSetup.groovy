@@ -355,12 +355,18 @@ public abstract class SshBasedAppSetup extends AbstractSoftwareProcessSshDriver 
      *
      * @see #start()
      */
+    @Override
     public void stop() {
         shutdown()
         postShutdown()
         log.info "stopped {}", entity
     }
 
+    @Override
+    public void kill() {
+        stop();
+    }
+    
     /**
      * Restart the application.
      * 

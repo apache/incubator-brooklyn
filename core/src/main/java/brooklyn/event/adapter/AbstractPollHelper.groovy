@@ -18,6 +18,8 @@ public abstract class AbstractPollHelper {
 
     final Map<AttributeSensor, Closure> polledSensors = [:]
 
+    final List<Closure> polledListeners = []
+
     boolean lastWasSuccessful = false;
 
     AbstractSensorAdapter adapter;
@@ -30,6 +32,10 @@ public abstract class AbstractPollHelper {
     public void addSensor(Sensor s, Closure c) {
         Object old = polledSensors.put(s, c)
         if (old!=null) log.warn "change of provider (discouraged) for sensor ${s} on ${entity}", new Throwable("path of discouraged change");
+    }
+
+    public void addListener(Closure c) {
+        polledListeners.add(c)
     }
 
     ScheduledTask schedule;
@@ -50,7 +56,7 @@ public abstract class AbstractPollHelper {
     }
 
     protected boolean isEmpty() {
-        polledSensors.isEmpty();
+        polledSensors.isEmpty() && polledListeners.isEmpty();
     }
     
     /** implementation-specific generation of AbstractSensorEvaluationContext which is then typically passed to evaluateSensorsOnPollResponse */
@@ -87,6 +93,12 @@ public abstract class AbstractPollHelper {
 
     void evaluateSensorsOnResponse(AbstractSensorEvaluationContext response) {
         polledSensors.each { s, c -> evaluateSensorOnResponse(s, c, response) }
+        polledListeners.each {
+            Object v = response.evaluate({it})
+            if (v != AbstractSensorEvaluationContext.UNSET) {
+                it.call(v)
+            }
+        }
     }
 
     Object evaluateSensorOnResponse(Sensor<?> s, Closure c, AbstractSensorEvaluationContext response) {

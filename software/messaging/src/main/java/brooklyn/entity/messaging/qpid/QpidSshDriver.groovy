@@ -90,6 +90,11 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
         newScript(STOPPING, usePidFile:pidFile).execute();
     }
 
+    @Override
+    public void kill() {
+        newScript(KILLING, usePidFile:pidFile).execute();
+    }
+
     public Map<String, String> getShellEnvironment() {
         Map result = super.getShellEnvironment()
         result << [

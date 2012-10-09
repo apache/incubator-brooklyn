@@ -70,6 +70,11 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
         newScript(STOPPING, usePidFile:pidFile).execute();
     }
 
+    @Override
+    public void kill() {
+        newScript(KILLING, usePidFile:pidFile).execute();
+    }
+
     public Map<String, String> getShellEnvironment() {
         def result = super.getShellEnvironment()
         result << [

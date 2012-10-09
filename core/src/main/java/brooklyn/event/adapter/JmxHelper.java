@@ -225,7 +225,7 @@ public class JmxHelper {
         int attempt = 0;
         while (currentTime <= endMs) {
             currentTime = System.currentTimeMillis();
-            if (attempt != 0) sleep(100); //sleep 100 to prevent trashing and facilitate interruption
+            if (attempt != 0) sleep(100); //sleep 100 to prevent thrashing and facilitate interruption
             if (LOG.isTraceEnabled()) LOG.trace("trying connection to {} at time {}", url, currentTime);
 
             try {

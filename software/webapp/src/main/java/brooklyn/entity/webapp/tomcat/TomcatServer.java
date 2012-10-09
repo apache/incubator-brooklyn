@@ -25,6 +25,8 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Function;
+
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
@@ -87,6 +89,15 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
             }
         };
         connectorObjectNameAdapter.attribute("stateName").subscribe(SERVICE_UP, closure);
+
+        // If MBean is unreachable, then mark as service-down
+        requestProcessorObjectNameAdapter.reachable().poll(new Function<Boolean,Void>() {
+                @Override public Void apply(Boolean input) {
+                    if (input != null && Boolean.FALSE.equals(input)) {
+                        setAttribute(SERVICE_UP, false);
+                    }
+                    return null;
+                }});
     }
 
     @Override

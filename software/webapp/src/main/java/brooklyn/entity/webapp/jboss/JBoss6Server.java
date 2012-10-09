@@ -1,5 +1,14 @@
 package brooklyn.entity.webapp.jboss;
 
+import groovy.time.TimeDuration;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.java.UsesJmx;
@@ -12,13 +21,8 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.util.flags.SetFromFlag;
-import groovy.time.TimeDuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import com.google.common.base.Function;
 
 public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAppService, UsesJmx {
 
@@ -68,6 +72,15 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
         objectNameAdapter.attribute("requestCount").subscribe(REQUEST_COUNT);
         objectNameAdapter.attribute("processingTime").subscribe(TOTAL_PROCESSING_TIME);
         jmx.objectName("jboss.system:type=Server").attribute("Started").subscribe(SERVICE_UP);
+        
+        // If MBean is unreachable, then mark as service-down
+        jmx.objectName("jboss.system:type=Server").reachable().poll(new Function<Boolean,Void>() {
+                @Override public Void apply(Boolean input) {
+                    if (input != null && Boolean.FALSE.equals(input)) {
+                        setAttribute(SERVICE_UP, false);
+                    }
+                    return null;
+                }});
     }
 
 //    public JBoss6SshDriver newDriver(SshMachineLocation machine) {
