@@ -33,7 +33,7 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.29");
+            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.32");
 
     /**
      * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down.
