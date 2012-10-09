@@ -55,7 +55,9 @@ public class NginxHttpsSslIntegrationTest {
         cluster = new DynamicCluster(owner:app, factory:template, initialSize:1)
         cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
         
-        ProxySslConfig ssl = new ProxySslConfig(sourceCertificateUrl:CERTIFICATE_URL, sourceKeyUrl:KEY_URL);
+        ProxySslConfig ssl = new ProxySslConfig(
+                certificateSourceUrl:CERTIFICATE_URL,
+                keySourceUrl:KEY_URL);
         nginx = new NginxController(app,
                 sticky: false,
                 cluster: cluster,
