@@ -37,12 +37,12 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 : new ComparableVersion(os.version).isGreaterThanOrEqualTo(OsVersions.MAC_10_6) ? "osx10.6"
                 : new ComparableVersion(os.version).isGreaterThanOrEqualTo(OsVersions.MAC_10_5) ? "osx10.5"
                 : "osx10.5";  //lowest common denominator
-            String osp2 = os.arch.equals(OsArchs.X_86_64) ? "x86_64" : "x86"
+            String osp2 = os.is64bit() ? "x86_64" : "x86"
             return osp1+"-"+osp2;
         }
         //assume generic linux
         String osp1 = "linux2.6";
-        String osp2 = os.arch.equals(OsArchs.X_86_64) ? "x86_64" : "i686"
+        String osp2 = os.is64bit() ? "x86_64" : "i686"
         return osp1+"-"+osp2;
     }
 	

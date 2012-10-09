@@ -28,6 +28,7 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
@@ -36,6 +37,8 @@ import brooklyn.util.text.Identifiers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+
+import static org.testng.Assert.assertNotNull;
 
 public class StandaloneJcloudsTest {
 
@@ -75,6 +78,8 @@ public class StandaloneJcloudsTest {
             Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupId, 1, template);
             node = Iterables.getOnlyElement(nodes, null);
             if (node == null) throw new IllegalStateException("No nodes returned");
+
+            assertNotNull(node.getOperatingSystem());
 
             Credentials nodeCredentials = node.getCredentials();
             final LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(nodeCredentials);
