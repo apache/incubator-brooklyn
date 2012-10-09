@@ -31,7 +31,7 @@ public class EntityPreManagementTest {
         e.setAttribute(Attributes.HOSTNAME, "martian.martian");
         Assert.assertEquals(e.getAttribute(Attributes.HOSTNAME), "martian.martian");
         
-        Assert.assertEquals(e.getManagementContext(), null);
+        Assert.assertFalse(e.getManagementSupport().isManagementContextReal());
     }
     
     @Test
@@ -56,7 +56,7 @@ public class EntityPreManagementTest {
         Assert.assertEquals(e.getAttribute(Attributes.HOSTNAME), "martian.martian");
         
         if (!events.isEmpty()) Assert.fail("Shouldn't have events yet: "+events);
-        Assert.assertEquals(e.getManagementContext(), null);
+        Assert.assertFalse(e.getManagementSupport().isManagementContextReal());
         
         TestApplication app = new TestApplication();
         e.setOwner(app);

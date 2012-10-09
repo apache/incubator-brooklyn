@@ -201,6 +201,10 @@ public class EntityManagementSupport {
         }
     }
 
+    public synchronized boolean isManagementContextReal() {
+        return managementContextUsable;
+    }
+    
     public synchronized ManagementContext getManagementContext(boolean returnNonDeploymentIfNotDeployed) {
         if (managementContextUsable) return managementContext;
         if (returnNonDeploymentIfNotDeployed) {
