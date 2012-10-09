@@ -180,6 +180,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     @Override
+    public void kill() {
+        stop(); // TODO Don't `kill -9`, as that doesn't stop the worker processes
+    }
+
+    @Override
     public void restart() {
         try {
             if (isRunning()) {

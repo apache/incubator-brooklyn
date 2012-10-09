@@ -127,6 +127,12 @@ class MyEntitySshDriver extends JavaSoftwareProcessSshDriver implements MyEntity
     }
 
     @Override
+    public void kill() {
+        newScript(KILLING, usePidFile:true)
+            .execute();
+    }
+
+    @Override
     protected List<String> getCustomJavaConfigOptions() {
         return super.getCustomJavaConfigOptions() + ["-Dabc=def"]
     }

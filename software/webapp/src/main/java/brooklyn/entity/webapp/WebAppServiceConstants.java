@@ -1,15 +1,27 @@
 package brooklyn.entity.webapp;
 
+import java.util.List;
+
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.collect.ImmutableList;
 
 public interface WebAppServiceConstants {
 
     @SetFromFlag("httpPort")
     public static final PortAttributeSensorAndConfigKey HTTP_PORT = Attributes.HTTP_PORT;
+
+    @SetFromFlag("httpsPort")
+    public static final PortAttributeSensorAndConfigKey HTTPS_PORT = Attributes.HTTPS_PORT;
+
+    @SetFromFlag("enabledProtocols")
+    public static final BasicAttributeSensorAndConfigKey<List<String>> ENABLED_PROTOCOLS = new BasicAttributeSensorAndConfigKey(
+            List.class, "webapp.enabledProtocols", "List of enabled protocols (e.g. http, https)", ImmutableList.of("http"));
 
     public static final brooklyn.event.basic.BasicAttributeSensor<Integer> ERROR_COUNT =
             new brooklyn.event.basic.BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.errors", "Request errors");

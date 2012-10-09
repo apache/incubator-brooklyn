@@ -95,6 +95,12 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
     }
 
     @Override
+    public void kill() {
+        Map flags = MutableMap.of("usePidFile","pid.txt");
+        newScript(flags, KILLING).execute();
+    }
+
+    @Override
     protected List<String> getCustomJavaConfigOptions() {
         List<String> options = new LinkedList<String>();
         options.addAll(super.getCustomJavaConfigOptions());

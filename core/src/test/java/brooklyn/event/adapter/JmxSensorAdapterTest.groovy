@@ -2,7 +2,6 @@ package brooklyn.event.adapter
 
 import static org.testng.Assert.*
 
-import java.util.Map
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -60,11 +59,14 @@ public class JmxSensorAdapterTest {
     private JmxHelper jmxHelper
     
     private BasicAttributeSensor<Integer> intAttribute = [ Integer, "brooklyn.test.intAttribute", "Brooklyn testing int attribute" ]
+    private BasicAttributeSensor<Boolean> boolAttribute = [ Boolean, "brooklyn.test.boolAttribute", "Brooklyn testing bool attribute" ]
     private BasicAttributeSensor<String> stringAttribute = [ String, "brooklyn.test.stringAttribute", "Brooklyn testing string attribute" ]
     private BasicAttributeSensor<Map> mapAttribute = [ Map, "brooklyn.test.mapAttribute", "Brooklyn testing map attribute" ]
     private String objectName = 'Brooklyn:type=MyTestMBean,name=myname'
+    private String wrongObjectName = 'Brooklyn:type=MyTestMBean,name=wrongname'
     private ObjectName jmxObjectName = new ObjectName('Brooklyn:type=MyTestMBean,name=myname')
     private String attributeName = 'myattrib'
+    private String wrongAttributeName = 'wrongattrib'
     private String opName = 'myop'
     
     @BeforeMethod(alwaysRun=true)
@@ -114,6 +116,57 @@ public class JmxSensorAdapterTest {
         mbean.updateAttributeValue(attributeName, 64)
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
             assertEquals entity.getAttribute(intAttribute), 64
+        }
+    }
+
+    @Test
+    public void jmxPollerWillPollEvenIfOnlyConnectsAfterActivatingAdapters() {
+        jmxService.shutdown();
+        
+        jmxAdapter.setJmxConnectionTimeout(0);
+        jmxAdapter.objectName(objectName).with {
+            attribute(attributeName).subscribe(intAttribute)
+        }
+        registry.activateAdapters()
+
+        jmxService = new JmxService(entity);
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): 42)
+        
+        // Retrieves value after JMX Service becomes available
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertEquals entity.getAttribute(intAttribute), 42
+        }
+    }
+
+    @Test(enabled=false)
+    public void jmxReachablePollerRespondsToConnectException() {
+        jmxService.shutdown();
+        
+        boolean isup = true;
+        
+        jmxAdapter.setJmxConnectionTimeout(10);
+        jmxAdapter.objectName(wrongObjectName).with {
+            reachable().poll( { isup = it } )
+        }
+        registry.activateAdapters()
+        
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertFalse(isup);
+        }
+    }
+
+    @Test
+    public void jmxReachablePollerRespondsToMBeanNotFound() {
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): 42)
+        boolean isup = true;
+        
+        jmxAdapter.objectName(wrongObjectName).with {
+            reachable().poll( { isup = it } )
+        }
+        registry.activateAdapters()
+        
+        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+            assertFalse(isup);
         }
     }
 

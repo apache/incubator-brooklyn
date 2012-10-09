@@ -170,6 +170,26 @@ public class WebAppIntegrationTest {
     }
     
     /**
+     * Checks an entity can start, set SERVICE_UP to true and shutdown again.
+     */
+    @Test(groups = "Integration", dataProvider = "basicEntities")
+    public void testReportsServiceDownWhenKilled(SoftwareProcessEntity entity) {
+        this.entity = entity
+        log.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication())
+        
+        entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        executeUntilSucceeds(timeout: 120*SECONDS) {
+            assertTrue entity.getAttribute(Startable.SERVICE_UP)
+        }
+        
+        entity.getDriver().kill();
+
+        executeUntilSucceeds {
+            assertFalse(entity.getAttribute(Startable.SERVICE_UP))
+        }
+    }
+    
+    /**
      * Checks that an entity correctly sets request and error count metrics by
      * connecting to a non-existent URL several times.
      */

@@ -5,9 +5,14 @@ import brooklyn.location.OsDetails;
 public class BasicOsDetails implements OsDetails {
 
     final String name, arch, version;
+    final boolean is64bit;
     
     public BasicOsDetails(String name, String arch, String version) {
-        this.name = name; this.arch = arch; this.version = version;
+       this(name,arch,version, arch != null && arch.contains("64"));
+    }
+
+    public BasicOsDetails(String name, String arch, String version, boolean is64Bit) {
+        this.name = name; this.arch = arch; this.version = version; this.is64bit = is64Bit;
     }
     
     /** java property os.name (human readable name); e.g. "Mac OS X" */
@@ -41,7 +46,12 @@ public class BasicOsDetails implements OsDetails {
     public boolean isMac() {
         return getName()!=null && getName().equals(OsNames.MAC_OS_X);
     }
-    
+
+    @Override
+    public boolean is64bit() {
+        return is64bit;
+    }
+
     @Override
     public String toString() {
         return "OS["+name+";"+arch+";"+version+"]";

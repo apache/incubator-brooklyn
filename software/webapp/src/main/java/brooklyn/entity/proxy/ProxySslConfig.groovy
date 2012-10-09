@@ -22,15 +22,15 @@ public class ProxySslConfig implements Serializable {
      *  (however it will not currently merge multiple certificates.
      *  if conflicting certificates are attempted to be installed nginx will complain.) 
      */
-    String sourceCertificateUrl;
+    String certificateSourceUrl;
 
-    String sourceKeyUrl;
+    String keySourceUrl;
 
     /**
      * Sets the ssl_certificate path to be used within the generated LoadBalancer configuration. If set to null,
      * Brooklyn will use an auto generated path.
      *
-     * If sourceCertificateUrl, then Brooklyn will copy the certificate the certificateDestination.
+     * If certificateSourceUrl, then Brooklyn will copy the certificate the certificateDestination.
      *
      * Setting this field is useful if there is a certificate on the nginx machine you want to make use of.
      */
@@ -40,7 +40,7 @@ public class ProxySslConfig implements Serializable {
      * Sets the ssl_certificate_key path to be used within the generated LoadBalancer configuration. If set to null,
      * Brooklyn will use an auto generated path.
      *
-     * If sourceKeyUrl, then Brooklyn will copy the certificate the keyDestination.
+     * If keySourceUrl, then Brooklyn will copy the certificate the keyDestination.
      *
      * Setting this field is useful if there is a certificate_key on the nginx machine you want to make use of.
      */
@@ -57,7 +57,7 @@ public class ProxySslConfig implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(sourceCertificateUrl, sourceKeyUrl, certificateDestination, keyDestination, reuseSessions, targetIsSsl);
+        return Objects.hashCode(certificateSourceUrl, keySourceUrl, certificateDestination, keyDestination, reuseSessions, targetIsSsl);
     }
 
     @Override
@@ -70,10 +70,10 @@ public class ProxySslConfig implements Serializable {
             return false;
         ProxySslConfig other = (ProxySslConfig) obj;
 
-        return Objects.equal(sourceCertificateUrl, other.sourceCertificateUrl) &&
+        return Objects.equal(certificateSourceUrl, other.certificateSourceUrl) &&
                Object.equals(certificateDestination, other.certificateDestination) &&
                Object.equals(keyDestination, other.keyDestination) &&
-                Objects.equal(sourceKeyUrl, other.sourceKeyUrl) &&
+                Objects.equal(keySourceUrl, other.keySourceUrl) &&
                 Objects.equal(reuseSessions, other.reuseSessions) &&
                 Objects.equal(targetIsSsl, other.targetIsSsl);
     }

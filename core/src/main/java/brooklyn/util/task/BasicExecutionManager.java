@@ -232,7 +232,10 @@ public class BasicExecutionManager implements ExecutionManager {
 					Object result;
 					try {
 					    result = oldJob.call();
-					} catch (Exception e) { throw Throwables.propagate(e); }
+					} catch (Exception e) {
+					    log.warn("Error executing "+oldJob+" ("+task.getDescription()+")", e);
+					    throw Throwables.propagate(e);
+				    }
 					task.runCount++;
 					if (task.period!=null) {
 						task.delay = task.period;

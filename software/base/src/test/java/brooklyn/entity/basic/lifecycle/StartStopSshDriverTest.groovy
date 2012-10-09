@@ -74,6 +74,7 @@ class StartStopSshDriverTest {
 public class BasicStartStopSshDriver extends AbstractSoftwareProcessSshDriver {
     public boolean isRunning() { true }
     public void stop() {}
+    public void kill() {}
     public void install() {}
     public void customize() {}
     public void launch() {}

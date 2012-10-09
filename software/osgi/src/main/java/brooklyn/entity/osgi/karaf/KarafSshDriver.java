@@ -105,6 +105,11 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
     }
 
     @Override
+    public void kill() {
+        stop(); // TODO no pid file to easily do `kill -9`
+    }
+
+    @Override
     protected List<String> getCustomJavaConfigOptions() {
         List<String> result = new LinkedList<String>();
         result.addAll(super.getCustomJavaConfigOptions());

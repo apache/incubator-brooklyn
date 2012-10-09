@@ -1,12 +1,17 @@
 package brooklyn.entity.webapp;
 
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
-
 import java.io.File;
+import java.util.List;
+
+import brooklyn.entity.java.JavaSoftwareProcessDriver;
 
 public interface JavaWebAppDriver extends JavaSoftwareProcessDriver {
 
+    List<String> getEnabledProtocols();
+
     Integer getHttpPort();
+
+    Integer getHttpsPort();
 
     void deploy(File file);
 
