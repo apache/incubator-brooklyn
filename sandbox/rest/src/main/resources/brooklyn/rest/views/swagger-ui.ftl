@@ -9,8 +9,9 @@
     <link href='http://fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
     <link href='http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/smoothness/jquery-ui.css' media='screen'
           rel='stylesheet' type='text/css'/>
-    <link href='/swagger-ui/stylesheets/screen.css' media='screen' rel='stylesheet' type='text/css'/>
-    <script src='/swagger-ui/javascripts/jquery-1.6.2.min.js' type='text/javascript'></script>
+    <link href='/assets/css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
+
+    <script src='/assets/js/jquery-1.7.2.js' type='text/javascript'></script>
     <script type='text/javascript'>
         function toggle(selector) {
             jQuery(selector).toggle();

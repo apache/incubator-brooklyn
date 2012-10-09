@@ -1,18 +1,30 @@
 package brooklyn.rest.resources;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.policy.basic.AbstractPolicy;
+import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
 import static com.google.common.collect.Iterables.transform;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import static com.google.common.collect.Sets.filter;
+import com.google.common.io.CharStreams;
+import com.sun.jersey.core.header.FormDataContentDisposition;
+import com.sun.jersey.multipart.FormDataParam;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiError;
+import com.wordnik.swagger.core.ApiErrors;
+import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 import groovy.lang.GroovyClassLoader;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
+import org.reflections.Reflections;
 
 import javax.annotation.Nullable;
 import javax.validation.Valid;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -23,23 +35,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.reflections.Reflections;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.policy.basic.AbstractPolicy;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.wordnik.swagger.core.Api;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 @Path("/v1/catalog")
 @Api(value = "/v1/catalog", description = "Manage entities and policies available on the server")
@@ -101,6 +104,18 @@ public class CatalogResource extends BaseResource {
     return Response.ok().build();
   }
 
+  @POST
+  @ApiOperation(value = "Create a new entity by uploading a Groovy script from browser using multipart/form-data",
+      responseClass = "String")
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  public Response createFromMultipart(
+      @ApiParam(name = "groovyCode", value = "multipart/form-data file input field")
+      @FormDataParam("groovyCode") InputStream uploadedInputStream,
+      @FormDataParam("groovyCode") FormDataContentDisposition fileDetail) throws IOException {
+
+    return create(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
+  }
+
   @GET
   @Path("/entities")
   @ApiOperation(value = "Fetch a list of entities matching a query", responseClass = "String", multiValueResponse = true)
@@ -142,12 +157,12 @@ public class CatalogResource extends BaseResource {
 
       Entity instance = (Entity) constructor.newInstance(Maps.newHashMap());
       return Lists.newArrayList(transform(instance.getEntityType().getConfigKeys(),
-          new Function<ConfigKey<?>, String>() {
-            public String apply(ConfigKey<?> configKey) {
+          new Function<brooklyn.config.ConfigKey<?>, String>() {
+            @Override
+            public String apply(@Nullable brooklyn.config.ConfigKey<?> configKey) {
               return configKey.getName();
             }
           }));
-
     } catch (NoSuchMethodException e) {
       throw notFound(e.getMessage());
     }

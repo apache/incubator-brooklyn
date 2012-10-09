@@ -1,0 +1,75 @@
+<!-- Catalog page template -->
+<div id="catalog-resource">
+    <div>
+        <button id="add-new-entity" type="button" class="btn btn-info btn-mini">Add entity/policy</button>
+        <button id="add-new-location" type="button" class="btn btn-info btn-mini">Add Location</button>
+    </div>
+    <dl class="dl-horizontal"></dl>
+    <div class="tabbable">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#entities" data-toggle="tab">Entities</a></li>
+            <li><a href="#policies" data-toggle="tab">Policies</a></li>
+            <li><a href="#locations" data-toggle="tab">Locations</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="entities">
+                <ul></ul>
+            </div>
+            <div class="tab-pane" id="policies">
+                <ul></ul>
+            </div>
+            <div class="tab-pane" id="locations">
+                <table id="locations-table" class="table table-bordered table-condensed">
+                    <thead>
+                    <tr>
+                        <th style="text-align: center; vertical-align: middle">Provider</th>
+                        <th style="text-align: center; vertical-align: middle">Config</th>
+                        <th style="text-align: center; vertical-align: middle">Options</th>
+                    </tr>
+                    </thead>
+                    <tbody id="locations-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal hide fade" id="new-entity-modal">
+    <form class="form-vertical" id="new-entity-form">
+
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">x</button>
+            <h3>Add a new Entity or Policy</h3>
+        </div>
+
+        <div class="modal-body">
+
+            <fieldset>
+                <div class="row">
+                    <div class="span5">
+
+                        <label for="groovy-code" class="control-label">Entity or Policy definition:</label>
+
+                        <div class="control-group">
+                            <div class="controls">
+                                <input id="groovy-code" name="groovyCode" type="file" class="input-large">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            <div id="info-box">
+                <p><span class="label label-info">Note:</span> This window will close automatically when file is
+                    uploaded</p>
+            </div>
+        </div>
+
+        <div class="modal-footer form-actions">
+            <button class="btn" data-dismiss="modal" type="button">Close</button>
+            <button id="new-entity-submit" class="btn btn-primary" type="button">Save</button>
+        </div>
+
+    </form>
+</div>
+
+<div class="modal hide fade" id="new-location-modal"></div>

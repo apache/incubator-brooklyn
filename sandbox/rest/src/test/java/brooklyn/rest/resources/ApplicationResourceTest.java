@@ -20,7 +20,6 @@ import com.google.common.collect.Maps;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.yammer.dropwizard.jersey.DropwizardResourceConfig;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 

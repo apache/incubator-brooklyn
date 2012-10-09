@@ -1,5 +1,7 @@
-{
-  "name":"Vanilla Java App",
-  "type":"brooklyn.entity.java.VanillaJavaApp",
-  "config":{}
-}
+[
+    {
+        "name":"Vanilla Java App",
+        "type":"brooklyn.entity.java.VanillaJavaApp",
+        "config":{}
+    }
+]

@@ -1,0 +1,26 @@
+<!-- New application wizard step 1: set name and locations -->
+<div class="control-group">
+    <label for="application-name">Name</label>
+
+    <div class="controls">
+        <input id="application-name" name="name" type="text" style="width:80%">
+    </div>
+</div>
+<div id="app-locations">
+    <h4>Locations added:</h4>
+    <ul></ul>
+    <button id="toggle-selector-container" class="btn btn-info btn-mini">Add location</button>
+</div>
+<dl class="dl-horizontal"></dl>
+<div id="selector-container" class="control-group hide">
+    <label for="select-location">Please select at least one location:</label>
+    <select id="select-location" style="margin:0; width:80%"></select>
+    <button id="add-app-location" class="btn btn-info btn-mini" type="button"><i class="icon-plus-sign"></i>
+    </button>
+</div>
+<div class="info-message hide">
+    <p>
+        <span class="label-important">Important</span> Must supply a name and at least one location.
+    </p>
+</div>
+</div>

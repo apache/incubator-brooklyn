@@ -1,16 +1,16 @@
 {
-  "name":"myapp",
-  "entities":[
-    {
-      "name":"Vanilla Java App",
-      "type":"brooklyn.entity.java.VanillaJavaApp",
-      "config":{
-        "initialSize":"1",
-        "creationScriptUrl":"http://my.brooklyn.io/storage/foo.sql"
-      }
-    }
-  ],
-  "locations":[
-    "/v1/locations/1"
-  ]
+    "name":"myapp",
+    "entities":[
+        {
+            "name":"Vanilla Java App",
+            "type":"brooklyn.entity.java.VanillaJavaApp",
+            "config":{
+                "initialSize":"1",
+                "creationScriptUrl":"http://my.brooklyn.io/storage/foo.sql"
+            }
+        }
+    ],
+    "locations":[
+        "/v1/locations/1"
+    ]
 }

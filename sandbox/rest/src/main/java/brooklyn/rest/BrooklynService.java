@@ -3,14 +3,6 @@ package brooklyn.rest;
 import brooklyn.rest.auth.BasicAuthFilter;
 import brooklyn.rest.auth.ConfigBasedAuthenticator;
 import brooklyn.rest.auth.User;
-import com.yammer.dropwizard.auth.Authenticator;
-import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
-import com.yammer.dropwizard.auth.basic.BasicCredentials;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
 import brooklyn.rest.commands.applications.DeleteApplicationCommand;
 import brooklyn.rest.commands.applications.InvokeEffectorCommand;
 import brooklyn.rest.commands.applications.ListApplicationsCommand;
@@ -26,6 +18,7 @@ import brooklyn.rest.commands.locations.ListLocationsCommand;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import brooklyn.rest.health.GeneralHealthCheck;
+import brooklyn.rest.resources.ActivityResource;
 import brooklyn.rest.resources.ApplicationResource;
 import brooklyn.rest.resources.CatalogResource;
 import brooklyn.rest.resources.EffectorResource;
@@ -34,14 +27,20 @@ import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
 import brooklyn.rest.resources.VersionResource;
-
+import brooklyn.rest.resources.WebClientResource;
+import com.google.common.base.Throwables;
 import com.yammer.dropwizard.Service;
+import com.yammer.dropwizard.auth.Authenticator;
+import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
+import com.yammer.dropwizard.auth.basic.BasicCredentials;
 import com.yammer.dropwizard.bundles.AssetsBundle;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.views.ViewBundle;
 
-import com.google.common.base.Throwables;
-import org.jclouds.http.filters.BasicAuthentication;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Application entry point. Configures and starts the embedded web-server.
@@ -56,7 +55,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
   protected BrooklynService() {
     super("brooklyn-rest");
-    addBundle(new AssetsBundle("/swagger-ui"));
+    addBundle(new AssetsBundle("/assets"));
     addBundle(new ViewBundle());
   }
 
@@ -94,8 +93,10 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.addResource(new EntityResource(applicationManager));
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager, managedExecutor));
+    environment.addResource(new ActivityResource(applicationManager));
     environment.addResource(new SwaggerUiResource());
     environment.addResource(new VersionResource());
+    environment.addResource(new WebClientResource());
 
     environment.addHealthCheck(new GeneralHealthCheck());
 

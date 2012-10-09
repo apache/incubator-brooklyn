@@ -5,9 +5,12 @@ import com.google.common.collect.ImmutableSet;
 import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
-import java.io.IOException;
 import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
 
 public class ApplicationTest {
 
@@ -24,7 +27,16 @@ public class ApplicationTest {
 
   @Test
   public void testSerializeToJSON() throws IOException {
-    assertEquals(asJson(application), jsonFixture("fixtures/application.json"));
+    Application application1 = new Application(applicationSpec, Application.Status.STARTING) {
+      @Override
+      public Map<String, URI> getLinks() {
+        return ImmutableMap.of(
+            "self", URI.create("/v1/applications/" + applicationSpec.getName()),
+            "entities", URI.create("fixtures/entity-summary-list.json")
+        );
+      }
+    };
+    assertEquals(asJson(application1), jsonFixture("fixtures/application.json"));
   }
 
   @Test

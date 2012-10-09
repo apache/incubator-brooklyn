@@ -1,20 +1,35 @@
 package brooklyn.rest.resources;
 
+import brooklyn.entity.Entity;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
 import static com.google.common.base.Preconditions.checkNotNull;
-import com.wordnik.swagger.core.*;
-import java.net.URI;
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiError;
+import com.wordnik.swagger.core.ApiErrors;
+import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
+
+import javax.validation.Valid;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.net.URI;
 
 @Path("/v1/applications")
 @Api(value = "/v1/applications", description = "Manage applications")
@@ -24,6 +39,7 @@ public class ApplicationResource extends BaseResource {
   private final ApplicationManager manager;
   private final CatalogResource catalog;
   private final LocationStore locations;
+  private final ObjectMapper mapper = new ObjectMapper();
 
   public ApplicationResource(
       ApplicationManager manager, LocationStore locations, CatalogResource catalog
@@ -31,6 +47,39 @@ public class ApplicationResource extends BaseResource {
     this.manager = checkNotNull(manager, "manager");
     this.locations = checkNotNull(locations, "locations");
     this.catalog = checkNotNull(catalog, "catalog");
+  }
+
+  @GET
+  @Path("/tree")
+  @ApiOperation(
+      value = "Fetch applications and entities tree hierarchy"
+  )
+  public JsonNode applicationTree() {
+    ArrayNode apps = mapper.createArrayNode();
+    for (Application application : manager.registry().values()) {
+      apps.add(recursiveTreeFromEntity(application.getInstance()));
+    }
+    return apps;
+  }
+
+  public JsonNode recursiveTreeFromEntity(Entity entity) {
+    ObjectNode aRoot = mapper.createObjectNode();
+    aRoot.put("name", entity.getDisplayName());
+    aRoot.put("id", entity.getId());
+    aRoot.put("type", entity.getEntityType().getName());
+    if (entity.getOwnedChildren().size() != 0) {
+      aRoot.put("children", childEntitiesAsArray(entity));
+    }
+    return aRoot;
+  }
+
+
+  private ArrayNode childEntitiesAsArray(Entity entity) {
+    ArrayNode node = mapper.createArrayNode();
+    for (Entity e : entity.getOwnedChildren()) {
+      node.add(recursiveTreeFromEntity(e));
+    }
+    return node;
   }
 
   @GET
