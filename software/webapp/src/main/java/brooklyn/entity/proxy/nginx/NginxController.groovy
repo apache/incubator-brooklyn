@@ -176,14 +176,14 @@ public class NginxController extends AbstractController {
         NginxSshDriver driver = (NginxSshDriver) getDriver();
 
         if (!Strings.isEmpty(ssl.certificateSourceUrl)) {
-            String certificateDestination = ssl.certificateDestination == null ? driver.getRunDir() + "/conf/" + id + ".crt" : ssl.certificateDestination;
+            String certificateDestination = Strings.isEmpty(ssl.certificateDestination) ? driver.getRunDir() + "/conf/" + id + ".crt" : ssl.certificateDestination;
             driver.machine.copyTo(permissions: "0400",
                     new ResourceUtils(this).getResourceFromUrl(ssl.certificateSourceUrl),
                     certificateDestination);
         }
 
         if (!Strings.isEmpty(ssl.keySourceUrl)) {
-            String keyDestination = ssl.keyDestination == null ? driver.getRunDir() + "/conf/" + id + ".key" : ssl.keyDestination;
+            String keyDestination = Strings.isEmpty(ssl.keyDestination) ? driver.getRunDir() + "/conf/" + id + ".key" : ssl.keyDestination;
             driver.machine.copyTo(permissions: "0400",
                     new ResourceUtils(this).getResourceFromUrl(ssl.keySourceUrl),
                     keyDestination);
