@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.util.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
     public AbstractApplication(){
         this(new LinkedHashMap());
+        log.warn("Using the AbstractApplication no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
+                       "potentially bypassing explicitly loaded properties");
     }
 
     public AbstractApplication(Map properties) {
