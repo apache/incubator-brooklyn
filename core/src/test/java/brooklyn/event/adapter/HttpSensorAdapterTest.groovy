@@ -4,10 +4,14 @@ import static brooklyn.event.adapter.HttpResponseContextTest.*
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.with
 import static org.testng.Assert.*
 
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 public class HttpSensorAdapterTest {
@@ -16,14 +20,24 @@ public class HttpSensorAdapterTest {
 	final static BasicAttributeSensor SENSOR_LONG = [Long.class, "aLong", ""];
 	final static BasicAttributeSensor SENSOR_BOOLEAN = [Boolean.class, "aBool", ""];
 
-	final EntityLocal entity = new TestEntity();
-	final HttpSensorAdapter adapter = [ "BOGUS URL" ]
-	final SensorRegistry registry = new SensorRegistry(entity);
+    TestApplication app;
+	EntityLocal entity;
+	HttpSensorAdapter adapter;
+	SensorRegistry registry;
 
-	{
-		def ad2 = registry.register(adapter)
-		assertEquals(ad2, adapter)
-	}
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        app = new TestApplication();
+        entity = new TestEntity(app);
+        registry = new SensorRegistry(entity);
+        adapter = registry.register(new HttpSensorAdapter("http://bogus.url.is.definitely.wrong.efaege3"))
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (registry != null) registry.close();
+        if (app != null) app.stop();
+    }
 
 	@Test
 	public void testContentEvaluation() {
@@ -53,5 +67,22 @@ public class HttpSensorAdapterTest {
 		//string in header should be be automatically converted to long
 		assertEquals entity.getAttribute(SENSOR_LONG), 8
 	}
-	
+    
+	// Relies on URL above being bogus
+    @Test(groups="Integration")
+    public void testReportsErrorOnFailedConnection() {
+        BasicAttributeSensor<Exception> exceptionSensor = new BasicAttributeSensor(Exception.class, "test.exception", "mydescr");
+        try {
+            adapter.poll(exceptionSensor, {error});
+            registry.activateAdapters();
+            
+            TestUtils.executeUntilSucceeds {
+                Object val = entity.getAttribute(exceptionSensor);
+                assertNotNull(val);
+                assertTrue(val instanceof Exception, "val="+val);
+            }
+        } finally {
+            registry.close();
+        }
+    }
 }
