@@ -307,6 +307,7 @@ public class SshjTool implements SshTool {
         try {
             acquire(sshClientConnection);
         } catch (Exception e) {
+            LOG.debug(toString()+" failed to connect (rethrowing)", e);
             throw propagate(e, "failed to connect");
         }
     }
@@ -318,7 +319,7 @@ public class SshjTool implements SshTool {
 
     @Override
     public void disconnect() {
-        if (LOG.isTraceEnabled()) LOG.trace("Disconnecting {}", toString());
+        if (LOG.isTraceEnabled()) LOG.trace("Disconnecting {}", this);
         try {
             sshClientConnection.clear();
         } catch (Exception e) {
@@ -428,7 +429,7 @@ public class SshjTool implements SshTool {
         
         String scriptContents = toScript(commands, env);
         
-        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+" as script: {}", scriptContents);
+        if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
         
         createFile(ImmutableMap.of("permissions", "0700"), scriptPath, scriptContents);
         
@@ -455,10 +456,10 @@ public class SshjTool implements SshTool {
                 .add("exit $?")
                 .build();
         
-        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+": {}", allcmds);
+        if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {}: {}", host, allcmds);
         
         Integer result = acquire(new ShellAction(allcmds, out, err));
-        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+" completed, exit code: {}", result);
+        if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} completed: return status {}", host, result);
         return result != null ? result : -1;
     }
 
@@ -479,10 +480,10 @@ public class SshjTool implements SshTool {
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
 
-        if (LOG.isDebugEnabled()) LOG.debug("Running command at "+host+": {}", singlecmd);
+        if (LOG.isTraceEnabled()) LOG.trace("Running command at {}: {}", host, singlecmd);
         
         Command result = acquire(new ExecAction(singlecmd, out, err));
-        if (LOG.isDebugEnabled()) LOG.debug("Running command at "+host+" completed, exit code: {}", result.getExitStatus());
+        if (LOG.isTraceEnabled()) LOG.trace("Running command at {} completed: exit code {}", host, result.getExitStatus());
         return result.getExitStatus();
     }
 
@@ -553,7 +554,7 @@ public class SshjTool implements SshTool {
                     LOG.warn("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
                     throw propagate(from, errorMessage + " (out of retries - max " + sshTries + ")");
                 } else {
-                    LOG.debug("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
+                    if (LOG.isDebugEnabled()) LOG.debug("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
                     backoffForAttempt(i + 1, errorMessage + ": " + from.getMessage());
                     if (connection != sshClientConnection)
                         connect();
@@ -707,10 +708,7 @@ public class SshjTool implements SshTool {
     }
 
     private SshException propagate(Exception e, String message) throws SshException {
-        message += ": " + e.getMessage();
-        // it's not necessarily an error yet, that's up to the caller
-        LOG.debug("<< PROPAGATING: " + message, e);
-        throw new SshException("(" + toString() + ") " + message, e);
+        throw new SshException("(" + toString() + ") " + message + ":" + e.getMessage(), e);
     }
     
     protected void allocatePTY(Session s) throws ConnectionException, TransportException {

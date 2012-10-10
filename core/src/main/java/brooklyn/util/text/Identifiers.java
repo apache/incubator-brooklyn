@@ -112,7 +112,7 @@ public class Identifiers {
     }
 
     public static String makeRandomBase64Id(int length) {
-        StringBuffer s = new StringBuffer();
+        StringBuilder s = new StringBuilder();
         while (length>0) {
             appendBase64IdFromValueOfLength(randomLong(), length>10 ? 10 : length, s);
             length -= 10;
@@ -123,7 +123,7 @@ public class Identifiers {
         return getBase64IdFromValue(value, 10);
     }
     public static String getBase64IdFromValue(long value, int length) {
-        StringBuffer s = new StringBuffer();
+        StringBuilder s = new StringBuilder();
         appendBase64IdFromValueOfLength(value, length, s);
         return s.toString();
     }
@@ -137,4 +137,14 @@ public class Identifiers {
             idx = idx >> 6;
         }
     }
+    public static void appendBase64IdFromValueOfLength(long value, int length, StringBuilder sb) {
+        if (length>11)
+            throw new IllegalArgumentException("can't get a Base64 string longer than 11 chars from a long");
+        long idx = value;
+        for (int i=0; i<length; i++) {
+            byte x = (byte)(idx & 63);
+            sb.append(BASE64_VALID_CHARS.charAt(x));
+            idx = idx >> 6;
+        }
+    }    
 }

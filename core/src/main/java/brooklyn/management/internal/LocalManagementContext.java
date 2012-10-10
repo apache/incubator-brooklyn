@@ -1,9 +1,6 @@
 package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
-
-import brooklyn.entity.drivers.BasicEntityDriverFactory;
-import brooklyn.entity.drivers.EntityDriverFactory;
 import groovy.util.ObservableList;
 
 import java.util.ArrayList;
@@ -25,6 +22,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
 import brooklyn.util.task.BasicExecutionManager;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -35,14 +33,16 @@ import com.google.common.collect.Sets;
 public class LocalManagementContext extends AbstractManagementContext {
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
+    private static final Object MANAGED_LOCALLY = new Object();
+    
     private ExecutionManager execution;
     private SubscriptionManager subscriptions;
 
-    protected Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
-    protected ObservableList entities = new ObservableList();
-    protected Set<Application> applications = Sets.newLinkedHashSet();
+    protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
+    protected final ObservableList entities = new ObservableList();
+    protected final Set<Application> applications = Sets.newLinkedHashSet();
 
-    private static final Object MANAGED_LOCALLY = new Object();
+    private final String tostring = "LocalManagementContext("+Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5)+")";
 
     protected synchronized boolean manageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = MANAGED_LOCALLY;
@@ -55,7 +55,7 @@ public class LocalManagementContext extends AbstractManagementContext {
             }
             return false;
         } else {
-            log.debug("{} starting management of entity {}", this, e);
+            if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
             if (e instanceof Application) {
                 applications.add((Application)e);
                 ((AbstractApplication)e).setManagementContext(this);
@@ -79,7 +79,7 @@ public class LocalManagementContext extends AbstractManagementContext {
             log.error("{} call to stop management of entity {} removed different entity {}", new Object[] { this, e, old });
             return true;
         } else {
-            log.debug("{} stopped management of entity {}", this, e);
+            if (log.isDebugEnabled()) log.debug("{} stopped management of entity {}", this, e);
             return true;
         }
     }
@@ -125,5 +125,10 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
         entities.removePropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener));
+    }
+    
+    @Override
+    public String toString() {
+        return tostring;
     }
 }

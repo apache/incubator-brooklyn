@@ -325,7 +325,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
     
     protected int execWithLogging(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env, ExecRunner execCommand) {
-        logSsh.debug("{} on machine {}: {}", new Object[] {summaryForLogging, this, commands});
+        if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {}: {}", new Object[] {summaryForLogging, this, commands});
         
         Preconditions.checkNotNull(address, "host address must be specified for ssh");
         if (commands.isEmpty()) {
@@ -375,7 +375,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             try {  
                 int result = execCommand.exec(ssh, flags, commands, env);
                 ssh.disconnect();
-                if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} completed: {}", new Object[] {summaryForLogging, this, result});
+                if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} completed: return status {}", new Object[] {summaryForLogging, this, result});
 
                 return result;
             } finally { Tasks.setBlockingDetails(null); }

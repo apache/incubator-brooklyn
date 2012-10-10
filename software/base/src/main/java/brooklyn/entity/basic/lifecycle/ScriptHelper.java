@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.MutableMap;
 import brooklyn.util.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.task.Tasks;
@@ -191,9 +190,8 @@ public class ScriptHelper {
         }
 
         List<String> lines = getLines();
-        if (log.isDebugEnabled()) {
-            log.debug("executing: {} - {}", summary, lines);
-        }
+        if (log.isTraceEnabled()) log.trace("executing: {} - {}", summary, lines);
+        
         int result;
         try {
             mutexAcquire.run();
@@ -212,9 +210,8 @@ public class ScriptHelper {
         } finally {
             mutexRelease.run();
         }
-        if (log.isDebugEnabled()) {
-            log.debug("finished executing: {} - result code {}", summary, result);
-        }
+        if (log.isTraceEnabled()) log.trace("finished executing: {} - result code {}", summary, result);
+        
         if (!resultCodeCheck.apply(result)) {
             throw new IllegalStateException(format("Execution failed, invalid result %s for %s", result, summary));
         }

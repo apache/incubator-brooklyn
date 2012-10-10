@@ -143,7 +143,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             int currentSize = getCurrentSize();
             int delta = desiredSize - currentSize;
             if (delta != 0) {
-                logger.info("Resize {} from {} to {}; delta = {}", new Object[] {this, currentSize, desiredSize, delta});
+                logger.info("Resize {} from {} to {}", new Object[] {this, currentSize, desiredSize});
             } else {
                 if (logger.isDebugEnabled()) logger.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
             }
@@ -245,6 +245,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         if (entity==null || !(entity instanceof Entity)) 
             throw new IllegalStateException("EntityFactory factory routine did not return an entity, in "+this+" ("+entity+")");
         
+        getManagementContext().manage(entity);
         addMember(entity);
         return entity;
     }

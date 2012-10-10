@@ -209,7 +209,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     @Override
     protected void postStart() {
         super.postStart();
-        LOG.info("Adding policy {} to {} on AbstractController.start", serverPoolMemberTrackerPolicy, this);
+        LOG.info("Adding policy {} to {}, during start", serverPoolMemberTrackerPolicy, this);
         addPolicy(serverPoolMemberTrackerPolicy);
         if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
         reset();

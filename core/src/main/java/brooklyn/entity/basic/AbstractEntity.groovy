@@ -83,6 +83,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     // an exception will be thrown.
     boolean previouslyOwned = false
 
+    /**
+     * Whether we are still being constructed, in which case never warn in "assertNotYetOwned" 
+     */
+    private boolean preConfigured = true;
+    
     private final EntityDynamicType entityType;
     
     protected transient ExecutionContext execution
@@ -141,6 +146,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             def checkWeGetThis = configure(flags);
             assert this == checkWeGetThis : "$this configure method does not return itself; returns $checkWeGetThis instead"
 
+            preConfigured = false;
+            
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
 
@@ -413,7 +420,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     protected void assertNotYetOwned() {
-        if (getApplication()?.isDeployed())
+        if (!preConfigured && getApplication()?.isDeployed())
             LOG.warn("configuration being made to $this after deployment; may not be supported in future versions");
         //throw new IllegalStateException("Cannot set configuration $key on active entity $this")
     }
