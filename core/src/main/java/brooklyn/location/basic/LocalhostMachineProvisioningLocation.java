@@ -142,7 +142,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             return true;
         }
     }
-    /** checks the actual availability of the port on localhost, ie by binding to it */
+    /** checks the actual availability of the port on localhost, ie by binding to it; cf {@link NetworkUtils#isPortAvailable(int)} */
     public static boolean checkPortAvailable(InetAddress localAddress, int portNumber) {
         if (portNumber<1024) {
             if (LOG.isDebugEnabled()) LOG.debug("Skipping system availability check for privileged localhost port "+portNumber);
