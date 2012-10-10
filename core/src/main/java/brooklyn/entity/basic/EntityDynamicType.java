@@ -176,12 +176,14 @@ public class EntityDynamicType {
         try {
             Class<? extends Entity> clazz = entity.getClass();
             Map<String,Effector<?>> result = Maps.newLinkedHashMap();
+            Map<String,Field> sources = Maps.newLinkedHashMap();
             for (Field f : clazz.getFields()) {
                 if (Effector.class.isAssignableFrom(f.getType())) {
                     Effector<?> eff = (Effector<?>) f.get(entity);
                     Effector<?> overwritten = result.put(eff.getName(), eff);
+                    Field source = sources.put(eff.getName(), f);
                     if (overwritten!=null && overwritten != eff) 
-                        LOG.warn("multiple definitions for effector {} on {}; preferring {} to {}", new Object[] {eff.getName(), entity, eff, overwritten});
+                        LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {eff.getName(), entity, eff, f, overwritten, source});
                 }
             }
             
@@ -198,12 +200,20 @@ public class EntityDynamicType {
         try {
             Class<? extends Entity> clazz = entity.getClass();
             Map<String,Sensor<?>> result = Maps.newLinkedHashMap();
+            Map<String,Field> sources = Maps.newLinkedHashMap();
             for (Field f : clazz.getFields()) {
                 if (Sensor.class.isAssignableFrom(f.getType())) {
                     Sensor<?> sens = (Sensor<?>) f.get(entity);
                     Sensor<?> overwritten = result.put(sens.getName(), sens);
-                    if (overwritten!=null && overwritten != sens) 
-                        LOG.warn("multiple definitions for sensor {} on {}; preferring {} to {}", new Object[] {sens.getName(), entity, sens, overwritten});
+                    Field source = sources.put(sens.getName(), f);
+                    if (overwritten!=null && overwritten != sens) {
+                        if (sens instanceof HasConfigKey) {
+                            // probably overriding defaults, just log as debug (there will be add'l logging in config key section)
+                            LOG.debug("multiple definitions for config sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {sens.getName(), entity, sens, f, overwritten, source});
+                        } else {
+                            LOG.warn("multiple definitions for sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {sens.getName(), entity, sens, f, overwritten, source});
+                        }
+                    }
                 }
             }
 

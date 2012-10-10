@@ -14,8 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Throwables;
-
 public class Time {
 
 	public static String DATE_FORMAT_PREFERRED = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -147,11 +145,12 @@ public class Time {
 		return result;
 	}
 
+	/** sleep which propagates Interrupted as unchecked */
 	public static void sleep(long millis) {
 		try {
 			Thread.sleep(millis);
 		} catch (InterruptedException e) {
-			throw Throwables.propagate(e);
+			throw Exceptions.propagate(e);
 		}
 	}
 
@@ -275,4 +274,5 @@ public class Time {
 			return d*multiplier + dd;
 		}
 	}
+	
 }

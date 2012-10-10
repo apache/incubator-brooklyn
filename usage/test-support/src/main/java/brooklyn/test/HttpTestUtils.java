@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -17,10 +18,13 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -108,6 +112,36 @@ public class HttpTestUtils {
          });
     }
 
+    public static void assertContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
+        try {
+            String contents = DefaultGroovyMethods.getText(new URL(url).openStream());
+            Assert.assertTrue(contents!=null && contents.length()>0);
+            for (String text: Lists.asList(phrase, additionalPhrases)) {
+                if (!contents.contains(text)) {
+                    LOG.warn("CONTENTS OF URL "+url+" MISSING TEXT: "+text+"\n"+contents);
+                    Assert.fail("URL "+url+" does not contain text: "+text);
+                }
+            }
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    public static void assertContentEventuallyContainsText(Map flags, final String url, final String phrase, final String ...additionalPhrases) {
+        TestUtils.executeUntilSucceeds(new Runnable() {
+            public void run() {
+                assertContentContainsText(url, phrase, additionalPhrases);
+            }
+         });
+    }
+    public static void assertContentEventuallyContainsText(final String url, final String phrase, final String ...additionalPhrases) {
+        assertContentEventuallyContainsText(Collections.emptyMap(), url, phrase, additionalPhrases);
+    }
+
+    /** @deprecated since 0.4.0 use assertContentEventuallyContainsText */
+    // it's not necessarily http (and http is implied by the class name anyway)
+    // more importantly, we want to use new routines above which don't wrap execute-until-succeeds twice!
+    @Deprecated
     public static void assertHttpContentEventuallyContainsText(final String url, final String containedText) {
         TestUtils.executeUntilSucceeds(new Runnable() {
             public void run() {

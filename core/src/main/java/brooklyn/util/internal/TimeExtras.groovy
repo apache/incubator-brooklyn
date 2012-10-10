@@ -3,11 +3,11 @@ package brooklyn.util.internal
 import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 
-import org.codehaus.groovy.reflection.ClassInfo;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+import brooklyn.util.Time
 
 
 /**
@@ -44,6 +44,19 @@ class TimeExtras {
      * where an int may get constructed too early and not have the multiply syntax available
      * (because grail is invoked?; if e.g. 5*SECONDS throws an error, try duration(5, SECONDS)  */ 
     public static TimeDuration duration(int value, TimeUnit unit) {
-        return new TimeDuration(unit.toMillis(value));
+        return new TimeDuration(0, 0, 0, (int)unit.toMillis(value));
     }
+    
+    public static final TimeDuration ONE_SECOND = duration(1, TimeUnit.SECONDS);
+    public static final TimeDuration FIVE_SECONDS = duration(5, TimeUnit.SECONDS);
+    public static final TimeDuration TEN_SECONDS = duration(10, TimeUnit.SECONDS);
+    public static final TimeDuration THIRTY_SECONDS = duration(30, TimeUnit.SECONDS);
+    public static final TimeDuration ONE_MINUTE = duration(1, TimeUnit.MINUTES);
+    public static final TimeDuration TWO_MINUTES = duration(2, TimeUnit.MINUTES);
+    public static final TimeDuration FIVE_MINUTES = duration(5, TimeUnit.MINUTES);
+
+    public static void sleep(TimeDuration duration) {
+        Time.sleep(duration.toMilliseconds());
+    }    
+    
 }
