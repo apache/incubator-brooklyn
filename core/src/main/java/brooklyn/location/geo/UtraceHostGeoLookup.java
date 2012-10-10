@@ -7,15 +7,17 @@ import groovy.util.XmlParser;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.Exceptions;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.RuntimeInterruptedException;
 
 import com.google.common.base.Throwables;
 
@@ -54,51 +56,46 @@ Beyond this you get blacklisted and requests may time out, or return none.
         return "http://xml.utrace.de/?query="+ip.trim();
     }
 
-    static AtomicBoolean retrievingLocalExternalIp = new AtomicBoolean(false); 
-    volatile static String localExternalIp;
+    private static final AtomicBoolean retrievingLocalExternalIp = new AtomicBoolean(false);
+    private static final CountDownLatch triedLocalExternalIp = new CountDownLatch(1);
+    static volatile String localExternalIp;
+
     /** returns public IP of localhost */
-    public static synchronized String getLocalhostExternalIp() {
+    public static String getLocalhostExternalIp() {
         if (localExternalIp!=null) return localExternalIp;
 
         // do in private thread, otherwise blocks for 30s+ on dodgy network!
         // (we can skip it if someone else is doing it, we have synch lock so we'll get notified)
-        if (!retrievingLocalExternalIp.get())
+        if (retrievingLocalExternalIp.compareAndSet(false, true)) {
             new Thread(new Runnable() {
                 public void run() {
-                    if (retrievingLocalExternalIp.getAndSet(true))
-                        // someone else already trying to retrieve; caller can safely just wait,
-                        // as they will get notified by the someone else
-                        return;
                     try {
-                        if (localExternalIp!=null)
-                            // someone else succeeded
-                            return;
                         log.debug("Looking up external IP of this host in private thread "+Thread.currentThread());
                         localExternalIp = new ResourceUtils(HostGeoLookup.class).getResourceAsString("http://api.externalip.net/ip/").trim();
                         log.debug("Finished looking up external IP of this host in private thread, result "+localExternalIp);
                     } catch (Throwable t) {
                         log.debug("Not able to look up external IP of this host in private thread, probably offline ("+t+")");
                     } finally {
-                        synchronized (UtraceHostGeoLookup.class) {
-                            UtraceHostGeoLookup.class.notifyAll();        
-                            retrievingLocalExternalIp.set(false);
-                        }
+                        retrievingLocalExternalIp.set(false);
+                        triedLocalExternalIp.countDown();
                     }
                 }
             }).start();
-        
+        }
+
         try {
             // only wait 2s, so startup is fast
-            UtraceHostGeoLookup.class.wait(2000);
+            triedLocalExternalIp.await(2000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
-        if (localExternalIp==null) throw 
-            Throwables.propagate(new IOException("Unable to discover external IP of local machine; response to server timed out (thread may be ongoing)"));
-        
+        if (localExternalIp==null)  
+            throw Throwables.propagate(new IOException("Unable to discover external IP of local machine; response to server timed out (ongoing="+retrievingLocalExternalIp+")"));
+
         log.debug("Looked up external IP of this host, result is: "+localExternalIp);
         return localExternalIp;
     }
+    
     public String getLookupUrlForLocalhost() {
         return getLookupUrlForPublicIp(getLocalhostExternalIp());
     }
