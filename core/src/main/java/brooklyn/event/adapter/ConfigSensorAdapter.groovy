@@ -27,5 +27,11 @@ public class ConfigSensorAdapter extends AbstractSensorAdapter {
 			}
         }
 	}
-	
+    
+    //for selectively applying once (e.g. sub-classes of DynamicWebAppCluster that don't want to set HTTP_PORT etc!)
+    public static void apply(EntityLocal entity, AttributeSensorAndConfigKey key) {
+        if (entity.getAttribute(key)==null) {
+            entity.setAttribute(key)
+        }
+    }
 }
