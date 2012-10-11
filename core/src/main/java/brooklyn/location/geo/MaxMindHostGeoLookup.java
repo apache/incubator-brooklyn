@@ -60,7 +60,7 @@ public class MaxMindHostGeoLookup implements HostGeoLookup {
             name.append(" ("); name.append(l.countryCode); name.append(")");
             
             HostGeoInfo geo = new HostGeoInfo(address.getHostName(), name.toString(), l.latitude, l.longitude);
-            log.info("Geo info lookup (MaxMind DB) for "+address+" returned: "+geo);
+            log.debug("Geo info lookup (MaxMind DB) for "+address+" returned: "+geo);
             return geo;
         } catch (Exception e) {
             if (log.isDebugEnabled())

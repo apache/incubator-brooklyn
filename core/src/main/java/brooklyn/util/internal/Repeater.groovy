@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.util.Time;
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 
@@ -225,7 +226,6 @@ public class Repeater {
 
         while (true) {
             iterations++
-            if (log.isDebugEnabled()) log.debug "{}: iteration {}", description, iterations
 
             try {
                 body.call()
@@ -244,8 +244,19 @@ public class Repeater {
                 if (rethrowExceptionImmediately) throw e
             }
             if (done) {
-                if (log.isDebugEnabled()) log.debug "{}: condition satisfied", description
+                if (log.isDebugEnabled()) log.debug("{}: condition satisfied", description)
                 return true
+            } else {
+                if (log.isDebugEnabled()) {
+                    String msg = String.format("%s: unsatisfied during iteration %s %s", description, iterations,
+                            (iterationLimit > 0 ? "(max "+iterationLimit+" attempts)" : "") + 
+                            (endTime > 0 ? "("+Time.makeTimeString(endTime - System.currentTimeMillis())+" remaining)" : ""));
+                    if (iterations == 1) {
+                        log.debug(msg);
+                    } else {
+                        log.trace(msg);
+                    }
+                }
             }
 
             if (iterationLimit > 0 && iterations == iterationLimit) {
@@ -261,7 +272,8 @@ public class Repeater {
 
             if (endTime > 0) {
 				if (System.currentTimeMillis() > endTime) {
-                    if (log.isDebugEnabled()) log.debug "{}: condition not satisfied and deadline passed", description
+                    if (log.isDebugEnabled()) log.debug("{}: condition not satisfied and deadline {} passed", 
+                            description, Time.makeTimeString(endTime - System.currentTimeMillis()));
 	                if (rethrowException && lastError) {
 	                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage())
 	                    throw lastError

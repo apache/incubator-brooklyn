@@ -156,7 +156,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                 .run()) {
             throw new IllegalStateException("Timeout waiting for SERVICE_UP from ${this}");
         }
-        log.debug("Detected SERVICE_UP for software ${this}")
+        log.debug("Detected SERVICE_UP for software {}", this)
     }
 
     public void checkModifiable() {
@@ -171,7 +171,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     @Override
 	public void start(Collection<? extends Location> locations) {
-        log.info("Starting software process entity "+this+" at "+locations);
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
 		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
 
@@ -184,7 +183,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
 	public void startInLocation(Collection<Location> locations) {
-		Preconditions.checkArgument locations.size() == 1
+		if (locations.size() != 1) {
+            throw new IllegalArgumentException("Expected one location when starting "+this+", but given "+locations);
+		}
 		Location location = Iterables.getOnlyElement(locations)
 		startInLocation(location)
 	}
@@ -210,7 +211,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public void startInLocation(MachineProvisioningLocation location) {
 		Map<String,Object> flags = obtainProvisioningFlags(location);
         if (!(location in LocalhostMachineProvisioningLocation))
-            LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
+            LOG.info("Starting {}, obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
 		provisioningLoc = location;
         SshMachineLocation machine;
         Tasks.withBlockingDetails("Provisioning machine in "+location) {
@@ -218,10 +219,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         }
 		if (machine == null) throw new NoMachinesAvailableException(location)
 		if (LOG.isDebugEnabled())
-		    LOG.debug("SoftwareProcessEntity {} obtained new location instance {}, details {}", this, machine,
+		    LOG.debug("While starting {}, obtained new location instance {}, details {}", this, machine,
 		            machine.getUser()+":"+Entities.sanitize(machine.getConfig()))
         if (!(location in LocalhostMachineProvisioningLocation))
-            LOG.info("SoftwareProcessEntity {} obtained a new location instance {}, now preparing process there", this, machine)
+            LOG.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine)
 		startInLocation(machine)
 	}
 
@@ -236,7 +237,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                 if (p != null && !p.isEmpty()) ports += p.iterator().next()
             }
         }
-        log.debug("getRequiredOpenPorts detected default ${ports} for ${this}")
+        log.debug("getRequiredOpenPorts detected default {} for {}", ports, this)
         ports
     }
 
@@ -254,6 +255,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
     public void startInLocation(SshMachineLocation machine) {
+        log.info("Starting {} on machine {}", this, machine);
+        
         locations.add(machine)
         initDriver(machine)
         
@@ -325,7 +328,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             log.warn("Skipping stop of software process entity "+this+" when already stopped");
             return;
         }
-        log.info("Stopping software process entity "+this);
+        log.info("Stopping {} in {}", this, getLocations());
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
 		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
         setAttribute(SERVICE_UP, false)

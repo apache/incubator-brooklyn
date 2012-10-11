@@ -20,12 +20,11 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
+import brooklyn.util.text.Strings
 
 import com.google.common.collect.Iterables
 import com.google.common.collect.LinkedHashMultimap
 import com.google.common.collect.Multimap
-
-import brooklyn.util.text.Strings
 
 /**
  * An entity that represents an Nginx proxy (e.g. for routing requests to servers in a cluster).
@@ -57,7 +56,7 @@ public class NginxController extends AbstractController {
     @SetFromFlag("sticky")
     public static final BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
-    
+
     public NginxController(Entity owner) {
         this(new LinkedHashMap(), owner);
     }

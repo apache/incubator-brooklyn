@@ -27,6 +27,7 @@ import brooklyn.management.SubscriptionManager;
 import brooklyn.util.internal.LanguageUtils;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.SingleThreadedScheduler;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -74,14 +75,16 @@ public class LocalSubscriptionManager implements SubscriptionManager {
 
     protected final ExecutionManager em;
     
-    protected ConcurrentMap<String, Subscription> allSubscriptions = new ConcurrentHashMap<String, Subscription>();
-    protected ConcurrentMap<Object, Set<Subscription>> subscriptionsBySubscriber = new ConcurrentHashMap<Object, Set<Subscription>>();
-    protected ConcurrentMap<Object, Set<Subscription>> subscriptionsByToken = new ConcurrentHashMap<Object, Set<Subscription>>();
+    protected final ConcurrentMap<String, Subscription> allSubscriptions = new ConcurrentHashMap<String, Subscription>();
+    protected final ConcurrentMap<Object, Set<Subscription>> subscriptionsBySubscriber = new ConcurrentHashMap<Object, Set<Subscription>>();
+    protected final ConcurrentMap<Object, Set<Subscription>> subscriptionsByToken = new ConcurrentHashMap<Object, Set<Subscription>>();
     
     private final AtomicLong totalEventsPublishedCount = new AtomicLong();
     
     private final AtomicLong totalEventsDeliveredCount = new AtomicLong();
     
+    private final String tostring = "SubscriptionContext("+Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5)+")";
+
     public LocalSubscriptionManager(ExecutionManager m) {
         this.em = m;
     }
@@ -131,7 +134,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         s.eventFilter = (Predicate) flags.remove("eventFilter");
         s.flags = flags;
         
-        if (LOG.isDebugEnabled()) LOG.debug("Creating subscription {} for {} on {} {} in {}", new Object[] {s, s.subscriber, producer, sensor, this});
+        if (LOG.isDebugEnabled()) LOG.debug("Creating subscription {} for {} on {} {} in {}", new Object[] {s.id, s.subscriber, producer, sensor, this});
         allSubscriptions.put(s.id, s);
         LanguageUtils.addToMapOfSets(subscriptionsByToken, makeEntitySensorToken(s.producer, s.sensor), s);
         if (s.subscriber!=null) {
@@ -229,7 +232,7 @@ public class LocalSubscriptionManager implements SubscriptionManager {
         
         //note, generating the notifications must be done in the calling thread to preserve order
         //e.g. emit(A); emit(B); should cause onEvent(A); onEvent(B) in that order
-        if (LOG.isTraceEnabled()) LOG.trace("{} got a {} event", this, event);
+        if (LOG.isTraceEnabled()) LOG.trace("{} got event {}", this, event);
         totalEventsPublishedCount.incrementAndGet();
         
         Set<Subscription> subs = (Set<Subscription>) ((Set<?>) getSubscriptionsForEntitySensor(event.getSource(), event.getSensor()));
@@ -246,5 +249,10 @@ public class LocalSubscriptionManager implements SubscriptionManager {
                 totalEventsDeliveredCount.incrementAndGet();
             }
         }
+    }
+    
+    @Override
+    public String toString() {
+        return tostring;
     }
 }
