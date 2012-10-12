@@ -45,6 +45,11 @@ public class MaxMindHostGeoLookup implements HostGeoLookup {
         if (NetworkUtils.isPrivateSubnet(extAddress)) extAddress = InetAddress.getByName(UtraceHostGeoLookup.getLocalhostExternalIp());
         
         com.maxmind.geoip.Location l = ll.getLocation(extAddress);
+        if (l==null) {
+            if (log.isDebugEnabled()) log.debug("Geo info failed to find location for address {}, using {}", extAddress, ll);
+            return null;
+        }
+        
         try {
             StringBuilder name = new StringBuilder();
             
