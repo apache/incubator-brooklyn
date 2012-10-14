@@ -10,9 +10,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -45,18 +47,45 @@ public class HttpTestUtils {
      * Connects to the given url and returns the connection.
      */
     public static URLConnection connectToUrl(String u) throws Exception {
-        URL url = new URL(u);
-        URLConnection connection = url.openConnection();
-        TrustingSslSocketFactory.configure(connection);
-        HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-            @Override public boolean verify(String s, SSLSession sslSession) {
-                return true;
+        final URL url = new URL(u);
+        final AtomicReference<URLConnection> result = new AtomicReference<URLConnection>();
+        final AtomicReference<Exception> exception = new AtomicReference<Exception>();
+        
+        Thread thread = new Thread("url-test-connector") {
+            public void run() {
+                try {
+                    URLConnection connection = url.openConnection();
+                    TrustingSslSocketFactory.configure(connection);
+                    HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+                        @Override public boolean verify(String s, SSLSession sslSession) {
+                            return true;
+                        }
+                    });
+                    connection.connect();
+    
+                    connection.getContentLength(); // Make sure the connection is made.
+                    result.set(connection);
+                } catch (Exception e) {
+                    exception.set(e);
+                    LOG.info("Error connecting to url "+url+" (propagating)", e);
+                }
             }
-        });
-        connection.connect();
-
-        connection.getContentLength(); // Make sure the connection is made.
-        return connection;
+        };
+        try {
+            thread.start();
+            thread.join(60*1000);
+            
+            if (thread.isAlive()) {
+                throw new IllegalStateException("Connect to URL not complete within 60 seconds, for url "+url+"; stacktrace "+Arrays.toString(thread.getStackTrace()));
+            } else if (exception.get() != null) {
+                throw exception.get();
+            } else {
+                return result.get();
+            }
+            
+        } finally {
+            thread.interrupt();
+        }
     }
 
     public static int getHttpStatusCode(String url) throws Exception {
