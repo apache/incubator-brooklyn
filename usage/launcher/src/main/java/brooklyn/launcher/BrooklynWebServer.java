@@ -169,6 +169,7 @@ public class BrooklynWebServer {
      */
     public synchronized void start() throws Exception {
         if (server!=null) throw new IllegalStateException(""+this+" already running");
+
         if (actualPort==-1){
             actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), httpsEnabled?httpsPort:port);
         }

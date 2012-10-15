@@ -50,7 +50,10 @@ public class CredentialsFromEnvTest {
 
     @Test
     public void testUserPasswordProgrammaticSetting() {
-        def ce = CredentialsFromEnv.newInstance(identity:"DirectorDave", credential:"s3cr3t", "FooServers");
+        Map flags = [identity:"DirectorDave", credential:"s3cr3t"]
+        flags.putAll(BrooklynProperties.Factory.newDefault())
+
+        def ce = CredentialsFromEnv.newInstance(flags, "FooServers");
         Assert.assertEquals(ce.getIdentity(), "DirectorDave")
         Assert.assertEquals(ce.getCredential(), "s3cr3t")
     }

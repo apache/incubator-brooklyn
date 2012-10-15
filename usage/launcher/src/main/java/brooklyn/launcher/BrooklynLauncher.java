@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.config.BrooklynProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,13 +63,13 @@ public class BrooklynLauncher {
         return new BrooklynLauncher();
     }
     
-    ManagementContext context = null;
-    List<Application> appsToManage = new ArrayList<Application>();
-    
-    boolean startWebApps = true;
-    PortRange port = PortRanges.fromString("8081+");
-    Map<String,String> webApps = new LinkedHashMap<String,String>();
-    Map<String, Object> attributes = new LinkedHashMap<String, Object>();
+    private ManagementContext context = null;
+    private List<Application> appsToManage = new ArrayList<Application>();
+    private BrooklynProperties brooklynProperties;
+    private boolean startWebApps = true;
+    private PortRange port = PortRanges.fromString("8081+");
+    private Map<String,String> webApps = new LinkedHashMap<String,String>();
+    //private Map<String, Object> attributes = new LinkedHashMap<String, Object>();
 
     /** Specifies the management context this launcher should use. 
      * If not specified a new {@link LocalManagementContext} is used. */
@@ -96,19 +97,26 @@ public class BrooklynLauncher {
     public BrooklynLauncher webconsolePort(int port) {
         return webconsolePort(PortRanges.fromInteger(port));
     }
-    /** Specifies the port where the web console (and any additional webapps specified) will listed; 
+
+    /** Specifies the port where the web console (and any additional webapps specified) will listed;
      * default "8081+" being the first available >= 8081. */ 
     public BrooklynLauncher webconsolePort(String port) {
         return webconsolePort(PortRanges.fromString(port));
     }
-    /** Specifies the port where the web console (and any additional webapps specified) will listed; 
+
+    /** Specifies the port where the web console (and any additional webapps specified) will listed;
      * default "8081+" being the first available >= 8081. */ 
     public BrooklynLauncher webconsolePort(PortRange port) {
         this.port = port;
         return this;
     }
-    
-    /** Specifies an additional webapp to host on the webconsole port. 
+
+    public BrooklynLauncher brooklynProperties(BrooklynProperties brooklynProperties){
+        this.brooklynProperties = brooklynProperties;
+        return this;
+    }
+
+    /** Specifies an additional webapp to host on the webconsole port.
      * @param contextPath The context path (e.g. "/hello", or equivalently just "hello") where the webapp will be hosted.
      *      "/" will override the brooklyn console webapp.
      * @param warUrl The URL from which the WAR should be loaded, supporting classpath:// protocol in addition to file:// and http(s)://.
@@ -121,25 +129,37 @@ public class BrooklynLauncher {
     /** Specifies an attribute passed to deployed webapps 
      * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT} */
     public BrooklynLauncher setAttribute(String field, Object value) {
-        attributes.put(field, value);
+        if(brooklynProperties == null){
+            brooklynProperties = BrooklynProperties.Factory.newDefault();
+        }
+        brooklynProperties.put(field, value);
         return this;        
     }
 
     /** Starts the web server (with web console) and Brooklyn applications, as per the specifications configured. 
      * @return An object containing details of the web server and the management context. */
     public BrooklynServerDetails launch() {
+        if(brooklynProperties == null){
+            brooklynProperties = BrooklynProperties.Factory.newDefault();
+        }
+
         for (Application app: appsToManage) {
-            if (context==null) context = app.getManagementContext();
+            if (context==null) {
+                context = app.getManagementContext();
+            }
             context.manage(app);
         }
-        if (context==null) context = new LocalManagementContext();
+
+        if (context==null) {
+            context = new LocalManagementContext(brooklynProperties);
+        }
         
         BrooklynWebServer webServer = null;
         if (startWebApps) {
             try {
                 webServer = new BrooklynWebServer(context);
                 webServer.setPort(port);
-                webServer.putAttributes(attributes);
+                webServer.putAttributes(brooklynProperties);
                 
                 for (Map.Entry<String, String> webapp : webApps.entrySet())
                     webServer.deploy(webapp.getKey(), webapp.getValue());

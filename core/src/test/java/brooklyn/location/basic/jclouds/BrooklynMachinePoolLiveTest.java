@@ -1,5 +1,7 @@
 package brooklyn.location.basic.jclouds;
 
+import brooklyn.config.BrooklynProperties;
+import brooklyn.location.basic.LocationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -46,7 +48,7 @@ public class BrooklynMachinePoolLiveTest {
     
     @Test(groups="Live")
     public void buildClaimAndDestroy() {
-        SamplePool p = new SamplePool(JcloudsResolver.resolve("aws-ec2:us-west-1"));
+        SamplePool p = new SamplePool(resolve("aws-ec2:us-west-1"));
         log.info("buildClaimAndDestroy: created pool");
         p.refresh();
         log.info("buildClaimAndDestroy: refreshed pool");
@@ -66,5 +68,8 @@ public class BrooklynMachinePoolLiveTest {
     }
     
 
-    
+    private static JcloudsLocation resolve(String spec) {
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        return (JcloudsLocation) new LocationRegistry(brooklynProperties).resolve(JcloudsResolver.JCLOUDS+":"+spec);
+    }
 }

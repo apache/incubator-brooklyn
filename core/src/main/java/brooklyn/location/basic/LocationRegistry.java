@@ -23,10 +23,13 @@ public class LocationRegistry {
     public static final Logger log = LoggerFactory.getLogger(LocationRegistry.class);
     
     private final Map properties;
-    
-    public LocationRegistry() {
+
+    public LocationRegistry(){
         this(BrooklynProperties.Factory.newDefault());
+        log.warn("Using the LocationRegistry no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
+                "potentially bypassing explicitly loaded properties");
     }
+
     public LocationRegistry(Map properties) {
         this.properties = properties;
         findServices();

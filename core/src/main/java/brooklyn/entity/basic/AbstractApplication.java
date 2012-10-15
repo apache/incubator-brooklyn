@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import brooklyn.config.BrooklynProperties;
+import brooklyn.util.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +22,12 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     private volatile AbstractManagementContext mgmt = null;
     private boolean deployed = false;
 
+    BrooklynProperties brooklynProperties = null;
+
     public AbstractApplication(){
         this(new LinkedHashMap());
+        log.warn("Using the AbstractApplication no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
+                       "potentially bypassing explicitly loaded properties");
     }
 
     public AbstractApplication(Map properties) {
@@ -30,6 +36,12 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
         if (properties.containsKey("mgmt")) {
             mgmt = (AbstractManagementContext) properties.remove("mgmt");
+        }
+
+        if(properties.containsKey("brooklyn.properties")){
+            brooklynProperties = (BrooklynProperties) properties.remove("brooklyn.properties");
+        }else{
+            brooklynProperties = BrooklynProperties.Factory.newDefault();
         }
 
         setAttribute(SERVICE_UP, false);
@@ -123,7 +135,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         if (hasManagementContext())
             return mgmt;
 
-        LocalManagementContext newMgmt = new LocalManagementContext();
+        LocalManagementContext newMgmt = new LocalManagementContext(brooklynProperties);
         if (log.isDebugEnabled()) {
             log.debug("creating new local management context for "+this+" ("+newMgmt+") automatically on attempt to access context");
             if (log.isTraceEnabled())

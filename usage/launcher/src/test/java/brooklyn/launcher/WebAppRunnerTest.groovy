@@ -1,5 +1,7 @@
 package brooklyn.launcher
 
+import brooklyn.config.BrooklynProperties
+
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
@@ -8,14 +10,9 @@ import groovy.time.TimeDuration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
-
-import brooklyn.config.BrooklynServiceAttributes
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.internal.LocalManagementContext
-import brooklyn.test.TestUtils;
-import brooklyn.util.BrooklynLanguageExtensions
 import brooklyn.util.NetworkUtils;
-import brooklyn.util.internal.BrooklynSystemProperties;
+import brooklyn.management.internal.LocalManagementContext
+import brooklyn.test.TestUtils
 import brooklyn.util.internal.TimeExtras
 
 
@@ -39,8 +36,11 @@ public class WebAppRunnerTest {
             attributes = [:] + attributes; //copy map, don't change what was supplied
         }
         bigProps.attributes = attributes;
-        attributes.put(BrooklynSystemProperties.SECURITY_PROVIDER.getPropertyName(), 'brooklyn.web.console.security.AnyoneSecurityProvider');
-        return new BrooklynWebServer(bigProps, new LocalManagementContext());
+
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        brooklynProperties.putAll(bigProps);
+        brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.web.console.security.AnyoneSecurityProvider")
+        return new BrooklynWebServer(bigProps, new LocalManagementContext(brooklynProperties));
     }
     /** @deprecated since 0.4.0. user createWebServer, or better, use BrooklynLauncher.newLauncher() */
     public static BrooklynWebServer createLauncher(Map properties) {
@@ -125,7 +125,7 @@ public class WebAppRunnerTest {
     @Test
     public void testStartWithLauncher() {
         BrooklynServerDetails details = BrooklynLauncher.newLauncher().
-            setAttribute(BrooklynSystemProperties.SECURITY_PROVIDER.getPropertyName(), 'brooklyn.web.console.security.AnyoneSecurityProvider').
+            setAttribute("brooklyn.webconsole.security.provider",'brooklyn.web.console.security.AnyoneSecurityProvider').
             webapp("/hello", "hello-world.war").launch();
         
         try {

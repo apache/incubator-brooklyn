@@ -1,5 +1,6 @@
 package brooklyn.launcher;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.management.internal.LocalManagementContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -10,6 +11,7 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -21,11 +23,18 @@ import java.util.Map;
 
 public class BrooklynWebServerTest {
 
-    public static final Logger log = LoggerFactory.getLogger(WebAppRunnerTest.class);
+    public static final Logger log = LoggerFactory.getLogger(BrooklynWebServer.class);
+
+    private BrooklynProperties brooklynProperties;
+
+    @BeforeMethod
+    public void setUp(){
+        brooklynProperties = BrooklynProperties.Factory.newDefault();
+    }
 
     @Test
     public void verifyHttp() throws Exception {
-        BrooklynWebServer webServer = new BrooklynWebServer(new LocalManagementContext());
+        BrooklynWebServer webServer = new BrooklynWebServer(new LocalManagementContext(brooklynProperties));
         webServer.start();
 
         DefaultHttpClient httpclient = new DefaultHttpClient();
@@ -56,7 +65,7 @@ public class BrooklynWebServerTest {
         flags.put("truststorePath", getFile("server.ts"));
         flags.put("trustStorePassword", "password");
 
-        BrooklynWebServer webServer = new BrooklynWebServer(flags, new LocalManagementContext());
+        BrooklynWebServer webServer = new BrooklynWebServer(flags, new LocalManagementContext(brooklynProperties));
         webServer.start();
         return webServer;
     }
