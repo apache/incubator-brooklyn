@@ -50,7 +50,7 @@ public class TrustingSslSocketFactory extends SSLSocketFactory {
     /** trusts all SSL certificates */
     public static final TrustManager TRUST_ALL = new X509TrustManager() {
         public X509Certificate[] getAcceptedIssuers() {
-            return null;
+            return new X509Certificate[0];
         }
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType)
