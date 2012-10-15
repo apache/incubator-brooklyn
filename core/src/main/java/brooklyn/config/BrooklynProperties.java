@@ -61,8 +61,8 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         }
 
         private static void addGlobalProperties(BrooklynProperties p) {
-            File globalPropertiesFile = new File(
-                    p.getFirst(MutableMap.of("defaultIfNone", "/"), "user.home", "HOME")+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
+            String userHome = System.getProperty("user.home");
+            File globalPropertiesFile = new File(userHome+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
 
             if (globalPropertiesFile.exists()) {
                 p.addFrom(globalPropertiesFile);
