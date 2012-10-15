@@ -6,7 +6,7 @@
 
     <groupId>io.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
-    <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <version>0.5.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
 
     <name>Brooklyn Parent Project</name>
     <description>
@@ -81,7 +81,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <brooklyn.version>0.4.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+        <brooklyn.version>0.5.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
 
         <cobertura.version>1.9.4.1</cobertura.version>
         <surefire.version>2.12.3</surefire.version>
