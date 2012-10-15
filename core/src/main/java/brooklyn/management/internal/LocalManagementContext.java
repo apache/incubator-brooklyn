@@ -57,7 +57,7 @@ public class LocalManagementContext extends AbstractManagementContext {
        super(brooklynProperties);
     }
 
-    protected synchronized boolean manageNonRecursive(Entity e) {
+     protected synchronized boolean manageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = MANAGED_LOCALLY;
         Object old = entitiesById.put(e.getId(), e);
         if (old!=null) {
