@@ -1,6 +1,6 @@
 package brooklyn.entity.proxy;
 
-import com.google.common.base.Objects;
+import com.google.common.base.Objects
 
 public class ProxySslConfig implements Serializable {
 
@@ -62,8 +62,6 @@ public class ProxySslConfig implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
         if (obj == null)
             return false;
         if (getClass() != obj.getClass())
@@ -71,8 +69,8 @@ public class ProxySslConfig implements Serializable {
         ProxySslConfig other = (ProxySslConfig) obj;
 
         return Objects.equal(certificateSourceUrl, other.certificateSourceUrl) &&
-               Object.equals(certificateDestination, other.certificateDestination) &&
-               Object.equals(keyDestination, other.keyDestination) &&
+                Objects.equal(certificateDestination, other.certificateDestination) &&
+                Objects.equal(keyDestination, other.keyDestination) &&
                 Objects.equal(keySourceUrl, other.keySourceUrl) &&
                 Objects.equal(reuseSessions, other.reuseSessions) &&
                 Objects.equal(targetIsSsl, other.targetIsSsl);

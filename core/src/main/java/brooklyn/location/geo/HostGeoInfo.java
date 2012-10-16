@@ -35,7 +35,7 @@ public class HostGeoInfo {
             }
         } catch (Exception e) {
             if (log.isDebugEnabled())
-                log.debug("unable to look up geo DNS info for "+address+": "+e);
+                log.debug("unable to look up geo DNS info for "+address, e);
         }
         return null;
     }
