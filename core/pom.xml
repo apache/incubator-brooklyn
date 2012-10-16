@@ -72,7 +72,7 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk16</artifactId>
-			<version>${bouncycastle.version}</version>
+            <version>${bouncycastle.version}</version>
             <scope>compile</scope>
         </dependency>
 
