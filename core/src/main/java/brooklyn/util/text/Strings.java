@@ -486,4 +486,10 @@ public class Strings {
         return s.substring(0, Math.min(s.length(), maxlen));
     }
 
+    /** returns toString of the object if it is not null, otherwise null */
+    public static String toString(Object context) {
+        if (context==null) return null;
+        return context.toString();
+    }
+
 }

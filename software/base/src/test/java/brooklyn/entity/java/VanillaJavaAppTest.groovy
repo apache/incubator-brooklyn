@@ -10,19 +10,23 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Lifecycle
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.util.ResourceUtils;
 
 class VanillaJavaAppTest {
 
     private static final long TIMEOUT_MS = 10*1000
     
-    // FIXME Hard-codes Aled's path; needs fixed!
-    private static final String BROOKLYN_HOME = "/Users/aled/eclipse-workspaces/cloudsoft/brooklyn-central"
+    private static String BROOKLYN_THIS_CLASSPATH = null;
+    private static Class MAIN_CLASS = ExampleVanillaMain.class;
     
     AbstractApplication app
     SshMachineLocation loc
     
     @BeforeMethod
     public void setUp() {
+        if (BROOKLYN_THIS_CLASSPATH==null) {
+            BROOKLYN_THIS_CLASSPATH = new ResourceUtils(MAIN_CLASS).getClassLoaderDir();
+        }
         app = new AbstractApplication() {}
         loc = new SshMachineLocation(address:"localhost")
     }
@@ -47,11 +51,10 @@ class VanillaJavaAppTest {
         // TODO: how to test: launch standalone app that outputs system properties to stdout? Probe via JMX?
     }
     
-    @Test(groups=["WIP", "Integration"])
+    @Test(groups=["Integration"])
     public void testStartsAndStops() {
-        String cp = "/$BROOKLYN_HOME/software/base/target/test-classes"
-        String main = "brooklyn.entity.java.ExampleVanillaMain"
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[cp], args:[])
+        String main = MAIN_CLASS.getCanonicalName();
+        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
         app.start([loc])
         assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.RUNNING)
         
@@ -59,11 +62,10 @@ class VanillaJavaAppTest {
         assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.STOPPED)
     }
     
-    @Test(groups=["WIP", "Integration"])
+    @Test(groups=["Integration"])
     public void testHasJvmMXBeanSensorVals() {
-        String cp = "$BROOKLYN_HOME/software/base/target/test-classes"
-        String main = "brooklyn.entity.java.ExampleVanillaMain"
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[cp], args:[])
+        String main = MAIN_CLASS.getCanonicalName();
+        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
         app.start([loc])
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
@@ -94,11 +96,10 @@ class VanillaJavaAppTest {
         }
     }
     
-    @Test(groups=["WIP", "Integration"])
+    @Test(groups=["Integration"])
     public void testStartsWithJmxPortSpecifiedInConfig() {
-        String cp = "$BROOKLYN_HOME/software/base/target/test-classes"
-        String main = "brooklyn.entity.java.ExampleVanillaMain"
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[cp], args:[])
+        String main = MAIN_CLASS.getCanonicalName();
+        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
         javaProcess.setConfig(UsesJmx.JMX_PORT, 54321)
         app.start([loc])
         
