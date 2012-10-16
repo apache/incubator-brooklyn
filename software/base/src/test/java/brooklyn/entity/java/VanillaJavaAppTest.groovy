@@ -22,7 +22,7 @@ class VanillaJavaAppTest {
     AbstractApplication app
     SshMachineLocation loc
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void setUp() {
         if (BROOKLYN_THIS_CLASSPATH==null) {
             BROOKLYN_THIS_CLASSPATH = new ResourceUtils(MAIN_CLASS).getClassLoaderDir();
@@ -31,7 +31,7 @@ class VanillaJavaAppTest {
         loc = new SshMachineLocation(address:"localhost")
     }
     
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void tearDown() {
         app?.stop()
     }
