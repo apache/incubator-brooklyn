@@ -188,7 +188,7 @@ public class JmxmpAgent {
                 ts.load(new FileInputStream(trustStoreFile), trustStorePass.toCharArray());
                 tmf.init(ts);
 //                tms = tmf.getTrustManagers();
-                // line above causes certain tests to fail
+                // line above causes tests to fail!  bug in JMXMP TLS impl?
                 tms = new TrustManager[] { newInspectAllTrustManager((X509TrustManager) tmf.getTrustManagers()[0]) };
             } else {
                 tms = null;
@@ -206,16 +206,12 @@ public class JmxmpAgent {
     public static final TrustManager newInspectAllTrustManager(final X509TrustManager delegate) {
         return new X509TrustManager() {
             public X509Certificate[] getAcceptedIssuers() {
-//                new Throwable("looking up accepted issuers").printStackTrace();
-//                X509Certificate[] result = delegate.getAcceptedIssuers();
-//                System.err.println("GOT: "+Arrays.toString(result));
-//                return result;
+                // overriding this method fixes bug where non-accepted issuers have an "accept all" policy, in JMXMP/TLS
                 return new X509Certificate[0];
             }
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType)
                     throws java.security.cert.CertificateException {
-//                new Throwable("checking if client is trusted").printStackTrace();
                 delegate.checkClientTrusted(chain, authType);
             }
             @Override

@@ -1,5 +1,6 @@
 package brooklyn.util.jmx.jmxmp;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -106,9 +107,9 @@ public class JmxmpAgentSslTest {
     private Properties saveStoresAndGetConnectorProperties() throws 
             KeyStoreException, IOException, NoSuchAlgorithmException,
             CertificateException, FileNotFoundException {
-        String keystoreFile = "/tmp/server-keystore";
+        String keystoreFile = File.createTempFile("server-keystore", ".jmx.test").getAbsolutePath();
+        String truststoreFile = File.createTempFile("server-truststore", ".jmx.test").getAbsolutePath();
         if (serverKeystore!=null) serverKeystore.store( new FileOutputStream(keystoreFile), new char[0]);
-        String truststoreFile = "/tmp/server-truststore";
         if (serverTruststore!=null) serverTruststore.store( new FileOutputStream(truststoreFile), new char[0]);
         Properties p = new Properties();
         p.put(JmxmpAgent.JMXMP_KEYSTORE_FILE_PROPERTY, keystoreFile);
@@ -131,7 +132,7 @@ public class JmxmpAgentSslTest {
         p.put(JmxmpAgent.AUTHENTICATE_CLIENTS_PROPERTY, "false");
         
         server = new JmxmpAgent().startJmxmpConnector(p);
-        new JmxmpClient().connect("service:jmx:jmxmp://almacretin.local:11099", new LinkedHashMap());
+        new JmxmpClient().connect("service:jmx:jmxmp://localhost:11099", new LinkedHashMap());
     }
 
     @SuppressWarnings("rawtypes")
@@ -147,7 +148,7 @@ public class JmxmpAgentSslTest {
         p.put(JmxmpAgent.AUTHENTICATE_CLIENTS_PROPERTY, "true");
         
         server = new JmxmpAgent().startJmxmpConnector(p);
-        new JmxmpClient().connect("service:jmx:jmxmp://almacretin.local:11099", new LinkedHashMap());
+        new JmxmpClient().connect("service:jmx:jmxmp://localhost:11099", new LinkedHashMap());
     }
 
     @Test
@@ -162,7 +163,7 @@ public class JmxmpAgentSslTest {
 
         Properties p = saveStoresAndGetConnectorProperties();
         server = new JmxmpAgent().startJmxmpConnector(p);
-        new JmxmpClient().connectTls("service:jmx:jmxmp://almacretin.local:11099",
+        new JmxmpClient().connectTls("service:jmx:jmxmp://localhost:11099",
                 clientKeystore, "", clientTruststore);
     }
 
@@ -179,7 +180,7 @@ public class JmxmpAgentSslTest {
 
         Properties p = saveStoresAndGetConnectorProperties();
         server = new JmxmpAgent().startJmxmpConnector(p);
-        new JmxmpClient().connectTls("service:jmx:jmxmp://almacretin.local:11099",
+        new JmxmpClient().connectTls("service:jmx:jmxmp://localhost:11099",
                 clientKeystore, "", clientTruststore);
     }
 
@@ -196,7 +197,7 @@ public class JmxmpAgentSslTest {
 
         Properties p = saveStoresAndGetConnectorProperties();
         server = new JmxmpAgent().startJmxmpConnector(p);
-        new JmxmpClient().connectTls("service:jmx:jmxmp://almacretin.local:11099",
+        new JmxmpClient().connectTls("service:jmx:jmxmp://localhost:11099",
                 clientKeystore, "", clientTruststore);
     }
 
@@ -213,7 +214,7 @@ public class JmxmpAgentSslTest {
 
         Properties p = saveStoresAndGetConnectorProperties();
         server = new JmxmpAgent().startJmxmpConnector(p);
-        new JmxmpClient().connectTls("service:jmx:jmxmp://almacretin.local:11099",
+        new JmxmpClient().connectTls("service:jmx:jmxmp://localhost:11099",
                 clientKeystore, "", clientTruststore);
     }
 
@@ -230,7 +231,7 @@ public class JmxmpAgentSslTest {
 
         Properties p = saveStoresAndGetConnectorProperties();
         server = new JmxmpAgent().startJmxmpConnector(p);
-        new JmxmpClient().connectTls("service:jmx:jmxmp://almacretin.local:11099",
+        new JmxmpClient().connectTls("service:jmx:jmxmp://localhost:11099",
                 clientKeystore, "", clientTruststore);
     }
 
