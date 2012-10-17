@@ -26,7 +26,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
     public AbstractApplication(){
         this(new LinkedHashMap());
-        log.warn("Using the AbstractApplication no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
+        log.debug("Using the AbstractApplication no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
                        "potentially bypassing explicitly loaded properties");
     }
 
