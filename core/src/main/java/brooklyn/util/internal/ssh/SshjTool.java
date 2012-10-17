@@ -25,6 +25,7 @@ import static com.google.common.base.Throwables.getCausalChain;
 import static com.google.common.collect.Iterables.any;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,8 +106,7 @@ public class SshjTool implements SshTool {
         @Override
         public void close() throws IOException {
             super.close();
-            if (sftp != null)
-                sftp.close();
+            closeWhispering(sftp, this);
         }
     }
 
@@ -572,12 +572,8 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() {
-            if (sftp != null)
-                try {
-                    sftp.close();
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
+            closeWhispering(sftp, this);
+            sftp = null;
         }
 
         @Override
@@ -603,8 +599,8 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() throws IOException {
-            if (sftp != null)
-                sftp.close();
+            closeWhispering(sftp, this);
+            sftp = null;
         }
 
         @Override
@@ -646,12 +642,8 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() {
-            if (sftp != null)
-                try {
-                    sftp.close();
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
+            closeWhispering(sftp, this);
+            sftp = null;
         }
 
         @Override
@@ -733,8 +725,8 @@ public class SshjTool implements SshTool {
 
             @Override
             public void clear() throws TransportException, ConnectionException {
-                if (session != null)
-                    session.close();
+                closeWhispering(session, this);
+                session = null;
             }
 
             @Override
@@ -771,18 +763,12 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() throws TransportException, ConnectionException {
-            if (session != null) {
-                session.close();
-            }
-            if (shell != null) {
-                shell.close();
-            }
-            if (outgobbler != null) {
-                outgobbler.shutdown();
-            }
-            if (errgobbler != null) {
-                errgobbler.shutdown();
-            }
+            closeWhispering(session, this);
+            closeWhispering(shell, this);
+            closeWhispering(outgobbler, this);
+            closeWhispering(errgobbler, this);
+            session = null;
+            shell = null;
         }
 
         @Override
@@ -844,18 +830,12 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() throws TransportException, ConnectionException {
-            if (session != null) {
-                session.close();
-            }
-            if (shell != null) {
-                shell.close();
-            }
-            if (outgobbler != null) {
-                outgobbler.shutdown();
-            }
-            if (errgobbler != null) {
-                errgobbler.shutdown();
-            }
+            closeWhispering(session, this);
+            closeWhispering(shell, this);
+            closeWhispering(outgobbler, this);
+            closeWhispering(errgobbler, this);
+            session = null;
+            shell = null;
         }
 
         @Override
@@ -893,7 +873,7 @@ public class SshjTool implements SshTool {
                     }
                 }
                 shell.sendEOF();
-                output.close();
+                closeWhispering(output, this);
                 
                 try {
                     int timeout = sshClientConnection.getSessionTimeout();
@@ -925,12 +905,8 @@ public class SshjTool implements SshTool {
                     return ((SessionChannel)session).getExitStatus();
                 } finally {
                     // wait for all stdout/stderr to have been re-directed
-                    try {
-                        shell.close();
-                    } catch (Exception e) {
-                        LOG.debug("ssh shell closing error: "+e);
-                        /* close quietly */
-                    }
+                    closeWhispering(shell, this);
+                    shell = null;
                     try {
                         if (outgobbler != null) outgobbler.join();
                         if (errgobbler != null) errgobbler.join();
@@ -994,6 +970,23 @@ public class SshjTool implements SshTool {
             return TypeCoercions.coerce(map.get(key), clazz);
         } else {
             return defaultVal;
+        }
+    }
+    
+    /**
+     * Similar to Guava's Closeables.closeQuitely, except logs exception at debug with context in message.
+     */
+    private void closeWhispering(Closeable closeable, Object context) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                if (LOG.isDebugEnabled()) {
+                    String msg = String.format("<< exception during close, for %s -> %s (%s); continuing.", 
+                            SshjTool.this.toString(), context, closeable);
+                    LOG.debug(msg, e);
+                }
+            }
         }
     }
 }
