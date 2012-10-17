@@ -128,8 +128,13 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     // TODO Only do this when first being managed; not when moving
     @Override 
     public void onManagementStarting() {
-        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) {
+        Lifecycle state = getAttribute(SERVICE_STATE);
+        if (state == Lifecycle.RUNNING) {
             rebind();
+        } else if (state != null && state != Lifecycle.CREATED) {
+            LOG.warn("On start-up of {}, not (re)binding because state is {}", this, state);
+    	} else {
+            // Expect this is a normal start() sequence (i.e. start() will subsequently be called)
     	}
     }
 	
