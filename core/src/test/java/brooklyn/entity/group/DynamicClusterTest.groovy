@@ -430,6 +430,61 @@ class DynamicClusterTest {
         }
     }
     
+    @Test
+    public void testReplacesMember() {
+        DynamicCluster cluster = new DynamicCluster([
+                factory:{ properties -> return new TestEntity(properties) },
+                initialSize:1,
+            ], app)
+        
+        cluster.start([loc])
+        Entity member = Iterables.get(cluster.members, 0);
+        
+        assertTrue(cluster.replaceMember(member));
+        
+        assertEquals(cluster.members.size(), 1)
+        assertFalse(cluster.members.contains(member))
+        assertFalse(cluster.ownedChildren.contains(member))
+    }
+    
+    @Test
+    public void testReplaceMemberReturnsFalseIfNotMember() {
+        DynamicCluster cluster = new DynamicCluster([
+                factory:{ properties -> return new TestEntity(properties) },
+                initialSize:1,
+            ], app)
+        
+        cluster.start([loc])
+        Entity member = Iterables.get(cluster.members, 0);
+        
+        assertFalse(cluster.replaceMember(app));
+        
+        assertEquals(cluster.members as Set, ImmutableSet.of(member));
+    }
+    
+    @Test
+    public void testReplaceMemberFailsIfCantProvisionReplacement() {
+        final int failNum = 2
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = new DynamicCluster(app,  
+                initialSize:1,
+                factory:{ properties -> 
+                    int num = counter.incrementAndGet();
+                    return new FailingEntity(properties, (num==failNum)) 
+                })
+        
+        cluster.start([loc])
+        Entity member = Iterables.get(cluster.members, 0);
+        
+        try {
+            cluster.replaceMember(member);
+            fail();
+        } catch (Exception e) {
+            if (!e.toString().contains("failed to grow")) throw e;
+        }
+        assertEquals(cluster.members as Set, ImmutableSet.of(member));
+    }
+    
     private Throwable unwrapException(Throwable e) {
         if (e instanceof ExecutionException) {
             return unwrapException(e.cause)

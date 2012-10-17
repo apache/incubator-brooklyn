@@ -13,15 +13,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
@@ -49,6 +53,8 @@ import com.google.common.collect.Maps;
  */
 public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster.class);
+
+    public static final Effector<Boolean> REPLACE_MEMBER = new MethodEffector<Boolean>(DynamicCluster.class, "replaceMember");
 
     @SetFromFlag("quarantineFailedEntities")
     public static final ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = new BasicConfigKey<Boolean>(
@@ -190,6 +196,40 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             }
         }
         return getCurrentSize();
+    }
+
+    @Description("Replaces the given member, if it is one; first adds a new member, then removes this one.")
+    public boolean replaceMember(@NamedParameter("member") @Description("The member to be replaced") Entity member) {
+        logger.info("In {}, replacing member {}", this, member);
+        
+        synchronized (mutex) {
+            if (!getMembers().contains(member)) {
+                LOG.warn("In {}, entity {} is not a member so not replacing", this, member);
+                return false;
+            }
+            
+            int preGrowSize = getCurrentSize();
+            grow(1);
+            int postGrowSize = getCurrentSize();
+            if (postGrowSize <= preGrowSize) {
+                String msg = String.format("In %s, failed to grow, to replace %s; current size %s; not removing", this, member, postGrowSize);
+                throw new IllegalStateException(msg);
+            }
+            
+            removeNode(member);
+            if (member instanceof Startable) {
+                Task<?> task = member.invoke(Startable.STOP, Collections.<String,Object>emptyMap());
+                try {
+                    task.get();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw Throwables.propagate(e);
+                } catch (ExecutionException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+            return true;
+        }
     }
 
     /**
