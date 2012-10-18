@@ -15,6 +15,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 
@@ -49,6 +50,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
         super.connectSensors();
 
         WebAppServiceMethods.connectWebAppServerPolicies(this);
+        JavaAppUtils.connectJavaAppServerPolicies(this);
     }
 
     //just provide better typing
