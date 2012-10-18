@@ -7,6 +7,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.location.MachineLocation;
@@ -20,6 +22,8 @@ import com.google.common.collect.Iterables;
 
 public class ByonLocationResolverTest {
 
+    private static final Logger log = LoggerFactory.getLogger(ByonLocationResolverTest.class);
+    
     @Test
     public void testThrowsOnInvalid() throws Exception {
         assertThrowsIllegalArgument("wrongprefix:(hosts=\"1.1.1.1\")");
@@ -53,7 +57,9 @@ public class ByonLocationResolverTest {
     public void testNiceError() throws Exception {
         TestUtils.assertFailsWith(new Runnable() {
             public void run() {
-                resolve("byon:(hosts=\"1.1.1.{1,2}}\")");
+                FixedListMachineProvisioningLocation<SshMachineLocation> x = 
+                        resolve("byon:(hosts=\"1.1.1.{1,2}}\")");
+                log.info("got "+x+" but should have failed");
             }
         }, new Predicate<Throwable>() {
             @Override

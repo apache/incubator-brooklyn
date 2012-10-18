@@ -609,6 +609,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
+                <module>util/jmx/jmxmp-ssl-agent</module>
                 <module>software/base</module>
                 <module>software/osgi</module>
                 <module>software/webapp</module>

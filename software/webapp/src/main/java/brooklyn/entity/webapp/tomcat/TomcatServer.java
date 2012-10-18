@@ -73,31 +73,38 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
 
         Map<String, Object> flags = new LinkedHashMap<String, Object>();
         flags.put("period", new TimeDuration(0, 0, 0, 0, 500));
-        jmx = sensorRegistry.register(new JmxSensorAdapter(flags));
+        
+        if (getDriver().isJmxEnabled()) {
+            jmx = sensorRegistry.register(new JmxSensorAdapter(flags));
 
-        JmxObjectNameAdapter requestProcessorObjectNameAdapter = jmx.objectName("Catalina:type=GlobalRequestProcessor,name=\"http-*\"");
-        requestProcessorObjectNameAdapter.attribute("errorCount").subscribe(ERROR_COUNT);
-        requestProcessorObjectNameAdapter.attribute("requestCount").subscribe(REQUEST_COUNT);
-        requestProcessorObjectNameAdapter.attribute("processingTime").subscribe(TOTAL_PROCESSING_TIME);
+            JmxObjectNameAdapter requestProcessorObjectNameAdapter = jmx.objectName("Catalina:type=GlobalRequestProcessor,name=\"http-*\"");
+            requestProcessorObjectNameAdapter.attribute("errorCount").subscribe(ERROR_COUNT);
+            requestProcessorObjectNameAdapter.attribute("requestCount").subscribe(REQUEST_COUNT);
+            requestProcessorObjectNameAdapter.attribute("processingTime").subscribe(TOTAL_PROCESSING_TIME);
 
-        JmxObjectNameAdapter connectorObjectNameAdapter = jmx.objectName(format("Catalina:type=Connector,port=%s", getAttribute(HTTP_PORT)));
-        connectorObjectNameAdapter.attribute("stateName").subscribe(CONNECTOR_STATUS);
-        Closure closure = new Closure(this) {
-            @Override
-            public Object call(Object... args) {
-                return "STARTED".equals(args[0]);
-            }
-        };
-        connectorObjectNameAdapter.attribute("stateName").subscribe(SERVICE_UP, closure);
+            JmxObjectNameAdapter connectorObjectNameAdapter = jmx.objectName(format("Catalina:type=Connector,port=%s", getAttribute(HTTP_PORT)));
+            connectorObjectNameAdapter.attribute("stateName").subscribe(CONNECTOR_STATUS);
+            Closure closure = new Closure(this) {
+                @Override
+                public Object call(Object... args) {
+                    return "STARTED".equals(args[0]);
+                }
+            };
+            connectorObjectNameAdapter.attribute("stateName").subscribe(SERVICE_UP, closure);
 
-        // If MBean is unreachable, then mark as service-down
-        requestProcessorObjectNameAdapter.reachable().poll(new Function<Boolean,Void>() {
+            // If MBean is unreachable, then mark as service-down
+            requestProcessorObjectNameAdapter.reachable().poll(new Function<Boolean,Void>() {
                 @Override public Void apply(Boolean input) {
                     if (input != null && Boolean.FALSE.equals(input)) {
                         setAttribute(SERVICE_UP, false);
                     }
                     return null;
                 }});
+        } else {
+            // if not using JMX
+            LOG.warn("Tomcat running without JMX monitoring; limited visibility of service available");
+            // TODO we could at least check the http/s is up
+        }
     }
 
     @Override

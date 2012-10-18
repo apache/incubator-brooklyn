@@ -1,8 +1,8 @@
 package brooklyn.entity.java;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import groovy.json.StringEscapeUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -21,6 +21,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
+import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
@@ -56,7 +57,11 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     protected abstract String getLogFileLocation();
 
     public boolean isJmxEnabled() {
-        return entity instanceof UsesJmx;
+        return (entity instanceof UsesJmx) && (entity.getConfig(UsesJmx.USE_JMX));
+    }
+
+    public boolean isJmxSslEnabled() {
+        return GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED));
     }
 
     /**
@@ -120,7 +125,11 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                     }
                 });
 
-        Set<String> result = MutableSet.<String> builder().addAll(getCustomJavaConfigOptions()).addAll(sysprops).build();
+        Set<String> result = MutableSet.<String> builder().
+                addAll(getJmxJavaConfigOptions()).
+                addAll(getCustomJavaConfigOptions()).
+                addAll(sysprops).
+            build();
 
         for (String customOpt : entity.getConfig(UsesJava.JAVA_OPTS)) {
             for (List<String> mutuallyExclusiveOpt : MUTUALLY_EXCLUSIVE_OPTS) {
@@ -214,26 +223,50 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         return !isJmxEnabled() ? null : entity.getAttribute(UsesJmx.JMX_CONTEXT);
     }
 
+    public JmxmpSslSupport getJmxSslSupport() {
+        return new JmxmpSslSupport(this);
+    }
+    
     /**
      * Return the configuration properties required to enable JMX for a Java application.
      * 
      * These should be set as properties in the {@code JAVA_OPTS} environment variable when calling the
      * run script for the application.
-     * 
-     * TODO security!
      */
     protected Map<String, ?> getJmxJavaSystemProperties() {
-        Integer jmxRemotePort = checkNotNull(getJmxPort(), "jmxPort for entity " + entity);
-        String hostName = checkNotNull(getMachine().getAddress().getHostName(), "hostname for entity " + entity);
-        return MutableMap.<String, Object> builder().
+        MutableMap.Builder<String, Object> result = MutableMap.<String, Object> builder();
+        
+        if (isJmxEnabled()) {
+            Integer jmxRemotePort = checkNotNull(getJmxPort(), "jmxPort for entity " + entity);
+            String hostName = checkNotNull(getMachine().getAddress().getHostName(), "hostname for entity " + entity);
+            result.
                 put("com.sun.management.jmxremote", null).
-                put("com.sun.management.jmxremote.port", jmxRemotePort).
-                put("com.sun.management.jmxremote.ssl", false).
-                put("com.sun.management.jmxremote.authenticate", false).
-                put("java.rmi.server.hostname", hostName).
-            build();
+                put("java.rmi.server.hostname", hostName);
+            
+            if (!isJmxSslEnabled()) {
+                result.
+                    put("com.sun.management.jmxremote.port", jmxRemotePort).
+                    put("com.sun.management.jmxremote.ssl", false).
+                    put("com.sun.management.jmxremote.authenticate", false);
+            } else {
+                getJmxSslSupport().applyAgentJmxJavaSystemProperties(result);
+            }
+        }
+        
+        return result.build();
     }
 
+    /**
+     * Return any JVM arguments required, other than the -D defines returned by {@link #getJmxJavaSystemProperties()}
+     */
+    protected List<String> getJmxJavaConfigOptions() {
+        List<String> result = new ArrayList<String>();
+        if (isJmxEnabled() && isJmxSslEnabled()) {
+            getJmxSslSupport().applyAgentJmxJavaConfigOptions(result);            
+        }
+        return result;
+    }
+        
     public void installJava() {
         // this should work, but not in 1.4.0 because oracle have blocked download (fixed in head 1.4.1
         // and 1.5.0)
@@ -267,9 +300,17 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         // "sudo apt-get install -y --allow-unauthenticated openjdk-7-jdk"
     }
 
+    public void installJmxSupport() {
+        if (isJmxEnabled() && isJmxSslEnabled()) {
+            newScript("JMX_SETUP_PREINSTALL").body.append("mkdir -p "+getRunDir()).execute();
+            getJmxSslSupport().install();            
+        }
+    }
+    
     @Override
     public void start() {
         installJava();
+        installJmxSupport();
         super.start();
     }
 
