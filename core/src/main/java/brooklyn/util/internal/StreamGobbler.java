@@ -1,5 +1,6 @@
 package brooklyn.util.internal;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -8,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 
-public class StreamGobbler extends Thread {
+public class StreamGobbler extends Thread implements Closeable {
 	
     protected final InputStream stream;
     protected final PrintStream out;
@@ -25,9 +26,18 @@ public class StreamGobbler extends Thread {
         this.log = log;
     }
     
-    public void shutdown() {
+    @Override
+    public void close() {
         running.set(false);
         interrupt();
+    }
+
+    /**
+     * @deprecate Use close() instead.
+     */
+    @Deprecated
+    public void shutdown() {
+        close();
     }
 
     String logPrefix = "";

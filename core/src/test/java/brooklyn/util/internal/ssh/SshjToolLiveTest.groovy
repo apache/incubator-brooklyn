@@ -2,8 +2,6 @@ package brooklyn.util.internal.ssh
 
 import static org.testng.Assert.*
 
-import java.io.File
-import java.util.Map
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -11,7 +9,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Identifiers
 
 import com.google.common.base.Charsets
 import com.google.common.base.Strings
@@ -377,6 +375,18 @@ public class SshjToolLiveTest {
         String errMsg = new String(err.toByteArray());
         assertTrue(errMsg.contains("bash: $nonExistantCmd: command not found\n"), "errMsg="+errMsg+"; out="+out+"; err="+err);
         
+    }
+
+    @Test(groups = [ "Integration" ])
+    public void testConnectWithInvalidUserThrowsException() {
+        final SshjTool localtool = new SshjTool(user:'wronguser', host:'localhost', privateKeyFile:"~/.ssh/id_rsa")
+        tools.add(localtool)
+        try {
+            localtool.connect()
+            fail();
+        } catch (SshException e) {
+            if (!e.toString().contains("failed to connect")) throw e;
+        }
     }
 
     private void assertRemoteFileContents(String remotePath, String expectedContents) {
