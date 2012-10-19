@@ -199,8 +199,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
      * @param memberId
      * @throws NoSuchElementException If entity cannot be resolved, or it is not a member 
      */
-    @Description("Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. Returns id of the new entity; or throws exception if couldn't be replaced.")
-            //given member, if it is one; first adds a new member, then removes this one.")
+    @Description("Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. "+
+            "Returns id of the new entity; or throws exception if couldn't be replaced.")
     public String replaceMember(@NamedParameter("memberId") @Description("The entity id of a member to be replaced") String memberId) {
         Entity member = getManagementContext().getEntity(memberId);
         logger.info("In {}, replacing member {} ({})", new Object[] {this, memberId, member});
@@ -220,15 +220,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 throw new IllegalStateException(msg);
             }
             
-            removeNode(member);
-            if (member instanceof Startable) {
-                Task<?> task = member.invoke(Startable.STOP, Collections.<String,Object>emptyMap());
-                try {
-                    task.get();
-                } catch (Exception e) {
-                    throw Exceptions.propagate(e);
-                }
-            }
+            stopAndRemoveNode(member);
             
             return Iterables.get(addedEntities, 0).getId();
         }
@@ -263,13 +255,17 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     private void shrink(int delta) {
         Collection<Entity> removedEntities = Lists.newArrayList();
         
-        for (int i = 0; i < (delta*-1); i++) { removedEntities.add(removeNode()); }
+        for (int i = 0; i < (delta*-1); i++) { removedEntities.add(pickAndRemoveMember()); }
 
         Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
         try {
             invoke.get();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
+        } finally {
+            for (Entity removedEntity : removedEntities) {
+                discardNode(removedEntity);
+            }
         }
     }
     
@@ -284,7 +280,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     private void cleanupFailedNodes(Collection<Entity> failedEntities) {
         // TODO Could also call stop on them?
         for (Entity entity : failedEntities) {
-            removeNode(entity);
+            discardNode(entity);
         }
     }
     
@@ -352,7 +348,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         return entity;
     }
 
-    protected Entity removeNode() {
+    protected Entity pickAndRemoveMember() {
         
         // TODO use pluggable strategy; default is to remove newest
         // TODO inefficient impl
@@ -362,14 +358,28 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Entity entity = removalStrategy.apply(getMembers());
         Preconditions.checkNotNull(entity, "No entity chosen for removal from "+getId());
         Preconditions.checkState(entity instanceof Startable, "Chosen entity for removal not stoppable: cluster="+this+"; choice="+entity);
-        
-        return removeNode(entity);
+
+        removeMember(entity);
+        return entity;
     }
     
-    protected Entity removeNode(Entity entity) {
+    protected void discardNode(Entity entity) {
         removeMember(entity);
         managementContext.unmanage(entity);
+    }
+    
+    protected void stopAndRemoveNode(Entity member) {
+        removeMember(member);
         
-        return entity;
+        if (member instanceof Startable) {
+            Task<?> task = member.invoke(Startable.STOP, Collections.<String,Object>emptyMap());
+            try {
+                task.get();
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+        }
+        
+        managementContext.unmanage(member);
     }
 }

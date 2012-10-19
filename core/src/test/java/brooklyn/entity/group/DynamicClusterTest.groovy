@@ -140,6 +140,12 @@ class DynamicClusterTest {
         assertEquals newSize, cluster.currentSize
         assertEquals newSize, cluster.members.size()
         assertEquals newSize, cluster.getAttribute(Changeable.GROUP_SIZE)
+        
+        newSize = cluster.resize(0)
+        assertEquals newSize, 0
+        assertEquals newSize, cluster.currentSize
+        assertEquals newSize, cluster.members.size()
+        assertEquals newSize, cluster.getAttribute(Changeable.GROUP_SIZE)
     }
 
     @Test
