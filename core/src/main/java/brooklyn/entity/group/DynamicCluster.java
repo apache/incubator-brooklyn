@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
@@ -26,7 +27,6 @@ import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
-import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -36,12 +36,13 @@ import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -174,9 +175,6 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         throw new UnsupportedOperationException();
     }
     
-//    public Integer resize(Integer desiredSize) {
-//    }
-    
     public Integer resize(Integer desiredSize) {
         synchronized (mutex) {
             int currentSize = getCurrentSize();
@@ -191,28 +189,34 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 grow(delta);
             } else if (delta < 0) {
                 shrink(delta);
-            } else {
-                setAttribute(Changeable.GROUP_SIZE, currentSize);
             }
         }
         return getCurrentSize();
     }
 
-    @Description("Replaces the given member, if it is one; first adds a new member, then removes this one.")
-    public boolean replaceMember(@NamedParameter("member") @Description("The member to be replaced") Entity member) {
-        logger.info("In {}, replacing member {}", this, member);
-        
+    /**
+     * 
+     * @param memberId
+     * @throws NoSuchElementException If entity cannot be resolved, or it is not a member 
+     */
+    @Description("Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. Returns id of the new entity; or throws exception if couldn't be replaced.")
+            //given member, if it is one; first adds a new member, then removes this one.")
+    public String replaceMember(@NamedParameter("memberId") @Description("The entity id of a member to be replaced") String memberId) {
+        Entity member = getManagementContext().getEntity(memberId);
+        logger.info("In {}, replacing member {} ({})", new Object[] {this, memberId, member});
+
+        if (member == null) {
+            throw new NoSuchElementException("In "+this+", entity "+memberId+" cannot be resolved, so not replacing");
+        }
+
         synchronized (mutex) {
             if (!getMembers().contains(member)) {
-                LOG.warn("In {}, entity {} is not a member so not replacing", this, member);
-                return false;
+                throw new NoSuchElementException("In "+this+", entity "+member+" is not a member so not replacing");
             }
             
-            int preGrowSize = getCurrentSize();
-            grow(1);
-            int postGrowSize = getCurrentSize();
-            if (postGrowSize <= preGrowSize) {
-                String msg = String.format("In %s, failed to grow, to replace %s; current size %s; not removing", this, member, postGrowSize);
+            Collection<Entity> addedEntities = grow(1);
+            if (addedEntities.size() < 1) {
+                String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
                 throw new IllegalStateException(msg);
             }
             
@@ -221,21 +225,19 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 Task<?> task = member.invoke(Startable.STOP, Collections.<String,Object>emptyMap());
                 try {
                     task.get();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw Throwables.propagate(e);
-                } catch (ExecutionException e) {
-                    throw Throwables.propagate(e);
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
                 }
             }
-            return true;
+            
+            return Iterables.get(addedEntities, 0).getId();
         }
     }
 
     /**
      * Increases the cluster size by the given number.
      */
-    private void grow(int delta) {
+    private Collection<Entity> grow(int delta) {
         Collection<Entity> addedEntities = Lists.newArrayList();
         for (int i = 0; i < delta; i++) {
             addedEntities.add(addNode());
@@ -254,6 +256,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 cleanupFailedNodes(errors.keySet());
             }
         }
+        
+        return MutableList.<Entity>builder().addAll(addedEntities).removeAll(errors.keySet()).build();
     }
     
     private void shrink(int delta) {
@@ -264,11 +268,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
         try {
             invoke.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw Throwables.propagate(e);
-        } catch (ExecutionException e) {
-            throw Throwables.propagate(e);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
     
@@ -302,18 +303,12 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             Entity entity = entry.getKey();
             Task<?> task = entry.getValue();
             try {
-                try {
-                    task.get();
-                } catch (Throwable t) {
-                    throw unwrapException(t);
-                }
+                task.get();
             } catch (InterruptedException e) {
-                // TODO This interrupt could have come from the task's thread, so don't want to interrupt this thread!
-                Thread.currentThread().interrupt();
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             } catch (Throwable t) {
                 logger.error("Cluster "+this+" failed to start entity "+entity, t);
-                errors.put(entity, t);
+                errors.put(entity, unwrapException(t));
             }
         }
         return errors;

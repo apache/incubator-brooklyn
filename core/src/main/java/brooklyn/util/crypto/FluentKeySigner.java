@@ -17,7 +17,7 @@ import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
 
-import brooklyn.util.Exceptions;
+import brooklyn.util.exceptions.Exceptions;
 
 /** A fluent API which simplifies generating certificates (signed keys) */
 /* we use deprecated X509V3CertificateGenerator for now because official replacement,

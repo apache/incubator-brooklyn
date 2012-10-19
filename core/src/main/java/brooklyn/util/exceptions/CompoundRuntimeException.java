@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.exceptions;
 
 import java.util.Collections;
 import java.util.List;
