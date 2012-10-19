@@ -67,7 +67,7 @@ public class HttpTestUtils {
                     result.set(connection);
                 } catch (Exception e) {
                     exception.set(e);
-                    LOG.info("Error connecting to url "+url+" (propagating)", e);
+                    LOG.debug("Error connecting to url "+url+" (propagating)", e);
                 }
             }
         };
@@ -78,6 +78,7 @@ public class HttpTestUtils {
             if (thread.isAlive()) {
                 throw new IllegalStateException("Connect to URL not complete within 60 seconds, for url "+url+"; stacktrace "+Arrays.toString(thread.getStackTrace()));
             } else if (exception.get() != null) {
+                LOG.debug("Error connecting to url "+url+", thread caller of "+exception, new Throwable("source of rethrown error "+exception));
                 throw exception.get();
             } else {
                 return result.get();
@@ -90,8 +91,10 @@ public class HttpTestUtils {
 
     public static int getHttpStatusCode(String url) throws Exception {
         URLConnection connection = connectToUrl(url);
+        long startTime = System.currentTimeMillis();
         int status = ((HttpURLConnection) connection).getResponseCode();
-        LOG.debug("connection to {} gives {}", url, status);
+        if (LOG.isDebugEnabled())
+            LOG.debug("connection to {} ({}ms) gives {}", new Object[] { url, (System.currentTimeMillis()-startTime), status });
         return status;
     }
 
