@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -191,7 +189,7 @@ public class MementoTransformer {
     }
 
     private static Iterable<?> transformLocationsToIds(Iterable<?> vs) {
-    	if (containsMatch(vs, Predicates.instanceOf(Location.class))) {
+    	if (containsType(vs, Location.class)) {
     		// refers to other locations; must be transformed
     		// assumes is entirely composed of location objects
     		List<String> result = Lists.newArrayList();
@@ -205,7 +203,7 @@ public class MementoTransformer {
 	}
 
     private static Map<?,?> transformLocationsToIds(Map<?,?> vs) {
-    	if (containsMatch(vs.values(), Predicates.instanceOf(Location.class))) {
+    	if (containsType(vs.values(), Location.class)) {
     		// requires transforming for serialization
     		Map<Object,Object> result = Maps.newLinkedHashMap();
     		for (Map.Entry<?,?> entry : vs.entrySet()) {
@@ -220,7 +218,7 @@ public class MementoTransformer {
 	}
     
     private static Iterable<?> transformEntitiesToIds(Iterable<?> vs) {
-        if (containsMatch(vs, Predicates.instanceOf(Entity.class))) {
+        if (containsType(vs, Entity.class)) {
             // refers to other Entities; must be transformed
             // assumes is entirely composed of Entity objects
             List<String> result = Lists.newArrayList();
@@ -234,7 +232,7 @@ public class MementoTransformer {
     }
 
     private static Map<?,?> transformEntitiesToIds(Map<?,?> vs) {
-        if (containsMatch(vs.values(), Predicates.instanceOf(Entity.class))) {
+        if (containsType(vs.values(), Entity.class)) {
             // requires transforming for serialization
             Map<Object,Object> result = Maps.newLinkedHashMap();
             for (Map.Entry<?,?> entry : vs.entrySet()) {
@@ -248,11 +246,16 @@ public class MementoTransformer {
         }
     }
 
-    private static <T> boolean containsMatch(Iterable<T> vals, Predicate<? super T> predicate) {
+    /**
+     * Returns true if the first non-null element is of the given type. Otherwise returns false 
+     * (including if empty or all nulls). This is a sufficient check, because we're assuming that 
+     * if it contains a location/element then everything in there is a location/element.
+     */
+    private static <T> boolean containsType(Iterable<T> vals, Class<?> clazz) {
     	for (T val : vals) {
-    		if (predicate.apply(val)) {
-    			return true;
-    		}
+    	    if (val != null) {
+    	        return clazz.isInstance(val);
+    	    }
     	}
     	return false;
     }
