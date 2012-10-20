@@ -40,6 +40,9 @@ import brooklyn.util.flags.FlagUtils
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.text.Identifiers
 
+import com.google.common.base.Objects
+import com.google.common.base.Objects.ToStringHelper
+import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 
 /**
@@ -529,21 +532,37 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     /** Default String representation is simplified name of class, together with selected fields. */
     @Override
     public String toString() {
-        StringBuilder result = []
-        result << getClass().getSimpleName()
-        if (!result) result << getClass().getName()
-		def fields = toStringFieldsToInclude()
-        result << "[" << fields.collect({
-            def v = this.hasProperty(it) ? this[it] : null  /* TODO would like to use attributes, config: this.properties[it] */
-            v ? "$it=$v" : null
-        }).findAll({it!=null}).join(",") << "]"
+        Collection<String> fields = toStringFieldsToInclude();
+        if (fields.equals(ImmutableSet.of('id', 'displayName'))) {
+            return toStringHelper().toString();
+        } else {
+            StringBuilder result = []
+            result << getClass().getSimpleName()
+            if (!result) result << getClass().getName()
+            result << "[" << fields.collect({
+                def v = this.hasProperty(it) ? this[it] : null  /* TODO would like to use attributes, config: this.properties[it] */
+                v ? "$it=$v" : null
+            }).findAll({it!=null}).join(",") << "]"
+        }
     }
 
-    /** override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString */
+    /** 
+     * Override this to add to the toString(), e.g. <code>return super.toStringHelper().add("port", port);</code>
+     * 
+     * Cannot be used in combination with overriding the deprecated toStringFieldsToInclude.
+     */
+    protected ToStringHelper toStringHelper() {
+        return Objects.toStringHelper(this).omitNullValues().add("id", getId()).add("name", getDisplayName());
+    }
+    
+    /** 
+     * override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString
+     * 
+     * @deprecated In 0.5.0, instead override toStringHelper instead
+     */
+    @Deprecated
     public Collection<String> toStringFieldsToInclude() { 
-		Set fields = ['id']
-		if (!this.hasProperty('name')) fields << 'displayName'
-		else fields << 'name'
+		return ['id', 'displayName'] as Set
 	}
 
     

@@ -11,14 +11,16 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.java.UsesJmx
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
-import brooklyn.entity.messaging.jms.JMSBroker;
-import brooklyn.entity.messaging.jms.JMSDestination;
+import brooklyn.entity.messaging.jms.JMSBroker
+import brooklyn.entity.messaging.jms.JMSDestination
 import brooklyn.event.adapter.JmxHelper
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.util.flags.SetFromFlag
+
+import com.google.common.base.Objects.ToStringHelper
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
  */
@@ -73,9 +75,9 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 	}
 
 	@Override
-	public Collection<String> toStringFieldsToInclude() {
-		return super.toStringFieldsToInclude() + [ 'openWirePort' ]
-	}
+    protected ToStringHelper toStringHelper() {
+        return super.toStringHelper().add("openWirePort", getAttribute(OPEN_WIRE_PORT));
+    }
 
     @Override
     Class getDriverInterface() {
