@@ -292,6 +292,8 @@ public class SshjTool implements SshTool {
                 .connectTimeout(builder.connectTimeout)
                 .sessionTimeout(builder.sessionTimeout)
                 .build();
+        
+        if (LOG.isTraceEnabled()) LOG.trace("Created SshjTool {} ({})", this, System.identityHashCode(this));
     }
     
     public String getHostAddress() {
@@ -305,9 +307,10 @@ public class SshjTool implements SshTool {
     @Override
     public void connect() {
         try {
+            if (LOG.isTraceEnabled()) LOG.trace("Connecting SshjTool {} ({})", this, System.identityHashCode(this));
             acquire(sshClientConnection);
         } catch (Exception e) {
-            LOG.debug(toString()+" failed to connect (rethrowing)", e);
+            if (LOG.isDebugEnabled()) LOG.debug(toString()+" failed to connect (rethrowing)", e);
             throw propagate(e, "failed to connect");
         }
     }
@@ -319,7 +322,7 @@ public class SshjTool implements SshTool {
 
     @Override
     public void disconnect() {
-        if (LOG.isTraceEnabled()) LOG.trace("Disconnecting {}", this);
+        if (LOG.isTraceEnabled()) LOG.trace("Disconnecting SshjTool {} ({})", this, System.identityHashCode(this));
         try {
             sshClientConnection.clear();
         } catch (Exception e) {
@@ -329,7 +332,7 @@ public class SshjTool implements SshTool {
 
     @Override
     public boolean isConnected() {
-        return sshClientConnection.isConnected();
+        return sshClientConnection.isConnected() && sshClientConnection.isAuthenticated();
     }
     
     @Override
