@@ -22,6 +22,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+        
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId> <!-- for javax.annotation.Nullable etc -->
+        </dependency>
     </dependencies>
     
 </project>
