@@ -347,8 +347,8 @@ public class JmxHelper {
      * @throws IllegalStateException if not connected.
      */
     private synchronized MBeanServerConnection getConnectionOrFail() {
-        if (connection != null)
-            return connection;
+        if (isConnected())
+            return getConnection();
 
         if (triedConnecting) {
             throw new IllegalStateException("Failed to connect to JMX at "+url);
