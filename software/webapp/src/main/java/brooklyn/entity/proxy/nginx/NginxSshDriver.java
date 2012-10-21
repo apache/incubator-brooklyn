@@ -4,16 +4,19 @@ package brooklyn.entity.proxy.nginx;
 import static java.lang.String.format;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Throwables;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.trait.Startable;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -196,7 +199,27 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         launch();
     }
     
+    private final ExecController reloadExecutor = new ExecController(
+            entity+"->reload",
+            new Runnable() {
+                public void run() {
+                    reloadImpl();
+                }
+            });
+    
     public void reload() {
+        // If there are concurrent calls to reload (such that some calls come in when another call is queued), then 
+        // don't bother doing the subsequent calls. Instead just rely on the currently queued call.
+        //
+        // Motivation is that calls to nginx.reload were backing up: we ended up executing lots of them in parallel
+        // when there were several changes to the nginx conifg that requiring a reload. The problem can be particularly
+        // bad because the ssh commands take a second or two - if 10 changes were made to the config in that time, we'd
+        // end up executing reload 10 times in parallel.
+        
+        reloadExecutor.run();
+    }
+    
+    private void reloadImpl() {
         // Note that previously, if serviceUp==false then we'd restart nginx.
         // That caused a race on stop()+reload(): nginx could simultaneously be stopping and also reconfiguring 
         // (e.g. due to a cluster-resize), the restart() would leave nginx running even after stop() had returned.
@@ -222,5 +245,40 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 format("cd %s", getRunDir()),
                 sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
         ).execute();
+    }
+    
+    /**
+     * Executes the given task, but only if another thread hasn't executed it for us (where the other thread
+     * began executing it after the current caller of <code>run</code> began attempting to do so itself).
+     * 
+     * @author aled
+     */
+    private static class ExecController {
+        private final String summary;
+        private final Runnable task;
+        private final AtomicLong counter = new AtomicLong();
+        
+        ExecController(String summary, Runnable task) {
+            this.summary = summary;
+            this.task = task;
+        }
+        
+        void run() {
+            long preCount = counter.get();
+            synchronized (this) {
+                if (counter.compareAndSet(preCount, preCount+1)) {
+                    try {
+                        if (log.isDebugEnabled()) log.debug("Executing {}; incremented count to {}", new Object[] {summary, counter});
+                        task.run();
+                    } catch (Exception e) {
+                        if (log.isDebugEnabled()) log.debug("Failed executing {}; reseting count to {} and propagating exception: {}", new Object[] {summary, preCount, e});
+                        counter.set(preCount);
+                        throw Throwables.propagate(e);
+                    }
+                } else {
+                    if (log.isDebugEnabled()) log.debug("Not executing {} because executed by another thread subsequent to us attempting (preCount {}; count {})", new Object[] {summary, preCount, counter});
+                }
+            }
+        }
     }
 }
