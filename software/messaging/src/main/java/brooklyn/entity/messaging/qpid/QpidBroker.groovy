@@ -12,9 +12,9 @@ import brooklyn.entity.java.UsesJmx
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.Topic
 import brooklyn.entity.messaging.amqp.AmqpExchange
-import brooklyn.entity.messaging.amqp.AmqpServer;
-import brooklyn.entity.messaging.jms.JMSBroker;
-import brooklyn.entity.messaging.jms.JMSDestination;
+import brooklyn.entity.messaging.amqp.AmqpServer
+import brooklyn.entity.messaging.jms.JMSBroker
+import brooklyn.entity.messaging.jms.JMSDestination
 import brooklyn.event.adapter.JmxHelper
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
@@ -22,6 +22,8 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.util.flags.SetFromFlag
+
+import com.google.common.base.Objects.ToStringHelper
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
@@ -122,10 +124,9 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     }
 
     @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + [ 'amqpPort' ]
+    protected ToStringHelper toStringHelper() {
+        return super.toStringHelper().add("amqpPort", getAmqpPort());
     }
-
 }
 
 public abstract class QpidDestination extends JMSDestination implements AmqpExchange {
@@ -176,11 +177,6 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
         } else {
 	        return name
         }
-    }
-
-    @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + ['name']
     }
 }
 

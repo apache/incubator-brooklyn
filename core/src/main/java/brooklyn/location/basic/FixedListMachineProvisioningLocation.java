@@ -3,6 +3,7 @@ package brooklyn.location.basic;
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +23,7 @@ import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 
 /**
  * A provisioner of {@link MachineLocation}s which takes a list of machines it can connect to.
@@ -32,7 +34,7 @@ import com.google.common.collect.Sets;
  * (override provisionMore and canProvisionMore).
  */
 //TODO combine with jclouds BYON
-public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, CoordinatesProvider {
+public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, CoordinatesProvider, Closeable {
 
     private Object lock;
     @SetFromFlag("machines")
@@ -63,6 +65,13 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
             inUse = Sets.newLinkedHashSet();
         }
         super.configure(properties);
+    }
+    
+    @Override
+    public void close() {
+        for (T machine : machines) {
+            if (machine instanceof Closeable) Closeables.closeQuietly((Closeable)machine);
+        }
     }
     
     protected Set<T> getMachines() {

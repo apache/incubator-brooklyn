@@ -25,8 +25,6 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
-import brooklyn.location.OsDetails;
-import brooklyn.location.basic.BasicOsDetails;
 import org.jclouds.Constants;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
@@ -56,7 +54,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.OsDetails;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.BasicOsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.util.KeyValueParser;
@@ -75,6 +75,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -1084,11 +1085,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     }
     
     private String getPublicHostnameAws(String ip, BrooklynJcloudsSetupHolder setup) {
+        SshMachineLocation sshLocByIp = null;
         try {
             Map sshConfig = generateSshConfig(setup, null);
             
             // TODO messy way to get an SSH session 
-            SshMachineLocation sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", setup.user, "config", sshConfig));
+            sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", setup.user, "config", sshConfig));
             
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
@@ -1103,6 +1105,8 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             throw new IllegalStateException("Could not obtain hostname for vm "+ip+"; exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()));
         } catch (IOException e) {
             throw Throwables.propagate(e);
+        } finally {
+            Closeables.closeQuietly(sshLocByIp);
         }
     }
     

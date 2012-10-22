@@ -343,7 +343,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         if (entity==null || !(entity instanceof Entity)) 
             throw new IllegalStateException("EntityFactory factory routine did not return an entity, in "+this+" ("+entity+")");
         
-        getManagementContext().manage(entity);
+        if (getManagementContext().isManaged(this)) getManagementContext().manage(entity);
         addMember(entity);
         return entity;
     }

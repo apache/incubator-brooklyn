@@ -1,14 +1,18 @@
 package brooklyn.util.task
 
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import static org.testng.Assert.*
+
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
-import static org.testng.Assert.*
 
+import brooklyn.test.TestUtils
 import brooklyn.util.internal.TimeExtras
+
+import com.google.common.collect.Lists
 
 public class ScheduledExecutionTest {
 
@@ -89,4 +93,38 @@ public class ScheduledExecutionTest {
 		assertEquals(i, 5)
 	}
 
+    @Test
+    public void testScheduledTaskTakesLongerThanPeriod() {
+        final int PERIOD = 1;
+        final int SLEEP_TIME = 100;
+        final int EARLY_RETURN_GRACE = 10;
+        BasicExecutionManager m = new BasicExecutionManager();
+        final List<Long> execTimes = new CopyOnWriteArrayList<Long>();
+        
+        def t = new ScheduledTask(delay: PERIOD*TimeUnit.MILLISECONDS, period: PERIOD*TimeUnit.MILLISECONDS, { new BasicTask({
+            execTimes.add(System.currentTimeMillis());
+            Thread.sleep(100);
+        }) } );
+    
+        m.submit(t);
+        
+        TestUtils.executeUntilSucceeds {
+            execTimes.size() > 3;
+        }
+        
+        List<Long> timeDiffs = Lists.newArrayList();
+        long prevExecTime = -1;
+        for (Long execTime : execTimes) {
+            if (prevExecTime == -1) {
+                prevExecTime = execTime;
+            } else {
+                timeDiffs.add(execTime - prevExecTime);
+                prevExecTime = execTime;
+            }
+        }
+        
+        for (Long timeDiff : timeDiffs) {
+            if (timeDiff < (SLEEP_TIME - EARLY_RETURN_GRACE)) fail("timeDiffs="+timeDiffs+"; execTimes="+execTimes);
+        }
+    }
 }

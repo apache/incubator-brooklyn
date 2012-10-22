@@ -123,9 +123,4 @@ public abstract class JMSDestination extends AbstractEntity {
         delete()
         super.destroy()
     }
-    
-    @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + [ 'name' ]
-    }
 }

@@ -161,12 +161,15 @@ public class ResourceUtils {
                 .putIfNotNull("user", user)
                 .put("address", InetAddress.getByName(address))
                 .build());
-
-        File tempFile = File.createTempFile("brooklyn-sftp", ".tmp");
-        tempFile.deleteOnExit();
-        tempFile.setReadable(true, true);
-        machine.copyFrom(path, tempFile.getAbsolutePath());
-        return new FileInputStream(tempFile);
+        try {
+            File tempFile = File.createTempFile("brooklyn-sftp", ".tmp");
+            tempFile.deleteOnExit();
+            tempFile.setReadable(true, true);
+            machine.copyFrom(path, tempFile.getAbsolutePath());
+            return new FileInputStream(tempFile);
+        } finally {
+            Closeables.closeQuietly(machine);
+        }
     }
     
     /** takes {@link #getResourceFromUrl(String)} and reads fully, into a string */

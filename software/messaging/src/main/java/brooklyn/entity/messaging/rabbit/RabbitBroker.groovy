@@ -1,5 +1,8 @@
 package brooklyn.entity.messaging.rabbit
 
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -10,16 +13,15 @@ import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.Queue
 import brooklyn.entity.messaging.amqp.AmqpExchange
 import brooklyn.entity.messaging.amqp.AmqpServer
+import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.SshSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.event.adapter.AbstractSensorAdapter
-import brooklyn.event.adapter.FunctionSensorAdapter
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
+
+import com.google.common.base.Objects.ToStringHelper
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
@@ -99,11 +101,11 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
        sensorRegistry.activateAdapters();
 
        serviceUpAdapter.poll(SERVICE_UP);
-     }
+    }
 
     @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + [ 'amqpPort' ]
+    protected ToStringHelper toStringHelper() {
+        return super.toStringHelper().add("amqpPort", getAmqpPort());
     }
 }
 
@@ -148,8 +150,8 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
     public String getDefaultExchangeName() { AmqpExchange.DIRECT }
 
     @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + [ 'virtualHost', 'exchange' ]
+    protected ToStringHelper toStringHelper() {
+        return super.toStringHelper().add("virtualHost", getVirtualHost()).add("exchange", getExchangeName());
     }
 }
 
@@ -183,9 +185,4 @@ public class RabbitQueue extends RabbitDestination implements Queue {
      * Return the AMQP name for the queue.
      */
     public String getQueueName() { name }
-
-    @Override
-    public Collection<String> toStringFieldsToInclude() {
-        return super.toStringFieldsToInclude() + [ 'name' ]
-    }
 }
