@@ -106,8 +106,8 @@ public class HttpTestUtils {
         long startTime = System.currentTimeMillis();
         int status = ((HttpURLConnection) connection).getResponseCode();
         
-        // read fully, then close everything, trying to prevent cached threads at server
-        String s = DefaultGroovyMethods.getText( connection.getInputStream() );
+        // read fully if possible, then close everything, trying to prevent cached threads at server
+        try { DefaultGroovyMethods.getText( connection.getInputStream() ); } catch (Exception e) {}
         try { ((HttpURLConnection) connection).disconnect(); } catch (Exception e) {}
         try { connection.getInputStream().close(); } catch (Exception e) {}
         try { connection.getOutputStream().close(); } catch (Exception e) {}

@@ -2,7 +2,6 @@ package brooklyn.launcher
 
 import brooklyn.config.BrooklynProperties
 
-import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 import groovy.time.TimeDuration
@@ -12,6 +11,7 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 import brooklyn.util.NetworkUtils;
 import brooklyn.management.internal.LocalManagementContext
+import brooklyn.test.HttpTestUtils;
 import brooklyn.test.TestUtils
 import brooklyn.util.internal.TimeExtras
 
@@ -56,33 +56,16 @@ public class WebAppRunnerTest {
         
         try {
             server.start();
-            assertBrooklynAt("http://localhost:8090/");
+            assertBrooklynEventuallyAt("http://localhost:8090/");
         } finally {
             server.stop();
         }
     }
 
-    public static void assertBrooklynAt(String url) {
-        assertUrlHasText(url, "Brooklyn Web Console", "Dashboard");
+    public static void assertBrooklynEventuallyAt(String url) {
+        HttpTestUtils.assertContentEventuallyContainsText(url, "Brooklyn Web Console", "Dashboard");
     }
     
-    /** @deprecated since 0.4.0 use TestUtils.assertUrlHasText */
-    public static void assertUrlHasText(String url, String ...phrases) {
-        TestUtils.assertUrlHasText(url, phrases);
-        
-        String contents;
-        executeUntilSucceeds(timeout:TIMEOUT_MS, maxAttempts:50) {
-            contents = new URL(url).openStream().getText();
-            assertTrue(contents!=null && contents.length()>0)
-        }
-        for (String text: phrases) {
-            if (!contents.contains(text)) {
-                println "CONTENTS OF URL MISSING TEXT: $text\n"+contents
-                fail("URL $url does not contain text: $text")
-            }
-        }
-    }
-        
     @Test
     public void testStartSecondaryWar() {
         if (!NetworkUtils.isPortAvailable(8090))
@@ -93,8 +76,8 @@ public class WebAppRunnerTest {
         try {
             server.start();
 
-            assertBrooklynAt("http://localhost:8090/");
-            assertUrlHasText("http://localhost:8090/hello",
+            assertBrooklynEventuallyAt("http://localhost:8090/");
+            HttpTestUtils.assertContentEventuallyContainsText("http://localhost:8090/hello",
                 "This is the home page for a sample application");
 
         } finally {
@@ -113,8 +96,8 @@ public class WebAppRunnerTest {
             server.start();
             server.deploy("/hello", "hello-world.war");
 
-            assertBrooklynAt("http://localhost:8090/");
-            assertUrlHasText("http://localhost:8090/hello",
+            assertBrooklynEventuallyAt("http://localhost:8090/");
+            HttpTestUtils.assertContentEventuallyContainsText("http://localhost:8090/hello",
                 "This is the home page for a sample application");
 
         } finally {
@@ -131,10 +114,10 @@ public class WebAppRunnerTest {
         try {
             details.getWebServer().deploy("/hello2", "hello-world.war");
 
-            assertBrooklynAt(details.getWebServerUrl());
-            assertUrlHasText(details.getWebServerUrl()+"hello", "This is the home page for a sample application");
-            assertUrlHasText(details.getWebServerUrl()+"hello2", "This is the home page for a sample application");
-            assertUrlStatusCodeEventually(details.getWebServerUrl()+"hello0", 404);
+            assertBrooklynEventuallyAt(details.getWebServerUrl());
+            HttpTestUtils.assertContentEventuallyContainsText(details.getWebServerUrl()+"hello", "This is the home page for a sample application");
+            HttpTestUtils.assertContentEventuallyContainsText(details.getWebServerUrl()+"hello2", "This is the home page for a sample application");
+            HttpTestUtils.assertHttpStatusCodeEventuallyEquals(details.getWebServerUrl()+"hello0", 404);
 
         } finally {
             details.getWebServer().stop();
