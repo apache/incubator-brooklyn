@@ -99,6 +99,9 @@ public class HttpTestUtils {
         try {
             int statusCode = getHttpStatusCode(url);
             fail("Expected url "+url+" unreachable, but got status code "+statusCode);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted for "+url+" (in assertion that unreachable)", e);
         } catch (Exception e) {
             IOException cause = getFirstThrowableOfType(e, IOException.class);
             if (cause != null) {
@@ -124,6 +127,9 @@ public class HttpTestUtils {
     public static void assertHttpStatusCodeEquals(String url, int expectedCode) {
         try {
             assertEquals(getHttpStatusCode(url), expectedCode, "url="+url);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted for "+url+" (in assertion that result code is "+expectedCode+")", e);
         } catch (Exception e) {
             throw new IllegalStateException("Server at "+url+" failed to respond (in assertion that result code is "+expectedCode+"): "+e, e);
         }

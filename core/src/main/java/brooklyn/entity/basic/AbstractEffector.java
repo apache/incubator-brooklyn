@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.EntityType;
 import brooklyn.entity.ParameterType;
 
 import com.google.common.base.Joiner;
@@ -75,7 +76,8 @@ public abstract class AbstractEffector<T> implements Effector<T> {
     public String toString() {
         List<String> parameterNames = new ArrayList<String>(parameters.size());
         for (ParameterType<?> parameter: parameters) {
-            parameterNames.add(parameter.getName());
+            String parameterName = (parameter.getName() != null) ? parameter.getName() : "<unknown>";
+            parameterNames.add(parameterName);
         }
         return name+"["+Joiner.on(",").join(parameterNames)+"]";
     }

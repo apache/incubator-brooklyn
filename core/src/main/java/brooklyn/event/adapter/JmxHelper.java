@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.util.MutableMap;
-import brooklyn.util.RuntimeInterruptedException;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.internal.LanguageUtils;
 import brooklyn.util.internal.TimeExtras;
 

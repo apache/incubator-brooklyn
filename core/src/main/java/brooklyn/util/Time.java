@@ -12,6 +12,7 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
 public class Time {
