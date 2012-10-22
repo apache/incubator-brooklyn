@@ -55,7 +55,7 @@ import com.google.common.collect.Maps;
 public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster.class);
 
-    public static final Effector<Boolean> REPLACE_MEMBER = new MethodEffector<Boolean>(DynamicCluster.class, "replaceMember");
+    public static final Effector<String> REPLACE_MEMBER = new MethodEffector<String>(DynamicCluster.class, "replaceMember");
 
     @SetFromFlag("quarantineFailedEntities")
     public static final ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = new BasicConfigKey<Boolean>(
