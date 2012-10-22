@@ -143,6 +143,13 @@ public class WebAppMonitor implements Runnable {
     public WebAppMonitor assertNoFailures(String message) {
         return assertSuccessPercentage(message, 1.0);
     }
+    public WebAppMonitor assertAttemptsMade(int minAttempts, String message) {
+        if (getAttempts()<minAttempts) {
+            Assert.fail(message+" -- webapp access failures! " +
+                    "(0 attempts made; probably blocked on server)");            
+        }
+        return this;
+    }
     public WebAppMonitor assertSuccessPercentage(String message, double percentage) {
         if ((getFailures() > (1-percentage) * getAttempts()+0.0001) || getAttempts()<=0) {
             Assert.fail(message+" -- webapp access failures! " +

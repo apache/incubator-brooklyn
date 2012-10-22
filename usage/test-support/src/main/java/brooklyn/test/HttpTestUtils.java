@@ -10,10 +10,14 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.HostnameVerifier;
@@ -43,16 +47,20 @@ public class HttpTestUtils {
 
     protected static final Logger LOG = LoggerFactory.getLogger(HttpTestUtils.class);
 
+    static final ExecutorService executor = Executors.newCachedThreadPool();
+    
     /**
      * Connects to the given url and returns the connection.
+     * Caller should <code>connection.getInputStream().close();</code> the result of this
+     * (especially if they are making heavy use of this method).
      */
     public static URLConnection connectToUrl(String u) throws Exception {
         final URL url = new URL(u);
-        final AtomicReference<URLConnection> result = new AtomicReference<URLConnection>();
         final AtomicReference<Exception> exception = new AtomicReference<Exception>();
         
-        Thread thread = new Thread("url-test-connector") {
-            public void run() {
+        // sometimes openConnection hangs, so run in background
+        Future<URLConnection> f = executor.submit(new Callable<URLConnection>() {
+            public URLConnection call() {
                 try {
                     URLConnection connection = url.openConnection();
                     TrustingSslSocketFactory.configure(connection);
@@ -64,28 +72,31 @@ public class HttpTestUtils {
                     connection.connect();
     
                     connection.getContentLength(); // Make sure the connection is made.
-                    result.set(connection);
+                    return connection;
                 } catch (Exception e) {
                     exception.set(e);
                     LOG.debug("Error connecting to url "+url+" (propagating)", e);
                 }
+                return null;
             }
-        };
+        });
         try {
-            thread.start();
-            thread.join(60*1000);
-            
-            if (thread.isAlive()) {
-                throw new IllegalStateException("Connect to URL not complete within 60 seconds, for url "+url+"; stacktrace "+Arrays.toString(thread.getStackTrace()));
-            } else if (exception.get() != null) {
+            URLConnection result = null;
+            try {
+                result = f.get(60, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IllegalStateException("Connect to URL not complete within 60 seconds, for url "+url+": "+e);
+            }
+            if (exception.get() != null) {
                 LOG.debug("Error connecting to url "+url+", thread caller of "+exception, new Throwable("source of rethrown error "+exception));
                 throw exception.get();
             } else {
-                return result.get();
+                return result;
             }
-            
         } finally {
-            thread.interrupt();
+            f.cancel(true);
         }
     }
 
@@ -93,6 +104,14 @@ public class HttpTestUtils {
         URLConnection connection = connectToUrl(url);
         long startTime = System.currentTimeMillis();
         int status = ((HttpURLConnection) connection).getResponseCode();
+        
+        // read fully, then close everything, trying to prevent cached threads at server
+        String s = DefaultGroovyMethods.getText( connection.getInputStream() );
+        try { ((HttpURLConnection) connection).disconnect(); } catch (Exception e) {}
+        try { connection.getInputStream().close(); } catch (Exception e) {}
+        try { connection.getOutputStream().close(); } catch (Exception e) {}
+        try { ((HttpURLConnection) connection).getErrorStream().close(); } catch (Exception e) {}
+        
         if (LOG.isDebugEnabled())
             LOG.debug("connection to {} ({}ms) gives {}", new Object[] { url, (System.currentTimeMillis()-startTime), status });
         return status;
