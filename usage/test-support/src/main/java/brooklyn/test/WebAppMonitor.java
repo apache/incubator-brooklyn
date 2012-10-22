@@ -57,11 +57,11 @@ public class WebAppMonitor implements Runnable {
                     lastTime.set(System.currentTimeMillis()-startTime);
                     lastStatus.set(code);
                     if (isResponseOkay(code)) {
+                        successes.incrementAndGet();
+                    } else {
                         lastFailure.set(code);
                         failures.incrementAndGet();
                         onFailure("return code "+code);
-                    } else {
-                        successes.incrementAndGet();
                     }
                 }
             } catch (Exception e) {
