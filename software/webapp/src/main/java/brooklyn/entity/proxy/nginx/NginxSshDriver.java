@@ -3,13 +3,10 @@ package brooklyn.entity.proxy.nginx;
 import static java.lang.String.format;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Throwables;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
@@ -21,6 +18,8 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.task.Tasks;
+
+import com.google.common.base.Throwables;
 
 /**
  * Start a {@link NginxController} in a {@link brooklyn.location.Location} accessible over ssh.
@@ -245,11 +244,25 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             return;
         }
         
+        doReloadNow();
+    }
+    
+    /**
+     * Instructs nginx to reload its configuration (without restarting, so don't lose any requests).
+     * Can be overridden if necessary, to change the call used for reloading.
+     */
+    protected void doReloadNow() {
+        /*
+         * We use kill -HUP because that is recommended at http://wiki.nginx.org/CommandLine, 
+         * but there is no noticeable difference (i.e. no impact on #365) compared to:
+         *   sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
+         * 
+         * Note that if conf file is invalid, you'll get no stdout/stderr from `kill` but you
+         * do from using `nginx ... -s reload` so that can be handly when manually debugging.
+         */
         newScript(RESTARTING).
             body.append(
                 format("cd %s", getRunDir()),
-//                sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
-                // we prefer the below as per http://wiki.nginx.org/CommandLine, though no noticeable difference with above (no impact on #365)
                 format("export PID=`cat %s`", NGINX_PID_FILE),
                 "kill -HUP $PID"
         ).execute();
