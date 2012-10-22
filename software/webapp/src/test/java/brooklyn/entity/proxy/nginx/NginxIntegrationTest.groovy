@@ -1,12 +1,12 @@
 package brooklyn.entity.proxy.nginx;
 
+import static brooklyn.test.HttpTestUtils.*
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -17,12 +17,12 @@ import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.event.AttributeSensor
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.test.HttpTestUtils;
+import brooklyn.test.TestUtils
+import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
-
-import com.google.common.base.Preconditions
 
 /**
  * Test the operation of the {@link NginxController} class.
@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions
 public class NginxIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(NginxIntegrationTest.class)
 
+    static final String HELLO_WAR_URL = "classpath://hello-world.war";
     static { TimeExtras.init() }
 
     private TestApplication app
@@ -72,11 +73,9 @@ public class NginxIntegrationTest {
     @Test(groups = "Integration")
     public void testCanStartupAndShutdown() {
         def template = { Map properties -> new JBoss7Server(properties) }
-        URL war = getClass().getClassLoader().getResource("hello-world.war")
-        Preconditions.checkState war != null, "Unable to locate resource $war"
         
         serverPool = new DynamicCluster(owner:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, war.path)
+        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
         
         nginx = new NginxController([
 	            "owner" : app,
@@ -88,11 +87,12 @@ public class NginxIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
         // App-servers and nginx has started
-        assertAttributeEventually(serverPool, SoftwareProcessEntity.SERVICE_UP, true);
-        serverPool.members.each {
-            assertAttributeEventually(it, SoftwareProcessEntity.SERVICE_UP, true);
+        assertEventually {        
+            serverPool.members.each { 
+                assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP);
+            }
+            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP);
         }
-        assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
 
         // URLs reachable        
         assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 200);
@@ -116,11 +116,9 @@ public class NginxIntegrationTest {
     @Test(groups = "Integration")
     public void testDomainless() {
         def template = { Map properties -> new JBoss7Server(properties) }
-        URL war = getClass().getClassLoader().getResource("hello-world.war")
-        Preconditions.checkState war != null, "Unable to locate resource $war"
         
         serverPool = new DynamicCluster(owner:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, war.path)
+        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
         
         nginx = new NginxController([
                 "owner" : app,
@@ -188,4 +186,133 @@ public class NginxIntegrationTest {
         assertUrlStatusCodeEventually(url1, 404);
         assertUrlStatusCodeEventually(url2, 404);
     }
+    
+    /** Test that site access does not fail even while nginx is reloaded */
+    // FIXME test disabled -- reload isn't a problem, but #365 is
+    @Test(enabled = false, groups = "Integration")
+    public void testServiceContinuity() {
+        def template = { Map properties -> new JBoss7Server(properties) }
+        
+        serverPool = new DynamicCluster(owner:app, factory:template, initialSize:1)
+        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
+        
+        nginx = new NginxController(app, serverPool: serverPool);
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+
+        assertEventually {        
+            serverPool.members.each { 
+                assertHttpStatusCodeEquals it.getAttribute(WebAppService.ROOT_URL), 200;
+            }
+            assertHttpStatusCodeEquals nginx.getAttribute(WebAppService.ROOT_URL), 200;
+        }
+
+        WebAppMonitor monitor = new WebAppMonitor(nginx.getAttribute(WebAppService.ROOT_URL)).
+            logFailures(LOG).
+            delayMillis(0);
+        Thread t = new Thread(monitor);
+        t.start();
+
+        try {
+            Thread.sleep(1*1000);
+            LOG.info("service continuity test, startup, "+monitor.getAttempts()+" requests made");
+            monitor.assertAttemptsMade(10, "startup").assertNoFailures("startup").resetCounts();
+            
+            for (int i=0; i<20; i++) {
+                nginx.reload();
+                Thread.sleep(500);
+                LOG.info("service continuity test, iteration "+i+", "+monitor.getAttempts()+" requests made");
+                monitor.assertAttemptsMade(10, "reloaded").assertNoFailures("reloaded").resetCounts();
+            }
+            
+        } finally {
+            t.interrupt();
+        }
+        
+        app.stop();
+
+        // Services have stopped
+        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        serverPool.members.each {
+            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        }
+    }
+
+    // FIXME test disabled -- issue #365
+    /*
+     * This currently makes no assertions, but writes out the number of sequential reqs per sec
+     * supported with nginx and jboss.
+     * <p>
+     * jboss is (now) steady, at 6k+, since we close the connections in HttpTestUtils.getHttpStatusCode.
+     * but nginx still hits problems, after about 15k reqs, something is getting starved in nginx.
+     */
+    @Test(enabled=false, groups = "Integration")
+    public void testContinuityNginxAndJboss() {
+        def template = { Map properties -> new JBoss7Server(properties) }
+        
+        serverPool = new DynamicCluster(owner:app, factory:template, initialSize:1)
+        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
+        
+        nginx = new NginxController(app, serverPool: serverPool);
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+
+        String nginxUrl = nginx.getAttribute(WebAppService.ROOT_URL);
+        String jbossUrl;
+        assertEventually {
+            serverPool.members.each {
+                jbossUrl = it.getAttribute(WebAppService.ROOT_URL);
+                assertHttpStatusCodeEquals jbossUrl, 200;
+            }
+            assertHttpStatusCodeEquals nginxUrl, 200;
+        }
+
+        Thread t = new Thread() {
+            public void run() {
+                long lastReportTime = System.currentTimeMillis();
+                int num = 0;
+                while (true) {
+                    try {
+                        num++;
+                        int code = HttpTestUtils.getHttpStatusCode(nginxUrl);
+                        if (code!=200) LOG.info("NGINX GOT: "+code);
+                        else LOG.debug("NGINX GOT: "+code);
+                        if (System.currentTimeMillis()>=lastReportTime+1000) {
+                            LOG.info("NGINX DID "+num+" requests in last "+(System.currentTimeMillis()-lastReportTime)+"ms");
+                            num=0;
+                            lastReportTime = System.currentTimeMillis();
+                        }
+                    } catch (Exception e) {
+                        LOG.info("NGINX GOT: "+e);
+                    }
+                }
+            }
+        };
+        t.start();
+        
+        Thread t2 = new Thread() {
+            public void run() {
+                long lastReportTime = System.currentTimeMillis();
+                int num = 0;
+        while (true) {
+            try {
+                num++;
+                int code = HttpTestUtils.getHttpStatusCode(jbossUrl);
+                if (code!=200) LOG.info("JBOSS GOT: "+code);
+                else LOG.debug("JBOSS GOT: "+code);
+                if (System.currentTimeMillis()>=1000+lastReportTime) {
+                    LOG.info("JBOSS DID "+num+" requests in last "+(System.currentTimeMillis()-lastReportTime)+"ms");
+                    num=0;
+                    lastReportTime = System.currentTimeMillis();
+                }
+            } catch (Exception e) {
+                LOG.info("JBOSS GOT: "+e);
+            }
+        }
+            }
+        };
+        t2.start();
+        
+        t2.join();
+    }
+
 }

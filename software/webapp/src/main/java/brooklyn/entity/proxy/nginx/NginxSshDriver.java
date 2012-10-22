@@ -1,6 +1,5 @@
 package brooklyn.entity.proxy.nginx;
 
-
 import static java.lang.String.format;
 
 import java.util.Map;
@@ -27,7 +26,9 @@ import brooklyn.util.task.Tasks;
  * Start a {@link NginxController} in a {@link brooklyn.location.Location} accessible over ssh.
  */
 public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements NginxDriver {
+
     public static final Logger log = LoggerFactory.getLogger(NginxSshDriver.class);
+    private static final String NGINX_PID_FILE = "logs/nginx.pid";
 
     protected boolean customizationCompleted = false;
 
@@ -163,14 +164,14 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public boolean isRunning() {
-        Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
+        Map flags = MutableMap.of("usePidFile", NGINX_PID_FILE);
         return newScript(flags, CHECK_RUNNING).execute() == 0;
     }
 
     @Override
     public void stop() {
         // Don't `kill -9`, as that doesn't stop the worker processes
-        String pidFile = "logs/nginx.pid";
+        String pidFile = NGINX_PID_FILE;
         Map flags = MutableMap.of("usePidFile", false);
 
         newScript(flags, STOPPING).
@@ -239,11 +240,13 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             return;
         }
         
-        Map flags = MutableMap.of("usePidFile", "logs/nginx.pid");
-        newScript(flags, RESTARTING).
-                body.append(
+        newScript(RESTARTING).
+            body.append(
                 format("cd %s", getRunDir()),
-                sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
+//                sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
+                // we prefer the below as per http://wiki.nginx.org/CommandLine, though no noticeable difference with above (no impact on #365)
+                format("export PID=`cat %s`", NGINX_PID_FILE),
+                "kill -HUP $PID"
         ).execute();
     }
     
