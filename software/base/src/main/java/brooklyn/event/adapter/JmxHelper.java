@@ -132,9 +132,8 @@ public class JmxHelper {
         this(toConnectorUrl(entity), entity, entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD));
     }
     
-    // TODO deprecate the constructors below, supporting just the above
-    // (or create a new class separating out entity-based connections vs using a connection, 
-    // then deprecate this class)
+    // TODO split this in to two classes, one for entities, and one entity-neutral
+    // (simplifying set of constructors below)
     
     public JmxHelper(String url) {
         this(url, null, null);

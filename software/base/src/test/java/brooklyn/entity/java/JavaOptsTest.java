@@ -138,38 +138,6 @@ public class JavaOptsTest {
         assertHasExpectedCmds(expectedCmds, expectedEnvs);
     }
 
-    /*
-    java.lang.AssertionError: Cmd not present: expected=[
-java $JAVA_OPTS -cp "lib/*" my.Main  >> /tmp/brooklyn-alex/apps/pdbzOGUQ/entities/
-        VanillaJavaApp_DmoMEajV/console 2>&1 </dev/null &
-java $JAVA_OPTS -cp "lib/*" my.Main  >> /tmp/brooklyn-alex/apps/pdbzOGUQ/entities/
-        VanillaJavaApp_DmoMEajV/console 2>&1 </dev/null &
-]; actual=[ExecCmd[
-
-installing VanillaJavaApp[id=DmoMEajV,displayName=VanillaJavaApp:DmoM]: [
-export INSTALL_DIR="/tmp/brooklyn-alex/installs/VanillaJavaApp", 
-mkdir -p $INSTALL_DIR, cd $INSTALL_DIR, test -f BROOKLYN && exit 0, date > $INSTALL_DIR/BROOKLYN]; 
-{out=, err=, logPrefix=DmoMEajV@null}; 
-{JAVA_OPTS=-Dmykey=myval -Xms128m -Xmx512m -XX:MaxPermSize=512m}
-
-], ExecCmd[customizing VanillaJavaApp[id=DmoMEajV,displayName=VanillaJavaApp:DmoM]: [
-export RUN_DIR="/tmp/brooklyn-alex/apps/pdbzOGUQ/entities/VanillaJavaApp_DmoMEajV", 
-mkdir -p $RUN_DIR, cd $RUN_DIR, 
-mkdir -p /tmp/brooklyn-alex/apps/pdbzOGUQ/entities/VanillaJavaApp_DmoMEajV/lib]; 
-{logPrefix=DmoMEajV@null}; 
-{JAVA_OPTS=-Dmykey=myval -Xms128m -Xmx512m -XX:MaxPermSize=512m}], 
-
-ExecCmd[launching VanillaJavaApp[id=DmoMEajV,displayName=VanillaJavaApp:DmoM]: [
-
-export RUN_DIR="/tmp/brooklyn-alex/apps/pdbzOGUQ/entities/VanillaJavaApp_DmoMEajV", 
-mkdir -p $RUN_DIR, cd $RUN_DIR, echo "launching: java $JAVA_OPTS -cp 'lib/*' my.Main ", 
-java $JAVA_OPTS -cp "lib/*" my.Main  >> /tmp/brooklyn-alex/apps/pdbzOGUQ/entities/
-        VanillaJavaApp_DmoMEajV/console 2>&1 </dev/null &
-
-, 
- * echo $! > /tmp/brooklyn-alex/apps/pdbzOGUQ/entities/VanillaJavaApp_DmoMEajV/pid.txt]; {out=, err=, logPrefix=DmoMEajV@null}; {JAVA_OPTS=-Dmykey=myval -Xms128m -Xmx512m -XX:MaxPermSize=512m}], ExecCmd[check-running VanillaJavaApp[id=DmoMEajV,displayName=VanillaJavaApp:DmoM]: [export RUN_DIR="/tmp/brooklyn-alex/apps/pdbzOGUQ/entities/VanillaJavaApp_DmoMEajV", mkdir -p $RUN_DIR, cd $RUN_DIR, test -f /tmp/brooklyn-alex/apps/pdbzOGUQ/entities/VanillaJavaApp_DmoMEajV/pid.txt || exit 1, ps -p `cat /tmp/brooklyn-alex/apps/pdbzOGUQ/entities/VanillaJavaApp_DmoMEajV/pid.txt`]; {logPrefix=DmoMEajV@null}; {JAVA_OPTS=-Dmykey=myval -Xms128m -Xmx512m -XX:MaxPermSize=512m}]]
- */
-
     @Test
     public void testPassesJavaSysProps() {
         VanillaJavaApp javaProcess = new VanillaJavaApp(MutableMap.builder()
@@ -370,13 +338,5 @@ java $JAVA_OPTS -cp "lib/*" my.Main  >> /tmp/brooklyn-alex/apps/pdbzOGUQ/entitie
             EXPECTED_SECURE_JMX_OPTS,
             FORBIDDEN_SECURE_JMX_OPTS);
     }
-/*
-
-2012-10-18 22:47:40,875 WARN  Missing phrases in commands: [-Dcom.sun.management.jmxremote.port=1]
-COMMANDS: [ExecCmd[JMX_SETUP_PREINSTALL brooklyn.entity.java.JavaOptsTest$3[id=CPEr9F4S,displayName=:CPEr]: [mkdir -p /tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S]; {logPrefix=CPEr9F4S@null}; {JAVA_OPTS=-javaagent:/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/brooklyn-jmxmp-agent-shaded-0.5.0-SNAPSHOT.jar -Xms128m -Xmx512m -XX:MaxPermSize=512m 
-
--Dcom.sun.management.jmxremote -Djava.rmi.server.hostname=localhost -Dbrooklyn.jmxmp.port=1 -Dcom.sun.management.jmxremote.ssl=true -Dbrooklyn.jmxmp.ssl.authenticate=true -Dcom.sun.management.jmxremote.authenticate=false -Dbrooklyn.jmxmp.ssl.keyStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-keystore -Dbrooklyn.jmxmp.ssl.trustStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-truststore}], ExecCmd[installing brooklyn.entity.java.JavaOptsTest$3[id=CPEr9F4S,displayName=:CPEr]: [export INSTALL_DIR="/tmp/brooklyn-alex/installs/brooklyn.entity.java.JavaOptsTest$3", mkdir -p $INSTALL_DIR, cd $INSTALL_DIR, test -f BROOKLYN && exit 0, date > $INSTALL_DIR/BROOKLYN]; {out=, err=, logPrefix=CPEr9F4S@null}; {JAVA_OPTS=-javaagent:/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/brooklyn-jmxmp-agent-shaded-0.5.0-SNAPSHOT.jar -Xms128m -Xmx512m -XX:MaxPermSize=512m -Dcom.sun.management.jmxremote -Djava.rmi.server.hostname=localhost -Dbrooklyn.jmxmp.port=1 -Dcom.sun.management.jmxremote.ssl=true -Dbrooklyn.jmxmp.ssl.authenticate=true -Dcom.sun.management.jmxremote.authenticate=false -Dbrooklyn.jmxmp.ssl.keyStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-keystore -Dbrooklyn.jmxmp.ssl.trustStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-truststore}], ExecCmd[customizing brooklyn.entity.java.JavaOptsTest$3[id=CPEr9F4S,displayName=:CPEr]: [export RUN_DIR="/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S", mkdir -p $RUN_DIR, cd $RUN_DIR, mkdir -p /tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/lib]; {logPrefix=CPEr9F4S@null}; {JAVA_OPTS=-javaagent:/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/brooklyn-jmxmp-agent-shaded-0.5.0-SNAPSHOT.jar -Xms128m -Xmx512m -XX:MaxPermSize=512m -Dcom.sun.management.jmxremote -Djava.rmi.server.hostname=localhost -Dbrooklyn.jmxmp.port=1 -Dcom.sun.management.jmxremote.ssl=true -Dbrooklyn.jmxmp.ssl.authenticate=true -Dcom.sun.management.jmxremote.authenticate=false -Dbrooklyn.jmxmp.ssl.keyStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-keystore -Dbrooklyn.jmxmp.ssl.trustStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-truststore}], ExecCmd[launching brooklyn.entity.java.JavaOptsTest$3[id=CPEr9F4S,displayName=:CPEr]: [export RUN_DIR="/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S", mkdir -p $RUN_DIR, cd $RUN_DIR, echo "launching: java $JAVA_OPTS -cp 'lib/*' my.Main ", java $JAVA_OPTS -cp "lib/*" my.Main  >> /tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/console 2>&1 </dev/null &, echo $! > /tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/pid.txt]; {out=, err=, logPrefix=CPEr9F4S@null}; {JAVA_OPTS=-javaagent:/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/brooklyn-jmxmp-agent-shaded-0.5.0-SNAPSHOT.jar -Xms128m -Xmx512m -XX:MaxPermSize=512m -Dcom.sun.management.jmxremote -Djava.rmi.server.hostname=localhost -Dbrooklyn.jmxmp.port=1 -Dcom.sun.management.jmxremote.ssl=true -Dbrooklyn.jmxmp.ssl.authenticate=true -Dcom.sun.management.jmxremote.authenticate=false -Dbrooklyn.jmxmp.ssl.keyStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-keystore -Dbrooklyn.jmxmp.ssl.trustStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-truststore}], ExecCmd[check-running brooklyn.entity.java.JavaOptsTest$3[id=CPEr9F4S,displayName=:CPEr]: [export RUN_DIR="/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S", mkdir -p $RUN_DIR, cd $RUN_DIR, test -f /tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/pid.txt || exit 1, ps -p `cat /tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/pid.txt`]; {logPrefix=CPEr9F4S@null}; {JAVA_OPTS=-javaagent:/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/brooklyn-jmxmp-agent-shaded-0.5.0-SNAPSHOT.jar -Xms128m -Xmx512m -XX:MaxPermSize=512m -Dcom.sun.management.jmxremote -Djava.rmi.server.hostname=localhost -Dbrooklyn.jmxmp.port=1 -Dcom.sun.management.jmxremote.ssl=true -Dbrooklyn.jmxmp.ssl.authenticate=true -Dcom.sun.management.jmxremote.authenticate=false -Dbrooklyn.jmxmp.ssl.keyStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-keystore -Dbrooklyn.jmxmp.ssl.trustStore=/tmp/brooklyn-alex/apps/P57MMAts/entities/brooklyn.entity.java.JavaOptsTest$3_CPEr9F4S/jmx-truststore}]]
-
-
- */
+    
 }

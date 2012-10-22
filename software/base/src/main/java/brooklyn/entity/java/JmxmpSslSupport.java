@@ -24,7 +24,6 @@ public class JmxmpSslSupport {
     
     protected final JavaSoftwareProcessSshDriver driver;
     
-    // for tests
     private KeyStore agentTrustStore;
     private KeyStore agentKeyStore;
 
