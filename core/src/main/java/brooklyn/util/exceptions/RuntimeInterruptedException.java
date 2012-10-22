@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.exceptions;
 
 /**
  * A {@link RuntimeException} that is thrown when a Thread is interrupted.

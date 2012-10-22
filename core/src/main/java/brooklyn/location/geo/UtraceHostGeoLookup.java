@@ -14,10 +14,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.Exceptions;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.RuntimeInterruptedException;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.base.Throwables;
 
