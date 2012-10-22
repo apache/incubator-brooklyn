@@ -37,19 +37,19 @@ public class SshMachineLocationPerformanceTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SshMachineLocationPerformanceTest.class);
     
-    private SshMachineLocation tool;
+    private SshMachineLocation machine;
     private ListeningExecutorService executor;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        tool = new SshMachineLocation(MutableMap.of("address", "localhost"));
+        machine = new SshMachineLocation(MutableMap.of("address", "localhost"));
         executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
     }
     
     @AfterMethod(alwaysRun=true)
     public void afterMethod() throws Exception {
         if (executor != null) executor.shutdownNow();
-        Closeables.closeQuietly(tool);
+        Closeables.closeQuietly(machine);
     }
 
     @Test(groups = {"Integration"})
@@ -74,7 +74,7 @@ public class SshMachineLocationPerformanceTest {
     }
 
     private void runExecManyCommands(final List<String> cmds, String context, int iterations) throws Exception {
-        runExecManyCommands(cmds, context, iterations);
+        runExecManyCommands(cmds, context, 1, iterations);
     }
     
     private void runExecManyCommands(final List<String> cmds, String context, int concurrentRuns, int iterations) throws Exception {
@@ -114,6 +114,6 @@ public class SshMachineLocationPerformanceTest {
     }
 
     private int execScript(List<String> cmds) {
-        return tool.execScript("mysummary", cmds);
+        return machine.execScript("mysummary", cmds);
     }
 }

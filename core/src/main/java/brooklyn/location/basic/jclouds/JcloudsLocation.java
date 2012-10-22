@@ -785,7 +785,6 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         LOG.info("Releasing machine {} in {}, instance id {}", new Object[] {machine, this, instanceId});
         
-        machine.close();
         removeChildLocation(machine);
         ComputeService computeService = null;
         try {

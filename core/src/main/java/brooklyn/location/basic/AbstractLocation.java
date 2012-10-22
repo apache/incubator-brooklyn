@@ -2,6 +2,7 @@ package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -21,6 +22,7 @@ import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.Closeables;
 
 /**
  * A basic implementation of the {@link Location} interface.
@@ -141,7 +143,11 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     }
     
     protected boolean removeChildLocation(Location child) {
-        return childLocations.remove(child);
+        boolean removed = childLocations.remove(child);
+        if (removed && child instanceof Closeable) {
+            Closeables.closeQuietly((Closeable)child);
+        }
+        return removed;
     }
 
     public void setParentLocation(Location parent) {
