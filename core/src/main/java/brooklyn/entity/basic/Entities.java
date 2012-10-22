@@ -30,6 +30,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.task.ParallelTask;
 
 import com.google.common.collect.Iterables;
@@ -165,6 +166,55 @@ public class Entities {
 		out.flush();
 	}
 
+    public static void dumpInfo(Location loc) {
+        try {
+            dumpInfo(loc, new PrintWriter(System.out), "", "  ");
+        } catch (IOException exc) {
+            // system.out throwing an exception is odd, so don't have IOException on signature
+            throw new RuntimeException(exc);
+        }
+    }
+    public static void dumpInfo(Location loc, Writer out) throws IOException {
+        dumpInfo(loc, out, "", "  ");
+    }
+    public static void dumpInfo(Location loc, String currentIndentation, String tab) throws IOException {
+        dumpInfo(loc, new PrintWriter(System.out), currentIndentation, tab);
+    }
+    public static void dumpInfo(Location loc, Writer out, String currentIndentation, String tab) throws IOException {
+        out.append(currentIndentation+loc.toString()+"\n");
+        
+        for (Map.Entry<String,?> entry : sortMap(loc.getLocationProperties()).entrySet()) {
+            String key = entry.getKey();
+            Object val = entry.getValue();
+            if (!isTrivial(val)) {
+                out.append(currentIndentation+tab+tab+key);
+                out.append(" = ");
+                if (isSecret(key)) out.append("xxxxxxxx");
+                else out.append(""+val);
+                out.append("\n");
+            }
+        }
+        
+        
+        for (Map.Entry<String,?> entry : sortMap(FlagUtils.getFieldsWithFlags(loc)).entrySet()) {
+            String key = entry.getKey();
+            Object val = entry.getValue();
+            if (!isTrivial(val)) {
+                out.append(currentIndentation+tab+tab+key);
+                out.append(" = ");
+                if (isSecret(key)) out.append("xxxxxxxx");
+                else out.append(""+val);
+                out.append("\n");
+            }
+        }
+        
+        for (Location it : loc.getChildLocations()) {
+            dumpInfo(it, out, currentIndentation+tab, tab);
+        }
+        
+        out.flush();
+    }
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
     public static List<Sensor<?>> sortSensors(Set<Sensor<?>> sensors) {
 	    List result = new ArrayList(sensors);
@@ -177,6 +227,7 @@ public class Entities {
 	    });
 	    return result;
     }
+	
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static List<ConfigKey<?>> sortConfigKeys(Set<ConfigKey<?>> configs) {
         List result = new ArrayList(configs);
@@ -187,6 +238,17 @@ public class Entities {
                     }
             
         });
+        return result;
+    }
+    
+    public static <T> Map<String, T> sortMap(Map<String, T> map) {
+        Map<String,T> result = Maps.newLinkedHashMap();
+        List<String> order = Lists.newArrayList(map.keySet());
+        Collections.sort(order, String.CASE_INSENSITIVE_ORDER);
+        
+        for (String key : order) {
+            result.put(key, map.get(key));
+        }
         return result;
     }
     
