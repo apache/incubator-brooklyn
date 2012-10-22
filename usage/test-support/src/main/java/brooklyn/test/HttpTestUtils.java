@@ -75,7 +75,7 @@ public class HttpTestUtils {
                     return connection;
                 } catch (Exception e) {
                     exception.set(e);
-                    LOG.debug("Error connecting to url "+url+" (propagating)", e);
+                    LOG.debug("Error connecting to url "+url+" (propagating): "+e, e);
                 }
                 return null;
             }
@@ -87,6 +87,7 @@ public class HttpTestUtils {
             } catch (InterruptedException e) {
                 throw e;
             } catch (Exception e) {
+                LOG.debug("Error connecting to url "+url+", probably timed out (rethrowing): "+e);
                 throw new IllegalStateException("Connect to URL not complete within 60 seconds, for url "+url+": "+e);
             }
             if (exception.get() != null) {

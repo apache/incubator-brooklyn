@@ -220,7 +220,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             body.append(
                 format("cd %s", getRunDir()),
 //                sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
-                // alternatively can do:
+                // we prefer the below as per http://wiki.nginx.org/CommandLine, though no noticeable difference with above (no impact on #365)
                 format("export PID=`cat %s`", NGINX_PID_FILE),
                 "kill -HUP $PID"
         ).execute();

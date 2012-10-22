@@ -55,13 +55,12 @@ public class WebAppMonitor implements Runnable {
                 if (preAttempt()) {
                     int code = HttpTestUtils.getHttpStatusCode(url);
                     lastTime.set(System.currentTimeMillis()-startTime);
-                    if (code!=200) {
-                        lastStatus.set(code);
+                    lastStatus.set(code);
+                    if (isResponseOkay(code)) {
                         lastFailure.set(code);
                         failures.incrementAndGet();
                         onFailure("return code "+code);
                     } else {
-                        lastStatus.set(null);
                         successes.incrementAndGet();
                     }
                 }
@@ -87,6 +86,11 @@ public class WebAppMonitor implements Runnable {
             isActive.notifyAll();
         }
     }
+    
+    public boolean isResponseOkay(Object code) {
+        return code!=null && new Integer(200).equals(code);
+    }
+    
     public void setDelayMillis(long delayMillis) {
         this.delayMillis = delayMillis;
     }
@@ -117,6 +121,9 @@ public class WebAppMonitor implements Runnable {
     public int getAttempts() {
         return getFailures()+getSuccesses();
     }
+    public boolean getLastWasFailed() {
+        return isResponseOkay(getLastStatus());
+    }
     public Object getLastStatus() {
         return lastStatus.get();
     }
@@ -141,7 +148,7 @@ public class WebAppMonitor implements Runnable {
     }
     
     public WebAppMonitor assertNoFailures(String message) {
-        return assertSuccessPercentage(message, 1.0);
+        return assertSuccessFraction(message, 1.0);
     }
     public WebAppMonitor assertAttemptsMade(int minAttempts, String message) {
         if (getAttempts()<minAttempts) {
@@ -150,12 +157,12 @@ public class WebAppMonitor implements Runnable {
         }
         return this;
     }
-    public WebAppMonitor assertSuccessPercentage(String message, double percentage) {
+    public WebAppMonitor assertSuccessFraction(String message, double percentage) {
         if ((getFailures() > (1-percentage) * getAttempts()+0.0001) || getAttempts()<=0) {
             Assert.fail(message+" -- webapp access failures! " +
             		"("+getFailures()+" failed of "+getAttempts()+" monitoring attempts) against "+getUrl()+"; " +
             		"last was "+getLastStatus()+" taking "+getLastTime()+"ms" +
-            		(getLastStatus()==null ? "; last failure was "+getLastFailure() : ""));
+            		(getLastFailure()!=null ? "; last failure was "+getLastFailure() : ""));
         }
         return this;
     }

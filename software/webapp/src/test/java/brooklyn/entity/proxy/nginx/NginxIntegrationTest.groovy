@@ -188,6 +188,7 @@ public class NginxIntegrationTest {
     }
     
     /** Test that site access does not fail even while nginx is reloaded */
+    // FIXME test disabled -- reload isn't a problem, but #365 is
     @Test(enabled = false, groups = "Integration")
     public void testServiceContinuity() {
         def template = { Map properties -> new JBoss7Server(properties) }
@@ -237,6 +238,7 @@ public class NginxIntegrationTest {
         }
     }
 
+    // FIXME test disabled -- issue #365
     /*
      * This currently makes no assertions, but writes out the number of sequential reqs per sec
      * supported with nginx and jboss.
@@ -268,21 +270,21 @@ public class NginxIntegrationTest {
             public void run() {
                 long lastReportTime = System.currentTimeMillis();
                 int num = 0;
-        while (true) {
-            try {
-                num++;
-                int code = HttpTestUtils.getHttpStatusCode(nginxUrl);
-                if (code!=200) LOG.info("NGINX GOT: "+code);
-                else LOG.debug("NGINX GOT: "+code);
-                if (System.currentTimeMillis()>=lastReportTime+1000) {
-                    LOG.info("NGINX DID "+num+" requests in last "+(System.currentTimeMillis()-lastReportTime)+"ms");
-                    num=0;
-                    lastReportTime = System.currentTimeMillis();
+                while (true) {
+                    try {
+                        num++;
+                        int code = HttpTestUtils.getHttpStatusCode(nginxUrl);
+                        if (code!=200) LOG.info("NGINX GOT: "+code);
+                        else LOG.debug("NGINX GOT: "+code);
+                        if (System.currentTimeMillis()>=lastReportTime+1000) {
+                            LOG.info("NGINX DID "+num+" requests in last "+(System.currentTimeMillis()-lastReportTime)+"ms");
+                            num=0;
+                            lastReportTime = System.currentTimeMillis();
+                        }
+                    } catch (Exception e) {
+                        LOG.info("NGINX GOT: "+e);
+                    }
                 }
-            } catch (Exception e) {
-                LOG.info("NGINX GOT: "+e);
-            }
-        }
             }
         };
         t.start();
