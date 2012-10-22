@@ -7,32 +7,42 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
 
-import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.trait.Changeable;
+import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.EntityStartException;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.MutableList;
+import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -45,8 +55,18 @@ import com.google.common.collect.Maps;
 public class DynamicCluster extends AbstractGroup implements Cluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicCluster.class);
 
+    public static final Effector<Boolean> REPLACE_MEMBER = new MethodEffector<Boolean>(DynamicCluster.class, "replaceMember");
+
+    @SetFromFlag("quarantineFailedEntities")
+    public static final ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = new BasicConfigKey<Boolean>(
+            Boolean.class, "dynamiccluster.quarantineFailedEntities", "Whether to guarantine entities that fail to start, or to try to clean them up", false);
+
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 
+    public static final BasicNotificationSensor<Entity> ENTITY_QUARANTINED = new BasicNotificationSensor<Entity>(Entity.class, "dynamiccluster.entityQuarantined", "Entity failed to start, and has been quarantined");
+
+    public static final AttributeSensor<Group> QUARANTINE_GROUP = new BasicAttributeSensor<Group>(Group.class, "dynamiccluster.quarantineGroup", "Group of quarantined entities that failed to start");
+    
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
     
@@ -113,13 +133,30 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         this.factory = factory;
     }
     
+    private boolean isQuarantineEnabled() {
+        return getConfig(QUARANTINE_FAILED_ENTITIES);
+    }
+    
+    private Group getQuarantineGroup() {
+        return getAttribute(QUARANTINE_GROUP);
+    }
+    
     public void start(Collection<? extends Location> locs) {
+        if (isQuarantineEnabled()) {
+            Group quarantineGroup = new BasicGroup(MutableMap.of("displayName", "quarantine"), this);
+            getManagementContext().manage(quarantineGroup);
+            setAttribute(QUARANTINE_GROUP, quarantineGroup);
+        }
+        
         Preconditions.checkNotNull(locs, "locations must be supplied");
         Preconditions.checkArgument(locs.size() == 1, "Exactly one location must be supplied");
         location = Iterables.getOnlyElement(locs);
         getLocations().add(location);
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         resize(getConfig(INITIAL_SIZE));
+        if (getCurrentSize() != getConfig(INITIAL_SIZE)) {
+            throw new IllegalStateException("On start of cluster "+this+", failed to get to initial size of "+getConfig(INITIAL_SIZE)+"; size is "+getCurrentSize());
+        }
         for (Policy it : getPolicies()) { it.resume(); }
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         setAttribute(SERVICE_UP, calculateServiceUp());
@@ -137,7 +174,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public void restart() {
         throw new UnsupportedOperationException();
     }
-
+    
     public Integer resize(Integer desiredSize) {
         synchronized (mutex) {
             int currentSize = getCurrentSize();
@@ -148,36 +185,105 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 if (logger.isDebugEnabled()) logger.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
             }
     
-            Collection<Entity> addedEntities = Lists.newArrayList();
-            Collection<Entity> removedEntities = Lists.newArrayList();
-
             if (delta > 0) {
-                for (int i = 0; i < delta; i++) { addedEntities.add(addNode()); }
-                Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
-                for (Entity entity: addedEntities) {
-                    Map<String,?> args = ImmutableMap.of("locations", ImmutableList.of(location));
-                    tasks.put(entity, entity.invoke(Startable.START, args));
-                }
-                waitForTasksOnEntityStart(tasks);                
+                grow(delta);
             } else if (delta < 0) {
-                for (int i = 0; i < (delta*-1); i++) { removedEntities.add(removeNode()); }
-
-                Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
-                try {
-                    invoke.get();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw Throwables.propagate(e);
-                } catch (ExecutionException e) {
-                    throw Throwables.propagate(e);
-                }
-            } else {
-                setAttribute(Changeable.GROUP_SIZE, currentSize);
+                shrink(delta);
             }
         }
         return getCurrentSize();
     }
 
+    /**
+     * 
+     * @param memberId
+     * @throws NoSuchElementException If entity cannot be resolved, or it is not a member 
+     */
+    @Description("Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. "+
+            "Returns id of the new entity; or throws exception if couldn't be replaced.")
+    public String replaceMember(@NamedParameter("memberId") @Description("The entity id of a member to be replaced") String memberId) {
+        Entity member = getManagementContext().getEntity(memberId);
+        logger.info("In {}, replacing member {} ({})", new Object[] {this, memberId, member});
+
+        if (member == null) {
+            throw new NoSuchElementException("In "+this+", entity "+memberId+" cannot be resolved, so not replacing");
+        }
+
+        synchronized (mutex) {
+            if (!getMembers().contains(member)) {
+                throw new NoSuchElementException("In "+this+", entity "+member+" is not a member so not replacing");
+            }
+            
+            Collection<Entity> addedEntities = grow(1);
+            if (addedEntities.size() < 1) {
+                String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
+                throw new IllegalStateException(msg);
+            }
+            
+            stopAndRemoveNode(member);
+            
+            return Iterables.get(addedEntities, 0).getId();
+        }
+    }
+
+    /**
+     * Increases the cluster size by the given number.
+     */
+    private Collection<Entity> grow(int delta) {
+        Collection<Entity> addedEntities = Lists.newArrayList();
+        for (int i = 0; i < delta; i++) {
+            addedEntities.add(addNode());
+        }
+        Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
+        for (Entity entity: addedEntities) {
+            Map<String,?> args = ImmutableMap.of("locations", ImmutableList.of(location));
+            tasks.put(entity, entity.invoke(Startable.START, args));
+        }
+        Map<Entity, Throwable> errors = waitForTasksOnEntityStart(tasks);
+        
+        if (!errors.isEmpty()) {
+            if (isQuarantineEnabled()) {
+                quarantineFailedNodes(errors.keySet());
+            } else {
+                cleanupFailedNodes(errors.keySet());
+            }
+        }
+        
+        return MutableList.<Entity>builder().addAll(addedEntities).removeAll(errors.keySet()).build();
+    }
+    
+    private void shrink(int delta) {
+        Collection<Entity> removedEntities = Lists.newArrayList();
+        
+        for (int i = 0; i < (delta*-1); i++) { removedEntities.add(pickAndRemoveMember()); }
+
+        Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
+        try {
+            invoke.get();
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            for (Entity removedEntity : removedEntities) {
+                discardNode(removedEntity);
+            }
+        }
+    }
+    
+    private void quarantineFailedNodes(Collection<Entity> failedEntities) {
+        for (Entity entity : failedEntities) {
+            emit(ENTITY_QUARANTINED, entity);
+            getQuarantineGroup().addMember(entity);
+            removeMember(entity);
+        }
+    }
+    
+    private void cleanupFailedNodes(Collection<Entity> failedEntities) {
+        // TODO Could also call stop on them?
+        for (Entity entity : failedEntities) {
+            discardNode(entity);
+        }
+    }
+    
     /**
      * Default impl is to be up when running, and !up otherwise.
      */
@@ -185,31 +291,23 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
     }
     
-    protected void waitForTasksOnEntityStart(Map<Entity,Task<?>> tasks) {
+    protected Map<Entity, Throwable> waitForTasksOnEntityStart(Map<Entity,Task<?>> tasks) {
         // TODO Could have CompoundException, rather than propagating first
-        Throwable toPropagate = null;
+        Map<Entity, Throwable> errors = Maps.newLinkedHashMap();
+        
         for (Map.Entry<Entity,Task<?>> entry : tasks.entrySet()) {
             Entity entity = entry.getKey();
             Task<?> task = entry.getValue();
             try {
-                try {
-                    task.get();
-                } catch (Throwable t) {
-                    throw unwrapException(t);
-                }
+                task.get();
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw Throwables.propagate(e);
+                throw Exceptions.propagate(e);
             } catch (Throwable t) {
-                if (Throwables2.getFirstThrowableOfType(t, EntityStartException.class) != null) {
-                    logger.error("Cluster "+this+" failed to start entity "+entity, t);
-                    removeNode(entity);
-                } else {
-                    if (toPropagate == null) toPropagate = t;
-                }
+                logger.error("Cluster "+this+" failed to start entity "+entity, t);
+                errors.put(entity, unwrapException(t));
             }
         }
-        if (toPropagate != null) throw Throwables.propagate(toPropagate);
+        return errors;
     }
     
     protected Throwable unwrapException(Throwable e) {
@@ -250,7 +348,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         return entity;
     }
 
-    protected Entity removeNode() {
+    protected Entity pickAndRemoveMember() {
         
         // TODO use pluggable strategy; default is to remove newest
         // TODO inefficient impl
@@ -260,14 +358,28 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Entity entity = removalStrategy.apply(getMembers());
         Preconditions.checkNotNull(entity, "No entity chosen for removal from "+getId());
         Preconditions.checkState(entity instanceof Startable, "Chosen entity for removal not stoppable: cluster="+this+"; choice="+entity);
-        
-        return removeNode(entity);
+
+        removeMember(entity);
+        return entity;
     }
     
-    protected Entity removeNode(Entity entity) {
+    protected void discardNode(Entity entity) {
         removeMember(entity);
         managementContext.unmanage(entity);
+    }
+    
+    protected void stopAndRemoveNode(Entity member) {
+        removeMember(member);
         
-        return entity;
+        if (member instanceof Startable) {
+            Task<?> task = member.invoke(Startable.STOP, Collections.<String,Object>emptyMap());
+            try {
+                task.get();
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+        }
+        
+        managementContext.unmanage(member);
     }
 }
