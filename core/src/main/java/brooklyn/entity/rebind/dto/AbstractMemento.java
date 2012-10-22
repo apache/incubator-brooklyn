@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.mementos.Memento;
 
 import com.google.common.base.Objects;
@@ -14,6 +15,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
     private static final long serialVersionUID = -8091049282749284567L;
 
     protected static abstract class Builder<B extends Builder<?>> {
+        protected String brooklynVersion = BrooklynVersion.get();
         protected String id;
         protected String type;
         protected String displayName;
@@ -24,11 +26,15 @@ public abstract class AbstractMemento implements Memento, Serializable {
             return (B) this;
         }
         public B from(Memento other) {
+            brooklynVersion = other.getBrooklynVersion();
             id = other.getId();
             type = other.getType();
             displayName = other.getDisplayName();
             customProperties.putAll(other.getCustomProperties());
             return self();
+        }
+        public B brooklynVersion(String val) {
+            brooklynVersion = val; return self();
         }
         public B id(String val) {
             id = val; return self();
@@ -44,6 +50,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         }
     }
     
+    private String brooklynVersion;
     private String id;
     private String type;
     private String displayName;
@@ -55,6 +62,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
 
     // Trusts the builder to not mess around with mutability after calling build()
     protected AbstractMemento(Builder<?> builder) {
+        brooklynVersion = builder.brooklynVersion;
         id = builder.id;
         type = builder.type;
         displayName = builder.displayName;
@@ -62,22 +70,31 @@ public abstract class AbstractMemento implements Memento, Serializable {
     }
 
     @Override
+    public String getBrooklynVersion() {
+        return brooklynVersion;
+    }
+    
+    @Override
     public String getId() {
         return id;
     }
     
+    @Override
     public String getType() {
         return type;
     }
     
+    @Override
     public String getDisplayName() {
         return displayName;
     }
     
+    @Override
     public Object getCustomProperty(String name) {
         return customProperties.get(name);
     }
     
+    @Override
     public Map<String, ? extends Object> getCustomProperties() {
         return customProperties;
     }

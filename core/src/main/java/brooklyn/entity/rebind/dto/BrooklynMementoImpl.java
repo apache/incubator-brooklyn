@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -24,12 +25,16 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     }
     
     public static class Builder {
+        protected String brooklynVersion = BrooklynVersion.get();
         protected List<String> applicationIds = Lists.newArrayList();
         protected List<String> topLevelLocationIds = Lists.newArrayList();
         protected Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
         protected Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
         protected Map<String, PolicyMemento> policies = Maps.newLinkedHashMap();
         
+        public Builder brooklynVersion(String val) {
+            brooklynVersion = val; return this;
+        }
         public Builder applicationId(String val) {
             applicationIds.add(val); return this;
         }
@@ -62,6 +67,7 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         }
     }
 
+    private String brooklynVersion;
     private List<String> applicationIds;
     private List<String> topLevelLocationIds;
     private Map<String, EntityMemento> entities;
@@ -69,6 +75,7 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     private Map<String, PolicyMemento> policies;
     
     private BrooklynMementoImpl(Builder builder) {
+        brooklynVersion = builder.brooklynVersion;
         applicationIds = Collections.unmodifiableList(builder.applicationIds);
         topLevelLocationIds = Collections.unmodifiableList(builder.topLevelLocationIds);
         entities = Collections.unmodifiableMap(builder.entities);

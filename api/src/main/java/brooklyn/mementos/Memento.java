@@ -4,6 +4,11 @@ import java.io.Serializable;
 import java.util.Map;
 
 public interface Memento extends Serializable {
+
+    /**
+     * The version of brooklyn used when this memento was generated.
+     */
+    String getBrooklynVersion();
     
     String getId();
     
