@@ -1,7 +1,5 @@
 package brooklyn.entity.java;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.KeyPair;
@@ -13,11 +11,11 @@ import java.util.List;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.util.Exceptions;
 import brooklyn.util.MutableMap.Builder;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.crypto.FluentKeySigner;
 import brooklyn.util.crypto.SecureKeys;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 public class JmxmpSslSupport {

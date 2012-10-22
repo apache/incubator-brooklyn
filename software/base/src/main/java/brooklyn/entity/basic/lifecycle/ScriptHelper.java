@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.RuntimeInterruptedException;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.task.Tasks;
 

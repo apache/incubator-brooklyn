@@ -2,8 +2,11 @@ package brooklyn.test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
+import org.testng.Assert;
 
 /**
  * Repeatedly polls a given URL, to check if it is always available.
@@ -15,6 +18,9 @@ public class WebAppMonitor implements Runnable {
     final AtomicBoolean isActive = new AtomicBoolean(false);
     final AtomicInteger successes = new AtomicInteger(0);
     final AtomicInteger failures = new AtomicInteger(0);
+    final AtomicLong lastTime = new AtomicLong(-1);
+    final AtomicReference<Object> lastStatus = new AtomicReference<Object>(null);
+    final AtomicReference<Object> lastFailure = new AtomicReference<Object>(null);
     Logger log;
     Object problem = null; 
     String url;
@@ -44,17 +50,25 @@ public class WebAppMonitor implements Runnable {
                 throw new IllegalStateException("already running");
         }
         while (shouldBeActive.get()) {
+            long startTime = System.currentTimeMillis();
             try {
                 if (preAttempt()) {
-                    int code = TestUtils.urlRespondsStatusCode(url);
+                    int code = HttpTestUtils.getHttpStatusCode(url);
+                    lastTime.set(System.currentTimeMillis()-startTime);
                     if (code!=200) {
+                        lastStatus.set(code);
+                        lastFailure.set(code);
                         failures.incrementAndGet();
                         onFailure("return code "+code);
                     } else {
+                        lastStatus.set(null);
                         successes.incrementAndGet();
                     }
                 }
             } catch (Exception e) {
+                lastTime.set(System.currentTimeMillis()-startTime);
+                lastStatus.set(e);
+                lastFailure.set(e);
                 failures.incrementAndGet();
                 onFailure(e);
             }
@@ -103,14 +117,45 @@ public class WebAppMonitor implements Runnable {
     public int getAttempts() {
         return getFailures()+getSuccesses();
     }
+    public Object getLastStatus() {
+        return lastStatus.get();
+    }
+    public long getLastTime() {
+        return lastTime.get();
+    }
+    /** result code (int) or exception */
+    public Object getLastFailure() {
+        return lastFailure.get();
+    }
+    
     public void onFailure(Object problem) {
         if (log != null) {
-            log.warn("detected failure at "+getUrl()+": "+problem);
+            log.warn("Detected failure in monitor accessing "+getUrl()+": "+problem);
         }
         this.problem = problem;
     }
+    
     /** return false to skip a run */
     public boolean preAttempt() {
         return true;
     }
+    
+    public WebAppMonitor assertNoFailures(String message) {
+        return assertSuccessPercentage(message, 1.0);
+    }
+    public WebAppMonitor assertSuccessPercentage(String message, double percentage) {
+        if ((getFailures() > (1-percentage) * getAttempts()+0.0001) || getAttempts()<=0) {
+            Assert.fail(message+" -- webapp access failures! " +
+            		"("+getFailures()+" failed of "+getAttempts()+" monitoring attempts) against "+getUrl()+"; " +
+            		"last was "+getLastStatus()+" taking "+getLastTime()+"ms" +
+            		(getLastStatus()==null ? "; last failure was "+getLastFailure() : ""));
+        }
+        return this;
+    }
+    public WebAppMonitor resetCounts() {
+        failures.set(0);
+        successes.set(0);
+        return this;
+    }
+    
 }

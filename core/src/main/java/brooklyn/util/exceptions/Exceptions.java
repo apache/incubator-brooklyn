@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.exceptions;
 
 import com.google.common.base.Throwables;
 

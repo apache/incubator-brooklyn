@@ -21,7 +21,7 @@ import javax.security.auth.x500.X500Principal;
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import brooklyn.util.Exceptions;
+import brooklyn.util.exceptions.Exceptions;
 
 /**
  * Utility methods for generating and working with keys
