@@ -2,6 +2,7 @@ package brooklyn.util.crypto;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -58,6 +59,17 @@ public class SecureKeys {
         try {
             KeyStore store = KeyStore.getInstance(KeyStore.getDefaultType());
             store.load(null, null);
+            return store;
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    /** returns keystore of default type read from given source */
+    public static KeyStore newKeyStore(InputStream source, String passphrase) {
+        try {
+            KeyStore store = KeyStore.getInstance(KeyStore.getDefaultType());
+            store.load(source, passphrase!=null ? passphrase.toCharArray() : new char[0]);
             return store;
         } catch (Exception e) {
             throw Exceptions.propagate(e);

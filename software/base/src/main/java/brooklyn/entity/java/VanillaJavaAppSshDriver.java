@@ -28,10 +28,6 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
         return (VanillaJavaApp) super.getEntity();
     }
 
-    public boolean isJmxEnabled() {
-        return super.isJmxEnabled() && getEntity().useJmx;
-    }
-
     protected String getLogFileLocation() {
         return format("%s/console", getRunDir());
     }

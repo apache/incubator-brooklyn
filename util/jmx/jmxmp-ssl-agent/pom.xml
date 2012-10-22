@@ -2,10 +2,10 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
-    
-    <artifactId>jmxmp-ssl-agent</artifactId>
-    <name>Secure JMXMP Agent</name>
-    
+
+    <artifactId>brooklyn-jmxmp-agent</artifactId>
+    <name>Brooklyn Secure JMXMP Agent</name>
+
     <description>
         A JMX connector serving the JMXMP protocol for firewall connectivity with SSL (TLS) support
     </description>
@@ -25,17 +25,15 @@
             <artifactId>jmxremote_optional</artifactId>
             <version>1.0.1_04</version>
         </dependency>
-        
+
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
-            <version>${brooklyn.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
-            <version>${brooklyn.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -45,7 +43,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
                 <configuration>
                     <archive>
                         <index>true</index>
@@ -53,12 +50,41 @@
                             <addClasspath>true</addClasspath>
                         </manifest>
                         <manifestEntries>
-                            <Premain-Class>io.brooklyn.ext.jmxmp.JmxmpAgent</Premain-Class>
-                         </manifestEntries>
+                            <Premain-Class>brooklyn.util.jmx.jmxmp.JmxmpAgent</Premain-Class>
+                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <configuration>
+                    <outputFile>${project.build.directory}/${project.artifactId}-shaded-${project.version}.jar</outputFile>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-distribution</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/${project.artifactId}-shaded-${project.version}.jar</file>
+                                    <type>jar</type>
+                                    <classifier>with-dependencies</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-    
+
 </project>

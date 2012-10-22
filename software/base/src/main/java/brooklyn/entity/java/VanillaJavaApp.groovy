@@ -35,9 +35,6 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     @SetFromFlag("classpath")
     public static final ConfigKey<List> CLASSPATH = new BasicConfigKey<List>(List.class, "vanillaJavaApp.classpath", "classpath to use, as list of URL entries", []);
 
-    @SetFromFlag(defaultVal="true")
-    protected boolean useJmx;
-    
     @SetFromFlag
     protected long jmxPollPeriod;
     
@@ -82,7 +79,7 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
         
         sensorRegistry.register(new ConfigSensorAdapter());
         
-        if (useJmx) {
+        if ( ((VanillaJavaAppDriver)getDriver()).isJmxEnabled() ) {
             TimeDuration jmxPollPeriod = (jmxPollPeriod > 0 ? jmxPollPeriod : 500)*TimeUnit.MILLISECONDS;
             jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(period:jmxPollPeriod));
             JavaAppUtils.connectMXBeanSensors(this, jmxAdapter);

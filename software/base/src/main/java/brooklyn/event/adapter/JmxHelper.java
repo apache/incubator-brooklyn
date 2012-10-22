@@ -5,8 +5,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.time.TimeDuration;
 
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -26,21 +30,30 @@ import javax.management.openmbean.TabularData;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.java.UsesJmx;
+import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
+import brooklyn.util.crypto.SecureKeys;
+import brooklyn.util.crypto.SslTrustUtils;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.internal.LanguageUtils;
 import brooklyn.util.internal.TimeExtras;
+import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 public class JmxHelper {
 
@@ -51,6 +64,8 @@ public class JmxHelper {
     public static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/%s";
     // first host:port may be ignored, so above is sufficient, but not sure
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s";
+    // jmxmp
+    public static final String JMXMP_URL_FORMAT = "service:jmx:jmxmp://%s:%d";
 
     // Tracks the MBeans we have failed to find, with a set keyed off the url
     private static final Map<String, Set<ObjectName>> notFoundMBeansByUrl = Collections.synchronizedMap(new WeakHashMap<String, Set<ObjectName>>());
@@ -86,17 +101,21 @@ public class JmxHelper {
             return url;
         } else {
             String host = checkNotNull(entity.getAttribute(Attributes.HOSTNAME));
-            Integer jmxRmiRegistryPort = entity.getAttribute(Attributes.JMX_PORT);
-            Integer rmiServerPort = entity.getAttribute(Attributes.RMI_SERVER_PORT);
-            String context = entity.getAttribute(Attributes.JMX_CONTEXT);
-
-            url = toConnectorUrl(host, jmxRmiRegistryPort, rmiServerPort, context);
+            Integer jmxEntryPort = entity.getAttribute(Attributes.JMX_PORT);
+            if (GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED))) {
+                url = String.format(JMXMP_URL_FORMAT, host, jmxEntryPort);
+            } else {
+                Integer rmiServerPort = entity.getAttribute(Attributes.RMI_SERVER_PORT);
+                String context = entity.getAttribute(Attributes.JMX_CONTEXT);
+                url = toConnectorUrl(host, jmxEntryPort, rmiServerPort, context);
+            }
             if (entity.getEntityType().getSensors().contains(Attributes.JMX_SERVICE_URL))
                 entity.setAttribute(Attributes.JMX_SERVICE_URL, url);
             return url;
         }
     }
 
+    final EntityLocal entity;
     final String url;
     final String user;
     final String password;
@@ -109,16 +128,24 @@ public class JmxHelper {
     // Tracks the MBeans we have failed to find for this JmsHelper's connection URL (so can log just once for each)
     private final Set<ObjectName> notFoundMBeans;
 
+    public JmxHelper(EntityLocal entity) {
+        this(toConnectorUrl(entity), entity, entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD));
+    }
+    
+    // TODO split this in to two classes, one for entities, and one entity-neutral
+    // (simplifying set of constructors below)
+    
     public JmxHelper(String url) {
         this(url, null, null);
     }
 
-    public JmxHelper(EntityLocal entity) {
-        this(toConnectorUrl(entity), entity.getAttribute(Attributes.JMX_USER), entity.getAttribute(Attributes.JMX_PASSWORD));
-    }
-
     public JmxHelper(String url, String user, String password) {
+        this(url, null, user, password);
+    }
+    
+    public JmxHelper(String url, EntityLocal entity, String user, String password) {
         this.url = url;
+        this.entity = entity;
         this.user = user;
         this.password = password;
 
@@ -177,17 +204,14 @@ public class JmxHelper {
     }
 
     /** attempts to connect immediately */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public synchronized void connect() throws IOException {
         if (connection != null) return;
 
         triedConnecting = true;
         if (connector != null) connector.close();
         JMXServiceURL serviceUrl = new JMXServiceURL(url);
-        Map env = Maps.newLinkedHashMap();
-        if (truth(user) && truth(password)) {
-            String[] creds = new String[] {user, password};
-            env.put(JMXConnector.CREDENTIALS, creds);
-        }
+        Map env = getConnectionEnvVars();
         try {
             connector = JMXConnectorFactory.connect(serviceUrl, env);
         } catch (NullPointerException npe) {
@@ -203,6 +227,46 @@ public class JmxHelper {
             }
         }
         connection = connector.getMBeanServerConnection();
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public Map getConnectionEnvVars() {
+        Map env = new LinkedHashMap();
+        
+        if (truth(user) && truth(password)) {
+            String[] creds = new String[] {user, password};
+            env.put(JMXConnector.CREDENTIALS, creds);
+        }
+        
+        if (entity!=null && GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED))) {
+            env.put("jmx.remote.profiles", JmxmpAgent.TLS_JMX_REMOTE_PROFILES);
+
+            PrivateKey key = entity.getConfig(UsesJmx.JMX_SSL_ACCESS_KEY);
+            Certificate cert = entity.getConfig(UsesJmx.JMX_SSL_ACCESS_CERT);
+            KeyStore ks = SecureKeys.newKeyStore();
+            try {
+                KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                if (key!=null) {
+                    ks.setKeyEntry("brooklyn-jmx-access", key, "".toCharArray(), new Certificate[] { cert });
+                }
+                kmf.init(ks, "".toCharArray());
+
+                TrustManager tms = 
+                        // TODO use root cert for trusting server
+                        //trustStore!=null ? SecureKeys.getTrustManager(trustStore) : 
+                        SslTrustUtils.TRUST_ALL;
+
+                SSLContext ctx = SSLContext.getInstance("TLSv1");
+                ctx.init(kmf.getKeyManagers(), new TrustManager[] { tms }, null);
+                SSLSocketFactory ssf = ctx.getSocketFactory(); 
+                env.put(JmxmpAgent.TLS_SOCKET_FACTORY_PROPERTY, ssf); 
+                
+            } catch (Exception e) {
+                LOG.warn("Error setting key "+key+" for "+entity+": "+e, e);
+            }
+        }
+        
+        return env;
     }
 
     /**
@@ -376,13 +440,13 @@ public class JmxHelper {
     public Set<ObjectInstance> doesMBeanExistsEventually(String objectName, long timeout, TimeUnit timeUnit) {
         return doesMBeanExistsEventually(createObjectName(objectName), timeout, timeUnit);
     }
-    
+
+    /** returns set of beans found, with retry, empty set if none after timeout */
     public Set<ObjectInstance> doesMBeanExistsEventually(final ObjectName objectName, long timeout, TimeUnit timeUnit) {
         final long timeoutMillis = timeUnit.toMillis(timeout);
         final AtomicReference<Set<ObjectInstance>> beans = new AtomicReference<Set<ObjectInstance>>(Collections.<ObjectInstance>emptySet());
         try {
-            //TODO: Success value is ignored.
-            boolean success = LanguageUtils.repeatUntilSuccess(
+            LanguageUtils.repeatUntilSuccess(
                     MutableMap.of("timeout", timeoutMillis), 
                     "Wait for "+objectName,
             		new Callable<Boolean>() {
@@ -393,13 +457,8 @@ public class JmxHelper {
                         }
                     });
             return beans.get();
-            
-        // TODO can't compile this catch block, even though repeatUntilSuccess throws Exception; strangeness of calling groovy
-        // } catch (InterruptedException e) {
-        //     throw new RuntimeInterruptedException(e);
-            
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
 

@@ -28,10 +28,11 @@ import javax.net.ssl.X509TrustManager;
  * <p>
  * Listens on 11099 unless overridden by system property brooklyn.jmxmp.port.
  * <p>
- * Use the usual com.sun.management.jmxremote.{ssl,authenticate} properties as needed 
- * (note that both default false, so in a secure environment you'll need both).
- * If using ssl for encryption and server authentication you will need to supply brooklyn.jmxmp.ssl.keyStore, 
- * with the corresponding trustStore needed for client authentication (both pointing to files on the local file system).
+ * Use the usual com.sun.management.jmxremote.ssl to enable both SSL _and_ authentication
+ * (setting brooklyn.jmxmp.ssl.authenticate false if you need to disable authentication for some reason); 
+ * unless you disable client-side server authentication you will need to supply brooklyn.jmxmp.ssl.keyStore, 
+ * and similarly unless server-side client auth is off you'll need the corresponding trustStore 
+ * (both pointing to files on the local file system).
  * <p>
  * Service comes up on:  service:jmx:jmxmp://${HOSTNAME}:${PORT}
  * <p>
@@ -51,8 +52,12 @@ public class JmxmpAgent {
     /** whether to use SSL (TLS) encryption; requires a keystore to be set */
     public static final String USE_SSL_PROPERTY = "com.sun.management.jmxremote.ssl";
     /** whether to use SSL (TLS) certificates to authenticate the client; 
-     * requires a truststore to be set, and requires {@link #USE_SSL_PROPERTY} true */
-    public static final String AUTHENTICATE_CLIENTS_PROPERTY = "com.sun.management.jmxremote.authenticate";
+     * requires a truststore to be set, and requires {@link #USE_SSL_PROPERTY} true 
+     * (different to 'com.sun.management.jmxremote.authenticate' because something else
+     * insists on intercepting that and uses it for passwords); 
+     * defaults to true iff {@link #USE_SSL_PROPERTY} is set because 
+     * who wouldn't want client authentication if you're encrypting the link */
+    public static final String AUTHENTICATE_CLIENTS_PROPERTY = "brooklyn.jmxmp.ssl.authenticate";
     
     public static final String JMXMP_KEYSTORE_FILE_PROPERTY = "brooklyn.jmxmp.ssl.keyStore";
     public static final String JMXMP_KEYSTORE_PASSWORD_PROPERTY = "brooklyn.jmxmp.ssl.keyStorePassword";
@@ -222,4 +227,7 @@ public class JmxmpAgent {
         };
     };
     
+    public static void main(String[] args) {
+        premain("");
+    }
 }
