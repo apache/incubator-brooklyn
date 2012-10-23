@@ -70,12 +70,10 @@ public class DynamicGroupTest {
     
     @Test
     public void testGroupDetectsNewlyManagedMatchingMember() {
-        Entity e3 = new AbstractEntity() {}
+        Entity e3 = new AbstractEntity(app) {}
         app.manage(e3);
         group.setEntityFilter( { it.getId().equals(e3.getId()) } )
         
-        e3.setOwner(app)
-        e3.getManagementContext().manage(e3)
         assertEquals(group.getMembers(), [e3])
     }
     

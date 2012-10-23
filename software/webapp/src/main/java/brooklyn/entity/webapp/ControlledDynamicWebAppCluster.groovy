@@ -70,7 +70,8 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         if (cachedController!=null) return cachedController;
         log.debug("creating default controller for {}", this);
         cachedController = new NginxController(this);
-        getManagementSupport().getManagementContext(false).manage(cachedController);
+        Entities.manage(cachedController);
+        return cachedController;
     }
     
     private ConfigurableEntityFactory<WebAppService> cachedWebServerFactory;
@@ -94,7 +95,8 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
             // FIXME Establish if definitely want to change how we treat closures like this
             //initialSize: { getConfig(INITIAL_SIZE) } );
             initialSize: getConfig(INITIAL_SIZE));
-        getManagementSupport().getManagementContext(false).manage(cachedCluster);
+        Entities.manage(cachedCluster);
+        return cachedCluster;
     }
     
     public void start(Collection<? extends Location> locations) {
@@ -103,15 +105,13 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         
         controller.bind(serverPool:cluster);
 
+        List<Entity> childrenToStart = [cluster];
         // Set controller as child of cluster, if it is not already owned
-        List<Entity> childrenToStart;        
         if (controller.getOwner() == null) {
             addOwnedChild(controller);
-            childrenToStart = [cluster, controller];
-        } else {
-            childrenToStart = [cluster];
         }
-                
+        // And only start controller if we are owner
+        if (this.equals(controller.getOwner())) childrenToStart << controller;
         Entities.invokeEffectorList(this, childrenToStart, Startable.START, [locations:locations]).get();
         
         connectSensors();

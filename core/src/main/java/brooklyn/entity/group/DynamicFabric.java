@@ -163,8 +163,7 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
                 ((AbstractEntity)entity).setDisplayName(entity.getDisplayName() +" ("+locationName+")");
         }
         if (entity.getOwner()==null) entity.setOwner(this);
-        if (getManagementSupport().isDeployed())
-            getManagementContext().manage(entity);
+        Entities.manage(entity);
         
         fabricSizeEnricher.addProducer(entity);
 

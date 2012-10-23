@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -28,6 +29,7 @@ import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.FlagUtils;
@@ -68,7 +70,7 @@ public class Entities {
 		        }});
 		}
 	    ParallelTask<T> invoke = new ParallelTask<T>(tasks);
-	    callingEntity.getExecutionContext().submit(invoke);
+	    callingEntity.getManagementSupport().getExecutionContext().submit(invoke);
 	    return invoke;
 	}
     public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<Entity> entitiesToCall, 
@@ -280,20 +282,6 @@ public class Entities {
 		return false;
 	}
 
-    /** Interim method for assisting with entity lifecycle */
-    public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
-        if (context != null) context.manage(e);
-        if (e instanceof Startable) ((Startable)e).start(locations);
-        return e;
-    }
-
-    /** Interim method for assisting with entity lifecycle */
-    public static void destroy(ManagementContext context, Entity e) {
-        if (e instanceof Startable) ((Startable)e).stop();
-        if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
-        if (context != null) context.unmanage(e);
-    }
-
     private static final List<Entity> entitiesToStopOnShutdown = Lists.newArrayList();
     private static final AtomicBoolean isShutdownHookRegistered = new AtomicBoolean();
     
@@ -327,5 +315,99 @@ public class Entities {
             entitiesToStopOnShutdown.add(entity);
         }
     }
+
+    /** @deprecated use start(Entity) */
+    public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
+        if (context != null) context.manage(e);
+        if (e instanceof Startable) ((Startable)e).start(locations);
+        return e;
+    }
+
+    /** @deprecated use destroy(Entity) */
+    public static void destroy(ManagementContext context, Entity e) {
+        if (e instanceof Startable) ((Startable)e).stop();
+        if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
+        if (context != null) context.unmanage(e);
+    }
+
+    /** convenience for starting an entity, esp a new Startable instance which has been created dynamically
+     * (after the application is started) */
+    public static void start(Entity e, Collection<Location> locations) {
+        if (!manage(e)) {
+            log.warn("Using discouraged Entities.start(Application, Locations) -- should create and use the preferred management context");
+            startManagement(e);
+        }
+        if (e instanceof Startable) ((Startable)e).start(locations);
+    }
+
+    /** stops, destroys, and unmanages the given entity -- does as many as are valid given the type and state */
+    public static void destroy(Entity e) {
+        if (isManaged(e)) {
+            if (e instanceof Startable) ((Startable)e).stop();
+            if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
+            unmanage(e);
+        }
+    }
+
+    public static boolean isManaged(Entity e) {
+        return ((AbstractEntity)e).getManagementSupport().isDeployed();
+    }
     
+    /** brings this entity under management iff its ancestor is managed, returns true in that case;
+     * otherwise returns false in the expectation that the ancestor will become managed,
+     * or throws exception if it has no owner or a non-application root 
+     * (will throw if e is an Application; see also {@link #startManagement(Entity)} ) */
+    public static boolean manage(Entity e) {
+        Entity o = e.getOwner();
+        Entity eum = e; //highest unmanaged ancestor
+        if (o==null) throw new IllegalStateException("Can't manage "+e+" because it is an orphan");
+        while (o.getOwner()!=null) {
+            if (!isManaged(o)) eum = o;
+            o = o.getOwner();
+        }
+        if (isManaged(o)) {
+            ((AbstractEntity)o).getManagementSupport().getManagementContext(false).manage(eum);
+            return true;
+        }
+        if (!(o instanceof Application))
+            throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
+        return false;
+    }
+    
+    /** brings this entity under management, creating a local management context if necessary
+     * (assuming root is an application).
+     * returns existing management context if there is one (non-deployment),
+     * or new local mgmt context if not,
+     * or throwing exception if root is not an application 
+     * <p>
+     * callers are recommended to use {@link #manage(Entity)} instead unless they know
+     * a plain-vanilla non-root management context is sufficient (e.g. in tests)
+     * <p>
+     * this method may change, but is provided as a stop-gap to prevent ad-hoc things
+     * being done in the code which are even more likely to break! */
+    public static ManagementContext startManagement(Entity e) {
+        Entity o = e;
+        Entity eum = e; //highest unmanaged ancestor
+        while (o.getOwner()!=null) {
+            if (!isManaged(o)) eum = o;
+            o = o.getOwner();
+        }
+        if (isManaged(o)) {
+            ManagementContext mgmt = ((AbstractEntity)o).getManagementSupport().getManagementContext(false);
+            mgmt.manage(eum);
+            return mgmt;
+        }
+        if (!(o instanceof Application))
+            throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
+        ManagementContext mgmt = new LocalManagementContext();
+        mgmt.manage(o);
+        return mgmt;
+    }
+    
+    public static void unmanage(Entity entity) {
+        if (((AbstractEntity)entity).getManagementSupport().isDeployed()) {
+            ((AbstractEntity)entity).getManagementSupport().getManagementContext(true).unmanage(entity);
+        }
+    }
+
 }

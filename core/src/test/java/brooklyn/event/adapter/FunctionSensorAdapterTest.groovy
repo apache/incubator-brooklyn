@@ -28,7 +28,7 @@ public class FunctionSensorAdapterTest {
         app = new TestApplication();
         entity = new TestEntity(app);
         entityRegistry = new SensorRegistry(entity);
-        new LocalManagementContext().manage(app);
+        app.startManagement();
     }
     
     FunctionSensorAdapter adapter;

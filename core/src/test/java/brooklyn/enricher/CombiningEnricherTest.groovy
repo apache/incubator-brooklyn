@@ -1,24 +1,22 @@
 package brooklyn.enricher;
 
-import java.util.Arrays;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.testng.Assert
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import brooklyn.enricher.basic.AbstractCombiningEnricher;
-import brooklyn.entity.SimpleApp;
-import brooklyn.entity.SimpleEntity;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.TestUtils;
-import brooklyn.util.MutableMap;
+import brooklyn.enricher.basic.AbstractCombiningEnricher
+import brooklyn.entity.SimpleApp
+import brooklyn.entity.SimpleEntity
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.EntityLocal
+import brooklyn.event.AttributeSensor
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.location.basic.SimulatedLocation
+import brooklyn.test.TestUtils
+import brooklyn.util.MutableMap
 class CombiningEnricherTest {
 
     public static final Logger log = LoggerFactory.getLogger(CombiningEnricherTest.class);
@@ -40,7 +38,7 @@ class CombiningEnricherTest {
         intSensorC = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.c");
         target = new BasicAttributeSensor<Long>(Long.class, "long.sensor.target");
         
-        new LocalManagementContext().manage(app);
+        Entities.startManagement(app);
         
         app.start(Arrays.asList(new SimulatedLocation()));
     }

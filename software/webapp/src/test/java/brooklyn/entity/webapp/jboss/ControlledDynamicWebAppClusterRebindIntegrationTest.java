@@ -126,7 +126,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         assertEquals(newCluster.getCurrentSize(), (Integer)1);
         newCluster.resize(2);
         
-        Iterable<Entity> newJbosses = Iterables.filter(newCluster.getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));
+        Iterable<Entity> newJbosses = Iterables.filter(newCluster.getCluster().getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));
         assertEquals(Iterables.size(newJbosses), 2);
         
         Thread.sleep(1000);

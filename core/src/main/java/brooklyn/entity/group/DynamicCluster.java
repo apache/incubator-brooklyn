@@ -152,7 +152,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public void start(Collection<? extends Location> locs) {
         if (isQuarantineEnabled()) {
             Group quarantineGroup = new BasicGroup(MutableMap.of("displayName", "quarantine"), this);
-            getManagementContext().manage(quarantineGroup);
+            Entities.manage(quarantineGroup);
             setAttribute(QUARANTINE_GROUP, quarantineGroup);
         }
         
@@ -353,7 +353,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         if (entity==null || !(entity instanceof Entity)) 
             throw new IllegalStateException("EntityFactory factory routine did not return an entity, in "+this+" ("+entity+")");
         
-        if (getManagementContext().isManaged(this)) getManagementContext().manage(entity);
+        Entities.manage(entity);
         addMember(entity);
         return entity;
     }
@@ -375,9 +375,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     
     protected void discardNode(Entity entity) {
         removeMember(entity);
-        if (getManagementSupport().isDeployed()) {
-            getManagementSupport().getManagementContext(true).unmanage(entity);
-        }
+        Entities.unmanage(entity);
     }
     
     protected void stopAndRemoveNode(Entity member) {
@@ -391,9 +389,6 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 throw Exceptions.propagate(e);
             }
         }
-        
-        if (getManagementSupport().isDeployed()) {
-            getManagementSupport().getManagementContext(true).unmanage(member);
-        }
+        Entities.unmanage(member);
     }
 }

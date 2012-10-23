@@ -11,11 +11,11 @@ import org.testng.annotations.Test
 import brooklyn.entity.SimpleApp
 import brooklyn.entity.SimpleEntity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
-import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.TestUtils
 
 import com.google.common.base.Function
@@ -40,7 +40,7 @@ class CustomAggregatingEnricherTest {
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
         target = new BasicAttributeSensor<Integer>(Long.class, "target sensor")
         
-        new LocalManagementContext().manage(app);
+        Entities.startManagement(app);
         app.start([new SimulatedLocation()])
     }
     
@@ -171,7 +171,7 @@ class CustomAggregatingEnricherTest {
     public void testAggregatesNewMembersOfGroup() {
         try {
             AbstractGroup group = new AbstractGroup(owner:app) {}
-            app.getManagementSupport().getManagementContext(false).manage(group);
+            Entities.manage(group);
             SimpleEntity p1 = app.newSimpleChild(); 
             SimpleEntity p2 = app.newSimpleChild();
             log.debug("created $group and the entities it will contain $p1 $p2")
@@ -219,7 +219,7 @@ class CustomAggregatingEnricherTest {
         group.addMember(p1)
         group.addMember(p2)
         p1.setAttribute(intSensor, 1)
-        app.getManagementSupport().getManagementContext(false).manage(group);
+        Entities.manage(group);
         
         CustomAggregatingEnricher<Integer> cae = CustomAggregatingEnricher.<Integer>newSummingEnricher(intSensor, target, allMembers:true)
         group.addEnricher(cae)

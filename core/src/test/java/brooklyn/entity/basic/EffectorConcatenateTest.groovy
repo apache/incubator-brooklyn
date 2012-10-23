@@ -33,6 +33,7 @@ public class EffectorConcatenateTest {
         }
 
         AtomicReference concatTask = new AtomicReference();
+        // FIXME instead of waiting on this we should use semaphores -- seems we very occasionally get spurious wakes
         AtomicReference response = new AtomicReference();
         
         @Description("sample effector concatenating strings and sometimes waiting")

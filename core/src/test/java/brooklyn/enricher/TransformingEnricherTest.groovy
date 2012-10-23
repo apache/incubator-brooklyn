@@ -13,11 +13,11 @@ import brooklyn.enricher.basic.SensorTransformingEnricher
 import brooklyn.entity.SimpleApp
 import brooklyn.entity.SimpleEntity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils
 import brooklyn.util.MutableMap
 
@@ -40,7 +40,7 @@ public class TransformingEnricherTest {
         producer = new SimpleEntity(app);
         intSensorA = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.a");
         target = new BasicAttributeSensor<Long>(Long.class, "long.sensor.target");
-        new LocalManagementContext().manage(app);
+        Entities.startManagement(app);
         
         app.start(Arrays.asList(new SimulatedLocation()));
     }

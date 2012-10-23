@@ -5,10 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.config.BrooklynProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
@@ -17,6 +17,7 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.NonDeploymentManagementContext;
 
 public class BrooklynLauncher {
 
@@ -142,14 +143,17 @@ public class BrooklynLauncher {
         }
 
         for (Application app: appsToManage) {
-            if (context==null) {
-                context = app.getManagementContext();
+            ManagementContext appContext = ((AbstractApplication)app).getManagementSupport().getManagementContext(true);
+            if (!(appContext instanceof NonDeploymentManagementContext)) {
+                if (context!=null && !context.equals(appContext)) throw new IllegalStateException("Can't start single web console with multiple applications with different active managers");
+                context = appContext;
             }
-            context.manage(app);
         }
-
         if (context==null) {
             context = new LocalManagementContext(brooklynProperties);
+        }
+        for (Application app: appsToManage) {
+            context.manage(app);
         }
         
         BrooklynWebServer webServer = null;

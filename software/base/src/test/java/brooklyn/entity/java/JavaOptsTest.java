@@ -82,7 +82,7 @@ public class JavaOptsTest {
     
     @AfterMethod
     public void tearDown() {
-        if (app != null) app.stop();
+        if (app != null && app.getManagementSupport().isDeployed()) app.stop();
     }
     
     @Test
@@ -247,6 +247,7 @@ public class JavaOptsTest {
                 /* nothing here */
             }
         };
+        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         List<String> phrases = new ArrayList<String>(expectedPhrases);

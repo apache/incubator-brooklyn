@@ -4,14 +4,15 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionHandle;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.MutableMap;
 
 /**
@@ -39,11 +40,15 @@ public class TestApplication extends AbstractApplication {
 
     /** convenience for wiring in management during testing */
     public void startManagement() {
-        new LocalManagementContext().manage(this);
+        Entities.startManagement(this);
     }
+    
     /** convenience for wiring in management during testing */
     public <T extends Entity> T manage(T entity) {
-        getManagementSupport().getManagementContext(false).manage(entity);
+        if (!Entities.manage(entity)) {
+            Assert.assertEquals(entity.getApplication(), this);
+        }
         return entity;
     }
+
 }
