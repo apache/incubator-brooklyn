@@ -29,6 +29,7 @@ public class DelegatingSecurityProvider implements SecurityProvider {
         }
 
         try {
+            @SuppressWarnings("unchecked")
             Class<? extends SecurityProvider> clazz = (Class<? extends SecurityProvider>)Class.forName("" + className);
             targetProvider = clazz.newInstance();
         } catch (Exception e) {

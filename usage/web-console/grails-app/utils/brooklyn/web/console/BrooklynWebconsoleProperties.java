@@ -11,8 +11,9 @@ public class BrooklynWebconsoleProperties {
     public final static StringSystemProperty SECURITY_PROVIDER =
             new StringSystemProperty(BASE_NAME+".security.provider");
     /** explicitly set the users/passwords, e.g. in brooklyn.properties:
-     * brooklyn.webconsole.security.explicit.users=admin
+     * brooklyn.webconsole.security.explicit.users=admin,bob
      * brooklyn.webconsole.security.explicit.user.admin=password
+     * brooklyn.webconsole.security.explicit.user.bob=bobspass
      */
     public final static StringSystemProperty SECURITY_PROVIDER_EXPLICIT__USERS =
             new StringSystemProperty(BASE_NAME+".security.explicit.users");
