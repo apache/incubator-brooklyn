@@ -324,7 +324,6 @@ public class JavaOptsTest {
             "-Dbrooklyn.jmxmp.port=1",
             "-Dcom.sun.management.jmxremote.ssl=true",
             "-D"+JmxmpAgent.AUTHENTICATE_CLIENTS_PROPERTY+"=true",
-            "-Djava.rmi.server.hostname=",
             "keyStore", "/jmx-keystore",
             "trustStore", "/jmx-truststore",
             "-javaagent", "brooklyn-jmxmp-agent"
@@ -332,7 +331,9 @@ public class JavaOptsTest {
 
     private static final List<String> FORBIDDEN_SECURE_JMX_OPTS = Arrays.asList(
             "-Dcom.sun.management.jmxremote.authenticate=true",
-            "-Dcom.sun.management.jmxremote.ssl=false"
+            "-Dcom.sun.management.jmxremote.ssl=false",
+            // hostname isn't forbidden -- but it is generally not used now
+            "-Djava.rmi.server.hostname="
         );
 
     @Test
