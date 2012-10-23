@@ -239,15 +239,14 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         if (isJmxEnabled()) {
             Integer jmxRemotePort = checkNotNull(getJmxPort(), "jmxPort for entity " + entity);
             String hostName = checkNotNull(getMachine().getAddress().getHostName(), "hostname for entity " + entity);
-            result.
-                put("com.sun.management.jmxremote", null).
-                put("java.rmi.server.hostname", hostName);
+            result.put("com.sun.management.jmxremote", null);
             
             if (!isJmxSslEnabled()) {
                 result.
                     put("com.sun.management.jmxremote.port", jmxRemotePort).
                     put("com.sun.management.jmxremote.ssl", false).
-                    put("com.sun.management.jmxremote.authenticate", false);
+                    put("com.sun.management.jmxremote.authenticate", false).
+                    put("java.rmi.server.hostname", hostName);
             } else {
                 getJmxSslSupport().applyAgentJmxJavaSystemProperties(result);
             }
