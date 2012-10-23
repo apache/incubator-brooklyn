@@ -70,13 +70,26 @@ public class DynamicGroupTest {
     
     @Test
     public void testGroupDetectsNewlyManagedMatchingMember() {
+        Entity e3 = new AbstractEntity() {}
+        group.setEntityFilter( { it.getId().equals(e3.getId()) } )
+        e3.setOwner(app);
+        
+        assertEquals(group.getMembers(), [])
+        
+        app.manage(e3);
+        
+        assertEquals(group.getMembers(), [e3])
+    }
+
+    @Test
+    public void testGroupUsesNewFilter() {
         Entity e3 = new AbstractEntity(app) {}
         app.manage(e3);
         group.setEntityFilter( { it.getId().equals(e3.getId()) } )
         
         assertEquals(group.getMembers(), [e3])
     }
-    
+
     @Test
     public void testGroupDetectsChangedEntities() {
         final BasicAttributeSensor<String> MY_ATTRIBUTE = [ String, "test.myAttribute", "My test attribute" ]

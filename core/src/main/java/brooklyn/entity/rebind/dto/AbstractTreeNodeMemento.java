@@ -14,6 +14,7 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
     private static final long serialVersionUID = -8973379097665013550L;
 
     protected static abstract class Builder<B extends Builder<?>> extends AbstractMemento.Builder<B> {
+        boolean isValid = true;
         protected String parent;
         protected List<String> children = Lists.newArrayList();
         
@@ -24,16 +25,28 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
             return self();
         }
         public B parent(String val) {
+            assertValid();
             parent = val; return self();
         }
         public B children(List<String> val) {
+            assertValid();
             children = val; return self();
         }
         public B addChild(String id) {
+            assertValid();
             children.add(id); return self();
         }
         public B removeChild(String id) {
+            assertValid();
             children.remove(id); return self();
+        }
+        /** prevent from being used twice, because the fields are mutable */
+        protected void invalidate() {
+            assertValid();
+            isValid = false;
+        }
+        protected void assertValid() {
+            if (!isValid) throw new IllegalStateException("Builder has already been used to build");
         }
     }
     
@@ -48,7 +61,7 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
     protected AbstractTreeNodeMemento(Builder<?> builder) {
         super(builder);
         parent = builder.parent;
-        children = Collections.unmodifiableList(builder.children);
+        children = builder.children;
     }
 
     @Override
@@ -58,6 +71,6 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
     
     @Override
     public List<String> getChildren() {
-        return children;
+        return Collections.unmodifiableList(children);
     }
 }

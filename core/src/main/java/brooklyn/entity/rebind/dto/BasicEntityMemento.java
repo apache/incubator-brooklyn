@@ -1,6 +1,7 @@
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -65,11 +66,14 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             return this;
         }
         public EntityMemento build() {
+            invalidate();
             return new BasicEntityMemento(this);
         }
     }
     
+    // TODO can this be inferred?
     private boolean isTopLevelApp;
+    
     private Map<String, Object> config;
     private Map<String, Object> attributes;
     private Set<String> entityReferenceConfigs;
@@ -79,6 +83,8 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private List<String> locations;
     private List<String> policies;
     private List<String> members;
+    
+    // TODO can we move some of these to entity type, or remove/re-insert those which are final statics?
     private Map<String, ConfigKey> configKeys;
     private Map<String, AttributeSensor> attributeKeys;
     
@@ -94,54 +100,75 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private BasicEntityMemento() {
     }
 
-    // Trusts the builder to not mess around with mutability after calling build()
+    // Trusts the builder to not mess around with mutability after calling build() -- with invalidate pattern
+    // Does not make any attempt to make unmodifiable, or immutable copy, to have cleaner (and faster) output
     protected BasicEntityMemento(Builder builder) {
         super(builder);
         isTopLevelApp = builder.isTopLevelApp;
-        locations = Collections.unmodifiableList(builder.locations);
-        policies = Collections.unmodifiableList(builder.policies);
-        members = Collections.unmodifiableList(builder.members);
-        configByKey = Collections.unmodifiableMap(builder.config);
-        attributesByKey = Collections.unmodifiableMap(builder.attributes);
-        entityReferenceConfigsByKey = Collections.unmodifiableSet(builder.entityReferenceConfigs);
-        entityReferenceAttributesByKey = Collections.unmodifiableSet(builder.entityReferenceAttributes);
-        locationReferenceConfigsByKey = Collections.unmodifiableSet(builder.locationReferenceConfigs);
-        locationReferenceAttributesByKey = Collections.unmodifiableSet(builder.locationReferenceAttributes);
+        locations = toPersistedList(builder.locations);
+        policies = toPersistedList(builder.policies);
+        members = toPersistedList(builder.members);
+        configByKey = toPersistedMap(builder.config);
+        attributesByKey = toPersistedMap(builder.attributes);
+        entityReferenceConfigsByKey = toPersistedSet(builder.entityReferenceConfigs);
+        entityReferenceAttributesByKey = toPersistedSet(builder.entityReferenceAttributes);
+        locationReferenceConfigsByKey = toPersistedSet(builder.locationReferenceConfigs);
+        locationReferenceAttributesByKey = toPersistedSet(builder.locationReferenceAttributes);
         
-        configKeys = Maps.newLinkedHashMap();
-        config = Maps.newLinkedHashMap();
-        for (Map.Entry<ConfigKey, Object> entry : configByKey.entrySet()) {
-            ConfigKey key = entry.getKey();
-            configKeys.put(key.getName(), key);
-            config.put(key.getName(), entry.getValue());
+        if (configByKey!=null) {
+            configKeys = Maps.newLinkedHashMap();
+            config = Maps.newLinkedHashMap();
+            for (Map.Entry<ConfigKey, Object> entry : configByKey.entrySet()) {
+                ConfigKey key = entry.getKey();
+                configKeys.put(key.getName(), key);
+                config.put(key.getName(), entry.getValue());
+            }
+            configKeys = toPersistedMap(configKeys);
+            config = toPersistedMap(config);
         }
         
-        attributeKeys = Maps.newLinkedHashMap();
-        attributes = Maps.newLinkedHashMap();
-        for (Map.Entry<AttributeSensor, Object> entry : attributesByKey.entrySet()) {
-            AttributeSensor key = entry.getKey();
-            attributeKeys.put(key.getName(), key);
-            attributes.put(key.getName(), entry.getValue());
+        if (attributesByKey!=null) {
+            attributeKeys = Maps.newLinkedHashMap();
+            attributes = Maps.newLinkedHashMap();
+            for (Map.Entry<AttributeSensor, Object> entry : attributesByKey.entrySet()) {
+                AttributeSensor key = entry.getKey();
+                attributeKeys.put(key.getName(), key);
+                attributes.put(key.getName(), entry.getValue());
+            }
+            attributeKeys = toPersistedMap(attributeKeys);
+            attributes = toPersistedMap(attributes);
         }
         
-        entityReferenceConfigs = Sets.newLinkedHashSet();
-        for (ConfigKey key : entityReferenceConfigsByKey) {
-            entityReferenceConfigs.add(key.getName());
+        if (entityReferenceConfigsByKey!=null) {
+            entityReferenceConfigs = Sets.newLinkedHashSet();
+            for (ConfigKey key : entityReferenceConfigsByKey) {
+                entityReferenceConfigs.add(key.getName());
+            }
+            entityReferenceConfigs = toPersistedSet(entityReferenceConfigs);
         }
         
-        entityReferenceAttributes = Sets.newLinkedHashSet();
-        for (AttributeSensor key : entityReferenceAttributesByKey) {
-            entityReferenceAttributes.add(key.getName());
+        if (entityReferenceAttributesByKey!=null) {
+            entityReferenceAttributes = Sets.newLinkedHashSet();
+            for (AttributeSensor key : entityReferenceAttributesByKey) {
+                entityReferenceAttributes.add(key.getName());
+            }
+            entityReferenceAttributes = toPersistedSet(entityReferenceAttributes);
+        }
+
+        if (locationReferenceConfigsByKey!=null) {
+            locationReferenceConfigs = Sets.newLinkedHashSet();
+            for (ConfigKey key : locationReferenceConfigsByKey) {
+                locationReferenceConfigs.add(key.getName());
+            }
+            locationReferenceConfigs = toPersistedSet(locationReferenceConfigs);
         }
         
-        locationReferenceConfigs = Sets.newLinkedHashSet();
-        for (ConfigKey key : locationReferenceConfigsByKey) {
-            locationReferenceConfigs.add(key.getName());
-        }
-        
-        locationReferenceAttributes = Sets.newLinkedHashSet();
-        for (AttributeSensor key : locationReferenceAttributesByKey) {
-            locationReferenceAttributes.add(key.getName());
+        if (locationReferenceAttributesByKey!=null) {
+            locationReferenceAttributes = Sets.newLinkedHashSet();
+            for (AttributeSensor key : locationReferenceAttributesByKey) {
+                locationReferenceAttributes.add(key.getName());
+            }
+            locationReferenceAttributes = toPersistedSet(locationReferenceAttributes);
         }
     }
 
@@ -155,40 +182,42 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
      */
     private void postDeserialize() {
         configByKey = Maps.newLinkedHashMap();
-        for (Map.Entry<String, Object> entry : config.entrySet()) {
-            configByKey.put(configKeys.get(entry.getKey()), entry.getValue());
-        }
-        configByKey = Collections.unmodifiableMap(configByKey);
-        
-        attributesByKey = Maps.newLinkedHashMap();
-        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
-            attributesByKey.put(attributeKeys.get(entry.getKey()), entry.getValue());
-        }
-        attributesByKey = Collections.unmodifiableMap(attributesByKey);
-        
         entityReferenceConfigsByKey = Sets.newLinkedHashSet();
-        for (String key : entityReferenceConfigs) {
-            entityReferenceConfigsByKey.add(configKeys.get(key));
-        }
-        entityReferenceConfigsByKey = Collections.unmodifiableSet(entityReferenceConfigsByKey);
-
-        entityReferenceAttributesByKey = Sets.newLinkedHashSet();
-        for (String key : entityReferenceAttributes) {
-            entityReferenceAttributesByKey.add(attributeKeys.get(key));
-        }
-        entityReferenceAttributesByKey = Collections.unmodifiableSet(entityReferenceAttributesByKey);
-        
         locationReferenceConfigsByKey = Sets.newLinkedHashSet();
-        for (String key : locationReferenceConfigs) {
-            locationReferenceConfigsByKey.add(configKeys.get(key));
+        if (configKeys!=null) {
+            for (Map.Entry<String, Object> entry : config.entrySet()) {
+                configByKey.put(configKeys.get(entry.getKey()), entry.getValue());
+            }
+            if (entityReferenceConfigs!=null) {
+                for (String key : entityReferenceConfigs) {
+                    entityReferenceConfigsByKey.add(configKeys.get(key));
+                }
+            }
+            if (locationReferenceConfigs!=null) {
+                for (String key : locationReferenceConfigs) {
+                    locationReferenceConfigsByKey.add(configKeys.get(key));
+                }
+            }
         }
-        locationReferenceConfigsByKey = Collections.unmodifiableSet(locationReferenceConfigsByKey);
 
+        attributesByKey = Maps.newLinkedHashMap();
+        entityReferenceAttributesByKey = Sets.newLinkedHashSet();
         locationReferenceAttributesByKey = Sets.newLinkedHashSet();
-        for (String key : locationReferenceAttributes) {
-            locationReferenceAttributesByKey.add(attributeKeys.get(key));
+        if (attributeKeys!=null) {
+            for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+                attributesByKey.put(attributeKeys.get(entry.getKey()), entry.getValue());
+            }
+            if (entityReferenceAttributes!=null) {
+                for (String key : entityReferenceAttributes) {
+                    entityReferenceAttributesByKey.add(attributeKeys.get(key));
+                }
+            }
+            if (locationReferenceAttributes!=null) {
+                for (String key : locationReferenceAttributes) {
+                    locationReferenceAttributesByKey.add(attributeKeys.get(key));
+                }
+            }
         }
-        locationReferenceAttributesByKey = Collections.unmodifiableSet(locationReferenceAttributesByKey);
     }
     
     @Override
@@ -199,51 +228,52 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     @Override
     public Map<ConfigKey, Object> getConfig() {
         if (configByKey == null) postDeserialize();
-        return configByKey;
+        return Collections.unmodifiableMap(configByKey);
     }
     
     @Override
     public Map<AttributeSensor, Object> getAttributes() {
         if (attributesByKey == null) postDeserialize();
-        return attributesByKey;
+        return fromPersistedMap(attributesByKey);
     }
     
     @Override
     public Set<AttributeSensor> getEntityReferenceAttributes() {
         if (entityReferenceAttributesByKey == null) postDeserialize();
-        return entityReferenceAttributesByKey;
+        return fromPersistedSet(entityReferenceAttributesByKey);
     }
     
     @Override
     public Set<ConfigKey> getEntityReferenceConfigs() {
         if (entityReferenceConfigsByKey == null) postDeserialize();
-        return entityReferenceConfigsByKey;
+        return fromPersistedSet(entityReferenceConfigsByKey);
     }
     
     @Override
     public Set<AttributeSensor> getLocationReferenceAttributes() {
         if (locationReferenceAttributesByKey == null) postDeserialize();
-        return locationReferenceAttributesByKey;
+        return fromPersistedSet(locationReferenceAttributesByKey);
     }
     
     @Override
     public Set<ConfigKey> getLocationReferenceConfigs() {
         if (locationReferenceConfigsByKey == null) postDeserialize();
-        return locationReferenceConfigsByKey;
+        return fromPersistedSet(locationReferenceConfigsByKey);
     }
     
     @Override
     public List<String> getPolicies() {
-        return policies;
+        return fromPersistedList(policies);
     }
     
     @Override
     public List<String> getMembers() {
-        return members;
+        return fromPersistedList(members);
     }
     
     @Override
     public List<String> getLocations() {
-        return locations;
+        return fromPersistedList(locations);
     }
+
 }

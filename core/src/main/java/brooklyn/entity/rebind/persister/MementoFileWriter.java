@@ -169,7 +169,7 @@ public class MementoFileWriter<T> {
         Stopwatch stopwatch = new Stopwatch();
         
         // Write to the temp file, then atomically move it to the permanent file location
-        Files.write(serializer.toString(val), tmpFile, Charsets.UTF_8);
+        Files.write(serializer.toString(val)+"\n", tmpFile, Charsets.UTF_8);
         Files.move(tmpFile, file);
 
         modCount.incrementAndGet();

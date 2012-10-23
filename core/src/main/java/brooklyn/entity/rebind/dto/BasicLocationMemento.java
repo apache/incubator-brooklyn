@@ -50,23 +50,23 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicLocationMemento(Builder builder) {
 	    super(builder);
-	    locationProperties = Collections.unmodifiableMap(builder.locationProperties);
-	    flags = Collections.unmodifiableMap(builder.flags);
-	    locationReferenceFlags = Collections.unmodifiableSet(builder.locationReferenceFlags);
+	    locationProperties = toPersistedMap(builder.locationProperties);
+	    flags = toPersistedMap(builder.flags);
+	    locationReferenceFlags = toPersistedSet(builder.locationReferenceFlags);
 	}
 	
     @Override
     public Map<String,Object> getLocationProperties() {
-		return locationProperties;
+		return fromPersistedMap(locationProperties);
 	}
 	
     @Override
     public Map<String, Object> getFlags() {
-		return flags;
+		return fromPersistedMap(flags);
 	}
     
     @Override
     public Set<String> getLocationReferenceFlags() {
-    	return locationReferenceFlags;
+    	return fromPersistedSet(locationReferenceFlags);
     }
 }

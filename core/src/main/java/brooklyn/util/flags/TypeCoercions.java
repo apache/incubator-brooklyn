@@ -52,6 +52,7 @@ public class TypeCoercions {
      * 
      * registeredAdapters.get(targetType).findFirst({ k,v -> k.isInstance(value) }, { k,v -> v.apply(value) })
      **/
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T coerce(Object value, Class<T> targetType) {
         if (value==null) return null;
         if (targetType.isInstance(value)) return (T) value;
@@ -116,6 +117,15 @@ public class TypeCoercions {
             }
         }
 
+        if (targetType.isEnum()) {
+            try {
+                return (T) Enum.valueOf((Class)targetType, ""+value);
+            } catch (IllegalArgumentException e) {
+                // some enums (eg Lifecycle) use a tostring which is different, not ideal...
+                return (T) Enum.valueOf((Class)targetType, (""+value).toUpperCase());
+            }
+        }
+
         //now look in registry - TODO use registry first?
         Map<?,?> adaptersToTarget = registeredAdapters.get(targetType);
         if (adaptersToTarget!=null) {
@@ -125,7 +135,7 @@ public class TypeCoercions {
                 }
             }
         }
-        
+                
         //not found
         throw new ClassCastException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): no adapter known");
     }

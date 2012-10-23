@@ -2,7 +2,9 @@ package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.mementos.Memento;
@@ -66,7 +68,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         id = builder.id;
         type = builder.type;
         displayName = builder.displayName;
-        customProperties = Collections.unmodifiableMap(builder.customProperties );
+        customProperties = toPersistedMap(builder.customProperties);
     }
 
     @Override
@@ -91,16 +93,43 @@ public abstract class AbstractMemento implements Memento, Serializable {
     
     @Override
     public Object getCustomProperty(String name) {
+        if (customProperties==null) return null;
         return customProperties.get(name);
     }
     
     @Override
     public Map<String, ? extends Object> getCustomProperties() {
-        return customProperties;
+        return fromPersistedMap(customProperties);
     }
     
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("type", getType()).add("id", getId()).toString();
     }
+    
+    protected <T> List<T> fromPersistedList(List<T> l) {
+        if (l==null) return Collections.emptyList();
+        return Collections.unmodifiableList(l);
+    }
+    protected <T> List<T> toPersistedList(List<T> l) {
+        if (l==null || l.isEmpty()) return null;
+        return l;
+    }
+    protected <T> Set<T> fromPersistedSet(Set<T> l) {
+        if (l==null) return Collections.emptySet();
+        return Collections.unmodifiableSet(l);
+    }
+    protected <T> Set<T> toPersistedSet(Set<T> l) {
+        if (l==null || l.isEmpty()) return null;
+        return l;
+    }
+    protected <K,V> Map<K,V> fromPersistedMap(Map<K,V> m) {
+        if (m==null) return Collections.emptyMap();
+        return Collections.unmodifiableMap(m);
+    }
+    protected <K,V> Map<K,V> toPersistedMap(Map<K,V> m) {
+        if (m==null || m.isEmpty()) return null;
+        return m;
+    }
+
 }

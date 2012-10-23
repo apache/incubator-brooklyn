@@ -1,7 +1,6 @@
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Map;
 
 import brooklyn.mementos.PolicyMemento;
@@ -41,11 +40,11 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
 
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicPolicyMemento(Builder builder) {
-	    flags = Collections.unmodifiableMap(builder.flags);
+	    flags = toPersistedMap(builder.flags);
 	}
 	
     @Override
     public Map<String, Object> getFlags() {
-		return flags;
+		return fromPersistedMap(flags);
 	}
 }
