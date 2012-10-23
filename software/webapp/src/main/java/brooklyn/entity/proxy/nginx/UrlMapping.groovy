@@ -1,13 +1,14 @@
 package brooklyn.entity.proxy.nginx;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
+import brooklyn.entity.rebind.RebindSupport
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.WebAppServiceConstants;
@@ -16,6 +17,7 @@ import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.management.SubscriptionHandle
+import brooklyn.mementos.EntityMemento
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -107,6 +109,13 @@ public class UrlMapping extends AbstractGroup {
         recompute();
     }
 
+    @Override
+    public void onManagementMastering() {
+        if (getConfig(TARGET_PARENT) != null) {
+            recompute();
+        }
+    }
+    
     /** defines how address string, ie  hostname:port, is constructed from a given entity.
      * returns null if not possible.
      * <p>
@@ -174,5 +183,4 @@ public class UrlMapping extends AbstractGroup {
         
         recomputeAddresses();
     }
-    
 }

@@ -16,6 +16,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -35,7 +36,7 @@ public class TimeFractionDeltaEnricherTest {
     public void before() {
         app = new TestApplication();
         producer = new TestEntity(app);
-        managementContext = app.getManagementContext();
+        managementContext = new LocalManagementContext();
         managementContext.manage(app);
         
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor");

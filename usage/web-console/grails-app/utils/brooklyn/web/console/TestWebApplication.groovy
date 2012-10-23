@@ -233,9 +233,13 @@ public class TestWebApplication extends AbstractApplication {
             this.policies = testPolicies;
 
             // Stealing the sensors from TomcatNode
-            this.getMutableEntityType().addSensors(new TomcatServer([:]).getEntityType().getSensors());
-
-            //updates sensors (this doesn't seem to be working?)
+            this.getMutableEntityType().addSensors(new TomcatServer([:]).getEntityType().getSensors());                
+            updateSensorsWithRandoms(this);
+            setAttribute(TomcatServer.ROOT_URL, "http://localhost:8080/my-web-app-here");
+        }
+        
+        public void onManagementStarted() {
+            //updates sensors (not sure this is working?)
             TestTomcatEntity tc = this;  //NB: ref to TestTomcatEntity.this breaks mvn build
             this.getExecutionContext().submit(
                 new ScheduledTask(period: TimeExtras.duration(5, TimeUnit.SECONDS),
@@ -244,9 +248,6 @@ public class TestWebApplication extends AbstractApplication {
                     displayName: "Update values",
                     description: "This updates sensor values",
                     { updateSensorsWithRandoms(tc); }));
-                
-            updateSensorsWithRandoms(this);
-            setAttribute(TomcatServer.ROOT_URL, "http://localhost:8080/my-web-app-here");
         }
 
         public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {

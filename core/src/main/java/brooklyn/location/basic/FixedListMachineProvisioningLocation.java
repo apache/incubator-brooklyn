@@ -37,8 +37,11 @@ import com.google.common.io.Closeables;
 public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, CoordinatesProvider, Closeable {
 
     private Object lock;
-    @SetFromFlag("machines")
+    
+    @SetFromFlag
     protected Set<T> machines;
+    
+    @SetFromFlag
     protected Set<T> inUse;
 
     public FixedListMachineProvisioningLocation() {
@@ -49,12 +52,11 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
 
         for (MachineLocation location: machines) {
             // FIXME Bad casting
-            Location location2 = (Location) location;
-            Location parent = location2.getParentLocation();
+            Location machine = (Location) location;
+            Location parent = machine.getParentLocation();
             if (parent != null && !parent.equals(this))
-                throw new IllegalStateException("Machines must not have a parent location, but machine '"+location2.getName()+"' has its parent location set");
-	        addChildLocation(location2);
-	        location2.setParentLocation(this);
+                throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getName()+"' has its parent location set");
+	        addChildLocation(machine);
         }
     }
 
@@ -97,7 +99,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     }   
      
     @Override
-    protected void addChildLocation(Location child) {
+    public void addChildLocation(Location child) {
         super.addChildLocation(child);
         machines.add((T)child);
     }

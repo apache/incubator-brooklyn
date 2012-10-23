@@ -2,10 +2,12 @@ package brooklyn.event.adapter;
 
 import static org.testng.Assert.assertEquals
 
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestEntity
 import java.util.concurrent.TimeUnit
 
@@ -17,9 +19,18 @@ import brooklyn.test.TestUtils
 public class FunctionSensorAdapterTest {
     private static final Logger log = LoggerFactory.getLogger(FunctionSensorAdapterTest.class)
 
-    final EntityLocal entity = new TestEntity();
-    final SensorRegistry entityRegistry = new SensorRegistry(entity);
+    TestApplication app;
+    EntityLocal entity;
+    SensorRegistry entityRegistry;
 
+    @BeforeMethod
+    public void setup() {
+        app = new TestApplication();
+        entity = new TestEntity(app);
+        entityRegistry = new SensorRegistry(entity);
+        app.startManagement();
+    }
+    
     FunctionSensorAdapter adapter;
 
     public FunctionSensorAdapter registerAdapter(FunctionSensorAdapter adapter=null, boolean clearPollPeriod=true) {
@@ -49,9 +60,6 @@ public class FunctionSensorAdapterTest {
 
     @Test
      public void testWithPeriod() {
-         TestApplication app = new TestApplication();
-         entity.setOwner(app);
-
          entity.setAttribute(TestEntity.SEQUENCE,0);
          adapter = new FunctionSensorAdapter(period: 200*TimeUnit.MILLISECONDS, {1});
          registerAdapter(adapter, false);

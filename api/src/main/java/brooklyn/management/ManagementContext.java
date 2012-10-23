@@ -6,6 +6,7 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.rebind.RebindManager;
 
 /**
  * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
@@ -74,6 +75,8 @@ public interface ManagementContext {
      */
     SubscriptionContext getSubscriptionContext(Entity entity);
 
+    RebindManager getRebindManager();
+    
     /**
      * Manage an entity.
      */

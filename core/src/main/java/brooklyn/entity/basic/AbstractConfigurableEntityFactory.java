@@ -1,13 +1,14 @@
 package brooklyn.entity.basic;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
-
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public abstract class AbstractConfigurableEntityFactory<T extends Entity> implements ConfigurableEntityFactory<T> {
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
+
+public abstract class AbstractConfigurableEntityFactory<T extends Entity> implements ConfigurableEntityFactory<T>, Serializable {
     protected final Map config = new LinkedHashMap();
 
     public AbstractConfigurableEntityFactory(){

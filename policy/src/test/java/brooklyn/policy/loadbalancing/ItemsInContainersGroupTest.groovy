@@ -34,6 +34,7 @@ public class ItemsInContainersGroupTest {
         containerGroup = new DynamicGroup([name:"containerGroup"], app, containerGroupFilter)
         itemGroup = new ItemsInContainersGroup([:], app)
         itemGroup.setContainers(containerGroup)
+        app.startManagement();
         app.start([loc])
     }
 
@@ -52,6 +53,7 @@ public class ItemsInContainersGroupTest {
         app.managementContext.unmanage(itemGroup)
         
         itemGroup = new ItemsInContainersGroup([itemFilter:{it.displayName == "2"}], app)
+        app.managementContext.manage(itemGroup)
         itemGroup.setContainers(containerGroup)
         
         MockContainerEntity containerIn = newContainer(app, "A", "ingroup")

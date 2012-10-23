@@ -12,7 +12,6 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
-import brooklyn.management.internal.BasicSubscriptionContext;
 import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.policy.EntityAdjunct;
 import brooklyn.util.flags.SetFromFlag;
@@ -51,9 +50,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
     protected synchronized SubscriptionTracker getSubscriptionTracker() {
         if (_subscriptionTracker!=null) return _subscriptionTracker;
         if (entity==null) return null;
-        if (entity.getManagementContext()==null) return null;
-        BasicSubscriptionContext subscriptionContext = new BasicSubscriptionContext(entity.getManagementContext().getSubscriptionManager(), this);
-        _subscriptionTracker = new SubscriptionTracker(subscriptionContext);
+        _subscriptionTracker = new SubscriptionTracker(entity.getManagementSupport().getSubscriptionContext());
         return _subscriptionTracker;
     }
     
@@ -75,11 +72,12 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
         return getSubscriptionTracker().subscribeToChildren(producerParent, sensor, listener);
     }
 
-    /** returns false if deleted, throws exception if invalid state, otherwise true */
+    /** returns false if deleted, throws exception if invalid state, otherwise true.
+     * okay if entity is not yet managed. */
     protected boolean check(Entity producer) {
         if (destroyed.get()) return false;
         if (entity==null) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because it is not associated to an entity");
-        if (entity.getManagementContext()==null) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because the associated entity "+entity+" is not yet managed");
+        if (entity.getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because the associated entity "+entity+" is no longer managed");
         return true;
     }
         
@@ -111,6 +109,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
         return (tracker != null) ? tracker.getAllSubscriptions() : Collections.<SubscriptionHandle>emptyList();
     }
     
+    /** @deprecated since 0.4.0 shouldn't be needed? */
     protected ManagementContext getManagementContext() {
         return entity.getManagementContext();
     }

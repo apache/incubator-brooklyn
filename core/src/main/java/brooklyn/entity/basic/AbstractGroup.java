@@ -4,7 +4,6 @@ import groovy.transform.InheritConstructors;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +14,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
+import brooklyn.util.MutableMap;
 
 import com.google.common.base.Predicate;
 
@@ -40,7 +40,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
     
     public AbstractGroup() {
-        this(Collections.emptyMap(), null);
+        this(new MutableMap(), null);
     }
     
     public AbstractGroup(Map<?,?> props) {
@@ -48,12 +48,13 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
     
     public AbstractGroup(Entity owner) {
-        this(Collections.emptyMap(), owner);
+        this(new MutableMap(), owner);
     }
 
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child
      */
+    @Override
     public void addMember(Entity member) {
         synchronized (_members) {
 	        member.addGroup(this);
@@ -61,6 +62,8 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
                 log.debug("Group {} got new member {}", this, member);
 	            emit(MEMBER_ADDED, member);
 	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
+	            
+	            getManagementSupport().getEntityChangeListener().onMembersChanged();
 	        }
 	    }
     }
@@ -68,6 +71,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     /**
      * Returns <code>true</code> if the group was changed as a result of the call.
      */
+    @Override
     public boolean removeMember(Entity member) {
         synchronized (_members) {
             boolean changed = (member != null && _members.remove(member));
@@ -75,7 +79,10 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
                 log.debug("Group {} lost member {}", this, member);
 	            emit(MEMBER_REMOVED, member);
 	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
+	            
+	            getManagementSupport().getEntityChangeListener().onMembersChanged();
 	        }
+            
 	        return changed;
         }
     }
@@ -98,22 +105,27 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
                     addMember(m);
                 }
             }
+            
+            getManagementSupport().getEntityChangeListener().onMembersChanged();
         }
     }
  
     // Declared so can be overridden (the default auto-generated getter is final!)
+    @Override
     public Collection<Entity> getMembers() {
         synchronized (_members) {
             return _members.get();
         }
     }
 
+    @Override
     public boolean hasMember(Entity e) {
         synchronized (_members) {
             return _members.contains(e);
         }
     }
 
+    @Override
     public Integer getCurrentSize() {
         synchronized (_members) {
             return _members.size();

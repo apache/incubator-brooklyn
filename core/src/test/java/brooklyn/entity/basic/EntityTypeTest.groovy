@@ -10,7 +10,7 @@ import static org.testng.Assert.assertTrue;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.LocallyManagedEntity;
+import brooklyn.entity.SimpleEntity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -32,11 +32,13 @@ public class EntityTypeTest {
     @BeforeMethod
     public void setUpTestEntity() throws Exception{
         app = new TestApplication();
-        entity = new LocallyManagedEntity(app);
+        entity = new SimpleEntity(app);
         
         listener = new EntitySubscriptionTest.RecordingSensorEventListener();
-        app.getManagementContext().getSubscriptionManager().subscribe(entity, SENSOR_ADDED, listener);
-        app.getManagementContext().getSubscriptionManager().subscribe(entity, SENSOR_REMOVED, listener);
+        app.getSubscriptionContext().subscribe(entity, SENSOR_ADDED, listener);
+        app.getSubscriptionContext().subscribe(entity, SENSOR_REMOVED, listener);
+        
+        app.startManagement();
     }
 
     @Test

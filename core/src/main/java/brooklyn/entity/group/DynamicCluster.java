@@ -70,13 +70,13 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
     
-    @SetFromFlag
-    EntityFactory<?> factory;
+    @SetFromFlag("factory")
+    public static final ConfigKey<EntityFactory> FACTORY = new BasicConfigKey<EntityFactory>(
+            EntityFactory.class, "dynamiccluster.factory", "factory for creating new cluster members", null);
 
-    @SetFromFlag
-    Function<Collection<Entity>, Entity> removalStrategy;
-
-    Location location;
+    @SetFromFlag("removalStrategy")
+    public static final ConfigKey<Function<Collection<Entity>, Entity>> REMOVAL_STRATEGY = new BasicConfigKey(
+            Function.class, "dynamiccluster.removalstrategy", "strategy for deciding what to remove when down-sizing", null);
 
     private static final Function<Collection<Entity>, Entity> defaultRemovalStrategy = new Function<Collection<Entity>, Entity>() {
         public Entity apply(Collection<Entity> contenders) {
@@ -107,7 +107,6 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
      */
     public DynamicCluster(Map<?,?> properties, Entity owner) {
         super(properties, owner);
-        if (removalStrategy == null) removalStrategy = defaultRemovalStrategy;
         setAttribute(SERVICE_UP, false);
     }
     public DynamicCluster(Entity owner) {
@@ -116,21 +115,30 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public DynamicCluster(Map<?,?> properties) {
         this(properties, null);
     }
-
+    
     public void setRemovalStrategy(Function<Collection<Entity>, Entity> val) {
-        removalStrategy = checkNotNull(val, "removalStrategy");
+        setConfig(REMOVAL_STRATEGY, checkNotNull(val, "removalStrategy"));
     }
     
     public void setRemovalStrategy(Closure val) {
         setRemovalStrategy(GroovyJavaMethods.functionFromClosure(val));
     }
 
+    public Function<Collection<Entity>, Entity> getRemovalStrategy() {
+        Function<Collection<Entity>, Entity> result = getConfig(REMOVAL_STRATEGY);
+        return (result != null) ? result : defaultRemovalStrategy;
+    }
+    
     public EntityFactory<?> getFactory() {
-        return factory;
+        return getConfig(FACTORY);
     }
     
     public void setFactory(EntityFactory<?> factory) {
-        this.factory = factory;
+        setConfigEvenIfOwned(FACTORY, factory);
+    }
+    
+    private Location getLocation() {
+        return Iterables.getOnlyElement(getLocations());
     }
     
     private boolean isQuarantineEnabled() {
@@ -144,14 +152,13 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     public void start(Collection<? extends Location> locs) {
         if (isQuarantineEnabled()) {
             Group quarantineGroup = new BasicGroup(MutableMap.of("displayName", "quarantine"), this);
-            getManagementContext().manage(quarantineGroup);
+            Entities.manage(quarantineGroup);
             setAttribute(QUARANTINE_GROUP, quarantineGroup);
         }
         
         Preconditions.checkNotNull(locs, "locations must be supplied");
-        Preconditions.checkArgument(locs.size() == 1, "Exactly one location must be supplied");
-        location = Iterables.getOnlyElement(locs);
-        getLocations().add(location);
+        Preconditions.checkArgument(locs.size() == 1, "Exactly one location must be supplied, but given "+locs.size());
+        getLocations().addAll(locs);
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         resize(getConfig(INITIAL_SIZE));
         if (getCurrentSize() != getConfig(INITIAL_SIZE)) {
@@ -236,7 +243,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         }
         Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
         for (Entity entity: addedEntities) {
-            Map<String,?> args = ImmutableMap.of("locations", ImmutableList.of(location));
+            Map<String,?> args = ImmutableMap.of("locations", ImmutableList.of(getLocation()));
             tasks.put(entity, entity.invoke(Startable.START, args));
         }
         Map<Entity, Throwable> errors = waitForTasksOnEntityStart(tasks);
@@ -257,6 +264,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         
         for (int i = 0; i < (delta*-1); i++) { removedEntities.add(pickAndRemoveMember()); }
 
+        // FIXME symmetry in order of added as child, managed, started, and added to group
+        // FIXME assume stoppable; use logic of grow?
         Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
         try {
             invoke.get();
@@ -303,7 +312,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             } catch (InterruptedException e) {
                 throw Exceptions.propagate(e);
             } catch (Throwable t) {
-                logger.error("Cluster "+this+" failed to start entity "+entity, t);
+                logger.error("Cluster "+this+" failed to start entity "+entity+" (removing): "+t, t);
                 errors.put(entity, unwrapException(t));
             }
         }
@@ -336,14 +345,15 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         creation.putAll(getCustomChildFlags());
         if (logger.isDebugEnabled()) logger.debug("Adding a node to {}({}) with properties {}", new Object[] {getDisplayName(), getId(), creation});
 
-        if (factory==null) 
+        EntityFactory<?> factory = getFactory();
+        if (factory == null) 
             throw new IllegalStateException("EntityFactory factory not supplied for "+this);
-        Entity entity = (factory instanceof EntityFactoryForLocation ? ((EntityFactoryForLocation)factory).newFactoryForLocation(location) : factory).
+        Entity entity = (factory instanceof EntityFactoryForLocation ? ((EntityFactoryForLocation)factory).newFactoryForLocation(getLocation()) : factory).
             newEntity(creation, this);
         if (entity==null || !(entity instanceof Entity)) 
             throw new IllegalStateException("EntityFactory factory routine did not return an entity, in "+this+" ("+entity+")");
         
-        if (getManagementContext().isManaged(this)) getManagementContext().manage(entity);
+        Entities.manage(entity);
         addMember(entity);
         return entity;
     }
@@ -355,7 +365,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         Preconditions.checkState(getMembers().size() > 0, "Attempt to remove a node when members is empty, from cluster "+this);
         if (logger.isDebugEnabled()) logger.debug("Removing a node from {}", this);
         
-        Entity entity = removalStrategy.apply(getMembers());
+        Entity entity = getRemovalStrategy().apply(getMembers());
         Preconditions.checkNotNull(entity, "No entity chosen for removal from "+getId());
         Preconditions.checkState(entity instanceof Startable, "Chosen entity for removal not stoppable: cluster="+this+"; choice="+entity);
 
@@ -365,7 +375,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     
     protected void discardNode(Entity entity) {
         removeMember(entity);
-        managementContext.unmanage(entity);
+        Entities.unmanage(entity);
     }
     
     protected void stopAndRemoveNode(Entity member) {
@@ -379,7 +389,6 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
                 throw Exceptions.propagate(e);
             }
         }
-        
-        managementContext.unmanage(member);
+        Entities.unmanage(member);
     }
 }

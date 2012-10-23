@@ -21,7 +21,7 @@ import com.google.common.collect.Maps;
  * A means of executing tasks against an ExecutionManager with a given bucket/set of tags pre-defined
  * (so that it can look like an {@link Executor} and also supply {@link ExecutorService#submit(Callable)}
  */
-public class BasicExecutionContext implements ExecutionContext {
+public class BasicExecutionContext extends AbstractExecutionContext {
     static final ThreadLocal<BasicExecutionContext> perThreadExecutionContext = new ThreadLocal<BasicExecutionContext>();
     
     public static BasicExecutionContext getCurrentExecutionContext() { return perThreadExecutionContext.get(); }
@@ -56,33 +56,10 @@ public class BasicExecutionContext implements ExecutionContext {
     public Set<Task<?>> getTasks() { return executionManager.getTasksWithAllTags((Set)tags); }
 
     //these conform with ExecutorService but we do not want to expose shutdown etc here
-    
-    /**
-     * Submits the given runnable/callable/task for execution (in a separate thread);
-     * supported keys in the map include: tags (add'l tags to put on the resulting task), 
-     * description (string), and others as described in the reference below
-     *   
-     * @see ExecutionManager#submit(Map, Task) 
-     */
-    public Task<?> submit(Map<?, ?> properties, Runnable runnable) { return submitInternal(properties, runnable); }
-    
-    /** @see #submit(Map, Runnable) */
-    public Task<?> submit(Runnable runnable) { return submitInternal(Maps.newLinkedHashMap(), runnable); }
- 
-    /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Callable<T> callable) { return submitInternal(Maps.newLinkedHashMap(), callable); }
-    
-    /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Map<?, ?> properties, Callable<T> callable) { return submitInternal(properties, callable); }
- 
-    /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Task<T> task) { return submitInternal(Maps.newLinkedHashMap(), task); }
-    
-    /** @see #submit(Map, Runnable) */
-    public <T> Task<T> submit(Map<?, ?> properties, Task<T> task) { return submitInternal(properties, task); }
- 
-    @SuppressWarnings("deprecation")
-    private <T> Task<T> submitInternal(Map properties, Object task) {
+     
+    @SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
+    @Override
+    protected <T> Task<T> submitInternal(Map properties, Object task) {
         if (properties.get("tags")==null) properties.put("tags", new ArrayList()); 
         ((Collection)properties.get("tags")).addAll(tags);
         
@@ -107,15 +84,6 @@ public class BasicExecutionContext implements ExecutionContext {
         
         return executionManager.submit(properties, task);
     }
-
-    /**
-     * Provided for compatibility
-     * 
-     * Submit is preferred if a handle on the resulting Task is desired (although a task can be passed in so this is not always necessary) 
-     *
-     * @see #submit(Map, Runnable) 
-     */
-    public void execute(Runnable r) { submit(r); }
     
     private void registerPerThreadExecutionContext() { perThreadExecutionContext.set(this); }
 

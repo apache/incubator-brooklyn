@@ -6,17 +6,13 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.enricher.DeltaEnricher;
-import brooklyn.enricher.TimeWeightedDeltaEnricher;
-import brooklyn.entity.LocallyManagedEntity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
-
-import brooklyn.event.basic.BasicAttributeSensor;
-
-
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.SubscriptionContext
+import brooklyn.management.internal.LocalManagementContext;
 
 class DeltaEnrichersTests {
     
@@ -31,8 +27,8 @@ class DeltaEnrichersTests {
     @BeforeMethod
     public void before() {
         app = new AbstractApplication() {}
-
-        producer = new LocallyManagedEntity(owner:app)
+        producer = new AbstractEntity(app) {}
+        new LocalManagementContext().manage(app);
 
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
         deltaSensor = new BasicAttributeSensor<Double>(Double.class, "delta sensor")
@@ -49,13 +45,13 @@ class DeltaEnrichersTests {
         
         delta.onEvent(intSensor.newEvent(producer, 0))
         delta.onEvent(intSensor.newEvent(producer, 0))
-        assertEquals(producer.getAttribute(deltaSensor), 0)
+        assertEquals(producer.getAttribute(deltaSensor), 0d)
         delta.onEvent(intSensor.newEvent(producer, 1))
-        assertEquals(producer.getAttribute(deltaSensor), 1)
+        assertEquals(producer.getAttribute(deltaSensor), 1d)
         delta.onEvent(intSensor.newEvent(producer, 3))
-        assertEquals(producer.getAttribute(deltaSensor), 2)
+        assertEquals(producer.getAttribute(deltaSensor), 2d)
         delta.onEvent(intSensor.newEvent(producer, 8))
-        assertEquals(producer.getAttribute(deltaSensor), 5)
+        assertEquals(producer.getAttribute(deltaSensor), 5d)
     }
     
     @Test

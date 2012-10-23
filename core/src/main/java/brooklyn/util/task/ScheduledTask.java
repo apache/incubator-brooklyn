@@ -14,14 +14,19 @@ import java.util.concurrent.TimeUnit;
 import brooklyn.management.Task;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.MutableMap;
+import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Throwables;
 
 public class ScheduledTask extends BasicTask {
 
-    // TODO See BasicExecutionManager.submitNewScheduledTask for where these fields are actually set.
-    // Would be nice if the scheduledTask was more self-contained, rather than its fields being
-    // modified by a different class in a non-obvious way...
+    // TODO It looks like now groovy callers construct ScheduledTask with these values in the map constructor.
+    // How does that work in pure-java!?
+    // Adding builder-like-setters so can be used in Java. But would be much nicer if this was immutable.
+    // Previous (out-of-date?) todo was:
+    //     See BasicExecutionManager.submitNewScheduledTask for where these fields are actually set.
+    //     Would be nice if the scheduledTask was more self-contained, rather than its fields being
+    //     modified by a different class in a non-obvious way...
     
 	final Callable<Task> taskFactory;
 	/** initial delay before running, set as flag in constructor; defaults to 0 */
@@ -50,6 +55,21 @@ public class ScheduledTask extends BasicTask {
 		period = JavaGroovyEquivalents.toTimeDuration(elvis(flags.remove("period"), null));
 		maxIterations = elvis(flags.remove("maxIterations"), null);
 	}
+	
+	public ScheduledTask delay(long val) {
+	    this.delay = JavaGroovyEquivalents.toTimeDuration(val);
+	    return this;
+	}
+
+	public ScheduledTask period(long val) {
+        this.period = JavaGroovyEquivalents.toTimeDuration(val);
+        return this;
+	}
+
+    public ScheduledTask maxIterations(int val) {
+        this.maxIterations = val;
+        return this;
+    }
 
     public Callable<Task> getTaskFactory() {
         return taskFactory;

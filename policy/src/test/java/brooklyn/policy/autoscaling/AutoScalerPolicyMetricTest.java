@@ -10,6 +10,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 
@@ -28,6 +29,7 @@ public class AutoScalerPolicyMetricTest {
     public void before() {
         app = new TestApplication();
         tc = new TestCluster(app, 1);
+        new LocalManagementContext().manage(app);
     }
     
     @Test

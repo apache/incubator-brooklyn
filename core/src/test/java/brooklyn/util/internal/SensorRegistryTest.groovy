@@ -3,22 +3,22 @@ package brooklyn.util.internal
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
-import groovy.time.TimeDuration;
-
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.LocallyManagedEntity
+import brooklyn.entity.SimpleEntity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.ValueProvider;
+import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.test.TestUtils;
+import brooklyn.management.internal.LocalManagementContext
+import brooklyn.test.TestUtils
 
 /**
  * Test the operation of the {@link SensorRegistry} class.
@@ -26,9 +26,16 @@ import brooklyn.test.TestUtils;
 public class SensorRegistryTest {
     private static final Logger log = LoggerFactory.getLogger(SensorRegistryTest.class)
 
+    AbstractEntity entity;
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setup() {
+        entity = new SimpleEntity()
+        new LocalManagementContext().manage(entity);
+    }
+    
     @Test
     public void sensorUpdatedPeriodically() {
-        AbstractEntity entity = new LocallyManagedEntity()
         SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:50])
         
         final AtomicInteger desiredVal = new AtomicInteger(1)
@@ -47,7 +54,6 @@ public class SensorRegistryTest {
     @Test
     public void sensorUpdateDefaultPeriodIsUsed() {
         final int PERIOD = 250
-        AbstractEntity entity = new LocallyManagedEntity()
         SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:PERIOD, connectDelay:0])
         
         List<Long> callTimes = [] as CopyOnWriteArrayList
@@ -63,7 +69,6 @@ public class SensorRegistryTest {
     public void sensorUpdatePeriodOverrideIsUsed() {
         final int PERIOD = 250
         // Create an entity and configure it with the above JMX service
-        AbstractEntity entity = new LocallyManagedEntity()
         SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:1000, connectDelay:0])
         
         List<Long> callTimes = [] as CopyOnWriteArrayList
@@ -80,6 +85,7 @@ public class SensorRegistryTest {
         for (int i=0; i<100; i++) {
             log.info("running testRemoveSensorStopsItBeingUpdated iteration $i");
             try {
+                setup();
                 testRemoveSensorStopsItBeingUpdated();
             } catch (Throwable t) {
                 log.info("failed testRemoveSensorStopsItBeingUpdated, iteration $i: $t");
@@ -90,7 +96,6 @@ public class SensorRegistryTest {
     
     @Test(groups="Integration")
     public void testRemoveSensorStopsItBeingUpdated() {
-        AbstractEntity entity = new LocallyManagedEntity()
         SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:50])
         
         final AtomicInteger desiredVal = new AtomicInteger(1)
@@ -136,7 +141,6 @@ public class SensorRegistryTest {
 
     @Test(groups="Integration")
     public void testClosePollerStopsItBeingUpdated() {
-        AbstractEntity entity = new LocallyManagedEntity()
         SensorRegistry sensorRegistry = new SensorRegistry(entity, [period:50])
         
         final AtomicInteger desiredVal = new AtomicInteger(1)

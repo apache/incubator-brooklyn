@@ -12,6 +12,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -37,12 +38,16 @@ public class MembershipTrackingPolicyTest {
         policy = new RecordingMembershipTrackingPolicy(MutableMap.of("group", group));
         group.addPolicy(policy);
         policy.setGroup(group);
+        
+        app.startManagement();
         app.start(ImmutableList.of(loc));
     }
     
     @Test
     public void testNotifiedOfMemberAddedAndRemoved() throws Exception {
         final TestEntity e1 = new TestEntity(group);
+        app.manage(e1);
+        
         assertRecordsEventually(Record.newAdded(e1));
         
         e1.clearOwner();
@@ -52,6 +57,8 @@ public class MembershipTrackingPolicyTest {
     @Test
     public void testNotifiedOfMemberChanged() throws Exception {
         final TestEntity e1 = new TestEntity(group);
+        app.manage(e1);
+        
         e1.setAttribute(Startable.SERVICE_UP, true);
         
         assertRecordsEventually(Record.newAdded(e1), Record.newChanged(e1));
@@ -62,12 +69,16 @@ public class MembershipTrackingPolicyTest {
         policy.suspend();
         
         final TestEntity e1 = new TestEntity(group);
+        app.manage(e1);
+        
         assertRecordsContinually(new Record[0]);
     }
 
     @Test
     public void testNotifiedOfEverythingWhenPolicyResumed() throws Exception {
         final TestEntity e1 = new TestEntity(group);
+        app.manage(e1);
+        
         assertRecordsEventually(Record.newAdded(e1));
         
         policy.suspend();
@@ -85,6 +96,7 @@ public class MembershipTrackingPolicyTest {
         policy.resume();
         
         final TestEntity e1 = new TestEntity(group);
+        app.manage(e1);
         assertRecordsEventually(Record.newAdded(e1));
     }
 

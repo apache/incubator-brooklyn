@@ -16,10 +16,14 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.flags.SetFromFlag;
 
 public abstract class AbstractApplication extends AbstractEntity implements Startable, Application {
     public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
-    private volatile AbstractManagementContext mgmt = null;
+    
+    @SetFromFlag("mgmt")
+    private volatile AbstractManagementContext mgmt;
+    
     private boolean deployed = false;
 
     BrooklynProperties brooklynProperties = null;
@@ -52,7 +56,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      * calling preStart(locations) first and postStart(locations) afterwards.
      */
     public void start(Collection<? extends Location> locations) {
-        this.getLocations().addAll(locations);
+        this.addLocations(locations);
 
         preStart(locations);
         StartableMethods.start(this, locations);
@@ -105,11 +109,16 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         throw new UnsupportedOperationException();
     }
 
+    /** @deprecated use getManagementSupport().isDeployed() */
     public boolean hasManagementContext() {
         return mgmt!=null;
     }
     
+    /** @deprecated since 0.4.0 use mgmt.manage(app) */
     public synchronized void setManagementContext(AbstractManagementContext mgmt) {
+        log.warn("Call to setManagementContext on app; should instead call mgmt.manage(app)",
+                new Throwable("Location of call to setMgmtContext"));
+        
         if (mgmt!=null && mgmt.equals(this.mgmt))
             return;
         if (hasManagementContext() && mgmt!=null) {
@@ -130,22 +139,24 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         }
     }
     
-    @Override
-    public synchronized AbstractManagementContext getManagementContext() {
-        if (hasManagementContext())
-            return mgmt;
+//    @Override
+//    public synchronized AbstractManagementContext getManagementContext() {
+//        if (hasManagementContext())
+//            return mgmt;
+//
+//        LocalManagementContext newMgmt = new LocalManagementContext();
+//        if (log.isDebugEnabled()) {
+//            log.warn("Accessing management context of application "+this+" before it is managed; creating "+newMgmt+". " +
+//            		"In future this creation may not be supported.");
+//            if (log.isTraceEnabled())
+//                log.trace("trace for local mgmt creation of "+this, new Throwable("trace for local mgmt creation of "+this));
+//        }
+//        
+//        setManagementContext(newMgmt);
+//        return mgmt;
+//    }
 
-        LocalManagementContext newMgmt = new LocalManagementContext(brooklynProperties);
-        if (log.isDebugEnabled()) {
-            log.debug("creating new local management context for "+this+" ("+newMgmt+") automatically on attempt to access context");
-            if (log.isTraceEnabled())
-                log.trace("trace for local mgmt creation of "+this, new Throwable("trace for local mgmt creation of "+this));
-        }
-        
-        setManagementContext(newMgmt);
-        return mgmt;
-    }
-
+    /** @deprecated use getManagementSupport().isDeployed, which is not linked to start/stop */
     public boolean isDeployed() {
         return deployed;
     }

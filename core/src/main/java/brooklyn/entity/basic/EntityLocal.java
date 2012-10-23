@@ -1,5 +1,6 @@
 package brooklyn.entity.basic;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
@@ -10,10 +11,12 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
+import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.policy.basic.AbstractPolicy;
 
 /** 
@@ -26,6 +29,15 @@ public interface EntityLocal extends Entity {
     // Separate out what is specific to "local jvm", and what is here for an SPI rather than API.
 
     /**
+     * Sets the entity's display name.
+     */
+    void setDisplayName(String displayName);
+
+    void addLocations(Collection<? extends Location> locations);
+
+    void removeLocations(Collection<? extends Location> locations);
+
+    /**
      * Sets the {@link Sensor} data for the given attribute to the specified value.
      * 
      * This can be used to "enrich" the entity, such as adding aggregated information, 
@@ -34,7 +46,13 @@ public interface EntityLocal extends Entity {
      * @return the old value for the attribute (possibly <code>null</code>)
      */
     <T> T setAttribute(AttributeSensor<T> sensor, T val);
-    
+
+    /**
+     * 
+     * Like {@link setAttribute(AttributeSensor, T)}, except does not publish an attribute-change event.
+     */
+    <T> T setAttributeWithoutPublishing(AttributeSensor<T> sensor, T val);
+
     // ??? = policy which detects a group is too hot and want the entity to fire a TOO_HOT event
     
     <T> T getConfig(ConfigKey<T> key, T defaultValue);
@@ -106,11 +124,18 @@ public interface EntityLocal extends Entity {
     
     /** 
      * @return The management context for the entity, or null if it is not yet managed.
+     * @deprecated since 0.4.0 access via getManagementSupport
      */
     ManagementContext getManagementContext();
-    
+
+    /** 
+     * @return Routings for accessing and inspecting the management context of the entity
+     */
+    EntityManagementSupport getManagementSupport();    
+
     /** 
      * @return The task execution context for the entity, or null if it is not yet managed.
+     * @deprecated since 0.4.0 access via getManagementSupport
      */    
     ExecutionContext getExecutionContext();
 }

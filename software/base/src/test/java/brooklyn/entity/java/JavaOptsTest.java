@@ -21,7 +21,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication;
@@ -60,7 +59,7 @@ public class JavaOptsTest {
         }
     }
     
-    private AbstractApplication app;
+    private TestApplication app;
     private SshMachineLocation loc;
     List<ExecCmd> execScriptCmds;
     
@@ -83,7 +82,7 @@ public class JavaOptsTest {
     
     @AfterMethod
     public void tearDown() {
-        if (app != null) app.stop();
+        if (app != null && app.getManagementSupport().isDeployed()) app.stop();
     }
     
     @Test
@@ -93,6 +92,7 @@ public class JavaOptsTest {
                 .put("useJmx", false)
                 .build(), 
                 app);
+        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -110,6 +110,7 @@ public class JavaOptsTest {
                 .put("useJmx", false)
                 .build(), 
                 app);
+        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -127,6 +128,7 @@ public class JavaOptsTest {
                 .put("useJmx", false)
                 .build(), 
                 app);
+        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -146,6 +148,7 @@ public class JavaOptsTest {
                 .put("useJmx", false)
                 .build(), 
                 app);
+        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -165,6 +168,7 @@ public class JavaOptsTest {
                 .put("useJmx", false)
                 .build(), 
                 app);
+        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -194,6 +198,7 @@ public class JavaOptsTest {
                 };
             }
         };
+        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         String runDir = javaProcess.getRunDir();
@@ -242,6 +247,7 @@ public class JavaOptsTest {
                 /* nothing here */
             }
         };
+        app.startManagement();
         app.start(ImmutableList.of(loc));
         
         List<String> phrases = new ArrayList<String>(expectedPhrases);

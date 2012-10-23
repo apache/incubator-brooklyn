@@ -19,6 +19,7 @@ class EntityExecutionManagerTest {
     public void testGetTasksOfEntity() throws Exception {
         AbstractApplication app = new AbstractApplication() {}
         TestEntity e = new TestEntity([owner:app])
+        new LocalManagementContext().manage(app);
         
         CountDownLatch latch = new CountDownLatch(1)
         Task task = e.executionContext.submit( expirationPolicy: ExpirationPolicy.NEVER, { latch.countDown() } )

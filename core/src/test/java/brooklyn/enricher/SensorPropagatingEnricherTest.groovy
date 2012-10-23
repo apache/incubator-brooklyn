@@ -16,6 +16,8 @@ class SensorPropagatingEnricherTest {
     public void testPropagation() {
         TestApplication app = []
         TestEntity entity = [ app ];
+        app.startManagement();
+        
         app.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(entity, TestEntity.SEQUENCE)) 
 
         //name propagated

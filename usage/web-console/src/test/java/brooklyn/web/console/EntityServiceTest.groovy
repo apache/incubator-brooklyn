@@ -42,6 +42,7 @@ class EntityServiceTest {
         testCollection.add(testApp)
 
         testEntity = testCollection.get(0).testEntity()
+        testApp.managementContext.manage(testEntity);
         testEntities = Collections.singletonList(testEntity);
     }
 

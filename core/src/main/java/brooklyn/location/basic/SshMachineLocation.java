@@ -38,6 +38,7 @@ import brooklyn.util.MutableMap;
 import brooklyn.util.ReaderInputStream;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.SshTool;
 import brooklyn.util.internal.StreamGobbler;
 import brooklyn.util.internal.ssh.SshException;
@@ -91,6 +92,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag
     Map config;
 
+    @SetFromFlag
+    transient WithMutexes mutexSupport;
+    
     /** any property that should be passed as ssh config (connection-time) 
      *  can be prefixed with this and . and will be passed through (with the prefix removed),
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
@@ -149,21 +153,31 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
         super.configure(properties);
 
-        if (properties.containsKey("username")) {
-            LOG.warn("Using deprecated ssh machine property 'username': use 'user' instead", new Throwable("source of deprecated ssh 'username' invocation"));
-            user = ""+properties.get("username");
-        }
-        Preconditions.checkNotNull(address, "address is required for SshMachineLocation");
+        // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields
+        // Yikes, dangerous code for accessing fields of sub-class in super-class' constructor! But getting away with it so far!
         
-        if (name == null) {
-            name = (truth(user) ? user+"@" : "") + address.getHostName();
+        if (mutexSupport == null) {
+        	mutexSupport = new MutexSupport();
         }
-        if (getHostGeoInfo() == null) {
-            Location parentLocation = getParentLocation();
-            if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo)parentLocation).getHostGeoInfo()!=null)
-                setHostGeoInfo( ((HasHostGeoInfo)parentLocation).getHostGeoInfo() );
-            else
-                setHostGeoInfo(HostGeoInfo.fromLocation(this));
+        
+        boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
+        if (!deferConstructionChecks) {
+	        if (properties.containsKey("username")) {
+	            LOG.warn("Using deprecated ssh machine property 'username': use 'user' instead", new Throwable("source of deprecated ssh 'username' invocation"));
+	            user = ""+properties.get("username");
+	        }
+	        
+	        if (name == null) {
+	        	name = (truth(user) ? user+"@" : "") + address.getHostName();
+	        }
+        
+	        if (getHostGeoInfo() == null) {
+	            Location parentLocation = getParentLocation();
+	            if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo)parentLocation).getHostGeoInfo()!=null)
+	                setHostGeoInfo( ((HasHostGeoInfo)parentLocation).getHostGeoInfo() );
+	            else
+	                setHostGeoInfo(HostGeoInfo.fromLocation(this));
+	        }
         }
     }
 
@@ -628,8 +642,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     protected WithMutexes newMutexSupport() { return new MutexSupport(); }
-    
-    WithMutexes mutexSupport = newMutexSupport();
     
     @Override
     public void acquireMutex(String mutexId, String description) throws InterruptedException {

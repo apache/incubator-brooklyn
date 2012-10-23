@@ -257,11 +257,21 @@ public class TestUtils {
         }
     }
     
-    public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate) {
+    // FIXME When calling from java, the generics declared in groovy messing things up! 
+    public static void assertContinuallyFromJava(Map flags=[:], Supplier<?> supplier, Predicate<?> predicate) {
         assertContinually(flags, supplier, predicate, (String)null);
     }
     
+    public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate) {
+        assertContinually(flags, supplier, predicate, (String)null);
+    }
+
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg, long durationMs) {
+        flags.put("duration", toTimeDuration(durationMs));
+        assertContinually(flags, supplier, predicate, errMsg);
+    }
+    
+    public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
         TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
         TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
         long periodMs = period.toMilliseconds()

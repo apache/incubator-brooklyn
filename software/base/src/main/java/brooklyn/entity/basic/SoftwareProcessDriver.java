@@ -28,6 +28,11 @@ public interface SoftwareProcessDriver extends EntityDriver {
     boolean isRunning();
 
     /**
+     * Rebinds the driver to a pre-existing software process.
+     */
+    void rebind();
+
+    /**
      * @see Startable#start(Collection)
      */
     void start();

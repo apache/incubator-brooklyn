@@ -1,12 +1,13 @@
 package brooklyn.entity.proxy;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,10 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
+import brooklyn.entity.rebind.BasicEntityRebindSupport;
+import brooklyn.entity.rebind.MementoTransformer;
+import brooklyn.entity.rebind.RebindContext;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.AttributeSensor;
@@ -26,10 +31,13 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.mementos.EntityMemento;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -141,6 +149,13 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         }
     }
 
+    @Override
+    public void onManagementNoLongerMaster() {
+        super.onManagementNoLongerMaster();
+        isActive = false;
+        serverPoolMemberTrackerPolicy.reset();
+    }
+
     private Group getServerPool() {
         return getConfig(SERVER_POOL);
     }
@@ -212,11 +227,17 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         LOG.info("Adding policy {} to {}, during start", serverPoolMemberTrackerPolicy, this);
         addPolicy(serverPoolMemberTrackerPolicy);
         if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
-        reset();
+        
+        resetServerPoolMemberTrackerPolicy();
+    }
+    
+    @Override
+    protected void postActivation() {
+        super.postActivation();
         isActive = true;
         update();
     }
-    
+
     protected void preStop() {
         super.preStop();
         serverPoolMemberTrackerPolicy.reset();
@@ -240,7 +261,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
     }
 
-    protected synchronized void reset() {
+    protected synchronized void resetServerPoolMemberTrackerPolicy() {
         serverPoolMemberTrackerPolicy.reset();
         serverPoolAddresses.clear();
         serverPoolTargets.clear();
@@ -335,4 +356,33 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
                 new Object[] {member, ip, port, this});
         return null;
     }
+	
+    @Override
+    public RebindSupport<EntityMemento> getRebindSupport() {
+        return new BasicEntityRebindSupport(this) {
+            @Override public EntityMemento getMemento() {
+                // Note: using MutableMap so accepts nulls
+            	Map<String, Object> flags = Maps.newLinkedHashMap();
+            	flags.put("serverPoolAddresses", serverPoolAddresses);
+            	flags.put("serverPoolTargets", MementoTransformer.transformEntitiesToIds(serverPoolTargets));
+                return super.getMementoWithProperties(flags);
+            }
+            @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
+            	super.doReconstruct(rebindContext, memento);
+            	// TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
+            	// will be out-of-sync (for ever more?)
+            	serverPoolAddresses.addAll((Collection<String>) memento.getCustomProperty("serverPoolAddresses"));
+				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomProperty("serverPoolTargets"), Collection.class, true));
+            }
+        };
+    }
+    
+    private final Function<Entity, String> entityIdFunction = new Function<Entity, String>() {
+		@Override
+		@Nullable
+		public String apply(@Nullable Entity input) {
+			return (input != null) ? input.getId() : null;
+		}
+    	
+	};
 }
