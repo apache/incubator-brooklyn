@@ -1,19 +1,19 @@
 package brooklyn.web.console.security;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.StringConfigMap;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.util.text.Strings;
-import brooklyn.web.console.BrooklynWebconsoleProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Hashtable;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.InitialDirContext;
 import javax.servlet.http.HttpSession;
-import java.util.Hashtable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.config.StringConfigMap;
+import brooklyn.management.ManagementContext;
+import brooklyn.util.text.Strings;
+import brooklyn.web.console.BrooklynWebconsoleProperties;
 
 /**
  * A {@link SecurityProvider} implementation that relies on LDAP to authenticate.
@@ -47,6 +47,7 @@ public class LdapSecurityProvider implements SecurityProvider {
         this.ldapRealm = ldapRealm;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
         Hashtable env = new Hashtable();

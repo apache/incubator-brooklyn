@@ -26,8 +26,9 @@ public class LocationRegistry {
 
     public LocationRegistry(){
         this(BrooklynProperties.Factory.newDefault());
-        log.warn("Using the LocationRegistry no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
-                "potentially bypassing explicitly loaded properties");
+        if (log.isDebugEnabled())
+            log.debug("Using the LocationRegistry no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
+                    "potentially bypassing explicitly loaded properties", new Throwable("source of no-arg LocationRegistry constructor"));
     }
 
     public LocationRegistry(Map properties) {

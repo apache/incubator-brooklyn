@@ -4,16 +4,24 @@ import java.net.URLConnection;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 public class SslTrustUtils {
 
-    /** configures a connection to accept all certificates, if it is for https */
+    /** @deprecated since 0.5.0 use trustAll */
+    @Deprecated
     public static <T extends URLConnection> T configure(T connection) {
+        return trustAll(connection);
+    }
+    /** configures a connection to accept all certificates, if it is for https */
+    public static <T extends URLConnection> T trustAll(T connection) {
         if (connection instanceof HttpsURLConnection) {
             ((HttpsURLConnection)connection).setSSLSocketFactory(TrustingSslSocketFactory.getInstance());
+            ((HttpsURLConnection)connection).setHostnameVerifier(ALL_HOSTS_VALID);
         }
         return connection;
     }
@@ -69,4 +77,11 @@ public class SslTrustUtils {
             return delegate.getAcceptedIssuers();
         }
     }
+    
+    public static final HostnameVerifier ALL_HOSTS_VALID = new HostnameVerifier() {
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+    };
+
 }

@@ -1,12 +1,11 @@
 package brooklyn.web.console.security;
 
+import javax.servlet.ServletContext;
+
+import org.codehaus.groovy.grails.web.context.ServletContextHolder;
+
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
-import org.codehaus.groovy.grails.web.context.ServletContextHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletContext;
 
 /**
  * Locates the ManagementContext by using the ServletContextHolder.getServletContext().
