@@ -31,7 +31,7 @@
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-policy</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-test-support</artifactId>
@@ -60,6 +60,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Include-Resource>{maven-resources}, target/classes/brooklyn-jmxmp-agent-shaded-${project.version}.jar</Include-Resource>
+                    </instructions>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <!-- copy the jmxmp-agent JAR so it is available on the classpath for programmatic deployment -->
