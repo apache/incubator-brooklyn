@@ -17,6 +17,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.xstream.Inet4AddressConverter;
 import brooklyn.util.xstream.StringKeyMapConverter;
 
 import com.thoughtworks.xstream.XStream;
@@ -48,6 +49,7 @@ public class XmlMementoSerializer<T> implements MementoSerializer<T> {
         xstream.alias("MutableMap", MutableMap.class);
         
         xstream.registerConverter(new StringKeyMapConverter(xstream.getMapper()), /* priority */ 10);
+        xstream.registerConverter(new Inet4AddressConverter());
     }
     
     @Override
