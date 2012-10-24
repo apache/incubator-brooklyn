@@ -17,9 +17,11 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.xstream.ImmutableListConverter;
 import brooklyn.util.xstream.Inet4AddressConverter;
 import brooklyn.util.xstream.StringKeyMapConverter;
 
+import com.google.common.collect.ImmutableList;
 import com.thoughtworks.xstream.XStream;
 
 /* uses xml, cleaned up a bit
@@ -46,9 +48,12 @@ public class XmlMementoSerializer<T> implements MementoSerializer<T> {
         xstream.alias("map", Map.class, LinkedHashMap.class);
         xstream.alias("set", Set.class, LinkedHashSet.class);
         
+        xstream.registerConverter(new StringKeyMapConverter(xstream.getMapper()), /* priority */ 10);
         xstream.alias("MutableMap", MutableMap.class);
         
-        xstream.registerConverter(new StringKeyMapConverter(xstream.getMapper()), /* priority */ 10);
+        xstream.aliasType("ImmutableList", ImmutableList.class);
+        xstream.registerConverter(new ImmutableListConverter(xstream.getMapper()));
+        
         xstream.registerConverter(new Inet4AddressConverter());
     }
     
