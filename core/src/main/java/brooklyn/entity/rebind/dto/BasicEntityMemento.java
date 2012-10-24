@@ -11,7 +11,9 @@ import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.EntityTypes;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.TreeNode;
 
@@ -84,7 +86,9 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     
     // TODO can we move some of these to entity type, or remove/re-insert those which are final statics?
     private Map<String, ConfigKey> configKeys;
+    private transient Map<String, ConfigKey<?>> staticConfigKeys;
     private Map<String, AttributeSensor> attributeKeys;
+    private transient Map<String, Sensor<?>> staticSensorKeys;
     
     private transient Map<ConfigKey, Object> configByKey;
     private transient Map<AttributeSensor, Object> attributesByKey;
@@ -118,7 +122,8 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             config = Maps.newLinkedHashMap();
             for (Map.Entry<ConfigKey, Object> entry : configByKey.entrySet()) {
                 ConfigKey key = entry.getKey();
-                configKeys.put(key.getName(), key);
+                if (!key.equals(getStaticConfigKeys().get(key.getName())))
+                    configKeys.put(key.getName(), key);
                 config.put(key.getName(), entry.getValue());
             }
             configKeys = toPersistedMap(configKeys);
@@ -130,7 +135,8 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             attributes = Maps.newLinkedHashMap();
             for (Map.Entry<AttributeSensor, Object> entry : attributesByKey.entrySet()) {
                 AttributeSensor key = entry.getKey();
-                attributeKeys.put(key.getName(), key);
+                if (!key.equals(getStaticSensorKeys().get(key.getName())))
+                    attributeKeys.put(key.getName(), key);
                 attributes.put(key.getName(), entry.getValue());
             }
             attributeKeys = toPersistedMap(attributeKeys);
@@ -170,6 +176,34 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         }
     }
 
+    protected synchronized Map<String, ConfigKey<?>> getStaticConfigKeys() {
+        if (staticConfigKeys==null) 
+            staticConfigKeys = EntityTypes.getDefinedConfigKeys(getType());
+        return staticConfigKeys;
+    }
+
+    protected ConfigKey<?> getConfigKey(String key) {
+        if (configKeys!=null) {
+            ConfigKey<?> ck = configKeys.get(key);
+            if (ck!=null) return ck;
+        }
+        return getStaticConfigKeys().get(key);
+    }
+
+    protected synchronized Map<String, Sensor<?>> getStaticSensorKeys() {
+        if (staticSensorKeys==null) 
+            staticSensorKeys = EntityTypes.getDefinedSensors(getType());
+        return staticSensorKeys;
+    }
+
+    protected AttributeSensor<?> getAttributeKey(String key) {
+        if (attributeKeys!=null) {
+            AttributeSensor<?> ak = attributeKeys.get(key);
+            if (ak!=null) return ak;
+        }
+        return (AttributeSensor<?>) getStaticSensorKeys().get(key);
+    }
+
     /**
      * Creates the appropriate data-structures for the getters, from the serialized forms.
      * The serialized form is string->object (e.g. using attribute sensor name), whereas 
@@ -182,38 +216,38 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         configByKey = Maps.newLinkedHashMap();
         entityReferenceConfigsByKey = Sets.newLinkedHashSet();
         locationReferenceConfigsByKey = Sets.newLinkedHashSet();
-        if (configKeys!=null) {
+        if (config!=null) {
             for (Map.Entry<String, Object> entry : config.entrySet()) {
-                configByKey.put(configKeys.get(entry.getKey()), entry.getValue());
+                configByKey.put(getConfigKey(entry.getKey()), entry.getValue());
             }
-            if (entityReferenceConfigs!=null) {
-                for (String key : entityReferenceConfigs) {
-                    entityReferenceConfigsByKey.add(configKeys.get(key));
-                }
+        }
+        if (entityReferenceConfigs!=null) {
+            for (String key : entityReferenceConfigs) {
+                entityReferenceConfigsByKey.add(getConfigKey(key));
             }
-            if (locationReferenceConfigs!=null) {
-                for (String key : locationReferenceConfigs) {
-                    locationReferenceConfigsByKey.add(configKeys.get(key));
-                }
+        }
+        if (locationReferenceConfigs!=null) {
+            for (String key : locationReferenceConfigs) {
+                locationReferenceConfigsByKey.add(getConfigKey(key));
             }
         }
 
         attributesByKey = Maps.newLinkedHashMap();
         entityReferenceAttributesByKey = Sets.newLinkedHashSet();
         locationReferenceAttributesByKey = Sets.newLinkedHashSet();
-        if (attributeKeys!=null) {
+        if (attributes!=null) {
             for (Map.Entry<String, Object> entry : attributes.entrySet()) {
-                attributesByKey.put(attributeKeys.get(entry.getKey()), entry.getValue());
+                attributesByKey.put(getAttributeKey(entry.getKey()), entry.getValue());
             }
-            if (entityReferenceAttributes!=null) {
-                for (String key : entityReferenceAttributes) {
-                    entityReferenceAttributesByKey.add(attributeKeys.get(key));
-                }
+        }
+        if (entityReferenceAttributes!=null) {
+            for (String key : entityReferenceAttributes) {
+                entityReferenceAttributesByKey.add(getAttributeKey(key));
             }
-            if (locationReferenceAttributes!=null) {
-                for (String key : locationReferenceAttributes) {
-                    locationReferenceAttributesByKey.add(attributeKeys.get(key));
-                }
+        }
+        if (locationReferenceAttributes!=null) {
+            for (String key : locationReferenceAttributes) {
+                locationReferenceAttributesByKey.add(getAttributeKey(key));
             }
         }
     }
