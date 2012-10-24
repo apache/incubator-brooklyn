@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -31,6 +33,8 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
 
     protected static final Logger LOG = LoggerFactory.getLogger(BrooklynMementoPersisterToMultiFile.class);
 
+    private static final int SHUTDOWN_TIMEOUT_MS = 10*1000;
+    
     private final File dir;
     private final File entitiesDir;
     private final File locationsDir;
@@ -77,6 +81,11 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     public void stop() {
         running = false;
         executor.shutdown();
+        try {
+            executor.awaitTermination(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
     }
     
     @Override
