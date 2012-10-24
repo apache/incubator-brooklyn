@@ -520,7 +520,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
     }
 
-    public brooklyn.config.ConfigMap getConfigMap() {
+    public EntityConfigMap getConfigMap() {
         return configsInternal;
     }
     

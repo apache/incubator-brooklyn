@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.event.basic.StructuredConfigKey;
-import brooklyn.event.basic.StructuredConfigKey.StructuredModification;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
@@ -98,6 +97,7 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
         return null;
     }
     
+    /** returns the config visible at this entity, local and inherited (preferring local) */
     public Map<ConfigKey<?>,Object> getAllConfig() {
         Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(inheritedConfig.size()+ownConfig.size());
         result.putAll(inheritedConfig);
@@ -105,6 +105,13 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
         return Collections.unmodifiableMap(result);
     }
 
+    /** returns the config defined at this entity, ie not inherited */
+    public Map<ConfigKey<?>,Object> getLocalConfig() {
+        Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(inheritedConfig.size()+ownConfig.size());
+        result.putAll(ownConfig);
+        return Collections.unmodifiableMap(result);        
+    }
+    
     public Object setConfig(ConfigKey<?> key, Object v) {
         Object val;
         if ((v instanceof Future) || (v instanceof Closure)) {
