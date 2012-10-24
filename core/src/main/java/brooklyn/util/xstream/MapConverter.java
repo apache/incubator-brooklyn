@@ -38,13 +38,13 @@ public class MapConverter extends com.thoughtworks.xstream.converters.collection
 
     protected void populateMap(HierarchicalStreamReader reader, UnmarshallingContext context, Map map) {
         while (reader.hasMoreChildren()) {
+            reader.moveDown();
             unmarshalEntry(reader, context, map);
+            reader.moveUp();
         }
     }
 
     protected void unmarshalEntry(HierarchicalStreamReader reader, UnmarshallingContext context, Map map) {
-        reader.moveDown();
-
         reader.moveDown();
         Object key = readItem(reader, context, map);
         reader.moveUp();
@@ -54,8 +54,6 @@ public class MapConverter extends com.thoughtworks.xstream.converters.collection
         reader.moveUp();
 
         map.put(key, value);
-
-        reader.moveUp();
     }
 
 }

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.Identifiers;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
@@ -17,14 +18,29 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.mapper.Mapper;
 
+/** converter which simplifies representation of a map for string-based keys,
+ * to <key>value</key>, or <entry key="key" type="string">value</entry> 
+ * @author alex
+ *
+ */
 public class StringKeyMapConverter extends MapConverter {
 
     private static final Logger log = LoggerFactory.getLogger(StringKeyMapConverter.class);
     
+    // full stop is technically allowed ... goes against "best practice" ... 
+    // but simplifies property maps, and is used elsewhere in xstream's repn
+    final static String VALID_XML_NODE_NAME_CHARS = Identifiers.JAVA_VALID_NONSTART_CHARS + ".";
+    
     public StringKeyMapConverter(Mapper mapper) {
         super(mapper);
     }
-
+    
+    protected boolean isKeyValidForNodeName(String key) {
+        // false to always write as <entry key="key" ...
+//        return false;
+        return Identifiers.isValidToken(key, VALID_XML_NODE_NAME_CHARS, VALID_XML_NODE_NAME_CHARS);
+    }
+    
     public boolean canConvert(Class type) {
         return super.canConvert(type) || type.getName().equals(MutableMap.class.getName());
     }
@@ -39,11 +55,18 @@ public class StringKeyMapConverter extends MapConverter {
     }
     
     protected void marshalStringKey(HierarchicalStreamWriter writer, MarshallingContext context, Entry entry) {
-        ExtendedHierarchicalStreamWriterHelper.startNode(writer, getEntryNodeName(), Map.Entry.class);
-        writer.addAttribute("key", (String)entry.getKey());
+        String key = (String)entry.getKey();
+        String entryNodeName = getEntryNodeName();
+        boolean useKeyAsNodeName = (!key.equals(entryNodeName) && isKeyValidForNodeName(key));
+        if (useKeyAsNodeName) entryNodeName = key;
+        ExtendedHierarchicalStreamWriterHelper.startNode(writer, entryNodeName, Map.Entry.class);
+        if (!useKeyAsNodeName)
+            writer.addAttribute("key", key);
         
-        if (entry.getValue()!=null && isInlineableType(entry.getValue().getClass())) {
-            writer.addAttribute("type", mapper().serializedClass(entry.getValue().getClass()));
+        Object value = entry.getValue();
+        if (entry.getValue()!=null && isInlineableType(value.getClass())) {
+            if (!(value instanceof String))
+                writer.addAttribute("type", mapper().serializedClass(entry.getValue().getClass()));
             if (entry.getValue().getClass().isEnum())
                 writer.setValue(((Enum)entry.getValue()).name());
             else
@@ -70,7 +93,8 @@ public class StringKeyMapConverter extends MapConverter {
     
     @Override
     protected void unmarshalEntry(HierarchicalStreamReader reader, UnmarshallingContext context, Map map) {
-        String key = reader.getAttribute("key");
+        String key = reader.getNodeName(); 
+        if (key.equals(getEntryNodeName())) key = reader.getAttribute("key");
         if (key==null) {
             super.unmarshalEntry(reader, context, map);
         } else {
@@ -79,15 +103,14 @@ public class StringKeyMapConverter extends MapConverter {
     }
 
     protected void unmarshalStringKey(HierarchicalStreamReader reader, UnmarshallingContext context, Map map, String key) {
-        reader.moveDown();
         String type = reader.getAttribute("type");
         Object value;
-        if (type==null) {
+        if (type==null && reader.hasMoreChildren()) {
             reader.moveDown();
             value = readItem(reader, context, map);
             reader.moveUp();
         } else {
-            Class typeC = mapper().realClass(type);
+            Class typeC = type!=null ? mapper().realClass(type) : String.class;
             try {
                 value = TypeCoercions.coerce(reader.getValue(), typeC);
             } catch (Exception e) {
@@ -95,7 +118,6 @@ public class StringKeyMapConverter extends MapConverter {
                 throw Exceptions.propagate(e);
             }
         }
-        reader.moveUp();
         map.put(key, value);
     }
 

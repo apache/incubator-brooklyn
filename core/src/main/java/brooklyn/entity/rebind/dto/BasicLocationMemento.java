@@ -1,7 +1,6 @@
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +34,7 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
             locationProperties.putAll(other.getLocationProperties());
             flags.putAll(other.getFlags());
             locationReferenceFlags.addAll(other.getLocationReferenceFlags());
-            customProperties.putAll(other.getCustomProperties());
+            fields.putAll(other.getCustomFields());
             return self();
         }
         public LocationMemento build() {

@@ -230,7 +230,7 @@ public class RebindLocationTest {
                 @Override
                 protected void doReconsruct(RebindContext rebindContext, LocationMemento memento) {
                     super.doReconsruct(rebindContext, memento);
-                    myfield = (String) memento.getCustomProperty("myfield");
+                    myfield = (String) memento.getCustomField("myfield");
                     rebound = true;
                 }
             };

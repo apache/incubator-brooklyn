@@ -1,7 +1,6 @@
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +61,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             locations.addAll(other.getLocations());
             policies.addAll(other.getPolicies());
             members.addAll(other.getMembers());
-            customProperties.putAll(other.getCustomProperties());
             return this;
         }
         public EntityMemento build() {
@@ -75,14 +73,14 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private boolean isTopLevelApp;
     
     private Map<String, Object> config;
+    private List<String> locations;
+    private List<String> members;
     private Map<String, Object> attributes;
     private Set<String> entityReferenceConfigs;
     private Set<String> entityReferenceAttributes;
     private Set<String> locationReferenceConfigs;
     private Set<String> locationReferenceAttributes;
-    private List<String> locations;
     private List<String> policies;
-    private List<String> members;
     
     // TODO can we move some of these to entity type, or remove/re-insert those which are final statics?
     private Map<String, ConfigKey> configKeys;

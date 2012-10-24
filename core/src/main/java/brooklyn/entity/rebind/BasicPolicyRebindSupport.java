@@ -28,11 +28,11 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
     }
 
     protected PolicyMemento getMementoWithProperties(Map<String,?> props) {
-        PolicyMemento memento = MementosGenerators.newPolicyMementoBuilder(policy).customProperties(props).build();
+        PolicyMemento memento = MementosGenerators.newPolicyMementoBuilder(policy).customFields(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for policy {}({}): displayName={}; flags={}; " +
     			"customProperties={}; ",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(),  
-                sanitize(memento.getFlags()), sanitize(memento.getCustomProperties())});
+                sanitize(memento.getFlags()), sanitize(memento.getCustomFields())});
     	return memento;
     }
 
@@ -41,7 +41,7 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing policy {}({}): displayName={}; flags={}; " +
     			"customProperties={}",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(),  
-				sanitize(memento.getFlags()), sanitize(memento.getCustomProperties())});
+				sanitize(memento.getFlags()), sanitize(memento.getCustomFields())});
 
     	// Note that the flags have been set in the constructor
         policy.setName(memento.getDisplayName());

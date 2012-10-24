@@ -3,6 +3,7 @@ package brooklyn.entity.rebind.dto;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import brooklyn.mementos.Memento;
 import brooklyn.mementos.TreeNode;
@@ -52,6 +53,7 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
     
     private String parent;
     private List<String> children;
+    private Map<String,Object> fields;
     
     // for de-serialization
     protected AbstractTreeNodeMemento() {
@@ -64,6 +66,14 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
         children = builder.children;
     }
 
+    protected void setCustomFields(Map<String, Object> fields) {
+        this.fields = toPersistedMap(fields);
+    }
+    
+    public Map<String, Object> getCustomFields() {
+        return fromPersistedMap(fields);
+    }
+    
     @Override
     public String getParent() {
         return parent;

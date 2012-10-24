@@ -21,7 +21,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         protected String id;
         protected String type;
         protected String displayName;
-        public Map<String, Object> customProperties = Maps.newLinkedHashMap();
+        protected Map<String, Object> fields = Maps.newLinkedHashMap();
         
         @SuppressWarnings("unchecked")
         protected B self() {
@@ -32,7 +32,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
             id = other.getId();
             type = other.getType();
             displayName = other.getDisplayName();
-            customProperties.putAll(other.getCustomProperties());
+            fields.putAll(other.getCustomFields());
             return self();
         }
         public B brooklynVersion(String val) {
@@ -47,16 +47,15 @@ public abstract class AbstractMemento implements Memento, Serializable {
         public B displayName(String val) {
             displayName = val; return self();
         }
-        public B customProperties(Map<String,?> vals) {
-            customProperties.putAll(vals); return self();
+        public B customFields(Map<String,?> vals) {
+            fields.putAll(vals); return self();
         }
     }
     
     private String brooklynVersion;
-    private String id;
     private String type;
+    private String id;
     private String displayName;
-    private Map<String,Object> customProperties;
     
     // for de-serialization
     protected AbstractMemento() {
@@ -68,9 +67,11 @@ public abstract class AbstractMemento implements Memento, Serializable {
         id = builder.id;
         type = builder.type;
         displayName = builder.displayName;
-        customProperties = toPersistedMap(builder.customProperties);
+        setCustomFields(builder.fields);
     }
 
+    protected abstract void setCustomFields(Map<String, Object> fields);
+    
     @Override
     public String getBrooklynVersion() {
         return brooklynVersion;
@@ -92,15 +93,13 @@ public abstract class AbstractMemento implements Memento, Serializable {
     }
     
     @Override
-    public Object getCustomProperty(String name) {
-        if (customProperties==null) return null;
-        return customProperties.get(name);
+    public Object getCustomField(String name) {
+        if (getCustomFields()==null) return null;
+        return getCustomFields().get(name);
     }
     
     @Override
-    public Map<String, ? extends Object> getCustomProperties() {
-        return fromPersistedMap(customProperties);
-    }
+    public abstract Map<String, ? extends Object> getCustomFields();
     
     @Override
     public String toString() {
