@@ -11,10 +11,13 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 
@@ -24,6 +27,9 @@ import com.google.common.collect.Sets;
 public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity implements JavaWebAppService {
 
     private static final Logger log = LoggerFactory.getLogger(JavaWebAppSoftwareProcess.class);
+
+    public static final Effector<Void> DEPLOY = new MethodEffector<Void>(JavaWebAppSoftwareProcess.class, "deploy");
+    public static final Effector<Void> UNDEPLOY = new MethodEffector<Void>(JavaWebAppSoftwareProcess.class, "undeploy");
 
     public static final AttributeSensor<Set<String>> DEPLOYED_WARS = new BasicAttributeSensor(
             Set.class, "webapp.deployedWars", "Names of archives/contexts that are currently deployed");
@@ -49,6 +55,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
         super.connectSensors();
 
         WebAppServiceMethods.connectWebAppServerPolicies(this);
+        JavaAppUtils.connectJavaAppServerPolicies(this);
     }
 
     //just provide better typing

@@ -25,6 +25,7 @@ public class JavaEntityTest {
     @BeforeMethod
     public void setUp() throws Exception {
         app = new TestApplication();
+        app.startManagement();
         app.start(ImmutableList.of(new SimulatedLocation()));
     }
     
@@ -51,6 +52,7 @@ public class JavaEntityTest {
     @Test
     public void testCanSetConfig() {
         entity = new ExampleJavaEntity(MutableMap.of("displayName", "myName", "myConfig1", "myVal1"), app);
+        app.manage(entity);
         
         assertEquals(entity.getDisplayName(), "myName");
         assertEquals(entity.getConfig(ExampleJavaEntity.MY_CONFIG1), "myVal1");
@@ -59,6 +61,7 @@ public class JavaEntityTest {
     @Test
     public void testCanSetAttribute() {
         entity = new ExampleJavaEntity(app);
+        app.manage(entity);
         
         entity.setAttribute(ExampleJavaEntity.MY_SENSOR1, "myval");
         assertEquals(entity.getAttribute(ExampleJavaEntity.MY_SENSOR1), "myval");
@@ -67,6 +70,7 @@ public class JavaEntityTest {
     @Test
     public void testCanCallEffector() {
         entity = new ExampleJavaEntity(app);
+        app.manage(entity);
         
         entity.effector1("val1");
         assertEquals(entity.effectorInvocations, ImmutableList.of("val1"));

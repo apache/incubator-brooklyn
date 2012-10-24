@@ -48,6 +48,7 @@ class DynamicFabricTest {
         loc1 = new SimulatedLocation()
         loc2 = new SimulatedLocation()
         loc3 = new SimulatedLocation()
+        app.startManagement();
     }
     
     @Test
@@ -62,6 +63,7 @@ class DynamicFabricTest {
     
     private void runWithLocations(Collection<Location> locs) {
         DynamicFabric fabric = new DynamicFabric(factory:{ properties -> return new TestEntity(properties) }, app)
+        app.manage(fabric);
         app.start(locs)
         
         assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
@@ -84,6 +86,7 @@ class DynamicFabricTest {
                         entitiesAdded.add(result)
                         result },
                 app)
+        app.manage(fabric);
         
         app.start([loc1,loc2])
         
@@ -98,7 +101,7 @@ class DynamicFabricTest {
             return new DynamicCluster(owner:owner, initialSize:0,
                 factory:{ clusterProperties -> return new TestEntity(clusterProperties) })
             }, app)
-        
+        app.manage(fabric);
         app.start(locs)
         
         int i = 0, total = 0
@@ -124,6 +127,7 @@ class DynamicFabricTest {
                         return new BlockingEntity(properties, latch) 
                 }, 
                 app)
+        app.manage(fabric);
         Collection<Location> locs = [ loc1, loc2 ]
         
         Task task = fabric.invoke(Startable.START, [ locations:locs ])
@@ -177,6 +181,7 @@ class DynamicFabricTest {
                                 .build() 
                 }, 
                 app)
+        app.manage(fabric);
         Collection<Location> locs = [ loc1, loc2 ]
         
         // Start the fabric (and check we have the required num things to concurrently stop)
@@ -215,6 +220,7 @@ class DynamicFabricTest {
         DynamicFabric fabric = new DynamicFabric(
                 factory:{ properties -> return new AbstractEntity(properties) {} }, 
                 app)
+        app.manage(fabric);
         
         try {
             fabric.start([loc1])
@@ -236,7 +242,7 @@ class DynamicFabricTest {
         DynamicFabric fabric = new DynamicFabric(
                 factory:{ properties -> return new TestEntity(properties) }, 
                 app)
-        
+        app.manage(fabric);
         fabric.start([loc1])
         
         AbstractEntity extraChild = new AbstractEntity(owner:fabric) {}
@@ -261,7 +267,8 @@ class DynamicFabricTest {
         }
         //available through inheritance (as a PortRange)
         fabric.setConfig(Attributes.HTTP_PORT, 1234)
-		
+        app.manage(fabric);
+        
 		app.start([ new SimulatedLocation() ])
         
 		assertEquals(fabric.ownedChildren.size(), 1)

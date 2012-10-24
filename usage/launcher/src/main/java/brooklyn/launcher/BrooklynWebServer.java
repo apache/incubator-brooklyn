@@ -25,6 +25,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 import com.google.common.base.Throwables;
@@ -169,6 +170,7 @@ public class BrooklynWebServer {
      */
     public synchronized void start() throws Exception {
         if (server!=null) throw new IllegalStateException(""+this+" already running");
+
         if (actualPort==-1){
             actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), httpsEnabled?httpsPort:port);
         }
@@ -191,8 +193,10 @@ public class BrooklynWebServer {
             SslContextFactory sslContextFactory = new SslContextFactory();
             sslContextFactory.setKeyStore(checkFileExists(keystorePath, "keystore"));
             sslContextFactory.setKeyStorePassword(keystorePassword);
-            sslContextFactory.setTrustStore(checkFileExists(truststorePath, "truststore"));
-            sslContextFactory.setTrustStorePassword(trustStorePassword);
+            if (!Strings.isEmpty(truststorePath)) {
+                sslContextFactory.setTrustStore(checkFileExists(truststorePath, "truststore"));
+                sslContextFactory.setTrustStorePassword(trustStorePassword);
+            }
 
             SslSocketConnector sslSocketConnector = new SslSocketConnector(sslContextFactory);
             sslSocketConnector.setPort(actualPort);

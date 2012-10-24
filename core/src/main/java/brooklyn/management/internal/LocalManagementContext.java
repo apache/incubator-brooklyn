@@ -2,8 +2,7 @@ package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 
-import brooklyn.entity.drivers.BasicEntityDriverFactory;
-import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.config.BrooklynProperties;
 import groovy.util.ObservableList;
 
 import java.util.ArrayList;
@@ -17,14 +16,13 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
 import brooklyn.util.task.BasicExecutionManager;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -35,16 +33,29 @@ import com.google.common.collect.Sets;
 public class LocalManagementContext extends AbstractManagementContext {
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
-    private ExecutionManager execution;
+    private static final Object MANAGED_LOCALLY = new Object();
+    
+    private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
 
-    protected Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
-    protected ObservableList entities = new ObservableList();
-    protected Set<Application> applications = Sets.newLinkedHashSet();
+    protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
+    protected final ObservableList entities = new ObservableList();
+    protected final Set<Application> applications = Sets.newLinkedHashSet();
 
-    private static final Object MANAGED_LOCALLY = new Object();
+    private final String tostring = "LocalManagementContext("+Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5)+")";
 
-    protected synchronized boolean manageNonRecursive(Entity e) {
+    /**
+     * Creates a LocalManagement with default BrooklynProperties.
+     */
+    public LocalManagementContext(){
+        this(BrooklynProperties.Factory.newDefault());
+    }
+
+    public LocalManagementContext(BrooklynProperties brooklynProperties){
+       super(brooklynProperties);
+    }
+
+     protected synchronized boolean manageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = MANAGED_LOCALLY;
         Object old = entitiesById.put(e.getId(), e);
         if (old!=null) {
@@ -55,10 +66,9 @@ public class LocalManagementContext extends AbstractManagementContext {
             }
             return false;
         } else {
-            log.debug("{} starting management of entity {}", this, e);
+            if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
             if (e instanceof Application) {
                 applications.add((Application)e);
-                ((AbstractApplication)e).setManagementContext(this);
             }
             entities.add(e);
             return true;
@@ -79,7 +89,7 @@ public class LocalManagementContext extends AbstractManagementContext {
             log.error("{} call to stop management of entity {} removed different entity {}", new Object[] { this, e, old });
             return true;
         } else {
-            log.debug("{} stopped management of entity {}", this, e);
+            if (log.isDebugEnabled()) log.debug("{} stopped management of entity {}", this, e);
             return true;
         }
     }
@@ -109,10 +119,16 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
         return execution;
     }
-    	
-    public <T> Task<T> runAtEntity(Map flags, Entity entity, Callable<T> c) {
+    
+    @Override
+    public void terminate() {
+        super.terminate();
+        if (execution != null) execution.shutdownNow();
+    }
+    
+    public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, (elvis(flags.get("displayName"), flags.get("description"), flags, c)));
-        return ((EntityLocal)entity).getExecutionContext().submit(flags, c);
+        return getExecutionContext(entity).submit(flags, c);
     }
 
     public boolean isManagedLocally(Entity e) {
@@ -125,5 +141,10 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
         entities.removePropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener));
+    }
+    
+    @Override
+    public String toString() {
+        return tostring;
     }
 }

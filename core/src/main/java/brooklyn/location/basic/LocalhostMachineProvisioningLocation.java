@@ -142,7 +142,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             return true;
         }
     }
-    /** checks the actual availability of the port on localhost, ie by binding to it */
+    /** checks the actual availability of the port on localhost, ie by binding to it; cf {@link NetworkUtils#isPortAvailable(int)} */
     public static boolean checkPortAvailable(InetAddress localAddress, int portNumber) {
         if (portNumber<1024) {
             if (LOG.isDebugEnabled()) LOG.debug("Skipping system availability check for privileged localhost port "+portNumber);
@@ -177,14 +177,16 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             releasePort(null, p);
     }
     
-    private static class LocalhostMachine extends SshMachineLocation {
-        private final Set<Integer> portsObtained = Sets.newLinkedHashSet();
+    public static class LocalhostMachine extends SshMachineLocation {
+        private static final WithMutexes mutexSupport = new MutexSupport();
         
-        private LocalhostMachine() {
-            this(MutableMap.of());
+        private final Set<Integer> portsObtained = Sets.newLinkedHashSet();
+
+        public LocalhostMachine() {
+            this(MutableMap.of("mutexSupport", mutexSupport));
         }
-        private LocalhostMachine(Map properties) {
-            super(properties);
+        public LocalhostMachine(Map properties) {
+            super(MutableMap.builder().putAll(properties).put("mutexSupport", mutexSupport).build());
         }
         public boolean obtainSpecificPort(int portNumber) {
             return LocalhostMachineProvisioningLocation.obtainSpecificPort(getAddress(), portNumber);
@@ -207,9 +209,5 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         public OsDetails getOsDetails() {
             return new BasicOsDetails.Factory().newLocalhostInstance();
         }
-        
-        private static WithMutexes mutexSupport = new MutexSupport();
-        protected WithMutexes newMutexSupport() { return mutexSupport; }
-        
     }
 }

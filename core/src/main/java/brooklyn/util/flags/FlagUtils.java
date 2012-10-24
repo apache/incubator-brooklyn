@@ -1,5 +1,7 @@
 package brooklyn.util.flags;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 import groovy.lang.Closure;
@@ -10,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -51,6 +54,44 @@ public class FlagUtils {
         return setFieldsFromFlagsInternal(flags, o, getAllFields(o.getClass()));
     }
 	
+    /**
+     * Sets the field with the given flag (if it exists) to the given value.
+     * Will attempt to coerce the value to the required type.
+     * Will respect "nullable" on the SetFromFlag annotation.
+     * 
+     * @throws IllegalArgumentException If fieldVal is null and the SetFromFlag annotation set nullable=false
+     */
+    public static void setFieldFromFlag(String flagName, Object fieldVal, Object o) {
+        setFieldFromFlagInternal(checkNotNull(flagName, "flagName"), fieldVal, o, getAllFields(o.getClass()));
+    }
+    
+    /** get all fields (including private and static) on the given object and all supertypes, 
+     * that are annotated with SetFromFlags. 
+     */
+    public static Map<String, ? extends Object> getFieldsWithFlags(Object o) {
+        return getFieldsWithFlagsInternal(o, getAllFields(o.getClass()));
+    }
+	
+    /**
+     * Finds the {@link Field} on the given object annotated with the given name flag.
+     */
+    public static Field findFieldForFlag(String flagName, Object o) {
+    	return findFieldForFlagInternal(flagName, o, getAllFields(o.getClass()));
+    }
+
+    /** get all fields (including private and static) on the given object and all supertypes, 
+     * that are annotated with SetFromFlags. 
+     */
+    public static Map<String, Object> getFieldsWithFlagsExcludingModifiers(Object o, int excludingModifiers) {
+        List<Field> filteredFields = Lists.newArrayList();
+        for (Field contender : getAllFields(o.getClass())) {
+        	if ((contender.getModifiers() & excludingModifiers) == 0) {
+        		filteredFields.add(contender);
+        	}
+        }
+		return getFieldsWithFlagsInternal(o, filteredFields);
+    }
+    
     // TODO Don't want to use class AbstractEntity here...
     public static Map<String, ? extends Object> setConfigKeysFromFlags(Map<String, ? extends Object> flags, AbstractEntity entity) {
         return setConfigKeysFromFlagsInternal(flags, entity, getAllFields(entity.getClass()));
@@ -108,6 +149,45 @@ public class FlagUtils {
 		return classes;
 	}
 	
+    private static Map<String, Object> getFieldsWithFlagsInternal(Object o, Collection<Field> fields) {
+        Map<String, Object> result = Maps.newLinkedHashMap();
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf != null) {
+                String flagName = elvis(cf.value(), f.getName());
+                if (truth(flagName)) {
+                	result.put(flagName, getField(o, f));
+                } else {
+                	log.warn("Ignoring field {} of object {} as no flag name available", f, o);
+                }
+            }
+        }
+        return result;
+    }
+
+    private static Field findFieldForFlagInternal(String flagName, Object o, Collection<Field> fields) {
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf != null) {
+            	String contenderName = elvis(cf.value(), f.getName());
+                if (flagName.equals(contenderName)) {
+                	return f;
+                }
+            }
+        }
+        throw new NoSuchElementException("Field with flag "+flagName+" not found on "+o+" of type "+(o != null ? o.getClass() : null));
+    }
+
+    private static void setFieldFromFlagInternal(String flagName, Object fieldVal, Object o, Collection<Field> fields) {
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf != null && flagName.equals(elvis(cf.value(), f.getName()))) {
+                setField(o, f, fieldVal, cf);
+                break;
+            }
+        }
+    }
+
     private static Map<String, ? extends Object> setFieldsFromFlagsInternal(Map<String,? extends Object> flags, Object o, Collection<Field> fields) {
         Map<String, Object> remaining = Maps.newLinkedHashMap();
 		if (truth(flags)) remaining.putAll(flags);

@@ -4,9 +4,12 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionHandle;
@@ -35,5 +38,17 @@ public class TestApplication extends AbstractApplication {
         return "Application["+id.substring(Math.max(0, id.length()-8))+"]";
     }
 
-    // TODO add more mock methods
+    /** convenience for wiring in management during testing */
+    public void startManagement() {
+        Entities.startManagement(this);
+    }
+    
+    /** convenience for wiring in management during testing */
+    public <T extends Entity> T manage(T entity) {
+        if (!Entities.manage(entity)) {
+            Assert.assertEquals(entity.getApplication(), this);
+        }
+        return entity;
+    }
+
 }

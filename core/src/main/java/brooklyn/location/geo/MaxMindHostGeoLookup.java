@@ -45,6 +45,11 @@ public class MaxMindHostGeoLookup implements HostGeoLookup {
         if (NetworkUtils.isPrivateSubnet(extAddress)) extAddress = InetAddress.getByName(UtraceHostGeoLookup.getLocalhostExternalIp());
         
         com.maxmind.geoip.Location l = ll.getLocation(extAddress);
+        if (l==null) {
+            if (log.isDebugEnabled()) log.debug("Geo info failed to find location for address {}, using {}", extAddress, ll);
+            return null;
+        }
+        
         try {
             StringBuilder name = new StringBuilder();
             
@@ -60,7 +65,7 @@ public class MaxMindHostGeoLookup implements HostGeoLookup {
             name.append(" ("); name.append(l.countryCode); name.append(")");
             
             HostGeoInfo geo = new HostGeoInfo(address.getHostName(), name.toString(), l.latitude, l.longitude);
-            log.info("Geo info lookup (MaxMind DB) for "+address+" returned: "+geo);
+            log.debug("Geo info lookup (MaxMind DB) for "+address+" returned: "+geo);
             return geo;
         } catch (Exception e) {
             if (log.isDebugEnabled())

@@ -76,6 +76,17 @@ public class MutableList<V> extends ArrayList<V> {
             return this;
         }
 
+        public Builder<V> removeAll(Iterable<? extends V> iterable) {
+            if (iterable instanceof Collection) {
+                result.removeAll((Collection<? extends V>) iterable);
+            } else {
+                for (V v : iterable) {
+                    result.remove(v);
+                }
+            }
+            return this;
+        }
+
         public MutableList<V> build() {
           return new MutableList<V>(result);
         }

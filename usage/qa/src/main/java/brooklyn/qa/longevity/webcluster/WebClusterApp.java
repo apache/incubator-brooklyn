@@ -50,7 +50,7 @@ public class WebClusterApp extends AbstractApplication {
 
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = new LocationRegistry().getLocationsById(!args.isEmpty() ? args : Arrays.asList(DEFAULT_LOCATION));
+        List<Location> locations = new LocationRegistry(config).getLocationsById(!args.isEmpty() ? args : Arrays.asList(DEFAULT_LOCATION));
 
         WebClusterApp app = new WebClusterApp(MutableMap.of("name", "Brooklyn WebApp Cluster example"));
 

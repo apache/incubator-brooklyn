@@ -9,7 +9,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.BasicPolicyRebindSupport;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.management.ExecutionContext;
+import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
 import brooklyn.util.flags.FlagUtils;
 
@@ -84,6 +87,11 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     @Override
     public boolean isRunning() {
         return !isSuspended() && !isDestroyed();
+    }
+
+    @Override
+    public RebindSupport<PolicyMemento> getRebindSupport() {
+        return new BasicPolicyRebindSupport(this);
     }
 
     @Override

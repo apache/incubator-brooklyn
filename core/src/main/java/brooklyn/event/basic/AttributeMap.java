@@ -14,6 +14,9 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 
+import com.google.common.collect.Maps;
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 /**
@@ -43,6 +46,16 @@ public final class AttributeMap implements Serializable {
         this.entity = Preconditions.checkNotNull(entity, "entity must be specified");
     }
 
+    public Map<String, Object> asMap() {
+        Map<String, Object> result = Maps.newLinkedHashMap();
+        for (Map.Entry<Collection<String>, Object> entry : values.entrySet()) {
+            String sensorName = Joiner.on('.').join(entry.getKey());
+            Object val = (isNull(entry.getValue())) ? null : entry.getValue();
+            result.put(sensorName, val);
+        }
+        return result;
+    }
+    
     /**
      * Updates the value.
      *
@@ -73,9 +86,15 @@ public final class AttributeMap implements Serializable {
     }
 
     public <T> T update(AttributeSensor<T> attribute, T newValue) {
+        T oldValue = updateWithoutPublishing(attribute, newValue);
+        ((AbstractEntity)entity).emitInternal(attribute, newValue);
+        return oldValue;
+    }
+    
+    public <T> T updateWithoutPublishing(AttributeSensor<T> attribute, T newValue) {
         if (log.isDebugEnabled()) {
             Object oldValue = getValue(attribute);
-            if ((oldValue == null && newValue != null) || (oldValue != null && !oldValue.equals(newValue))) {
+            if (!Objects.equal(oldValue, newValue != null)) {
                 log.debug("setting attribute {} to {} (was {}) on {}", new Object[] {attribute.getName(), newValue, oldValue, entity});
             } else {
                 if (log.isTraceEnabled()) log.trace("setting attribute {} to {} (unchanged) on {}", new Object[] {attribute.getName(), newValue, this});
@@ -83,7 +102,6 @@ public final class AttributeMap implements Serializable {
         }
 
         T oldValue = (T) update(attribute.getNameParts(), newValue);
-        ((AbstractEntity)entity).emitInternal(attribute, newValue);
         
         return (isNull(oldValue)) ? null : oldValue;
     }

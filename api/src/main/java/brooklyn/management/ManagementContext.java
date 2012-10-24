@@ -2,10 +2,11 @@ package brooklyn.management;
 
 import java.util.Collection;
 
-import brooklyn.config.ConfigMap.StringConfigMap;
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.rebind.RebindManager;
 
 /**
  * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
@@ -16,10 +17,12 @@ import brooklyn.entity.drivers.EntityDriverFactory;
  * It may refer to several applications, and it refers to all the entities owned by those applications.
  */
 public interface ManagementContext {
+
     /**
      * All applications under control of this management plane
      */
     Collection<Application> getApplications();
+
     /**
      * All entities under control of this management plane
      */
@@ -72,6 +75,8 @@ public interface ManagementContext {
      */
     SubscriptionContext getSubscriptionContext(Entity entity);
 
+    RebindManager getRebindManager();
+    
     /**
      * Manage an entity.
      */

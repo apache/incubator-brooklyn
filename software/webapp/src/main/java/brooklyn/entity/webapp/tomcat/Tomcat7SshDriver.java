@@ -45,7 +45,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs));
-        commands.add(CommonCommands.installExecutable("tar xvzf"));
+        commands.add(CommonCommands.installExecutable("tar"));
         commands.add(format("tar xvzf %s",saveAs));
 
         newScript(INSTALLING).

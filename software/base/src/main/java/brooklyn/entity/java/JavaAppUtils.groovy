@@ -2,16 +2,18 @@ package brooklyn.entity.java
 
 import java.lang.management.ManagementFactory
 import java.lang.management.MemoryUsage
+import java.util.concurrent.TimeUnit
 
 import javax.management.openmbean.CompositeData
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.enricher.RollingTimeWindowMeanEnricher
+import brooklyn.enricher.TimeFractionDeltaEnricher
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.event.adapter.JmxSensorAdapter
-import java.util.concurrent.TimeUnit
 
 class JavaAppUtils {
 
@@ -46,6 +48,7 @@ class JavaAppUtils {
             }
             
             jmxAdapter.objectName(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME).with {
+                attribute("ProcessCpuTime").subscribe(UsesJavaMXBeans.PROCESS_CPU_TIME);
                 attribute("SystemLoadAverage").subscribe(UsesJavaMXBeans.SYSTEM_LOAD_AVERAGE);
                 attribute(period:60*TimeUnit.SECONDS, "AvailableProcessors").subscribe(UsesJavaMXBeans.AVAILABLE_PROCESSORS);
                 attribute(period:60*TimeUnit.SECONDS, "TotalPhysicalMemorySize").subscribe(UsesJavaMXBeans.TOTAL_PHYSICAL_MEMORY_SIZE);
@@ -58,5 +61,14 @@ class JavaAppUtils {
 //                attribute("SystemLoadAverage").subscribe(UsesJavaMXBeans.GARBAGE_COLLECTION_TIME, { def m -> log.info("XXXXXXX $m") });
 //            }
         }
+    }
+    
+    public static void connectJavaAppServerPolicies(EntityLocal entity) {
+        entity.addEnricher(new TimeFractionDeltaEnricher<Long>(entity, UsesJavaMXBeans.PROCESS_CPU_TIME, 
+                UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION, TimeUnit.NANOSECONDS));
+
+        entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity,
+                UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION, UsesJavaMXBeans.AVG_PROCESS_CPU_TIME_FRACTION,
+                UsesJavaMXBeans.AVG_PROCESS_CPU_TIME_FRACTION_PERIOD));
     }
 }

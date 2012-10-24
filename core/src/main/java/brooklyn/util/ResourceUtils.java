@@ -9,11 +9,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
@@ -25,16 +27,25 @@ public class ResourceUtils {
 
     ClassLoader loader = null;
     String context = null;
+    Object contextObject = null;
     
     /** context string used for errors */
-    public ResourceUtils(ClassLoader loader, String context) {
+    public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
         this.loader = loader;
-        this.context = context;
+        this.contextObject = contextObject;
+        this.context = contextMessage;
+    }
+    /** contextObject used for classloading, contextMessage used for errors */
+    public ResourceUtils(Object contextObject, String contextMessage) {
+        this(contextObject==null ? null : 
+            contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
+                contextObject instanceof ClassLoader ? ((ClassLoader)contextObject) : 
+                    contextObject.getClass().getClassLoader(), 
+            contextObject, contextMessage);
     }
     /** uses the classloader of the given object, and the phrase object's toString (preceded by the word 'for') as the context string used in errors */
-    @SuppressWarnings("rawtypes")
     public ResourceUtils(Object context) {
-        this(context==null ? null : context instanceof Class ? ((Class)context).getClassLoader() : context.getClass().getClassLoader(), context==null ? null : ""+context);
+        this(context, Strings.toString(context));
     }
     
     public ClassLoader getLoader() {
@@ -147,15 +158,18 @@ public class ResourceUtils {
         address = subUrl.substring(atIndex + 1, colonIndex);
         path = subUrl.substring(colonIndex+1);
         SshMachineLocation machine = new SshMachineLocation(MutableMap.builder()
-                .putIfNotNull("username", user)
+                .putIfNotNull("user", user)
                 .put("address", InetAddress.getByName(address))
                 .build());
-
-        File tempFile = File.createTempFile("brooklyn-sftp", ".tmp");
-        tempFile.deleteOnExit();
-        tempFile.setReadable(true, true);
-        machine.copyFrom(path, tempFile.getAbsolutePath());
-        return new FileInputStream(tempFile);
+        try {
+            File tempFile = File.createTempFile("brooklyn-sftp", ".tmp");
+            tempFile.deleteOnExit();
+            tempFile.setReadable(true, true);
+            machine.copyFrom(path, tempFile.getAbsolutePath());
+            return new FileInputStream(tempFile);
+        } finally {
+            Closeables.closeQuietly(machine);
+        }
     }
     
     /** takes {@link #getResourceFromUrl(String)} and reads fully, into a string */
@@ -168,6 +182,38 @@ public class ResourceUtils {
         }
     }
 
+    /** returns the base directory or JAR from which the context is class-loaded, if possible;
+     * throws exception if not found */
+    public String getClassLoaderDir() {
+        if (contextObject==null) throw new IllegalArgumentException("No suitable context ("+context+") to auto-detect classloader dir");
+        Class<?> cc = contextObject instanceof Class ? (Class<?>)contextObject : contextObject.getClass();
+        return getClassLoaderDir(cc.getCanonicalName().replace('.', '/')+".class");
+    }
+    public String getClassLoaderDir(String resourceInThatDir) {
+        resourceInThatDir = Strings.removeFromStart(resourceInThatDir, "/");
+        URL url = getLoader().getResource(resourceInThatDir);
+        if (url==null) throw new NoSuchElementException("Resource ("+resourceInThatDir+") not found");
+        String urls = url.toString();
+
+        boolean isJar = urls.startsWith("jar:");
+        urls = Strings.removeFromStart(urls, "jar:");
+        if (!urls.startsWith("file:")) throw new IllegalStateException("Resource ("+resourceInThatDir+") not on file system (at "+urls+")");
+        urls = Strings.removeFromStart(urls, "file:");
+        urls = Strings.removeFromStart(urls, "//");
+        
+        int i = urls.indexOf(resourceInThatDir);
+        if (i==-1) throw new IllegalStateException("Resource path ("+resourceInThatDir+") not in url substring ("+urls+")");
+        urls = urls.substring(0, i);
+        
+        if (isJar) {
+            urls = Strings.removeFromEnd(urls, "/");
+            if (!urls.endsWith("!")) throw new IllegalStateException("Context class url mismatch, is jar but does not have ! separator ("+urls+")");
+            urls = Strings.removeFromEnd(urls, "!");
+            if (!new File(urls).exists()) throw new IllegalStateException("Context class url substring ("+urls+") not found on filesystem");
+        }
+        return urls;
+    }
+    
     public static String readFullyString(InputStream is) throws IOException {
         return new String(readFullyBytes(is));
     }

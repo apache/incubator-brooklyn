@@ -21,11 +21,16 @@ public class MapListAndOtherStructuredConfigKeyTest {
     @BeforeMethod
     public void setUp() {
         app = new TestApplication();
+        app.startManagement();
     }
 
+    public TestEntity newTestEntity() {
+        return app.manage(new TestEntity(app));
+    }
+    
     @Test    
     public void testMapConfigKeyCanStoreAndRetrieveVals() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval")
         app.start([new SimulatedLocation()])
@@ -34,7 +39,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     
     @Test
     public void testMapConfigKeyCanStoreAndRetrieveFutureVals() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), DependentConfiguration.whenDone( {return "aval"} as Callable))
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), DependentConfiguration.whenDone( {return "bval"} as Callable))
         app.start([new SimulatedLocation()])
@@ -44,7 +49,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
     public void testConfigKeyStringWontStoreAndRetrieveMaps() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         Map v1 = [a:1, b:"bb"]
         //it only allows strings
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), v1)
@@ -52,7 +57,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     
     @Test
     public void testConfigKeyCanStoreAndRetrieveMaps() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         Map v1 = [a:1, b:"bb"]
         entity.setConfig(TestEntity.CONF_MAP_PLAIN, v1)
         app.start([new SimulatedLocation()])
@@ -61,7 +66,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @Test    
     public void testListConfigKeyCanStoreAndRetrieveVals() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "bval")
         app.start([new SimulatedLocation()])
@@ -71,7 +76,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     
     @Test
     public void testListConfigKeyCanStoreAndRetrieveFutureVals() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), DependentConfiguration.whenDone( {return "aval"} as Callable))
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), DependentConfiguration.whenDone( {return "bval"} as Callable))
         app.start([new SimulatedLocation()])
@@ -81,7 +86,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @Test
     public void testListConfigKeyAddDirect() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
         entity.setConfig(TestEntity.CONF_LIST_THING, "bval")
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval"])
@@ -89,7 +94,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @Test
     public void testListConfigKeyClear() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
         entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.clear())
         // for now defaults to null, but empty list might be better? or whatever the default is?
@@ -98,28 +103,28 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @Test
     public void testListConfigKeyAddMod() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
         entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.add("bval", "cval"))
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval","cval"])
     }
     @Test
     public void testListConfigKeyAddAllMod() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
         entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.addAll(["bval", "cval"]))
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval","bval","cval"])
     }
     @Test
     public void testListConfigKeyAddItemMod() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
         entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.addItem(["bval", "cval"]))
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["aval",["bval","cval"]])
     }
     @Test
     public void testListConfigKeySetMod() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
         entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.set(["bval", "cval"]))
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), ["bval","cval"])
@@ -127,7 +132,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @Test
     public void testMapConfigPutDirect() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
         entity.setConfig(TestEntity.CONF_MAP_THING, [bkey:"bval"])
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
@@ -135,7 +140,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @Test
     public void testMapConfigPutAllMod() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
         entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.put([bkey:"bval"]))
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
@@ -143,7 +148,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
 
     @Test
     public void testMapConfigClearMod() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
         entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.clear())
         // for now defaults to null, but empty map might be better? or whatever the default is?
@@ -151,7 +156,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     }
     @Test
     public void testMapConfigSetMode() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
         entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.set([bkey:"bval"]))
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [bkey:"bval"])

@@ -1,25 +1,29 @@
 package brooklyn.util;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.util.NoSuchElementException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class ResourceUtilsTest {
 
+    private static final Logger log = LoggerFactory.getLogger(ResourceUtilsTest.class);
+    
     private String tempFileContents = "abc";
     private ResourceUtils utils;
     private File tempFile;
     
     @BeforeClass(alwaysRun=true)
     public void setUp() throws Exception {
-        utils = new ResourceUtils(ResourceUtilsTest.class.getClassLoader(), "mycontext");
+        utils = new ResourceUtils(this, "mycontext");
         tempFile = ResourceUtils.writeToTempFile(new ByteArrayInputStream(tempFileContents.getBytes()), "resourceutils-test", ".txt");
     }
     
@@ -53,7 +57,35 @@ public class ResourceUtilsTest {
         InputStream stream = utils.getResourceFromUrl(tempFile.getAbsolutePath());
         assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
     }
-    
+
+    @Test
+    public void testClassLoaderDir() throws Exception {
+        String d = utils.getClassLoaderDir();
+        log.info("Found resource "+this+" in: "+d);
+        assertTrue(new File(d+"/brooklyn/util/").exists());
+    }
+
+    @Test
+    public void testClassLoaderDirFromJar() throws Exception {
+        String d = utils.getClassLoaderDir("java/lang/Object.class");
+        log.info("Found Object in: "+d);
+        assertTrue(d.toLowerCase().endsWith(".jar"));
+    }
+
+    @Test
+    public void testClassLoaderDirFromJarWithSlash() throws Exception {
+        String d = utils.getClassLoaderDir("/java/lang/Object.class");
+        log.info("Found Object in: "+d);
+        assertTrue(d.toLowerCase().endsWith(".jar"));
+    }
+
+    @Test(expectedExceptions={NoSuchElementException.class})
+    public void testClassLoaderDirNotFound() throws Exception {
+        String d = utils.getClassLoaderDir("/somewhere/not/found/XXX.xxx");
+        // above should fail
+        log.warn("Uh oh found iamginary resource in: "+d);
+    }
+
     @Test(groups="Integration")
     public void testGetResourceViaSftp() throws Exception {
         InputStream stream = utils.getResourceFromUrl("sftp://localhost:"+tempFile.getAbsolutePath());

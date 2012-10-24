@@ -1,4 +1,5 @@
 package brooklyn.extras.openshift;
+import brooklyn.config.BrooklynProperties;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -8,7 +9,8 @@ public class LocationResolvesTest {
 
     @Test
     public void testOpenshiftLocationResolves() {
-        Assert.assertNotNull(new LocationRegistry().resolve("openshift"));
+        BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
+        Assert.assertNotNull(new LocationRegistry(properties).resolve("openshift"));
     }
     
 }

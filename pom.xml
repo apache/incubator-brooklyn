@@ -6,7 +6,7 @@
 
     <groupId>io.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
-    <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <version>0.5.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
 
     <name>Brooklyn Parent Project</name>
     <description>
@@ -81,7 +81,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <brooklyn.version>0.4.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+        <brooklyn.version>0.5.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
 
         <cobertura.version>1.9.4.1</cobertura.version>
         <surefire.version>2.12.3</surefire.version>
@@ -96,6 +96,7 @@
         <slf4j.version>1.5.11</slf4j.version>
         <!-- NB: slf4j 1.6.x seems to change some signatures which breaks e.g. grails 1.3; grails may ask for 1.5.8 but that's okay -->
         <xstream.version>1.3.1</xstream.version>
+        <jackson.version>1.9.10</jackson.version>
         <jansi.version>1.2.1</jansi.version>
         <guava.version>12.0.1</guava.version>
         <ivy.version>2.2.0</ivy.version>
@@ -609,6 +610,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
+                <module>util/jmx/jmxmp-ssl-agent</module>
                 <module>software/base</module>
                 <module>software/osgi</module>
                 <module>software/webapp</module>

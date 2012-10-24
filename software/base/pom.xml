@@ -4,7 +4,7 @@
     <packaging>bundle</packaging>
 
     <artifactId>brooklyn-software-base</artifactId>
-    
+
     <name>Brooklyn Software Base</name>
     <description>
 		Base classes for Brooklyn software process entities
@@ -12,7 +12,7 @@
     <parent>
         <groupId>io.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
-        <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <version>0.5.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -21,7 +21,17 @@
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
         </dependency>
-        
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-jmxmp-agent</artifactId>
+            <version>${brooklyn.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-policy</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-test-support</artifactId>
@@ -47,5 +57,47 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Include-Resource>{maven-resources}, target/classes/brooklyn-jmxmp-agent-shaded-${project.version}.jar</Include-Resource>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <!-- copy the jmxmp-agent JAR so it is available on the classpath for programmatic deployment -->
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <!-- NB this can fail in eclipse trying to copy _from_ target/classes. see http://jira.codehaus.org/browse/MDEP-259 -->
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>brooklyn-jmxmp-agent</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <classifier>with-dependencies</classifier>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>target/classes</outputDirectory>
+                                    <destFileName>brooklyn-jmxmp-agent-shaded-${project.version}.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

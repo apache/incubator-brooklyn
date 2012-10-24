@@ -3,6 +3,9 @@ package brooklyn.entity
 import static org.testng.Assert.*
 
 import org.testng.annotations.Test
+
+import groovy.transform.InheritConstructors;
+
 import java.beans.ReflectionUtils;
 
 import org.slf4j.Logger
@@ -33,6 +36,7 @@ public class EffectorSayHiTest {
     @Test
     public void testFindEffectors() {
         MyEntity e = new MyEntity();
+        new LocalManagementContext().manage(e);
 
         assertEquals("sayHi1", e.SAY_HI_1.getName());
         assertEquals(["name", "greeting"], e.SAY_HI_1.getParameters()[0..1]*.getName());
@@ -60,6 +64,7 @@ public class EffectorSayHiTest {
     @Test
     public void testInvokeEffectorMethod1BypassInterception() {
         MyEntity e = new MyEntity();
+        new LocalManagementContext().manage(e);
 
         String name = "sayHi1"
         def args = ["Bob", "hello"] as Object[]
@@ -74,6 +79,7 @@ public class EffectorSayHiTest {
     @Test
     public void testInvokeEffectorMethod2BypassInterception() {
         MyEntity e = new MyEntity();
+        new LocalManagementContext().manage(e);
 
         String name = "sayHi2"
         def args = ["Bob", "hello"] as Object[]
@@ -83,6 +89,7 @@ public class EffectorSayHiTest {
     @Test
     public void testInvokeEffectors1() {
         MyEntity e = new MyEntity();
+        new LocalManagementContext().manage(e);
 
         assertEquals("hi Bob", e.sayHi1("Bob", "hi"))
         assertEquals("hello Bob", e.sayHi1("Bob"))
@@ -99,7 +106,8 @@ public class EffectorSayHiTest {
     @Test
     public void testInvokeEffectors2() {
         MyEntity e = new MyEntity();
-
+        new LocalManagementContext().manage(e);
+        
         assertEquals("hi Bob", e.sayHi2("Bob", "hi"))
         assertEquals("hello Bob", e.sayHi2("Bob"))
 
@@ -113,6 +121,8 @@ public class EffectorSayHiTest {
     @Test
     public void testCanRetrieveTaskForEffector() {
         MyEntity e = new MyEntity();
+        new LocalManagementContext().manage(e);
+        
         e.sayHi2("Bob", "hi")
 
         ManagementContext managementContext = e.getManagementContext()
@@ -125,6 +135,7 @@ public class EffectorSayHiTest {
     @Test
     public void testCanExcludeNonEffectorTasks() {
         MyEntity e = new MyEntity()
+        new LocalManagementContext().manage(e);
         ManagementContext managementContext = e.getManagementContext()
         ExecutionContext executionContext = managementContext.getExecutionContext()
         executionContext.submit( {} as Runnable)
@@ -173,7 +184,8 @@ interface CanSayHi {
 
 }
 
-public class MyEntity extends LocallyManagedEntity implements CanSayHi {
+@InheritConstructors
+public class MyEntity extends SimpleEntity implements CanSayHi {
 	public String sayHi1(String name, String greeting) { "$greeting $name" }
 	public String sayHi2(String name, String greeting) { "$greeting $name" }
 }

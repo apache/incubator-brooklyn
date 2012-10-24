@@ -92,7 +92,8 @@ public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
     public static void main(String[] argv) throws IOException {
         ArrayList args = new ArrayList(Arrays.asList(argv));
         int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = new LocationRegistry().getLocationsById(
+        BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
+        List<Location> locations = new LocationRegistry(properties).getLocationsById(
                 !args.isEmpty() ? args : Collections.singletonList(DEFAULT_LOCATION));
 
         WebClusterDatabaseExampleAltJava app = new WebClusterDatabaseExampleAltJava();

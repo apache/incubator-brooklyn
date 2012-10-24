@@ -13,7 +13,7 @@
     <parent>
         <groupId>io.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
-        <version>0.4.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <version>0.5.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -21,7 +21,7 @@
         <grails.version>1.3.7</grails.version>
     </properties>
 
-    <dependencies>
+      <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-core</artifactId>
@@ -48,7 +48,23 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
+          <!-- the ldap server (for testing) -->
+          <dependency>
+              <groupId>org.forgerock.opendj</groupId>
+              <artifactId>opendj-server</artifactId>
+              <version>2.4.5</version>
+              <scope>test</scope>
+          </dependency>
+
+          <!-- the storage backend for the ldap server (also for testing) -->
+          <dependency>
+              <groupId>com.sleepycat</groupId>
+              <artifactId>je</artifactId>
+              <version>5.0.34</version>
+              <scope>test</scope>
+          </dependency>
+
+          <dependency>
             <groupId>org.grails</groupId>
             <artifactId>grails-bootstrap</artifactId>
             <version>${grails.version}</version>
@@ -293,7 +309,13 @@
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
-    </dependencies>
+          <dependency>
+              <groupId>com.google.guava</groupId>
+              <artifactId>guava</artifactId>
+              <version>${guava.version}</version>
+          </dependency>
+
+      </dependencies>
 
     <repositories>
         <!-- Required to get hold of javassist:javassist -->
@@ -309,6 +331,28 @@
             <id>spring-releases</id>
             <name>Spring Maven RELEASE Repository</name>
             <url>http://maven.springframework.org/release</url>
+        </repository>
+        <!-- contains the opends dependencies: needed for testing ldap functionality -->
+        <repository>
+            <id>forgerock-staging-repository</id>
+            <name>ForgeRock Release Repository</name>
+            <url>http://maven.forgerock.org/repo/releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <!-- contains the sleepycat dependency: needed for testing ldap functionality-->
+        <repository>
+            <id>Silverpeas</id>
+            <layout>default</layout>
+            <name>Silverpeas Repository</name>
+            <url>http://www.silverpeas.org/nexus/content/groups/silverpeas</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
 

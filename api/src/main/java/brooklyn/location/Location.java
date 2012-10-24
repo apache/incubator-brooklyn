@@ -2,11 +2,15 @@ package brooklyn.location;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
+
+import brooklyn.entity.rebind.Rebindable;
+import brooklyn.mementos.LocationMemento;
 
 /**
  *  Location.
  */
-public interface Location extends Serializable {
+public interface Location extends Serializable, Rebindable<LocationMemento> {
 
     /**
      * A unique id for this location.
@@ -40,6 +44,8 @@ public interface Location extends Serializable {
      * Set the 'parent' of this location. If this location was previously a child of a different location, it is removed from
      * the other location first. It is valid to pass in <code>null</code> to indicate that the location should be disconnected
      * from its parent.
+     * 
+     * Adds this location as a child of the new parent (see <code>getChildLocations()</code>).
      *
      * @param newParent the new parent location object, or <code>null</code> to clear the parent reference.
      */
@@ -73,9 +79,13 @@ public interface Location extends Serializable {
     Object getLocationProperty(String key);
     
     /**
+     * Returns the loction properties of this immediate location (i.e. not including those from the parent hierarchy).
+     */
+    Map<String,?> getLocationProperties();
+    
+    /**
      * Like {@link #getLocationProperty}, but if the property is not defined on this location, searches recursively up
      * the parent hierarchy until it is found, or the root is reached (when this method will return <code>null</code>).
      */
     Object findLocationProperty(String key);
-
 }

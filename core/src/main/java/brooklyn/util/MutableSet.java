@@ -1,9 +1,11 @@
 package brooklyn.util;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class MutableSet<V> extends LinkedHashSet<V> {
 
@@ -40,11 +42,12 @@ public class MutableSet<V> extends LinkedHashSet<V> {
     }
     
     public MutableSet(Iterable<? extends V> source) {
-        super((source instanceof Collection) ? (Collection<? extends V>)source : ImmutableSet.copyOf(source));
+        super((source instanceof Collection) ? (Collection<? extends V>)source : Sets.newLinkedHashSet(source));
     }
     
-    public ImmutableSet<V> toImmutable() {
-        return ImmutableSet.copyOf(this);
+    public Set<V> toImmutable() {
+    	// Don't use ImmutableSet as that does not accept nulls
+        return Collections.unmodifiableSet(Sets.newLinkedHashSet(this));
     }
     
     public static <V> Builder<V> builder() {

@@ -3,7 +3,6 @@ package brooklyn.entity.basic;
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
-import java.util.List
 import java.util.concurrent.CopyOnWriteArrayList
 
 import org.testng.annotations.BeforeMethod
@@ -14,6 +13,7 @@ import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.SubscriptionHandle
+import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
@@ -24,6 +24,7 @@ public class EntitySubscriptionTest {
     private static final long TIMEOUT_MS = 5000;
     private static final long SHORT_WAIT_MS = 100;
     
+    protected LocalManagementContext mgmt;
     private SimulatedLocation loc;
     private TestApplication app;
     private TestEntity entity;
@@ -48,6 +49,10 @@ public class EntitySubscriptionTest {
         
         otherEntity = new TestEntity(owner:app);
         listener = new RecordingSensorEventListener();
+        
+        mgmt = new LocalManagementContext();
+        mgmt.manage(app);
+        
         app.start([loc])
     }
     
@@ -105,8 +110,8 @@ public class EntitySubscriptionTest {
         entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
         
         TestEntity observedChildEntity2 = new TestEntity(owner:observedEntity);
-        
         observedChildEntity2.setAttribute(TestEntity.SEQUENCE, 123);
+        mgmt.manage(observedChildEntity2);
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(listener.events, [
@@ -134,8 +139,8 @@ public class EntitySubscriptionTest {
         entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
         TestEntity observedMemberEntity2 = new TestEntity(owner:app);
+        mgmt.manage(observedMemberEntity2);
         observedGroup.addMember(observedMemberEntity2);
-        
         observedMemberEntity2.setAttribute(TestEntity.SEQUENCE, 123);
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {

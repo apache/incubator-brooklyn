@@ -12,9 +12,8 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
-
-import com.google.common.base.Throwables;
 
 public class Time {
 
@@ -147,11 +146,12 @@ public class Time {
 		return result;
 	}
 
+	/** sleep which propagates Interrupted as unchecked */
 	public static void sleep(long millis) {
 		try {
 			Thread.sleep(millis);
 		} catch (InterruptedException e) {
-			throw Throwables.propagate(e);
+			throw Exceptions.propagate(e);
 		}
 	}
 
@@ -275,4 +275,5 @@ public class Time {
 			return d*multiplier + dd;
 		}
 	}
+	
 }

@@ -26,6 +26,15 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         this.location = checkNotNull(location, "location");
     }
 	
+    /*
+     * (non-Javadoc)
+     * @see brooklyn.entity.basic.SoftwareProcessDriver#rebind()
+     */
+    @Override
+    public void rebind() {
+        // no-op
+    }
+
     /**
      * Start the entity.
      *

@@ -25,6 +25,7 @@ import static com.google.common.base.Throwables.getCausalChain;
 import static com.google.common.collect.Iterables.any;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,8 +106,7 @@ public class SshjTool implements SshTool {
         @Override
         public void close() throws IOException {
             super.close();
-            if (sftp != null)
-                sftp.close();
+            closeWhispering(sftp, this);
         }
     }
 
@@ -292,6 +292,8 @@ public class SshjTool implements SshTool {
                 .connectTimeout(builder.connectTimeout)
                 .sessionTimeout(builder.sessionTimeout)
                 .build();
+        
+        if (LOG.isTraceEnabled()) LOG.trace("Created SshjTool {} ({})", this, System.identityHashCode(this));
     }
     
     public String getHostAddress() {
@@ -305,8 +307,10 @@ public class SshjTool implements SshTool {
     @Override
     public void connect() {
         try {
+            if (LOG.isTraceEnabled()) LOG.trace("Connecting SshjTool {} ({})", this, System.identityHashCode(this));
             acquire(sshClientConnection);
         } catch (Exception e) {
+            if (LOG.isDebugEnabled()) LOG.debug(toString()+" failed to connect (rethrowing)", e);
             throw propagate(e, "failed to connect");
         }
     }
@@ -318,7 +322,7 @@ public class SshjTool implements SshTool {
 
     @Override
     public void disconnect() {
-        if (LOG.isTraceEnabled()) LOG.trace("Disconnecting {}", toString());
+        if (LOG.isTraceEnabled()) LOG.trace("Disconnecting SshjTool {} ({})", this, System.identityHashCode(this));
         try {
             sshClientConnection.clear();
         } catch (Exception e) {
@@ -328,7 +332,7 @@ public class SshjTool implements SshTool {
 
     @Override
     public boolean isConnected() {
-        return sshClientConnection.isConnected();
+        return sshClientConnection.isConnected() && sshClientConnection.isAuthenticated();
     }
     
     @Override
@@ -428,7 +432,7 @@ public class SshjTool implements SshTool {
         
         String scriptContents = toScript(commands, env);
         
-        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+" as script: {}", scriptContents);
+        if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
         
         createFile(ImmutableMap.of("permissions", "0700"), scriptPath, scriptContents);
         
@@ -455,10 +459,10 @@ public class SshjTool implements SshTool {
                 .add("exit $?")
                 .build();
         
-        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+": {}", allcmds);
+        if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {}: {}", host, allcmds);
         
         Integer result = acquire(new ShellAction(allcmds, out, err));
-        if (LOG.isDebugEnabled()) LOG.debug("Running shell command at "+host+" completed, exit code: {}", result);
+        if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} completed: return status {}", host, result);
         return result != null ? result : -1;
     }
 
@@ -479,10 +483,10 @@ public class SshjTool implements SshTool {
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
 
-        if (LOG.isDebugEnabled()) LOG.debug("Running command at "+host+": {}", singlecmd);
+        if (LOG.isTraceEnabled()) LOG.trace("Running command at {}: {}", host, singlecmd);
         
         Command result = acquire(new ExecAction(singlecmd, out, err));
-        if (LOG.isDebugEnabled()) LOG.debug("Running command at "+host+" completed, exit code: {}", result.getExitStatus());
+        if (LOG.isTraceEnabled()) LOG.trace("Running command at {} completed: exit code {}", host, result.getExitStatus());
         return result.getExitStatus();
     }
 
@@ -553,7 +557,7 @@ public class SshjTool implements SshTool {
                     LOG.warn("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
                     throw propagate(from, errorMessage + " (out of retries - max " + sshTries + ")");
                 } else {
-                    LOG.debug("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
+                    if (LOG.isDebugEnabled()) LOG.debug("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
                     backoffForAttempt(i + 1, errorMessage + ": " + from.getMessage());
                     if (connection != sshClientConnection)
                         connect();
@@ -571,12 +575,8 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() {
-            if (sftp != null)
-                try {
-                    sftp.close();
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
+            closeWhispering(sftp, this);
+            sftp = null;
         }
 
         @Override
@@ -602,8 +602,8 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() throws IOException {
-            if (sftp != null)
-                sftp.close();
+            closeWhispering(sftp, this);
+            sftp = null;
         }
 
         @Override
@@ -645,12 +645,8 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() {
-            if (sftp != null)
-                try {
-                    sftp.close();
-                } catch (IOException e) {
-                    Throwables.propagate(e);
-                }
+            closeWhispering(sftp, this);
+            sftp = null;
         }
 
         @Override
@@ -707,10 +703,7 @@ public class SshjTool implements SshTool {
     }
 
     private SshException propagate(Exception e, String message) throws SshException {
-        message += ": " + e.getMessage();
-        // it's not necessarily an error yet, that's up to the caller
-        LOG.debug("<< PROPAGATING: " + message, e);
-        throw new SshException("(" + toString() + ") " + message, e);
+        throw new SshException("(" + toString() + ") " + message + ":" + e.getMessage(), e);
     }
     
     protected void allocatePTY(Session s) throws ConnectionException, TransportException {
@@ -735,8 +728,8 @@ public class SshjTool implements SshTool {
 
             @Override
             public void clear() throws TransportException, ConnectionException {
-                if (session != null)
-                    session.close();
+                closeWhispering(session, this);
+                session = null;
             }
 
             @Override
@@ -773,18 +766,12 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() throws TransportException, ConnectionException {
-            if (session != null) {
-                session.close();
-            }
-            if (shell != null) {
-                shell.close();
-            }
-            if (outgobbler != null) {
-                outgobbler.shutdown();
-            }
-            if (errgobbler != null) {
-                errgobbler.shutdown();
-            }
+            closeWhispering(session, this);
+            closeWhispering(shell, this);
+            closeWhispering(outgobbler, this);
+            closeWhispering(errgobbler, this);
+            session = null;
+            shell = null;
         }
 
         @Override
@@ -846,18 +833,12 @@ public class SshjTool implements SshTool {
 
         @Override
         public void clear() throws TransportException, ConnectionException {
-            if (session != null) {
-                session.close();
-            }
-            if (shell != null) {
-                shell.close();
-            }
-            if (outgobbler != null) {
-                outgobbler.shutdown();
-            }
-            if (errgobbler != null) {
-                errgobbler.shutdown();
-            }
+            closeWhispering(session, this);
+            closeWhispering(shell, this);
+            closeWhispering(outgobbler, this);
+            closeWhispering(errgobbler, this);
+            session = null;
+            shell = null;
         }
 
         @Override
@@ -895,7 +876,7 @@ public class SshjTool implements SshTool {
                     }
                 }
                 shell.sendEOF();
-                output.close();
+                closeWhispering(output, this);
                 
                 try {
                     int timeout = sshClientConnection.getSessionTimeout();
@@ -927,12 +908,8 @@ public class SshjTool implements SshTool {
                     return ((SessionChannel)session).getExitStatus();
                 } finally {
                     // wait for all stdout/stderr to have been re-directed
-                    try {
-                        shell.close();
-                    } catch (Exception e) {
-                        LOG.debug("ssh shell closing error: "+e);
-                        /* close quietly */
-                    }
+                    closeWhispering(shell, this);
+                    shell = null;
                     try {
                         if (outgobbler != null) outgobbler.join();
                         if (errgobbler != null) errgobbler.join();
@@ -996,6 +973,23 @@ public class SshjTool implements SshTool {
             return TypeCoercions.coerce(map.get(key), clazz);
         } else {
             return defaultVal;
+        }
+    }
+    
+    /**
+     * Similar to Guava's Closeables.closeQuitely, except logs exception at debug with context in message.
+     */
+    private void closeWhispering(Closeable closeable, Object context) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                if (LOG.isDebugEnabled()) {
+                    String msg = String.format("<< exception during close, for %s -> %s (%s); continuing.", 
+                            SshjTool.this.toString(), context, closeable);
+                    LOG.debug(msg, e);
+                }
+            }
         }
     }
 }

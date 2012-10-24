@@ -32,7 +32,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
 
     public static final String BROOKLYN_HOME_DIR = "/tmp/brooklyn-"+System.getProperty("user.name");
-    public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+"/"+"installs";
+    public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"installs";
+    public static final String DEFAULT_RUN_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"apps";
     public static final String NO_VERSION_INFO = "no-version-info";
 
     public AbstractSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
@@ -58,17 +59,28 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     protected String getEntityVersionLabel() {
         return getEntityVersionLabel("_");
     }
+    
     protected String getEntityVersionLabel(String separator) {
         return elvis(entity.getClass().getSimpleName(),  
                 entity.getClass().getName())+(!NO_VERSION_INFO.equals(getVersion()) ? separator+getVersion() : "");
     }
+    
     public String getInstallDir() {
+        String installBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
+        if (installBasedir == null) installBasedir = DEFAULT_INSTALL_BASEDIR;
+        if (installBasedir.endsWith(File.separator)) installBasedir.substring(0, installBasedir.length()-1);
+        
         return elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_INSTALL_DIR),
-                DEFAULT_INSTALL_BASEDIR+"/"+getEntityVersionLabel("/"));
+                installBasedir+"/"+getEntityVersionLabel("/"));
     }
+    
     public String getRunDir() {
+        String runBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
+        if (runBasedir == null) runBasedir = DEFAULT_RUN_BASEDIR;
+        if (runBasedir.endsWith(File.separator)) runBasedir.substring(0, runBasedir.length()-1);
+        
         return elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_RUN_DIR), 
-                BROOKLYN_HOME_DIR+"/"+"apps"+"/"+entity.getApplication().getId()+"/"+"entities"+"/"+
+                runBasedir+"/"+entity.getApplication().getId()+"/"+"entities"+"/"+
                 getEntityVersionLabel()+"_"+entity.getId());
     }
 

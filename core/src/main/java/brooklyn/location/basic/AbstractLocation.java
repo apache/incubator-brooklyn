@@ -2,6 +2,7 @@ package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -9,11 +10,15 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.BasicLocationRebindSupport;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.location.Location;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.mementos.LocationMemento;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Objects;
@@ -21,6 +26,7 @@ import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.Closeables;
 
 /**
  * A basic implementation of the {@link Location} interface.
@@ -72,7 +78,10 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     }
     public AbstractLocation(Map properties) {
         configure(properties);
-        FlagUtils.checkRequiredFields(this);
+        boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
+        if (!deferConstructionChecks) {
+        	FlagUtils.checkRequiredFields(this);
+        }
     }
 
     /** will set fields from flags, and put the remaining ones into the 'leftovers' map.
@@ -114,6 +123,10 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public boolean equals(Object o) {
         if (! (o instanceof Location)) {
             return false;
@@ -136,12 +149,35 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
         return false;
     }
     
-    protected void addChildLocation(Location child) {
-        childLocations.add(child); 
+    public void addChildLocation(Location child) {
+    	// Previously, setParentLocation delegated to addChildLocation and we sometimes ended up with
+    	// duplicate entries here. Instead this now uses a similar scheme to 
+    	// AbstractEntity.setOwner/addOwnedChild (with any weaknesses for distribution that such a 
+    	// scheme might have...).
+    	// 
+    	// We continue to use a list to allow identical-looking locations, but they must be different 
+    	// instances.
+    	
+    	for (Location contender : childLocations) {
+    		if (contender == child) {
+    			// don't re-add; no-op
+    			return;
+    		}
+    	}
+    	
+        childLocations.add(child);
+        child.setParentLocation(this);
     }
     
     protected boolean removeChildLocation(Location child) {
-        return childLocations.remove(child);
+        boolean removed = childLocations.remove(child);
+        if (removed) {
+            if (child instanceof Closeable) {
+                Closeables.closeQuietly((Closeable)child);
+            }
+            child.setParentLocation(null);
+        }
+        return removed;
     }
 
     public void setParentLocation(Location parent) {
@@ -162,14 +198,24 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
         }
     }
     
+    @Override
     public boolean hasLocationProperty(String key) { return leftoverProperties.containsKey(key); }
+    
+    @Override
     public Object getLocationProperty(String key) { return leftoverProperties.get(key); }
+    
+    @Override
     public Object findLocationProperty(String key) {
         if (hasLocationProperty(key)) return getLocationProperty(key);
         if (parentLocation != null) return parentLocation.findLocationProperty(key);
         return null;
     }
     
+    @Override
+    public Map<String,?> getLocationProperties() {
+    	return Collections.<String,Object>unmodifiableMap(leftoverProperties);
+    }
+
     /** Default String representation is simplified name of class, together with selected fields. */
     @Override
     public String toString() {
@@ -189,5 +235,17 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
             if (!truth(getLocationProperty("longitude"))) leftoverProperties.put("longitude", hostGeoInfo.longitude);
         } 
     }
-       
+    
+    /**
+     * Exposed only for rebind; do not call otherwise!
+     */
+    // TODO Would like to use a nicer pattern than this
+	public void addLeftoverProperties(Map<String, ?> locationProperties) {
+		leftoverProperties.putAll(locationProperties);
+	}
+	
+	@Override
+    public RebindSupport<LocationMemento> getRebindSupport() {
+        return new BasicLocationRebindSupport(this);
+    }
 }

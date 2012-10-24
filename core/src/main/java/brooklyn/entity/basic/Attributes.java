@@ -64,10 +64,10 @@ public interface Attributes {
             List.class, "port.list.sensors", "List of port number attributes");
 
     PortAttributeSensorAndConfigKey HTTP_PORT = new PortAttributeSensorAndConfigKey(
-            "http.port", "HTTP port", ImmutableList.of(8080,"18000+"));
+            "http.port", "HTTP port", ImmutableList.of(8080,"18080+"));
     
     PortAttributeSensorAndConfigKey HTTPS_PORT = new PortAttributeSensorAndConfigKey(
-            "https.port", "HTTP port (with SSL/TLS)", ImmutableList.of(443,8443,"18443+"));
+            "https.port", "HTTP port (with SSL/TLS)", ImmutableList.of(8443,"18443+"));
                     
     PortAttributeSensorAndConfigKey SSH_PORT = new PortAttributeSensorAndConfigKey("ssh.port", "SSH port", 22);
     PortAttributeSensorAndConfigKey SMTP_PORT = new PortAttributeSensorAndConfigKey("smtp.port", "SMTP port", 25);

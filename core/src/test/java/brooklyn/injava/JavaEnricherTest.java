@@ -24,6 +24,7 @@ public class JavaEnricherTest {
     public void setUp() throws Exception {
         app = new TestApplication();
         entity = new ExampleJavaEntity(app);
+        app.startManagement();
         app.start(ImmutableList.of(new SimulatedLocation()));
     }
     

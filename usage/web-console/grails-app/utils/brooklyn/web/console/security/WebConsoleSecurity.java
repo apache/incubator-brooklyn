@@ -1,12 +1,17 @@
 package brooklyn.web.console.security;
 
-public class WebConsoleSecurity {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    static SecurityProvider instance;
-    
+public class WebConsoleSecurity {
+    public static final Logger LOG = LoggerFactory.getLogger(WebConsoleSecurity.class);
+
+    private static SecurityProvider instance;
+
     public static synchronized SecurityProvider getInstance() {
-        if (instance==null) instance = new DelegatingSecurityProvider();
+        if (instance == null) {
+            instance = new DelegatingSecurityProvider();
+        }
         return instance;
     }
-    
 }

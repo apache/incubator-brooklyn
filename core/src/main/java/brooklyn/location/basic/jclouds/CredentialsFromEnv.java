@@ -63,8 +63,9 @@ public class CredentialsFromEnv {
         this(MutableMap.of(), provider);
     }
     public CredentialsFromEnv(@SuppressWarnings("rawtypes") Map properties, String provider) {
-        this(BrooklynProperties.Factory.newDefault().addFromMap(properties), provider);
+        this(BrooklynProperties.Factory.newEmpty().addFromMap(properties), provider);
     }
+
     public CredentialsFromEnv(BrooklynProperties sysProps, String provider) {
         this.sysProps = sysProps;
         props.put("provider", provider);

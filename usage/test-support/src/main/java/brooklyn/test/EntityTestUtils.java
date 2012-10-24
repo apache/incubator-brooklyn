@@ -4,10 +4,11 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
+
+import com.google.common.collect.Maps;
 
 public class EntityTestUtils {
 
@@ -16,6 +17,10 @@ public class EntityTestUtils {
 	
     public static <T> void assertAttributeEquals(Entity entity, AttributeSensor<T> attribute, T expected) {
         assertEquals(entity.getAttribute(attribute), expected);
+    }
+    
+    public static <T> void assertConfigEquals(Entity entity, ConfigKey<T> configKey, T expected) {
+        assertEquals(entity.getConfig(configKey), expected);
     }
     
     public static <T> void assertAttributeEqualsEventually(final Entity entity, final AttributeSensor<T> attribute, final T expected) {

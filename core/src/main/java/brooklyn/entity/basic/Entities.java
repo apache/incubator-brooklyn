@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,20 +19,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.task.ParallelTask;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 
@@ -66,7 +70,7 @@ public class Entities {
 		        }});
 		}
 	    ParallelTask<T> invoke = new ParallelTask<T>(tasks);
-	    callingEntity.getExecutionContext().submit(invoke);
+	    callingEntity.getManagementSupport().getExecutionContext().submit(invoke);
 	    return invoke;
 	}
     public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<Entity> entitiesToCall, 
@@ -84,9 +88,9 @@ public class Entities {
                 (v instanceof CharSequence&& ((CharSequence)v).length() == 0);
     }
     
-    public static Map<Object,Object> sanitize(Map<?,?> input) {
-        Map<Object,Object> result = new LinkedHashMap<Object,Object>();
-        for (Map.Entry<?,?> e: input.entrySet()) {
+    public static <K> Map<K,Object> sanitize(Map<K,?> input) {
+        Map<K,Object> result = Maps.newLinkedHashMap();
+        for (Map.Entry<K,?> e: input.entrySet()) {
             if (isSecret(""+e.getKey())) result.put(e.getKey(), "xxxxxxxx");
             else result.put(e.getKey(), e.getValue());
         }
@@ -135,6 +139,7 @@ public class Entities {
                 out.append("\n");
             }
 		}
+		
 		for (Sensor<?> it : sortSensors(e.getEntityType().getSensors())) {
 			if (it instanceof AttributeSensor) {
                 Object v = e.getAttribute((AttributeSensor<?>)it);
@@ -147,11 +152,70 @@ public class Entities {
                 }
 			}
 		}
+		
+		if (e instanceof Group) {
+		    StringBuilder members = new StringBuilder();
+    		for (Entity it : ((Group)e).getMembers()) {
+                members.append(it.getId()+", ");
+            }
+    		out.append(currentIndentation+tab+tab+"Members: "+members.toString()+"\n");
+		}
+		
 		for (Entity it : e.getOwnedChildren()) {
 			dumpInfo(it, out, currentIndentation+tab, tab);
 		}
+		
 		out.flush();
 	}
+
+    public static void dumpInfo(Location loc) {
+        try {
+            dumpInfo(loc, new PrintWriter(System.out), "", "  ");
+        } catch (IOException exc) {
+            // system.out throwing an exception is odd, so don't have IOException on signature
+            throw new RuntimeException(exc);
+        }
+    }
+    public static void dumpInfo(Location loc, Writer out) throws IOException {
+        dumpInfo(loc, out, "", "  ");
+    }
+    public static void dumpInfo(Location loc, String currentIndentation, String tab) throws IOException {
+        dumpInfo(loc, new PrintWriter(System.out), currentIndentation, tab);
+    }
+    public static void dumpInfo(Location loc, Writer out, String currentIndentation, String tab) throws IOException {
+        out.append(currentIndentation+loc.toString()+"\n");
+        
+        for (Map.Entry<String,?> entry : sortMap(loc.getLocationProperties()).entrySet()) {
+            String key = entry.getKey();
+            Object val = entry.getValue();
+            if (!isTrivial(val)) {
+                out.append(currentIndentation+tab+tab+key);
+                out.append(" = ");
+                if (isSecret(key)) out.append("xxxxxxxx");
+                else out.append(""+val);
+                out.append("\n");
+            }
+        }
+        
+        
+        for (Map.Entry<String,?> entry : sortMap(FlagUtils.getFieldsWithFlags(loc)).entrySet()) {
+            String key = entry.getKey();
+            Object val = entry.getValue();
+            if (!isTrivial(val)) {
+                out.append(currentIndentation+tab+tab+key);
+                out.append(" = ");
+                if (isSecret(key)) out.append("xxxxxxxx");
+                else out.append(""+val);
+                out.append("\n");
+            }
+        }
+        
+        for (Location it : loc.getChildLocations()) {
+            dumpInfo(it, out, currentIndentation+tab, tab);
+        }
+        
+        out.flush();
+    }
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
     public static List<Sensor<?>> sortSensors(Set<Sensor<?>> sensors) {
@@ -165,6 +229,7 @@ public class Entities {
 	    });
 	    return result;
     }
+	
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static List<ConfigKey<?>> sortConfigKeys(Set<ConfigKey<?>> configs) {
         List result = new ArrayList(configs);
@@ -175,6 +240,17 @@ public class Entities {
                     }
             
         });
+        return result;
+    }
+    
+    public static <T> Map<String, T> sortMap(Map<String, T> map) {
+        Map<String,T> result = Maps.newLinkedHashMap();
+        List<String> order = Lists.newArrayList(map.keySet());
+        Collections.sort(order, String.CASE_INSENSITIVE_ORDER);
+        
+        for (String key : order) {
+            result.put(key, map.get(key));
+        }
         return result;
     }
     
@@ -205,20 +281,6 @@ public class Entities {
 		
 		return false;
 	}
-
-    /** Interim method for assisting with entity lifecycle */
-    public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
-        if (context != null) context.manage(e);
-        if (e instanceof Startable) ((Startable)e).start(locations);
-        return e;
-    }
-
-    /** Interim method for assisting with entity lifecycle */
-    public static void destroy(ManagementContext context, Entity e) {
-        if (e instanceof Startable) ((Startable)e).stop();
-        if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
-        if (context != null) context.unmanage(e);
-    }
 
     private static final List<Entity> entitiesToStopOnShutdown = Lists.newArrayList();
     private static final AtomicBoolean isShutdownHookRegistered = new AtomicBoolean();
@@ -253,5 +315,99 @@ public class Entities {
             entitiesToStopOnShutdown.add(entity);
         }
     }
+
+    /** @deprecated use start(Entity) */
+    public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
+        if (context != null) context.manage(e);
+        if (e instanceof Startable) ((Startable)e).start(locations);
+        return e;
+    }
+
+    /** @deprecated use destroy(Entity) */
+    public static void destroy(ManagementContext context, Entity e) {
+        if (e instanceof Startable) ((Startable)e).stop();
+        if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
+        if (context != null) context.unmanage(e);
+    }
+
+    /** convenience for starting an entity, esp a new Startable instance which has been created dynamically
+     * (after the application is started) */
+    public static void start(Entity e, Collection<Location> locations) {
+        if (!manage(e)) {
+            log.warn("Using discouraged Entities.start(Application, Locations) -- should create and use the preferred management context");
+            startManagement(e);
+        }
+        if (e instanceof Startable) ((Startable)e).start(locations);
+    }
+
+    /** stops, destroys, and unmanages the given entity -- does as many as are valid given the type and state */
+    public static void destroy(Entity e) {
+        if (isManaged(e)) {
+            if (e instanceof Startable) ((Startable)e).stop();
+            if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
+            unmanage(e);
+        }
+    }
+
+    public static boolean isManaged(Entity e) {
+        return ((AbstractEntity)e).getManagementSupport().isDeployed();
+    }
     
+    /** brings this entity under management iff its ancestor is managed, returns true in that case;
+     * otherwise returns false in the expectation that the ancestor will become managed,
+     * or throws exception if it has no owner or a non-application root 
+     * (will throw if e is an Application; see also {@link #startManagement(Entity)} ) */
+    public static boolean manage(Entity e) {
+        Entity o = e.getOwner();
+        Entity eum = e; //highest unmanaged ancestor
+        if (o==null) throw new IllegalStateException("Can't manage "+e+" because it is an orphan");
+        while (o.getOwner()!=null) {
+            if (!isManaged(o)) eum = o;
+            o = o.getOwner();
+        }
+        if (isManaged(o)) {
+            ((AbstractEntity)o).getManagementSupport().getManagementContext(false).manage(eum);
+            return true;
+        }
+        if (!(o instanceof Application))
+            throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
+        return false;
+    }
+    
+    /** brings this entity under management, creating a local management context if necessary
+     * (assuming root is an application).
+     * returns existing management context if there is one (non-deployment),
+     * or new local mgmt context if not,
+     * or throwing exception if root is not an application 
+     * <p>
+     * callers are recommended to use {@link #manage(Entity)} instead unless they know
+     * a plain-vanilla non-root management context is sufficient (e.g. in tests)
+     * <p>
+     * this method may change, but is provided as a stop-gap to prevent ad-hoc things
+     * being done in the code which are even more likely to break! */
+    public static ManagementContext startManagement(Entity e) {
+        Entity o = e;
+        Entity eum = e; //highest unmanaged ancestor
+        while (o.getOwner()!=null) {
+            if (!isManaged(o)) eum = o;
+            o = o.getOwner();
+        }
+        if (isManaged(o)) {
+            ManagementContext mgmt = ((AbstractEntity)o).getManagementSupport().getManagementContext(false);
+            mgmt.manage(eum);
+            return mgmt;
+        }
+        if (!(o instanceof Application))
+            throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
+        ManagementContext mgmt = new LocalManagementContext();
+        mgmt.manage(o);
+        return mgmt;
+    }
+    
+    public static void unmanage(Entity entity) {
+        if (((AbstractEntity)entity).getManagementSupport().isDeployed()) {
+            ((AbstractEntity)entity).getManagementSupport().getManagementContext(true).unmanage(entity);
+        }
+    }
+
 }

@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
+import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.Lifecycle
+import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy
 import brooklyn.entity.proxy.AbstractController
@@ -20,12 +23,11 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
+import brooklyn.util.text.Strings
 
 import com.google.common.collect.Iterables
 import com.google.common.collect.LinkedHashMultimap
 import com.google.common.collect.Multimap
-
-import brooklyn.util.text.Strings
 
 /**
  * An entity that represents an Nginx proxy (e.g. for routing requests to servers in a cluster).
@@ -49,7 +51,10 @@ public class NginxController extends AbstractController {
 
     private static final Logger LOG = LoggerFactory.getLogger(NginxController.class);
     static { TimeExtras.init(); }
-       
+    
+    public static final MethodEffector<Void> GET_CURRENT_CONFIGURATION = 
+            new MethodEffector<Void>(NginxController.class, "getCurrentConfiguration");
+    
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
         new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "1.3.7");
@@ -57,7 +62,7 @@ public class NginxController extends AbstractController {
     @SetFromFlag("sticky")
     public static final BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
-    
+
     public NginxController(Entity owner) {
         this(new LinkedHashMap(), owner);
     }
@@ -70,7 +75,11 @@ public class NginxController extends AbstractController {
         super(properties, owner);
     }
 
-    public void onManagementBecomingMaster() {
+    //public void onManagementBecomingMaster() {
+    @Override
+    protected void postStart() {
+        super.postStart();
+        
         // Now can guarantee that owner/managementContext has been set
         Group urlMappings = getConfig(URL_MAPPINGS);
         if (urlMappings != null) {
@@ -91,7 +100,10 @@ public class NginxController extends AbstractController {
     @Override
     public void reload() {
         NginxSshDriver driver = (NginxSshDriver)getDriver();
-        if (driver==null) throw new IllegalStateException("Cannot reload (no driver instance; stopped?)");
+        if (driver==null) {
+            Lifecycle state = getAttribute(NginxController.SERVICE_STATE);
+            throw new IllegalStateException("Cannot reload (no driver instance; stopped? (state="+state+")");
+        }
         
         driver.reload();
     }
@@ -136,6 +148,11 @@ public class NginxController extends AbstractController {
 
     public void doExtraConfigurationDuringStart() {
         reconfigureService();
+    }
+
+    @Description("Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")
+    public String getCurrentConfiguration() {
+        return getConfigFile();
     }
     
     @Override

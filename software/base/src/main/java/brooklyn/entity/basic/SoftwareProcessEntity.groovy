@@ -7,9 +7,10 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.drivers.DriverDependentEntity
+import brooklyn.entity.rebind.RebindSupport
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.adapter.ConfigSensorAdapter
@@ -24,6 +25,7 @@ import brooklyn.location.PortRange
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
+import brooklyn.mementos.EntityMemento
 import brooklyn.util.MutableMap
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
@@ -31,6 +33,7 @@ import brooklyn.util.task.Tasks
 
 import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
+import com.google.common.base.Predicates
 import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
 
@@ -43,7 +46,6 @@ import com.google.common.collect.Maps
  */
 public abstract class SoftwareProcessEntity extends AbstractEntity implements Startable, DriverDependentEntity {
 	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
-
     
     @SetFromFlag("startLatch")
     public static final ConfigKey<String> START_LATCH = ConfigKeys.START_LATCH
@@ -76,9 +78,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME
 	public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS
 
+    public static final AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = new BasicAttributeSensor<MachineProvisioningLocation>(
+            MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
+        
 	public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE
 	
-	private MachineProvisioningLocation provisioningLoc
 	private SoftwareProcessDriver driver
 	protected transient SensorRegistry sensorRegistry
 
@@ -94,12 +98,12 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     }
 
     protected void setProvisioningLocation(MachineProvisioningLocation val) {
-        if (provisioningLoc) throw new IllegalStateException("Cannot change provisioning location: existing="+provisioningLoc+"; new="+val)
-        provisioningLoc = val
+        if (getAttribute(PROVISIONING_LOCATION) != null) throw new IllegalStateException("Cannot change provisioning location: existing="+getAttribute(PROVISIONING_LOCATION)+"; new="+val)
+        setAttribute(PROVISIONING_LOCATION, val);
     }
     
     protected MachineProvisioningLocation getProvisioningLocation() {
-        return provisioningLoc
+        return getAttribute(PROVISIONING_LOCATION);
     }
     
 	public SoftwareProcessDriver getDriver() { driver }
@@ -119,6 +123,51 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 	
     protected void postActivation() {
+    }
+    
+    // TODO Only do this when first being managed; not when moving
+    @Override 
+    public void onManagementStarting() {
+        Lifecycle state = getAttribute(SERVICE_STATE);
+        if (state == Lifecycle.RUNNING) {
+            rebind();
+        } else if (state != null && state != Lifecycle.CREATED) {
+            LOG.warn("On start-up of {}, not (re)binding because state is {}", this, state);
+    	} else {
+            // Expect this is a normal start() sequence (i.e. start() will subsequently be called)
+    	}
+    }
+	
+    @Override 
+    public void onManagementStarted() {
+        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) {
+            postRebind();
+        }
+    }
+    
+    protected void rebind() {
+        // e.g. rebinding to a running instance
+        // FIXME For rebind, what to do about things in STARTING or STOPPING state?
+        // FIXME What if location not set?
+        LOG.info("Connecting to pre-running service: {}", this);
+        
+        Iterable<SshMachineLocation> sshMachineLocations = Iterables.filter(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
+        if (!Iterables.isEmpty(sshMachineLocations)) {
+            initDriver(Iterables.get(sshMachineLocations, 0));
+            driver.rebind();
+            if (LOG.isDebugEnabled()) LOG.debug("On rebind of {}, re-created driver {}", this, driver);
+        } else {
+            LOG.info("On rebind of {}, no SshMachineLocation found (with locations {}) so not generating driver",
+                    this, getLocations());
+        }
+        
+        if (!sensorRegistry) sensorRegistry = new SensorRegistry(this);
+        postStart();
+        sensorRegistry.activateAdapters();
+    }
+    
+    protected void postRebind() {
+        postActivation();
     }
     
 	/** lifecycle message for connecting sensors to registry;
@@ -156,7 +205,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                 .run()) {
             throw new IllegalStateException("Timeout waiting for SERVICE_UP from ${this}");
         }
-        log.debug("Detected SERVICE_UP for software ${this}")
+        log.debug("Detected SERVICE_UP for software {}", this)
     }
 
     public void checkModifiable() {
@@ -171,7 +220,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     @Override
 	public void start(Collection<? extends Location> locations) {
-        log.info("Starting software process entity "+this+" at "+locations);
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
 		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
 
@@ -184,7 +232,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
 	public void startInLocation(Collection<Location> locations) {
-		Preconditions.checkArgument locations.size() == 1
+		if (locations.size() != 1) {
+            throw new IllegalArgumentException("Expected one location when starting "+this+", but given "+locations);
+		}
 		Location location = Iterables.getOnlyElement(locations)
 		startInLocation(location)
 	}
@@ -210,18 +260,18 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public void startInLocation(MachineProvisioningLocation location) {
 		Map<String,Object> flags = obtainProvisioningFlags(location);
         if (!(location in LocalhostMachineProvisioningLocation))
-            LOG.info("SoftwareProcessEntity {} obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
-		provisioningLoc = location;
+            LOG.info("Starting {}, obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
+		setAttribute(PROVISIONING_LOCATION, location);
         SshMachineLocation machine;
         Tasks.withBlockingDetails("Provisioning machine in "+location) {
             machine = location.obtain(flags);
         }
 		if (machine == null) throw new NoMachinesAvailableException(location)
 		if (LOG.isDebugEnabled())
-		    LOG.debug("SoftwareProcessEntity {} obtained new location instance {}, details {}", this, machine,
+		    LOG.debug("While starting {}, obtained new location instance {}, details {}", this, machine,
 		            machine.getUser()+":"+Entities.sanitize(machine.getConfig()))
         if (!(location in LocalhostMachineProvisioningLocation))
-            LOG.info("SoftwareProcessEntity {} obtained a new location instance {}, now preparing process there", this, machine)
+            LOG.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine)
 		startInLocation(machine)
 	}
 
@@ -236,7 +286,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                 if (p != null && !p.isEmpty()) ports += p.iterator().next()
             }
         }
-        log.debug("getRequiredOpenPorts detected default ${ports} for ${this}")
+        log.debug("getRequiredOpenPorts detected default {} for {}", ports, this)
         ports
     }
 
@@ -254,6 +304,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
     public void startInLocation(SshMachineLocation machine) {
+        log.info("Starting {} on machine {}", this, machine);
+        
         locations.add(machine)
         initDriver(machine)
         
@@ -325,7 +377,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             log.warn("Skipping stop of software process entity "+this+" when already stopped");
             return;
         }
-        log.info("Stopping software process entity "+this);
+        log.info("Stopping {} in {}", this, getLocations());
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPING)
 		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
         setAttribute(SERVICE_UP, false)
@@ -357,7 +409,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		if (driver) driver.stop()
 
 		// Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
-		provisioningLoc?.release(machine)
+		getAttribute(PROVISIONING_LOCATION)?.release(machine)
 
 		driver = null;
 	}
@@ -368,9 +420,4 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         //if successfully restarts
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
 	}
-
 }
-
-
-
-

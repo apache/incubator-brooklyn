@@ -1,20 +1,23 @@
 package brooklyn.entity.proxy.nginx;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
+import brooklyn.entity.rebind.RebindSupport
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.WebAppService
+import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.management.SubscriptionHandle
+import brooklyn.mementos.EntityMemento
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -106,14 +109,43 @@ public class UrlMapping extends AbstractGroup {
         recompute();
     }
 
+    @Override
+    public void onManagementMastering() {
+        if (getConfig(TARGET_PARENT) != null) {
+            recompute();
+        }
+    }
+    
     /** defines how address string, ie  hostname:port, is constructed from a given entity.
      * returns null if not possible.
      * <p>
-     * the default is to look at HOSTNAME and HTTP_PORT attribute sensors. this method is suitable (intended) for overriding.
+     * the default is to look at HOSTNAME and HTTPS_PORT or HTTP_PORT attribute sensors (depending on SSL_CONFIG being set with targetIsSsl).
+     * <p> 
+     * this method is suitable (intended) for overriding if needed.
      */
     protected String getAddressOfEntity(Entity s) {
         def h = s.getAttribute(Attributes.HOSTNAME);
-        def p = s.getAttribute(Attributes.HTTP_PORT);
+        
+        def p = null;
+        def proto = s.getAttribute(WebAppServiceConstants.ENABLED_PROTOCOLS);
+        ProxySslConfig sslConfig = getConfig(SSL_CONFIG);
+        if (sslConfig && sslConfig.targetIsSsl) {
+            // use ssl
+            if (proto && proto.find({ "https".equals( ((String)it).toLowerCase()); })) {
+                // proto configured correctly
+            } else {
+                // proto not defined; use https anyway, but it might fail
+                log.warn("Misconfiguration for "+this+": ENABLED_PROTOCOLS='"+proto+"' for "+s+" but sslConfig="+sslConfig);
+            }
+            p = s.getAttribute(Attributes.HTTPS_PORT);
+            if (!p)
+                log.warn("Misconfiguration for "+this+": sslConfig="+sslConfig+" but no HTTPS_PORT on "+s);
+        }
+        if (!p) {
+            // default to http
+            p = s.getAttribute(Attributes.HTTP_PORT);
+        }
+        
         if (h && p) return ""+h+":"+p;
         log.error("Unable to construct hostname:port representation for "+s+"; skipping in "+this);
         return null;
@@ -151,5 +183,4 @@ public class UrlMapping extends AbstractGroup {
         
         recomputeAddresses();
     }
-    
 }

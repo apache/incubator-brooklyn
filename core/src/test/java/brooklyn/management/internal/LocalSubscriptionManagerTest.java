@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -28,15 +29,22 @@ public class LocalSubscriptionManagerTest {
     private static final int TIMEOUT_MS = 5000;
     
     private TestApplication app;
+    private TestEntity entity;
     
-    @BeforeMethod
-    public void setUp() throws Exception {
+    @BeforeMethod(alwaysRun=true)
+    public void setup() {
         app = new TestApplication();
+        entity = new TestEntity(app);
+        new LocalManagementContext().manage(app);
     }
-    
+
+    private void manage(Entity ...entities) {
+        for (Entity e: entities)
+            app.getManagementSupport().getManagementContext(true).manage(e);
+    }
+
     @Test
     public void testSubscribeToEntityAttributeChange() throws Exception {
-        TestEntity entity = new TestEntity(app);
         final CountDownLatch latch = new CountDownLatch(1);
         app.subscribe(entity, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
@@ -50,7 +58,6 @@ public class LocalSubscriptionManagerTest {
     
     @Test
     public void testSubscribeToEntityWithAttributeWildcard() throws Exception {
-        TestEntity entity = new TestEntity(app);
         final CountDownLatch latch = new CountDownLatch(1);
         app.subscribe(entity, null, new SensorEventListener<Object>() {
             @Override public void onEvent(SensorEvent<Object> event) {
@@ -64,7 +71,6 @@ public class LocalSubscriptionManagerTest {
     
     @Test
     public void testSubscribeToAttributeChangeWithEntityWildcard() throws Exception {
-        TestEntity entity = new TestEntity(app);
         final CountDownLatch latch = new CountDownLatch(1);
         app.subscribe(null, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
@@ -78,13 +84,12 @@ public class LocalSubscriptionManagerTest {
     
     @Test
     public void testSubscribeToChildAttributeChange() throws Exception {
-        TestEntity child = new TestEntity(app);
         final CountDownLatch latch = new CountDownLatch(1);
         app.subscribeToChildren(app, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
             @Override public void onEvent(SensorEvent<Object> event) {
                 latch.countDown();
             }});
-        child.setSequenceValue(1234);
+        entity.setSequenceValue(1234);
         if (!latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
             fail("Timeout waiting for Event on child TestEntity listener");
         }
@@ -94,6 +99,8 @@ public class LocalSubscriptionManagerTest {
     public void testSubscribeToMemberAttributeChange() throws Exception {
         BasicGroup group = new BasicGroup(app);
         TestEntity member = new TestEntity(app);
+        manage(group, member);
+        
         group.addMember(member);
 
         final List<SensorEvent<Integer>> events = new CopyOnWriteArrayList<SensorEvent<Integer>>();
@@ -151,4 +158,5 @@ public class LocalSubscriptionManagerTest {
 
         if (threadException.get() != null) throw threadException.get();
     }
+
 }

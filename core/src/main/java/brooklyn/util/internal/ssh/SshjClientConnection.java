@@ -147,13 +147,18 @@ public class SshjClientConnection implements SshAction<SSHClient> {
         return ssh != null && ssh.isConnected();
     }
 
+    public boolean isAuthenticated() {
+        return ssh != null && ssh.isAuthenticated();
+    }
+
     @Override
     public void clear() {
         if (ssh != null && ssh.isConnected()) {
             try {
+                if (LOG.isTraceEnabled()) LOG.trace("Disconnecting SshjClientConnection {} ({})", this, System.identityHashCode(this));
                 ssh.disconnect();
             } catch (IOException e) {
-                LOG.debug("<< exception disconnecting from {}: {}", e, e.getMessage());
+                if (LOG.isDebugEnabled()) LOG.debug("<< exception disconnecting from {}: {}", e, e.getMessage());
             }
             ssh = null;
         }
@@ -161,6 +166,7 @@ public class SshjClientConnection implements SshAction<SSHClient> {
 
     @Override
     public SSHClient create() throws Exception {
+        if (LOG.isTraceEnabled()) LOG.trace("Connecting SshjClientConnection {} ({})", this, System.identityHashCode(this));
         ssh = new net.schmizz.sshj.SSHClient();
         if (!strictHostKeyChecking) {
             ssh.addHostKeyVerifier(new PromiscuousVerifier());

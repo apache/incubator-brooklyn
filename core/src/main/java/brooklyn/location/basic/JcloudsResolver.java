@@ -2,6 +2,7 @@ package brooklyn.location.basic;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -39,10 +40,12 @@ public class JcloudsResolver implements RegistryLocationResolver {
             // it is suggested not to maintain this list here, instead to require aws-ec2 explicitly named.
             "eu-west-1","us-east-1","us-west-1","us-west-2","ap-southeast-1","ap-northeast-1","sa-east-1");
          
+
     public static JcloudsLocation resolve(String spec) {
-        return (JcloudsLocation) new LocationRegistry().resolve(JCLOUDS+":"+spec);
+        BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
+        return (JcloudsLocation) new LocationRegistry(properties).resolve(JCLOUDS+":"+spec);
     }
-    
+
     public JcloudsLocation newLocationFromString(String spec) {
         return newLocationFromString(new LinkedHashMap(), spec);
     }
@@ -85,10 +88,17 @@ public class JcloudsResolver implements RegistryLocationResolver {
             provider = "aws-ec2";
             log.warn("Use of deprecated location '"+region+"'; in future refer to with explicit provider '"+provider+":"+region+"'");
         }
-        
-        Map jcloudsProperties = new MutableMap(new CredentialsFromEnv(BrooklynProperties.Factory.newDefault().addFromMap(properties), provider).asMap());
-        
-        // adding properties here, so user can programmatically pass things through to JcloudsLocation for provisioning;
+
+        //BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        //Map jcloudsProperties = new MutableMap(new CredentialsFromEnv(brooklynProperties.addFromMap(properties), provider).asMap());
+
+        Map tmpProperties = new HashMap();
+        tmpProperties.putAll(registry.getProperties());
+        tmpProperties.putAll(properties);
+
+        Map jcloudsProperties = new HashMap();
+        jcloudsProperties.putAll(new CredentialsFromEnv(tmpProperties,provider).asMap());
+         // adding properties here, so user can programmatically pass things through to JcloudsLocation for provisioning;
         // they are filtered by location, in the factory constructor below
         jcloudsProperties.putAll(properties);
         
@@ -111,5 +121,4 @@ public class JcloudsResolver implements RegistryLocationResolver {
     public String getPrefix() {
         return JCLOUDS;
     }
-    
 }

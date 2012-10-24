@@ -5,6 +5,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -18,13 +19,25 @@ public class NetworkUtils {
     
     public static final int MIN_PORT_NUMBER = 1;
     public static final int MAX_PORT_NUMBER = 65535;
-    
+
+    private static boolean loggedLocalhostNotAvailable = false;
     public static boolean isPortAvailable(int port) {
+        try {
+            return isPortAvailable(InetAddress.getByName("localhost"), port);
+        } catch (UnknownHostException e) {
+            if (!loggedLocalhostNotAvailable) {
+                loggedLocalhostNotAvailable = true;
+                log.warn("localhost unavailable during port availability check for "+port+": "+e+"; ignoring, but this may be a sign of network misconfiguration");
+            }
+            return isPortAvailable(null, port);
+        }
+    }
+    public static boolean isPortAvailable(InetAddress localAddress, int port) {
         if (port < MIN_PORT_NUMBER || port > MAX_PORT_NUMBER) {
             throw new IllegalArgumentException("Invalid start port: " + port);
         }
         try {
-            Socket s = new Socket(InetAddress.getByName("localhost"), port);
+            Socket s = new Socket(localAddress, port);
             try {
                 s.close();
             } catch (Exception e) {}
@@ -70,7 +83,7 @@ public class NetworkUtils {
         return port;
     }
 
-    public static void checkPortsValid(Map ports) {
+    public static void checkPortsValid(@SuppressWarnings("rawtypes") Map ports) {
         for (Object ppo : ports.entrySet()) {
             Map.Entry<?,?> pp = (Map.Entry<?,?>)ppo;
             Object val = pp.getValue();

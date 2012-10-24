@@ -18,6 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
+/** An SSLSocketFactory which trusts all endpoints (ie encryption but no authentication) 
+ * @deprecated use brooklyn.util.crypto.TrustingSslSocketFactory */
+@Deprecated
 public class TrustingSslSocketFactory extends SSLSocketFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(TrustingSslSocketFactory.class);
@@ -48,7 +51,7 @@ public class TrustingSslSocketFactory extends SSLSocketFactory {
     /** trusts all SSL certificates */
     public static final TrustManager TRUST_ALL = new X509TrustManager() {
         public X509Certificate[] getAcceptedIssuers() {
-            return null;
+            return new X509Certificate[0];
         }
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType)
