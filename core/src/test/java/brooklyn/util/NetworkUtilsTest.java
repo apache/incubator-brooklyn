@@ -1,5 +1,6 @@
 package brooklyn.util;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -14,6 +15,33 @@ import brooklyn.util.text.Identifiers;
 
 public class NetworkUtilsTest {
 
+    @Test
+    public void testGetInetAddressWithFixedNameByIpBytes() throws Exception {
+        InetAddress addr = NetworkUtils.getInetAddressWithFixedName(new byte[] {1,2,3,4});
+        assertEquals(addr.getAddress(), new byte[] {1,2,3,4});
+        assertEquals(addr.getHostName(), "1.2.3.4");
+    }
+    
+    @Test
+    public void testGetInetAddressWithFixedNameByIp() throws Exception {
+        InetAddress addr = NetworkUtils.getInetAddressWithFixedName("1.2.3.4");
+        assertEquals(addr.getAddress(), new byte[] {1,2,3,4});
+        assertEquals(addr.getHostName(), "1.2.3.4");
+        
+        InetAddress addr2 = NetworkUtils.getInetAddressWithFixedName("255.255.255.255");
+        assertEquals(addr2.getAddress(), new byte[] {(byte)(int)255,(byte)(int)255,(byte)(int)255,(byte)(int)255});
+        assertEquals(addr2.getHostName(), "255.255.255.255");
+        
+        InetAddress addr3 = NetworkUtils.getInetAddressWithFixedName("localhost");
+        assertEquals(addr3.getHostName(), "localhost");
+        
+    }
+    
+    @Test(expectedExceptions=UnknownHostException.class)
+    public void testGetInetAddressWithFixedNameButInvalidIpThrowsException() throws Exception {
+        NetworkUtils.getInetAddressWithFixedName("1.2.3.400");
+    }
+    
     @Test
     public void testIsPortAvailableReportsTrueWhenPortIsFree() throws Exception {
         int port = 58768;

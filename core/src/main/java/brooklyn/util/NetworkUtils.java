@@ -6,7 +6,9 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,12 @@ public class NetworkUtils {
     
     public static final int MIN_PORT_NUMBER = 1;
     public static final int MAX_PORT_NUMBER = 65535;
+
+    public static final String VALID_IP_ADDRESS_REGEX = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$";
+    public static final Pattern VALID_IP_ADDRESS_PATTERN;
+    static {
+        VALID_IP_ADDRESS_PATTERN = Pattern.compile(VALID_IP_ADDRESS_REGEX);
+    }
 
     private static boolean loggedLocalhostNotAvailable = false;
     public static boolean isPortAvailable(int port) {
@@ -149,4 +157,26 @@ public class NetworkUtils {
         }
     }
     
+    public static InetAddress getInetAddressWithFixedName(byte[] ip) throws UnknownHostException {
+        StringBuilder name = new StringBuilder();
+        for (byte part : ip) {
+            if (name.length() > 0) name.append(".");
+            name.append(part);
+        }
+        return InetAddress.getByAddress(name.toString(), ip);
+    }
+    
+    public static InetAddress getInetAddressWithFixedName(String hostnameOrIp) throws UnknownHostException {
+        if (VALID_IP_ADDRESS_PATTERN.matcher(hostnameOrIp).matches()) {
+            byte[] ip = new byte[4];
+            String[] parts = hostnameOrIp.split("\\.");
+            assert parts.length == 4 : "val="+hostnameOrIp+"; split="+Arrays.toString(parts)+"; length="+parts.length;
+            for (int i = 0; i < parts.length; i++) {
+                ip[i] = (byte)Integer.parseInt(parts[i]);
+            }
+            return InetAddress.getByAddress(hostnameOrIp, ip);
+        } else {
+            return InetAddress.getByName(hostnameOrIp);
+        }
+    }
 }

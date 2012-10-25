@@ -26,6 +26,7 @@ import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.util.JavaGroovyEquivalents;
+import brooklyn.util.NetworkUtils;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -331,7 +332,7 @@ public class TypeCoercions {
             @Override
             public InetAddress apply(String input) {
                 try {
-                    return Inet4Address.getByName(input);
+                    return NetworkUtils.getInetAddressWithFixedName(input);
                 } catch (UnknownHostException e) {
                     throw Throwables.propagate(e);
                 }

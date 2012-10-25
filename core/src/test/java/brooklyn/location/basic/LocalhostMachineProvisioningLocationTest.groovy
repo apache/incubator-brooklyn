@@ -2,13 +2,12 @@ package brooklyn.location.basic
 
 import static org.testng.Assert.*
 
-import org.testng.Assert;
+import org.testng.Assert
 import org.testng.annotations.Test
 
-import brooklyn.location.Location;
+import brooklyn.location.Location
 import brooklyn.location.NoMachinesAvailableException
-import brooklyn.location.PortRange;
-import brooklyn.util.NetworkUtils;
+import brooklyn.location.PortRange
 
 public class LocalhostMachineProvisioningLocationTest {
     @Test
@@ -19,6 +18,19 @@ public class LocalhostMachineProvisioningLocationTest {
         assertEquals machine.address, InetAddress.localHost
     }
 
+    @Test
+    public void testUsesLocationNameProvided() throws Exception {
+        LocalhostMachineProvisioningLocation provisioner = new LocalhostMachineProvisioningLocation(address:"localhost");
+        assertEquals(((SshMachineLocation)provisioner.obtain()).getAddress().getHostName(), "localhost");
+
+        LocalhostMachineProvisioningLocation provisioner2 = new LocalhostMachineProvisioningLocation(address:"1.2.3.4");
+        assertEquals(((SshMachineLocation)provisioner2.obtain()).getAddress().getHostName(), "1.2.3.4");
+        
+        // Assumes that /etc/hosts contains a localhost2
+        LocalhostMachineProvisioningLocation provisioner3 = new LocalhostMachineProvisioningLocation(address:"localhost2");
+        assertEquals(((SshMachineLocation)provisioner3.obtain()).getAddress().getHostName(), "localhost2");
+    }
+    
     @Test(expectedExceptions = [ NoMachinesAvailableException.class ])
     public void provisionWithASpecificNumberOfInstances() {
         LocalhostMachineProvisioningLocation provisioner = new LocalhostMachineProvisioningLocation(count:2)
