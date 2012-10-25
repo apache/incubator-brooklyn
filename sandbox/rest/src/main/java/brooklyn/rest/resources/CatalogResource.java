@@ -1,26 +1,15 @@
 package brooklyn.rest.resources;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.policy.basic.AbstractPolicy;
-import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
-import static com.google.common.collect.Iterables.transform;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import static com.google.common.collect.Sets.filter;
-import com.google.common.io.CharStreams;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
-import com.wordnik.swagger.core.Api;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
 import groovy.lang.GroovyClassLoader;
-import org.reflections.Reflections;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.validation.Valid;
@@ -35,14 +24,25 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
+import org.reflections.Reflections;
+
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.EntityTypes;
+import brooklyn.policy.basic.AbstractPolicy;
+
+import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.io.CharStreams;
+import com.sun.jersey.core.header.FormDataContentDisposition;
+import com.sun.jersey.multipart.FormDataParam;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiError;
+import com.wordnik.swagger.core.ApiErrors;
+import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/catalog")
 @Api(value = "/v1/catalog", description = "Manage entities and policies available on the server")
@@ -53,6 +53,7 @@ public class CatalogResource extends BaseResource {
   private final Map<String, Class<? extends AbstractPolicy>> policies = Maps.newConcurrentMap();
 
   public CatalogResource() {
+    // TODO allow other prefixes to be supplied?
     entities.putAll(buildMapOfSubTypesOf("brooklyn", AbstractEntity.class));
     policies.putAll(buildMapOfSubTypesOf("brooklyn", AbstractPolicy.class));
   }
@@ -82,6 +83,7 @@ public class CatalogResource extends BaseResource {
     return policies.get(policyName);
   }
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @POST
   @ApiOperation(value = "Create new entity or policy by uploading a Groovy script", responseClass = "String")
   public Response create(
@@ -149,23 +151,7 @@ public class CatalogResource extends BaseResource {
       throw notFound("Entity with type '%s' not found", entityType);
     }
 
-    try {
-      // TODO find a different way to query the list of configuration keys
-      // without having to create an instance
-      Class<? extends AbstractEntity> clazz = entities.get(entityType);
-      Constructor constructor = clazz.getConstructor(new Class[]{Map.class});
-
-      Entity instance = (Entity) constructor.newInstance(Maps.newHashMap());
-      return Lists.newArrayList(transform(instance.getEntityType().getConfigKeys(),
-          new Function<brooklyn.config.ConfigKey<?>, String>() {
-            @Override
-            public String apply(@Nullable brooklyn.config.ConfigKey<?> configKey) {
-              return configKey.getName();
-            }
-          }));
-    } catch (NoSuchMethodException e) {
-      throw notFound(e.getMessage());
-    }
+    return Lists.newArrayList(EntityTypes.getDefinedConfigKeys(entityType).keySet());
   }
 
   @GET
