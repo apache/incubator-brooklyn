@@ -31,12 +31,12 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     }
 
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
-        LocationMemento memento = MementosGenerators.newLocationMementoBuilder(location).customProperties(props).build();
+        LocationMemento memento = MementosGenerators.newLocationMementoBuilder(location).customFields(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; parent={}; children={}; "+
     	        "locationProperties={}; flags={}; locationReferenceFlags={}; customProperties={}; ",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
                 memento.getChildren(), sanitize(memento.getLocationProperties()), sanitize(memento.getFlags()), 
-                memento.getLocationReferenceFlags(), sanitize(memento.getCustomProperties())});
+                memento.getLocationReferenceFlags(), sanitize(memento.getCustomFields())});
     	return memento;
     }
 
@@ -47,7 +47,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
     			memento.getChildren(), sanitize(memento.getLocationProperties()), 
     			sanitize(memento.getFlags()), memento.getLocationReferenceFlags(), 
-    			sanitize(memento.getCustomProperties())});
+    			sanitize(memento.getCustomFields())});
 
     	// Note that the flags have been set in the constructor
         location.setName(memento.getDisplayName());

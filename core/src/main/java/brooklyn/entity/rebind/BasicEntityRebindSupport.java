@@ -38,14 +38,14 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     }
 
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
-        EntityMemento memento = MementosGenerators.newEntityMementoBuilder(entity).customProperties(props).build();
+        EntityMemento memento = MementosGenerators.newEntityMementoBuilder(entity).customFields(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity {}({}): parent={}; children={}; locations={}; "+
     	        "policies={}; members={}; config={}; attributes={}; entityReferenceConfigs={}; " +
     	        "entityReferenceAttributes={}; customProperties={}", 
     			new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
                 memento.getLocations(), memento.getPolicies(), memento.getMembers(), sanitize(memento.getConfig()), 
                 sanitize(memento.getAttributes()), memento.getEntityReferenceConfigs(), 
-                memento.getEntityReferenceAttributes(), sanitize(memento.getCustomProperties())});
+                memento.getEntityReferenceAttributes(), sanitize(memento.getCustomFields())});
     	return memento;
     }
 
@@ -57,7 +57,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     	        new Object[] {memento.getType(), memento.getId(), memento.getParent(), memento.getChildren(), 
     	        memento.getLocations(), memento.getPolicies(), memento.getMembers(), sanitize(memento.getConfig()), 
     	        sanitize(memento.getAttributes()), memento.getEntityReferenceConfigs(), 
-    	        memento.getEntityReferenceAttributes(), sanitize(memento.getCustomProperties())});
+    	        memento.getEntityReferenceAttributes(), sanitize(memento.getCustomFields())});
 
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());

@@ -33,5 +33,4 @@ public interface ConfigMap {
     /** returns submap matching the given filter predicate; see ConfigPredicates for common predicates */
     public ConfigMap submap(Predicate<ConfigKey<?>> filter);
 
-
 }

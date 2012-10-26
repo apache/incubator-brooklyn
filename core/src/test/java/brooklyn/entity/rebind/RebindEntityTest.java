@@ -556,7 +556,7 @@ public class RebindEntityTest {
                 }
                 @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
                     super.doReconstruct(rebindContext, memento);
-                    myfield = (String) memento.getCustomProperty("myfield");
+                    myfield = (String) memento.getCustomField("myfield");
                 }
             };
         }

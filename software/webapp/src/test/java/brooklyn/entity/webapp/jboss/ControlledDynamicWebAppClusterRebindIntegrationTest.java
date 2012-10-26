@@ -59,6 +59,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         executor = Executors.newCachedThreadPool();
 
         mementoDir = Files.createTempDir();
+        LOG.info("Test persisting to "+mementoDir);
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
@@ -95,7 +96,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     }
     
     // FIXME Fails before rebind (getting 404 from nginx)! Need to investigate this more.
-    @Test(groups = {"Integration", "WIP"})
+    @Test(groups = {"Integration"})
     public void testRebindsToRunningCluster() throws Exception {
         NginxController origNginx = new NginxController(MutableMap.of("domain", "localhost"), origApp);
 

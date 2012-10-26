@@ -24,11 +24,10 @@ public class BasicSensor<T> implements Sensor<T> {
     
     private static final Splitter dots = Splitter.on('.');
 
-    private transient Class<T> type;
-    private String typeName;
+    private Class<T> type;
     private String name;
     private String description;
-    private List<String> nameParts;
+    private transient List<String> nameParts;
     
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicSensor() { /* for gson */ }
@@ -40,23 +39,26 @@ public class BasicSensor<T> implements Sensor<T> {
     
     public BasicSensor(Class<T> type, String name, String description) {
         this.type = checkNotNull(type, "type");
-        this.typeName = type.getName();
         this.name = checkNotNull(name, "name");
         this.description = description;
-        this.nameParts = ImmutableList.copyOf(dots.split(name));
     }
 
     /** @see Sensor#getType() */
     public Class<T> getType() { return type; }
  
     /** @see Sensor#getTypeName() */
-    public String getTypeName() { return typeName; }
+    public String getTypeName() { 
+        return type.getName();
+    }
  
     /** @see Sensor#getName() */
     public String getName() { return name; }
  
     /** @see Sensor#getNameParts() */
-    public List<String> getNameParts() { return nameParts; }
+    public synchronized List<String> getNameParts() {
+        if (nameParts==null) nameParts = ImmutableList.copyOf(dots.split(name));
+        return nameParts; 
+    }
  
     /** @see Sensor#getDescription() */
     public String getDescription() { return description; }
@@ -68,7 +70,7 @@ public class BasicSensor<T> implements Sensor<T> {
     
     @Override
     public int hashCode() {
-        return Objects.hashCode(typeName, name, description);
+        return Objects.hashCode(getTypeName(), name, description);
     }
  
     @Override
@@ -77,11 +79,11 @@ public class BasicSensor<T> implements Sensor<T> {
         if (!(other instanceof BasicSensor)) return false;
         BasicSensor<?> o = (BasicSensor) other;
         
-        return Objects.equal(typeName, o.typeName) && Objects.equal(name, o.name) && Objects.equal(description, o.description);
+        return Objects.equal(getTypeName(), o.getTypeName()) && Objects.equal(name, o.name) && Objects.equal(description, o.description);
     }
     
     @Override
     public String toString() {
-        return String.format("Sensor: %s (%s)", name, typeName);
+        return String.format("Sensor: %s (%s)", name, getTypeName());
     }
 }

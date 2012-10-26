@@ -16,6 +16,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
+import brooklyn.management.Task;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.policy.basic.AbstractPolicy;
 
@@ -63,7 +64,9 @@ public interface EntityLocal extends Entity {
      * Must be called before the entity is started.
      */
     <T> T setConfig(ConfigKey<T> key, T val);
+    <T> T setConfig(ConfigKey<T> key, Task<T> val);
     <T> T setConfig(HasConfigKey<T> key, T val);
+    <T> T setConfig(HasConfigKey<T> key, Task<T> val);
     
     /**
      * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).
