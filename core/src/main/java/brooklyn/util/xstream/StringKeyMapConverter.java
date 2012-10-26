@@ -36,8 +36,7 @@ public class StringKeyMapConverter extends MapConverter {
     }
     
     protected boolean isKeyValidForNodeName(String key) {
-        // false to always write as <entry key="key" ...
-//        return false;
+        // return false to always write as <entry key="key" ...; otherwise only use that when key is not valid xml
         return Identifiers.isValidToken(key, VALID_XML_NODE_NAME_CHARS, VALID_XML_NODE_NAME_CHARS);
     }
     
@@ -80,15 +79,6 @@ public class StringKeyMapConverter extends MapConverter {
 
     protected boolean isInlineableType(Class<?> type) {
         return TypeCoercions.isPrimitiveOrBoxer(type) || String.class.equals(type) || type.isEnum();
-    }
-    
-    public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-        try {
-            return super.unmarshal(reader, context);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw Exceptions.propagate(t);
-        }
     }
     
     @Override

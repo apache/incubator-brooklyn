@@ -12,7 +12,7 @@ public class EntityTypes {
 
     private static class ImmutableEntityType extends EntityDynamicType {
         public ImmutableEntityType(Class<? extends Entity> clazz) {
-            super(clazz, null);
+            super(clazz);
         }
         @Override
         public void addSensor(Sensor<?> newSensor) {

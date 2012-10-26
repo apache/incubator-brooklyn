@@ -70,6 +70,8 @@ public abstract class AbstractMemento implements Memento, Serializable {
         setCustomFields(builder.fields);
     }
 
+    // "fields" is not included as a field here, so that it is serialized after selected subclass fields
+    // but the method declared here simplifies how it is connected in via builder etc
     protected abstract void setCustomFields(Map<String, Object> fields);
     
     @Override

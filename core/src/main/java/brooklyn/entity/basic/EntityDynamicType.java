@@ -51,7 +51,10 @@ public class EntityDynamicType {
     public EntityDynamicType(AbstractEntity entity) {
         this(entity.getClass(), entity);
     }
-    protected EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
+    protected EntityDynamicType(Class<? extends Entity> clazz) {
+        this(clazz, null);
+    }
+    private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
         this.entityClass = clazz;
         this.entity = entity;
         String id = entity==null ? clazz.getName() : entity.getId();
@@ -188,7 +191,7 @@ public class EntityDynamicType {
                 if (Effector.class.isAssignableFrom(f.getType())) {
                     if (!Modifier.isStatic(f.getModifiers())) {
                         // require it to be static or we have an instance
-                        LOG.warn("Discouraged use of non-static effector "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
+                        LOG.warn("Discouraged/deprecated use of non-static effector "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
                         if (optionalEntity==null) continue;
                     }
                     Effector<?> eff = (Effector<?>) f.get(optionalEntity);

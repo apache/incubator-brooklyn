@@ -107,7 +107,7 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
 
     /** returns the config defined at this entity, ie not inherited */
     public Map<ConfigKey<?>,Object> getLocalConfig() {
-        Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(inheritedConfig.size()+ownConfig.size());
+        Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(ownConfig.size());
         result.putAll(ownConfig);
         return Collections.unmodifiableMap(result);        
     }

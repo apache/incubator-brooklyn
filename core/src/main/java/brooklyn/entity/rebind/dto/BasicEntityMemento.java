@@ -110,12 +110,13 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         locations = toPersistedList(builder.locations);
         policies = toPersistedList(builder.policies);
         members = toPersistedList(builder.members);
-        configByKey = toPersistedMap(builder.config);
-        attributesByKey = toPersistedMap(builder.attributes);
-        entityReferenceConfigsByKey = toPersistedSet(builder.entityReferenceConfigs);
-        entityReferenceAttributesByKey = toPersistedSet(builder.entityReferenceAttributes);
-        locationReferenceConfigsByKey = toPersistedSet(builder.locationReferenceConfigs);
-        locationReferenceAttributesByKey = toPersistedSet(builder.locationReferenceAttributes);
+        
+        configByKey = builder.config;
+        attributesByKey = builder.attributes;
+        entityReferenceConfigsByKey = builder.entityReferenceConfigs;
+        entityReferenceAttributesByKey = builder.entityReferenceAttributes;
+        locationReferenceConfigsByKey = builder.locationReferenceConfigs;
+        locationReferenceAttributesByKey = builder.locationReferenceAttributes;
         
         if (configByKey!=null) {
             configKeys = Maps.newLinkedHashMap();
@@ -266,31 +267,31 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     @Override
     public Map<AttributeSensor, Object> getAttributes() {
         if (attributesByKey == null) postDeserialize();
-        return fromPersistedMap(attributesByKey);
+        return Collections.unmodifiableMap(attributesByKey);
     }
     
     @Override
     public Set<AttributeSensor> getEntityReferenceAttributes() {
         if (entityReferenceAttributesByKey == null) postDeserialize();
-        return fromPersistedSet(entityReferenceAttributesByKey);
+        return Collections.unmodifiableSet(entityReferenceAttributesByKey);
     }
     
     @Override
     public Set<ConfigKey> getEntityReferenceConfigs() {
         if (entityReferenceConfigsByKey == null) postDeserialize();
-        return fromPersistedSet(entityReferenceConfigsByKey);
+        return Collections.unmodifiableSet(entityReferenceConfigsByKey);
     }
     
     @Override
     public Set<AttributeSensor> getLocationReferenceAttributes() {
         if (locationReferenceAttributesByKey == null) postDeserialize();
-        return fromPersistedSet(locationReferenceAttributesByKey);
+        return Collections.unmodifiableSet(locationReferenceAttributesByKey);
     }
     
     @Override
     public Set<ConfigKey> getLocationReferenceConfigs() {
         if (locationReferenceConfigsByKey == null) postDeserialize();
-        return fromPersistedSet(locationReferenceConfigsByKey);
+        return Collections.unmodifiableSet(fromPersistedSet(locationReferenceConfigsByKey));
     }
     
     @Override
