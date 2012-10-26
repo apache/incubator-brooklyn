@@ -482,11 +482,20 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         assertNotYetOwned()
         configsInternal.setConfig(key, val);
     }
-    
+
+    public <T> T setConfig(ConfigKey<T> key, Task<T> val) {
+        assertNotYetOwned()
+        configsInternal.setConfig(key, val);
+    }
+
 	@Override
 	public <T> T setConfig(HasConfigKey<T> key, T val) {
 		setConfig(key.configKey, val)
 	}
+
+    public <T> T setConfig(HasConfigKey<T> key, Task<T> val) {
+        setConfig(key.configKey, val)
+    }
 
     public <T> T setConfigEvenIfOwned(ConfigKey<T> key, T val) {
         configsInternal.setConfig(key, val);
