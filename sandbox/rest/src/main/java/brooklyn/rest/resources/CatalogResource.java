@@ -58,6 +58,7 @@ public class CatalogResource extends BaseResource {
   private final Map<String, Class<? extends AbstractPolicy>> registeredPolicies = Maps.newConcurrentMap();
 
   private synchronized void scanIfNeeded() {
+      // defer expensive scans, particularly for unit tests
       if (scanNeeded==false) return;
       scanNeeded = false;
       // TODO allow other prefixes to be supplied?
@@ -80,6 +81,10 @@ public class CatalogResource extends BaseResource {
 
   public boolean containsEntity(String entityName) {
     if (registeredEntities.containsKey(entityName)) return true;
+    if (scanNeeded) {
+        // test early to avoid scan
+        if (forName(entityName, false)!=null) return true;
+    }
     scanIfNeeded();
     if (scannedEntities.containsKey(entityName)) return true;
     return false;

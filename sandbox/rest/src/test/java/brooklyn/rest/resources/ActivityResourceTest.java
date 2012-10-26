@@ -6,6 +6,8 @@ import org.testng.annotations.Test;
 @Test(enabled = false)
 public class ActivityResourceTest extends BaseResourceTest {
 
+    // TODO tests for activity resource
+    
   @Override
   protected void setUpResources() throws Exception {
   }

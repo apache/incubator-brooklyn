@@ -92,7 +92,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
     environment.addResource(new EntityResource(applicationManager));
     environment.addResource(new SensorResource(applicationManager));
-    environment.addResource(new EffectorResource(applicationManager, managedExecutor));
+    environment.addResource(new EffectorResource(applicationManager));
     environment.addResource(new ActivityResource(applicationManager));
     environment.addResource(new SwaggerUiResource());
     environment.addResource(new VersionResource());

@@ -54,7 +54,7 @@ define([
                 type:"POST",
                 url:url,
                 data:JSON.stringify(parameters),
-                contentType:"application/json charset=utf-8",
+                contentType:"application/json",
                 success:function (data) {
                     // hide the modal
                     that.$el.modal("hide")

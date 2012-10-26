@@ -14,7 +14,7 @@ import brooklyn.test.entity.TestApplication
 
 import com.google.common.collect.ImmutableSet
 
-class ConfigMapTest {
+public class ConfigMapTest {
 
     private TestApplication app
     private MySubEntity entity
