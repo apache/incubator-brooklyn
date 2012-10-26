@@ -1,11 +1,12 @@
 package brooklyn.entity.basic;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.testng.annotations.Test;
 
-import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -17,20 +18,23 @@ public class EffectorBasicTest {
     @Test
     public void testInvokeEffectorStart() {
         TestApplication app = new TestApplication();
-        new TestEntity(app);
         app.startManagement();
-        app.start(Arrays.asList(new SimulatedLocation()));
+        List<SimulatedLocation> l = Arrays.asList(new SimulatedLocation());
+        app.start(l);
+        TestUtils.assertSetsEqual(l, app.getLocations());
     }
 
     @Test
-    public void testInvokeEffectorStartWithDependentConfig() {
+    public void testInvokeEffectorStartWithTwoEntities() {
         TestApplication app = new TestApplication();
         TestEntity entity = new TestEntity(app);
         TestEntity entity2 = new TestEntity(app);
-        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME));
         app.startManagement();
-        app.start(Arrays.asList(new SimulatedLocation()));
+        List<SimulatedLocation> l = Arrays.asList(new SimulatedLocation());
+        app.start(l);
+        TestUtils.assertSetsEqual(l, app.getLocations());
+        TestUtils.assertSetsEqual(l, entity.getLocations());
+        TestUtils.assertSetsEqual(l, entity2.getLocations());
     }
     
-
 }

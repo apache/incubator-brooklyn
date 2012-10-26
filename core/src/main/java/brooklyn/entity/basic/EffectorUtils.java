@@ -66,15 +66,16 @@ public class EffectorUtils<T> {
                 //all supplied (unnamed) arguments must be used; ignore map
                 newArgs.add(l.remove(0));
             // TODO do we ignore arguments in the same order that groovy does?
-            else if (!l.isEmpty() && it.getParameterClass().isInstance(l.get(0)))
+            else if (!l.isEmpty() && it.getParameterClass().isInstance(l.get(0))) {
                 //if there are parameters supplied, and type is correct, they get applied before default values
                 //(this is akin to groovy)
                 newArgs.add(l.remove(0));
-            else if (it instanceof BasicParameterType && ((BasicParameterType)it).hasDefaultValue())
+            } else if (it instanceof BasicParameterType && ((BasicParameterType)it).hasDefaultValue()) {
                 //finally, default values are used to make up for missing parameters
                 newArgs.add(((BasicParameterType)it).getDefaultValue());
-            else
+            } else {
                 throw new IllegalArgumentException("Invalid arguments (count mismatch) for effector "+eff+": "+args);
+            }
 
             newArgsNeeded--;
         }
@@ -94,14 +95,15 @@ public class EffectorUtils<T> {
         for (int index = 0; index < eff.getParameters().size(); index++) {
             ParameterType<?> it = eff.getParameters().get(index);
             Object v;
-            if (truth(it.getName()) && m.containsKey(it.getName()))
+            if (truth(it.getName()) && m.containsKey(it.getName())) {
                 // argument is in the map
                 v = m.remove(it.getName());
-            else if (it instanceof BasicParameterType && ((BasicParameterType)it).hasDefaultValue())
+            } else if (it instanceof BasicParameterType && ((BasicParameterType)it).hasDefaultValue()) {
                 //finally, default values are used to make up for missing parameters
                 v = ((BasicParameterType)it).getDefaultValue();
-            else
+            } else {
                 throw new IllegalArgumentException("Invalid arguments (missing argument "+it+") for effector "+eff+": "+m);
+            }
 
             newArgs.add( TypeCoercions.coerce(v, it.getParameterClass()) );
             newArgsNeeded--;

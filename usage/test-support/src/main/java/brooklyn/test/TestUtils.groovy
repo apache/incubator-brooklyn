@@ -401,5 +401,13 @@ public class TestUtils {
         }
         if (!failed) fail("Test code should have thrown exception but did not");
     }
+
+    public static void assertSetsEqual(Collection c1, Collection c2) {
+        Set s = new LinkedHashSet();
+        s.addAll(c1); s.removeAll(c2);
+        if (!s.isEmpty()) fail("First argument contains additional contents: "+s);
+        s.clear(); s.addAll(c2); s.removeAll(c1);
+        if (!s.isEmpty()) fail("Second argument contains additional contents: "+s);
+    }
     
 }
