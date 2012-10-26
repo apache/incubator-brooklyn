@@ -195,7 +195,6 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 entity, 
                 new Callable<T>() {
                     public T call() {
-                        // TODO unpleasant cast
                         return ((AbstractEffector<T>)eff).call(entity, parameters);
                     }});
     }

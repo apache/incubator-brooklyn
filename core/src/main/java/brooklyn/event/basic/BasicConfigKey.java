@@ -24,7 +24,6 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     
     private String name;
     private Class<T> type;
-    private String typeName;
     private String description;
     private T defaultValue;
 
@@ -43,7 +42,6 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.description = description;
         this.name = checkNotNull(name, "name");
         this.type = checkNotNull(type, "type");
-        this.typeName = type.getName();
         this.defaultValue = defaultValue;
     }
 
@@ -51,7 +49,6 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.description = key.getDescription();
         this.name = checkNotNull(key.getName(), "name");
         this.type = checkNotNull(key.getType(), "type");
-        this.typeName = checkNotNull(key.getTypeName(), "typeName");
         this.defaultValue = defaultValue;
     }
     
@@ -59,7 +56,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     public String getName() { return name; }
 
     /** @see ConfigKey#getTypeName() */
-    public String getTypeName() { return typeName; }
+    public String getTypeName() { return type.getName(); }
 
     /** @see ConfigKey#getType() */
     public Class<T> getType() { return type; }
@@ -96,7 +93,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     
     @Override
     public String toString() {
-        return String.format("Config: %s (%s)", name, typeName);
+        return String.format("Config: %s (%s)", name, getTypeName());
     }
 
     /**

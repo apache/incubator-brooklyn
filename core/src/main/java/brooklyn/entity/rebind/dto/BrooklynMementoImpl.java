@@ -76,11 +76,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     
     private BrooklynMementoImpl(Builder builder) {
         brooklynVersion = builder.brooklynVersion;
-        applicationIds = Collections.unmodifiableList(builder.applicationIds);
-        topLevelLocationIds = Collections.unmodifiableList(builder.topLevelLocationIds);
-        entities = Collections.unmodifiableMap(builder.entities);
-        locations = Collections.unmodifiableMap(builder.locations);
-        policies = Collections.unmodifiableMap(builder.policies);
+        applicationIds = builder.applicationIds;
+        topLevelLocationIds = builder.topLevelLocationIds;
+        entities = builder.entities;
+        locations = builder.locations;
+        policies = builder.policies;
     }
 
     @Override

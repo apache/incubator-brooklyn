@@ -5,9 +5,15 @@ import java.util.Random;
 public class Identifiers {
     
     private static Random random = new Random();
-    public static final String JAVA_VALID_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    
+    public static final String JAVA_VALID_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
     public static final String JAVA_VALID_NONSTART_CHARS = JAVA_VALID_START_CHARS+"1234567890";
-    public static final String BASE64_VALID_CHARS = JAVA_VALID_NONSTART_CHARS+"+=";
+
+    public static final String JAVA_GENERATED_IDENTIFIER_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    public static final String JAVA_GENERATED_IDENTIFIERNONSTART_CHARS = JAVA_GENERATED_IDENTIFIER_START_CHARS+"1234567890";
+
+    public static final String BASE64_VALID_CHARS = JAVA_GENERATED_IDENTIFIERNONSTART_CHARS+"+=";
+    
     public static final String ID_VALID_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     public static final String ID_VALID_NONSTART_CHARS = ID_VALID_START_CHARS+"1234567890";
     
@@ -70,10 +76,10 @@ public class Identifiers {
             char[] id = new char[l];
             int d = random.nextInt( (26+26) * (26+26+10) * (26+26+10) * (26+26+10) * (26+26+10));
             int i = 0;    
-            id[i] = JAVA_VALID_START_CHARS.charAt(d % (26+26));
+            id[i] = JAVA_GENERATED_IDENTIFIER_START_CHARS.charAt(d % (26+26));
             d /= (26+26);
             if (++i<l) do {
-                    id[i] = JAVA_VALID_NONSTART_CHARS.charAt(d%(26+26+10));
+                    id[i] = JAVA_GENERATED_IDENTIFIERNONSTART_CHARS.charAt(d%(26+26+10));
                     if (++i>=l) break;
                     if (i%5==0) {
                             d = random.nextInt( (26+26+10) * (26+26+10) * (26+26+10) * (26+26+10) * (26+26+10));
@@ -146,5 +152,18 @@ public class Identifiers {
             sb.append(BASE64_VALID_CHARS.charAt(x));
             idx = idx >> 6;
         }
-    }    
+    }
+    
+    public static boolean isValidJavaToken(String s) {
+        return isValidToken(s, JAVA_VALID_START_CHARS, JAVA_VALID_NONSTART_CHARS);
+    }
+    
+    public static boolean isValidToken(String token, String validStartChars, String validSubsequentChars) {
+        if (token==null || token.length()==0) return false;
+        if (validStartChars.indexOf(token.charAt(0))==-1) return false;
+        for (int i=1; i<token.length(); i++)
+            if (validSubsequentChars.indexOf(token.charAt(i))==-1) return false;
+        return true;
+    }
+    
 }

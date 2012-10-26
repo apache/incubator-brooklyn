@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,11 +24,9 @@ import com.google.common.collect.Maps;
 
 public class EntityDynamicType {
 
-    // TODO Deal with Serializable: what is the requirement? It depends on how we implement remoting,
-    // so deferring it for now...
-    
     protected static final Logger LOG = LoggerFactory.getLogger(EntityDynamicType.class);
 
+    private final Class<? extends Entity> entityClass;
     private final AbstractEntity entity;
 
     /** 
@@ -48,21 +47,29 @@ public class EntityDynamicType {
 
     private volatile EntityTypeSnapshot snapshot;
     private final AtomicBoolean snapshotValid = new AtomicBoolean(false);
-    
+
     public EntityDynamicType(AbstractEntity entity) {
+        this(entity.getClass(), entity);
+    }
+    protected EntityDynamicType(Class<? extends Entity> clazz) {
+        this(clazz, null);
+    }
+    private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
+        this.entityClass = clazz;
         this.entity = entity;
+        String id = entity==null ? clazz.getName() : entity.getId();
         
-        effectors.putAll(findEffectors(entity));
+        effectors.putAll(findEffectors(clazz, entity));
         if (LOG.isTraceEnabled())
-            LOG.trace("Entity {} effectors: {}", entity.getId(), Joiner.on(", ").join(effectors.keySet()));
+            LOG.trace("Entity {} effectors: {}", id, Joiner.on(", ").join(effectors.keySet()));
         
-        sensors.putAll(findSensors(entity));
+        sensors.putAll(findSensors(clazz, entity));
         if (LOG.isTraceEnabled())
-            LOG.trace("Entity {} sensors: {}", entity.getId(), Joiner.on(", ").join(sensors.keySet()));
+            LOG.trace("Entity {} sensors: {}", id, Joiner.on(", ").join(sensors.keySet()));
         
-        configKeys.putAll(findConfigKeys(entity));
+        configKeys.putAll(findConfigKeys(clazz, entity));
         if (LOG.isTraceEnabled())
-            LOG.trace("Entity {} config keys: {}", entity.getId(), Joiner.on(", ").join(configKeys.keySet()));
+            LOG.trace("Entity {} config keys: {}", id, Joiner.on(", ").join(configKeys.keySet()));
 
         refreshSnapshot();
     }
@@ -167,27 +174,32 @@ public class EntityDynamicType {
     
     private EntityTypeSnapshot refreshSnapshot() {
         if (snapshotValid.compareAndSet(false, true)) {
-            snapshot = new EntityTypeSnapshot(entity.getClass().getCanonicalName(), configKeys, 
+            snapshot = new EntityTypeSnapshot(entityClass.getCanonicalName(), configKeys, 
                     sensors, effectors.values());
         }
         return snapshot;
     }
     
     /**
-     * Finds the effectors sensors defined on the entity's class.
+     * Finds the effectors defined on the entity's class, statics and optionally any non-static (discouraged).
      */
-    private static Map<String,Effector<?>> findEffectors(Entity entity) {
+    protected static Map<String,Effector<?>> findEffectors(Class<? extends Entity> clazz, Entity optionalEntity) {
         try {
-            Class<? extends Entity> clazz = entity.getClass();
             Map<String,Effector<?>> result = Maps.newLinkedHashMap();
             Map<String,Field> sources = Maps.newLinkedHashMap();
             for (Field f : clazz.getFields()) {
                 if (Effector.class.isAssignableFrom(f.getType())) {
-                    Effector<?> eff = (Effector<?>) f.get(entity);
+                    if (!Modifier.isStatic(f.getModifiers())) {
+                        // require it to be static or we have an instance
+                        LOG.warn("Discouraged/deprecated use of non-static effector "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
+                        if (optionalEntity==null) continue;
+                    }
+                    Effector<?> eff = (Effector<?>) f.get(optionalEntity);
                     Effector<?> overwritten = result.put(eff.getName(), eff);
                     Field source = sources.put(eff.getName(), f);
                     if (overwritten!=null && overwritten != eff) 
-                        LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {eff.getName(), entity, eff, f, overwritten, source});
+                        LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                                eff.getName(), optionalEntity!=null ? optionalEntity : clazz, eff, f, overwritten, source});
                 }
             }
             
@@ -198,24 +210,30 @@ public class EntityDynamicType {
     }
     
     /**
-     * Finds the sensors statically defined on the entity's class.
+     * Finds the sensors defined on the entity's class, statics and optionally any non-static (discouraged).
      */
-    private static Map<String,Sensor<?>> findSensors(Entity entity) {
+    protected static Map<String,Sensor<?>> findSensors(Class<? extends Entity> clazz, Entity optionalEntity) {
         try {
-            Class<? extends Entity> clazz = entity.getClass();
             Map<String,Sensor<?>> result = Maps.newLinkedHashMap();
             Map<String,Field> sources = Maps.newLinkedHashMap();
             for (Field f : clazz.getFields()) {
                 if (Sensor.class.isAssignableFrom(f.getType())) {
-                    Sensor<?> sens = (Sensor<?>) f.get(entity);
+                    if (!Modifier.isStatic(f.getModifiers())) {
+                        // require it to be static or we have an instance
+                        LOG.warn("Discouraged use of non-static sensor "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
+                        if (optionalEntity==null) continue;
+                    }
+                    Sensor<?> sens = (Sensor<?>) f.get(optionalEntity);
                     Sensor<?> overwritten = result.put(sens.getName(), sens);
                     Field source = sources.put(sens.getName(), f);
                     if (overwritten!=null && overwritten != sens) {
                         if (sens instanceof HasConfigKey) {
                             // probably overriding defaults, just log as debug (there will be add'l logging in config key section)
-                            LOG.debug("multiple definitions for config sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {sens.getName(), entity, sens, f, overwritten, source});
+                            LOG.debug("multiple definitions for config sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                                    sens.getName(), optionalEntity!=null ? optionalEntity : clazz, sens, f, overwritten, source});
                         } else {
-                            LOG.warn("multiple definitions for sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {sens.getName(), entity, sens, f, overwritten, source});
+                            LOG.warn("multiple definitions for sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                                    sens.getName(), optionalEntity!=null ? optionalEntity : clazz, sens, f, overwritten, source});
                         }
                     }
                 }
@@ -228,39 +246,47 @@ public class EntityDynamicType {
     }
     
     /**
-     * Finds the config keys statically defined on the entity's class.
+     * Finds the config keys defined on the entity's class, statics and optionally any non-static (discouraged).
      */
-    private static Map<String,ConfigKey<?>> findConfigKeys(Entity entity) {
+    protected static Map<String,ConfigKey<?>> findConfigKeys(Class<? extends Entity> clazz, Entity optionalEntity) {
         try {
-            Class<? extends Entity> clazz = entity.getClass();
             Map<String,ConfigKey<?>> result = Maps.newLinkedHashMap();
             Map<String,Field> configFields = Maps.newLinkedHashMap();
             for (Field f : clazz.getFields()) {
-                ConfigKey<?> k = null;
-                if (ConfigKey.class.isAssignableFrom(f.getType())) {
-                    k = (ConfigKey<?>) f.get(entity);
-                } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-                    k = ((HasConfigKey<?>)f.get(entity)).getConfigKey();
+                boolean isConfigKey = ConfigKey.class.isAssignableFrom(f.getType());
+                if (!isConfigKey) {
+                    if (!HasConfigKey.class.isAssignableFrom(f.getType())) {
+                        // neither ConfigKey nor HasConfigKey
+                        continue;
+                    }
                 }
-                if (k != null) {
-                    Field alternativeField = configFields.get(k.getName());
-                    // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
-                    Field definitiveField = alternativeField != null ? inferSubbestField(alternativeField, f) : f;
-                    boolean skip = false;
-                    if (definitiveField != f) {
-                        // If they refer to the _same_ instance, just keep the one we already have
-                        if (alternativeField.get(entity) == f.get(entity)) skip = true;
-                    }
-                    if (skip) {
-                        //nothing
-                    } else if (definitiveField == f) {
-                        ConfigKey<?> overwritten = result.put(k.getName(), k);
-                        configFields.put(k.getName(), f);
-                    } else if (definitiveField != null) {
-                        if (LOG.isDebugEnabled()) LOG.debug("multiple definitions for config key {} on {}; preferring that in sub-class: {} to {}", new Object[] {k.getName(), entity, alternativeField, f});
-                    } else if (definitiveField == null) {
-                        LOG.warn("multiple definitions for config key {} on {}; preferring {} to {}", new Object[] {k.getName(), entity, alternativeField, f});
-                    }
+                if (!Modifier.isStatic(f.getModifiers())) {
+                    // require it to be static or we have an instance
+                    LOG.warn("Discouraged use of non-static config key "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
+                    if (optionalEntity==null) continue;
+                }
+                ConfigKey<?> k = isConfigKey ? (ConfigKey<?>) f.get(optionalEntity) : 
+                    ((HasConfigKey<?>)f.get(optionalEntity)).getConfigKey();
+
+                Field alternativeField = configFields.get(k.getName());
+                // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
+                Field definitiveField = alternativeField != null ? inferSubbestField(alternativeField, f) : f;
+                boolean skip = false;
+                if (definitiveField != f) {
+                    // If they refer to the _same_ instance, just keep the one we already have
+                    if (alternativeField.get(optionalEntity) == f.get(optionalEntity)) skip = true;
+                }
+                if (skip) {
+                    //nothing
+                } else if (definitiveField == f) {
+                    result.put(k.getName(), k);
+                    configFields.put(k.getName(), f);
+                } else if (definitiveField != null) {
+                    if (LOG.isDebugEnabled()) LOG.debug("multiple definitions for config key {} on {}; preferring that in sub-class: {} to {}", new Object[] {
+                            k.getName(), optionalEntity!=null ? optionalEntity : clazz, alternativeField, f});
+                } else if (definitiveField == null) {
+                    LOG.warn("multiple definitions for config key {} on {}; preferring {} to {}", new Object[] {
+                            k.getName(), optionalEntity!=null ? optionalEntity : clazz, alternativeField, f});
                 }
             }
             
@@ -280,4 +306,5 @@ public class EntityDynamicType {
         boolean isSuper2 = c2.isAssignableFrom(c1);
         return (isSuper1) ? (isSuper2 ? null : f2) : (isSuper2 ? f1 : null);
     }
+    
 }
