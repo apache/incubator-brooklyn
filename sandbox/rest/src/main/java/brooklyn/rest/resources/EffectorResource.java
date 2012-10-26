@@ -54,7 +54,7 @@ public class EffectorResource extends BaseResource {
       responseClass = "brooklyn.rest.api.EffectorSummary",
       multiValueResponse = true)
   @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Application or entity not found")
+      @ApiError(code = 404, reason = "Could not find application or entity")
   })
   public List<EffectorSummary> list(
       @ApiParam(name = "application", value = "Application name", required = true)
@@ -77,9 +77,10 @@ public class EffectorResource extends BaseResource {
 
   @POST
   @Path("/{effector}")
-  @ApiOperation(value = "Trigger an effector, returning either the return value (status 200) or an activity task ID on timeout (status 202)")
+  @ApiOperation(value = "Trigger an effector",
+    notes="Returns the return value (status 200) if it completes, or an activity task ID (status 202) if it times out")
   @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Application or Entity not found or Entity has no effector with that name")
+      @ApiError(code = 404, reason = "Could not find application, entity or effector")
   })
   public Response trigger(
       @ApiParam(name = "application", value = "Name of the application", required = true)
@@ -92,16 +93,15 @@ public class EffectorResource extends BaseResource {
       @PathParam("effector") String effectorName,
       
       // TODO test timeout; and should it be header, form, or what?
-      @ApiParam(name = "timeout", value = "Amount of time before the server should respond with the activity task ID and status 202, " +
-      		"rather than with the result of the effector; assumes milliseconds if no unit specified. " +
-      		"'never' (blocking) is the default; " +
+      @ApiParam(name = "timeout", value = "Delay before server should respond with activity task ID rather than result (in millis if no unit specified): " +
+      		"'never' (blocking) is default; " +
       		"'0' means always return task activity ID; " +
-      		"and e.g. '1000' or '1s' will return a result if available within one second otherwise status 202 and the activity task ID.", 
+      		"and e.g. '1000' or '1s' will return a result if available within one second otherwise status 202 and the activity task ID", 
       		required = false, defaultValue = "never")
       @HeaderParam("timeout")
       String timeout,
       
-      @ApiParam(name = "parameters", value = "Effector parameters as key value pairs", required = false)
+      @ApiParam(name = "parameters", value = "Effector parameters (as key value pairs)", required = false)
       @Valid 
       Map<String, String> parameters
   ) {

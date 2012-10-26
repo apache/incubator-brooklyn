@@ -19,7 +19,7 @@ import java.net.URL;
 public class WebClientResource extends BaseResource {
 
   @GET
-  @ApiOperation(value = "Fetch JavsvaScript Web client page")
+  @ApiOperation(value = "JavaScript client GUI page")
   public Response backboneUi() {
     String pageContent = "";
     try {

@@ -24,7 +24,7 @@ public class SwaggerUiView extends View {
   public final static String SWAGGER_VERSION = "1.0";
 
   public SwaggerUiView(Set<Class<?>> resourceClasses) {
-    super("brooklyn/rest/views/swagger-ui.ftl");
+    super("swagger-ui.ftl");
     resourceList = resourceClasses;
     apiListing = readApiListing(resourceList);
     apiList = readApis(resourceList);

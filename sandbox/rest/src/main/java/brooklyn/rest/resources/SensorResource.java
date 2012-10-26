@@ -43,7 +43,7 @@ public class SensorResource extends BaseResource {
       responseClass = "brooklyn.rest.api.SensorSummary",
       multiValueResponse = true)
   @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Missing application or entity")
+      @ApiError(code = 404, reason = "Could not find application or entity")
   })
   public List<SensorSummary> list(
       @ApiParam(value = "Application name", required = true)
@@ -72,7 +72,7 @@ public class SensorResource extends BaseResource {
 
   @GET
   @Path("/current-state")
-  @ApiOperation(value = "Fetch sensor details in batch")
+  @ApiOperation(value = "Fetch sensor values in batch", notes="Returns a map of sensor name to value")
   public Map<String, String> batchSensorRead(
       @ApiParam(value = "Application name", required = true)
       @PathParam("application") String applicationName,
@@ -99,9 +99,9 @@ public class SensorResource extends BaseResource {
 
   @GET
   @Path("/{sensor}")
-  @ApiOperation(value = "Fetch sensor details", responseClass = "String")
+  @ApiOperation(value = "Fetch sensor value", responseClass = "String")
   @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Application, entity or sensor not found")
+      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
   })
   public String get(
       @ApiParam(value = "Application name", required = true)
