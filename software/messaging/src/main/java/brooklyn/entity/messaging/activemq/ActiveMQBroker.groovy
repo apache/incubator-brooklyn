@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.java.UsesJmx
 import brooklyn.entity.messaging.Queue
@@ -28,7 +29,7 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 	private static final Logger log = LoggerFactory.getLogger(ActiveMQBroker.class)
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "5.5.1" ]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "5.7.0" ]
 
     /** download mirror, if desired */
     @SetFromFlag("mirrorUrl")
@@ -56,11 +57,17 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 	}
 	
 	public ActiveMQQueue createQueue(Map properties) {
-		return new ActiveMQQueue(properties);
+		ActiveMQQueue result = new ActiveMQQueue(properties);
+        Entities.manage(result);
+        result.create();
+        return result;
 	}
 
 	public ActiveMQTopic createTopic(Map properties) {
-		return new ActiveMQTopic(properties);
+		ActiveMQTopic result = new ActiveMQTopic(properties);
+        Entities.manage(result);
+        result.create();
+        return result;
 	}
 
     transient JmxSensorAdapter jmxAdapter;
@@ -152,6 +159,7 @@ public class ActiveMQTopic extends ActiveMQDestination implements Topic {
 		super.init()
 	}
 
+    @Override
 	public void create() {
 		jmxAdapter.helper.operation(broker, "addTopic", name)
 		connectSensors()

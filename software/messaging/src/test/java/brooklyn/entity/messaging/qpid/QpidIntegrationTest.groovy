@@ -20,6 +20,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -57,6 +58,7 @@ public class QpidIntegrationTest {
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
         qpid = new QpidBroker(owner:app);
+        Entities.startManagement(app);
         qpid.start([ testLocation ])
         executeUntilSucceedsWithShutdown(qpid) {
             assertTrue qpid.getAttribute(Startable.SERVICE_UP)
@@ -82,6 +84,7 @@ public class QpidIntegrationTest {
                    ('etc/config.xml'):new File('software/messaging/'+configfile) ]
         }
         qpid = new QpidBroker(owner:app, runtimeFiles:qpidRuntimeFiles);
+        Entities.startManagement(app);
         qpid.start([ testLocation ])
         //TODO assert the files/plugins were installed?
         executeUntilSucceedsWithShutdown(qpid) {
@@ -107,6 +110,7 @@ public class QpidIntegrationTest {
 
         // Start broker with a configured queue
         qpid = new QpidBroker(owner:app, queue:queueName);
+        Entities.startManagement(app);
         qpid.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue qpid.getAttribute(Startable.SERVICE_UP)

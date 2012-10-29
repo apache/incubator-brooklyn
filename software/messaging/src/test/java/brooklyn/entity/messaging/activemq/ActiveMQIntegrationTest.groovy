@@ -21,6 +21,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -58,6 +59,7 @@ public class ActiveMQIntegrationTest {
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
         activeMQ = new ActiveMQBroker(owner:app);
+        Entities.startManagement(app);
         activeMQ.start([ testLocation ])
         executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
@@ -72,6 +74,7 @@ public class ActiveMQIntegrationTest {
    @Test(groups = "Integration")
    public void canStartupAndShutdownWithCustomJmx() {
        activeMQ = new ActiveMQBroker(owner:app, jmxPort: "11099+");
+       Entities.startManagement(app);
        app.start([ testLocation ])
        executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
            assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
@@ -90,6 +93,7 @@ public class ActiveMQIntegrationTest {
 
         // Start broker with a configured queue
         activeMQ = new ActiveMQBroker(owner:app, queue:queueName);
+        Entities.startManagement(app);
         activeMQ.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)

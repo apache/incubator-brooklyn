@@ -32,17 +32,21 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
 
     @Override
     public void install() {
-        newScript(INSTALLING)
-                .failOnNonZeroResultCode()
-                .body.append(
-                    installPackage("erlang", // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
-                            apt:"erlang-nox erlang-dev",
-                            port:"erlang@${erlangVersion}+ssl"),
-                    INSTALL_WGET,
-                    "wget http://www.rabbitmq.com/releases/rabbitmq-server/v${version}/rabbitmq-server-generic-unix-${version}.tar.gz",
-                    "tar zxf rabbitmq-server-generic-unix-${version}.tar.gz"
-                )
-                .execute()
+        String url = "http://www.rabbitmq.com/releases/rabbitmq-server/v${version}/rabbitmq-server-generic-unix-${version}.tar.gz";
+        String saveAs = "rabbitmq-server-generic-unix-${version}.tar.gz";
+
+        List<String> commands = ImmutableList.builder()
+                .add(installPackage("erlang", // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
+                        apt:"erlang-nox erlang-dev",
+                        port:"erlang@${erlangVersion}+ssl"))
+                .addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
+                .add(CommonCommands.installExecutable("tar"))
+                .add(format("tar xvzf %s",saveAs))
+                .build();
+
+        newScript(INSTALLING).
+                failOnNonZeroResultCode().
+                body.append(commands).execute();
     }
 
     @Override
