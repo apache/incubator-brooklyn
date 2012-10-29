@@ -3,21 +3,23 @@ package brooklyn.entity.proxy.nginx;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Description
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.proxy.ProxySslConfig
-import brooklyn.entity.rebind.RebindSupport
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.WebAppService
-import brooklyn.entity.webapp.WebAppServiceConstants;
+import brooklyn.entity.webapp.WebAppServiceConstants
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.management.SubscriptionHandle
-import brooklyn.mementos.EntityMemento
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Preconditions
@@ -33,6 +35,8 @@ public class UrlMapping extends AbstractGroup {
 
     private static final Logger log = LoggerFactory.getLogger(UrlMapping.class);
     
+    public static final Effector<Void> DISCARD = new MethodEffector<Void>(UrlMapping.class, "discard");
+
     @SetFromFlag("label")
     public static final BasicConfigKey<String> LABEL =
         new BasicConfigKey<String>(String.class, "urlmapping.label", "optional human-readable label to identify a server");
@@ -182,5 +186,10 @@ public class UrlMapping extends AbstractGroup {
         }
         
         recomputeAddresses();
+    }
+    
+    @Description("Unmanages the url-mapping, so it is discarded and no longer applies")
+    public void discard() {
+        Entities.unmanage(this);
     }
 }

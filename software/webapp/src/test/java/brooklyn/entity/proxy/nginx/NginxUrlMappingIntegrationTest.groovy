@@ -22,6 +22,7 @@ import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
@@ -388,6 +389,26 @@ public class NginxUrlMappingIntegrationTest {
         assertEquals(urlRespondsStatusCode("http://localhost:${port}"), 404);
     }
     
+    @Test(groups = "Integration")
+    public void testDiscardUrlMapping() {
+        nginx = new NginxController(app, urlMappings:urlMappingsGroup);
+        
+        //cluster 0 mounted at localhost1 /
+        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
+            configure(JavaWebAppService.ROOT_WAR, WAR_URL)
+        UrlMapping u0 = new UrlMapping(urlMappingsGroup, domain: "localhost1", target: c0);
+        
+        app.start([ new LocalhostMachineProvisioningLocation() ])
+        int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
+        
+        HttpTestUtils.assertHttpStatusCodeEventuallyEquals("http://localhost1:${port}", 200);
+
+        // Discard, and confirm that subsequently get a 404 instead
+        u0.discard();
+        
+        HttpTestUtils.assertHttpStatusCodeEventuallyEquals("http://localhost1:${port}", 404);
+    }
+
     private void assertAppServerRespondsEventually(final JBoss7Server server) {
         String hostname = server.getAttribute(Attributes.HOSTNAME);
         int port = server.getAttribute(Attributes.HTTP_PORT);
