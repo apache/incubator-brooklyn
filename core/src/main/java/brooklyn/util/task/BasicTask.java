@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Throwables;
 
@@ -220,6 +221,16 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
         return result.get();
     }
 
+    public T getUnchecked() {
+        try {
+            return get();
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        } catch (ExecutionException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+        
     // future value --------------------
 
     public synchronized void blockUntilStarted() {

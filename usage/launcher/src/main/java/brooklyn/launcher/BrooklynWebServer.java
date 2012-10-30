@@ -173,6 +173,8 @@ public class BrooklynWebServer {
 
         if (actualPort==-1){
             actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), httpsEnabled?httpsPort:port);
+            if (actualPort == -1) 
+                throw new IllegalStateException("Unable to provision port for web console (wanted "+(httpsEnabled?httpsPort:port)+")");
         }
 
         if(httpsEnabled){

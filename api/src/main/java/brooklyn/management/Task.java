@@ -67,4 +67,8 @@ public interface Task<T> extends TaskStub, Future<T> {
      * Plain-text format, with new-lines (and sometimes extra info) if multiline enabled.
      */
     public String getStatusDetail(boolean multiline);
+    
+    /** As get, but propagating checked exceptions as unchecked for convenience. */
+    public T getUnchecked();
+    
 }
