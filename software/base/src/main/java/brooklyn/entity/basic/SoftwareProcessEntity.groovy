@@ -88,9 +88,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
 	public SoftwareProcessEntity(Map properties=[:], Entity owner=null) {
 		super(properties, owner)
-
-		setAttribute(SERVICE_UP, false)
-		setAttribute(SERVICE_STATE, Lifecycle.CREATED)
 	}
     
     public SoftwareProcessEntity(Entity owner) {
@@ -135,6 +132,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             LOG.warn("On start-up of {}, not (re)binding because state is {}", this, state);
     	} else {
             // Expect this is a normal start() sequence (i.e. start() will subsequently be called)
+            setAttribute(SERVICE_UP, false)
+            setAttribute(SERVICE_STATE, Lifecycle.CREATED)
     	}
     }
 	
