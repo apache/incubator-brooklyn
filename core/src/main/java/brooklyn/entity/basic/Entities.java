@@ -78,6 +78,7 @@ public class Entities {
             final Effector<T> effector, final Map<String,?> parameters) {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, parameters);
     }
+    @SuppressWarnings("unchecked")
     public static <T> Task<List<T>> invokeEffectorListWithArgs(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall, 
             final Effector<T> effector, Object ...args) {
         return invokeEffectorListWithMap(callingEntity, entitiesToCall, effector,
@@ -340,7 +341,7 @@ public class Entities {
     }
 
     /** @deprecated use start(Entity) */
-    public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
+    public static Entity start(ManagementContext context, Entity e, Collection<? extends Location> locations) {
         if (context != null) context.manage(e);
         if (e instanceof Startable) ((Startable)e).start(locations);
         return e;
@@ -367,7 +368,7 @@ public class Entities {
     /** stops, destroys, and unmanages the given entity -- does as many as are valid given the type and state */
     public static void destroy(Entity e) {
         if (isManaged(e)) {
-            if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP);
+            if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
             if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
             unmanage(e);
         }
