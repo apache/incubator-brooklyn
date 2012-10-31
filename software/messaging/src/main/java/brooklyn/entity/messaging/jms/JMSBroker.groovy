@@ -105,8 +105,6 @@ public abstract class JMSDestination extends AbstractEntity {
         Preconditions.checkNotNull name, "Name must be specified"
 
         init()
-
-        create()
     }
 
 	public String getName() { getDisplayName() }
@@ -114,8 +112,6 @@ public abstract class JMSDestination extends AbstractEntity {
     public abstract void init();
 
     public abstract void connectSensors()
-
-    public abstract void create();
 
     public abstract void delete();
 

@@ -36,6 +36,9 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public static final String DEFAULT_RUN_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"apps";
     public static final String NO_VERSION_INFO = "no-version-info";
 
+    private volatile String runDir;
+    private volatile String installDir;
+    
     public AbstractSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -66,22 +69,30 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
     
     public String getInstallDir() {
-        String installBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
-        if (installBasedir == null) installBasedir = DEFAULT_INSTALL_BASEDIR;
-        if (installBasedir.endsWith(File.separator)) installBasedir.substring(0, installBasedir.length()-1);
-        
-        return elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_INSTALL_DIR),
-                installBasedir+"/"+getEntityVersionLabel("/"));
+        // Cache it; evaluate lazily (and late) to ensure managementContext.config is accessible and completed its setup
+        // Caching has the benefit that the driver is usable, even if the entity is unmanaged (useful in some tests!)
+        if (installDir == null) {
+            String installBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
+            if (installBasedir == null) installBasedir = DEFAULT_INSTALL_BASEDIR;
+            if (installBasedir.endsWith(File.separator)) installBasedir.substring(0, installBasedir.length()-1);
+            
+            installDir = elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_INSTALL_DIR),
+                    installBasedir+"/"+getEntityVersionLabel("/"));
+        }
+        return installDir;
     }
     
     public String getRunDir() {
-        String runBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
-        if (runBasedir == null) runBasedir = DEFAULT_RUN_BASEDIR;
-        if (runBasedir.endsWith(File.separator)) runBasedir.substring(0, runBasedir.length()-1);
-        
-        return elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_RUN_DIR), 
-                runBasedir+"/"+entity.getApplication().getId()+"/"+"entities"+"/"+
-                getEntityVersionLabel()+"_"+entity.getId());
+        if (runDir == null) {
+            String runBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
+            if (runBasedir == null) runBasedir = DEFAULT_RUN_BASEDIR;
+            if (runBasedir.endsWith(File.separator)) runBasedir.substring(0, runBasedir.length()-1);
+            
+            runDir = elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_RUN_DIR), 
+                    runBasedir+"/"+entity.getApplication().getId()+"/"+"entities"+"/"+
+                    getEntityVersionLabel()+"_"+entity.getId());
+        }
+        return runDir;
     }
 
     public SshMachineLocation getMachine() { return getLocation(); }

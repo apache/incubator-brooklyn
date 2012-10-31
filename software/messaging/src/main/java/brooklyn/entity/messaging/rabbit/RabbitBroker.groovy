@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.Queue
@@ -30,7 +31,7 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
     private static final Logger log = LoggerFactory.getLogger(RabbitBroker.class)
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "2.8.2" ]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "2.8.7" ]
 
     @SetFromFlag("erlangVersion")
     public static final BasicConfigKey<String> ERLANG_VERSION = [ String, "erlang.version", "Erlang runtime version", "R15B" ]
@@ -72,7 +73,10 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
     }
 
     public RabbitQueue createQueue(Map properties) {
-        return new RabbitQueue(properties, this)
+        RabbitQueue result = new RabbitQueue(properties, this);
+        Entities.manage(result);
+        result.create();
+        return result;
     }
 
     @Override
@@ -125,7 +129,6 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
         exchange = properties.exchange ?: defaultExchangeName
 
         init()
-        create()
     }
 
     public void init() {

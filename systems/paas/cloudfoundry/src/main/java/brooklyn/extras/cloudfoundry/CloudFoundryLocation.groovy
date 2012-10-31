@@ -1,8 +1,5 @@
 package brooklyn.extras.cloudfoundry
 
-import java.net.InetAddress
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -14,6 +11,7 @@ import brooklyn.location.Location
 import brooklyn.location.LocationResolver
 import brooklyn.location.basic.AbstractLocation
 import brooklyn.location.geo.HostGeoInfo
+import brooklyn.util.NetworkUtils
 import brooklyn.util.StringUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.mutex.MutexSupport
@@ -86,7 +84,7 @@ class CloudFoundryLocation extends AbstractLocation implements AddressableLocati
         if (hostname?.isEmpty())
             throw new IllegalArgumentException("Cannot parse Cloud Foundry target '"+target+"' to determine address; expected in api.hostname.com or https://api.hostname.com/xxx format.")
         try {
-            return InetAddress.getByName(hostname);
+            return NetworkUtils.getInetAddressWithFixedName(hostname);
         } catch (Exception e) {
             if (log.isDebugEnabled())
                 log.warn("unable to look up IP info for "+hostname+": "+e);

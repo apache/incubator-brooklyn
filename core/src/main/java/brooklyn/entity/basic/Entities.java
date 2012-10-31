@@ -49,6 +49,18 @@ public class Entities {
 
     private static final Logger log = LoggerFactory.getLogger(Entities.class);
     
+    /**
+     * Names that, if they appear anywhere in an attribute/config/field indicates that it
+     * may be private, so should not be logged etc.
+     */
+    private static final List<String> SECRET_NAMES = ImmutableList.of(
+            "password",
+            "credential",
+            "secret",
+            "private",
+            "access.cert",
+            "access.key");
+    
 	/** invokes the given effector with the given named arguments on the entitiesToCall, from the calling context of the callingEntity;
 	 * intended for use only from the callingEntity.
 	 * @return ParallelTask containing a results from each invocation; calling get() on the result will block until all complete,
@@ -103,7 +115,11 @@ public class Entities {
     }
 
     public static boolean isSecret(String name) {
-        return name.contains("password") || name.contains("credential") || name.contains("secret") || name.contains("private");
+        String lowerName = name.toLowerCase();
+        for (String secretName : SECRET_NAMES) {
+            if (lowerName.contains(secretName)) return true;
+        }
+        return false;
     }
 
     public static boolean isTrivial(Object v) {

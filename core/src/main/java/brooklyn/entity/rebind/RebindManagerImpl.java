@@ -88,6 +88,7 @@ public class RebindManagerImpl implements RebindManager {
     @Override
     @VisibleForTesting
     public void waitForPendingComplete() throws InterruptedException {
+        if (persister == null || !running) return;
         realChangeListener.waitForPendingComplete();
         if (persister != null) persister.waitForWritesCompleted();
     }

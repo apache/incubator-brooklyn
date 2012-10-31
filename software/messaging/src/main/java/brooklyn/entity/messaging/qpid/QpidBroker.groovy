@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.java.UsesJmx
 import brooklyn.entity.messaging.Queue
@@ -38,7 +39,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     public static final String PASSWD = "etc/passwd"
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "0.14" ]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [ SoftwareProcessEntity.SUGGESTED_VERSION, "0.18" ]
     
     @SetFromFlag("amqpPort")
     public static final PortAttributeSensorAndConfigKey AMQP_PORT = AmqpServer.AMQP_PORT
@@ -76,12 +77,33 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
         setAttribute(BROKER_URL, String.format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)))
     }
 
+    public void waitForServiceUp() {
+        super.waitForServiceUp();
+
+        // Also wait for the MBean to exist (as used when creating queue/topic)
+        String virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME)
+        ObjectName virtualHostManager = new ObjectName("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"${virtualHost}\"")
+        JmxHelper helper = new JmxHelper(this)
+        helper.connect();
+        try {
+            helper.assertMBeanExistsEventually(virtualHostManager, 60*1000);
+        } finally {
+            helper.disconnect();
+        }
+    }
+    
     public QpidQueue createQueue(Map properties) {
-        return new QpidQueue(properties, this)
+        QpidQueue result = new QpidQueue(properties, this)
+        Entities.manage(result);
+        result.create();
+        return result;
     }
 
     public QpidTopic createTopic(Map properties) {
-        return new QpidTopic(properties, this)
+        QpidTopic result = new QpidTopic(properties, this);
+        Entities.manage(result);
+        result.create();
+        return result;
     }
 
     Class getDriverInterface() {
@@ -145,6 +167,8 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
     }
 
     public void init() {
+        // TODO Would be nice to share the JmxHelper for all destinations, so just one connection.
+        // But tricky for if brooklyn were distributed
         if (!virtualHost) virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME)
         setAttribute(QpidBroker.VIRTUAL_HOST_NAME, virtualHost)
         virtualHostManager = new ObjectName("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"${virtualHost}\"")
@@ -154,6 +178,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
         jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(helper));
     }
 
+    @Override
     public void create() {
         jmxAdapter.helper.operation(virtualHostManager, "createNewQueue", name, getOwner().getAttribute(Attributes.JMX_USER), true)
         jmxAdapter.helper.operation(exchange, "createNewBinding", name, name)

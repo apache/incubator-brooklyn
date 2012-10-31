@@ -4,20 +4,13 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import com.google.common.base.Charsets
-import com.google.common.collect.Maps
-import com.rabbitmq.client.Channel
-import com.rabbitmq.client.Connection
-import com.rabbitmq.client.ConnectionFactory
-import com.rabbitmq.client.QueueingConsumer
-
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.amqp.AmqpExchange
 import brooklyn.entity.trait.Startable
@@ -25,6 +18,13 @@ import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
+
+import com.google.common.base.Charsets
+import com.google.common.collect.Maps
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.Connection
+import com.rabbitmq.client.ConnectionFactory
+import com.rabbitmq.client.QueueingConsumer
 
 /**
  * Test the operation of the {@link RabbitBroker} class.
@@ -55,6 +55,7 @@ public class RabbitIntegrationTest {
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
         rabbit = new RabbitBroker(owner:app);
+        Entities.startManagement(app);
         rabbit.start([ testLocation ])
         executeUntilSucceedsWithShutdown(rabbit) {
             assertTrue rabbit.getAttribute(Startable.SERVICE_UP)
@@ -68,6 +69,7 @@ public class RabbitIntegrationTest {
     @Test(groups = "Integration")
     public void testClientConnection() {
         rabbit = new RabbitBroker(owner:app);
+        Entities.startManagement(app);
         rabbit.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue rabbit.getAttribute(Startable.SERVICE_UP)

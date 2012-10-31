@@ -108,7 +108,11 @@ public class MementoFileWriter<T> {
                     deleteNow();
                     return null;
                 } catch (Throwable t) {
-                    LOG.error("Error deleting "+file, t);
+                    if (executor.isShutdown()) {
+                        LOG.debug("Error deleting "+file+" (but executor shutdown)", t);
+                    } else {
+                        LOG.error("Error deleting "+file, t);
+                    }
                     throw Throwables.propagate(t);
                 }
             }});
@@ -122,7 +126,11 @@ public class MementoFileWriter<T> {
                     writeNow();
                     return null;
                 } catch (Throwable t) {
-                    LOG.error("Error writing to "+file, t);
+                    if (executor.isShutdown()) {
+                        LOG.debug("Error writing to "+file+" (but executor shutdown)", t);
+                    } else {
+                        LOG.error("Error writing to "+file, t);
+                    }
                     throw Throwables.propagate(t);
                 }
              }});

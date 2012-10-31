@@ -18,9 +18,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
+import javax.management.InvalidAttributeValueException;
 import javax.management.JMX;
+import javax.management.ListenerNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
 import javax.management.NotificationFilter;
 import javax.management.NotificationListener;
 import javax.management.ObjectInstance;
@@ -313,6 +319,17 @@ public class JmxHelper {
         // Expect SecurityException, IOException, etc.
         // But can also see things like javax.naming.ServiceUnavailableException with WSO2 app-servers.
         // So let's not try to second guess strange behaviours that future entities will exhibit.
+        //
+        // However, if it was our request that was invalid then not worth retrying.
+        
+        if (e instanceof AttributeNotFoundException) return false;
+        if (e instanceof InstanceAlreadyExistsException) return false;
+        if (e instanceof InstanceNotFoundException) return false;
+        if (e instanceof InvalidAttributeValueException) return false;
+        if (e instanceof ListenerNotFoundException) return false;
+        if (e instanceof MalformedObjectNameException) return false;
+        if (e instanceof NotCompliantMBeanException) return false;
+
         return true;
     }
 

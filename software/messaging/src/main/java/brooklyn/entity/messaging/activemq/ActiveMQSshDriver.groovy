@@ -79,6 +79,7 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
         def result = super.getShellEnvironment()
         result << [
             ACTIVEMQ_HOME: "${runDir}",
+            ACTIVEMQ_PIDFILE: getPidFile(),
             ACTIVEMQ_OPTS: result.JAVA_OPTS ?: "",
             ACTIVEMQ_SUNJMX_CONTROL: "--jmxurl service:jmx:rmi://${machine.address.hostName}:${rmiServerPort}/jndi/rmi://${machine.address.hostName}:${jmxPort}/jmxrmi",
             JAVA_OPTS: "",
