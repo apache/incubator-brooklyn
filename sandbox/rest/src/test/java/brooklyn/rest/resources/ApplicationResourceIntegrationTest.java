@@ -91,6 +91,7 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
 
     for (EntitySummary entity : entities) {
       client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
+      // TODO assertions on the above call?
 
       Set<EntitySummary> children = client().resource(entity.getLinks().get("children"))
           .get(new GenericType<Set<EntitySummary>>() {
@@ -114,7 +115,7 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
     assertEquals(uptime.getType(), "java.lang.Integer");
   }
 
-  @Test(groups="Integration", dependsOnMethods = "testListSensorsRedis")
+  @Test(groups="Integration", dependsOnMethods = { "testListSensorsRedis", "testListEntities" })
   public void testTriggerRedisStopEffector() throws InterruptedException {
     ClientResponse response = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
         .post(ClientResponse.class, ImmutableMap.of());

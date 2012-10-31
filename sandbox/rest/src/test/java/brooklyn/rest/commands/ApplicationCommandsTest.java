@@ -89,27 +89,29 @@ public class ApplicationCommandsTest extends BrooklynCommandTest {
     ));
   }
 
-  // TODO CLI to invoke effector with arguments
-//  @Test(dependsOnMethods = "testStartApplication")
-//  public void testInvokeEffectors() throws Exception {
-//    runCommandWithArgs(InvokeEffectorCommand.class, "simple", "sampleEffector", "foo", "2");
-//
-//    assertThat(standardOut(), allOf(
-//        containsString("foo2")
-//    ));
-//  }
-//
-//  @Test(dependsOnMethods = "testInvokeEffectors")
-//  public void testQuerySensors() throws Exception {
-//      runCommandWithArgs(QuerySensorsCommand.class, "simple");
-//      
-//      assertThat(standardOut(), allOf(
-//              containsString("/v1/applications/simple/entities/"),
-//              containsString(RestMockSimpleEntity.class.getName()),
-//              containsString("foo2")
-//              ));
-//  }
+  // TODO CLI to invoke effector **with arguments**
+  @Test(enabled=false, dependsOnMethods = "testStartApplication")
+  public void testInvokeEffectors() throws Exception {
+    runCommandWithArgs(InvokeEffectorCommand.class, "simple", "sampleEffector", "foo", "2");
+
+    assertThat(standardOut(), allOf(
+        containsString("foo2")
+    ));
+  }
+
+  // TODO requires effector above is invoked 
+  @Test(enabled=false, dependsOnMethods = "testInvokeEffectors")
+  public void testQuerySensors() throws Exception {
+      runCommandWithArgs(QuerySensorsCommand.class, "simple");
+      
+      assertThat(standardOut(), allOf(
+              containsString("/v1/applications/simple/entities/"),
+              containsString(RestMockSimpleEntity.class.getName()),
+              containsString("foo2")
+              ));
+  }
   
+  // TODO when above re-enabled, depend on the following
 //  @Test(dependsOnMethods = {"testListEffectors", "testQuerySensors", "testListApplications"})
   @Test(dependsOnMethods = {"testListEffectors", "testListApplications"})
   public void testDeleteApplication() throws Exception {

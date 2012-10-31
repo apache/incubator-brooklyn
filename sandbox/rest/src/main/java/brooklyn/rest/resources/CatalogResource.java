@@ -51,7 +51,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource extends BaseResource {
 
-  private boolean scanNeeded = true;
+  private volatile boolean scanNeeded = true;
   private Map<String, Class<? extends AbstractEntity>> scannedEntities = Collections.emptyMap();
   private final Map<String, Class<? extends AbstractEntity>> registeredEntities = Maps.newConcurrentMap();
   private Map<String, Class<? extends AbstractPolicy>> scannedPolicies = Collections.emptyMap();
