@@ -1,0 +1,149 @@
+/* landing page */
+.logo {
+	display: inline-block;
+	padding-top: 10px;
+	float: left;
+}
+
+.menubar-top {
+	display: inline-block;
+	vertical-align: bottom;
+	float: right;
+	text-align: right;
+	padding-top: 30px;
+	padding-right: 60px;
+}
+
+#application-content {
+	margin-top: 40px;
+	margin-bottom: 40px;
+}
+
+/* menu bar */
+.navbar .nav>li {
+	display: block;
+	float: left;
+	list-style: none;
+	margin: 15px 5px 0px 5px;
+}
+
+.navbar .nav>li>a:hover {
+	background-color: #A8B8B0;
+	foreground-color: #261;
+	color: #261;
+	text-decoration: none;
+	text-shadow: 0;
+}
+
+.navbar .nav>li>a {
+	background-color: #261;
+	color: #D0D4C0;
+	padding: 5px 7px 0px 7px;
+	-webkit-border-radius: 5px 5px 0 0;
+	-moz-border-radius: 5px 5px 0 0;
+	border-radius: 5px 5px 0 0;
+	line-height: 19px;
+	text-decoration: none;
+	text-shadow: 0;
+	/* text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25); */
+}
+
+/* tabs eg catalog page */
+.nav-tabs>li,.nav-pills>li {
+	float: left;
+	margin: 10px 1px -1px 1px;
+}
+
+.nav-tabs {
+	border-bottom: 1px solid #DDD;
+	padding-left: 8px;
+}
+
+.nav-tabs>li>a {
+	padding-top: 5px;
+	padding-bottom: 3px;
+	line-height: 18px;
+	border: 1px solid transparent;
+	-webkit-border-radius: 5px 5px 0 0;
+	-moz-border-radius: 5px 5px 0 0;
+	border-radius: 5px 5px 0 0;
+}
+
+/* home page squares */
+.home-summaries-row {
+	text-align: center;
+	margin: 0px 0px 30px 0px;
+}
+
+.roundedSummary {
+	border-radius: 15px;
+	background-color: #f7f6e8;
+	padding: 20px 20px;
+	margin: 20px 40px;
+	width: 240px;
+	height: 160px;
+	line-height: 1.2;
+	font-size: 140%;
+	display: inline-block;
+	text-align: left;
+}
+
+.roundedSummary:before { /* makes the summary vertically centered */
+	content: '';
+	display: inline-block;
+	height: 100%;
+	vertical-align: middle;
+	margin-right: -0.25em; /* adjusts for horiz spacing */
+}
+
+.roundedSummaryText {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.big {
+	font-size: 180%;
+}
+
+.home-widgets-row {
+	text-align: center;
+}
+
+.map-container {
+	width: 45%;
+	display: inline-block;
+	text-align: left;
+	vertical-align: top;
+	margin: 0px 20px;
+}
+.circles-map {
+	height: 350px;
+	border : 2px solid #909490;
+	-webkit-border-radius: 2px 2px 0 0;
+	-moz-border-radius: 2px 2px 0 0;
+	border-radius: 2px 2px 0 0;
+	border: 2px solid #909490;
+}
+.circles-map-message:before { /* makes the message vertically centered */
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    margin-right: -0.25em; /* adjusts for horiz spacing */
+}
+.circles-map-message {
+	display: inline-block;
+	width: 100%;
+	height: 100%;
+    color: #888;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.apps-summary-container {
+	width: 45%;
+	display: inline-block;
+	text-align: left;
+	vertical-align: top;
+	margin: 0px 20px;
+}

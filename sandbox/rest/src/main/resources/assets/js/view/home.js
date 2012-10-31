@@ -3,9 +3,10 @@
  */
 
 define([
-    "underscore", "jquery", "backbone", "./modal-wizard", "text!tpl/home/applications.html",
-    "text!tpl/home/app-entry.html", "bootstrap"
-], function (_, $, Backbone, ModalWizard, ApplicationsHtml, AppEntryHtml) {
+    "underscore", "jquery", "backbone", "./modal-wizard",
+    "text!tpl/home/applications.html", "text!tpl/home/summaries.html", "text!tpl/home/app-entry.html", 
+    "bootstrap"
+], function (_, $, Backbone, ModalWizard, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
 
     var HomeView = Backbone.View.extend({
         tagName:"div",
@@ -14,19 +15,44 @@ define([
             'click #add-new-application':'createApplication',
             'click .delete':'deleteApplication'
         },
+        
+        summariesView:{},
+        
         initialize:function () {
             var that = this
-            this.$el.html(_.template(ApplicationsHtml, {}))
-            this.collection.on('reset', this.renderCollection, this)
-            this.callPeriodically(function () {
-                that.collection.fetch()
-            }, 5000)
+            this.$el.html(_.template(ApplicationsHtml, {} ))
             this._appViews = {}
+            this.summariesView = new HomeView.HomeSummariesView({
+            	applications:this.collection,
+            	locations:this.options.locations,
+        	})
+            this.renderSummaries()
+            this.collection.on('reset', this.render, this)
+            this.options.locations.on('reset', this.renderSummaries, this)
+
+            id = $(this.$el).find("#circles-map");
+            requirejs(["googlemaps"], function (GoogleMaps) {
+            		GoogleMaps.addMapToCanvas(id[0], 40.7063, -73.9971, 14)
+            	}, function (error) {
+            		id.find("#circles-map-message").html("(map not available)"); 
+            });
+            
+            this.callPeriodically(function() {
+            	that.refresh(that);     	            	
+            }, 5000)
+            this.refresh(this)
         },
+        
+        refresh:function (that) {
+        	that.collection.fetch()
+        	that.options.locations.fetch()     	
+        },
+        
         // cleaning code goes here
         beforeClose:function () {
             this.collection.off("reset", this.render)
-            // iterate over all views and destroy them
+            this.options.locations.off("reset", this.renderSummaries)
+            // iterate over all (sub)views and destroy them
             _.each(this._appViews, function (value) {
                 value.close()
             })
@@ -34,10 +60,15 @@ define([
         },
 
         render:function () {
+            this.renderSummaries()
             this.renderCollection()
             return this
         },
 
+    	renderSummaries:function () {
+        	this.$('.home-summaries-row').html(this.summariesView.render().el )
+        },
+        
         renderCollection:function () {
             var $tableBody = this.$('#applications-table-body').empty()
             this.collection.each(function (app) {
@@ -70,6 +101,25 @@ define([
         }
     })
 
+    HomeView.HomeSummariesView = Backbone.View.extend({
+    	tagName:'div',
+        template:_.template(HomeSummariesHtml),
+
+        initialize:function () {
+//            this.apps.on('change', this.render, this)
+        },
+        render:function () {
+            this.$el.html(this.template({
+                apps:this.options.applications,
+                locations:this.options.locations
+            }))
+            return this
+        },
+        beforeClose:function () {
+//            this.off("change", this.render)
+        }
+    })
+    
     HomeView.AppEntryView = Backbone.View.extend({
         tagName:'tr',
 

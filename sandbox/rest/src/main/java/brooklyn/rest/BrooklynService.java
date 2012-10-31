@@ -1,5 +1,10 @@
 package brooklyn.rest;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import brooklyn.rest.auth.BasicAuthFilter;
 import brooklyn.rest.auth.ConfigBasedAuthenticator;
 import brooklyn.rest.auth.User;
@@ -28,7 +33,9 @@ import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
 import brooklyn.rest.resources.VersionResource;
 import brooklyn.rest.resources.WebClientResource;
+
 import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilderSpec;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.auth.Authenticator;
 import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
@@ -36,11 +43,6 @@ import com.yammer.dropwizard.auth.basic.BasicCredentials;
 import com.yammer.dropwizard.bundles.AssetsBundle;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.views.ViewBundle;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Application entry point. Configures and starts the embedded web-server.
@@ -55,7 +57,8 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
   protected BrooklynService() {
     super("brooklyn-rest");
-    addBundle(new AssetsBundle("/assets"));
+    AssetsBundle ab = new AssetsBundle("/assets", CacheBuilderSpec.disableCaching());
+    addBundle(ab);
     addBundle(new ViewBundle());
   }
 

@@ -1,6 +1,8 @@
 define([
-    "underscore", "jquery", "backbone", "model/location", "view/location-modal", "view/location-row" ,
-    "text!tpl/catalog/page.html", "text!tpl/catalog/entry.html", "bootstrap"
+    "underscore", "jquery", "backbone", "model/location", "view/location-modal", 
+    "view/location-row",
+    "text!tpl/catalog/page.html", 
+    "text!tpl/catalog/entry.html", "bootstrap"
 ], function (_, $, Backbone, Location, LocationModalView, LocationRowView, CatalogPageHtml, EntryHtml) {
 
     var CatalogResourceView = Backbone.View.extend({

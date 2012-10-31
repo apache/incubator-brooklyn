@@ -4,6 +4,8 @@ define([
 ], function (_, $, Backbone, Application, AppTree, Location, HomeView, ExplorerView, CatalogView) {
 
     // add close method to all views for clean-up
+	// (NB we have to update the prototype _here_ before any views are instantiated;
+	//  see "close" called below in "showView") 
     Backbone.View.prototype.close = function () {
         // call user defined close method if exists
         if (this.beforeClose) {
@@ -15,13 +17,15 @@ define([
         this.remove()
         this.unbind()
     }
-
+    
+    // registers a callback (cf setInterval) but it cleanly gets unregistered when view closes
     Backbone.View.prototype.callPeriodically = function (callback, interval) {
         if (!this._periodicFunctions) {
             this._periodicFunctions = []
         }
         this._periodicFunctions.push(setInterval(callback, interval))
     }
+
 
     var Router = Backbone.Router.extend({
         routes:{
@@ -39,38 +43,42 @@ define([
             this.currentView = view
             return view
         },
+        
         defaultRoute:function () {
             this.homePage()
         },
+        
+        applications:new Application.Collection,
+        appTree:new AppTree.Collection,
+        locations:new Location.Collection,
+        
         homePage:function () {
-            var that = this,
-                applications = new Application.Collection
+            var that = this;
             // render the page after we fetch the collection -- no rendering on error
-            applications.fetch({success:function () {
+            this.applications.fetch({success:function () {
                 var homeView = new HomeView({
-                    collection:applications,
+                    collection:that.applications,
+                    locations:that.locations,
                     appRouter:that
                 })
-                that.showView("#application-content", homeView)
+                that.showView("#application-content", homeView);
             }})
         },
         applicationsPage:function () {
-            var that = this,
-                appTree = new AppTree.Collection
-            appTree.fetch({success:function () {
+            var that = this
+            this.appTree.fetch({success:function () {
                 var appExplorer = new ExplorerView({
-                    collection:appTree,
+                    collection:that.appTree,
                     appRouter:that
                 })
                 that.showView("#application-content", appExplorer)
             }})
         },
         catalogPage:function () {
-            var that = this,
-                locations = new Location.Collection
-            locations.fetch({ success:function () {
+            var that = this
+            this.locations.fetch({ success:function () {
                 var catalogResource = new CatalogView({
-                    model:locations,
+                    model:that.locations,
                     appRouter:that
                 })
                 catalogResource.fetchModels()
