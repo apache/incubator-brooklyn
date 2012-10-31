@@ -1,9 +1,6 @@
 package brooklyn.entity.trait;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
-
 import java.util.Collection;
-import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,11 +9,9 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 
 public class StartableMethods {
@@ -30,16 +25,8 @@ public class StartableMethods {
         log.info("Starting entity "+e+" at "+locations);
         Iterable<Entity> startables = Iterables.filter(e.getOwnedChildren(), Predicates.instanceOf(Startable.class));
 
-        if (!Iterables.isEmpty(startables) && truth(locations) && !locations.isEmpty()) {
-	        Task start = Entities.invokeEffectorList(e, startables, Startable.START, MutableMap.of("locations", locations));
-	        try {
-	            start.get();
-	        } catch (ExecutionException ee) {
-	            throw Throwables.propagate(ee.getCause());
-	        } catch (InterruptedException ee) {
-	            Thread.currentThread().interrupt();
-	            throw Throwables.propagate(ee);
-            }
+        if (!Iterables.isEmpty(startables)) {
+	        Entities.invokeEffectorList(e, startables, Startable.START, MutableMap.of("locations", locations)).getUnchecked();
         }
 	}
 
@@ -49,15 +36,7 @@ public class StartableMethods {
         Iterable<Entity> startables = Iterables.filter(e.getOwnedChildren(), Predicates.instanceOf(Startable.class));
 		
 		if (!Iterables.isEmpty(startables)) {
-			Task task = Entities.invokeEffectorList(e, startables, Startable.STOP);
-			try {
-				task.get();
-            } catch (ExecutionException ee) {
-                throw Throwables.propagate(ee.getCause());
-            } catch (InterruptedException ee) {
-                Thread.currentThread().interrupt();
-                throw Throwables.propagate(ee);
-			}
+			Entities.invokeEffectorList(e, startables, Startable.STOP).getUnchecked();
 		}
         if (log.isDebugEnabled()) log.debug("Stopped entity "+e);
 	}
@@ -68,15 +47,7 @@ public class StartableMethods {
         Iterable<Entity> startables = Iterables.filter(e.getOwnedChildren(), Predicates.instanceOf(Startable.class));
         
         if (!Iterables.isEmpty(startables)) {
-            Task task = Entities.invokeEffectorList(e, startables, Startable.RESTART);
-            try {
-                task.get();
-            } catch (ExecutionException ee) {
-                throw Throwables.propagate(ee.getCause());
-            } catch (InterruptedException ee) {
-                Thread.currentThread().interrupt();
-                throw Throwables.propagate(ee);
-            }
+            Entities.invokeEffectorList(e, startables, Startable.RESTART).getUnchecked();
         }
         if (log.isDebugEnabled()) log.debug("Restarted entity "+e);
     }

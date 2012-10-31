@@ -4,6 +4,7 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,24 +56,29 @@ public class EffectorUtils<T> {
                 // this is to support   effector(param1: val1)
                 return prepareArgsForEffectorFromMap(eff, (Map)args[0]);
         
+        return prepareArgsForEffectorAsMapFromArray(eff, args).values().toArray(new Object[0]);
+    }
+    
+    public static Map prepareArgsForEffectorAsMapFromArray(Effector<?> eff, Object args[]) {
+        int newArgsNeeded = eff.getParameters().size();
         List l = Lists.newArrayList();
         l.addAll(Arrays.asList(args));
-        List newArgs = Lists.newArrayList();
+        Map newArgs = new LinkedHashMap();
 
         for (int index = 0; index < eff.getParameters().size(); index++) {
             ParameterType<?> it = eff.getParameters().get(index);
             
             if (l.size() >= newArgsNeeded)
                 //all supplied (unnamed) arguments must be used; ignore map
-                newArgs.add(l.remove(0));
+                newArgs.put(it.getName(), l.remove(0));
             // TODO do we ignore arguments in the same order that groovy does?
             else if (!l.isEmpty() && it.getParameterClass().isInstance(l.get(0))) {
                 //if there are parameters supplied, and type is correct, they get applied before default values
                 //(this is akin to groovy)
-                newArgs.add(l.remove(0));
+                newArgs.put(it.getName(), l.remove(0));
             } else if (it instanceof BasicParameterType && ((BasicParameterType)it).hasDefaultValue()) {
                 //finally, default values are used to make up for missing parameters
-                newArgs.add(((BasicParameterType)it).getDefaultValue());
+                newArgs.put(it.getName(), ((BasicParameterType)it).getDefaultValue());
             } else {
                 throw new IllegalArgumentException("Invalid arguments (count mismatch) for effector "+eff+": "+args);
             }
@@ -83,7 +89,7 @@ public class EffectorUtils<T> {
             throw new IllegalArgumentException("Invalid arguments (missing "+newArgsNeeded+") for effector "+eff+": "+args);
         if (!l.isEmpty())
             throw new IllegalArgumentException("Invalid arguments ("+l.size()+" extra) for effector "+eff+": "+args);
-        return newArgs.toArray(new Object[newArgs.size()]);    
+        return newArgs;    
     }
 
     private static Object[] prepareArgsForEffectorFromMap(Effector<?> eff, Map m) {

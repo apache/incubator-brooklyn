@@ -35,6 +35,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.task.ParallelTask;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -49,11 +50,11 @@ public class Entities {
     private static final Logger log = LoggerFactory.getLogger(Entities.class);
     
 	/** invokes the given effector with the given named arguments on the entitiesToCall, from the calling context of the callingEntity;
-	 * intended for use only from the callingEntity
+	 * intended for use only from the callingEntity.
 	 * @return ParallelTask containing a results from each invocation; calling get() on the result will block until all complete,
 	 * and throw error if any threw error   
 	 */
-	public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<Entity> entitiesToCall, 
+	public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall, 
 	        final Effector<T> effector, final Map<String,?> parameters) {
         // formulation is complicated, but it is building up a list of tasks, without blocking on them initially,
         // but ensuring that when the parallel task is gotten it does block on all of them
@@ -73,9 +74,32 @@ public class Entities {
 	    callingEntity.getManagementSupport().getExecutionContext().submit(invoke);
 	    return invoke;
 	}
-    public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<Entity> entitiesToCall, 
+    public static <T> Task<List<T>> invokeEffectorListWithMap(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall, 
+            final Effector<T> effector, final Map<String,?> parameters) {
+        return invokeEffectorList(callingEntity, entitiesToCall, effector, parameters);
+    }
+    @SuppressWarnings("unchecked")
+    public static <T> Task<List<T>> invokeEffectorListWithArgs(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall, 
+            final Effector<T> effector, Object ...args) {
+        return invokeEffectorListWithMap(callingEntity, entitiesToCall, effector,
+                // putting into a map, unnecessarily, as it ends up being the array again...
+                EffectorUtils.prepareArgsForEffectorAsMapFromArray(effector, args));
+    }
+    public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall, 
             final Effector<T> effector) {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
+    }
+    public static <T> Task<List<T>> invokeEffectorWithMap(EntityLocal callingEntity, Entity entityToCall, 
+            final Effector<T> effector, final Map<String,?> parameters) {
+        return invokeEffectorList(callingEntity, ImmutableList.of(entityToCall), effector, parameters);
+    }
+    public static <T> Task<List<T>> invokeEffectorWithArgs(EntityLocal callingEntity, Entity entityToCall, 
+            final Effector<T> effector, Object ...args) {
+        return invokeEffectorListWithArgs(callingEntity, ImmutableList.of(entityToCall), effector, args); 
+    }
+    public static <T> Task<List<T>> invokeEffector(EntityLocal callingEntity, Entity entityToCall, 
+            final Effector<T> effector) {
+        return invokeEffectorWithMap(callingEntity, entityToCall, effector, Collections.<String,Object>emptyMap());
     }
 
     public static boolean isSecret(String name) {
@@ -317,7 +341,7 @@ public class Entities {
     }
 
     /** @deprecated use start(Entity) */
-    public static Entity start(ManagementContext context, Entity e, Collection<Location> locations) {
+    public static Entity start(ManagementContext context, Entity e, Collection<? extends Location> locations) {
         if (context != null) context.manage(e);
         if (e instanceof Startable) ((Startable)e).start(locations);
         return e;
@@ -333,17 +357,18 @@ public class Entities {
     /** convenience for starting an entity, esp a new Startable instance which has been created dynamically
      * (after the application is started) */
     public static void start(Entity e, Collection<Location> locations) {
-        if (!manage(e)) {
-            log.warn("Using discouraged Entities.start(Application, Locations) -- should create and use the preferred management context");
+        if (!isManaged(e) && !manage(e)) {
+            log.warn("Using discouraged mechanism to start management -- Entities.start(Application, Locations) -- caller should create and use the preferred management context");
             startManagement(e);
         }
-        if (e instanceof Startable) ((Startable)e).start(locations);
+        if (e instanceof Startable) Entities.invokeEffectorWithMap((EntityLocal)e, e, Startable.START,
+                MutableMap.of("locations", locations)).getUnchecked();
     }
 
     /** stops, destroys, and unmanages the given entity -- does as many as are valid given the type and state */
     public static void destroy(Entity e) {
         if (isManaged(e)) {
-            if (e instanceof Startable) ((Startable)e).stop();
+            if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
             if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
             unmanage(e);
         }
