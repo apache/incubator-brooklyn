@@ -55,16 +55,18 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child
      */
     @Override
-    public void addMember(Entity member) {
+    public boolean addMember(Entity member) {
         synchronized (_members) {
 	        member.addGroup(this);
-	        if (_members.add(member)) {
+	        boolean changed = _members.add(member);
+	        if (changed) {
                 log.debug("Group {} got new member {}", this, member);
 	            emit(MEMBER_ADDED, member);
 	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
 	            
 	            getManagementSupport().getEntityChangeListener().onMembersChanged();
 	        }
+	        return changed;
 	    }
     }
  
