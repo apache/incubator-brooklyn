@@ -157,6 +157,12 @@ public class NetworkUtils {
         }
     }
     
+    /**
+     * Gets an InetAddress using the given IP, and using that IP as the hostname (i.e. avoids any hostname resolution).
+     * <p>
+     * This is very useful if using the InetAddress for updating config files on remote machines, because then it will
+     * not be pickup a hostname from the local /etc/hosts file, which might not be known on the remote machine.
+     */
     public static InetAddress getInetAddressWithFixedName(byte[] ip) throws UnknownHostException {
         StringBuilder name = new StringBuilder();
         for (byte part : ip) {
@@ -166,6 +172,11 @@ public class NetworkUtils {
         return InetAddress.getByAddress(name.toString(), ip);
     }
     
+    /**
+     * Gets an InetAddress using the given hostname or IP. If it is an IPv4 address, then this is equivalent
+     * to {@link getInetAddressWithFixedName(byte[])}. If it is a hostname, then this hostname will be used
+     * in the returned InetAddress.
+     */
     public static InetAddress getInetAddressWithFixedName(String hostnameOrIp) throws UnknownHostException {
         if (VALID_IP_ADDRESS_PATTERN.matcher(hostnameOrIp).matches()) {
             byte[] ip = new byte[4];

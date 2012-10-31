@@ -34,8 +34,8 @@ public class ScriptHelper {
     public final ScriptPart footer = new ScriptPart(this);
     
     protected final Map flags = new LinkedHashMap();
-    protected Predicate<Integer> resultCodeCheck = Predicates.alwaysTrue();
-    protected Predicate<ScriptHelper> executionCheck = Predicates.alwaysTrue();
+    protected Predicate<? super Integer> resultCodeCheck = Predicates.alwaysTrue();
+    protected Predicate<? super ScriptHelper> executionCheck = Predicates.alwaysTrue();
     
     protected boolean gatherOutput = false;
     protected ByteArrayOutputStream stdout, stderr;
@@ -54,7 +54,7 @@ public class ScriptHelper {
         return executeIf(predicate);
     }
 
-    public ScriptHelper executeIf(Predicate<ScriptHelper> c) {
+    public ScriptHelper executeIf(Predicate<? super ScriptHelper> c) {
         executionCheck = c;
         return this;
     }
@@ -85,16 +85,23 @@ public class ScriptHelper {
     }
 
     public ScriptHelper failOnNonZeroResultCode(boolean val) {
-        Predicate<Integer> onTrue = Predicates.equalTo(0);
-        Predicate<Integer> onFalse = Predicates.alwaysTrue();
-        requireResultCode(val ? onTrue : onFalse);
+        if (val) {
+            failOnNonZeroResultCode();
+        } else {
+            requireResultCode(Predicates.alwaysTrue());
+        }
         return this;
     }
 
     public ScriptHelper failOnNonZeroResultCode() {
-        return failOnNonZeroResultCode(true);
+        return updateTaskAndFailOnNonZeroResultCode();
     }
 
+    public ScriptHelper failOnNonZeroResultCodeWithoutUpdatingTask() {
+        requireResultCode(Predicates.equalTo(0));
+        return this;
+    }
+    
     public ScriptHelper updateTaskAndFailOnNonZeroResultCode() {
         gatherOutput();
         // a failure listener would be a cleaner way
@@ -135,7 +142,7 @@ public class ScriptHelper {
         return requireResultCode(objectPredicate);
     }
 
-    public ScriptHelper requireResultCode(Predicate<Integer> integerFilter) {
+    public ScriptHelper requireResultCode(Predicate<? super Integer> integerFilter) {
         resultCodeCheck = integerFilter;
         return this;
     }
