@@ -77,7 +77,7 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
     ClientResponse response = client().resource("/v1/applications")
         .post(ClientResponse.class, redisSpec);
 
-    assertEquals(manager.registry().size(), 1);
+    assertEquals(manager.registryById().size(), 1);
     assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
 
     waitForApplicationToBeRunning(response.getLocation());
@@ -129,14 +129,14 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
   }
   @Test(groups="Integration", dependsOnMethods = "testTriggerRedisStopEffector" )
   public void testDeleteRedisApplication() throws TimeoutException, InterruptedException {
-    int size = manager.registry().size();
+    int size = manager.registryById().size();
     ClientResponse response = client().resource("/v1/applications/redis-app")
         .delete(ClientResponse.class);
 
     waitForPageNotFoundResponse("/v1/applications/redis-app", Application.class);
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-    assertEquals(manager.registry().size(), size-1);
+    assertEquals(manager.registryById().size(), size-1);
   }
 
 }

@@ -56,7 +56,7 @@ public class ApplicationResource extends BaseResource {
   )
   public JsonNode applicationTree() {
     ArrayNode apps = mapper.createArrayNode();
-    for (Application application : manager.registry().values()) {
+    for (Application application : manager.registryById().values()) {
       apps.add(recursiveTreeFromEntity(application.getInstance()));
     }
     return apps;
@@ -88,7 +88,7 @@ public class ApplicationResource extends BaseResource {
       responseClass = "brooklyn.rest.api.Application"
   )
   public Iterable<Application> list() {
-    return manager.registry().values();
+    return manager.registryById().values();
   }
 
   @GET
@@ -102,12 +102,11 @@ public class ApplicationResource extends BaseResource {
   })
   public Application get(
       @ApiParam(
-          value = "Name of application that needs to be fetched",
+          value = "ID or name of application that needs to be fetched",
           required = true)
       @PathParam("application") String name) {
-    if (manager.registry().containsKey(name)) {
-      return manager.registry().get(name);
-    }
+    Application app = manager.getApp(name);
+    if (app!=null) return app;
     throw notFound("Application '%s' not found.", name);
   }
 
@@ -128,7 +127,7 @@ public class ApplicationResource extends BaseResource {
     checkAllEntityTypesAreValid(applicationSpec);
     checkAllLocationsAreValid(applicationSpec);
 
-    if (manager.registry().containsKey(applicationSpec.getName())) {
+    if (manager.getApp(applicationSpec.getName())!=null) {
       throw preconditionFailed("Application '%s' already registered.",
           applicationSpec.getName());
     }
@@ -154,10 +153,11 @@ public class ApplicationResource extends BaseResource {
           required = true
       )
       @PathParam("application") String application) {
-    if (!manager.registry().containsKey(application))
+    Application app = manager.getApp(application);
+    if (app==null)
       throw notFound("Application '%s' not found.", application);
 
-    manager.destroyInBackground(application);
+    manager.destroyAppByIdInBackground(app.getInstance().getId());
     return status(ACCEPTED).build();
   }
 

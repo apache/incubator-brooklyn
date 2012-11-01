@@ -51,7 +51,7 @@ public class SensorResource extends BaseResource {
       @ApiParam(value = "Entity name", required = true)
       @PathParam("entity") final String entityIdOrName
   ) {
-    final Application application = getApplicationOr404(manager.registry(), applicationName);
+    final Application application = getApplicationOr404(manager, applicationName);
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
     return Lists.newArrayList(transform(filter(
@@ -80,7 +80,7 @@ public class SensorResource extends BaseResource {
       @PathParam("entity") String entityId) {
     // TODO: add test
     Map<String, String> sensorMap = Maps.newHashMap();
-    Application application = getApplicationOr404(manager.registry(), applicationName);
+    Application application = getApplicationOr404(manager, applicationName);
     EntityLocal entity = getEntityOr404(application, entityId);
     List<Sensor<?>> sensors = Lists.newArrayList(filter(entity.getEntityType().getSensors(),
         new Predicate<Sensor<?>>() {
@@ -111,7 +111,7 @@ public class SensorResource extends BaseResource {
       @ApiParam(value = "Sensor name", required = true)
       @PathParam("sensor") String sensorName
   ) {
-    Application application = getApplicationOr404(manager.registry(), applicationName);
+    Application application = getApplicationOr404(manager, applicationName);
     EntityLocal entity = getEntityOr404(application, entityId);
 
     Object value = entity.getAttribute(getSensorOr404(entity, sensorName));

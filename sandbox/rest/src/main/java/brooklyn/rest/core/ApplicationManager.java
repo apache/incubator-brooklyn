@@ -38,7 +38,8 @@ public class ApplicationManager implements Managed {
   private final static Log LOG = Log.forClass(ApplicationManager.class);
 
   private final LocationStore locationStore;
-  private final ConcurrentMap<String, Application> applications;
+  private final ConcurrentMap<String, Application> applicationsById;
+  private final ConcurrentMap<String, Application> applicationsByName;
 
   private final ExecutorService executorService;
   private final BrooklynConfiguration configuration;
@@ -55,7 +56,8 @@ public class ApplicationManager implements Managed {
     this.locationStore = checkNotNull(locationStore, "locationStore");
     this.executorService = checkNotNull(executorService, "executorService");
     this.catalog = checkNotNull(catalog, "catalog");
-    this.applications = Maps.newConcurrentMap();
+    this.applicationsById = Maps.newConcurrentMap();
+    this.applicationsByName = Maps.newConcurrentMap();
     this.managementContext = configuration.getManagementContextClass().newInstance();
   }
 
@@ -74,23 +76,32 @@ public class ApplicationManager implements Managed {
   }
 
   private void waitForAllApplicationsToStopOrError() throws InterruptedException {
-    while (applications.size() != 0) {
+    while (applicationsById.size() != 0) {
       Thread.sleep(2000);
-      if (all(applications.values(), status(Application.Status.ERROR))) {
+      if (all(applicationsById.values(), status(Application.Status.ERROR))) {
         break;
       }
     }
   }
 
+  /** @deprecated use registryByXxx */
   public ConcurrentMap<String, Application> registry() {
-    return applications;
+    return registryByName();
   }
-
+  
+  public ConcurrentMap<String, Application> registryById() {
+      return applicationsById;
+  }
+  public ConcurrentMap<String, Application> registryByName() {
+      return applicationsByName;
+  }
 
   public void injectApplication(final AbstractApplication instance, Application.Status status) {
     String name = instance.getDisplayName();
     ApplicationSpec spec = new ApplicationSpec(name, Collections.<EntitySpec>emptySet(), Collections.<String>emptySet());
-    applications.put(name, new Application(spec, status, instance));
+    Application app = new Application(spec, status, instance);
+    applicationsById.put(instance.getId(), app);
+    applicationsByName.put(name, app);
   }
 
   public void startInBackground(final ApplicationSpec spec) {
@@ -123,7 +134,9 @@ public class ApplicationManager implements Managed {
     managementContext.manage(instance);
     
     LOG.info("Adding '{}' application to registry with status ACCEPTED", spec.getName());
-    applications.put(spec.getName(), new Application(spec, Application.Status.ACCEPTED, instance));
+    Application app = new Application(spec, Application.Status.ACCEPTED, instance);
+    applicationsById.put(instance.getId(), app);
+    applicationsByName.put(spec.getName(), app);
 
     // Start all the managed entities by asking the app instance to start in background
     executorService.submit(new Runnable() {
@@ -162,14 +175,25 @@ public class ApplicationManager implements Managed {
     });
   }
 
+  @Deprecated
   private void transitionTo(String name, Application.Status status) {
-    Application target = checkNotNull(applications.get(name), "No application found with name '%'", name);
-    LOG.info("Transitioning '{}' application from {} to {}", name, target.getStatus(), status);
+      transitionAppByNameTo(name, status);
+  }
+  
+  private void transitionAppByNameTo(String name, Application.Status status) {
+    Application target = checkNotNull(applicationsByName.get(name), "No application found with name '%'", name);
+    transitionAppByIdTo(target.getInstance().getId(), status);
+  }
+  private void transitionAppByIdTo(String id, Application.Status status) {
+    Application target = checkNotNull(applicationsById.get(id), "No application found with id '%'", id);
+    LOG.info("Transitioning '{}' ({}) application from {} to {}", target.getInstance().getDisplayName(), id, target.getStatus(), status);
 
-    boolean replaced = applications.replace(name, target, target.transitionTo(status));
+    Application newAppState = target.transitionTo(status);
+    boolean replaced = applicationsById.replace(target.getInstance().getId(), target, newAppState); 
+    applicationsByName.put(target.getInstance().getDisplayName(), newAppState);
     if (!replaced) {
       throw new ConcurrentModificationException("Unable to transition '" +
-          name + "' application to " + status);
+          id + "' application to " + status);
     }
   }
 
@@ -178,17 +202,22 @@ public class ApplicationManager implements Managed {
    *
    * @param name application name
    */
+  @Deprecated
   public void destroyInBackground(final String name) {
-    if (applications.containsKey(name)) {
+      destroyAppByNameInBackground(name);
+  }
+  public void destroyAppByNameInBackground(final String name) {
+    if (applicationsByName.containsKey(name)) {
       executorService.submit(new Runnable() {
         @Override
         public void run() {
           transitionTo(name, Application.Status.STOPPING);
-          AbstractApplication instance = applications.get(name).getInstance();
+          AbstractApplication instance = applicationsByName.get(name).getInstance();
           try {
             instance.stop();
             LOG.info("Removing '{}' application from registry", name);
-            applications.remove(name);
+            applicationsByName.remove(name);
+            applicationsById.remove(instance.getId());
 
           } catch (Exception e) {
             LOG.error(e, "Failed to stop application instance {}", instance);
@@ -202,13 +231,46 @@ public class ApplicationManager implements Managed {
       });
     }
   }
+  public void destroyAppByIdInBackground(final String id) {
+      if (applicationsById.containsKey(id)) {
+        executorService.submit(new Runnable() {
+          @Override
+          public void run() {
+            transitionAppByIdTo(id, Application.Status.STOPPING);
+            AbstractApplication instance = applicationsById.get(id).getInstance();
+            try {
+              instance.stop();
+              LOG.info("Removing '{}' application from registry", id);
+              applicationsById.remove(id);
+              applicationsByName.remove(instance.getDisplayName());
+
+            } catch (Exception e) {
+              LOG.error(e, "Failed to stop application instance {}", instance);
+              transitionAppByIdTo(id, Application.Status.ERROR);
+
+              throw Throwables.propagate(e);
+            } finally {
+                managementContext.unmanage(instance);
+            }
+          }
+        });
+      }
+    }
 
   /**
    * Destroy all running applications
    */
   public void destroyAllInBackground() {
-    for (String name : applications.keySet()) {
-      destroyInBackground(name);
+    for (String id : applicationsById.keySet()) {
+      destroyAppByIdInBackground(id);
     }
   }
+
+  /** Returns an App given id or name; else false */
+  public Application getApp(String idOrName) {
+      Application app = applicationsById.get(idOrName);
+      if (app!=null) return app;
+      return applicationsByName.get(idOrName);
+  }
+  
 }

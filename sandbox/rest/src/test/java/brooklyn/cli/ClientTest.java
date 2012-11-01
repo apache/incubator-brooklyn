@@ -118,10 +118,10 @@ public abstract class ClientTest {
       runWithArgs("deploy", "--format", "class", "brooklyn.cli.ExampleApp");
 
       // We should only have 1 app in the server's registry
-      assertEquals(applicationManager.registry().size(), 1);
+      assertEquals(applicationManager.registryById().size(), 1);
 
       // The name of that app should match what we have provided in the deploy command
-      assertEquals(Iterables.getOnlyElement(applicationManager.registry().keySet()), ExampleApp.class.getName());
+      assertEquals(Iterables.getOnlyElement(applicationManager.registryByName().keySet()), ExampleApp.class.getName());
 
     } catch (Exception e) {
       LOG.error(e, "stdout={}; stderr={}", standardOut(), standardErr());

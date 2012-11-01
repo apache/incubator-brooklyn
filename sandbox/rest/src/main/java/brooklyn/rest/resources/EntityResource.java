@@ -44,7 +44,7 @@ public class EntityResource extends BaseResource {
   public List<EntitySummary> list(
       @ApiParam(value = "The application name", required = true)
       @PathParam("application") final String applicationName) {
-    Application application = getApplicationOr404(manager.registry(), applicationName);
+    Application application = getApplicationOr404(manager, applicationName);
 
     return summaryForChildrenEntities(application, application.getInstance());
   }
@@ -62,7 +62,7 @@ public class EntityResource extends BaseResource {
       @ApiParam(value = "Application entity", required = true)
       @PathParam("entity") String entityIdOrName
   ) {
-    Application application = getApplicationOr404(manager.registry(), applicationName);
+    Application application = getApplicationOr404(manager, applicationName);
     EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
     return new EntitySummary(application, entity);
@@ -74,7 +74,7 @@ public class EntityResource extends BaseResource {
       @PathParam("application") final String applicationName,
       @PathParam("entity") final String entityIdOrName
   ) {
-    Application application = getApplicationOr404(manager.registry(), applicationName);
+    Application application = getApplicationOr404(manager, applicationName);
     Entity entity = getEntityOr404(application, entityIdOrName);
 
     return summaryForChildrenEntities(application, entity);

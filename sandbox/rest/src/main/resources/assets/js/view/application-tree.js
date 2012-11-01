@@ -36,7 +36,7 @@ define([
                 $template = $(this.template({
                     id:application.get("id"),
                     type:"application",
-                    parentApp:null,
+                    parentApp:application.get("id"),
                     displayName:application.get("name")
                 })), $tree,
                 treeFromEntity = function (entity) {
@@ -46,7 +46,7 @@ define([
                         $entityTpl = $(that.template({
                             id:entity.get("id"),
                             type:"entity",
-                            parentApp:application.get("name"),
+                            parentApp:application.get("id"),
                             displayName:entity.getDisplayName()
                         }))
                         _.each(entity.get("children"), function (childEntity) {
@@ -56,7 +56,7 @@ define([
                         $entityTpl = $(that.template({
                             id:entity.get("id"),
                             type:"leaf",
-                            parentApp:application.get("name"),
+                            parentApp:application.get("id"),
                             displayName:entity.getDisplayName()
                         }))
                     }
@@ -76,6 +76,8 @@ define([
                 appName = $(eventName.currentTarget).data("parent-app"),
                 entitySummary = new EntitySummary.Model,
                 that = this
+            console.log("CLICK")
+            console.log($(eventName.currentTarget))
             var app = new Application.Model()
             app.url = "/v1/applications/" + appName
             app.fetch({async:false})
