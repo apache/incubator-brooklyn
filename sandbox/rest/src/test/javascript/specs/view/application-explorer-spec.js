@@ -20,13 +20,13 @@ define([
             it('must contain div.row with two spans: #tree and #details', function () {
                 expect(view.$el.is('#application-explorer')).toBeTruthy()
                 expect(view.$el.is('div.container.container-fluid')).toBeTruthy()
-                expect(view.$("div#tree").is('.span4')).toBeTruthy()
-                expect(view.$("div#details").is('.span8')).toBeTruthy()
+                expect(view.$("div#tree").is('.span3')).toBeTruthy()
+                expect(view.$("div#details").is('.span9')).toBeTruthy()
             })
 
             it("must have a i.refresh element inside #tree header", function () {
                 expect(view.$("#tree h3").length).toBe(1)
-                expect(view.$("h3 i.refresh").length).toBe(1)
+                expect(view.$("#tree i.refresh").length).toBe(1)
             })
 
             it("must have div#tree-list for rendering the applications", function () {

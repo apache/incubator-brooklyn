@@ -35,11 +35,15 @@ define([
             this.options.locations.on('reset', this.renderSummaries, this)
 
             id = $(this.$el).find("#circles-map");
-            requirejs(["googlemaps"], function (GoogleMaps) {
-            		GoogleMaps.addMapToCanvas(id[0], 40.7063, -73.9971, 14)
-            	}, function (error) {
-            		id.find("#circles-map-message").html("(map not available)"); 
-            });
+            if (this.options.offline) {
+            	id.find("#circles-map-message").html("(map off in offline mode)");
+            } else {
+            	requirejs(["googlemaps"], function (GoogleMaps) {
+            			GoogleMaps.addMapToCanvas(id[0], 40.7063, -73.9971, 14)
+            		}, function (error) {
+            			id.find("#circles-map-message").html("(map not available)"); 
+            	});
+            }
             
             this.callPeriodically(function() {
             	that.refresh(that);     	            	

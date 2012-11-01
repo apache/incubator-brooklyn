@@ -8,10 +8,10 @@
  * - we test that rendering produces the right stuff
  */
 define([
-    "underscore", "jquery", "model/application", "view/home",
+    "underscore", "jquery", "model/application", "model/location", "view/home",
     "text!tpl/home/location-option.html", "text!tpl/home/location-entry.html", "text!tpl/home/entry.html",
     "text!tpl/home/key-value.html"
-], function (_, $, Application, HomeView, LocationOptionHtml, LocationEntryHtml, EntryHtml, KeyValueHtml) {
+], function (_, $, Application, Location, HomeView, LocationOptionHtml, LocationEntryHtml, EntryHtml, KeyValueHtml) {
 
     Backbone.View.prototype.callPeriodically = function (callback, interval) {
         if (!this._periodicFunctions) {
@@ -53,13 +53,18 @@ define([
 
         describe('view/home HomePageView', function () {
             var view,
-                apps = new Application.Collection
+                apps = new Application.Collection,
+                locs = new Location.Collection
             apps.url = "fixtures/application-list.json"
             apps.fetch({async:false})
+            locs.url = "fixtures/location-list.json"
+        	locs.fetch({async:false})
 
             beforeEach(function () {
                 view = new HomeView({
-                    collection:apps
+                    collection:apps,
+                    locations:locs,
+                    offline:true
                 }).render()
             })
 

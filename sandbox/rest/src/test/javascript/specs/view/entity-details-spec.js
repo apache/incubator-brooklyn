@@ -31,7 +31,6 @@ define([
         })
 
         it('renders to a bootstrap tabbable', function () {
-            expect(view.$('#details-header').length).toBe(1)
             expect(view.$('#summary').length).toBe(1)
             expect(view.$('#sensors').length).toBe(1)
             expect(view.$('#effectors').length).toBe(1)
