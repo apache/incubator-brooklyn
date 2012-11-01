@@ -28,24 +28,26 @@
 }
 
 .navbar .nav>li>a:hover {
-	background-color: #A8B8B0;
+	background-color: #A8B8B0 !important;
 	foreground-color: #261;
 	color: #261;
 	text-decoration: none;
-	text-shadow: 0;
+    text-shadow: 0 0px 0;
 }
 
 .navbar .nav>li>a {
 	background-color: #261;
-	color: #D0D4C0;
+	color: #F0F4E8;
 	padding: 5px 7px 0px 7px;
 	-webkit-border-radius: 5px 5px 0 0;
 	-moz-border-radius: 5px 5px 0 0;
 	border-radius: 5px 5px 0 0;
 	line-height: 19px;
 	text-decoration: none;
-	text-shadow: 0;
-	/* text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25); */
+	text-shadow: 0 0px 0;
+}
+.navbar .nav > li > a.active {
+	background-color: #492;
 }
 
 /* tabs eg catalog page */

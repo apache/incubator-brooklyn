@@ -17,6 +17,9 @@ define([
         },
         initialize:function () {
             this.$el.html(this.template({}))
+            $(".nav1").removeClass("active");
+            $(".nav1_apps").addClass("active");
+
             this.collection.on('reset', this.render, this)
             this.treeView = new ApplicationTreeView({
                 collection:this.collection

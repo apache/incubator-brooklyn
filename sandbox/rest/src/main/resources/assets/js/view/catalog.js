@@ -21,6 +21,9 @@ define([
         initialize:function () {
             var self = this
             self.$el.html(_.template(CatalogPageHtml, {}))
+            $(".nav1").removeClass("active");
+            $(".nav1_catalog").addClass("active");
+
             this.policyList = []
             this.entityTypes = []
             this.on('change', this.render, this)
