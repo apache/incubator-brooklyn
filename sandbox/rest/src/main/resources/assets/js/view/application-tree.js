@@ -28,7 +28,19 @@ define([
             this.collection.each(function (app) {
                 that.$el.append(that.buildTree(app))
             })
-            if (this.detailsView) this.detailsView.render()
+            this.highlightEntity();
+            if (this.detailsView) {
+            	this.detailsView.render()
+            } else {
+            	// if nothing selected, select the first application
+            	if (this.collection.size()>0) {
+            		var app0 = this.collection.first().id;
+            		_.defer(function () {
+            			if (!that.selectedEntityId)
+            				that.displayEntityId(app0, app0) 
+        			});
+            	}
+            }
             return this
         },
         buildTree:function (application) {
@@ -71,28 +83,42 @@ define([
             return $template
         },
         displayEntity:function (eventName) {
-            var type = $(eventName.currentTarget).data("entity-type"),
-                id = $(eventName.currentTarget).attr("id"),
-                appName = $(eventName.currentTarget).data("parent-app"),
-                entitySummary = new EntitySummary.Model,
+        	this.displayEntityId($(eventName.currentTarget).attr("id"), $(eventName.currentTarget).data("parent-app"));
+        },
+        displayEntityId:function (id, appName) {
+            var entitySummary = new EntitySummary.Model,
                 that = this
-            console.log("CLICK")
-            console.log($(eventName.currentTarget))
+            this.highlightEntity(id)
+
+
             var app = new Application.Model()
             app.url = "/v1/applications/" + appName
             app.fetch({async:false})
 
             entitySummary.url = "/v1/applications/" + appName + "/entities/" + id
-
             entitySummary.fetch({success:function () {
-                if (that.detailsView) that.detailsView.close()
+            	var whichTab="summary";
+                if (that.detailsView) {
+                	whichTab = $(that.detailsView.el).find(".tab-pane.active").attr("id");
+                	that.detailsView.close()
+                }
                 that.detailsView = new EntityDetailsView({
                     model:entitySummary,
                     application:app
                 })
                 $("div#details").html(that.detailsView.render().el)
+                // preserve the tab selected before
+                $("div#details").find("a[href=\"#"+whichTab+"\"]").tab('show')
             }})
             return false;
+        },
+        highlightEntity:function (id) {
+        	if (id) this.selectedEntityId = id
+        	else id = this.selectedEntityId
+        	$("span.entity_tree_node").removeClass("active")
+        	if (id) {
+        		$("span.entity_tree_node#"+id).addClass("active")
+        	}
         }
     })
 

@@ -191,3 +191,49 @@ ol.tree {
     -moz-border-radius: 0 0 4px 4px;
     border-radius: 0 0 4px 4px;
 }
+
+/** apps / entity explorer page */
+.apps-tree-toolbar {
+	text-align: right;
+}
+.entity_tree_node {
+	color: #182018;
+}
+.handy {
+	cursor: hand; cursor: pointer;
+}
+.entity_tree_node:hover {
+	text-decoration: underline;
+	cursor: hand; cursor: pointer;
+}
+.entity_tree_node.active {
+    font-weight: bold;
+}
+#tree label {
+/* remove the folder, and align with + - icons */
+background: none;
+padding-left: 16px;
+line-height: 15px;
+}
+#sensors-table_length select {
+	/* entity details sensor view, list page length dropdown */
+	width: 60px;
+}
+table.dataTable tr.odd td.sorting_1 {
+background-color: #F9F9F9;
+}
+table.dataTable tr.even td.sorting_1 {
+background-color: #FFFFFF;
+}
+table.dataTable tr.odd {
+background-color: #F9F9F9;
+}
+table.dataTable tr.even {
+background-color: #FFFFFF;
+}
+table.dataTable {
+margin: 0 auto 24px auto;
+}
+table.dataTable thead th {
+text-align: left;
+}

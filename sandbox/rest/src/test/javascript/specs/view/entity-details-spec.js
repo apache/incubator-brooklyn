@@ -76,8 +76,8 @@ define([
             $body = view.$('tbody')
 
             expect($body.find('tr:first .sensor-name').html()).toBe('jmx.context')
-            expect($body.find('tr:first .sensor-name').attr('title')).toBe("JMX context path")
-            expect($body.find('tr:last .sensor-name').attr('title')).toBe("Suggested shutdown port")
+            expect($body.find('tr:first .sensor-name').attr('data-original-title')).toMatch("JMX context path")
+            expect($body.find('tr:last .sensor-name').attr('data-original-title')).toMatch("Suggested shutdown port")
             expect($body.find("tr:last .sensor-name").attr("rel")).toBe("tooltip")
         })
     })

@@ -29,6 +29,7 @@ define([
                 that.updateSensors(that)
                 // call the table paging and sorting
                 $table.dataTable({
+                	"iDisplayLength": 25,
                     "oLanguage":{
                         "sLengthMenu":'Display <select>' +
                             '<option value="25">25</option>' +
@@ -37,6 +38,7 @@ define([
                             '</select> records'
                     }
                 })
+                $table.find('*[rel="tooltip"]').tooltip()
             }
             sensorsCollection.fetch({async:false, success:success})
         },
