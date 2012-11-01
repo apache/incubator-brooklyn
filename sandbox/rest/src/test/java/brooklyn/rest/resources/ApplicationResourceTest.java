@@ -1,6 +1,22 @@
 package brooklyn.rest.resources;
 
-import brooklyn.entity.basic.Lifecycle;
+import static com.google.common.collect.Iterables.find;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
+
+import javax.ws.rs.core.Response;
+
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
+
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.ApiError;
@@ -12,6 +28,8 @@ import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
+import brooklyn.rest.mock.RestMockSimpleEntity;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -20,21 +38,6 @@ import com.google.common.collect.Maps;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.yammer.dropwizard.jersey.DropwizardResourceConfig;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.Test;
-
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeoutException;
-
-import static com.google.common.collect.Iterables.find;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BaseResourceTest {
@@ -42,9 +45,9 @@ public class ApplicationResourceTest extends BaseResourceTest {
   private ApplicationManager manager;
   private ExecutorService executorService;
 
-  private final ApplicationSpec redisSpec = new ApplicationSpec("redis-app",
-      ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
-      ImmutableSet.of("/v1/locations/0"));
+  private final ApplicationSpec simpleSpec = new ApplicationSpec("simple-app",
+          ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())),
+          ImmutableSet.of("/v1/locations/0"));
 
   @Override
   protected void setUpResources() throws Exception {
@@ -57,7 +60,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
     addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
     addResource(new EntityResource(manager));
     addResource(new SensorResource(manager));
-    addResource(new EffectorResource(manager, executorService));
+    addResource(new EffectorResource(manager));
   }
 
   @AfterClass
@@ -78,12 +81,12 @@ public class ApplicationResourceTest extends BaseResourceTest {
   }
 
   @Test
-  public void testDeployRedisApplication() throws InterruptedException, TimeoutException {
+  public void testDeployApplication() throws InterruptedException, TimeoutException {
     ClientResponse response = client().resource("/v1/applications")
-        .post(ClientResponse.class, redisSpec);
+        .post(ClientResponse.class, simpleSpec);
 
     assertEquals(manager.registry().size(), 1);
-    assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
+    assertEquals(response.getLocation().getPath(), "/v1/applications/simple-app");
 
     waitForApplicationToBeRunning(response.getLocation());
   }
@@ -108,7 +111,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
     try {
       client().resource("/v1/applications").post(
           new ApplicationSpec("invalid-app",
-              ImmutableSet.<EntitySpec>of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
+              ImmutableSet.<EntitySpec>of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())),
               ImmutableSet.of("/v1/locations/3423"))
       );
 
@@ -118,9 +121,9 @@ public class ApplicationResourceTest extends BaseResourceTest {
     }
   }
 
-  @Test(dependsOnMethods = "testDeployRedisApplication")
+  @Test(dependsOnMethods = "testDeployApplication")
   public void testListEntities() {
-    Set<EntitySummary> entities = client().resource("/v1/applications/redis-app/entities")
+    Set<EntitySummary> entities = client().resource("/v1/applications/simple-app/entities")
         .get(new GenericType<Set<EntitySummary>>() {
         });
 
@@ -134,33 +137,64 @@ public class ApplicationResourceTest extends BaseResourceTest {
     }
   }
 
-  @Test(dependsOnMethods = "testDeployRedisApplication")
+  @Test(dependsOnMethods = "testDeployApplication")
   public void testListApplications() {
     Set<Application> applications = client().resource("/v1/applications")
         .get(new GenericType<Set<Application>>() {
         });
-    assertEquals(applications.size(), 1);
-    assertEquals(Iterables.get(applications, 0).getSpec(), redisSpec);
+    for (Application app: applications) {
+        if (app.getSpec().equals(simpleSpec)) return;
+    }
+    Assert.fail("simple-app not found in list of applications: "+applications);
   }
 
-  @Test(dependsOnMethods = "testDeployRedisApplication")
+  @Test(dependsOnMethods = "testDeployApplication")
   public void testListSensors() {
-    Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
+    Set<SensorSummary> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors")
         .get(new GenericType<Set<SensorSummary>>() {
         });
     assertTrue(sensors.size() > 0);
-    SensorSummary uptime = Iterables.find(sensors, new Predicate<SensorSummary>() {
+    SensorSummary sample = Iterables.find(sensors, new Predicate<SensorSummary>() {
       @Override
       public boolean apply(SensorSummary sensorSummary) {
-        return sensorSummary.getName().equals("redis.uptime");
+        return sensorSummary.getName().equals(RestMockSimpleEntity.SAMPLE_SENSOR.getName());
       }
     });
-    assertEquals(uptime.getType(), "java.lang.Integer");
+    assertEquals(sample.getType(), "java.lang.String");
+  }
+
+  @Test(dependsOnMethods = "testDeployApplication")
+  public void testListEffectors() {
+    Set<EffectorSummary> effectors = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors")
+        .get(new GenericType<Set<EffectorSummary>>() {
+        });
+
+    assertTrue(effectors.size() > 0);
+
+    EffectorSummary sampleEffector = find(effectors, new Predicate<EffectorSummary>() {
+      @Override
+      public boolean apply(EffectorSummary input) {
+        return input.getName().equals("sampleEffector");
+      }
+    });
+    assertEquals(sampleEffector.getReturnType(), "java.lang.String");
   }
 
   @Test(dependsOnMethods = "testListSensors")
+  public void testTriggerSampleEffector() throws InterruptedException, IOException {
+    ClientResponse response = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors/"+
+            RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
+        .post(ClientResponse.class, ImmutableMap.of("param1", "foo", "param2", 4));
+
+    assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
+    
+    String result = response.getEntity(String.class);
+    assertEquals(result, "foo4");
+  }
+
+  @Test(dependsOnMethods = "testTriggerSampleEffector")
   public void testReadAllSensors() {
-    Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
+    Set<SensorSummary> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors")
         .get(new GenericType<Set<SensorSummary>>() {
         });
 
@@ -169,48 +203,20 @@ public class ApplicationResourceTest extends BaseResourceTest {
       readings.put(sensor.getName(), client().resource(sensor.getLinks().get("self")).get(String.class));
     }
 
-    assertEquals(readings.get("service.state"), "running");
-    assertEquals(readings.get("redis.port"), "6379");
+    assertEquals(readings.get(RestMockSimpleEntity.SAMPLE_SENSOR.getName()), "foo4");
   }
 
-  @Test(dependsOnMethods = "testDeployRedisApplication")
-  public void testListEffectors() {
-    Set<EffectorSummary> effectors = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors")
-        .get(new GenericType<Set<EffectorSummary>>() {
-        });
 
-    assertTrue(effectors.size() > 0);
-
-    EffectorSummary stopEffector = find(effectors, new Predicate<EffectorSummary>() {
-      @Override
-      public boolean apply(EffectorSummary input) {
-        return input.getName().equals("stop");
-      }
-    });
-    assertEquals(stopEffector.getReturnType(), "void");
-  }
-
-  @Test(dependsOnMethods = "testReadAllSensors")
-  public void testTriggerStopEffector() throws InterruptedException {
-    ClientResponse response = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
-        .post(ClientResponse.class, ImmutableMap.of());
-
-    assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-
-    URI stateSensor = URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/service.state");
-    while (!client().resource(stateSensor).get(String.class).equals(Lifecycle.STOPPED.toString())) {
-      Thread.sleep(5000);
-    }
-  }
-
-  @Test(dependsOnMethods = {"testListEffectors", "testTriggerStopEffector", "testListApplications"})
+  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadAllSensors"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
-    ClientResponse response = client().resource("/v1/applications/redis-app")
+    int size = manager.registry().size();
+    ClientResponse response = client().resource("/v1/applications/simple-app")
         .delete(ClientResponse.class);
 
-    waitForPageNotFoundResponse("/v1/applications/redis-app", Application.class);
+    waitForPageNotFoundResponse("/v1/applications/simple-app", Application.class);
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-    assertEquals(manager.registry().size(), 0);
+    assertEquals(manager.registry().size(), size-1);
   }
+  
 }

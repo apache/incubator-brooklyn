@@ -21,6 +21,7 @@
         <slf4j.version>1.6.4</slf4j.version>
         <reflections.version>0.9.5</reflections.version>
         <guava.version>12.0.1</guava.version>
+        <jersey.multipart.version>1.12</jersey.multipart.version>
     </properties>
 
     <dependencies>
@@ -157,9 +158,28 @@
             <artifactId>jackson-mapper-asl</artifactId>
             <version>1.9.7</version>
         </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <version>${jersey.multipart.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <version>${jersey.multipart.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>${project.basedir}/src/test/resources/fixtures</directory>
+                <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -192,6 +212,36 @@
                             <mainClass>brooklyn.rest.BrooklynService</mainClass>
                         </manifest>
                     </archive>
+                </configuration>
+            </plugin>
+            <!-- run js tests with: $ mvn clean process-resources jasmine:test -->
+            <plugin>
+                <groupId>com.github.searls</groupId>
+                <artifactId>jasmine-maven-plugin</artifactId>
+                <version>1.2.0.0</version>
+                <!-- avoid double phase executions https://github.com/searls/jasmine-maven-plugin/pull/54 -->
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>FIREFOX_3</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <browserVersion>FIREFOX_3</browserVersion>
+                    <junitXmlReportFileName>TEST-FIREFOX_3-jasmine.xml</junitXmlReportFileName>
+                    <manualSpecRunnerHtmlFileName>FIREFOX_3-ManualSpecRunner.html</manualSpecRunnerHtmlFileName>
+                    <specRunnerHtmlFileName>FIREFOX_3-SpecRunner.html</specRunnerHtmlFileName>
+                    <jsSrcDir>${project.basedir}/src/main/resources/assets</jsSrcDir>
+                    <jsTestSrcDir>${project.basedir}/src/test/javascript/specs</jsTestSrcDir>
+                    <specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
+                    <scriptLoaderPath>js/libs/require.js</scriptLoaderPath>
+                    <customRunnerConfiguration>
+                        ${project.basedir}/src/test/javascript/config.txt
+                    </customRunnerConfiguration>
                 </configuration>
             </plugin>
         </plugins>

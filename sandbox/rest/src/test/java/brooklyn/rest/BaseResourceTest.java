@@ -3,10 +3,11 @@ package brooklyn.rest;
 import brooklyn.rest.api.Application;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.yammer.dropwizard.testing.ResourceTest;
-import java.net.URI;
-import java.util.concurrent.TimeoutException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+
+import java.net.URI;
+import java.util.concurrent.TimeoutException;
 
 
 public abstract class BaseResourceTest extends ResourceTest {
@@ -24,6 +25,8 @@ public abstract class BaseResourceTest extends ResourceTest {
   protected void waitForApplicationToBeRunning(URI applicationRef) throws InterruptedException, TimeoutException {
     int count = 0;
     while (getApplicationStatus(applicationRef) != Application.Status.RUNNING) {
+      if (getApplicationStatus(applicationRef) == Application.Status.ERROR)
+        throw new RuntimeException("Application failed with ERROR.");
       Thread.sleep(7000);
       count += 1;
       if (count == 20) {

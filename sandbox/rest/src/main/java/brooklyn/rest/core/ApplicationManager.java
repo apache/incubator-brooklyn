@@ -18,6 +18,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
@@ -42,18 +43,20 @@ public class ApplicationManager implements Managed {
   private final ExecutorService executorService;
   private final BrooklynConfiguration configuration;
   private final CatalogResource catalog;
+  private final ManagementContext managementContext;
 
   public ApplicationManager(
       BrooklynConfiguration configuration,
       LocationStore locationStore,
       CatalogResource catalog,
       ExecutorService executorService
-  ) {
+  ) throws Exception {
     this.configuration = checkNotNull(configuration, "configuration");
     this.locationStore = checkNotNull(locationStore, "locationStore");
     this.executorService = checkNotNull(executorService, "executorService");
     this.catalog = checkNotNull(catalog, "catalog");
     this.applications = Maps.newConcurrentMap();
+    this.managementContext = configuration.getManagementContextClass().newInstance();
   }
 
   @Override
@@ -116,6 +119,9 @@ public class ApplicationManager implements Managed {
       }
     }
 
+    LOG.info("Placing '{}' under management", spec.getName());
+    managementContext.manage(instance);
+    
     LOG.info("Adding '{}' application to registry with status ACCEPTED", spec.getName());
     applications.put(spec.getName(), new Application(spec, Application.Status.ACCEPTED, instance));
 
@@ -189,6 +195,8 @@ public class ApplicationManager implements Managed {
             transitionTo(name, Application.Status.ERROR);
 
             throw Throwables.propagate(e);
+          } finally {
+              managementContext.unmanage(instance);
           }
         }
       });

@@ -1,16 +1,20 @@
 package brooklyn.rest.resources;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+import java.net.URI;
+import java.util.Set;
+
+import javax.ws.rs.core.Response;
+
+import org.testng.annotations.Test;
+
 import brooklyn.rest.BaseResourceTest;
+
 import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
-import java.net.URI;
-import java.util.Set;
-import javax.ws.rs.core.Response;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-import org.testng.annotations.Test;
 
 public class CatalogResourceTest extends BaseResourceTest {
 

@@ -5,12 +5,13 @@
     <meta charset='utf-8'/>
     <!-- Always force latest IE rendering engine (even in intranet) and Chrome Frame -->
     <meta content='IE=edge,chrome=1' http-equiv='X-UA-Compatible'/>
-    <title>Swagger API Explorer</title>
+    <title>Brooklyn REST API Explorer</title>
     <link href='http://fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
     <link href='http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/smoothness/jquery-ui.css' media='screen'
           rel='stylesheet' type='text/css'/>
-    <link href='/swagger-ui/stylesheets/screen.css' media='screen' rel='stylesheet' type='text/css'/>
-    <script src='/swagger-ui/javascripts/jquery-1.6.2.min.js' type='text/javascript'></script>
+    <link href='/assets/css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
+
+    <script src='/assets/js/libs/jquery-1.7.2.js' type='text/javascript'></script>
     <script type='text/javascript'>
         function toggle(selector) {
             jQuery(selector).toggle();
@@ -20,7 +21,7 @@
 </head>
 <body>
 <div id="header" style="background-color:#89BF04;">
-    <h2 style="padding-left: 20px; color: white;">Brooklyn REST Api</h2>
+    <h2 style="padding-left: 20px; color: white;">Brooklyn REST API</h2>
 </div>
 <div class='container' id='resources_container'>
     <ul id='resources'>
@@ -82,9 +83,9 @@
 </span>
         </h3>
         <ul class='options'>
-            <li>
+            <li><h2>
             ${operation.getSummary()}
-            </li>
+            </h2></li>
         </ul>
     </div>
     <div class='content resource${resourceIndex}' id='content_${apiIndex}_${resourceIndex}_${operationIndex}'

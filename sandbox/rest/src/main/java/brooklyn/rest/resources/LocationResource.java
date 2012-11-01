@@ -57,7 +57,7 @@ public class LocationResource extends BaseResource {
       responseClass = "brooklyn.rest.api.LocationSummary",
       multiValueResponse = true)
   public LocationSummary get(
-      @ApiParam(value = "Location name", required = true)
+      @ApiParam(value = "Location id to fetch", required = true)
       @PathParam("location") Integer locationId) {
     return new LocationSummary(locationId.toString(), store.get(locationId));
   }

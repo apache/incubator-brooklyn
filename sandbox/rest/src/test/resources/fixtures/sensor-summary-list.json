@@ -1,0 +1,42 @@
+[
+    {
+        "name":"service.state",
+        "type":"brooklyn.entity.basic.Lifecycle",
+        "description":"Service lifecycle state",
+        "links":{
+            "self":"fixtures/service-state.json",
+            "application":"/v1/applications/tesr",
+            "entity":"/v1/applications/tesr/entities/zQsqdXzi"
+        }
+    },
+    {
+        "name":"jmx.context",
+        "type":"java.lang.String",
+        "description":"JMX context path",
+        "links":{
+            "self":"fixtures/service-state.json",
+            "application":"/v1/applications/tesr",
+            "entity":"/v1/applications/tesr/entities/zQsqdXzi"
+        }
+    },
+    {
+        "name":"tomcat.shutdownport",
+        "type":"java.lang.Integer",
+        "description":"Suggested shutdown port",
+        "links":{
+            "self":"fixtures/service-state.json",
+            "application":"/v1/applications/tesr",
+            "entity":"/v1/applications/tesr/entities/zQsqdXzi"
+        }
+    },
+    {
+        "name":"service.isUp",
+        "type":"java.lang.Boolean",
+        "description":"Service has been started successfully and is running",
+        "links":{
+            "self":"fixtures/service-state.json",
+            "application":"/v1/applications/tesr",
+            "entity":"/v1/applications/tesr/entities/zQsqdXzi"
+        }
+    }
+]

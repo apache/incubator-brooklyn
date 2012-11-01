@@ -1,0 +1,9 @@
+[
+    {
+        "provider":"localhost",
+        "config":{},
+        "links":{
+            "self":"/v1/locations/123"
+        }
+    }
+]

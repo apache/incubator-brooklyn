@@ -1,0 +1,41 @@
+[
+    {
+        "name":"start",
+        "description":"Start the process/service represented by an entity",
+        "returnType":"void",
+        "parameters":[
+            {
+                "name":"locations",
+                "type":"java.util.Collection",
+                "description":null
+            }
+        ],
+        "links":{
+            "self":"/v1/applications/tesr/entities/ZgoDhGQA/effectors/start",
+            "entity":"/v1/applications/tesr/entities/ZgoDhGQA",
+            "application":"/v1/applications/tesr"
+        }
+    },
+    {
+        "name":"restart",
+        "description":"Restart the process/service represented by an entity",
+        "returnType":"void",
+        "parameters":[ ],
+        "links":{
+            "self":"/v1/applications/tesr/entities/ZgoDhGQA/effectors/restart",
+            "entity":"/v1/applications/tesr/entities/ZgoDhGQA",
+            "application":"/v1/applications/tesr"
+        }
+    },
+    {
+        "name":"stop",
+        "description":"Stop the process/service represented by an entity",
+        "returnType":"void",
+        "parameters":[ ],
+        "links":{
+            "self":"/v1/applications/tesr/entities/ZgoDhGQA/effectors/stop",
+            "entity":"/v1/applications/tesr/entities/ZgoDhGQA",
+            "application":"/v1/applications/tesr"
+        }
+    }
+]

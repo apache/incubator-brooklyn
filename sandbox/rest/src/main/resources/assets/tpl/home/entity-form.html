@@ -1,0 +1,34 @@
+<!-- Template for creating and configuring a new entity for application wizard step 2 -->
+
+<h4>New entity form</h4>
+
+<div class="control-group">
+    <label for="entity-name" class="control-label">Entity name:</label>
+
+    <div class="controls">
+        <input id="entity-name" type="text" class="input-large" name="name"
+               placeholder="name" style="margin:0">
+    </div>
+</div>
+<div class="control-group">
+    <label for="entity-type" class="control-label">Entity type:</label>
+
+    <div class="controls">
+        <select id="entity-type" name="type" style="margin:0"></select>
+    </div>
+</div>
+
+<div id="entity-config">
+    <h5>Entity properties</h5>
+    <ul></ul>
+</div>
+<dl class="dl-horizontal"></dl>
+<div id="entity-group" class="control-group" style="margin:0">
+    <label for="entity-group" class="control-label">Entity configuration:</label>
+
+    <div class="controls">
+        <input id="key" type="text" class="input-medium" name="key" placeholder="key">
+        <input id="value" type="text" class="input-medium" name="value" placeholder="value">
+        <button id="add-config" class="btn btn-mini btn-info">Add config</button>
+    </div>
+</div>

@@ -32,6 +32,7 @@ public class EntitySummary {
         .put("children", URI.create(entityUri + "/entities"))
         .put("effectors", URI.create(entityUri + "/effectors"))
         .put("sensors", URI.create(entityUri + "/sensors"))
+        .put("activities", URI.create(entityUri + "/activities"))
         .build();
   }
 

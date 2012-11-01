@@ -1,0 +1,6 @@
+{
+    "service.state":"running",
+    "jmx.context":"jmx/context",
+    "tomcat.shutdownport":"8081",
+    "service.isUp":"true"
+}
