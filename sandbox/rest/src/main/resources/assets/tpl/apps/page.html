@@ -1,8 +1,18 @@
 <div class="row row-fluid">
-    <div class="span4 well sidebar-nav" id="tree">
-        <h3>Applications <i class="icon-refresh refresh"/></h3>
-        <div id="tree-list"></div>
-    </div>
+	<div class="span3" id="tree">
+		<div class="navbar_top">
+			<h3>Applications</h3>
+			<br/>
+			<span>
+				<i class="icon-refresh refresh" />
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<button id="add-new-application" type="button" class="btn btn-info">
+					   New</button>
+			</span>
+		</div>
+		<div id="tree-list" class="navbar_main"></div>
+	</div>
 
-    <div class="span8" id="details"></div>
+	<div class="span9" id="details"></div>
 </div>
+<div id="modal-container"></div>

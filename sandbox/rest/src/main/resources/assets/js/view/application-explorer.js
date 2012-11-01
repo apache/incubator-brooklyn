@@ -4,8 +4,10 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "model/app-tree", "./application-tree", "text!tpl/apps/page.html"
-], function (_, $, Backbone, AppTree, ApplicationTreeView, PageHtml) {
+    "underscore", "jquery", "backbone", 
+    "./modal-wizard", "model/app-tree", "./application-tree", 
+    "text!tpl/apps/page.html"
+], function (_, $, Backbone, ModalWizard, AppTree, ApplicationTreeView, PageHtml) {
 
     var ApplicationExplorerView = Backbone.View.extend({
         tagName:"div",
@@ -13,7 +15,9 @@ define([
         id:'application-explorer',
         template:_.template(PageHtml),
         events:{
-            'click .refresh':'refreshApplications'
+            'click .refresh':'refreshApplications',
+            'click #add-new-application':'createApplication',
+            'click .delete':'deleteApplication'
         },
         initialize:function () {
             this.$el.html(this.template({}))
@@ -34,10 +38,29 @@ define([
             this.treeView.render()
             return this
         },
+        
         refreshApplications:function () {
             this.collection.fetch()
             return false
+        },
+        
+        createApplication:function () {
+            if (this._modal) {
+                this._modal.close()
+            }
+            var wizard = new ModalWizard({appRouter:this.options.appRouter})
+            this._modal = wizard
+            this.$("#modal-container").html(wizard.render().el)
+            this.$("#modal-container .modal")
+                .on("hidden",function () {
+                    wizard.close()
+                }).modal('show')
+        },
+        deleteApplication:function (event) {
+            // call Backbone destroy() which does HTTP DELETE on the model
+            this.collection.getByCid(event.currentTarget['id']).destroy({wait:true})
         }
+        
     })
 
     return ApplicationExplorerView

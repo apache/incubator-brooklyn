@@ -53,7 +53,7 @@
 /* tabs eg catalog page */
 .nav-tabs>li,.nav-pills>li {
 	float: left;
-	margin: 10px 1px -1px 1px;
+	margin: 0px 1px -1px 1px;
 }
 
 .nav-tabs {
@@ -121,10 +121,9 @@
 .circles-map {
 	height: 350px;
 	border : 2px solid #909490;
-	-webkit-border-radius: 2px 2px 0 0;
-	-moz-border-radius: 2px 2px 0 0;
-	border-radius: 2px 2px 0 0;
-	border: 2px solid #909490;
+	-webkit-border-radius: 2px 2px 2px 2px;
+	-moz-border-radius: 2px 2px 2px 2px;
+	border-radius: 2px 2px 2px 2px;
 }
 .circles-map-message:before { /* makes the message vertically centered */
     content: '';
@@ -148,4 +147,47 @@
 	text-align: left;
 	vertical-align: top;
 	margin: 0px 20px;
+}
+#new-application-resource {
+	text-align: right;
+}
+
+/* general pages */
+.sidebar_at_right {
+	border-right: 4px solid #BBB;
+}
+
+.sidebar_at_left {
+    border-left: 4px solid #BBB;
+    margin-left: -4px !important;
+    padding-left: 24px;
+}
+
+.nav-tabs {
+	margin-bottom: 0px;
+}
+.tab-content {
+	padding: 18px 12px 12px 18px;
+    border-right: 1px solid #DDD;
+    border-left: 1px solid #DDD;
+    min-height: 500px;
+}
+#tree-list {
+}
+ol.tree {
+	padding: 0;
+}
+.navbar_top {
+	background-color: #D0D8D0;
+	padding: 8px 12px 12px 12px;
+    -webkit-border-radius: 4px 4px 0 0;
+    -moz-border-radius: 4px 4px 0 0;
+    border-radius: 4px 4px 0 0;
+}
+.navbar_main {
+    background-color: #F0F4F0;
+    padding: 24px 12px 24px 6px;
+    -webkit-border-radius: 0 0 4px 4px;
+    -moz-border-radius: 0 0 4px 4px;
+    border-radius: 0 0 4px 4px;
 }
