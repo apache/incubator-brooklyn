@@ -1,5 +1,7 @@
 package brooklyn.entity.basic
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
@@ -219,9 +221,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     @Override
 	public void start(Collection<? extends Location> locations) {
+        checkNotNull(locations, "locations");
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
 		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
-
+        
 		startInLocation locations
 		postStart()
 		sensorRegistry.activateAdapters()
@@ -234,7 +237,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		if (locations.size() != 1) {
             throw new IllegalArgumentException("Expected one location when starting "+this+", but given "+locations);
 		}
-		Location location = Iterables.getOnlyElement(locations)
+		Location location = checkNotNull(Iterables.getOnlyElement(locations), "location");
 		startInLocation(location)
 	}
 
