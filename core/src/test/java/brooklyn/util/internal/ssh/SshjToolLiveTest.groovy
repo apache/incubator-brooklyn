@@ -4,16 +4,21 @@ import static org.testng.Assert.*
 
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicInteger
+
+import net.schmizz.sshj.connection.channel.direct.Session
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.util.internal.ssh.SshjTool.SshAction
 import brooklyn.util.text.Identifiers
 
 import com.google.common.base.Charsets
 import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
 import com.google.common.io.Files
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListeningExecutorService
@@ -386,6 +391,68 @@ public class SshjToolLiveTest {
             fail();
         } catch (SshException e) {
             if (!e.toString().contains("failed to connect")) throw e;
+        }
+    }
+
+    @Test(groups = [ "Integration" ])
+    public void testGivesUpAfterMaxRetries() {
+        AtomicInteger callCount = new AtomicInteger();
+        
+        final SshjTool localtool = new SshjTool(sshTries:3, host:'localhost', privateKeyFile:"~/.ssh/id_rsa") {
+            protected SshAction<Session> newSessionAction() {
+                callCount.incrementAndGet();
+                throw new Exception("Simulating ssh execution failure");
+            }
+        }
+        
+        tools.add(localtool)
+        try {
+            localtool.execScript(ImmutableMap.of(), ImmutableList.of("true"));
+            fail();
+        } catch (SshException e) {
+            if (!e.toString().contains("out of retries")) throw e;
+            assertEquals(callCount.get(), 3);
+        }
+    }
+
+    @Test(groups = [ "Integration" ])
+    public void testReturnsOnSuccessWhenRetrying() {
+        AtomicInteger callCount = new AtomicInteger();
+        final int successOnAttempt = 2;
+        final SshjTool localtool = new SshjTool(sshTries:3, host:'localhost', privateKeyFile:"~/.ssh/id_rsa") {
+            protected SshAction<Session> newSessionAction() {
+                callCount.incrementAndGet();
+                if (callCount.incrementAndGet() >= successOnAttempt) {
+                    return super.newSessionAction();
+                } else {
+                    throw new Exception("Simulating ssh execution failure");
+                }
+            }
+        }
+        
+        tools.add(localtool)
+        localtool.execScript(ImmutableMap.of(), ImmutableList.of("true"));
+        assertEquals(callCount.get(), successOnAttempt);
+    }
+
+    @Test(groups = [ "Integration" ])
+    public void testGivesUpAfterMaxTime() {
+        AtomicInteger callCount = new AtomicInteger();
+        final SshjTool localtool = new SshjTool(sshTriesTimeout:1000, host:'localhost', privateKeyFile:"~/.ssh/id_rsa") {
+            protected SshAction<Session> newSessionAction() {
+                callCount.incrementAndGet();
+                Thread.sleep(600);
+                throw new Exception("Simulating ssh execution failure");
+            }
+        }
+        
+        tools.add(localtool)
+        try {
+            localtool.execScript(ImmutableMap.of(), ImmutableList.of("true"));
+            fail();
+        } catch (SshException e) {
+            if (!e.toString().contains("out of time")) throw e;
+            assertEquals(callCount.get(), 2);
         }
     }
 
