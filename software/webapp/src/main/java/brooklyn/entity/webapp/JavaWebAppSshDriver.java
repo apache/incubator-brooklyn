@@ -115,6 +115,14 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         deploy("file://"+f.getAbsolutePath(), targetName);
     }
 
+    /**
+     * Deploys a URL as a webapp at the appserver.
+     *
+     * Returns a token which can be used as an argument to undeploy,
+     * typically the web context with leading slash where the app can be reached (just "/" for ROOT)
+     *
+     * @see JavaWebAppSoftwareProcess#deploy(String, String) for details of how input filenames are handled
+     */
     @Override
     public String deploy(String url, String targetName) {
         String canonicalTargetName = getFilenameContextMapper().convertDeploymentTargetNameToFilename(targetName);
@@ -122,8 +130,13 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         log.info("{} deploying {} to {}:{}", new Object[]{entity, url, getHostname(), dest});
         // create a backup
         getMachine().run(String.format("mv -f %s %s.bak > /dev/null 2>&1", dest, dest)); //back up old file/directory
-        // TODO we could try resolving http resources remotely, rather than fetching here then copying
-        int result = getMachine().copyTo(getResource(url), dest);
+        int result = -1;
+        // TODO allow s3://bucket/file URIs for AWS S3 resources
+        if (url.startsWith("http")) {
+            result = getMachine().run(String.format("wget --no-check-certificate %s -O %s", url, dest)); // try resolving http resources remotely
+        } else {
+	        result = getMachine().copyTo(getResource(url), dest);
+        }
         log.debug("{} deployed {} to {}:{}: result {}", new Object[]{entity, url, getHostname(), dest, result});
         if (result!=0) log.warn("Problem deploying {} to {}:{} for {}: result {}", new Object[]{url, getHostname(), dest, entity, result}); 
         return getFilenameContextMapper().convertDeploymentTargetNameToContext(canonicalTargetName);
