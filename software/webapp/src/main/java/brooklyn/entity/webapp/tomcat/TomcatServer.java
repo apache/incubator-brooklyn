@@ -95,7 +95,8 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
             // If MBean is unreachable, then mark as service-down
             requestProcessorObjectNameAdapter.reachable().poll(new Function<Boolean,Void>() {
                 @Override public Void apply(Boolean input) {
-                    if (input != null && Boolean.FALSE.equals(input)) {
+                    if (input != null && Boolean.FALSE.equals(input) && Boolean.TRUE.equals(getAttribute(SERVICE_UP))) {
+                        log.debug("Entity "+this+" is not reachable on JMX");
                         setAttribute(SERVICE_UP, false);
                     }
                     return null;

@@ -57,9 +57,12 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                 Integer v = (value.isEmpty() ? null : value.iterator().next());
                 LOG.debug(""+entity+" choosing port "+v+" (unconfirmed) for "+getName());
                 return v;
+            } else {
+                LOG.warn(""+entity+" ports not applicable, or not yet applicable, because has multiple locations "+locations+"; ignoring "+getName());       
             }
+        } else {
+            LOG.warn(""+entity+" ports not applicable, or not yet applicable, bacause has no locations, ignoring "+getName());
         }
-        LOG.info(""+entity+" ports not applicable, or not yet applicable, in location "+locations+", ignoring "+getName());
         return null;
     }
 }

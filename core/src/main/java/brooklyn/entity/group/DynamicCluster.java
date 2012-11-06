@@ -156,13 +156,14 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             setAttribute(QUARANTINE_GROUP, quarantineGroup);
         }
         
-        Preconditions.checkNotNull(locs, "locations must be supplied");
-        Preconditions.checkArgument(locs.size() == 1, "Exactly one location must be supplied, but given "+locs.size());
+        if (locs==null) throw new IllegalStateException("Null location supplied to start "+this);
+        if (locs.size()!=1) throw new IllegalStateException("Wrong number of locations supplied to start "+this+": "+locs);
         getLocations().addAll(locs);
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-        resize(getConfig(INITIAL_SIZE));
-        if (getCurrentSize() != getConfig(INITIAL_SIZE)) {
-            throw new IllegalStateException("On start of cluster "+this+", failed to get to initial size of "+getConfig(INITIAL_SIZE)+"; size is "+getCurrentSize());
+        Integer initialSize = getConfig(INITIAL_SIZE);
+        resize(initialSize);
+        if (getCurrentSize() != initialSize) {
+            throw new IllegalStateException("On start of cluster "+this+", failed to get to initial size of "+initialSize+"; size is "+getCurrentSize());
         }
         for (Policy it : getPolicies()) { it.resume(); }
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);

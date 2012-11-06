@@ -95,11 +95,12 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
             // FIXME Establish if definitely want to change how we treat closures like this
             //initialSize: { getConfig(INITIAL_SIZE) } );
             initialSize: getConfig(INITIAL_SIZE));
-        Entities.manage(cachedCluster);
+        if (Entities.isManaged(this)) Entities.manage(cachedCluster);
         return cachedCluster;
     }
     
     public void start(Collection<? extends Location> locations) {
+        if (locations.isEmpty()) locations = this.locations;
         Iterables.getOnlyElement(locations); //assert just one
         this.locations.addAll(locations);
         

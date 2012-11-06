@@ -233,13 +233,12 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
 	}
 
-	public void startInLocation(Collection<Location> locations) {
-		if (locations.size() != 1) {
-            throw new IllegalArgumentException("Expected one location when starting "+this+", but given "+locations);
-		}
-		Location location = checkNotNull(Iterables.getOnlyElement(locations), "location");
-		startInLocation(location)
-	}
+    public void startInLocation(Collection<Location> locations) {
+        if (locations.isEmpty()) locations = this.locations;
+        if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
+            throw new IllegalArgumentException("Expected one non-null location when starting "+this+", but given "+locations);
+        startInLocation( Iterables.getOnlyElement(locations) )
+    }
 
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
         Map result = Maps.newLinkedHashMap(location.getProvisioningFlags([ getClass().getName() ]));

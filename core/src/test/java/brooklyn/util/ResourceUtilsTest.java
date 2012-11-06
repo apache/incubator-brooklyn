@@ -98,4 +98,12 @@ public class ResourceUtilsTest {
         InputStream stream = utils.getResourceFromUrl("sftp://"+user+"@localhost:"+tempFile.getAbsolutePath());
         assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
     }
+    
+    @Test
+    public void testMergePaths() throws Exception {
+        assertEquals(ResourceUtils.mergePaths("a","b"), "a/b");
+        assertEquals(ResourceUtils.mergePaths("/a//","/b/"), "/a/b/");
+        assertEquals(ResourceUtils.mergePaths("foo://","/b/"), "foo:///b/");
+    }
+
 }

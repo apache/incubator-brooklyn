@@ -2,7 +2,6 @@ package brooklyn.launcher;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

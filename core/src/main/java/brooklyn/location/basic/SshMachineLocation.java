@@ -8,6 +8,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -61,6 +62,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
+import com.google.common.io.Files;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -506,15 +508,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyTo(InputStream src, long filesize, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, filesize, destination);
     }
-	public int copyTo(final Map<String,?> props, InputStream src, long filesize, final String destination) {
+    public int copyTo(final Map<String,?> props, InputStream src, long filesize, final String destination) {
 	    final long finalFilesize;
 	    final InputStream finalSrc;
 	    
 		if (filesize==-1) {
 		    try {
-		        byte[] bytes = ByteStreams.toByteArray(src);
-		        finalFilesize = bytes.length;
-		        finalSrc = new ByteArrayInputStream(bytes);
+		        File tempFile = ResourceUtils.writeToTempFile(src, "sshcopy", "data");
+		        finalFilesize = tempFile.length();
+		        finalSrc = new FileInputStream(tempFile);
 		    } catch (IOException e) {
 		        throw Throwables.propagate(e);
 		    } finally {

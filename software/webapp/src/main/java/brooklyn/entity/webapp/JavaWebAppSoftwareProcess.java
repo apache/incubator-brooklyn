@@ -109,8 +109,8 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
      */
     @Description("Deploys the given artifact, from a source URL, to a given deployment filename/context")
     public void deploy(
-            @NamedParameter("url") String url, 
-            @NamedParameter("targetName") String targetName) {
+            @NamedParameter("url") @Description("URL of WAR file") String url, 
+            @NamedParameter("targetName") @Description("context path where WAR should be deployed (/ for ROOT)") String targetName) {
         try {
             checkNotNull(url, "url");
             checkNotNull(targetName, "targetName");
