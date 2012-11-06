@@ -106,7 +106,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
     public interface ListModification<T> extends StructuredModification<ListConfigKey<T>>, List<T> {
         @SuppressWarnings("serial")
         class ListModificationBase<T> extends ArrayList<T> implements ListModification<T> {
-            private boolean clearFirst;
+            private final boolean clearFirst;
             public ListModificationBase(Collection<T> delegate, boolean clearFirst) {
                 super(delegate);
                 this.clearFirst = clearFirst;

@@ -508,17 +508,13 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyTo(InputStream src, long filesize, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, filesize, destination);
     }
-	public int copyTo(final Map<String,?> props, InputStream src, long filesize, final String destination) {
+    public int copyTo(final Map<String,?> props, InputStream src, long filesize, final String destination) {
 	    final long finalFilesize;
 	    final InputStream finalSrc;
 	    
 		if (filesize==-1) {
 		    try {
-		        File tempFile = File.createTempFile("sshcopy", "data");
-		        tempFile.deleteOnExit();
-		        FileOutputStream out = new FileOutputStream(tempFile);
-		        ResourceUtils.copy(src, out);
-		        out.close();
+		        File tempFile = ResourceUtils.writeToTempFile(src, "sshcopy", "data");
 		        finalFilesize = tempFile.length();
 		        finalSrc = new FileInputStream(tempFile);
 		    } catch (IOException e) {

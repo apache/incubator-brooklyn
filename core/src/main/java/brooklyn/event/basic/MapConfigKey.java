@@ -69,7 +69,6 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
         Map<String,V> result = Maps.newLinkedHashMap();
         for (Map.Entry<?,?> entry : vals.entrySet()) {
             Object k = entry.getKey();
-//            Object v = entry.getValue();
             if (isSubKey(k)) {
                 @SuppressWarnings("unchecked")
                 SubElementConfigKey<V> subk = (SubElementConfigKey<V>) k;
@@ -131,7 +130,7 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
     public interface MapModification<V> extends StructuredModification<MapConfigKey<V>>, Map<String,V> {
         @SuppressWarnings("serial")
         class MapModificationBase<V> extends LinkedHashMap<String,V> implements MapModification<V> {
-            private boolean clearFirst;
+            private final boolean clearFirst;
             public MapModificationBase(Map<String,V> delegate, boolean clearFirst) {
                 super(delegate);
                 this.clearFirst = clearFirst;
