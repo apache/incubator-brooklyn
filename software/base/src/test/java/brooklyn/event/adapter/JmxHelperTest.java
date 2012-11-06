@@ -52,6 +52,7 @@ public class JmxHelperTest {
         jmxObjectNameWithWildcard = new ObjectName(objectNameWithWildcard);
         jmxService = new JmxService("localhost", 40123);
         jmxHelper = new JmxHelper(jmxService.getUrl());
+        jmxHelper.setMinTimeBetweenReconnectAttempts(0);
         jmxHelper.connect(TIMEOUT_MS);
     }
     
@@ -148,14 +149,6 @@ public class JmxHelperTest {
         jmxService.shutdown();
 
         // Ensure that we have a failed query while the "network is down"         
-        try {
-            jmxHelper.getAttribute(jmxObjectName, attributeName);
-            fail();
-        } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, IOException.class) == null) {
-                throw e;
-            }
-        }
         try {
             jmxHelper.getAttribute(jmxObjectName, attributeName);
             fail();

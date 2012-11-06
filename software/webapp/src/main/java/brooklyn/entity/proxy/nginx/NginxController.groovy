@@ -63,6 +63,10 @@ public class NginxController extends AbstractController {
     public static final BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
 
+    @SetFromFlag("httpPollPeriod")
+    public static final BasicConfigKey<Long> HTTP_POLL_PERIOD =
+        new BasicConfigKey<Long>(Long.class, "nginx.sensorpoll.http", "poll period (in milliseconds)", 1000);
+
     public NginxController(Entity owner) {
         this(new LinkedHashMap(), owner);
     }
@@ -120,7 +124,7 @@ public class NginxController extends AbstractController {
         
         HttpSensorAdapter http = sensorRegistry.register(
             new HttpSensorAdapter(getAttribute(AbstractController.ROOT_URL), 
-                period: 1000*TimeUnit.MILLISECONDS));
+                period: getConfig(HTTP_POLL_PERIOD)*TimeUnit.MILLISECONDS));
         
         // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
         http.with {
