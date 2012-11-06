@@ -61,6 +61,7 @@ import org.jclouds.io.payloads.StringPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.Time;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.SshTool;
 import brooklyn.util.internal.StreamGobbler;
@@ -71,6 +72,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -118,6 +120,8 @@ public class SshjTool implements SshTool {
 
 
     private final String toString;
+
+    private final int sshTriesTimeout;
 
     private final int sshTries;
 
@@ -171,6 +175,7 @@ public class SshjTool implements SshTool {
         private int connectTimeout;
         private int sessionTimeout;
         private int sshTries = 4;  //allow 4 tries by default, much safer
+        private int sshTriesTimeout = 2*60*1000;  //allow 2 minutesby default (so if too slow trying sshTries times, abort anyway)
         private long sshRetryDelay = 50L;
         
         @SuppressWarnings("unchecked")
@@ -198,6 +203,7 @@ public class SshjTool implements SshTool {
             connectTimeout = getOptionalVal(props, "connectTimeout", Integer.class, connectTimeout);
             sessionTimeout = getOptionalVal(props, "sessionTimeout", Integer.class, sessionTimeout);
             sshTries = getOptionalVal(props, "sshTries", Integer.class, sshTries);
+            sshTriesTimeout = getOptionalVal(props, "sshTriesTimeout", Integer.class, sshTriesTimeout);
             sshRetryDelay = getOptionalVal(props, "sshRetryDelay", Long.class, sshRetryDelay);
 
             return this;
@@ -236,6 +242,9 @@ public class SshjTool implements SshTool {
         public Builder sshRetries(int val) {
             this.sshTries = val; return this;
         }
+        public Builder sshRetriesTimeout(int val) {
+            this.sshTriesTimeout = val; return this;
+        }
         public Builder sshRetryDelay(long val) {
             this.sshRetryDelay = val; return this;
         }
@@ -260,7 +269,8 @@ public class SshjTool implements SshTool {
         password = builder.password;
         strictHostKeyChecking = builder.strictHostKeyChecking;
         allocatePTY = builder.allocatePTY;
-        sshTries = builder.sshTries ;
+        sshTries = builder.sshTries;
+        sshTriesTimeout = builder.sshTriesTimeout;
         backoffLimitedRetryHandler = new BackoffLimitedRetryHandler(sshTries, builder.sshRetryDelay);
         privateKeyPassphrase = builder.privateKeyPassphrase;
         privateKeyData = builder.privateKeyData;
@@ -535,10 +545,12 @@ public class SshjTool implements SshTool {
     }
 
     private void backoffForAttempt(int retryAttempt, String message) {
-        backoffLimitedRetryHandler.imposeBackoffExponentialDelay(200L, 2, retryAttempt, sshTries, message);
+        backoffLimitedRetryHandler.imposeBackoffExponentialDelay(retryAttempt, message);
     }
 
     protected <T, C extends SshAction<T>> T acquire(C connection) {
+        Stopwatch stopwatch = new Stopwatch().start();
+        
         for (int i = 0; i < sshTries; i++) {
             try {
                 connection.clear();
@@ -546,19 +558,25 @@ public class SshjTool implements SshTool {
                 T returnVal = connection.create();
                 if (LOG.isTraceEnabled()) LOG.trace("<< ({}) acquired {}", toString(), returnVal);
                 return returnVal;
-            } catch (Exception from) {
+            } catch (Exception e) {
                 String errorMessage = String.format("(%s) error acquiring %s", toString(), connection);
+                String fullMessage = String.format("%s (attempt %s/%s, in time %s/%s)", 
+                        errorMessage, (i+1), sshTries, Time.makeTimeString(stopwatch.elapsedMillis()), 
+                        (sshTriesTimeout > 0 ? Time.makeTimeString(sshTriesTimeout) : "unlimited"));
                 try {
                     disconnect();
-                } catch (Exception e1) {
-                    LOG.warn("<< ("+toString()+") error closing connection: "+from+" / "+e1, from);
+                } catch (Exception e2) {
+                    LOG.warn("<< ("+toString()+") error closing connection: "+e+" / "+e2, e);
                 }
                 if (i + 1 == sshTries) {
-                    LOG.warn("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
-                    throw propagate(from, errorMessage + " (out of retries - max " + sshTries + ")");
+                    LOG.warn("<< {}: {}", fullMessage, e.getMessage());
+                    throw propagate(e, fullMessage + "; out of retries");
+                } else if (sshTriesTimeout > 0 && stopwatch.elapsedMillis() > sshTriesTimeout) {
+                    LOG.warn("<< {}: {}", fullMessage, e.getMessage());
+                    throw propagate(e, fullMessage + "; out of time");
                 } else {
-                    if (LOG.isDebugEnabled()) LOG.debug("<< " + errorMessage + " (attempt " + (i + 1) + " of " + sshTries + "): " + from.getMessage());
-                    backoffForAttempt(i + 1, errorMessage + ": " + from.getMessage());
+                    if (LOG.isDebugEnabled()) LOG.debug("<< {}: {}", fullMessage, e.getMessage());
+                    backoffForAttempt(i + 1, errorMessage + ": " + e.getMessage());
                     if (connection != sshClientConnection)
                         connect();
                     continue;

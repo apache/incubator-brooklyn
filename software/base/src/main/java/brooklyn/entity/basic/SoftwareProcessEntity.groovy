@@ -1,5 +1,7 @@
 package brooklyn.entity.basic
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
@@ -88,9 +90,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
 	public SoftwareProcessEntity(Map properties=[:], Entity owner=null) {
 		super(properties, owner)
-
-		setAttribute(SERVICE_UP, false)
-		setAttribute(SERVICE_STATE, Lifecycle.CREATED)
 	}
     
     public SoftwareProcessEntity(Entity owner) {
@@ -135,6 +134,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
             LOG.warn("On start-up of {}, not (re)binding because state is {}", this, state);
     	} else {
             // Expect this is a normal start() sequence (i.e. start() will subsequently be called)
+            setAttribute(SERVICE_UP, false)
+            setAttribute(SERVICE_STATE, Lifecycle.CREATED)
     	}
     }
 	
@@ -220,9 +221,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     @Override
 	public void start(Collection<? extends Location> locations) {
+        checkNotNull(locations, "locations");
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
 		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
-
+        
 		startInLocation locations
 		postStart()
 		sensorRegistry.activateAdapters()
@@ -235,7 +237,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		if (locations.size() != 1) {
             throw new IllegalArgumentException("Expected one location when starting "+this+", but given "+locations);
 		}
-		Location location = Iterables.getOnlyElement(locations)
+		Location location = checkNotNull(Iterables.getOnlyElement(locations), "location");
 		startInLocation(location)
 	}
 

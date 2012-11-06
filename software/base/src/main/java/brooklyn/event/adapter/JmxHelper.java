@@ -49,6 +49,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
+import brooklyn.util.Time;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -72,7 +73,7 @@ public class JmxHelper {
     public static final String RMI_JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/%s";
     // jmxmp
     public static final String JMXMP_URL_FORMAT = "service:jmx:jmxmp://%s:%d";
-
+    
     // Tracks the MBeans we have failed to find, with a set keyed off the url
     private static final Map<String, Set<ObjectName>> notFoundMBeansByUrl = Collections.synchronizedMap(new WeakHashMap<String, Set<ObjectName>>());
 
@@ -129,7 +130,9 @@ public class JmxHelper {
     private volatile JMXConnector connector;
     private volatile MBeanServerConnection connection;
     private boolean triedConnecting;
-    private boolean triedReconnecting;
+    private boolean failedReconnecting;
+    private long failedReconnectingTime;
+    private int minTimeBetweenReconnectAttempts = 1000;
 
     // Tracks the MBeans we have failed to find for this JmsHelper's connection URL (so can log just once for each)
     private final Set<ObjectName> notFoundMBeans;
@@ -165,6 +168,10 @@ public class JmxHelper {
         }
     }
 
+    public void setMinTimeBetweenReconnectAttempts(int val) {
+        minTimeBetweenReconnectAttempts = val;
+    }
+    
     public String getUrl(){
         return url;
     }
@@ -193,18 +200,33 @@ public class JmxHelper {
      *
      * @throws IOException
      */
+    public synchronized void reconnectWithRetryDampened() throws IOException {
+        // If we've already tried reconnecting very recently, don't try again immediately
+        if (failedReconnecting) {
+            long timeSince = (System.currentTimeMillis() - failedReconnectingTime);
+            if (timeSince < minTimeBetweenReconnectAttempts) {
+                String msg = "Not reconnecting to JMX at "+url+" because attempt failed "+Time.makeTimeString(timeSince)+" ago";
+                throw new IllegalStateException(msg);
+            }
+        }
+        
+        reconnect();
+    }
+    
     public synchronized void reconnect() throws IOException {
         disconnect();
 
         try {
             connect();
+            failedReconnecting = false;
         } catch (Exception e) {
-            if (triedReconnecting) {
+            if (failedReconnecting) {
                 if (LOG.isDebugEnabled()) LOG.debug("unable to re-connect to JMX url (repeated failure): {}: {}", url, e);
             } else {
                 LOG.warn("unable to re-connect to JMX url: {}: {}", url, e);
-                triedReconnecting = true;
+                failedReconnecting = true;
             }
+            failedReconnectingTime = System.currentTimeMillis();
             throw Throwables.propagate(e);
         }
     }
@@ -370,10 +392,11 @@ public class JmxHelper {
         if (triedConnecting) {
             throw new IllegalStateException("Failed to connect to JMX at "+url);
         } else {
-            throw new IllegalStateException("Not connected (and not attempted to connect) to JMX at "+url);
+            String msg = "Not connected (and not attempted to connect) to JMX at "+url+
+                    (failedReconnecting ? (" (last reconnect failure at "+ Time.makeDateString(failedReconnectingTime) + ")") : "");
+            throw new IllegalStateException(msg);
         }
     }
-
 
     private <T> T invokeWithReconnect(Callable<T> task) {
         try {
@@ -381,7 +404,7 @@ public class JmxHelper {
         } catch (Exception e) {
             if (shouldRetryOn(e)) {
                 try {
-                    reconnect();
+                    reconnectWithRetryDampened();
                     return task.call();
                 } catch (Exception e2) {
                     throw Throwables.propagate(e2);

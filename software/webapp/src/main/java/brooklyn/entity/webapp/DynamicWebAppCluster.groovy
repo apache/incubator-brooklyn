@@ -69,12 +69,12 @@ class DynamicWebAppCluster extends DynamicCluster implements WebAppService {
         }
     }
     
-    public synchronized void addMember(Entity member) {
-        super.addMember(member)
+    public synchronized boolean addMember(Entity member) {
+        return super.addMember(member)
     }
     
     @Override
     public synchronized boolean removeMember(Entity member) {
-        super.removeMember(member)
+        return super.removeMember(member)
     }
 }

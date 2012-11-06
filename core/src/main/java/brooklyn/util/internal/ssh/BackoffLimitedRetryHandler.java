@@ -21,7 +21,7 @@ package brooklyn.util.internal.ssh;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
+import brooklyn.util.exceptions.Exceptions;
 
 /**
  * Allow replayable request to be retried a limited number of times, and impose an exponential back-off
@@ -61,12 +61,13 @@ public class BackoffLimitedRetryHandler {
             int max,
             String commandDescription) {
         long delayMs = (long) (period * Math.pow(failureCount, pow));
-        delayMs = delayMs > maxPeriod ? maxPeriod : delayMs;
-        LOG.debug("Retry {}/{}: delaying for {} ms: {}", new Object[] {failureCount, max, delayMs, commandDescription});
+        delayMs = (delayMs > maxPeriod) ? maxPeriod : delayMs;
+        if (LOG.isDebugEnabled()) LOG.debug("Retry {}/{}: delaying for {} ms: {}", 
+                new Object[] {failureCount, max, delayMs, commandDescription});
         try {
             Thread.sleep(delayMs);
         } catch (InterruptedException e) {
-            Throwables.propagate(e);
+            Exceptions.propagate(e);
         }
     }
 

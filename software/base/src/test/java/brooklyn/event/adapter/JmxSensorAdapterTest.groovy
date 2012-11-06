@@ -145,7 +145,7 @@ public class JmxSensorAdapterTest {
         boolean isup = true;
         
         jmxAdapter.setJmxConnectionTimeout(10);
-        jmxAdapter.objectName(wrongObjectName).with {
+        jmxAdapter.objectName(objectName).with {
             reachable().poll( { isup = it } )
         }
         registry.activateAdapters()
@@ -167,6 +167,54 @@ public class JmxSensorAdapterTest {
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
             assertFalse(isup);
+        }
+    }
+
+    // Remote jmx connections can take many seconds to give a connect exception (particularly if behind cloud firewalls).
+    // At one time, every polling thread tried to reconnect every time (while synchronized) so they all queued up behind
+    // each other and it took a very long time for things to update.
+    @Test(groups="Integration")
+    public void jmxReachablePollerRespondsPromptlyWhenManyOtherAttributePollers() {
+        final int EXCEPTION_DELAY = 5000;
+        final int LONG_TIMEOUT = EXCEPTION_DELAY + TIMEOUT;
+        GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): 42);
+        boolean isup = true;
+        
+        // simulate a "slow" connector, which takes a while to get exception when fails to connect
+        JmxHelper jmxHelper2 = new JmxHelper(entity) {
+            public void connect() {
+                try {
+                    super.connect();
+                } catch (Exception e) {
+                    Thread.sleep(EXCEPTION_DELAY);
+                    throw e;
+                }
+            }
+        };
+        try {
+            JmxSensorAdapter jmxAdapter2 = registry.register(new JmxSensorAdapter(period: 50*TimeUnit.MILLISECONDS, jmxHelper2));
+            
+            JmxObjectNameAdapter objectNameAdapter = jmxAdapter2.objectName(objectName);
+            for (int i = 0; i < 100; i++) {
+                BasicAttributeSensor<Integer> attrib = new BasicAttributeSensor<Integer>(Integer.class, "test.intAttribute"+i, "my desc");
+                objectNameAdapter.attribute(attributeName).subscribe(attrib);
+            }
+            objectNameAdapter.reachable().poll( { isup = it } );
+            
+            registry.activateAdapters();
+            
+            TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
+                assertTrue(isup);
+            }
+            
+            jmxService.shutdown();
+            
+            TestUtils.executeUntilSucceeds(timeout:LONG_TIMEOUT) {
+                assertFalse(isup);
+            }
+            
+        } finally {
+            jmxHelper2.disconnect();
         }
     }
 

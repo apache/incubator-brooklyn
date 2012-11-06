@@ -846,7 +846,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         this.@groups.invalidate();
     }
     
-    public final synchronized EntityManagementSupport getManagementSupport() {
+    // Non-final to allow for mocking
+    public synchronized EntityManagementSupport getManagementSupport() {
         if (managementSupport) return managementSupport;
         managementSupport = createManagementSupport();
         return managementSupport;

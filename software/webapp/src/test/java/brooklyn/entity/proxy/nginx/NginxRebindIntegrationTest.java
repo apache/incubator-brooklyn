@@ -20,6 +20,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.rebind.RebindTestUtils;
@@ -130,6 +131,7 @@ public class NginxRebindIntegrationTest {
 
         assertEquals(newNginx.getConfigFile(), origConfigFile);
         
+        assertEquals(newNginx.getAttribute(NginxController.SERVICE_STATE), Lifecycle.RUNNING);
         assertEquals(newNginx.getAttribute(NginxController.PROXY_HTTP_PORT), (Integer)nginxPort);
         assertEquals(newNginx.getAttribute(NginxController.ROOT_URL), rootUrl);
         assertEquals(newNginx.getAttribute(NginxController.PROXY_HTTP_PORT), origNginx.getAttribute(NginxController.PROXY_HTTP_PORT));
