@@ -134,10 +134,13 @@ public class CommonCommands {
         commands.add(exists("apt-get", sudo("apt-get update"),
                 sudo(formatIfNotNull("apt-get install -y %s", getFlag(flags, "apt", packageDefaultName)))));
         commands.add(exists("yum", sudo(formatIfNotNull("yum -y install %s", getFlag(flags, "yum", packageDefaultName)))));
-        commands.add(exists("rpm", sudo(formatIfNotNull("rpm -i %s", getFlag(flags, "rpm", packageDefaultName)))));
-        commands.add(exists("dpkg", sudo(formatIfNotNull("dpkg -i %s", getFlag(flags, "deb", packageDefaultName)))));
+        commands.add(exists("yum", sudo(formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName)))));
+        // don't need/want these as defaults do we? we can't assume the file is downloaded
+//        commands.add(exists("rpm", sudo(formatIfNotNull("rpm -i %s", getFlag(flags, "rpm", packageDefaultName)))));
+//        commands.add(exists("dpkg", sudo(formatIfNotNull("dpkg -i %s", getFlag(flags, "deb", packageDefaultName)))));
         commands.add(exists("port", sudo(formatIfNotNull("port install %s", getFlag(flags, "port", packageDefaultName)))));
-        String failure = format("(echo \"WARNING: no known/successful package manager to install %s, may fail subsequently\")",packageDefaultName);
+        String failure = format("(echo \"WARNING: no known/successful package manager to install %s, may fail subsequently\")",
+                packageDefaultName!=null ? packageDefaultName : flags.toString());
         return alternatives(commands, failure);
     }
 

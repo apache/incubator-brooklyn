@@ -67,7 +67,7 @@ class DynamicClusterTest {
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = NullPointerException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class,NullPointerException.class])
     public void startMethodFailsIfLocationsParameterIsMissing() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {
@@ -78,7 +78,7 @@ class DynamicClusterTest {
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class])
     public void startMethodFailsIfLocationsParameterIsEmpty() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {
@@ -89,7 +89,7 @@ class DynamicClusterTest {
         fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class])
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {

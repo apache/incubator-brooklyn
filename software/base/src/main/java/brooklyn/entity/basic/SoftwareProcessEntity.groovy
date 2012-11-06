@@ -232,11 +232,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
 	public void startInLocation(Collection<Location> locations) {
-		if (locations.size() != 1) {
+        if (locations.isEmpty()) locations = this.locations;
+		if (locations.size() != 1)
             throw new IllegalArgumentException("Expected one location when starting "+this+", but given "+locations);
-		}
-		Location location = Iterables.getOnlyElement(locations)
-		startInLocation(location)
+		startInLocation(Iterables.getOnlyElement(locations))
 	}
 
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {

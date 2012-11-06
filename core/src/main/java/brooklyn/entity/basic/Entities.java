@@ -55,6 +55,7 @@ public class Entities {
      */
     private static final List<String> SECRET_NAMES = ImmutableList.of(
             "password",
+            "passwd",
             "credential",
             "secret",
             "private",
