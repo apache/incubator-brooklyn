@@ -14,7 +14,7 @@ public interface StructuredConfigKey {
     public static class StructuredModifications {
         /** when passed as a value to a StructuredConfigKey, causes the structure to be cleared */
         @SuppressWarnings("unchecked")
-        public static final <U extends StructuredConfigKey,T extends StructuredModification<U>> T clear() {
+        public static final <U extends StructuredConfigKey,T extends StructuredModification<U>> T clearing() {
             return (T) new StructuredModification<U>() {
                 @SuppressWarnings("rawtypes")
                 @Override

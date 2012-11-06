@@ -96,7 +96,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     public void testListConfigKeyClear() throws Exception {
         TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_LIST_THING.subKey(), "aval")
-        entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.clear())
+        entity.setConfig(TestEntity.CONF_LIST_THING, ListModifications.clearing())
         // for now defaults to null, but empty list might be better? or whatever the default is?
         assertEquals(entity.getConfig(TestEntity.CONF_LIST_THING), null)
     }
@@ -150,7 +150,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     public void testMapConfigClearMod() throws Exception {
         TestEntity entity = newTestEntity()
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval")
-        entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.clear())
+        entity.setConfig(TestEntity.CONF_MAP_THING, MapModifications.clearing())
         // for now defaults to null, but empty map might be better? or whatever the default is?
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), null)
     }

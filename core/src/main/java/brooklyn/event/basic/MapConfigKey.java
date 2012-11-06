@@ -1,5 +1,6 @@
 package brooklyn.event.basic;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -7,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.MapConfigKey.MapModification.MapModificationBase;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.MutableMap;
 
@@ -126,30 +128,32 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
             return null;
     }
 
-    public interface MapModification extends StructuredModification<MapConfigKey<?>> {}
+    public interface MapModification<V> extends StructuredModification<MapConfigKey<V>>, Map<String,V> {
+        @SuppressWarnings("serial")
+        class MapModificationBase<V> extends LinkedHashMap<String,V> implements MapModification<V> {
+            private boolean clearFirst;
+            public MapModificationBase(Map<String,V> delegate, boolean clearFirst) {
+                super(delegate);
+                this.clearFirst = clearFirst;
+            }
+            @SuppressWarnings({ "rawtypes" })
+            @Override
+            public Object applyToKeyInMap(MapConfigKey<V> key, Map target) {
+                if (clearFirst) StructuredModifications.clearing().applyToKeyInMap(key, target);
+                return key.applyValueToMap(new LinkedHashMap<String,V>(this), target);
+            }
+        }
+    }
     
-    @SuppressWarnings("rawtypes")
     public static class MapModifications extends StructuredModifications {
         /** when passed as a value to a MapConfigKey, causes each of these items to be put 
          * (this Mod is redundant as no other value is really sensible) */
-        public static final MapModification put(final Map items) { 
-            return new MapModification() {
-                @Override
-                public Object applyToKeyInMap(MapConfigKey<?> key, Map target) {
-                    return key.applyValueToMap(items, target);
-                }
-            };
+        public static final <V> MapModification<V> put(final Map<String,V> items) { 
+            return new MapModificationBase<V>(items, false);
         }
         /** when passed as a value to a MapConfigKey, causes the map to be cleared and these items added */
-        public static final MapModification set(final Map items) { 
-            return new MapModification() {
-                @Override
-                public Object applyToKeyInMap(MapConfigKey<?> key, Map target) {
-                    clear().applyToKeyInMap(key, target);
-                    put(items).applyToKeyInMap(key, target);
-                    return null;
-                }
-            };
+        public static final <V> MapModification<V> set(final Map<String,V> items) {
+            return new MapModificationBase<V>(items, true);
         }
     }
 
