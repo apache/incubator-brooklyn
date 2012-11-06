@@ -45,10 +45,14 @@ define([
         },
         
         createApplication:function () {
+        	var that = this;
             if (this._modal) {
                 this._modal.close()
             }
-            var wizard = new ModalWizard({appRouter:this.options.appRouter})
+            var wizard = new ModalWizard({
+            	appRouter:that.options.appRouter,
+            	callback:function() { that.refreshApplications() }
+        	})
             this._modal = wizard
             this.$("#modal-container").html(wizard.render().el)
             this.$("#modal-container .modal")

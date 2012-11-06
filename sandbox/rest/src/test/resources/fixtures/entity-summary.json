@@ -1,12 +1,13 @@
-{
-    "type":"brooklyn.entity.webapp.tomcat.TomcatServer",
-    "links":{
-        "self":"/v1/applications/tesr/entities/zQsqdXzi",
-        "catalog":"/v1/catalog/entities/brooklyn.entity.webapp.tomcat.TomcatServer",
-        "application":"/v1/applications/tesr",
-        "children":"/v1/applications/tesr/entities/zQsqdXzi/entities",
-        "effectors":"fixtures/effector-summary-list.json",
-        "sensors":"fixtures/sensor-summary-list.json",
-        "activities":"fixtures/task-summary-list.json"
-    }
+{"id":"zQsqdXzi",
+ "name":"MyTomcat",
+ "type":"brooklyn.entity.webapp.tomcat.TomcatServer",
+ "links":{
+   "self":"/v1/applications/tesr/entities/zQsqdXzi",
+   "catalog":"/v1/catalog/entities/brooklyn.entity.webapp.tomcat.TomcatServer",
+   "application":"/v1/applications/tesr",
+   "children":"/v1/applications/tesr/entities/zQsqdXzi/entities",
+   "effectors":"fixtures/effector-summary-list.json",
+   "sensors":"fixtures/sensor-summary-list.json",
+   "activities":"fixtures/task-summary-list.json"
+ }
 }

@@ -89,9 +89,10 @@ define([
                 processData:false,
                 data:JSON.stringify(this.model.toJSON()),
                 success:function (data) {
+                	console.log(that.options.callback)
                     var $modal = $('#modal-container .modal')
                     $modal.modal('hide')
-                    that.options.appRouter.navigate("v1/home")
+                    if (that.options.callback) that.options.callback();
                 }
             })
             return false

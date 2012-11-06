@@ -17,7 +17,8 @@ define([
             var that = this, params = this.model.get("parameters")
             this.$el.html(this.template({
                 name:this.model.get("name"),
-                description:this.model.get("description")
+                entityName:this.options.entity.get("name"),
+                description:this.model.get("description")?this.model.get("description"):""
             }))
             // do we have parameters to render?
             if (params.length !== 0) {
@@ -28,10 +29,11 @@ define([
                     $tbody.append(that.effectorParam({
                         name:param.name,
                         type:param.type,
-                        description:param.description
+                        description:param.description?param.description:""
                     }))
                 })
             }
+            this.$(".modal-body").find('*[rel="tooltip"]').tooltip()
             return this
         },
         extractParamsFromTable:function () {

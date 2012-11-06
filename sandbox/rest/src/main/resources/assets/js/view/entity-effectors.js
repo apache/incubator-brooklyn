@@ -38,11 +38,12 @@ define([
             return this
         },
         showEffectorModal:function (eventName) {
-            // get the model that we need to show, create it's view and show it
+            // get the model that we need to show, create its view and show it
             var cid = $(eventName.currentTarget).attr("id")
             this._modal = new EffectorView({
                 el:"#effector-modal",
-                model:this._effectors.getByCid(cid)
+                model:this._effectors.getByCid(cid),
+                entity:this.model
             })
             this._modal.render().$el.modal('show')
         }

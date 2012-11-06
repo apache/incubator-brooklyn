@@ -219,6 +219,14 @@ line-height: 15px;
 	/* entity details sensor view, list page length dropdown */
 	width: 60px;
 }
+/* effector modal dialog */
+#params td {
+    vertical-align: middle;
+}
+#params input {
+	margin-bottom: 0px;
+}
+
 table.dataTable tr.odd td.sorting_1 {
 background-color: #F9F9F9;
 }
