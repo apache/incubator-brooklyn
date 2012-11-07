@@ -86,7 +86,8 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     public static final BasicAttributeSensor<Set<String>> TARGETS = SERVER_POOL_TARGETS;
     
     public static final MethodEffector<Void> RELOAD = new MethodEffector(AbstractController.class, "reload");
-    
+    public static final MethodEffector<Void> UPDATE = new MethodEffector(AbstractController.class, "update");
+
     protected volatile boolean isActive;
     protected volatile boolean updateNeeded = true;
 
@@ -235,7 +236,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     protected void postActivation() {
         super.postActivation();
         isActive = true;
-        update();
+        updateNonEffector();
     }
 
     protected void preStop() {
@@ -249,7 +250,12 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
      */
     protected abstract void reconfigureService();
     
+    @Description("Updates the entities configuration, and then forces reload of that configuration")
     public synchronized void update() {
+        updateNonEffector();
+    }
+
+    protected synchronized void updateNonEffector() {
         if (!isActive()) updateNeeded = true;
         else {
             updateNeeded = false;
@@ -325,7 +331,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
 
         LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, address});
         
-        update();
+        updateNonEffector();
         serverPoolTargets.add(member);
     }
     
@@ -342,7 +348,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         
         LOG.info("Removing from {}, member {} with address {}", new Object[] {this, member, address});
         
-        update();
+        updateNonEffector();
         serverPoolTargets.remove(member);
     }
     
