@@ -7,12 +7,15 @@ import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newLinkedList;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
+import scala.actors.threadpool.Arrays;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.location.Location;
@@ -98,36 +101,33 @@ public class ApplicationManager implements Managed {
 
   public void injectApplication(final AbstractApplication instance, Application.Status status) {
     String name = instance.getDisplayName();
-    ApplicationSpec spec = new ApplicationSpec(name, Collections.<EntitySpec>emptySet(), Collections.<String>emptySet());
+    ApplicationSpec spec = ApplicationSpec.builder().name(name).type(instance.getClass().getCanonicalName()).locations(Collections.<String>emptySet()).build();
     Application app = new Application(spec, status, instance);
     applicationsById.put(instance.getId(), app);
     applicationsByName.put(name, app);
   }
 
-  public void startInBackground(final ApplicationSpec spec) {
+  public Application startInBackground(final ApplicationSpec spec) {
     LOG.info("Creating application instance for {}", spec);
 
-    final AbstractApplication instance = new AbstractApplication() {
-    };
-    instance.setDisplayName(spec.getName());
+    final AbstractApplication instance;
+    
+    try {
+        if (spec.getType()!=null) {
+            instance = (AbstractApplication) newEntityInstance(spec.getType(), null, spec.getConfig());
+        } else {
+            instance = new AbstractApplication() {};
+        }
+        if (spec.getName()!=null) instance.setDisplayName(spec.getName());
 
-    for (EntitySpec entitySpec : spec.getEntities()) {
-      try {
-        LOG.info("Creating instance for entity {}", entitySpec.getType());
-        Class<? extends AbstractEntity> clazz = catalog.getEntityClass(entitySpec.getType());
-
-        Constructor constructor = clazz.getConstructor(new Class[]{Map.class, brooklyn.entity.Entity.class});
-
-        // TODO parse & rebuild config map as needed
-        Map<String, String> config = Maps.newHashMap(entitySpec.getConfig());
-        config.put("displayName", entitySpec.getName());
-
-        constructor.newInstance(config, instance);
-
-      } catch (Exception e) {
-        LOG.error(e, "Failed to create instance for entity {}", entitySpec);
+        if (spec.getEntities()!=null) for (EntitySpec entitySpec : spec.getEntities()) {
+            LOG.info("Creating instance for entity {}", entitySpec.getType());
+            AbstractEntity entity = newEntityInstance(entitySpec.getType(), instance, entitySpec.getConfig());
+            if (entitySpec.getName()!=null) entity.setDisplayName(entitySpec.getName());
+        }
+    } catch (Exception e) {
+        LOG.error(e, "Failed to create application: "+e);
         throw Throwables.propagate(e);
-      }
     }
 
     LOG.info("Placing '{}' under management", spec.getName());
@@ -173,9 +173,54 @@ public class ApplicationManager implements Managed {
         }
       }
     });
+    
+    return app;
   }
 
-  @Deprecated
+  private AbstractEntity newEntityInstance(String type, Entity owner, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    Class<? extends AbstractEntity> clazz = catalog.getEntityClass(type);
+    Map<String, String> config = Maps.newHashMap(configO);
+    Constructor<?>[] constructors = clazz.getConstructors();
+    AbstractEntity result = null;
+    if (owner==null) {
+        result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
+        if (result!=null) return result;
+    }
+    result = tryInstantiateEntity(constructors, new Class[] { Map.class, Entity.class }, new Object[] { config, owner });
+    if (result!=null) return result;
+
+    result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
+    if (result!=null) {
+        if (owner!=null) ((AbstractEntity)result).setOwner(owner);
+        return result;
+    }
+
+    result = tryInstantiateEntity(constructors, new Class[] { Entity.class }, new Object[] { owner });
+    if (result!=null) {
+        ((AbstractEntity)result).configure(config);
+        return result;
+    }
+
+    result = tryInstantiateEntity(constructors, new Class[] {}, new Object[] {});
+    if (result!=null) {
+        if (owner!=null) ((AbstractEntity)result).setOwner(owner);
+        ((AbstractEntity)result).configure(config);
+        return result;
+    }
+    
+    throw new IllegalStateException("No suitable constructor for instantiating entity "+type);
+  }
+
+  private AbstractEntity tryInstantiateEntity(Constructor<?>[] constructors, Class[] classes, Object[] objects) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    for (Constructor c: constructors) {
+        if (Arrays.equals(c.getParameterTypes(), classes)) {
+            return (AbstractEntity) c.newInstance(objects);
+        }
+    }
+    return null;
+  }
+
+@Deprecated
   private void transitionTo(String name, Application.Status status) {
       transitionAppByNameTo(name, status);
   }

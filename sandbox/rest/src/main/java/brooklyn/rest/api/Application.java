@@ -53,6 +53,11 @@ public class Application {
   }
 
   @JsonIgnore
+  public Object getId() {
+    return instance.getId();
+  }
+
+  @JsonIgnore
   public AbstractApplication getInstance() {
     return instance;
   }
@@ -109,4 +114,5 @@ public class Application {
         ", instance=" + instance +
         '}';
   }
+
 }

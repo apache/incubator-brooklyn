@@ -45,9 +45,10 @@ public class ApplicationResourceTest extends BaseResourceTest {
   private ApplicationManager manager;
   private ExecutorService executorService;
 
-  private final ApplicationSpec simpleSpec = new ApplicationSpec("simple-app",
-          ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())),
-          ImmutableSet.of("/v1/locations/0"));
+  private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
+          entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
+          locations(ImmutableSet.of("/v1/locations/0")).
+          build();
 
   @Override
   protected void setUpResources() throws Exception {
@@ -87,6 +88,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
     assertEquals(manager.registryById().size(), 1);
     assertEquals(response.getLocation().getPath(), "/v1/applications/simple-app");
+    assertEquals(response.getEntity(String.class), manager.registryById().keySet().iterator().next());
 
     waitForApplicationToBeRunning(response.getLocation());
   }
@@ -95,9 +97,10 @@ public class ApplicationResourceTest extends BaseResourceTest {
   public void testDeployWithInvalidEntityType() {
     try {
       client().resource("/v1/applications").post(
-          new ApplicationSpec("invalid-app",
-              ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity")),
-              ImmutableSet.<String>of("/v1/locations/0"))
+          ApplicationSpec.builder().name("invalid-app").
+              entities(ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity"))).
+              locations(ImmutableSet.<String>of("/v1/locations/0")).
+              build()
       );
 
     } catch (UniformInterfaceException e) {
@@ -110,9 +113,10 @@ public class ApplicationResourceTest extends BaseResourceTest {
   public void testDeployWithInvalidLocation() {
     try {
       client().resource("/v1/applications").post(
-          new ApplicationSpec("invalid-app",
-              ImmutableSet.<EntitySpec>of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())),
-              ImmutableSet.of("/v1/locations/3423"))
+          ApplicationSpec.builder().name("invalid-app").
+              entities(ImmutableSet.<EntitySpec>of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
+              locations(ImmutableSet.of("/v1/locations/3423")).
+              build()
       );
 
     } catch (UniformInterfaceException e) {

@@ -121,20 +121,19 @@ public class ApplicationResource extends BaseResource {
   public Response create(
       @ApiParam(
           name = "applicationSpec",
-          value = "Specification for application to be created",
+          value = "Specification for application to be created, with name, locations, and entities or type fields",
           required = true)
       @Valid ApplicationSpec applicationSpec) {
-    checkAllEntityTypesAreValid(applicationSpec);
-    checkAllLocationsAreValid(applicationSpec);
+    checkApplicationTypesAreValid(applicationSpec);
+    checkLocationsAreValid(applicationSpec);
 
     if (manager.getApp(applicationSpec.getName())!=null) {
-      throw preconditionFailed("Application '%s' already registered.",
-          applicationSpec.getName());
+      throw preconditionFailed("Application '%s' already registered.", applicationSpec.getName());
     }
-    manager.startInBackground(applicationSpec);
+    Application app = manager.startInBackground(applicationSpec);
 
     URI ref = URI.create(applicationSpec.getName());
-    return created(ref).build();
+    return created(ref).entity(app.getId()).build();
   }
 
 
@@ -161,7 +160,16 @@ public class ApplicationResource extends BaseResource {
     return status(ACCEPTED).build();
   }
 
-  private void checkAllEntityTypesAreValid(ApplicationSpec applicationSpec) {
+  private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {
+    if (applicationSpec.getType()!=null) {
+        if (!catalog.containsEntity(applicationSpec.getType())) {
+            throw notFound("Undefined application type '%s'", applicationSpec.getType());
+        }
+        if (applicationSpec.getEntities()!=null) {
+            throw preconditionFailed("Application given explicit type '%s' must not define entities", applicationSpec.getType());
+        }
+        return;
+    }
     for (EntitySpec entitySpec : applicationSpec.getEntities()) {
       if (!catalog.containsEntity(entitySpec.getType())) {
         throw notFound("Undefined entity type '%s'", entitySpec.getType());
@@ -169,7 +177,7 @@ public class ApplicationResource extends BaseResource {
     }
   }
 
-  private void checkAllLocationsAreValid(ApplicationSpec applicationSpec) {
+  private void checkLocationsAreValid(ApplicationSpec applicationSpec) {
     for (String locationRef : applicationSpec.getLocations()) {
       if (locations.getByRef(locationRef) == null) {
         throw notFound("Undefined location '%s'", locationRef);

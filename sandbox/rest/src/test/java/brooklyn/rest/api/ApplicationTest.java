@@ -20,8 +20,10 @@ public class ApplicationTest {
           "creationScriptUrl", "http://my.brooklyn.io/storage/foo.sql"
       ));
 
-  final ApplicationSpec applicationSpec = new ApplicationSpec("myapp", ImmutableSet.of(entitySpec),
-      ImmutableSet.of("/v1/locations/1"));
+  final ApplicationSpec applicationSpec = ApplicationSpec.builder().name("myapp").
+          entities(ImmutableSet.of(entitySpec)).
+          locations(ImmutableSet.of("/v1/locations/1")).
+          build();
 
   final Application application = new Application(applicationSpec, Application.Status.STARTING);
 
