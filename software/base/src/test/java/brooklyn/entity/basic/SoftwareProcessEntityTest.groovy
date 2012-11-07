@@ -7,6 +7,7 @@ import org.testng.annotations.Test
 
 import brooklyn.config.ConfigKey
 import brooklyn.entity.Entity
+import brooklyn.entity.trait.Startable;
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -82,12 +83,14 @@ public class SimulatedDriver extends AbstractSoftwareProcessDriver {
     public void stop() {
         events.add("stop");
         launched = false;
+        entity.setAttribute(Startable.SERVICE_UP, false);
     }
 
     @Override
     public void kill() {
         events.add("kill");
         launched = false;
+        entity.setAttribute(Startable.SERVICE_UP, false);
     }
 
     @Override
@@ -104,5 +107,6 @@ public class SimulatedDriver extends AbstractSoftwareProcessDriver {
     public void launch() {
         events.add("launch");
         launched = true;
+        entity.setAttribute(Startable.SERVICE_UP, true);
     }
 }

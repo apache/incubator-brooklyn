@@ -80,8 +80,17 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     
 	@Override
 	public void restart() {
-		stop();
-		start();
+	    boolean previouslyRunning = isRunning();
+        try {
+            stop();
+        } catch (Exception e) {
+            if (previouslyRunning) {
+                log.debug(getEntity() + " restart: stop failed, when was previously running", e);
+            } else {
+                log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
+            }
+        }
+        launch();
 	}
 	
 	public EntityLocal getEntity() { return entity; } 

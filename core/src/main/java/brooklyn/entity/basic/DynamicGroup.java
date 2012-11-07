@@ -100,7 +100,7 @@ public class DynamicGroup extends AbstractGroup {
         }
     }
     
-    public <T> void addSubscription(Entity producer, Sensor<T> sensor, final Predicate<SensorEvent<? super T>> filter) {
+    public <T> void addSubscription(Entity producer, Sensor<T> sensor, final Predicate<? super SensorEvent<? super T>> filter) {
         SensorEventListener<T> listener = new SensorEventListener<T>() {
             @Override public void onEvent(SensorEvent<T> event) {
                 if (filter.apply(event)) onEntityChanged(event.getSource());
@@ -109,7 +109,7 @@ public class DynamicGroup extends AbstractGroup {
         subscribe(producer, sensor, listener);
     }
 
-    <T> void addSubscription(Entity producer, Sensor<T> sensor) {
+    public <T> void addSubscription(Entity producer, Sensor<T> sensor) {
         addSubscription(producer, sensor, Predicates.<SensorEvent<? super T>>alwaysTrue());
     }
     

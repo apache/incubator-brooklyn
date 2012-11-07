@@ -109,10 +109,8 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
     }
 
     @Override
-    protected void postActivation() {
-        super.postActivation();
-
-        // wait for MBeans to be available, rather than just the process to have started
+    public void waitForServiceUp() {
+        // Increases wait-time by overriding this
         LOG.info("Waiting for {} up, via {}", this, jmx == null ? "" : jmx.getConnectionUrl());
         waitForServiceUp(new TimeDuration(0, 0, 5, 0, 0));
     }

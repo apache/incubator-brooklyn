@@ -1,6 +1,7 @@
 package brooklyn.entity.java;
 
 import static org.testng.Assert.fail;
+import groovy.time.TimeDuration;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication;
@@ -245,6 +247,7 @@ public class JavaOptsTest {
         VanillaJavaApp javaProcess = new VanillaJavaApp(props, app) {
             protected void connectSensors() {
                 /* nothing here */
+                setAttribute(SERVICE_UP, true);
             }
         };
         app.startManagement();

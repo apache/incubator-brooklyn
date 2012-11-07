@@ -59,6 +59,11 @@ class AbstractControllerTest {
                 domain:"mydomain") {
 
             @Override
+            public void connectSensors() {
+                setAttribute(SERVICE_UP, true);
+            }
+            
+            @Override
             protected void reconfigureService() {
                 log.info "test controller reconfigure, addresses $serverPoolAddresses"
                 if ((serverPoolAddresses && !updates) || (updates && serverPoolAddresses!=updates.last())) {
