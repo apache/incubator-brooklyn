@@ -1,7 +1,7 @@
 define([
     'underscore', 'jquery', 'backbone', "model/application", "model/app-tree", "model/location",
-    "view/home", "view/application-explorer", "view/catalog"
-], function (_, $, Backbone, Application, AppTree, Location, HomeView, ExplorerView, CatalogView) {
+    "view/home", "view/application-explorer", "view/catalog", "text!tpl/help/page.html"
+], function (_, $, Backbone, Application, AppTree, Location, HomeView, ExplorerView, CatalogView, HelpHtml) {
 
     // add close method to all views for clean-up
 	// (NB we have to update the prototype _here_ before any views are instantiated;
@@ -33,6 +33,7 @@ define([
             'v1/applications':'applicationsPage',
             'v1/locations':'catalogPage',
             'v1/catalog':'catalogPage',
+            'v1/help':'helpPage',
             '*path':'defaultRoute'
         },
         showView:function (selector, view) {
@@ -84,6 +85,12 @@ define([
                 catalogResource.fetchModels()
                 that.showView("#application-content", catalogResource)
             }})
+        },
+        helpPage:function () {
+            var that = this
+            $("#application-content").html(_.template(HelpHtml, {}))
+            $(".nav1").removeClass("active");
+            $(".nav1_help").addClass("active");
         }
     })
 

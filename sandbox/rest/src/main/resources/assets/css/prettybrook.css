@@ -271,3 +271,15 @@ margin: 0 auto 24px auto;
 table.dataTable thead th {
 text-align: left;
 }
+
+
+/* help page */
+#help-page p, #help-page ul {
+	margin-top: 8px;
+}
+.help-logo-right {
+	float: right;
+}
+.help-logo-right img {
+	border: 3px solid #333030;
+}
