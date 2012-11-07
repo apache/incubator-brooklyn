@@ -4,10 +4,13 @@
  */
 define([
     "underscore", "jquery", "backbone", "model/entity", "./entity", "model/application", "formatJson",
-    "model/location", "text!tpl/home/modal-wizard.html", "text!tpl/home/step1.html",
-    "text!tpl/home/step2.html", "text!tpl/home/step3.html", "text!tpl/home/location-option.html",
+    "model/location", "text!tpl/home/modal-wizard.html", 
+    "text!tpl/home/step1.html", "text!tpl/home/step2.html", "text!tpl/home/step3.html", 
+    "text!tpl/home/step1-location-row.html", "text!tpl/home/location-option.html",
     "text!tpl/home/location-entry.html", "text!tpl/home/entry.html", "bootstrap"
-], function (_, $, Backbone, Entity, EntityView, Application, FormatJSON, Location, ModalHtml, Step1Html, Step2Html, Step3Html, LocationOptionHtml, LocationEntryHtml, EntryHtml) {
+], function (_, $, Backbone, Entity, EntityView, Application, FormatJSON, Location, ModalHtml, 
+		Step1Html, Step2Html, Step3Html, 
+		Step1LocationRowHtml, LocationOptionHtml, LocationEntryHtml, EntryHtml) {
 
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
@@ -89,7 +92,6 @@ define([
                 processData:false,
                 data:JSON.stringify(this.model.toJSON()),
                 success:function (data) {
-                	console.log(that.options.callback)
                     var $modal = $('#modal-container .modal')
                     $modal.modal('hide')
                     if (that.options.callback) that.options.callback();
@@ -127,12 +129,14 @@ define([
     ModalWizard.Step1 = Backbone.View.extend({
         className:'modal-body',
         events:{
-            'click #toggle-selector-container':'toggleLocationContainer',
-            'click #add-app-location':'addLocation',
-            'click .remove':'removeLocation',
+            'click #add-selector-container':'addLocation',
+            'click #remove-app-location':'removeLocation',
+            'change select':'selection',
+            'change option':'selection',
             'blur #application-name':'updateName'
         },
         template:_.template(Step1Html),
+        locationRowTemplate:_.template(Step1LocationRowHtml),
         locationOptionTemplate:_.template(LocationOptionHtml),
 
         initialize:function () {
@@ -149,65 +153,71 @@ define([
             if (suffix!=null) suffix=":"+suffix; else suffix="";
             return suffix
         },
-        renderLocationSelector:function () {
-            var that = this,
-                $selectLocations = this.$('#select-location').empty()
-            this.locations.fetch({async:false,
-                success:function () {
-                    that.locations.each(function (aLocation) {
-                        var $option = that.locationOptionTemplate({
-                            url:aLocation.getLinkByName("self"),
-                            provider:aLocation.get("provider"),
-                            suffix:that.getSuffix(aLocation)
-                        })
-                        $selectLocations.append($option)
-                    })
-                }})
-        },
         renderName:function () {
             this.$('#application-name').val(this.model.get("name"))
         },
         renderAddedLocations:function () {
             // renders the locations added to the model
-            var $locationsList = this.$('#app-locations ul').empty(),
-                that = this
-            if (this.model.get("locations").length > 0) {
-                this.$('#app-locations h4').text('Locations added:')
-                _.each(this.model.get("locations"), function (aLocation) {
-                    var location, locationModel
-                    location = that.locations.find(function (model) {
-                        return model.getLinkByName("self") == aLocation
+        	var that = this;
+        	var container = this.$("#selector-container")
+        	container.empty()
+        	for (var li = 0; li < this.model.get("locations").length; li++) {
+        		var chosenLocation = this.model.get("locations")[li];
+        		container.append(that.locationRowTemplate({
+        				initialValue: chosenLocation.getLinkByName("self"),
+        				rowId: li
+        			}))
+        	}
+    		var $selectLocations = container.find('#select-location')
+    		this.locations.each(function(aLocation) {
+        			var $option = that.locationOptionTemplate({
+                        url:aLocation.getLinkByName("self"),
+                        provider:aLocation.get("provider"),
+                        suffix:that.getSuffix(aLocation)
                     })
-                    $locationsList.append(_.template(LocationEntryHtml, {
-                        entry:aLocation,
-                        provider:location.get("provider"),
-                        suffix:that.getSuffix(location)
-                    }))
-                })
-            } else {
-                this.$('#app-locations h4').text('No locations added.')
-            }
+                    $selectLocations.append($option)
+        		})
+    		$selectLocations.each(function(i) {
+    			var url = $($selectLocations[i]).parent().attr('initialValue');
+    			$($selectLocations[i]).val(url)
+//    			$($selectLocations[i]).find('option').indexOf( function(opt) { opt.attr('')})
+    		})
         },
         render:function () {
-            this.renderLocationSelector()
+        	var that = this
             this.renderName()
-            this.renderAddedLocations()
+            this.locations.fetch({async:false,
+                success:function () {
+                	if (that.model.get("locations").length==0)
+                		that.addLocation()
+            		else
+            			that.renderAddedLocations()
+                }})
             this.delegateEvents()
             return this
         },
         addLocation:function () {
-            this.model.addLocation(this.$('#select-location').val())
-            this.$('#selector-container').hide()
+        	if (this.locations.models.length>0) {
+            	this.model.addLocation(this.locations.models[0])
+            	this.renderAddedLocations()
+        	} else {
+                this.$('div.info-nolocs-message').show('slow').delay(2000).hide('slow')
+        	}
         },
         removeLocation:function (event) {
-            var toBeRemoved = $(event.currentTarget).siblings('span#url').html()
-            this.model.removeLocation(toBeRemoved)
+            var toBeRemoved = $(event.currentTarget).parent().attr('rowId')
+            this.model.removeLocationIndex(toBeRemoved)
+            this.renderAddedLocations()
+        },
+        selection:function (event) {
+        	var url = $(event.currentTarget).val();
+        	var loc = this.locations.find(function (candidate) {
+        		return candidate.getLinkByName("self")==url
+    		})
+        	this.model.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), loc)
         },
         updateName:function () {
             this.model.set("name", this.$('#application-name').val())
-        },
-        toggleLocationContainer:function () {
-            this.$('#selector-container').toggle()
         },
         validate:function () {
             if (this.model.get("name") !== "" && this.model.get("locations").length !== 0) {

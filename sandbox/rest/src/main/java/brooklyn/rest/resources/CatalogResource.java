@@ -175,6 +175,7 @@ public class CatalogResource extends BaseResource {
           if (!ri.next().toLowerCase().contains(normalizedName)) ri.remove(); 
       }
     }
+    Collections.sort(result);
     return result;
   }
 
@@ -203,6 +204,7 @@ public class CatalogResource extends BaseResource {
       List<String> result = new ArrayList<String>();
       result.addAll(registeredPolicies.keySet());
       result.addAll(scannedPolicies.keySet());
+      Collections.sort(result);
       return result;
   }
 }

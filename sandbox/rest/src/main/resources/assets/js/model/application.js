@@ -36,6 +36,26 @@ define([
             }
             this.set('locations', newLocations)
         },
+        removeLocationIndex:function (locationNumber) {
+            var newLocations = [],
+                currentLocations = this.get("locations")
+            for (var index=0; index<currentLocations.length; index++) {
+                if (index != locationNumber)
+                    newLocations.push(currentLocations[index])
+            }
+            this.set('locations', newLocations)
+        },
+        setLocationAtIndex:function (locationNumber, val) {
+            var newLocations = [],
+                currentLocations = this.get("locations")
+            for (var index=0; index<currentLocations.length; index++) {
+                if (index != locationNumber)
+                    newLocations.push(currentLocations[index])
+                else
+                    newLocations.push(val)
+            }
+            this.set('locations', newLocations)
+        },
         addEntity:function (entity) {
             var entities = this.get('entities')
             if (!this.hasEntityWithName(entity.get("name"))) {
