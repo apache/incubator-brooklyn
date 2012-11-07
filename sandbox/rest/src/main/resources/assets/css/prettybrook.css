@@ -177,6 +177,27 @@
 ol.tree {
 	padding: 0;
 }
+#tree-list li input + ol {
+    background: url(../img/toggle-small-expand.png) 40px 5px no-repeat;
+    margin: -1.963em 0 0 -40px; !important;
+    padding: 1.563em 0 0 62px; !important;
+}
+#tree-list li input:checked + ol {
+    background: url(../img/toggle-small.png) 40px 5px no-repeat;
+}
+#tree-list li input + ol > li {
+    padding-left: 1px;
+/*    margin: 0; */
+}
+#tree-list span.leaf {
+    margin-left: 16px !important;
+}
+#tree-list li.application {
+	margin-top: 6px !important;
+}
+#tree-list li input + ol {
+    height: auto;
+}
 .navbar_top {
 	background-color: #D0D8D0;
 	padding: 8px 12px 12px 12px;
@@ -184,12 +205,17 @@ ol.tree {
     -moz-border-radius: 4px 4px 0 0;
     border-radius: 4px 4px 0 0;
 }
-.navbar_main {
+.navbar_main_wrapper {
     background-color: #F0F4F0;
-    padding: 24px 12px 24px 6px;
+    padding: 12px 6px 4px 6px;
     -webkit-border-radius: 0 0 4px 4px;
     -moz-border-radius: 0 0 4px 4px;
     border-radius: 0 0 4px 4px;
+}
+.navbar_main {
+	padding: 0px 8px 6px 2px;
+	overflow-x: scroll;
+	margin: 0;
 }
 
 /** apps / entity explorer page */
@@ -213,7 +239,7 @@ ol.tree {
 /* remove the folder, and align with + - icons */
 background: none;
 padding-left: 16px;
-line-height: 15px;
+line-height: 18px;
 }
 #sensors-table_length select {
 	/* entity details sensor view, list page length dropdown */

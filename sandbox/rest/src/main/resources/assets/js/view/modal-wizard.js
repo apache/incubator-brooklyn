@@ -23,13 +23,13 @@ define([
             this.steps = [
                 {
                     step_number:1,
-                    title:'Application name and locations',
-                    instructions:'Enter the name of the new application and the location(s) where you wish to deploy it',
+                    title:'Deploy Application',
+                    instructions:'Enter the name of the new application and the location(s) where you wish to deploy it.',
                     view:new ModalWizard.Step1({ model:this.model})
                 },
                 {
                     step_number:2,
-                    title:'Configure entities for application',
+                    title:'Configure Application',
                     instructions:'Add all the entities for this application',
                     view:new ModalWizard.Step2({ model:this.model})
                 },
@@ -143,6 +143,12 @@ define([
         beforeClose:function () {
             this.model.off("change", this.render)
         },
+        getSuffix:function (location) {
+            var suffix=location.getConfigByName("location");
+            if (suffix==null) suffix=location.getConfigByName("endpoint")
+            if (suffix!=null) suffix=":"+suffix; else suffix="";
+            return suffix
+        },
         renderLocationSelector:function () {
             var that = this,
                 $selectLocations = this.$('#select-location').empty()
@@ -152,7 +158,7 @@ define([
                         var $option = that.locationOptionTemplate({
                             url:aLocation.getLinkByName("self"),
                             provider:aLocation.get("provider"),
-                            location:aLocation.getConfigByName("location")
+                            suffix:that.getSuffix(aLocation)
                         })
                         $selectLocations.append($option)
                     })
@@ -175,7 +181,7 @@ define([
                     $locationsList.append(_.template(LocationEntryHtml, {
                         entry:aLocation,
                         provider:location.get("provider"),
-                        location:location.getConfigByName("location")
+                        suffix:that.getSuffix(location)
                     }))
                 })
             } else {

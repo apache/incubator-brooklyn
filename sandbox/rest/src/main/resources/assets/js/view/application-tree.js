@@ -61,8 +61,9 @@ define([
                             parentApp:application.get("id"),
                             displayName:entity.getDisplayName()
                         }))
+                        var $parentTpl = $entityTpl.find("ol.tree")
                         _.each(entity.get("children"), function (childEntity) {
-                            $entityTpl.find("ol.tree").append(treeFromEntity(new AppTree.Model(childEntity)))
+                            $parentTpl.append(treeFromEntity(new AppTree.Model(childEntity)))
                         })
                     } else {
                         $entityTpl = $(that.template({

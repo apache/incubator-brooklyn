@@ -79,7 +79,11 @@ define([
         
         renderCollection:function () {
             var $tableBody = this.$('#applications-table-body').empty()
-            this.collection.each(function (app) {
+            if (this.collection==null)
+            	$tableBody.append("<td colspan='3'><i>No data available</i></td>");
+            else if (this.collection.isEmpty())
+            	$tableBody.append("<td colspan='3'><i>No applications deployed</i></td>");
+            else this.collection.each(function (app) {
                 var appView = new HomeView.AppEntryView({model:app})
                 if (this._appViews[app.cid]) {
                     // if the application has a view destroy it
