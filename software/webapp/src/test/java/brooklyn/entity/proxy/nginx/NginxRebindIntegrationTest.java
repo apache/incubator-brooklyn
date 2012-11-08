@@ -20,6 +20,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
@@ -76,9 +77,9 @@ public class NginxRebindIntegrationTest {
         	monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
-        if (newApp != null && newApp.getManagementSupport().getManagementContext(true).isManaged(newApp)) newApp.stop();
-        if (origApp != null && origApp.getManagementSupport().getManagementContext(true).isManaged(origApp)) origApp.stop();
-        //if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+        if (newApp != null && Entities.isManaged(newApp)) newApp.stop();
+        if (origApp != null && Entities.isManaged(origApp) && origManagementContext.isRunning()) origApp.stop();
+        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 
     private TestApplication rebind() throws Exception {

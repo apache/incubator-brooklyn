@@ -43,7 +43,7 @@ public class UrlMappingTest {
     private DynamicCluster cluster;
     private UrlMapping urlMapping;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);

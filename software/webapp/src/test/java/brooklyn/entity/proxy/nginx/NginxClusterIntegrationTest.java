@@ -17,6 +17,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
@@ -63,7 +64,7 @@ public class NginxClusterIntegrationTest {
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
     public void shutdown() {
-        if (app != null) app.stop();
+        if (app != null && Entities.isManaged(app)) app.stop();
     }
 
     @Test(groups = "Integration")

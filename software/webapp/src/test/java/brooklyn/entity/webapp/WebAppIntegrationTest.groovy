@@ -13,6 +13,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
@@ -128,6 +129,7 @@ public class WebAppIntegrationTest {
      */
     private TestApplication newTestApplication() {
         TestApplication ta = new TestApplication()
+        Entities.startManagement(ta);
         applications.add(ta)
         return ta
     }
@@ -143,8 +145,11 @@ public class WebAppIntegrationTest {
     public JavaWebAppSoftwareProcess[][] basicEntities() {
 		//FIXME we should start the application, not the entity
         TomcatServer tomcat = new TomcatServer(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        Entities.manage(tomcat);
         JBoss6Server jboss6 = new JBoss6Server( owner:newTestApplication(), portIncrement:PORT_INCREMENT);
+        Entities.manage(jboss6);
         JBoss7Server jboss7 = new JBoss7Server(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        Entities.manage(jboss7);
         return [ 
             [ tomcat ],
             [ jboss6 ],
