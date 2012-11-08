@@ -110,8 +110,8 @@ public class LanguageUtilsTest {
         assertFalse LanguageUtils.equals(t1, t1a, null, TestingFields.aa)
         
         //test it works with POJO objects (non-groovy)
-        assertTrue LanguageUtils.equals("hi", "ho", null, "count")
-        assertFalse LanguageUtils.equals("hi", "hello", null, "count")
+        assertTrue LanguageUtils.equals(new PojoTestingFields(1), new PojoTestingFields(1), null, "privateInt")
+        assertFalse LanguageUtils.equals(new PojoTestingFields(1), new PojoTestingFields(2), null, "privateInt")
         
         //and a tricky one, because x is a groovy property, it is _private_ so we cannot see it as a field wrt t1
         assertFalse LanguageUtils.equals(t1, t1a, null, "@x")
