@@ -39,6 +39,8 @@ import java.util.concurrent.ExecutorService;
  * server and so on.
  */
 public interface ExecutionManager {
+    public boolean isShutdown();
+    
     public Set<Task<?>> getTasksWithTag(Object tag);
 
     public Set<Task<?>> getTasksWithAnyTag(Iterable<String> tags);

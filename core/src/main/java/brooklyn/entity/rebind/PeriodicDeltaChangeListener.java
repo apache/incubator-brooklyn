@@ -51,6 +51,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         }
     }
     
+    private final ExecutionManager executionManager;
+    
     private final BrooklynMementoPersister persister;
 
     private final AtomicLong writeCount = new AtomicLong();
@@ -60,6 +62,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     private volatile boolean running = true;
 
     public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, long periodMillis) {
+        this.executionManager = executionManager;
         this.persister = persister;
         
         Callable<Task> taskFactory = new Callable<Task>() {
@@ -68,6 +71,11 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     public Void call() {
                         try {
                             persistNow();
+                            return null;
+                        } catch (Exception e) {
+                            // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
+                            // if we throw an exception, then our task will never get executed again
+                            LOG.warn("Problem persisting change-delta", e);
                             return null;
                         } catch (Throwable t) {
                             LOG.warn("Problem persisting change-delta (rethrowing)", t);
@@ -101,7 +109,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     }
 
     private boolean isActive() {
-        return running && persister != null;
+        return running && persister != null && !executionManager.isShutdown();
     }
     
     private void persistNow() {
