@@ -115,7 +115,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
 
         List<String> checkRunningScript = new LinkedList<String>();
         checkRunningScript.add(
-                format("%s/jboss-%s/bin/twiddle.sh --host %s --port %s get \"jboss.system:type=Server\" Started | grep false && exit 1",
+                format("%s/jboss-%s/bin/twiddle.sh --host %s --port %s get \"jboss.system:type=Server\" Started | grep true || exit 1",
                         getInstallDir(), getVersion(), host, port));
 
         //have to override the CLI/JMX options
