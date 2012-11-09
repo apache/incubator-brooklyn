@@ -1,8 +1,6 @@
 package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
-
-import brooklyn.config.BrooklynProperties;
 import groovy.util.ObservableList;
 
 import java.util.ArrayList;
@@ -14,6 +12,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -136,11 +135,14 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     public void addEntitySetListener(CollectionChangeListener<Entity> listener) {
-        entities.addPropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener));
+    	//must notify listener in a different thread to avoid deadlock (issue #378)
+    	AsyncCollectionChangeAdapter<Entity> wrappedListener = new AsyncCollectionChangeAdapter<Entity>(getExecutionManager(), listener);
+        entities.addPropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(wrappedListener));
     }
 
     public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
-        entities.removePropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener));
+    	AsyncCollectionChangeAdapter<Entity> wrappedListener = new AsyncCollectionChangeAdapter<Entity>(getExecutionManager(), listener);
+        entities.removePropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(wrappedListener));
     }
     
     @Override

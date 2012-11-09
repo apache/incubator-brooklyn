@@ -61,6 +61,10 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         // group itself has been told that it is unmanaged).
     }
     
+    public boolean isRunning() {
+        return running;
+    }
+    
     @Override
     public RebindManager getRebindManager() {
         return rebindManager;
