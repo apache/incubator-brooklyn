@@ -29,7 +29,7 @@ define([
                     step_number:1,
                     title:'Deploy Application',
                     instructions:'Enter the name of the new application and the location(s) where you wish to deploy it.',
-                    view:new ModalWizard.Step1({ model:this.model})
+                    view:new ModalWizard.Step1({ model:this.model })
                 },
                 {
                     step_number:2,
@@ -184,7 +184,6 @@ define([
     		$selectLocations.each(function(i) {
     			var url = $($selectLocations[i]).parent().attr('initialValue');
     			$($selectLocations[i]).val(url)
-//    			$($selectLocations[i]).find('option').indexOf( function(opt) { opt.attr('')})
     		})
         },
         render:function () {

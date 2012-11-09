@@ -74,12 +74,12 @@ define([
             expect(spec.get("locations").length).toEqual(1)
         })
 
-        it('does not allow you to add the same location twice', function () {
+        it('allows you to add the same location twice', function () {
             var spec = new Application.Spec,
                 location = '/ion/23'
             spec.addLocation(location)
             spec.addLocation(location)
-            expect(spec.get("locations").length).toEqual(1)
+            expect(spec.get("locations").length).toEqual(2)
         })
 
         it("triggers 'change' when you add an entity", function () {
