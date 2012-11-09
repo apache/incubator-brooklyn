@@ -26,6 +26,7 @@ import brooklyn.rest.health.GeneralHealthCheck;
 import brooklyn.rest.resources.ActivityResource;
 import brooklyn.rest.resources.ApplicationResource;
 import brooklyn.rest.resources.CatalogResource;
+import brooklyn.rest.resources.ConfigResource;
 import brooklyn.rest.resources.EffectorResource;
 import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
@@ -94,6 +95,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.addResource(new ApplicationResource(applicationManager, locationStore, catalogResource));
 
     environment.addResource(new EntityResource(applicationManager));
+    environment.addResource(new ConfigResource(applicationManager));
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager));
     environment.addResource(new ActivityResource(applicationManager));

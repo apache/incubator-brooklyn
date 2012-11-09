@@ -82,7 +82,7 @@ public class ApplicationSpec {
     this.name = checkNotNull(name, "name must be provided for an application spec");
     this.type = type;
     if (entities==null) this.entities = null;
-    else this.entities = entities.isEmpty() && type!=null ? null : ImmutableSet.copyOf(entities);
+    else this.entities = (entities.isEmpty() && type!=null) ? null : ImmutableSet.copyOf(entities);
     this.locations = ImmutableSet.copyOf(checkNotNull(locations, "locations must be provided for an application spec"));
     this.config = config == null ? Collections.<String, String>emptyMap() : ImmutableMap.<String, String>copyOf(config);
     if (this.entities!=null && this.type!=null) throw new IllegalStateException("cannot supply both type and entities for an application spec");

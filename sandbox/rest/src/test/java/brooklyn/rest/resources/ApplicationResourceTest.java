@@ -5,6 +5,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -22,6 +23,7 @@ import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.ApiError;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.ConfigSummary;
 import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.EntitySummary;
@@ -60,6 +62,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
     addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
     addResource(new EntityResource(manager));
+    addResource(new ConfigResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager));
   }
@@ -131,6 +134,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
         .get(new GenericType<Set<EntitySummary>>() {
         });
 
+    assertEquals(entities.size(), 1);
+    
     for (EntitySummary entity : entities) {
       client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
 
@@ -168,6 +173,23 @@ public class ApplicationResourceTest extends BaseResourceTest {
   }
 
   @Test(dependsOnMethods = "testDeployApplication")
+  public void testListConfig() {
+    Set<ConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/config")
+        .get(new GenericType<Set<ConfigSummary>>() {
+        });
+    assertTrue(config.size() > 0);
+    System.out.println(("CONFIG: "+config));
+    
+//    SensorSummary sample = Iterables.find(config, new Predicate<SensorSummary>() {
+//      @Override
+//      public boolean apply(SensorSummary sensorSummary) {
+//        return sensorSummary.getName().equals(RestMockSimpleEntity.SAMPLE_SENSOR.getName());
+//      }
+//    });
+//    assertEquals(sample.getType(), "java.lang.String");
+  }
+  
+  @Test(dependsOnMethods = "testDeployApplication")
   public void testListEffectors() {
     Set<EffectorSummary> effectors = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors")
         .get(new GenericType<Set<EffectorSummary>>() {
@@ -197,7 +219,15 @@ public class ApplicationResourceTest extends BaseResourceTest {
   }
 
   @Test(dependsOnMethods = "testTriggerSampleEffector")
-  public void testReadAllSensors() {
+  public void testBatchSensorValues() {
+    Map<String,String> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors/current-state")
+        .get(new GenericType<Map<String,String>>() {});
+    assertTrue(sensors.size() > 0);
+    assertEquals(sensors.get(RestMockSimpleEntity.SAMPLE_SENSOR.getName()), "foo4");
+  }
+
+  @Test(dependsOnMethods = "testBatchSensorValues")
+  public void testReadEachSensor() {
     Set<SensorSummary> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors")
         .get(new GenericType<Set<SensorSummary>>() {
         });
@@ -211,7 +241,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
   }
 
 
-  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadAllSensors"})
+  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
     int size = manager.registryById().size();
     ClientResponse response = client().resource("/v1/applications/simple-app")

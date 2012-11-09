@@ -68,6 +68,7 @@ public class EntityResource extends BaseResource {
     return new EntitySummary(application, entity);
   }
 
+  // TODO should this be "/children" ?
   @GET
   @Path("/{entity}/entities")
   public Iterable<EntitySummary> getChildren(
