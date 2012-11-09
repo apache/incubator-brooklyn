@@ -6,6 +6,7 @@ import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
+import brooklyn.util.exceptions.Exceptions;
 import static com.google.common.base.Preconditions.checkNotNull;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
@@ -124,6 +125,7 @@ public class ApplicationResource extends BaseResource {
           value = "Specification for application to be created, with name, locations, and entities or type fields",
           required = true)
       @Valid ApplicationSpec applicationSpec) {
+      try {
     checkApplicationTypesAreValid(applicationSpec);
     checkLocationsAreValid(applicationSpec);
 
@@ -134,6 +136,10 @@ public class ApplicationResource extends BaseResource {
 
     URI ref = URI.create(applicationSpec.getName());
     return created(ref).entity(app.getId()).build();
+      } catch (Exception e) {
+          e.printStackTrace();
+          throw Exceptions.propagate(e);
+      }
   }
 
 

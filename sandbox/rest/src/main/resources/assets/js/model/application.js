@@ -11,6 +11,7 @@ define([
         defaults:function () {
             return {
                 name:"",
+                type:null,
                 entities:[],
                 locations:[]
             }
@@ -19,13 +20,11 @@ define([
             if (location) return _.include(this.get('locations'), location)
         },
         addLocation:function (location) {
-            if (!this.hasLocation(location)) {
-                var locations = this.get('locations')
-                locations.push(location)
-                this.set('locations', locations)
-                this.trigger("change")
-                this.trigger("change:locations")
-            }
+        	var locations = this.get('locations')
+        	locations.push(location)
+        	this.set('locations', locations)
+        	this.trigger("change")
+        	this.trigger("change:locations")
         },
         removeLocation:function (location) {
             var newLocations = [],
@@ -64,6 +63,15 @@ define([
                 this.trigger("change")
                 this.trigger("change:entities")
             }
+        },
+        removeEntityIndex:function (indexToRemove) {
+            var newEntities = [],
+                currentEntities = this.get("entities")
+            for (var index=0; index<currentEntities.length; index++) {
+                if (index != indexToRemove)
+                    newEntities.push(currentEntities[index])
+            }
+            this.set('entities', newEntities)
         },
         removeEntityByName:function (name) {
             var newEntities = [],

@@ -2,22 +2,22 @@
  * Based on CSS Tree menu styles from CSS Ninja:  view-source:http://www.thecssninja.com/css/css-tree-menu
  */
 
-ol.tree {
+.cssninja ol.tree {
     padding: 0 0 0 30px;
     width: 300px;
 }
 
-li {
+.cssninja li {
     position: relative;
     margin-left: -15px;
     list-style: none;
 }
 
-li.file {
+.cssninja li.file {
     margin-left: -1px !important;
 }
 
-li.file a {
+.cssninja li.file a {
     /*background: url(../img/document.png) 0 0 no-repeat;*/
     /*color: #fff;*/
     padding-left: 21px;
@@ -25,7 +25,7 @@ li.file a {
     display: block;
 }
 
-li input {
+.cssninja li input {
     position: absolute;
     left: 0;
     margin-left: 0;
@@ -37,7 +37,7 @@ li input {
     top: 0;
 }
 
-li input + ol {
+.cssninja li input + ol {
     background: url(../img/toggle-small-expand.png) 40px 0 no-repeat;
     /* original value - does not render fine with bootstrap.
     margin: -1.938em 0 0 -44px; *//* 15px */
@@ -45,20 +45,20 @@ li input + ol {
     height: 1em;
 }
 
-li input + ol > li {
+.cssninja li input + ol > li {
     display: none;
     margin-left: -14px !important;
     padding-left: 1px;
 }
 
-li label {
+.cssninja li label {
     background: url(../img/folder-horizontal.png) 15px 1px no-repeat;
     /*cursor: pointer;*/
     display: block;
     padding-left: 37px;
 }
 
-li input:checked + ol {
+.cssninja li input:checked + ol {
     background: url(../img/toggle-small.png) 40px 5px no-repeat;
     /* original value - does not work with bootstrap
     margin: -1.25em 0 0 -44px; *//* 20px */
@@ -67,11 +67,11 @@ li input:checked + ol {
     height: auto;
 }
 
-li input:checked + ol > li {
+.cssninja li input:checked + ol > li {
     display: block;
     margin: 0 0 0.125em; /* 2px */
 }
 
-li input:checked + ol > li:last-child {
+.cssninja li input:checked + ol > li:last-child {
     margin: 0 0 0.063em; /* 1px */
 }

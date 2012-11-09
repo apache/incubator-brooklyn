@@ -3,14 +3,15 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "model/entity", "./entity", "model/application", "formatJson",
+    "underscore", "jquery", "backbone", "model/entity", "model/application", "formatJson",
     "model/location", "text!tpl/home/modal-wizard.html", 
     "text!tpl/home/step1.html", "text!tpl/home/step2.html", "text!tpl/home/step3.html", 
-    "text!tpl/home/step1-location-row.html", "text!tpl/home/location-option.html",
-    "text!tpl/home/location-entry.html", "text!tpl/home/entry.html", "bootstrap"
-], function (_, $, Backbone, Entity, EntityView, Application, FormatJSON, Location, ModalHtml, 
+    "text!tpl/home/step1-location-row.html", "text!tpl/home/step1-location-option.html",
+    "text!tpl/home/step2-entity-entry.html", "text!tpl/home/step2-config-entry.html", "bootstrap"
+], function (_, $, Backbone, Entity, Application, FormatJSON, Location, ModalHtml, 
 		Step1Html, Step2Html, Step3Html, 
-		Step1LocationRowHtml, LocationOptionHtml, LocationEntryHtml, EntryHtml) {
+		Step1LocationRowHtml, LocationOptionHtml,  
+		Step2EntityEntryHtml, Step2ConfigEntryHtml) {
 
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
@@ -33,13 +34,13 @@ define([
                 {
                     step_number:2,
                     title:'Configure Application',
-                    instructions:'Add all the entities for this application',
+                    instructions:'Define how the application is built and the configuration parameters',
                     view:new ModalWizard.Step2({ model:this.model})
                 },
                 {
                     step_number:3,
                     title:'Application Summary',
-                    instructions:'Check the details before you create the new application',
+                    instructions:'Confirm and save the JSON details which will be used to create the application',
                     view:new ModalWizard.Step3({ model:this.model})
                 }
             ]
@@ -95,6 +96,9 @@ define([
                     var $modal = $('#modal-container .modal')
                     $modal.modal('hide')
                     if (that.options.callback) that.options.callback();
+                },
+                error:function (data) {
+                	that.steps[that.currentStep].view.showFailure()
                 }
             })
             return false
@@ -164,7 +168,7 @@ define([
         	for (var li = 0; li < this.model.get("locations").length; li++) {
         		var chosenLocation = this.model.get("locations")[li];
         		container.append(that.locationRowTemplate({
-        				initialValue: chosenLocation.getLinkByName("self"),
+        				initialValue: chosenLocation,
         				rowId: li
         			}))
         	}
@@ -198,7 +202,7 @@ define([
         },
         addLocation:function () {
         	if (this.locations.models.length>0) {
-            	this.model.addLocation(this.locations.models[0])
+            	this.model.addLocation(this.locations.models[0].getLinkByName("self"))
             	this.renderAddedLocations()
         	} else {
                 this.$('div.info-nolocs-message').show('slow').delay(2000).hide('slow')
@@ -214,7 +218,8 @@ define([
         	var loc = this.locations.find(function (candidate) {
         		return candidate.getLinkByName("self")==url
     		})
-        	this.model.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), loc)
+        	this.model.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), 
+        			loc.getLinkByName("self"))
         },
         updateName:function () {
             this.model.set("name", this.$('#application-name').val())
@@ -231,69 +236,151 @@ define([
     /**
      * Second step from the create application wizard. Allows you to add and new entities and configure them.
      */
+    // Note: this does not restore values on a back click; setting type and entity type+name is easy,
+    // but relevant config lines is a little bit more tedious
     ModalWizard.Step2 = Backbone.View.extend({
         className:'modal-body',
         events:{
             'click #add-app-entity':'addEntity',
-            'click .remove':'removeEntity',
-            'click #toggle-entity-form':'toggleEntityForm'
+            'click .editable-entity-heading':'expandEntity',
+            'click .remove-entity-button':'removeEntityClick',
+            'click .editable-entity-button':'saveEntityClick',
+            'click #remove-config':'removeConfigRow',
+            'click #add-config':'addConfigRow'
         },
         template:_.template(Step2Html),
         initialize:function () {
+            var self = this
+            self.catalogEntities = []
+            self.catalogApplications = []
+            
             this.$el.html(this.template({}))
-            this.model.on("change", this.render, this)
-            this.entity = new Entity.Model
+            this.addEntity()
+            
+            $.get('/v1/catalog/entities', {}, function (result) {
+                self.catalogEntities = result
+                self.$(".entity-type-input").typeahead().data('typeahead').source = self.catalogEntities
+            })
+            $.get('/v1/catalog/applications', {}, function (result) {
+                self.catalogApplications = result
+                self.$(".application-type-input").typeahead().data('typeahead').source = self.catalogApplications
+            })
         },
         beforeClose:function () {
-            this.model.off("change", this.render)
         },
         renderConfiguredEntities:function () {
-            var $configuredEntities = this.$('#entities ul').empty()
+            var $configuredEntities = this.$('#entitiesAccordionish').empty()
+            var that = this
             if (this.model.get("entities").length > 0) {
-                this.$('#entities h4').text('Configured entities')
                 _.each(this.model.get("entities"), function (entity) {
-                    var $entity = _.template(EntryHtml, {entry:entity.name })
-                    $configuredEntities.append($entity)
+                	that.addEntityHtml($configuredEntities, entity)
                 })
-            } else {
-                this.$('#entities h4').text('No entities configured')
             }
         },
-        renderEntityForm:function () {
-            this.$('#entity-form').replaceWith(new EntityView({model:this.entity}).render().el)
-        },
+        
         render:function () {
             this.renderConfiguredEntities()
-            this.renderEntityForm()
             this.delegateEvents()
             return this
         },
-        toggleEntityForm:function () {
-            this.$('#new-entity').toggle()
+        
+        expandEntity:function (event) {
+        	$(event.currentTarget).next().show('fast').delay(1000).prev().hide('slow')
+        },
+        saveEntityClick:function (event) {
+        	this.saveEntity($(event.currentTarget).parent().parent().parent());
+        },
+        saveEntity:function ($entityGroup) {
+        	var that = this
+        	var name = $('#entity-name',$entityGroup).val()
+        	var type = $('#entity-type',$entityGroup).val()
+        	if (type=="" || !_.contains(that.catalogEntities, type)) {
+        		$('.entity-info-message',$entityGroup).show('slow').delay(2000).hide('slow')
+        		return false
+        	}
+    		var saveTarget = this.model.get("entities")[$entityGroup.index()];
+    		this.model.get("type") = null
+    		saveTarget.name = name
+    		saveTarget.type = type
+    		saveTarget.config = this.getConfigMap($entityGroup)
+    		
+    		if (name=="") name=type;
+    		if (name=="") name="<i>(new entity)</i>";
+    		$('#entity-name-header',$entityGroup).html( name )
+    		$('.editable-entity-body',$entityGroup).prev().show('fast').next().hide('fast')
+        	return true;
+        },
+        getConfigMap:function (root) {
+        	var map = {}
+        	$('.step2-entity-config',root).each( function (index,elt) {
+        		map[$('#key',elt).val()] = $('#value',elt).val()
+        	})
+        	return map;
+        },
+        saveTemplate:function () {
+        	var that = this
+        	var tab = $.find('#templateTab')
+        	var type = $(tab).find('#entity-type').val()
+        	if (!_.contains(this.catalogApplications, type)) {
+        		$('.entity-info-message').show('slow').delay(2000).hide('slow')
+        		return false
+        	}
+    		this.model.set("type", type);
+    		this.model.set("config", this.getConfigMap(tab))
+        	return true;
         },
         addEntity:function () {
-            if (this.entity.get("name").length > 0 &&
-                this.entity.get("type").length > 0) {
-
-                this.model.addEntity(this.entity)
-                this.$('#new-entity').hide()
-                this.entity = new Entity.Model()
-                this.render()
-            } else {
-                this.$('div.entity-info-message').show('slow').delay(2000).hide('slow')
-            }
+        	var entity = new Entity.Model
+        	this.model.addEntity( entity )
+        	this.addEntityHtml(this.$('#entitiesAccordionish'), entity)
         },
-        removeEntity:function (event) {
-            var name = $(event.currentTarget).siblings('span').text()
-            this.model.removeEntityByName(name)
+    	addEntityHtml:function (parent, entity) {
+            var $entity = _.template(Step2EntityEntryHtml, {})
+            var that = this
+            parent.append($entity)
+            parent.children().last().find('.entity-type-input').typeahead({ source: that.catalogEntities })
+        },        
+        removeEntityClick:function (event) {
+        	var $entityGroup = $(event.currentTarget).parent().parent().parent();
+        	this.model.removeEntityIndex($entityGroup.index())
+        	$entityGroup.remove()
         },
+        
+        addConfigRow:function (event) {
+        	var $row = _.template(Step2ConfigEntryHtml, {})
+        	$(event.currentTarget).parent().prev().append($row)
+        },
+        removeConfigRow:function (event) {
+        	$(event.currentTarget).parent().remove()
+        },
+        
         validate:function () {
-            if (this.model.get("entities").length > 0) {
-                return true
+        	var that = this
+        	var tabName = $('#step2Tab li[class="active"] a').attr('href')
+        	if (tabName=='#entitiesTab') {
+        		var allokay = true
+        		$($.find('.editable-entity-group')).each(
+    				function (i,$entityGroup) {
+    					allokay = that.saveEntity($entityGroup) & allokay
+    				})
+				if (!allokay) return false;
+        		if (this.model.get("entities").length > 0) {
+        			this.model.set("type", null);
+        			return true;
+        		}
+        	} else if (tabName=='#templateTab') {
+        		if (this.saveTemplate()) {
+        			this.model.set("entities", []);
+        			return true
+        		}
+            } else {
+            	// other tabs not implemented yet 
+            	// do nothing, show error return false below
             }
-            this.$('div.info-message').show('slow').delay(2000).hide('slow')
+            this.$('div.step2-info-message').show('slow').delay(2000).hide('slow')
             return false
         }
+
     })
     /**
      * Final step from the create application wizard. Review the summary and submit the request.
@@ -315,11 +402,15 @@ define([
         validate:function () {
             if (this.model.get("name") != ""
                 && this.model.get("locations").length > 0
-                && this.model.get("entities").length > 0) {
+                && (this.model.get("type")!=null || 
+                		this.model.get("entities").length > 0)) {
                 return true
             }
-            this.$('div.info-message').show('slow').delay(2000).hide('slow')
+            this.showFailure()
             return false
+        },
+        showFailure:function () {
+        	this.$('div.info-message').show('slow').delay(2000).hide('slow')
         }
     })
 

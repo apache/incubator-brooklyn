@@ -118,12 +118,12 @@ public class ApplicationManager implements Managed {
         } else {
             instance = new AbstractApplication() {};
         }
-        if (spec.getName()!=null) instance.setDisplayName(spec.getName());
+        if (spec.getName()!=null && !spec.getName().isEmpty()) instance.setDisplayName(spec.getName());
 
         if (spec.getEntities()!=null) for (EntitySpec entitySpec : spec.getEntities()) {
             LOG.info("Creating instance for entity {}", entitySpec.getType());
             AbstractEntity entity = newEntityInstance(entitySpec.getType(), instance, entitySpec.getConfig());
-            if (entitySpec.getName()!=null) entity.setDisplayName(entitySpec.getName());
+            if (entitySpec.getName()!=null && !spec.getName().isEmpty()) entity.setDisplayName(entitySpec.getName());
         }
     } catch (Exception e) {
         LOG.error(e, "Failed to create application: "+e);

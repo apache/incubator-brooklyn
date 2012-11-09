@@ -28,6 +28,7 @@ import javax.ws.rs.core.Response;
 
 import org.reflections.Reflections;
 
+import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityTypes;
 import brooklyn.policy.basic.AbstractPolicy;
@@ -164,6 +165,21 @@ public class CatalogResource extends BaseResource {
       @ApiParam(name = "name", value = "Query to filter entities by")
       final @QueryParam("name") @DefaultValue("") String name
   ) {
+      return listEntitiesMatching(name, false);
+  }
+
+  @GET
+  @Path("/applications")
+  @ApiOperation(value = "Fetch a list of applications matching a query", responseClass = "String", multiValueResponse = true)
+  public Iterable<String> listApplications(
+      @ApiParam(name = "name", value = "Query to filter entities by")
+      final @QueryParam("name") @DefaultValue("") String name
+  ) {
+      System.out.println("FOO");
+      return listEntitiesMatching(name, true);
+  }
+
+  protected Iterable<String> listEntitiesMatching(String name, boolean onlyApps) {
     scanIfNeeded();
     List<String> result = new ArrayList<String>();
     result.addAll(registeredEntities.keySet());
@@ -172,8 +188,15 @@ public class CatalogResource extends BaseResource {
       final String normalizedName = name.toLowerCase();
       Iterator<String> ri = result.iterator();
       while (ri.hasNext()) {
-          if (!ri.next().toLowerCase().contains(normalizedName)) ri.remove(); 
+          if (!ri.next().toLowerCase().contains(normalizedName)) ri.remove();
       }
+    }
+    if (onlyApps) {
+        Iterator<String> ri = result.iterator();
+        while (ri.hasNext()) {
+            Class<? extends AbstractEntity> type = getEntityClass(ri.next());
+            if (!Application.class.isAssignableFrom(type)) ri.remove();
+        }
     }
     Collections.sort(result);
     return result;

@@ -218,6 +218,25 @@ ol.tree {
 	margin: 0;
 }
 
+.label-message {
+	background-color: #DDD;
+    -webkit-border-radius: 2px 2px 2px 2px;
+    -moz-border-radius: 2px 2px 2px 2px;
+    border-radius: 2px 2px 2px 2px;
+    padding: 4px 0px 4px 0px;
+    margin-bottom: 4px;
+    font-weight: bold;
+} 
+.label-important {
+	display: inline;
+	padding: 4px;
+	color: #F0F0F0;
+	font-weight: bold;
+    -webkit-border-radius: 2px 2px 2px 2px;
+    -moz-border-radius: 2px 2px 2px 2px;
+    border-radius: 2px 2px 2px 2px;
+}
+
 /** apps / entity explorer page */
 .apps-tree-toolbar {
 	text-align: right;
@@ -244,6 +263,9 @@ line-height: 18px;
 #sensors-table_length select {
 	/* entity details sensor view, list page length dropdown */
 	width: 60px;
+}
+.cssninja ol.tree {
+    padding: 0;
 }
 /* effector modal dialog */
 #params td {
@@ -272,7 +294,62 @@ table.dataTable thead th {
 text-align: left;
 }
 
-
+/* add entity modal */
+.editable-entity-group {
+    margin-bottom: 2px;
+    border: 1px solid #E5E5E5;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+.editable-entity-heading {
+    padding: 2px 6px 2px 6px;
+    border-bottom: 1px solid #E5E5E5;
+    margin-bottom: -1px;
+    overflow: hidden;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    background-color: #F9F9F9;
+    line-height: 30px;
+}
+.editable-entity-heading:hover {
+	background-color: #F0F4F0;
+}
+.editable-entity-body {
+    border-top: 1px solid #E5E5E5;
+    margin-top: -1px;
+	padding: 7px 6px 2px 6px;
+	overflow: hidden;
+	-webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+.step2-entity-config input {
+    margin-bottom: 0px;	
+}
+.step2-entity-label-newline {
+    padding-left: 2px;
+    padding-bottom: 3px;	
+}
+.step2-entity-label {
+    width: 4em;
+    float: left;
+    padding-top: 3px;
+}
+.step2-entity-input {
+	width: 300px;
+}
+.step2-entity-config {
+	margin-bottom: 9px;
+	margin-top: 2px;
+}
+.step2-entity-config button {
+	margin-left: 8px;
+}
+#add-app-entity {
+	float: right;
+}
 /* help page */
 #help-page p, #help-page ul {
 	margin-top: 8px;
@@ -282,4 +359,8 @@ text-align: left;
 }
 .help-logo-right img {
 	border: 3px solid #333030;
+}
+.control-group {
+	margin-top: 6px;
+	margin-bottom: 9px;
 }

@@ -1,21 +1,64 @@
 <!-- New application wizard step 2: add and configure entities -->
-<div id="entities">
-    <h4>Configured entities</h4>
-    <ul></ul>
-    <button id="toggle-entity-form" class="btn btn-info btn-mini">Add new entity</button>
+
+<div class="step2-info-message label-message hide">
+	<div class="label-important">ERROR</div>  Invalid application type/spec
 </div>
-<div id="new-entity" class="hide" style="border:1px dashed black">
-    <div id="entity-form"></div>
-    <button id="add-app-entity" class="btn btn-info btn-mini" style="margin:5px;">Add entity</button>
-    <div class="entity-info-message hide">
-        <p>
-            <span class="label-important">Important</span>A valid entity must have at least one name and type.
-        </p>
-    </div>
-</div>
-<dl class="dl-horizontal"></dl>
-<div class="info-message hide">
-    <p>
-        <span class="label-important">Important</span>Must configure at least one valid entity per application.
-    </p>
+
+<div id="step2body">
+
+	<ul class="nav nav-tabs" id="step2Tab">
+		<li class="active"><a href="#templateTab" data-toggle="tab">Template</a></li>
+		<li><a href="#entitiesTab" data-toggle="tab">Entities</a></li>
+		
+		<li class="dropdown"><a class="dropdown-toggle" id="dropLanguage"
+			role="button" data-toggle="dropdown" href="#">Code <b class="caret"></b></a>
+			<ul id="menuLanguage" class="dropdown-menu" role="menu" aria-labelledby="dropLanguage">
+				<li><a tabindex="-1" data-toggle="tab" href="#jsonTab">JSON</a></li>
+				<li><a tabindex="-1" data-toggle="tab" href="#xmlTab">XML</a></li>
+				<li class="divider"></li>
+				<li><a tabindex="-1" data-toggle="tab" href="#groovyTab">Groovy</a></li>
+				<li class="divider"></li>
+				<li><a tabindex="-1" data-toggle="tab" href="#uploadTab">JAR</a></li>
+			</ul></li>
+	</ul>
+
+  <div class="tab-content">
+  <div class="tab-pane active" id="templateTab">
+  
+        <div class="control-group">
+            <div class="step2-entity-label-newline">Type</div>
+            <div class="controls app-type">
+                <input id="entity-type" type="text" name="type" class="input-large step2-entity-input application-type-input" placeholder="type">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="step2-entity-label-newline">Configuration</div>
+            <div class="controls">
+            </div>
+            <div>
+                <button id="add-config" class="btn btn-mini btn-info">
+                    Add Config Key</button>
+            </div>
+        </div>
+  </div>
+
+  
+  <div class="tab-pane" id="entitiesTab">
+    <div id="entitiesAccordionish"></div>
+    <button id="add-app-entity" class="btn btn-info btn-mini" style="margin:5px;">Add Additional Entity</button>
+  </div>
+
+  <div class="tab-pane" id="jsonTab">
+    <br/><br/><i>coming soon!</i>
+  </div>
+  <div class="tab-pane" id="xmlTab">
+    <br/><br/><i>coming soon!</i>
+  </div>
+  <div class="tab-pane" id="groovyTab">
+    <br/><br/><i>coming soon!</i>
+  </div>
+  <div class="tab-pane" id="uploadTab">
+    <br/><br/><i>coming soon!</i>
+  </div>
 </div>
