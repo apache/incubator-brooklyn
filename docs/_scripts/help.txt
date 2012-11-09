@@ -15,7 +15,7 @@ updating a snapshot version, in /v/VERSION/ on the server:
 
 
 export TARGET=`pwd -P`/../../brooklyncentral.github.com
-export BV=0.4.0-SNAPSHOT   # BROOKLYN_VERSION
+export BV=0.4.0-rc.1   # BROOKLYN_VERSION
 
 # build, copy
 if [ ! -f $TARGET/index.html ] ; then echo "could not find docs in $TARGET" ; exit 1 ; fi

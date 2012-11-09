@@ -18,6 +18,8 @@ toc: ../toc.json
 You can grab the distribution artifact, containing Brooklyn, its dependencies and launch scripts, here:
 
 <!-- BROOKLYN_VERSION_BELOW -->
+* [0.4.0-rc.1.tar.gz](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-rc.1/brooklyn-dist-0.4.0-rc.1-dist.tar.gz)
+* [0.4.0-rc.1.zip](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-rc.1/brooklyn-dist-0.4.0-rc.1-dist.zip)
 * [0.4.0-M2.tar.gz](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.tar.gz)
 * [0.4.0-M2.zip](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.zip)
 * [0.4.0-M1.tar.gz](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M1/brooklyn-dist-0.4.0-M1-dist.tar.gz)
@@ -31,6 +33,7 @@ Just download your preferred flavour and unpack.
 You can grab a single JAR containing all of Brooklyn and its dependencies here:
 
 <!-- BROOKLYN_VERSION_BELOW -->
+* [0.4.0-rc.1](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/0.4.0-rc.1/)
 * [0.4.0-M2](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/0.4.0-M2/)
 * [0.4.0-M1](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/0.4.0-M1/)
 * [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/brooklyn-all/0.4.0-SNAPSHOT/)

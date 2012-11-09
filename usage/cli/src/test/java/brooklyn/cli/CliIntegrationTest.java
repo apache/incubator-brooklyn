@@ -13,7 +13,7 @@ import brooklyn.entity.basic.AbstractApplication;
 public class CliIntegrationTest {
     
     // FIXME: this should not be hardcoded
-    String brooklynBinPath = "../dist/target/brooklyn-0.4.0-SNAPSHOT-dist/brooklyn/bin/";
+    String brooklynBinPath = "../dist/target/brooklyn-0.4.0-rc.1-dist/brooklyn/bin/";
     
     // Helper function used in testing
     private String convertStreamToString(InputStream is) {
