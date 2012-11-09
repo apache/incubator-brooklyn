@@ -542,7 +542,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         Map<String, Object> attribs = attributesInternal.asMap();
         for (Map.Entry<?,Object> entry : attribs.entrySet()) {
             AttributeSensor attribKey = (AttributeSensor) entityType.getSensor(entry.getKey());
-            result.put(attribKey, entry.getValue());
+            if (attribKey == null) {
+                LOG.warn("When retrieving all attributes of {}, ignoring attribute {} because no matching AttributeSensor found", this, entry.getKey());
+            } else {
+                result.put(attribKey, entry.getValue());
+            }
         }
         return result;
     }
