@@ -44,6 +44,7 @@ public class EntitySummary {
         .put("children", URI.create(entityUri + "/entities"))
         .put("effectors", URI.create(entityUri + "/effectors"))
         .put("sensors", URI.create(entityUri + "/sensors"))
+        .put("config", URI.create(entityUri + "/config"))
         .put("activities", URI.create(entityUri + "/activities"))
         .put("catalog", URI.create("/v1/catalog/entities/" + type));
     this.links = lb.build();

@@ -25,6 +25,9 @@ define(["underscore", "backbone"], function (_, Backbone) {
         },
         getSensorUpdateUrl:function () {
             return this.getLinkByName("self") + "/sensors/current-state"
+        },
+        getConfigUpdateUrl:function () {
+            return this.getLinkByName("self") + "/config/current-state"
         }
     })
 

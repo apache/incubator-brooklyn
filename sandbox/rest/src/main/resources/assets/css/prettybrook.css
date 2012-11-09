@@ -264,6 +264,10 @@ line-height: 18px;
 	/* entity details sensor view, list page length dropdown */
 	width: 60px;
 }
+#config-table_length select {
+    /* entity details sensor view, list page length dropdown */
+    width: 60px;
+}
 .cssninja ol.tree {
     padding: 0;
 }

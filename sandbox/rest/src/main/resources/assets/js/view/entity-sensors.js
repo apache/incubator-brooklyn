@@ -55,7 +55,9 @@ define([
                     // iterate over the sensors table and update each sensor
                     $rows.each(function (index) {
                         var key = $(this).find(".sensor-name").text()
-                        $(this).find(".sensor-value").html(_.escape(data[key]))
+                        var v = data[key]
+                        if (v === undefined) v = ''
+                        $(this).find(".sensor-value").html(_.escape(v))
                     })
                 })
             }
