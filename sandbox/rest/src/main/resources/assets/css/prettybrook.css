@@ -260,14 +260,6 @@ background: none;
 padding-left: 16px;
 line-height: 18px;
 }
-#sensors-table_length select {
-	/* entity details sensor view, list page length dropdown */
-	width: 60px;
-}
-#config-table_length select {
-    /* entity details sensor view, list page length dropdown */
-    width: 60px;
-}
 .cssninja ol.tree {
     padding: 0;
 }
@@ -291,12 +283,79 @@ background-color: #F9F9F9;
 table.dataTable tr.even {
 background-color: #FFFFFF;
 }
-table.dataTable {
-margin: 0 auto 24px auto;
-}
 table.dataTable thead th {
 text-align: left;
 }
+.dataTables_wrapper {
+/*	background-color: #FAFAFA; */
+}
+table.dataTable {
+margin: 0 auto 4px auto;
+border-width: 0px 0px 1px 0px;
+border-style: solid;
+}
+
+.dataTables_info {
+	padding-top: 2px;
+	padding-left: 6px;
+    font-size: 85%;
+    width: auto;
+    align: center;
+    clear: none;
+}
+.dataTables_paginate {
+    font-size: 85%;
+    float: right;
+}
+.dataTables_length {
+    float: left;
+    padding-left: 0.5em;
+    padding-top: 1px;
+}
+.dataTables_length label {
+    font-size: 85%;
+}
+.dataTables_length select {
+    height: auto;
+    font-size: 85%;
+    margin-bottom: 0px;
+    width: 45px;
+}
+.dataTables_paginate.paging_full_numbers a.paginate_button, 
+.dataTables_paginate.paging_full_numbers a.paginate_active {
+-webkit-border-radius: 0px;
+-moz-border-radius: 0px;
+border-radius: 0px;
+padding: 2px 5px;
+margin: 0;
+}
+.dataTables_filter input {
+    background-image: url("../img/magnifying-glass-right.png");
+    /* url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJ5JREFUeNpi+P//PwMQMANxERCfAeI/UBrEZwbJQ9WAFR0A4u1AbAnEbFB6O1ScGaawGoi3wHQiYyBYDZKHKbwHxLo4FOqC5GEKf4Ksw6EQ5IyfIDYTkPEUiNUZsAOQ+F9GRkYJEKcFiDficSOIcRjE4QTiY0C8DuRbqAJLKP8/FP9kQArHUiA+jySJjA8w4LAS5KZd0MAHhaccQIABALsMiBZy4YLtAAAAAElFTkSuQmCC); */
+    background-size:12px 12px;
+    background-repeat: no-repeat;
+    background-position: 8px 5px;
+    width: 15em;
+    font-size: 85%;
+    padding: 1px 4px 1px 24px;
+    margin-bottom: 2px;
+    -webkit-border-radius: 1em;
+    -moz-border-radius: 1em;
+    border-radius: 1em;
+}
+.dataTables_wrapper .brook-db-top-toolbar {
+	font-size: 85%;
+	float: right;
+	padding-right: 6px;
+}
+.dataTables_wrapper .brook-db-bot-toolbar {
+    font-size: 85%;
+    float: left;
+    padding-right: 10px;
+    padding-left: 5px;
+    padding-top: 1px;
+}
+
 
 /* add entity modal */
 .editable-entity-group {

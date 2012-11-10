@@ -98,7 +98,7 @@ define([
 
             entitySummary.url = "/v1/applications/" + appName + "/entities/" + id
             entitySummary.fetch({success:function () {
-            	var whichTab="summary";
+            	var whichTab="sensors";
                 if (that.detailsView) {
                 	whichTab = $(that.detailsView.el).find(".tab-pane.active").attr("id");
                 	that.detailsView.close()
