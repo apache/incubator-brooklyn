@@ -1,30 +1,46 @@
 package brooklyn.rest.views;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+import javax.ws.rs.Path;
+
+import org.testng.annotations.Test;
+
+import brooklyn.rest.resources.ActivityResource;
 import brooklyn.rest.resources.ApplicationResource;
 import brooklyn.rest.resources.CatalogResource;
 import brooklyn.rest.resources.EffectorResource;
 import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
+import brooklyn.rest.resources.PolicyResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
+import brooklyn.rest.resources.VersionResource;
+
 import com.google.common.collect.Sets;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.Documentation;
 import com.wordnik.swagger.core.DocumentationEndPoint;
-import org.testng.annotations.Test;
-
-import javax.ws.rs.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 public class SwaggerUiViewTest {
 
-  private static final Class<?>[] CLASSES = new Class[]{ApplicationResource.class, CatalogResource.class,
-    EffectorResource.class, EntityResource.class, LocationResource.class, SensorResource.class};
+  private static final Class<?>[] CLASSES = new Class[]{
+      ApplicationResource.class, 
+      EntityResource.class, 
+      SensorResource.class,
+      EffectorResource.class, 
+      PolicyResource.class, 
+      ActivityResource.class, 
+      
+      CatalogResource.class,
+      LocationResource.class, 
+      VersionResource.class 
+  };
 
   private final Set<Class<?>> resources = Sets.newHashSet(Arrays.asList(CLASSES));
   private SwaggerUiView uiView = new SwaggerUiView(resources);
@@ -35,7 +51,6 @@ public class SwaggerUiViewTest {
       assertTrue(clazz.isAnnotationPresent(Api.class));
       assertTrue(clazz.isAnnotationPresent(Path.class));
     }
-    assertEquals(CLASSES.length, 6);
   }
 
   @Test
@@ -44,7 +59,7 @@ public class SwaggerUiViewTest {
     assertEquals(doc.getApiVersion(), SwaggerUiView.API_VERSION);
     assertEquals(doc.getBasePath(), SwaggerUiView.BASE_PATH);
     assertEquals(doc.getSwaggerVersion(), SwaggerUiView.SWAGGER_VERSION);
-    assertEquals(doc.getApis().size(), 6);
+    assertEquals(doc.getApis().size(), CLASSES.length);
     assertEquals(doc.resourcePath(), SwaggerUiResource.RESOURCE_PATH);
     assertEquals(doc.getModels(), null);
   }
@@ -61,7 +76,7 @@ public class SwaggerUiViewTest {
   @Test
   public void testReadApisHasSensitiveValues() {
     List<Documentation> apis = SwaggerUiView.readApis(uiView.getResourceList());
-    assertEquals(apis.size(), 6);
+    assertEquals(apis.size(), CLASSES.length);
     System.out.println(apis);
   }
 

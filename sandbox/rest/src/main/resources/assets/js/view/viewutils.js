@@ -13,6 +13,7 @@ define([
                     "sSearch": "",
                     "sInfo": "_START_ - _END_ of _TOTAL_ ",
                     "sInfoEmpty": "<i>No data</i> ",
+                    "sEmptyTable": "<i>No matching records currently available</i>",
                     "oPaginate": {
                         "sFirst": "&lt;&lt;",
                         "sPrevious": "&lt;",

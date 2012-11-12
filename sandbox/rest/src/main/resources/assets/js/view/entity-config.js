@@ -24,8 +24,6 @@ define([
             configCollection.url = this.model.getLinkByName('config')
             var success = function () {
                 configCollection.each(function (config) {
-                    console.log(config)
-                    console.log(config.get("description"))
                     $tableBody.append(that.configTemplate({
                         name:config.get("name"),
                         description:config.get("description"),

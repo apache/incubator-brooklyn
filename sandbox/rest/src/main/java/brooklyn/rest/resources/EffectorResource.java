@@ -75,7 +75,7 @@ public class EffectorResource extends BaseResource {
         }));
   }
 
-@POST
+  @POST
   @Path("/{effector}")
   @ApiOperation(value = "Trigger an effector",
     notes="Returns the return value (status 200) if it completes, or an activity task ID (status 202) if it times out")

@@ -24,6 +24,7 @@ import brooklyn.rest.resources.ApplicationResource;
 import brooklyn.rest.resources.CatalogResource;
 import brooklyn.rest.resources.EffectorResource;
 import brooklyn.rest.resources.EntityResource;
+import brooklyn.rest.resources.PolicyResource;
 import brooklyn.rest.resources.SensorResource;
 
 public class ApplicationCommandsTest extends BrooklynCommandTest {
@@ -43,6 +44,7 @@ public class ApplicationCommandsTest extends BrooklynCommandTest {
     addResource(new EntityResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager));
+    addResource(new PolicyResource(manager));
   }
 
   @AfterClass

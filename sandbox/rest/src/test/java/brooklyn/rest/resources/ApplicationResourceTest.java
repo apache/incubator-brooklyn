@@ -5,7 +5,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -14,10 +13,13 @@ import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.ApiError;
@@ -27,9 +29,11 @@ import brooklyn.rest.api.ConfigSummary;
 import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.EntitySummary;
+import brooklyn.rest.api.PolicySummary;
 import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
+import brooklyn.rest.mock.CapitalizePolicy;
 import brooklyn.rest.mock.RestMockSimpleEntity;
 
 import com.google.common.base.Predicate;
@@ -44,6 +48,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BaseResourceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(ApplicationResourceTest.class);
+    
   private ApplicationManager manager;
   private ExecutorService executorService;
 
@@ -65,6 +71,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
     addResource(new ConfigResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager));
+    addResource(new PolicyResource(manager));
+    addResource(new ActivityResource(manager));
   }
 
   @AfterClass
@@ -179,14 +187,6 @@ public class ApplicationResourceTest extends BaseResourceTest {
         });
     assertTrue(config.size() > 0);
     System.out.println(("CONFIG: "+config));
-    
-//    SensorSummary sample = Iterables.find(config, new Predicate<SensorSummary>() {
-//      @Override
-//      public boolean apply(SensorSummary sensorSummary) {
-//        return sensorSummary.getName().equals(RestMockSimpleEntity.SAMPLE_SENSOR.getName());
-//      }
-//    });
-//    assertEquals(sample.getType(), "java.lang.String");
   }
   
   @Test(dependsOnMethods = "testDeployApplication")
@@ -240,8 +240,54 @@ public class ApplicationResourceTest extends BaseResourceTest {
     assertEquals(readings.get(RestMockSimpleEntity.SAMPLE_SENSOR.getName()), "foo4");
   }
 
+  @Test(dependsOnMethods = "testTriggerSampleEffector")
+  public void testPolicyWhichCapitalizes() {
+      String policiesEndpoint = "/v1/applications/simple-app/entities/simple-ent/policies";
+      Set<PolicySummary> policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
+      assertEquals(policies.size(), 0);
+      
+      ClientResponse response = client().resource(policiesEndpoint).
+          queryParam("type", CapitalizePolicy.class.getCanonicalName()).
+          post(ClientResponse.class, Maps.newHashMap());
+      assertEquals(response.getStatus(), 200);
+      String newPolicyId = response.getEntity(String.class);
+      log.info("POLICY CREATED: "+newPolicyId);
+      policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
+      assertEquals(policies.size(), 1);
+      
+      String status = client().resource(policiesEndpoint+"/"+newPolicyId).
+          get(String.class);
+      log.info("POLICY STATUS: "+status);
+      
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/start").
+              post(ClientResponse.class);
+      assertEquals(response.getStatus(), 200);
+      status = client().resource(policiesEndpoint+"/"+newPolicyId).
+              get(String.class);
+      assertEquals(status, Lifecycle.RUNNING.name());
+      
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/stop").
+              post(ClientResponse.class);
+      assertEquals(response.getStatus(), 200);
+      status = client().resource(policiesEndpoint+"/"+newPolicyId).
+              get(String.class);
+      assertEquals(status, Lifecycle.STOPPED.name());
+      
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/destroy").
+              post(ClientResponse.class);
+      assertTrue(response.getStatus()==200 || response.getStatus()==404);
+      response = client().resource(policiesEndpoint+"/"+newPolicyId).get(ClientResponse.class);
+      log.info("POLICY STATUS RESPONSE AFTER DESTROY: "+response.getStatus());
+      assertTrue(response.getStatus()==200 || response.getStatus()==404);
+      if (response.getStatus()==200) {
+          assertEquals(response.getEntity(String.class), Lifecycle.DESTROYED.name());
+      }
+      
+      policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
+      assertEquals(0, policies.size());      
+  }
 
-  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor"})
+  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
     int size = manager.registryById().size();
     ClientResponse response = client().resource("/v1/applications/simple-app")

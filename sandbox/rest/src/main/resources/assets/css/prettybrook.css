@@ -286,13 +286,11 @@ background-color: #FFFFFF;
 table.dataTable thead th {
 text-align: left;
 }
-.dataTables_wrapper {
-/*	background-color: #FAFAFA; */
-}
 table.dataTable {
 margin: 0 auto 4px auto;
 border-width: 0px 0px 1px 0px;
 border-style: solid;
+border-color: gray;
 }
 
 .dataTables_info {
@@ -355,7 +353,29 @@ margin: 0;
     padding-left: 5px;
     padding-top: 1px;
 }
-
+/* nonDatatables environments want to look a bit like our datatables environment */
+table.nonDatatables {
+    border-bottom: 1px solid gray;
+}
+table.nonDatatables thead {
+    border-bottom: 1px solid black;
+}
+table.table.nonDatatables tbody > tr:first-child > td {
+	/* need both bottom of head, and top of body, to support empty table and override non-empty row top border */
+	border-top: 1px black solid;
+}
+/* we keep the thin gray line between rows for manual tables,
+   subtle difference but seems nice */
+div.for-empty-table {
+    width: 100%;
+    float: left;
+    background-color: #F9F9F9;
+    font-style: italic;
+    padding: 8px 5px;
+    text-align: center;
+    margin-top: -18px;
+    border-bottom: 1px solid gray;
+}
 
 /* add entity modal */
 .editable-entity-group {

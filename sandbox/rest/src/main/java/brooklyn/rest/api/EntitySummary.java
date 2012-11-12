@@ -42,9 +42,10 @@ public class EntitySummary {
         lb.put("parent", URI.create(applicationUri+"/entities/"+entity.getOwner().getId()));
     lb.put("application", URI.create(applicationUri))
         .put("children", URI.create(entityUri + "/entities"))
-        .put("effectors", URI.create(entityUri + "/effectors"))
-        .put("sensors", URI.create(entityUri + "/sensors"))
         .put("config", URI.create(entityUri + "/config"))
+        .put("sensors", URI.create(entityUri + "/sensors"))
+        .put("effectors", URI.create(entityUri + "/effectors"))
+        .put("policies", URI.create(entityUri + "/policies"))
         .put("activities", URI.create(entityUri + "/activities"))
         .put("catalog", URI.create("/v1/catalog/entities/" + type));
     this.links = lb.build();

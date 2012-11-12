@@ -1,17 +1,29 @@
 package brooklyn.rest.commands;
 
-import brooklyn.rest.BrooklynConfiguration;
-import brooklyn.rest.commands.applications.*;
-import brooklyn.rest.core.ApplicationManager;
-import brooklyn.rest.core.LocationStore;
-import brooklyn.rest.resources.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
+
+import brooklyn.rest.BrooklynConfiguration;
+import brooklyn.rest.commands.applications.DeleteApplicationCommand;
+import brooklyn.rest.commands.applications.ListApplicationsCommand;
+import brooklyn.rest.commands.applications.ListEffectorsCommand;
+import brooklyn.rest.commands.applications.QuerySensorsCommand;
+import brooklyn.rest.commands.applications.StartApplicationCommand;
+import brooklyn.rest.core.ApplicationManager;
+import brooklyn.rest.core.LocationStore;
+import brooklyn.rest.resources.ApplicationResource;
+import brooklyn.rest.resources.CatalogResource;
+import brooklyn.rest.resources.EffectorResource;
+import brooklyn.rest.resources.EntityResource;
+import brooklyn.rest.resources.PolicyResource;
+import brooklyn.rest.resources.SensorResource;
 
 public class ApplicationCommandsIntegrationTest extends BrooklynCommandTest {
 
@@ -30,6 +42,7 @@ public class ApplicationCommandsIntegrationTest extends BrooklynCommandTest {
     addResource(new EntityResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager));
+    addResource(new PolicyResource(manager));
   }
 
   @AfterClass

@@ -55,6 +55,7 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
     addResource(new EntityResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager));
+    addResource(new PolicyResource(manager));
   }
 
   @AfterClass

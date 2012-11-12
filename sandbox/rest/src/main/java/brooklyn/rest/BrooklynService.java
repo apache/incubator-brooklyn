@@ -30,6 +30,7 @@ import brooklyn.rest.resources.ConfigResource;
 import brooklyn.rest.resources.EffectorResource;
 import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
+import brooklyn.rest.resources.PolicyResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
 import brooklyn.rest.resources.VersionResource;
@@ -98,6 +99,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     environment.addResource(new ConfigResource(applicationManager));
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager));
+    environment.addResource(new PolicyResource(applicationManager));
     environment.addResource(new ActivityResource(applicationManager));
     environment.addResource(new SwaggerUiResource());
     environment.addResource(new VersionResource());

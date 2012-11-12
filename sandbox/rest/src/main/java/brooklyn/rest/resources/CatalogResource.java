@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -26,7 +27,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
+import org.reflections.scanners.Scanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractEntity;
@@ -36,6 +41,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
@@ -52,6 +58,8 @@ import com.wordnik.swagger.core.ApiParam;
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource extends BaseResource {
 
+    private static final Logger log = LoggerFactory.getLogger(CatalogResource.class);
+    
   private volatile boolean scanNeeded = true;
   private Map<String, Class<? extends AbstractEntity>> scannedEntities = Collections.emptyMap();
   private final Map<String, Class<? extends AbstractEntity>> registeredEntities = Maps.newConcurrentMap();
@@ -68,7 +76,7 @@ public class CatalogResource extends BaseResource {
   }
   
   private <T> Map<String, Class<? extends T>> buildMapOfSubTypesOf(String prefix, Class<T> clazz) {
-    Reflections reflections = new Reflections(prefix);
+    Reflections reflections = new SafeReflections(prefix);
     ImmutableMap.Builder<String, Class<? extends T>> builder = ImmutableMap.builder();
     for (Class<? extends T> candidate : reflections.getSubTypesOf(clazz)) {
       if (!Modifier.isAbstract(candidate.getModifiers()) &&
@@ -229,5 +237,25 @@ public class CatalogResource extends BaseResource {
       result.addAll(scannedPolicies.keySet());
       Collections.sort(result);
       return result;
+  }
+  
+  public static class SafeReflections extends Reflections {
+      public SafeReflections(final String prefix, final Scanner... scanners) {
+          super(prefix, scanners);
+      }
+      @SuppressWarnings("unchecked")
+      public <T> Set<Class<? extends T>> getSubTypesOf(final Class<T> type) {
+          Set<String> subTypes = getStore().getSubTypesOf(type.getName());
+          List<Class<? extends T>> result = new ArrayList<Class<? extends T>>();
+          for (String className : subTypes) {
+              //noinspection unchecked
+              try {
+                  result.add((Class<? extends T>) ReflectionUtils.forName(className));
+              } catch (Throwable e) {
+                  log.warn("Unable to instantiate '"+className+"': "+e);
+              }
+          }
+          return ImmutableSet.copyOf(result);
+      }
   }
 }

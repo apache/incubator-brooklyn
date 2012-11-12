@@ -28,13 +28,18 @@ define([
         render:function () {
             var that = this
             var $tableBody = this.$('#effectors-table tbody').empty()
-            this._effectors.each(function (effector) {
-                $tableBody.append(that.effectorRow({
-                    name:effector.get("name"),
-                    description:effector.get("description"),
-                    cid:effector.cid
-                }))
-            })
+            if (this._effectors.length==0) {
+                this.$(".has-no-effectors").show();
+            } else {                
+                this.$(".has-no-effectors").hide();
+                this._effectors.each(function (effector) {
+                    $tableBody.append(that.effectorRow({
+                        name:effector.get("name"),
+                        description:effector.get("description"),
+                        cid:effector.cid
+                    }))
+                })
+            }
             return this
         },
         showEffectorModal:function (eventName) {
