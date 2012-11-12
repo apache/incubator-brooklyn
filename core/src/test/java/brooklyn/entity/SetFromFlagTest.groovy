@@ -83,6 +83,17 @@ public class SetFromFlagTest {
         assertEquals(entity.portRange1, new PortRanges.LinearPortRange(1, 3))
     }
     
+    @Test
+    public void testSetFromFlagCoercesStringValueToInt() {
+        MyEntity entity = new MyEntity(int1:"123")
+        assertEquals(entity.int1, 123)
+    }
+    
+    @Test(expectedExceptions=IllegalArgumentException.class)
+    public void testFailsFastOnInvalidCoercion() {
+        MyEntity entity = new MyEntity(int1:"thisisnotanint")
+    }
+    
     // Fails because configure being called from inside constructor; so field is set after configure called
     @Test(enabled=false) 
     public void testSetFromFlagWithFieldThatIsExplicitySet() {
