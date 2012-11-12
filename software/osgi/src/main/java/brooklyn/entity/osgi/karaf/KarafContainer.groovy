@@ -114,13 +114,6 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Collection<Integer> result = super.getRequiredOpenPorts()
-        result.add(getConfig(RMI_PORT.configKey))
-        return result
-    }
-
-    @Override
     public void postStart() {
 		super.postStart()
         deployConfiguration(getConfig(NAMED_PROPERTY_FILES))
