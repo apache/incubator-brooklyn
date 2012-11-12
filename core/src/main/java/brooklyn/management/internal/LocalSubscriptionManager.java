@@ -79,7 +79,7 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
             s.subscriberExecutionManagerTag = 
                 s.subscriber instanceof Entity ? "subscription-delivery-entity-"+((Entity)s.subscriber).getId()+"["+s.subscriber+"]" : 
                 s.subscriber instanceof String ? "subscription-delivery-string["+s.subscriber+"]" : 
-                s != null ? "subscription-delivery-object["+s.subscriber+"]" : null;
+                "subscription-delivery-object["+s.subscriber+"]";
             s.subscriberExecutionManagerTagSupplied = false;
         }
         s.eventFilter = (Predicate<SensorEvent<T>>) flags.remove("eventFilter");

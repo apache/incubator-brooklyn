@@ -195,7 +195,6 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     }
     
     private void onItemAdded(Movable item, boolean rebalanceNow) {
-        checkArgument(item instanceof Movable, "Added item "+item+" must implement Movable");
         Entity parentContainer = (Entity) item.getAttribute(Movable.CONTAINER);
         
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", new Object[] {this, item, parentContainer});

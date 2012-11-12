@@ -351,7 +351,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
             throw new IllegalStateException("EntityFactory factory not supplied for "+this);
         Entity entity = (factory instanceof EntityFactoryForLocation ? ((EntityFactoryForLocation)factory).newFactoryForLocation(getLocation()) : factory).
             newEntity(creation, this);
-        if (entity==null || !(entity instanceof Entity)) 
+        if (entity==null) 
             throw new IllegalStateException("EntityFactory factory routine did not return an entity, in "+this+" ("+entity+")");
         
         Entities.manage(entity);

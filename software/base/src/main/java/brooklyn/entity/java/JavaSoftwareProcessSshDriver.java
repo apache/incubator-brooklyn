@@ -142,7 +142,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
             for (String keyValOptPrefix : KEY_VAL_OPT_PREFIXES) {
                 if (customOpt.startsWith(keyValOptPrefix)) {
                     for (Iterator<String> iter = result.iterator(); iter.hasNext();) {
-                        String existingOpt = (String) iter.next();
+                        String existingOpt = iter.next();
                         if (existingOpt.startsWith(keyValOptPrefix)) {
                             iter.remove();
                         }
@@ -153,7 +153,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 String customOptPrefix = customOpt.substring(0, customOpt.indexOf("="));
 
                 for (Iterator<String> iter = result.iterator(); iter.hasNext();) {
-                    String existingOpt = (String) iter.next();
+                    String existingOpt = iter.next();
                     if (existingOpt.startsWith(customOptPrefix)) {
                         iter.remove();
                     }
