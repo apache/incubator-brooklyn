@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
@@ -120,8 +121,8 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     }
 
     @Override
-    public Entity configure(Map flags) {
-        Entity result = super.configure(flags);
+    public AbstractEntity configure(Map flags) {
+        AbstractEntity result = super.configure(flags);
         
         // Support old "cluster" flag (deprecated)
         if (flags.containsKey("cluster")) {

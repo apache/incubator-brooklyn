@@ -183,7 +183,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * 
      * @return this entity, for fluent style initialization
      */
-    public Entity configure(Map flags=[:]) {
+    public AbstractEntity configure(Map flags=[:]) {
         assertNotYetOwned()
 		
         Entity suppliedOwner = flags.remove('owner') ?: null
@@ -226,11 +226,23 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     /**
      * Sets a config key value, and returns this Entity instance for use in fluent-API style coding.
      */
-    public <T> Entity configure(ConfigKey<T> key, T value) {
+    public <T> AbstractEntity configure(ConfigKey<T> key, T value) {
         setConfig(key, value);
         return this;
     }
-    
+    public <T> AbstractEntity configure(ConfigKey<T> key, String value) {
+        setConfig(key, value);
+        return this;
+    }
+    public <T> AbstractEntity configure(HasConfigKey<T> key, T value) {
+        setConfig(key, value);
+        return this;
+    }
+    public <T> AbstractEntity configure(HasConfigKey<T> key, String value) {
+        setConfig(key, value);
+        return this;
+    }
+
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
