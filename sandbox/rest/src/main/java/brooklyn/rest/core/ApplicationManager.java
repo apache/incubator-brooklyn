@@ -64,6 +64,10 @@ public class ApplicationManager implements Managed {
     this.managementContext = configuration.getManagementContextClass().newInstance();
   }
 
+  public ManagementContext getManagementContext() {
+    return managementContext;
+  }
+  
   @Override
   public void start() throws Exception {
     // TODO load data about running applications from external storage
@@ -107,7 +111,8 @@ public class ApplicationManager implements Managed {
     applicationsByName.put(name, app);
   }
 
-  public Application startInBackground(final ApplicationSpec spec) {
+  @SuppressWarnings("serial")
+public Application startInBackground(final ApplicationSpec spec) {
     LOG.info("Creating application instance for {}", spec);
 
     final AbstractApplication instance;
@@ -211,8 +216,8 @@ public class ApplicationManager implements Managed {
     throw new IllegalStateException("No suitable constructor for instantiating entity "+type);
   }
 
-  private AbstractEntity tryInstantiateEntity(Constructor<?>[] constructors, Class[] classes, Object[] objects) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-    for (Constructor c: constructors) {
+  private AbstractEntity tryInstantiateEntity(Constructor<?>[] constructors, Class<?>[] classes, Object[] objects) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    for (Constructor<?> c: constructors) {
         if (Arrays.equals(c.getParameterTypes(), classes)) {
             return (AbstractEntity) c.newInstance(objects);
         }

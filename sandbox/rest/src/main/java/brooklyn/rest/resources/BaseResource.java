@@ -54,7 +54,8 @@ public abstract class BaseResource {
     return null;
   }
 
-  protected AttributeSensor<Object> getSensorOr404(EntityLocal entity, String sensorName) {
+  @SuppressWarnings("unchecked")
+protected AttributeSensor<Object> getSensorOr404(EntityLocal entity, String sensorName) {
     if (!entity.getEntityType().hasSensor(sensorName)) {
       throw notFound("Entity '%s' has no sensor with name '%s'", entity.getId(), sensorName);
     }

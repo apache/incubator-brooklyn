@@ -1,17 +1,13 @@
 package brooklyn.rest.resources;
 
-import brooklyn.rest.api.LocationSpec;
-import brooklyn.rest.api.LocationSummary;
-import brooklyn.rest.core.LocationStore;
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
-import com.google.common.collect.Lists;
-import com.wordnik.swagger.core.Api;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
 
+import java.net.URI;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -21,10 +17,20 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import brooklyn.location.Location;
+import brooklyn.rest.api.LocationSpec;
+import brooklyn.rest.api.LocationSummary;
+import brooklyn.rest.core.ApplicationManager;
+import brooklyn.rest.core.EntityLocationUtils;
+import brooklyn.rest.core.LocationStore;
+import brooklyn.util.MutableMap;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/locations")
 @Api(value = "/v1/locations", description = "Manage locations")
@@ -32,9 +38,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class LocationResource extends BaseResource {
 
   private final LocationStore store;
+  private ApplicationManager manager;
 
   public LocationResource(LocationStore store) {
-    this.store = checkNotNull(store, "store");
+      this(null, store);
+  }
+
+  public LocationResource(ApplicationManager manager, LocationStore store) {
+      this.manager = manager;
+      this.store = checkNotNull(store, "store");
   }
 
   @GET
@@ -49,6 +61,27 @@ public class LocationResource extends BaseResource {
             return new LocationSummary(entry.getKey().toString(), entry.getValue());
           }
         }));
+  }
+
+  // this is here to support the web GUI's circles
+  @GET
+  @Path("/usage/LocatedLocations")
+  @ApiOperation(value = "Return a summary of all usage", notes="interim API, expected to change")
+  public Map<String,Map<String,Object>> get() {
+      if (manager==null) throw preconditionFailed("Management Context required for this operation");
+      Map<String,Map<String,Object>> result = new LinkedHashMap<String,Map<String,Object>>();
+      Map<Location, Integer> counts = new EntityLocationUtils(manager.getManagementContext()).countLeafEntitiesByLocatedLocations();
+      for (Map.Entry<Location,Integer> count: counts.entrySet()) {
+          Location l = count.getKey();
+          Map<String,Object> m = MutableMap.<String,Object>of(
+                  "name", l.getName(),
+                  "leafEntityCount", count.getValue(),
+                  "latitude", l.getLocationProperty("latitude"),
+                  "longitude", l.getLocationProperty("longitude")
+              );
+          result.put(l.getId(), m);
+      }
+      return result;
   }
 
   @GET

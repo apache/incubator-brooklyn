@@ -8,16 +8,19 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
+import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 
-public class RestMockSimpleEntity extends AbstractEntity {
+public class RestMockSimpleEntity extends SoftwareProcessEntity {
 
     private static final Logger log = LoggerFactory.getLogger(RestMockSimpleEntity.class);
     
@@ -53,5 +56,21 @@ public class RestMockSimpleEntity extends AbstractEntity {
         setAttribute(SAMPLE_SENSOR, result);
         return result;
     }
+
+    @Override
+    public Class getDriverInterface() {
+        return MockSshDriver.class;
+    }
     
+    public static class MockSshDriver extends AbstractSoftwareProcessSshDriver {
+        public MockSshDriver(EntityLocal entity, SshMachineLocation machine) {
+            super(entity, machine);
+        }
+        public boolean isRunning() { return true; }
+        public void stop() {}
+        public void kill() {}
+        public void install() {}
+        public void customize() {}
+        public void launch() {}
+    }
 }

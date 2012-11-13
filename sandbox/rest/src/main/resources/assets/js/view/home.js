@@ -3,10 +3,10 @@
  */
 
 define([
-    "underscore", "jquery", "backbone", "./modal-wizard",
+    "underscore", "jquery", "backbone", "./modal-wizard", "model/location",
     "text!tpl/home/applications.html", "text!tpl/home/summaries.html", "text!tpl/home/app-entry.html", 
     "bootstrap"
-], function (_, $, Backbone, ModalWizard, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
+], function (_, $, Backbone, ModalWizard, Location, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
 
     var HomeView = Backbone.View.extend({
         tagName:"div",
@@ -39,7 +39,18 @@ define([
             	id.find("#circles-map-message").html("(map off in offline mode)");
             } else {
             	requirejs(["googlemaps"], function (GoogleMaps) {
-            			GoogleMaps.addMapToCanvas(id[0], 40.7063, -73.9971, 14)
+            			var map = GoogleMaps.addMapToCanvas(id[0],
+            			        // brooklyn bridge
+//            			        40.7063, -73.9971, 14
+            			        // edinburgh + atlantic
+//            			        55.6, -2.5, 2
+            			        0, 0, 1
+            			        )
+            			var locatedLocations = new Location.UsageLocated()
+            			that.updateCircles(that, locatedLocations, GoogleMaps, map)
+            			that.callPeriodically(function() {
+            			    that.updateCircles(that, locatedLocations, GoogleMaps, map)
+            			}, 10000)
             		}, function (error) {
             			id.find("#circles-map-message").html("(map not available)"); 
             	});
@@ -54,6 +65,11 @@ define([
         refresh:function (that) {
         	that.collection.fetch()
         	that.options.locations.fetch()     	
+        },
+        updateCircles: function(that, locatedLocations, GoogleMaps, map) {
+            locatedLocations.fetch({success:function() {
+                GoogleMaps.drawCircles(map, locatedLocations.attributes)
+            }})
         },
         
         // cleaning code goes here
@@ -98,18 +114,21 @@ define([
             if (this._modal) {
                 this._modal.close()
             }
+            var that = this;
             var wizard = new ModalWizard({appRouter:this.options.appRouter})
             this._modal = wizard
             this.$("#modal-container").html(wizard.render().el)
             this.$("#modal-container .modal")
                 .on("hidden",function () {
                     wizard.close()
+                    that.refresh(that)
                 }).modal('show')
         },
 
         deleteApplication:function (event) {
             // call Backbone destroy() which does HTTP DELETE on the model
             this.collection.getByCid(event.currentTarget['id']).destroy({wait:true})
+            this.refresh(this)
         }
     })
 

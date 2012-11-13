@@ -20,6 +20,9 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.location.Location;
+import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.ApiError;
@@ -73,6 +76,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
     addResource(new EffectorResource(manager));
     addResource(new PolicyResource(manager));
     addResource(new ActivityResource(manager));
+    addResource(new LocationResource(manager, locationStore));
   }
 
   @AfterClass
@@ -285,6 +289,22 @@ public class ApplicationResourceTest extends BaseResourceTest {
       
       policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
       assertEquals(0, policies.size());      
+  }
+
+  @SuppressWarnings({ "rawtypes" })
+  @Test(dependsOnMethods = "testDeployApplication")
+  public void testLocatedLocation() {
+    Location l = manager.getManagementContext().getApplications().iterator().next().getLocations().iterator().next();
+    if (!l.getLocationProperties().containsKey("latitude")) {
+        log.info("Supplying fake locations for localhost because could not be autodetected");
+        ((AbstractLocation)l).setHostGeoInfo(new HostGeoInfo("localhost", "localhost", 50, 0));
+    }
+    Map result = client().resource("/v1/locations/usage/LocatedLocations")
+        .get(Map.class);
+    log.info("LOCATIONS: "+result);
+    assertEquals(result.size(), 1);
+    Map details = (Map) result.values().iterator().next();
+    assertEquals(details.get("leafEntityCount"), 1);
   }
 
   @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes"})

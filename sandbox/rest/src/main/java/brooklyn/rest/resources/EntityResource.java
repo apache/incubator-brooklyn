@@ -1,27 +1,28 @@
 package brooklyn.rest.resources;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Iterables.transform;
+
+import java.util.List;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.core.ApplicationManager;
+
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import static com.google.common.collect.Iterables.transform;
 import com.google.common.collect.Lists;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
-
-import java.util.List;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Path("/v1/applications/{application}/entities")
 @Api(value = "/v1/applications/{application}/entities", description = "Manage entities")

@@ -90,7 +90,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
         locationStore, catalogResource, managedExecutor);
     environment.manage(applicationManager);
 
-    environment.addResource(new LocationResource(locationStore));
+    environment.addResource(new LocationResource(applicationManager, locationStore));
     environment.addResource(catalogResource);
 
     environment.addResource(new ApplicationResource(applicationManager, locationStore, catalogResource));

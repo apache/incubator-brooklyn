@@ -13,7 +13,7 @@ require.config({
         "jquery-form":"libs/jquery.form",
         "tablesorter":"libs/jquery.dataTables.min",
         "async":"libs/async",
-        "googlemaps":"libs/googlemaps",
+        "googlemaps":"view/googlemaps",
         "text":"libs/text",
         "tpl":"../tpl"
     },

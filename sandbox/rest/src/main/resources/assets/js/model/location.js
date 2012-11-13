@@ -68,5 +68,9 @@ define(["underscore", "backbone"], function (_, Backbone) {
         url:'/v1/locations'
     })
 
+    Location.UsageLocated = Backbone.Model.extend({
+        url:'/v1/locations/usage/LocatedLocations'
+    })
+
     return Location
 })
