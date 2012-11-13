@@ -206,7 +206,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
 
     @Override
     public Integer getJmxPort() {
-        return !isJmxEnabled() ? -1 : entity.getAttribute(UsesJmx.JMX_PORT);
+        return !isJmxEnabled() ? Integer.valueOf(-1) : entity.getAttribute(UsesJmx.JMX_PORT);
     }
 
     @Deprecated
