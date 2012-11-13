@@ -78,6 +78,8 @@
 }
 
 .roundedSummary {
+	-webkit-border-radius: 15px;
+	-moz-border-radius: 15px;
 	border-radius: 15px;
 	background-color: #f7f6e8;
 	padding: 20px 20px;
@@ -167,7 +169,7 @@
 	margin-bottom: 0px;
 }
 .tab-content {
-	padding: 18px 12px 12px 18px;
+	padding: 18px 12px 18px 12px;
     border-right: 1px solid #DDD;
     border-left: 1px solid #DDD;
     min-height: 500px;
@@ -235,6 +237,10 @@ ol.tree {
     -webkit-border-radius: 2px 2px 2px 2px;
     -moz-border-radius: 2px 2px 2px 2px;
     border-radius: 2px 2px 2px 2px;
+}
+.label-important.full-width {
+	display: block;
+	text-align: center;
 }
 
 /** apps / entity explorer page */
@@ -446,4 +452,50 @@ div.for-empty-table {
 .control-group {
 	margin-top: 6px;
 	margin-bottom: 9px;
+}
+
+
+/* catalog */
+.accordion-head {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    padding: 4px 10px 4px 8px;
+    font-weight: bold;
+    background-color: #F4F6F4;
+}
+.accordion-head.active {
+    background-color: #F8FAF8;
+}
+.accordion-body {
+	border-top: 1px dashed lightgray;
+    padding: 8px 8px 12px 8px;
+    max-height: 350px;'
+    overflow-x: scroll;
+    overflow-y: scroll;
+    background-color: white;
+}
+.accordion-head:hover {
+    background-color: #E0E4E0;
+    cursor: hand; cursor: pointer;
+}
+.accordion-item {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    margin: 9px -4px;
+    border: 1px solid lightgray;
+}
+.accordion-nav-row:hover {
+	text-decoration: underline;
+	cursor: hand; cursor: pointer;
+}
+.accordion-nav-row.active {
+    font-weight: bold;
+}
+.catalog-details h3 {
+	margin-bottom: 8px;
+}
+.float-right {
+	float: right;
 }

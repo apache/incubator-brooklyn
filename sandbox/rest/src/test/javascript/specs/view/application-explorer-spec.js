@@ -20,8 +20,8 @@ define([
             it('must contain div.row with two spans: #tree and #details', function () {
                 expect(view.$el.is('#application-explorer')).toBeTruthy()
                 expect(view.$el.is('div.container.container-fluid')).toBeTruthy()
-                expect(view.$("div#tree").is('.span3')).toBeTruthy()
-                expect(view.$("div#details").is('.span9')).toBeTruthy()
+                expect(view.$("div#tree").is('.span4')).toBeTruthy()
+                expect(view.$("div#details").is('.span8')).toBeTruthy()
             })
 
             it("must have a i.refresh element inside #tree header", function () {

@@ -40,7 +40,7 @@ define([
 //        })
 //    })
 
-    describe('EntitySummaryView', function () {
+    describe('view/entity-details-spec/Summary', function () {
         var entity, view, app
 
         beforeEach(function () {
@@ -56,13 +56,13 @@ define([
             }).render()
         })
 
-        it('must render as 2 p tags', function () {
-            expect(view.$("textarea").length).toBe(2)
-            expect(view.$("h3").length).toBe(2)
+        it('must render textarea contents', function () {
+            expect(view.$("textarea").length).toBe(1)
+            expect(view.$("textarea").val()).toMatch("Tomcat")
         })
     })
 
-    describe('EntitySensorsView', function () {
+    describe('view/entity-details-spec/Summary', function () {
         var sampleEntity, view
 
         beforeEach(function () {

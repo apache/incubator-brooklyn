@@ -53,7 +53,14 @@ define(["underscore", "backbone"], function (_, Backbone) {
         },
         hasSelfUrl:function (url) {
             return (this.getLinkByName("self") === url)
+        },
+        getPrettyName: function() {
+            var suffix=this.getConfigByName("location");
+            if (suffix==null) suffix=this.getConfigByName("endpoint")
+            if (suffix!=null) suffix=":"+suffix; else suffix="";
+            return this.get("provider")+suffix
         }
+
     })
 
     Location.Collection = Backbone.Collection.extend({

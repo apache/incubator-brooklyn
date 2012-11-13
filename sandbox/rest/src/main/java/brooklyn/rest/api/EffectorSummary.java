@@ -1,24 +1,30 @@
 package brooklyn.rest.api;
 
+import java.net.URI;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.EntityLocal;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import org.codehaus.jackson.annotate.JsonProperty;
-
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.Map;
-import java.util.Set;
 
 public class EffectorSummary {
 
   public static class ParameterSummary {
     private final String name;
     private final String type;
+    @JsonSerialize(include=Inclusion.NON_NULL)
     private final String description;
 
     public ParameterSummary(
@@ -31,7 +37,7 @@ public class EffectorSummary {
       this.description = description;
     }
 
-    public ParameterSummary(ParameterType type) {
+    public ParameterSummary(ParameterType<?> type) {
       this.name = type.getName();
       this.type = type.getParameterClassName();
       this.description = type.getDescription();
@@ -85,23 +91,25 @@ public class EffectorSummary {
   }
 
   private final String name;
-  private final String description;
   private final String returnType;
   private final Set<ParameterSummary> parameters;
+  @JsonSerialize(include=Inclusion.NON_NULL)
+  private final String description;
+  @JsonSerialize(include=Inclusion.NON_NULL)
   private final Map<String, URI> links;
 
   public EffectorSummary(
       @JsonProperty("name") String name,
-      @JsonProperty("description") String description,
       @JsonProperty("returnType") String returnType,
       @JsonProperty("parameters") Set<ParameterSummary> parameters,
+      @JsonProperty("description") String description,
       @JsonProperty("links") Map<String, URI> links
   ) {
     this.name = name;
     this.description = description;
     this.returnType = returnType;
     this.parameters = parameters;
-    this.links = ImmutableMap.copyOf(links);
+    this.links = links != null ? ImmutableMap.copyOf(links) : null;
   }
 
   public EffectorSummary(Application application, EntityLocal entity, Effector<?> effector) {
@@ -124,6 +132,18 @@ public class EffectorSummary {
         "entity", URI.create(entityUri),
         "application", URI.create(applicationUri)
     );
+  }
+
+  public static EffectorSummary forCatalog(Effector<?> effector) {
+      Set<ParameterSummary> parameters = ImmutableSet.copyOf(Iterables.transform(effector.getParameters(),
+              new Function<ParameterType<?>, ParameterSummary>() {
+                @Override
+                public ParameterSummary apply(@Nullable ParameterType<?> parameterType) {
+                  return new ParameterSummary(parameterType);
+                }
+              }));
+      return new EffectorSummary(effector.getName(), 
+              effector.getReturnTypeName(), parameters, effector.getDescription(), null);
   }
 
   public String getName() {

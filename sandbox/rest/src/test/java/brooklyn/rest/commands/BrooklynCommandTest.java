@@ -1,13 +1,6 @@
 package brooklyn.rest.commands;
 
 
-import com.yammer.dropwizard.testing.ResourceTest;
-import org.apache.commons.cli.GnuParser;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -15,9 +8,21 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 
+import org.apache.commons.cli.GnuParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.yammer.dropwizard.testing.ResourceTest;
+
 @Test(singleThreaded = true)
 public abstract class BrooklynCommandTest extends ResourceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(BrooklynCommandTest.class);
+    
   private ByteArrayOutputStream outBytes;
   private PrintStream out;
 
@@ -48,6 +53,12 @@ public abstract class BrooklynCommandTest extends ResourceTest {
   protected void runCommandWithArgs(Class<? extends BrooklynCommand> clazz, String... args) throws Exception {
     BrooklynCommand cmd = clazz.newInstance();
     cmd.runAsATest(out, err, client(), new GnuParser().parse(cmd.getOptions(), args));
+    log.warn("ERROR: "+errBytes.toString());
+  }
+
+  protected void runCommandWithArgsSwallowingExceptions(Class<? extends BrooklynCommand> clazz, String... args) throws Exception {
+      BrooklynCommand cmd = clazz.newInstance();
+      cmd.runAsATest(out, err, client(), new GnuParser().parse(cmd.getOptions(), args));
   }
 
   protected String standardOut() {

@@ -87,7 +87,7 @@ define([
                 var appView = new HomeView.AppEntryView({model:app})
                 if (this._appViews[app.cid]) {
                     // if the application has a view destroy it
-                    this._appViews[app.cid].destroy()
+                    this._appViews[app.cid].close()
                 }
                 this._appViews[app.cid] = appView
                 $tableBody.append(appView.render().el)

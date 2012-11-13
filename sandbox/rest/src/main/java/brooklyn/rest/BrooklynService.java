@@ -16,7 +16,7 @@ import brooklyn.rest.commands.applications.QuerySensorsCommand;
 import brooklyn.rest.commands.applications.StartApplicationCommand;
 import brooklyn.rest.commands.catalog.ListCatalogEntitiesCommand;
 import brooklyn.rest.commands.catalog.ListCatalogPoliciesCommand;
-import brooklyn.rest.commands.catalog.ListConfigKeysCommand;
+import brooklyn.rest.commands.catalog.CatalogEntityDetailsCommand;
 import brooklyn.rest.commands.catalog.LoadClassCommand;
 import brooklyn.rest.commands.locations.AddLocationCommand;
 import brooklyn.rest.commands.locations.ListLocationsCommand;
@@ -163,7 +163,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     service.addCommand(new ListLocationsCommand());
     service.addCommand(new AddLocationCommand());
 
-    service.addCommand(new ListConfigKeysCommand());
+    service.addCommand(new CatalogEntityDetailsCommand());
     service.addCommand(new ListCatalogEntitiesCommand());
     service.addCommand(new ListCatalogPoliciesCommand());
     service.addCommand(new LoadClassCommand());

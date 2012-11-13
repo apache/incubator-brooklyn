@@ -41,11 +41,11 @@ define([
                 view.close()
             })
 
-            it('must be div#application-resource', function () {
+            it('should be a div#application-resource', function () {
                 expect(view.$('div#application-resource').length).toEqual(1)
             })
 
-            it('div#application-resource must have div#new-application-resource and div#applications', function () {
+            it('should contain an apps table and a new button', function () {
                 expect(view.$('div#new-application-resource').length).toEqual(1)
                 expect(view.$('div#applications').length).toEqual(1)
             })

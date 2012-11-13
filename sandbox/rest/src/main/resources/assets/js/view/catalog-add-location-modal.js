@@ -2,7 +2,8 @@
  * Modal dialog to add a new location.
  */
 define([
-    "underscore", "jquery", "backbone", "text!tpl/catalog/location-modal.html", "text!tpl/catalog/location-config.html",
+    "underscore", "jquery", "backbone", 
+    "text!tpl/catalog/add-location-modal.html", "text!tpl/catalog/location-config.html",
     "bootstrap"
 ], function (_, $, Backbone, LocationModalHtml, LocationConfigHtml) {
 

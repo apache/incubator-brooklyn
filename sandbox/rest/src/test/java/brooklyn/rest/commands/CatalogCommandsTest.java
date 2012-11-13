@@ -2,7 +2,7 @@ package brooklyn.rest.commands;
 
 import brooklyn.rest.commands.catalog.ListCatalogEntitiesCommand;
 import brooklyn.rest.commands.catalog.ListCatalogPoliciesCommand;
-import brooklyn.rest.commands.catalog.ListConfigKeysCommand;
+import brooklyn.rest.commands.catalog.CatalogEntityDetailsCommand;
 import brooklyn.rest.commands.catalog.LoadClassCommand;
 import brooklyn.rest.resources.CatalogResource;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,22 +31,22 @@ public class CatalogCommandsTest extends BrooklynCommandTest {
   }
 
   @Test
-  public void testListConfigKeysForEntity() throws Exception {
-    runCommandWithArgs(ListConfigKeysCommand.class, "brooklyn.entity.nosql.redis.RedisStore");
+  public void testCatalogEntityDetails() throws Exception {
+    runCommandWithArgs(CatalogEntityDetailsCommand.class, "brooklyn.entity.nosql.redis.RedisStore");
 
     assertThat(standardOut(), containsString("redis.port"));
   }
 
   @Test
   public void testMissingConfigKeyNameForEntity() throws Exception {
-    runCommandWithArgs(ListConfigKeysCommand.class);
+    runCommandWithArgs(CatalogEntityDetailsCommand.class);
 
     assertThat(standardErr(), containsString("The type of the entity is mandatory"));
   }
 
   @Test
   public void testEntityTypeNotFound() throws Exception {
-    runCommandWithArgs(ListConfigKeysCommand.class, "dummy-entity-name");
+    runCommandWithArgs(CatalogEntityDetailsCommand.class, "dummy-entity-name");
 
     assertThat(standardErr(), containsString("Client response status: 404"));
   }

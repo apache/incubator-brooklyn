@@ -5,6 +5,7 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -43,13 +44,13 @@ public class EntityTypes {
     @SuppressWarnings("rawtypes")
     private static final Map<Class,ImmutableEntityType> cache = new LinkedHashMap<Class,ImmutableEntityType>();
     
-    public static EntityDynamicType getDefinedAutonomicType(Class<? extends Entity> entityClass) {
+    public static EntityDynamicType getDefinedEntityType(Class<? extends Entity> entityClass) {
         ImmutableEntityType t = cache.get(entityClass);
         if (t!=null) return t;
-        return loadDefinedAutonomicType(entityClass);
+        return loadDefinedEntityType(entityClass);
     }
 
-    private static synchronized EntityDynamicType loadDefinedAutonomicType(Class<? extends Entity> entityClass) {
+    private static synchronized EntityDynamicType loadDefinedEntityType(Class<? extends Entity> entityClass) {
         ImmutableEntityType type = cache.get(entityClass);
         if (type!=null) return type;
         type = new ImmutableEntityType(entityClass);
@@ -58,7 +59,7 @@ public class EntityTypes {
     }
 
     public static Map<String, ConfigKey<?>> getDefinedConfigKeys(Class<? extends Entity> entityClass) {
-        return getDefinedAutonomicType(entityClass).getConfigKeys();
+        return getDefinedEntityType(entityClass).getConfigKeys();
     }
     @SuppressWarnings("unchecked")
     public static Map<String, ConfigKey<?>> getDefinedConfigKeys(String entityTypeName) {
@@ -70,7 +71,7 @@ public class EntityTypes {
     }
     
     public static Map<String, Sensor<?>> getDefinedSensors(Class<? extends Entity> entityClass) {
-        return getDefinedAutonomicType(entityClass).getSensors();
+        return getDefinedEntityType(entityClass).getSensors();
     }
     @SuppressWarnings("unchecked")
     public static Map<String, Sensor<?>> getDefinedSensors(String entityTypeName) {

@@ -67,6 +67,7 @@ public class Application {
   }
 
   /* only to make jackson happy */
+  @SuppressWarnings("unused")
   private void setLinks(Map<String, URI> _) {
   }
 

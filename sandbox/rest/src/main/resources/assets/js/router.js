@@ -79,7 +79,7 @@ define([
             var that = this
             this.locations.fetch({ success:function () {
                 var catalogResource = new CatalogView({
-                    model:that.locations,
+                    locations:that.locations,
                     appRouter:that
                 })
                 catalogResource.fetchModels()

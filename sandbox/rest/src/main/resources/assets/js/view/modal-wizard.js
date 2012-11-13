@@ -151,12 +151,6 @@ define([
         beforeClose:function () {
             this.model.off("change", this.render)
         },
-        getSuffix:function (location) {
-            var suffix=location.getConfigByName("location");
-            if (suffix==null) suffix=location.getConfigByName("endpoint")
-            if (suffix!=null) suffix=":"+suffix; else suffix="";
-            return suffix
-        },
         renderName:function () {
             this.$('#application-name').val(this.model.get("name"))
         },
@@ -176,8 +170,7 @@ define([
     		this.locations.each(function(aLocation) {
         			var $option = that.locationOptionTemplate({
                         url:aLocation.getLinkByName("self"),
-                        provider:aLocation.get("provider"),
-                        suffix:that.getSuffix(aLocation)
+                        name:aLocation.getPrettyName()
                     })
                     $selectLocations.append($option)
         		})
@@ -298,7 +291,7 @@ define([
         		return false
         	}
     		var saveTarget = this.model.get("entities")[$entityGroup.index()];
-    		this.model.get("type") = null
+    		this.model.set("type", null)
     		saveTarget.name = name
     		saveTarget.type = type
     		saveTarget.config = this.getConfigMap($entityGroup)

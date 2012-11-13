@@ -1,0 +1,34 @@
+<div class="catalog-details catalog-details-location">
+
+<% if ((typeof title !== 'undefined') && (title.length > 0)) { %>
+    <div class="float-right"><button id="<%= id %>" class="btn btn-danger delete-location">Delete</button></div>
+    
+    <h3><%= title %></h3>
+<% } %>
+
+<% if (typeof config === 'undefined') { %>
+    <i>Loading...</i>
+<% } else { %>
+
+    <br/>
+    <table class="table table-striped table-condensed nonDatatables">
+        <thead><tr>
+            <th>Configuration Key</th>
+            <th>Value</th>
+        </tr></thead>
+        <tbody>
+        <% _.each(config, function(value, key){ %>
+        <tr>
+            <td style="border-left:none; width:50%;"><%- key%></td>
+            <td><%- value%></td>
+        </tr>
+        <% }); %>
+        </tbody>
+    </table>
+    <div class="has-no-config for-empty-table hide">
+        <i>No special configuration set</i>
+    </div>
+
+<% } %>
+
+</div>
