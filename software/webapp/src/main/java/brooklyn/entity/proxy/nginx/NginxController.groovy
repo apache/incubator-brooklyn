@@ -248,7 +248,7 @@ public class NginxController extends AbstractController {
         
         // For mapping by URL
         Iterable<UrlMapping> mappings = findUrlMappings();
-        Multimap<String, UrlMapping> mappingsByDomain = new LinkedHashMultimap<String, UrlMapping>();
+        Multimap<String, UrlMapping> mappingsByDomain = LinkedHashMultimap.create();
         for (UrlMapping mapping : mappings) {
             Collection<String> addrs = mapping.getAttribute(UrlMapping.TARGET_ADDRESSES);
             if (addrs) {
