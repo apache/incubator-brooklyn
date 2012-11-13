@@ -91,20 +91,21 @@
         <groovy.version>1.8.6</groovy.version>
         <testng.version>6.7</testng.version>
         <mockito.version>1.8.4</mockito.version>
-        <whirr.version>0.8.0</whirr.version>
+        <whirr.version>0.8.1</whirr.version>
         <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
         <slf4j.version>1.5.11</slf4j.version>
         <!-- NB: slf4j 1.6.x seems to change some signatures which breaks e.g. grails 1.3; grails may ask for 1.5.8 but that's okay -->
         <xstream.version>1.3.1</xstream.version>
         <jackson.version>1.9.10</jackson.version>
         <jansi.version>1.2.1</jansi.version>
-        <guava.version>12.0.1</guava.version>
+        <guava.version>13.0.1</guava.version>
+        <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
-        <jclouds.version>1.5.0-beta.11</jclouds.version>
+        <jclouds.version>1.5.2</jclouds.version>
         <spring.version>3.0.5.RELEASE</spring.version>
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
-        <sshj.version>0.8.0</sshj.version>
+        <sshj.version>0.8.1</sshj.version>
         <git-like-cli.version>0.3</git-like-cli.version>
 
         <includedTestGroups />
@@ -175,6 +176,11 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
