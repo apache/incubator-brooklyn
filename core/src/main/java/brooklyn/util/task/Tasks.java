@@ -1,7 +1,5 @@
 package brooklyn.util.task;
 
-import groovy.lang.Closure;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -16,7 +14,6 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.util.flags.TypeCoercions;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -70,8 +67,8 @@ public class Tasks {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
         //if the expected type is a closure or map and that's what we have, we're done (or if it's null);
-        //but not allowed to return a future as the resolved value
-        if (v==null || (type.isInstance(v) && !Future.class.isInstance(v)))
+        //but not allowed to return a future or DeferredSupplier as the resolved value
+        if (v==null || (type.isInstance(v) && !Future.class.isInstance(v) && !DeferredSupplier.class.isInstance(v)))
             return (T) v;
         try {
             //if it's a task or a future, we wait for the task to complete
@@ -82,6 +79,7 @@ public class Tasks {
                     exec.submit((Task) v);
                 }
             }
+            
             if (v instanceof Future) {
                 final Future<?> vfuture = (Future<?>) v;
                 
@@ -102,9 +100,10 @@ public class Tasks {
                 } else {
                     v = vfuture.get();
                 }
-// FIXME Confirm we really want to remove this
-//            } else if (v instanceof Closure) {
-//                v = ((Closure) v).call();
+                
+            } else if (v instanceof DeferredSupplier<?>) {
+                v = ((DeferredSupplier<?>) v).get();
+                
             } else if (v instanceof Map) {
                 //and if a map or list we look inside
                 Map result = Maps.newLinkedHashMap();
@@ -113,6 +112,7 @@ public class Tasks {
                             (contextMessage!=null ? contextMessage+", " : "") + "map entry "+entry.getKey()));
                 }
                 return (T) result;
+                
             } else if (v instanceof List) {
                 List result = Lists.newArrayList();
                 int count=0;
@@ -122,9 +122,11 @@ public class Tasks {
                     count++;
                 }
                 return (T) result;
+                
             } else {
                 return TypeCoercions.coerce(v, type);
             }
+            
         } catch (Exception e) {
             throw new IllegalArgumentException("Error resolving "+(contextMessage!=null ? contextMessage+", " : "")+v+", in "+exec+": "+e, e);
         }

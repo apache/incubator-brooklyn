@@ -1,7 +1,6 @@
 package brooklyn.entity.basic;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
-import groovy.lang.Closure;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -17,6 +16,7 @@ import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
+import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -114,7 +114,7 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
     
     public Object setConfig(ConfigKey<?> key, Object v) {
         Object val;
-        if ((v instanceof Future) || (v instanceof Closure)) {
+        if ((v instanceof Future) || (v instanceof DeferredSupplier)) {
             // no coercion for these (coerce on exit)
             val = v;
         } else if (key instanceof StructuredConfigKey) {
