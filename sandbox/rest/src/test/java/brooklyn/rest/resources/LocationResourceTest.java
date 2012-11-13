@@ -1,32 +1,35 @@
 package brooklyn.rest.resources;
 
-import brooklyn.rest.BaseResourceTest;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.testng.Assert.assertFalse;
+
+import java.net.URI;
+import java.util.Map;
+import java.util.Set;
+
+import javax.ws.rs.core.Response;
+
+import org.testng.annotations.Test;
+
+import brooklyn.rest.BrooklynMgrResourceTest;
 import brooklyn.rest.api.LocationSpec;
 import brooklyn.rest.api.LocationSummary;
 import brooklyn.rest.core.LocationStore;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
-import java.net.URI;
-import java.util.Map;
-import java.util.Set;
-import javax.ws.rs.core.Response;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNull;
-import org.testng.annotations.Test;
 
 @Test(singleThreaded = true)
-public class LocationResourceTest extends BaseResourceTest {
+public class LocationResourceTest extends BrooklynMgrResourceTest {
 
   private LocationStore store;
 
   @Override
   protected void setUpResources() throws Exception {
-    this.store = LocationStore.withLocalhost();
-    addResource(new LocationResource(store));
+    addResources();
   }
 
   @Test

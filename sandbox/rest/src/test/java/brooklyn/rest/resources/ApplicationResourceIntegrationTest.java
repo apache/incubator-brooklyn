@@ -5,25 +5,22 @@ import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.rest.BaseResourceTest;
-import brooklyn.rest.BrooklynConfiguration;
-import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.ApplicationSummary;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.api.SensorSummary;
-import brooklyn.rest.core.ApplicationManager;
-import brooklyn.rest.core.LocationStore;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -35,8 +32,7 @@ import com.sun.jersey.api.client.GenericType;
 @Test(singleThreaded = true)
 public class ApplicationResourceIntegrationTest extends BaseResourceTest {
 
-  private ApplicationManager manager;
-  private ExecutorService executorService;
+    private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
   private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").
       entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
@@ -45,25 +41,14 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
 
   @Override
   protected void setUpResources() throws Exception {
-    executorService = Executors.newCachedThreadPool();
-    LocationStore locationStore = LocationStore.withLocalhost();
-
-    manager = new ApplicationManager(new BrooklynConfiguration(), locationStore,
-        new CatalogResource(), executorService);
-
-    addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
-    addResource(new EntityResource(manager));
-    addResource(new SensorResource(manager));
-    addResource(new EffectorResource(manager));
-    addResource(new PolicyResource(manager));
+      addResources();
   }
 
   @AfterClass
   @Override
   public void tearDown() throws Exception {
     super.tearDown();
-    manager.stop();
-    executorService.shutdown();
+    stopManager();
   }
 
   @Test(groups="Integration")
@@ -71,7 +56,7 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
     ClientResponse response = client().resource("/v1/applications")
         .post(ClientResponse.class, redisSpec);
 
-    assertEquals(manager.registryById().size(), 1);
+    assertEquals(getManagementContext().getApplications().size(), 1);
     assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
 
     waitForApplicationToBeRunning(response.getLocation());
@@ -123,14 +108,14 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
   }
   @Test(groups="Integration", dependsOnMethods = "testTriggerRedisStopEffector" )
   public void testDeleteRedisApplication() throws TimeoutException, InterruptedException {
-    int size = manager.registryById().size();
+    int size = getManagementContext().getApplications().size();
     ClientResponse response = client().resource("/v1/applications/redis-app")
         .delete(ClientResponse.class);
 
-    waitForPageNotFoundResponse("/v1/applications/redis-app", Application.class);
+    waitForPageNotFoundResponse("/v1/applications/redis-app", ApplicationSummary.class);
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-    assertEquals(manager.registryById().size(), size-1);
+    assertEquals(getManagementContext().getApplications().size(), size-1);
   }
 
 }

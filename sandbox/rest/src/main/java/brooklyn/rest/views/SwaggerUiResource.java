@@ -1,7 +1,6 @@
-package brooklyn.rest.resources;
+package brooklyn.rest.views;
 
 
-import brooklyn.rest.views.SwaggerUiView;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.wordnik.swagger.core.Api;
 import freemarker.template.TemplateException;
@@ -16,7 +15,7 @@ import java.util.Set;
 
 @Path(SwaggerUiResource.RESOURCE_PATH)
 @Produces(MediaType.TEXT_HTML)
-public class SwaggerUiResource extends BaseResource {
+public class SwaggerUiResource {
 
   public static final String RESOURCE_PATH = "/v1/api/docs";
 

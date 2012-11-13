@@ -25,11 +25,11 @@ public class ApplicationTest {
           locations(ImmutableSet.of("/v1/locations/1")).
           build();
 
-  final Application application = new Application(applicationSpec, Application.Status.STARTING);
+  final ApplicationSummary application = new ApplicationSummary(applicationSpec, ApplicationSummary.Status.STARTING);
 
   @Test
   public void testSerializeToJSON() throws IOException {
-    Application application1 = new Application(applicationSpec, Application.Status.STARTING) {
+    ApplicationSummary application1 = new ApplicationSummary(applicationSpec, ApplicationSummary.Status.STARTING) {
       @Override
       public Map<String, URI> getLinks() {
         return ImmutableMap.of(
@@ -44,13 +44,13 @@ public class ApplicationTest {
   @Test
   public void testDeserializeFromJSON() throws IOException {
     assertEquals(fromJson(jsonFixture("fixtures/application.json"),
-        Application.class), application);
+        ApplicationSummary.class), application);
   }
 
   @Test
   public void testTransitionToRunning() {
-    Application running = application.transitionTo(Application.Status.RUNNING);
-    assertEquals(running.getStatus(), Application.Status.RUNNING);
+    ApplicationSummary running = application.transitionTo(ApplicationSummary.Status.RUNNING);
+    assertEquals(running.getStatus(), ApplicationSummary.Status.RUNNING);
   }
 
 }

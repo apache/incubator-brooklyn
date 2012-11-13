@@ -1,33 +1,37 @@
 package brooklyn.cli;
 
-import brooklyn.cli.commands.CommandExecutionException;
-import brooklyn.entity.basic.BasicEntity;
-import brooklyn.policy.basic.GeneralPurposePolicy;
-import brooklyn.rest.BrooklynService;
-import brooklyn.rest.core.ApplicationManager;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-import com.yammer.dropwizard.logging.Log;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.testng.Assert.assertEquals;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.testng.Assert.assertEquals;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import brooklyn.cli.commands.CommandExecutionException;
+import brooklyn.entity.basic.BasicEntity;
+import brooklyn.management.ManagementContext;
+import brooklyn.policy.basic.GeneralPurposePolicy;
+import brooklyn.rest.BrooklynService;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+import com.yammer.dropwizard.logging.Log;
 
 public abstract class ClientTest {
 
   private final static Log LOG = Log.forClass(ClientTest.class);
 
   protected BrooklynService brooklynServer;
-  protected ApplicationManager applicationManager;
+  protected ManagementContext managementContext;
   protected Client brooklynClient;
 
   private ByteArrayOutputStream outBytes;
@@ -61,7 +65,7 @@ public abstract class ClientTest {
     String[] args = {"server", tempConfigFile.getAbsolutePath()};
     brooklynServer.runAsync(args);
 
-    applicationManager = brooklynServer.getApplicationManager();
+    managementContext = brooklynServer.getManagementContext();
   }
 
   public void oneTimeTearDown() throws Exception {
@@ -118,10 +122,10 @@ public abstract class ClientTest {
       runWithArgs("deploy", "--format", "class", "brooklyn.cli.ExampleApp");
 
       // We should only have 1 app in the server's registry
-      assertEquals(applicationManager.registryById().size(), 1);
+      assertEquals(managementContext.getApplications().size(), 1);
 
       // The name of that app should match what we have provided in the deploy command
-      assertEquals(Iterables.getOnlyElement(applicationManager.registryByName().keySet()), ExampleApp.class.getName());
+      assertEquals(Iterables.getOnlyElement(managementContext.getApplications()).getEntityType().getName(), ExampleApp.class.getName());
 
     } catch (Exception e) {
       LOG.error(e, "stdout={}; stderr={}", standardOut(), standardErr());

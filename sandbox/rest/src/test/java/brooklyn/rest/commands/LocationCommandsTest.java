@@ -1,18 +1,19 @@
 package brooklyn.rest.commands;
 
-import brooklyn.rest.commands.locations.AddLocationCommand;
-import brooklyn.rest.commands.locations.ListLocationsCommand;
-import brooklyn.rest.core.LocationStore;
-import brooklyn.rest.resources.LocationResource;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+
 import org.testng.annotations.Test;
+
+import brooklyn.rest.commands.locations.AddLocationCommand;
+import brooklyn.rest.commands.locations.ListLocationsCommand;
+import brooklyn.rest.resources.LocationResource;
 
 public class LocationCommandsTest extends BrooklynCommandTest {
 
   @Override
   protected void setUpResources() throws Exception {
-    addResource(new LocationResource(LocationStore.withLocalhost()));
+    addResource(new LocationResource());
   }
 
   @Test

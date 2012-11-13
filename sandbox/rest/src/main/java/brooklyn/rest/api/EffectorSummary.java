@@ -112,7 +112,8 @@ public class EffectorSummary {
     this.links = links != null ? ImmutableMap.copyOf(links) : null;
   }
 
-  public EffectorSummary(Application application, EntityLocal entity, Effector<?> effector) {
+  @Deprecated
+  public EffectorSummary(ApplicationSummary application, EntityLocal entity, Effector<?> effector) {
     this.name = effector.getName();
     this.description = effector.getDescription();
     this.returnType = effector.getReturnTypeName();
@@ -133,6 +134,32 @@ public class EffectorSummary {
         "application", URI.create(applicationUri)
     );
   }
+  
+  public static EffectorSummary fromEntity(EntityLocal entity, Effector<?> effector) {
+      return new EffectorSummary(entity, effector);
+  }
+  
+  protected EffectorSummary(EntityLocal entity, Effector<?> effector) {
+      this.name = effector.getName();
+      this.description = effector.getDescription();
+      this.returnType = effector.getReturnTypeName();
+
+      this.parameters = ImmutableSet.copyOf(Iterables.transform(effector.getParameters(),
+          new Function<ParameterType<?>, ParameterSummary>() {
+            @Override
+            public ParameterSummary apply(@Nullable ParameterType<?> parameterType) {
+              return new ParameterSummary(parameterType);
+            }
+          }));
+
+      String applicationUri = "/v1/applications/" + entity.getApplicationId();
+      String entityUri = applicationUri + "/entities/" + entity.getId();
+      this.links = ImmutableMap.of(
+          "self", URI.create(entityUri + "/effectors/" + effector.getName()),
+          "entity", URI.create(entityUri),
+          "application", URI.create(applicationUri)
+      );
+    }  
 
   public static EffectorSummary forCatalog(Effector<?> effector) {
       Set<ParameterSummary> parameters = ImmutableSet.copyOf(Iterables.transform(effector.getParameters(),

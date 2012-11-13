@@ -7,8 +7,6 @@ import static org.testng.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.Response;
@@ -24,18 +22,15 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.rest.BaseResourceTest;
-import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.ApiError;
-import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.ApplicationSummary;
 import brooklyn.rest.api.ConfigSummary;
 import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.api.PolicySummary;
 import brooklyn.rest.api.SensorSummary;
-import brooklyn.rest.core.ApplicationManager;
-import brooklyn.rest.core.LocationStore;
 import brooklyn.rest.mock.CapitalizePolicy;
 import brooklyn.rest.mock.RestMockSimpleEntity;
 
@@ -53,9 +48,6 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceTest.class);
     
-  private ApplicationManager manager;
-  private ExecutorService executorService;
-
   private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
           entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
           locations(ImmutableSet.of("/v1/locations/0")).
@@ -63,34 +55,20 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Override
   protected void setUpResources() throws Exception {
-    executorService = Executors.newCachedThreadPool();
-    LocationStore locationStore = LocationStore.withLocalhost();
-
-    manager = new ApplicationManager(new BrooklynConfiguration(), locationStore,
-        new CatalogResource(), executorService);
-
-    addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
-    addResource(new EntityResource(manager));
-    addResource(new ConfigResource(manager));
-    addResource(new SensorResource(manager));
-    addResource(new EffectorResource(manager));
-    addResource(new PolicyResource(manager));
-    addResource(new ActivityResource(manager));
-    addResource(new LocationResource(manager, locationStore));
+      addResources();
   }
 
   @AfterClass
   @Override
   public void tearDown() throws Exception {
     super.tearDown();
-    manager.stop();
-    executorService.shutdown();
+    stopManager();
   }
 
   @Test
   public void testGetUndefinedApplication() {
     try {
-      client().resource("/v1/applications/dummy-not-found").get(Application.class);
+      client().resource("/v1/applications/dummy-not-found").get(ApplicationSummary.class);
     } catch (UniformInterfaceException e) {
       assertEquals(e.getResponse().getStatus(), 404);
     }
@@ -101,9 +79,9 @@ public class ApplicationResourceTest extends BaseResourceTest {
     ClientResponse response = client().resource("/v1/applications")
         .post(ClientResponse.class, simpleSpec);
 
-    assertEquals(manager.registryById().size(), 1);
+    assertEquals(getManagementContext().getApplications().size(), 1);
     assertEquals(response.getLocation().getPath(), "/v1/applications/simple-app");
-    assertEquals(response.getEntity(String.class), manager.registryById().keySet().iterator().next());
+    assertEquals(response.getEntity(String.class), getManagementContext().getApplications().iterator().next().getApplicationId());
 
     waitForApplicationToBeRunning(response.getLocation());
   }
@@ -160,10 +138,10 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = "testDeployApplication")
   public void testListApplications() {
-    Set<Application> applications = client().resource("/v1/applications")
-        .get(new GenericType<Set<Application>>() {
+    Set<ApplicationSummary> applications = client().resource("/v1/applications")
+        .get(new GenericType<Set<ApplicationSummary>>() {
         });
-    for (Application app: applications) {
+    for (ApplicationSummary app: applications) {
         if (app.getSpec().equals(simpleSpec)) return;
     }
     Assert.fail("simple-app not found in list of applications: "+applications);
@@ -294,7 +272,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
   @SuppressWarnings({ "rawtypes" })
   @Test(dependsOnMethods = "testDeployApplication")
   public void testLocatedLocation() {
-    Location l = manager.getManagementContext().getApplications().iterator().next().getLocations().iterator().next();
+    Location l = getManagementContext().getApplications().iterator().next().getLocations().iterator().next();
     if (!l.getLocationProperties().containsKey("latitude")) {
         log.info("Supplying fake locations for localhost because could not be autodetected");
         ((AbstractLocation)l).setHostGeoInfo(new HostGeoInfo("localhost", "localhost", 50, 0));
@@ -309,14 +287,14 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
   @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
-    int size = manager.registryById().size();
+    int size = getManagementContext().getApplications().size();
     ClientResponse response = client().resource("/v1/applications/simple-app")
         .delete(ClientResponse.class);
 
-    waitForPageNotFoundResponse("/v1/applications/simple-app", Application.class);
+    waitForPageNotFoundResponse("/v1/applications/simple-app", ApplicationSummary.class);
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-    assertEquals(manager.registryById().size(), size-1);
+    assertEquals(getManagementContext().getApplications().size(), size-1);
   }
   
 }

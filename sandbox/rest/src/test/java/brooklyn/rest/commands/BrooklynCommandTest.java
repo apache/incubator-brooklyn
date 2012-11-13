@@ -16,10 +16,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.yammer.dropwizard.testing.ResourceTest;
+import brooklyn.rest.BrooklynMgrResourceTest;
 
 @Test(singleThreaded = true)
-public abstract class BrooklynCommandTest extends ResourceTest {
+public abstract class BrooklynCommandTest extends BrooklynMgrResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynCommandTest.class);
     
@@ -28,7 +28,7 @@ public abstract class BrooklynCommandTest extends ResourceTest {
 
   private ByteArrayOutputStream errBytes;
   private PrintStream err;
-
+  
   @BeforeClass
   @Override
   public void setUpJersey() throws Exception {

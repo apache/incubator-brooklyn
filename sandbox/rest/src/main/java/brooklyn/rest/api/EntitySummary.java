@@ -29,12 +29,18 @@ public class EntitySummary {
     this.links = ImmutableMap.copyOf(links);
   }
 
-  public EntitySummary(Application application, Entity entity) {
+  @Deprecated
+  public EntitySummary(ApplicationSummary application, Entity entity) {
+      this(entity);
+      assert entity.getApplicationId().equals(application.getId());
+  }
+  
+  protected EntitySummary(Entity entity) {
     this.type = entity.getClass().getName();
     this.id = entity.getId();
     this.name = entity.getDisplayName();
 
-    String applicationUri = "/v1/applications/" + application.getSpec().getName();
+    String applicationUri = "/v1/applications/" + entity.getApplicationId();
     String entityUri = applicationUri + "/entities/" + entity.getId();
     Builder<String, URI> lb = ImmutableMap.<String, URI>builder()
         .put("self", URI.create(entityUri));
@@ -49,6 +55,10 @@ public class EntitySummary {
         .put("activities", URI.create(entityUri + "/activities"))
         .put("catalog", URI.create("/v1/catalog/entities/" + type));
     this.links = lb.build();
+  }
+  
+  public static EntitySummary fromEntity(Entity entity) {
+      return new EntitySummary(entity);
   }
 
   public String getType() {

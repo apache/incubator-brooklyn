@@ -7,6 +7,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 
@@ -33,12 +34,16 @@ public class SensorSummary {
     this.links = links != null ? ImmutableMap.copyOf(links) : null;
   }
 
-  public SensorSummary(Application application, EntityLocal entity, Sensor<?> sensor) {
+  @Deprecated
+  public SensorSummary(ApplicationSummary application, EntityLocal entity, Sensor<?> sensor) {
+      this(entity, sensor);
+  }
+  protected SensorSummary(Entity entity, Sensor<?> sensor) {
     this.name = sensor.getName();
     this.type = sensor.getTypeName();
     this.description = sensor.getDescription();
 
-    String applicationUri = "/v1/applications/" + application.getSpec().getName();
+    String applicationUri = "/v1/applications/" + entity.getApplicationId();
     String entityUri = applicationUri + "/entities/" + entity.getId();
 
     this.links = ImmutableMap.<String, URI>builder()
@@ -46,6 +51,10 @@ public class SensorSummary {
         .put("application", URI.create(applicationUri))
         .put("entity", URI.create(entityUri))
         .build();
+  }
+
+  public static SensorSummary fromEntity(EntityLocal entity, Sensor<?> sensor) {
+      return new SensorSummary(entity, sensor);
   }
 
   public static SensorSummary forCatalog(Sensor<?> sensor) {
@@ -106,4 +115,5 @@ public class SensorSummary {
         ", links=" + links +
         '}';
   }
+
 }

@@ -1,7 +1,7 @@
 package brooklyn.cli.commands;
 
-import brooklyn.rest.api.Application;
-import brooklyn.rest.api.Application.Status;
+import brooklyn.rest.api.ApplicationSummary;
+import brooklyn.rest.api.ApplicationSummary.Status;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import com.google.common.annotations.VisibleForTesting;
@@ -130,7 +130,7 @@ public class DeployCommand extends BrooklynCommand {
         getOut().println("Waiting for application to start ("+appUri+")...");
         Status status = getApplicationStatus(appUri);
         Status previousStatus = null;
-        while (status != Application.Status.RUNNING && status != Application.Status.ERROR) {
+        while (status != ApplicationSummary.Status.RUNNING && status != ApplicationSummary.Status.ERROR) {
             if (status != previousStatus) {
                 getOut().println("Application status: "+status);
                 previousStatus = status;
@@ -140,7 +140,7 @@ public class DeployCommand extends BrooklynCommand {
             Thread.sleep(1000);
             status = getApplicationStatus(appUri);
         }
-        if (status == Application.Status.RUNNING) {
+        if (status == ApplicationSummary.Status.RUNNING) {
             String path = appUri.getPath();
             getOut().println("The application has been deployed: "+path.substring(path.lastIndexOf("/")+1));
         } else {
@@ -175,7 +175,7 @@ public class DeployCommand extends BrooklynCommand {
         return catalogEntityName;
     }
 
-    private Application.Status getApplicationStatus(URI uri) throws IOException, InterruptedException, CommandExecutionException {
+    private ApplicationSummary.Status getApplicationStatus(URI uri) throws IOException, InterruptedException, CommandExecutionException {
         WebResource webResource = getClient().resource(uri.toString());
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 
@@ -185,7 +185,7 @@ public class DeployCommand extends BrooklynCommand {
         }
 
         String response = clientResponse.getEntity(String.class);
-        Application application = getJsonParser().readValue(response, Application.class);
+        ApplicationSummary application = getJsonParser().readValue(response, ApplicationSummary.class);
         return application.getStatus();
     }
 

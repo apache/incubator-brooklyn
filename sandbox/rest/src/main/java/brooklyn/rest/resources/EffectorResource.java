@@ -1,6 +1,5 @@
 package brooklyn.rest.resources;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
 
 import java.util.List;
@@ -21,9 +20,9 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.basic.EffectorUtils;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
-import brooklyn.rest.api.Application;
 import brooklyn.rest.api.EffectorSummary;
-import brooklyn.rest.core.ApplicationManager;
+import brooklyn.rest.api.TaskSummary;
+import brooklyn.rest.core.WebResourceUtils;
 import brooklyn.util.Time;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -39,15 +38,9 @@ import com.yammer.dropwizard.logging.Log;
 @Path("/v1/applications/{application}/entities/{entity}/effectors")
 @Api(value = "/v1/applications/{application}/entities/{entity}/effectors", description = "Manage effectors")
 @Produces("application/json")
-public class EffectorResource extends BaseResource {
+public class EffectorResource extends BrooklynResourceBase {
 
   public static final Log LOG = Log.forClass(EffectorResource.class);
-
-  private final ApplicationManager manager;
-
-  public EffectorResource(ApplicationManager manager) {
-    this.manager = checkNotNull(manager, "manager");
-  }
 
   @GET
   @ApiOperation(value = "Fetch the list of effectors",
@@ -58,19 +51,17 @@ public class EffectorResource extends BaseResource {
   })
   public List<EffectorSummary> list(
       @ApiParam(name = "application", value = "Application name", required = true)
-      @PathParam("application") final String applicationName,
+      @PathParam("application") final String application,
       @ApiParam(name = "entity", value = "Entity name", required = true)
-      @PathParam("entity") final String entityIdOrName
+      @PathParam("entity") final String entityToken
   ) {
-    final Application application = getApplicationOr404(manager, applicationName);
-    final EntityLocal entity = getEntityOr404(application, entityIdOrName);
-
-    return Lists.newArrayList(transform(
+      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+      return Lists.newArrayList(transform(
         entity.getEntityType().getEffectors(),
         new Function<Effector<?>, EffectorSummary>() {
           @Override
           public EffectorSummary apply(Effector<?> effector) {
-            return new EffectorSummary(application, entity, effector);
+            return EffectorSummary.fromEntity(entity, effector);
           }
         }));
   }
@@ -83,11 +74,11 @@ public class EffectorResource extends BaseResource {
       @ApiError(code = 404, reason = "Could not find application, entity or effector")
   })
   public Response trigger(
-      @ApiParam(name = "application", value = "Name of the application", required = true)
-      @PathParam("application") String applicationName,
+      @ApiParam(name = "application", value = "Application ID or name", required = true)
+      @PathParam("application") String application,
       
-      @ApiParam(name = "entity", value = "Name of the entity", required = true)
-      @PathParam("entity") String entityIdOrName,
+      @ApiParam(name = "entity", value = "Entity ID or name", required = true)
+      @PathParam("entity") String entityToken,
       
       @ApiParam(name = "effector", value = "Name of the effector to trigger", required = true)
       @PathParam("effector") String effectorName,
@@ -95,7 +86,7 @@ public class EffectorResource extends BaseResource {
       // TODO test timeout; and should it be header, form, or what?
       @ApiParam(name = "timeout", value = "Delay before server should respond with activity task ID rather than result (in millis if no unit specified): " +
       		"'never' (blocking) is default; " +
-      		"'0' means always return task activity ID; " +
+      		"'0' means 'always' return task activity ID; " +
       		"and e.g. '1000' or '1s' will return a result if available within one second otherwise status 202 and the activity task ID", 
       		required = false, defaultValue = "never")
       @HeaderParam("timeout")
@@ -105,12 +96,11 @@ public class EffectorResource extends BaseResource {
       @Valid 
       Map<String, String> parameters
   ) {
-    final Application application = getApplicationOr404(manager, applicationName);
-    final EntityLocal entity = getEntityOr404(application, entityIdOrName);
+      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
 
     final Effector<?> effector = EffectorUtils.findEffectorMatching(entity.getEntityType().getEffectors(), effectorName, parameters);
     if (effector == null) {
-      throw notFound("Entity '%s' has no effector with name '%s'", entityIdOrName, effectorName);
+      throw WebResourceUtils.notFound("Entity '%s' has no effector with name '%s'", entityToken, effectorName);
     }
 
     Task<?> t = entity.invoke(effector, parameters);
@@ -120,19 +110,18 @@ public class EffectorResource extends BaseResource {
         if (timeout==null || timeout.isEmpty() || "never".equalsIgnoreCase(timeout)) {
             result = t.get();
         } else {
-            long timeoutMillis = Time.parseTimeString(timeout);
+            long timeoutMillis = "always".equalsIgnoreCase(timeout) ? 0 : Time.parseTimeString(timeout);
             try {
                 if (timeoutMillis==0) throw new TimeoutException();
                 result = t.get(timeoutMillis, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
-                // TODO does this put the result in the right format ?
-                return Response.status(Response.Status.ACCEPTED).entity( t.getId() ).build();
+                return Response.status(Response.Status.ACCEPTED).entity( TaskSummary.fromTask(t) ).build();
             }
         }
-        // TODO does this put the result in the right format ?
         return Response.status(Response.Status.ACCEPTED).entity( result ).build();
     } catch (Exception e) {
         throw Exceptions.propagate(e);
     }
   }
+  
 }

@@ -1,7 +1,7 @@
 package brooklyn.rest.commands.applications;
 
 import brooklyn.rest.api.ApiError;
-import brooklyn.rest.api.Application;
+import brooklyn.rest.api.ApplicationSummary;
 import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.commands.BrooklynCommand;
 import com.sun.jersey.api.client.Client;
@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.PrintStream;
 import java.net.URI;
 
-import static brooklyn.rest.api.Application.Status;
+import static brooklyn.rest.api.ApplicationSummary.Status;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class StartApplicationCommand extends BrooklynCommand {
@@ -75,8 +75,8 @@ public class StartApplicationCommand extends BrooklynCommand {
   }
 
   private Status getApplicationStatus(Client client, URI uri) {
-    Application application = client.resource(uri)
-        .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
+    ApplicationSummary application = client.resource(uri)
+        .type(MediaType.APPLICATION_JSON_TYPE).get(ApplicationSummary.class);
     return application.getStatus();
   }
 }

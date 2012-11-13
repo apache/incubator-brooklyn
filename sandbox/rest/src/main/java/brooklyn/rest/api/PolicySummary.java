@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.policy.Policy;
@@ -31,12 +32,17 @@ public class PolicySummary {
     this.links = ImmutableMap.copyOf(links);
   }
 
-  public PolicySummary(Application application, EntityLocal entity, Policy policy) {
+  @Deprecated
+  public PolicySummary(ApplicationSummary application, EntityLocal entity, Policy policy) {
+      this(entity, policy);
+      assert application.getId().equals(entity.getApplicationId());
+  }
+  protected PolicySummary(Entity entity, Policy policy) {
     this.id = policy.getId();
     this.name = policy.getName();
     this.state = Policies.getPolicyStatus(policy);
     
-    String applicationUri = "/v1/applications/" + application.getSpec().getName();
+    String applicationUri = "/v1/applications/" + entity.getApplicationId();
     String entityUri = applicationUri + "/entities/" + entity.getId();
 
     this.links = ImmutableMap.<String, URI>builder()
@@ -47,6 +53,10 @@ public class PolicySummary {
         .put("application", URI.create(applicationUri))
         .put("entity", URI.create(entityUri))
         .build();
+  }
+  
+  public static PolicySummary fromEntity(Entity entity, Policy policy) {
+      return new PolicySummary(entity, policy);
   }
 
   public String getId() {
@@ -95,4 +105,5 @@ public class PolicySummary {
         ", links=" + links +
         '}';
   }
+
 }

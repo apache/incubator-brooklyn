@@ -2,14 +2,22 @@ package brooklyn.rest.api;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import brooklyn.entity.Application;
+import brooklyn.location.Location;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -76,7 +84,7 @@ public class ApplicationSpec {
       @JsonProperty("name") String name,
       @JsonProperty("type") String type,
       @JsonProperty("entities") Set<EntitySpec> entities,
-      @JsonProperty("locations") Set<String> locations,
+      @JsonProperty("locations") Collection<String> locations,
       @JsonProperty("config") Map<String, String> config
   ) {
     this.name = checkNotNull(name, "name must be provided for an application spec");
@@ -87,6 +95,16 @@ public class ApplicationSpec {
     this.config = config == null ? Collections.<String, String>emptyMap() : ImmutableMap.<String, String>copyOf(config);
     if (this.entities!=null && this.type!=null) throw new IllegalStateException("cannot supply both type and entities for an application spec");
     if (this.entities==null && this.type==null) throw new IllegalStateException("must supply either type or entities for an application spec");
+  }
+
+  public static ApplicationSpec fromApplication(Application application) {
+      Collection<String> locations = Collections2.transform(application.getLocations(), new Function<Location,String>() {
+        @Override @Nullable
+        public String apply(@Nullable Location input) { return input.getId(); }
+      });
+      // okay to have entities and config as null, as this comes from a real instance
+      return new ApplicationSpec(application.getDisplayName(), application.getEntityType().getName(),
+              null, locations, null);
   }
 
   public String getName() {
@@ -150,4 +168,5 @@ public class ApplicationSpec {
         ", config=" + config +
         '}';
   }
+
 }

@@ -1,6 +1,5 @@
 package brooklyn.rest.resources;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
 
 import java.util.List;
@@ -11,10 +10,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.rest.api.Application;
 import brooklyn.rest.api.EntitySummary;
-import brooklyn.rest.core.ApplicationManager;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -27,13 +23,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/applications/{application}/entities")
 @Api(value = "/v1/applications/{application}/entities", description = "Manage entities")
 @Produces("application/json")
-public class EntityResource extends BaseResource {
-
-  private final ApplicationManager manager;
-
-  public EntityResource(ApplicationManager manager) {
-    this.manager = checkNotNull(manager, "manager");
-  }
+public class EntityResource extends BrooklynResourceBase {
 
   @GET
   @ApiOperation(value = "Fetch the list of entities for a given application",
@@ -43,11 +33,9 @@ public class EntityResource extends BaseResource {
       @ApiError(code = 404, reason = "Application not found")
   })
   public List<EntitySummary> list(
-      @ApiParam(value = "The application name", required = true)
-      @PathParam("application") final String applicationName) {
-    Application application = getApplicationOr404(manager, applicationName);
-
-    return summaryForChildrenEntities(application, application.getInstance());
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") final String application) {
+    return summaryForChildrenEntities(brooklyn().getApplication(application));
   }
 
   @GET
@@ -58,37 +46,31 @@ public class EntityResource extends BaseResource {
       @ApiError(code = 404, reason = "Application or entity missing")
   })
   public EntitySummary get(
-      @ApiParam(value = "Application name", required = true)
-      @PathParam("application") String applicationName,
-      @ApiParam(value = "Application entity", required = true)
-      @PathParam("entity") String entityIdOrName
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") String application,
+      @ApiParam(value = "Entity ID or name", required = true)
+      @PathParam("entity") String entity
   ) {
-    Application application = getApplicationOr404(manager, applicationName);
-    EntityLocal entity = getEntityOr404(application, entityIdOrName);
-
-    return new EntitySummary(application, entity);
+    return EntitySummary.fromEntity(brooklyn().getEntity(application, entity));
   }
 
-  // TODO should this be "/children" ?
+  // TODO rename as "/children" ?
   @GET
   @Path("/{entity}/entities")
   public Iterable<EntitySummary> getChildren(
-      @PathParam("application") final String applicationName,
-      @PathParam("entity") final String entityIdOrName
+      @PathParam("application") final String application,
+      @PathParam("entity") final String entity
   ) {
-    Application application = getApplicationOr404(manager, applicationName);
-    Entity entity = getEntityOr404(application, entityIdOrName);
-
-    return summaryForChildrenEntities(application, entity);
+    return summaryForChildrenEntities(brooklyn().getEntity(application, entity));
   }
 
-  private List<EntitySummary> summaryForChildrenEntities(final Application application, Entity rootEntity) {
+  private List<EntitySummary> summaryForChildrenEntities(Entity rootEntity) {
     return Lists.newArrayList(transform(
         rootEntity.getOwnedChildren(),
         new Function<Entity, EntitySummary>() {
           @Override
           public EntitySummary apply(Entity entity) {
-            return new EntitySummary(application, entity);
+            return EntitySummary.fromEntity(entity);
           }
         }));
   }

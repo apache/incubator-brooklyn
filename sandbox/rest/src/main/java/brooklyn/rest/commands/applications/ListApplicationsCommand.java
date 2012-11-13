@@ -1,6 +1,6 @@
 package brooklyn.rest.commands.applications;
 
-import brooklyn.rest.api.Application;
+import brooklyn.rest.api.ApplicationSummary;
 import brooklyn.rest.commands.BrooklynCommand;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
@@ -20,14 +20,14 @@ public class ListApplicationsCommand extends BrooklynCommand {
   @Override
   protected void run(PrintStream out, PrintStream err, Json json,
                      Client client, CommandLine params) throws Exception {
-    List<Application> applications = client.resource(uriFor("/v1/applications"))
-        .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<Application>>() {
+    List<ApplicationSummary> applications = client.resource(uriFor("/v1/applications"))
+        .type(MediaType.APPLICATION_JSON_TYPE).get(new GenericType<List<ApplicationSummary>>() {
         });
 
     String tableFormat = "%20s %10s\n";
     out.printf(tableFormat, "Application", "Status");
 
-    for (Application application : applications) {
+    for (ApplicationSummary application : applications) {
       out.printf(tableFormat, application.getSpec().getName(), application.getStatus());
     }
   }

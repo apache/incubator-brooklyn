@@ -1,6 +1,6 @@
 package brooklyn.cli.commands;
 
-import brooklyn.rest.api.Application;
+import brooklyn.rest.api.ApplicationSummary;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.codehaus.jackson.type.TypeReference;
@@ -28,10 +28,10 @@ public class ListApplicationsCommand extends BrooklynCommand {
 
         // Parse the JSON response
         String jsonResponse = clientResponse.getEntity(String.class);
-        List<Application> applications = getJsonParser().readValue(jsonResponse, new TypeReference<List<Application>>() {});
+        List<ApplicationSummary> applications = getJsonParser().readValue(jsonResponse, new TypeReference<List<ApplicationSummary>>() {});
 
         // Display the applications
-        for (Application application : applications) {
+        for (ApplicationSummary application : applications) {
             getOut().printf("%s [%s]\n",application.getSpec().getName(), application.getStatus());
         }
 

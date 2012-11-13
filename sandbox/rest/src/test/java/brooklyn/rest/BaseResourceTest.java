@@ -1,6 +1,6 @@
 package brooklyn.rest;
 
-import brooklyn.rest.api.Application;
+import brooklyn.rest.api.ApplicationSummary;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.yammer.dropwizard.testing.ResourceTest;
 import org.testng.annotations.AfterClass;
@@ -10,7 +10,7 @@ import java.net.URI;
 import java.util.concurrent.TimeoutException;
 
 
-public abstract class BaseResourceTest extends ResourceTest {
+public abstract class BaseResourceTest extends BrooklynMgrResourceTest {
 
   @BeforeClass
   public void setUp() throws Exception {
@@ -24,8 +24,8 @@ public abstract class BaseResourceTest extends ResourceTest {
 
   protected void waitForApplicationToBeRunning(URI applicationRef) throws InterruptedException, TimeoutException {
     int count = 0;
-    while (getApplicationStatus(applicationRef) != Application.Status.RUNNING) {
-      if (getApplicationStatus(applicationRef) == Application.Status.ERROR)
+    while (getApplicationStatus(applicationRef) != ApplicationSummary.Status.RUNNING) {
+      if (getApplicationStatus(applicationRef) == ApplicationSummary.Status.ERROR)
         throw new RuntimeException("Application failed with ERROR.");
       Thread.sleep(7000);
       count += 1;
@@ -35,8 +35,8 @@ public abstract class BaseResourceTest extends ResourceTest {
     }
   }
 
-  protected Application.Status getApplicationStatus(URI uri) {
-    return client().resource(uri).get(Application.class).getStatus();
+  protected ApplicationSummary.Status getApplicationStatus(URI uri) {
+    return client().resource(uri).get(ApplicationSummary.class).getStatus();
   }
 
   protected void waitForPageNotFoundResponse(String resource, Class<?> clazz)

@@ -1,6 +1,7 @@
 package brooklyn.rest.resources;
 
 import brooklyn.BrooklynVersion;
+
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiOperation;
 import javax.ws.rs.GET;
@@ -11,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/v1/version")
 @Api(value = "/v1/version", description = "Get brooklyn version")
 @Produces(MediaType.APPLICATION_JSON)
-public class VersionResource extends BaseResource {
+public class VersionResource extends BrooklynResourceBase {
 
   @GET
   @ApiOperation(value = "Get brooklyn version", responseClass = "String", multiValueResponse = false)

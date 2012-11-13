@@ -37,13 +37,18 @@ public class ConfigSummary {
     this.links = links!=null ? ImmutableMap.copyOf(links) : null;
   }
 
-  public ConfigSummary(Application application, EntityLocal entity, ConfigKey<?> config) {
+  public ConfigSummary(ApplicationSummary application, EntityLocal entity, ConfigKey<?> config) {
+      this(entity, config);
+      if (!entity.getApplicationId().equals(application.getInstance().getId()))
+          throw new IllegalStateException("Application "+application+" does not match app "+entity.getApplication()+" of "+entity);
+  }
+  public ConfigSummary(EntityLocal entity, ConfigKey<?> config) {
     this.name = config.getName();
     this.type = config.getTypeName();
     this.description = config.getDescription();
     this.defaultValue = config.getDefaultValue();
 
-    String applicationUri = "/v1/applications/" + application.getSpec().getName();
+    String applicationUri = "/v1/applications/" + entity.getApplicationId();
     String entityUri = applicationUri + "/entities/" + entity.getId();
 
     this.links = ImmutableMap.<String, URI>builder()

@@ -1,23 +1,55 @@
 package brooklyn.rest.api;
 
-import brooklyn.entity.basic.AbstractApplication;
-import com.google.common.collect.ImmutableMap;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.URI;
 import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import brooklyn.entity.Application;
+import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.trait.Startable;
 
-public class Application {
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+
+public class ApplicationSummary {
 
   public static enum Status {
     ACCEPTED,
     STARTING,
     RUNNING,
     STOPPING,
+    STOPPED,
     ERROR,
-    UNKNOWN
+    UNKNOWN;
+
+    public static Status fromApplication(Application application) {
+        if (application==null) return UNKNOWN;
+        Lifecycle state = application.getAttribute(Attributes.SERVICE_STATE);
+        if (state!=null) return fromLifecycle(state);
+        Boolean up = application.getAttribute(Startable.SERVICE_UP);
+        if (up!=null && up.booleanValue()) return Status.RUNNING;
+        return Status.UNKNOWN;
+    }
+    public static Status fromLifecycle(Lifecycle state) {
+        if (state==null) return UNKNOWN;
+        switch (state) {
+        case CREATED: return ACCEPTED;
+        case STARTING: return STARTING;
+        case RUNNING: return RUNNING;
+        case STOPPING: return STOPPING;
+        case STOPPED: return STOPPED; 
+        case DESTROYED: 
+        case ON_FIRE:
+        default: 
+            return UNKNOWN;
+        }
+    }
   }
 
   private final static Map<Status, Status> validTransitions =
@@ -26,7 +58,14 @@ public class Application {
           .put(Status.ACCEPTED, Status.STARTING)
           .put(Status.STARTING, Status.RUNNING)
           .put(Status.RUNNING, Status.STOPPING)
+          .put(Status.STOPPING, Status.STOPPED)
+          .put(Status.STOPPED, Status.STARTING)
           .build();
+
+  public static final Function<? super Application, ApplicationSummary> FROM_APPLICATION = new Function<Application, ApplicationSummary>() {
+      @Override
+      public ApplicationSummary apply(Application input) { return fromApplication(input); }
+  };
 
   private final ApplicationSpec spec;
   private final Status status;
@@ -34,7 +73,7 @@ public class Application {
   @JsonIgnore
   private transient AbstractApplication instance;
 
-  public Application(
+  public ApplicationSummary(
       @JsonProperty("spec") ApplicationSpec spec,
       @JsonProperty("status") Status status
   ) {
@@ -42,12 +81,18 @@ public class Application {
     this.status = checkNotNull(status, "status");
   }
 
-  public Application(ApplicationSpec spec, Status status, AbstractApplication instance) {
+  public ApplicationSummary(ApplicationSpec spec, Status status, AbstractApplication instance) {
     this.spec = checkNotNull(spec, "spec");
     this.status = checkNotNull(status, "status");
     this.instance = instance;
   }
 
+  public static ApplicationSummary fromApplication(Application application) {
+      return new ApplicationSummary(ApplicationSpec.fromApplication(application), 
+              Status.fromApplication(application), 
+              (AbstractApplication) application);
+  }
+  
   public ApplicationSpec getSpec() {
     return spec;
   }
@@ -78,9 +123,9 @@ public class Application {
     );
   }
 
-  public Application transitionTo(Status newStatus) {
+  public ApplicationSummary transitionTo(Status newStatus) {
     if (newStatus == Status.ERROR || validTransitions.get(status) == newStatus) {
-      return new Application(spec, newStatus, instance);
+      return new ApplicationSummary(spec, newStatus, instance);
     }
     throw new IllegalStateException("Invalid transition from '" +
         status + "' to '" + newStatus + "'");
@@ -91,7 +136,7 @@ public class Application {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    Application that = (Application) o;
+    ApplicationSummary that = (ApplicationSummary) o;
 
     if (spec != null ? !spec.equals(that.spec) : that.spec != null)
       return false;

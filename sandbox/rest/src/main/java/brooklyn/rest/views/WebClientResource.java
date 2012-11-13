@@ -1,4 +1,4 @@
-package brooklyn.rest.resources;
+package brooklyn.rest.views;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -16,7 +16,7 @@ import java.net.URL;
 @Path("/")
 @Api(value = "/", description = "Loads the javascript client for this web service")
 @Produces(MediaType.TEXT_HTML)
-public class WebClientResource extends BaseResource {
+public class WebClientResource {
 
   @GET
   @ApiOperation(value = "JavaScript client GUI page")
@@ -30,4 +30,5 @@ public class WebClientResource extends BaseResource {
     }
     return Response.ok(pageContent).build();
   }
+  
 }

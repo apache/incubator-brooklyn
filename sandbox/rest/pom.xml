@@ -20,16 +20,11 @@
         <dropwizard.version>0.4.4</dropwizard.version>
         <slf4j.version>1.6.4</slf4j.version>
         <reflections.version>0.9.5</reflections.version>
-        <guava.version>12.0.1</guava.version>
         <jersey.multipart.version>1.12</jersey.multipart.version>
+        <jetty.version>8.1.4.v20120524</jetty.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
@@ -50,6 +45,22 @@
             <artifactId>dropwizard-auth</artifactId>
             <version>${dropwizard.version}</version>
         </dependency>
+
+    <dependency>
+        <groupId>com.sun.jersey</groupId>
+        <artifactId>jersey-json</artifactId>
+        <version>1.8</version>
+    </dependency>
+    
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-webapp</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
@@ -58,19 +69,9 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-core</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        
+        
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-database</artifactId>

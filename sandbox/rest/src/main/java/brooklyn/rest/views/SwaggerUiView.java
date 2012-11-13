@@ -1,7 +1,6 @@
 package brooklyn.rest.views;
 
 
-import brooklyn.rest.resources.SwaggerUiResource;
 import com.google.common.collect.Lists;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.Documentation;

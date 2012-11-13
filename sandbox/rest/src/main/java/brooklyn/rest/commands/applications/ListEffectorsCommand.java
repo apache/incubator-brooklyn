@@ -1,6 +1,6 @@
 package brooklyn.rest.commands.applications;
 
-import brooklyn.rest.api.Application;
+import brooklyn.rest.api.ApplicationSummary;
 import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.commands.BrooklynCommand;
@@ -33,8 +33,8 @@ public class ListEffectorsCommand extends BrooklynCommand {
     checkArgument(params.getArgList().size() >= 1, "Application name is mandatory");
 
     String name = (String) params.getArgList().get(0);
-    Application application = client.resource(uriFor("/v1/applications/" + name))
-        .type(MediaType.APPLICATION_JSON_TYPE).get(Application.class);
+    ApplicationSummary application = client.resource(uriFor("/v1/applications/" + name))
+        .type(MediaType.APPLICATION_JSON_TYPE).get(ApplicationSummary.class);
 
     queryAllEntities(out, client, application.getLinks().get("entities"));
   }

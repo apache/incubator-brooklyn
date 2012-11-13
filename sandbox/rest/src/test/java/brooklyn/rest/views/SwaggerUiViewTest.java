@@ -19,7 +19,6 @@ import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.PolicyResource;
 import brooklyn.rest.resources.SensorResource;
-import brooklyn.rest.resources.SwaggerUiResource;
 import brooklyn.rest.resources.VersionResource;
 
 import com.google.common.collect.Sets;

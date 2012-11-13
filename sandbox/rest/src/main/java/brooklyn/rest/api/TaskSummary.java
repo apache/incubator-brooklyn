@@ -1,23 +1,28 @@
 package brooklyn.rest.api;
 
-import brooklyn.entity.Entity;
-import brooklyn.management.Task;
-import static com.google.common.base.Preconditions.checkNotNull;
-import com.google.common.base.Predicate;
-import static com.google.common.collect.Iterators.find;
-import org.codehaus.jackson.annotate.JsonIgnore;
-
-import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.annotation.Nullable;
+
+import org.codehaus.jackson.annotate.JsonIgnore;
+
+import brooklyn.entity.Entity;
+import brooklyn.management.Task;
+
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+
 public class TaskSummary {
 
   private final String entityId;
   private final String entityDisplayName;
+  
   private final String displayName;
   private final String description;
   private final String id;
@@ -29,19 +34,22 @@ public class TaskSummary {
   private final String currentStatus;
   private final String detailedStatus;
 
-
   public TaskSummary(Task task) {
-    checkNotNull(task);
+    Preconditions.checkNotNull(task);
     // 'ported' from groovy web console TaskSummary.groovy , not sure if always works as intended
-    Entity entity = (Entity) find(task.getTags().iterator(), new Predicate<Object>() {
+    Entity entity = (Entity) Iterables.find(task.getTags(), new Predicate<Object>() {
       @Override
       public boolean apply(@Nullable Object input) {
         return input instanceof Entity;
       }
     });
-
-    this.entityId = entity.getId();
-    this.entityDisplayName = entity.getDisplayName();
+    if (entity!=null) {
+        this.entityId = entity.getId();
+        this.entityDisplayName = entity.getDisplayName();
+    } else {
+        this.entityId = null;
+        this.entityDisplayName = entity.getDisplayName();
+    }
 
     this.tags = task.getTags();
     this.displayName = task.getDisplayName();
@@ -55,6 +63,13 @@ public class TaskSummary {
     this.detailedStatus = task.getStatusDetail(true);
   }
 
+  public static final TaskSummary fromTask(Task<?> task) { return new TaskSummary(task); }
+  
+  public static final Function<Task<?>, TaskSummary> FROM_TASK = new Function<Task<?>, TaskSummary>() {
+      @Override
+      public TaskSummary apply(@Nullable Task<?> input) { return fromTask(input); }
+  };
+    
   // formatter is not thread-safe; use thread-local storage
   private static final ThreadLocal<DateFormat> formatter = new ThreadLocal<DateFormat>() {
     @Override

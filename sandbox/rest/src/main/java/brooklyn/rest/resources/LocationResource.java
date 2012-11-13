@@ -1,6 +1,5 @@
 package brooklyn.rest.resources;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.transform;
 
 import java.net.URI;
@@ -21,9 +20,7 @@ import javax.ws.rs.core.Response;
 import brooklyn.location.Location;
 import brooklyn.rest.api.LocationSpec;
 import brooklyn.rest.api.LocationSummary;
-import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.EntityLocationUtils;
-import brooklyn.rest.core.LocationStore;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
@@ -35,26 +32,14 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/locations")
 @Api(value = "/v1/locations", description = "Manage locations")
 @Produces(MediaType.APPLICATION_JSON)
-public class LocationResource extends BaseResource {
-
-  private final LocationStore store;
-  private ApplicationManager manager;
-
-  public LocationResource(LocationStore store) {
-      this(null, store);
-  }
-
-  public LocationResource(ApplicationManager manager, LocationStore store) {
-      this.manager = manager;
-      this.store = checkNotNull(store, "store");
-  }
+public class LocationResource extends BrooklynResourceBase {
 
   @GET
   @ApiOperation(value = "Fetch the list of locations",
       responseClass = "brooklyn.rest.api.LocationSummary",
       multiValueResponse = true)
   public List<LocationSummary> list() {
-    return Lists.newArrayList(transform(store.entries(),
+    return Lists.newArrayList(transform(brooklyn().getLocationStore().entries(),
         new Function<Map.Entry<Integer, LocationSpec>, LocationSummary>() {
           @Override
           public LocationSummary apply(Map.Entry<Integer, LocationSpec> entry) {
@@ -68,9 +53,8 @@ public class LocationResource extends BaseResource {
   @Path("/usage/LocatedLocations")
   @ApiOperation(value = "Return a summary of all usage", notes="interim API, expected to change")
   public Map<String,Map<String,Object>> get() {
-      if (manager==null) throw preconditionFailed("Management Context required for this operation");
       Map<String,Map<String,Object>> result = new LinkedHashMap<String,Map<String,Object>>();
-      Map<Location, Integer> counts = new EntityLocationUtils(manager.getManagementContext()).countLeafEntitiesByLocatedLocations();
+      Map<Location, Integer> counts = new EntityLocationUtils(mgmt()).countLeafEntitiesByLocatedLocations();
       for (Map.Entry<Location,Integer> count: counts.entrySet()) {
           Location l = count.getKey();
           Map<String,Object> m = MutableMap.<String,Object>of(
@@ -92,7 +76,7 @@ public class LocationResource extends BaseResource {
   public LocationSummary get(
       @ApiParam(value = "Location id to fetch", required = true)
       @PathParam("location") Integer locationId) {
-    return new LocationSummary(locationId.toString(), store.get(locationId));
+    return new LocationSummary(locationId.toString(), brooklyn().getLocationStore().get(locationId));
   }
 
   @POST
@@ -100,7 +84,7 @@ public class LocationResource extends BaseResource {
   public Response create(
       @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
       @Valid LocationSpec locationSpec) {
-    int id = store.put(locationSpec);
+    int id = brooklyn().getLocationStore().put(locationSpec);
     return Response.created(URI.create("" + id)).build();
   }
 
@@ -110,7 +94,7 @@ public class LocationResource extends BaseResource {
   public void delete(
       @ApiParam(value = "Location id to delete", required = true)
       @PathParam("location") Integer locationId) {
-    store.remove(locationId);
+      brooklyn().getLocationStore().remove(locationId);
   }
 
 }

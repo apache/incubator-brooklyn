@@ -1,10 +1,12 @@
 package brooklyn.rest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.auth.BasicAuthFilter;
 import brooklyn.rest.auth.ConfigBasedAuthenticator;
 import brooklyn.rest.auth.User;
@@ -14,17 +16,16 @@ import brooklyn.rest.commands.applications.ListApplicationsCommand;
 import brooklyn.rest.commands.applications.ListEffectorsCommand;
 import brooklyn.rest.commands.applications.QuerySensorsCommand;
 import brooklyn.rest.commands.applications.StartApplicationCommand;
+import brooklyn.rest.commands.catalog.CatalogEntityDetailsCommand;
 import brooklyn.rest.commands.catalog.ListCatalogEntitiesCommand;
 import brooklyn.rest.commands.catalog.ListCatalogPoliciesCommand;
-import brooklyn.rest.commands.catalog.CatalogEntityDetailsCommand;
 import brooklyn.rest.commands.catalog.LoadClassCommand;
 import brooklyn.rest.commands.locations.AddLocationCommand;
 import brooklyn.rest.commands.locations.ListLocationsCommand;
-import brooklyn.rest.core.ApplicationManager;
-import brooklyn.rest.core.LocationStore;
 import brooklyn.rest.health.GeneralHealthCheck;
 import brooklyn.rest.resources.ActivityResource;
 import brooklyn.rest.resources.ApplicationResource;
+import brooklyn.rest.resources.BrooklynResourceBase;
 import brooklyn.rest.resources.CatalogResource;
 import brooklyn.rest.resources.ConfigResource;
 import brooklyn.rest.resources.EffectorResource;
@@ -32,9 +33,9 @@ import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.PolicyResource;
 import brooklyn.rest.resources.SensorResource;
-import brooklyn.rest.resources.SwaggerUiResource;
 import brooklyn.rest.resources.VersionResource;
-import brooklyn.rest.resources.WebClientResource;
+import brooklyn.rest.views.SwaggerUiResource;
+import brooklyn.rest.views.WebClientResource;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilderSpec;
@@ -53,7 +54,7 @@ import com.yammer.dropwizard.views.ViewBundle;
 public class BrooklynService extends Service<BrooklynConfiguration> {
 
   private volatile Environment environment;
-  private volatile ApplicationManager applicationManager;
+  private volatile ManagementContext managementContext = new LocalManagementContext();
 
   private final CountDownLatch initialized = new CountDownLatch(1);
 
@@ -64,10 +65,25 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     addBundle(new ViewBundle());
   }
 
-  public ApplicationManager getApplicationManager() {
-    return applicationManager;
+  public ManagementContext getManagementContext() {
+    return managementContext;
   }
 
+  public static final Iterable<BrooklynResourceBase> getBrooklynRestResources() {
+      List<BrooklynResourceBase> resources = new ArrayList<BrooklynResourceBase>();
+      resources.add(new LocationResource());
+      resources.add(new CatalogResource());
+      resources.add(new ApplicationResource());
+      resources.add(new EntityResource());
+      resources.add(new ConfigResource());
+      resources.add(new SensorResource());
+      resources.add(new EffectorResource());
+      resources.add(new PolicyResource());
+      resources.add(new ActivityResource());
+      resources.add(new VersionResource());
+      return resources;
+  }
+  
   @Override
   protected void initialize(BrooklynConfiguration configuration, Environment environment)
       throws Exception {
@@ -76,33 +92,20 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
     // Create managed components and wire them together
 
-    LocationStore locationStore = new LocationStore(configuration);
-    environment.manage(locationStore);
+//    LocationStore locationStore = new LocationStore(configuration);
+//    environment.manage(locationStore);
+//
+//    ExecutorConfiguration executorConfig = configuration.getExecutorConfiguration();
+//    ExecutorService managedExecutor = environment.managedExecutorService("brooklyn",
+//        executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
+//        executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
 
-    CatalogResource catalogResource = new CatalogResource();
-
-    ExecutorConfiguration executorConfig = configuration.getExecutorConfiguration();
-    ExecutorService managedExecutor = environment.managedExecutorService("brooklyn",
-        executorConfig.getCorePoolSize(), executorConfig.getMaximumPoolSize(),
-        executorConfig.getKeepAliveTimeInSeconds(), TimeUnit.SECONDS);
-
-    applicationManager = new ApplicationManager(configuration,
-        locationStore, catalogResource, managedExecutor);
-    environment.manage(applicationManager);
-
-    environment.addResource(new LocationResource(applicationManager, locationStore));
-    environment.addResource(catalogResource);
-
-    environment.addResource(new ApplicationResource(applicationManager, locationStore, catalogResource));
-
-    environment.addResource(new EntityResource(applicationManager));
-    environment.addResource(new ConfigResource(applicationManager));
-    environment.addResource(new SensorResource(applicationManager));
-    environment.addResource(new EffectorResource(applicationManager));
-    environment.addResource(new PolicyResource(applicationManager));
-    environment.addResource(new ActivityResource(applicationManager));
+    for (BrooklynResourceBase r: getBrooklynRestResources()) {
+        r.injectManagementContext(getManagementContext());
+        environment.addResource(r);
+    }
+    
     environment.addResource(new SwaggerUiResource());
-    environment.addResource(new VersionResource());
     environment.addResource(new WebClientResource());
 
     environment.addHealthCheck(new GeneralHealthCheck());

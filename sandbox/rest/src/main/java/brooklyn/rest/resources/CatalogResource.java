@@ -1,19 +1,8 @@
 package brooklyn.rest.resources;
 
-import groovy.lang.GroovyClassLoader;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -27,23 +16,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.reflections.ReflectionUtils;
-import org.reflections.Reflections;
-import org.reflections.scanners.Scanner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.Application;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.api.CatalogEntitySummary;
 import brooklyn.rest.api.CatalogPolicySummary;
-import brooklyn.util.exceptions.Exceptions;
+import brooklyn.rest.core.WebResourceUtils;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
@@ -56,231 +33,87 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/catalog")
 @Api(value = "/v1/catalog", description = "Manage entities and policies available on the server")
 @Produces(MediaType.APPLICATION_JSON)
-public class CatalogResource extends BaseResource {
+public class CatalogResource extends BrooklynResourceBase {
 
-    private static final Logger log = LoggerFactory.getLogger(CatalogResource.class);
+
+    @POST
+    @ApiOperation(value = "Create a new entity by uploading a Groovy script from browser using multipart/form-data",
+        responseClass = "String")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response createFromMultipart(
+        @ApiParam(name = "groovyCode", value = "multipart/form-data file input field")
+        @FormDataParam("groovyCode") InputStream uploadedInputStream,
+        @FormDataParam("groovyCode") FormDataContentDisposition fileDetail) throws IOException {
+
+      return brooklyn().getCatalog().createFromGroovyCode(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
+    }
     
-  private volatile boolean scanNeeded = true;
-  private Map<String, Class<? extends AbstractEntity>> scannedEntities = Collections.emptyMap();
-  private final Map<String, Class<? extends AbstractEntity>> registeredEntities = Maps.newConcurrentMap();
-  private Map<String, Class<? extends AbstractPolicy>> scannedPolicies = Collections.emptyMap();
-  private final Map<String, Class<? extends AbstractPolicy>> registeredPolicies = Maps.newConcurrentMap();
+    @POST
+    @ApiOperation(value = "Create new entity or policy by uploading a Groovy script", responseClass = "String")
+    public Response create(
+            @ApiParam(name = "groovyCode", value = "Groovy code for the entity or policy", required = true)
+            @Valid String groovyCode
+    ) {
+        return brooklyn().getCatalog().createFromGroovyCode(groovyCode);
+    }
 
-  private synchronized void scanIfNeeded() {
-      // defer expensive scans, particularly for unit tests
-      if (scanNeeded==false) return;
-      scanNeeded = false;
-      // TODO allow other prefixes to be supplied?
-      scannedEntities = buildMapOfSubTypesOf("brooklyn", AbstractEntity.class);
-      scannedPolicies = buildMapOfSubTypesOf("brooklyn", AbstractPolicy.class);
-  }
-  
-  private <T> Map<String, Class<? extends T>> buildMapOfSubTypesOf(String prefix, Class<T> clazz) {
-    Reflections reflections = new SafeReflections(prefix);
-    ImmutableMap.Builder<String, Class<? extends T>> builder = ImmutableMap.builder();
-    for (Class<? extends T> candidate : reflections.getSubTypesOf(clazz)) {
-      if (!Modifier.isAbstract(candidate.getModifiers()) &&
-          !candidate.isInterface() &&
-          !candidate.isAnonymousClass()) {
-        builder.put(candidate.getName(), candidate);
+    @GET
+    @Path("/entities")
+    @ApiOperation(value = "Fetch a list of entities matching a query", responseClass = "String", multiValueResponse = true)
+    public Iterable<String> listEntities(
+        @ApiParam(name = "name", value = "Query to filter entities by")
+        final @QueryParam("name") @DefaultValue("") String name
+    ) {
+        return brooklyn().getCatalog().listEntitiesMatching(name, false);
+    }
+
+    @GET
+    @Path("/applications")
+    @ApiOperation(value = "Fetch a list of application templates matching a query", responseClass = "String", multiValueResponse = true)
+    public Iterable<String> listApplications(
+        @ApiParam(name = "name", value = "Query to filter application templates by")
+        final @QueryParam("name") @DefaultValue("") String name
+    ) {
+        return brooklyn().getCatalog().listEntitiesMatching(name, true);
+    }
+
+    @GET
+    @Path("/entities/{entity}")
+    @ApiOperation(value = "Fetch an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Entity not found")
+    })
+    public CatalogEntitySummary getEntity(
+        @ApiParam(name = "entity", value = "The class name of the entity to retrieve", required = true)
+        @PathParam("entity") String entityType) throws Exception {
+      if (!brooklyn().getCatalog().containsEntity(entityType)) {
+        throw WebResourceUtils.notFound("Entity with type '%s' not found", entityType);
       }
-    }
-    return builder.build();
-  }
 
-  public boolean containsEntity(String entityName) {
-    if (registeredEntities.containsKey(entityName)) return true;
-    if (scanNeeded) {
-        // test early to avoid scan
-        if (forName(entityName, false)!=null) return true;
+      return CatalogEntitySummary.fromType(brooklyn().getCatalog().getEntityClass(entityType));
     }
-    scanIfNeeded();
-    if (scannedEntities.containsKey(entityName)) return true;
-    return false;
-  }
 
-  public boolean containsPolicy(String policyName) {
-      if (registeredPolicies.containsKey(policyName)) return true;
-      if (scanNeeded) {
-          // test early to avoid scan
-          if (forName(policyName, false)!=null) return true;
+    @GET
+    @Path("/policies")
+    @ApiOperation(value = "List available policies", responseClass = "String", multiValueResponse = true)
+    public Iterable<String> listPolicies() {
+        return brooklyn().getCatalog().listPolicies();
+    }
+    
+    @GET
+    @Path("/policies/{policy}")
+    @ApiOperation(value = "Fetch a policy's definition from the catalog", responseClass = "String", multiValueResponse = true)
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Entity not found")
+    })
+    public CatalogPolicySummary getPolicy(
+        @ApiParam(name = "policy", value = "The class name of the policy to retrieve", required = true)
+        @PathParam("policy") String policyType) throws Exception {
+      if (!brooklyn().getCatalog().containsPolicy(policyType)) {
+        throw WebResourceUtils.notFound("Policy with type '%s' not found", policyType);
       }
-      scanIfNeeded();
-      if (scannedPolicies.containsKey(policyName)) return true;
-      return false;
-  }
 
-  @SuppressWarnings("unchecked")
-  private static <T> Class<? extends T> forName(String className, boolean required) {
-    try {
-        return (Class<? extends T>) Class.forName(className);
-    } catch (ClassNotFoundException e) {
-        if (required) throw Exceptions.propagate(e);
-        return null;
-    }
-  }
-  
-  public Class<? extends AbstractEntity> getEntityClass(String entityName) {
-    Class<? extends AbstractEntity> result = registeredEntities.get(entityName);
-    if (result!=null) return result;
-    result = forName(entityName, false);
-    if (result!=null) return result;
-    scanIfNeeded();
-    result = scannedEntities.get(entityName);
-    if (result!=null) return result;
-    throw new NoSuchElementException("No entity class "+entityName);
-  }
-
-  public Class<? extends AbstractPolicy> getPolicyClass(String policyName) {
-      Class<? extends AbstractPolicy> result = registeredPolicies.get(policyName);
-      if (result!=null) return result;
-      result = forName(policyName, false);
-      if (result!=null) return result;
-      scanIfNeeded();
-      result = scannedPolicies.get(policyName);
-      if (result!=null) return result;
-      throw new NoSuchElementException("No policy class "+policyName);
-  }
-
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  @POST
-  @ApiOperation(value = "Create new entity or policy by uploading a Groovy script", responseClass = "String")
-  public Response create(
-      @ApiParam(name = "groovyCode", value = "Groovy code for the entity or policy", required = true)
-      @Valid String groovyCode) {
-    ClassLoader parent = getClass().getClassLoader();
-    GroovyClassLoader loader = new GroovyClassLoader(parent);
-
-    Class clazz = loader.parseClass(groovyCode);
-
-    if (AbstractEntity.class.isAssignableFrom(clazz)) {
-      registeredEntities.put(clazz.getName(), clazz);
-      return Response.created(URI.create("entities/" + clazz.getName())).build();
-
-    } else if (AbstractPolicy.class.isAssignableFrom(clazz)) {
-      registeredPolicies.put(clazz.getName(), clazz);
-      return Response.created(URI.create("policies/" + clazz.getName())).build();
+      return CatalogPolicySummary.fromType(brooklyn().getCatalog().getPolicyClass(policyType));
     }
 
-    return Response.ok().build();
-  }
-
-  @POST
-  @ApiOperation(value = "Create a new entity by uploading a Groovy script from browser using multipart/form-data",
-      responseClass = "String")
-  @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public Response createFromMultipart(
-      @ApiParam(name = "groovyCode", value = "multipart/form-data file input field")
-      @FormDataParam("groovyCode") InputStream uploadedInputStream,
-      @FormDataParam("groovyCode") FormDataContentDisposition fileDetail) throws IOException {
-
-    return create(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
-  }
-
-  @GET
-  @Path("/entities")
-  @ApiOperation(value = "Fetch a list of entities matching a query", responseClass = "String", multiValueResponse = true)
-  public Iterable<String> listEntities(
-      @ApiParam(name = "name", value = "Query to filter entities by")
-      final @QueryParam("name") @DefaultValue("") String name
-  ) {
-      return listEntitiesMatching(name, false);
-  }
-
-  @GET
-  @Path("/applications")
-  @ApiOperation(value = "Fetch a list of application templates matching a query", responseClass = "String", multiValueResponse = true)
-  public Iterable<String> listApplications(
-      @ApiParam(name = "name", value = "Query to filter application templates by")
-      final @QueryParam("name") @DefaultValue("") String name
-  ) {
-      return listEntitiesMatching(name, true);
-  }
-
-  protected Iterable<String> listEntitiesMatching(String name, boolean onlyApps) {
-    scanIfNeeded();
-    List<String> result = new ArrayList<String>();
-    result.addAll(registeredEntities.keySet());
-    result.addAll(scannedEntities.keySet());
-    if (name!=null && !name.isEmpty()) {
-      final String normalizedName = name.toLowerCase();
-      Iterator<String> ri = result.iterator();
-      while (ri.hasNext()) {
-          if (!ri.next().toLowerCase().contains(normalizedName)) ri.remove();
-      }
-    }
-    if (onlyApps) {
-        Iterator<String> ri = result.iterator();
-        while (ri.hasNext()) {
-            Class<? extends AbstractEntity> type = getEntityClass(ri.next());
-            if (!Application.class.isAssignableFrom(type)) ri.remove();
-        }
-    }
-    Collections.sort(result);
-    return result;
-  }
-
-  @GET
-  @Path("/entities/{entity}")
-  @ApiOperation(value = "Fetch an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
-  @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Entity not found")
-  })
-  public CatalogEntitySummary getEntity(
-      @ApiParam(name = "entity", value = "The class name of the entity to retrieve", required = true)
-      @PathParam("entity") String entityType) throws Exception {
-    if (!containsEntity(entityType)) {
-      throw notFound("Entity with type '%s' not found", entityType);
-    }
-
-    return CatalogEntitySummary.fromType(getEntityClass(entityType));
-  }
-
-  @GET
-  @Path("/policies")
-  @ApiOperation(value = "List available policies", responseClass = "String", multiValueResponse = true)
-  public Iterable<String> listPolicies() {
-      scanIfNeeded();
-      List<String> result = new ArrayList<String>();
-      result.addAll(registeredPolicies.keySet());
-      result.addAll(scannedPolicies.keySet());
-      Collections.sort(result);
-      return result;
-  }
-  
-  @GET
-  @Path("/policies/{policy}")
-  @ApiOperation(value = "Fetch a policy's definition from the catalog", responseClass = "String", multiValueResponse = true)
-  @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Entity not found")
-  })
-  public CatalogPolicySummary getPolicy(
-      @ApiParam(name = "policy", value = "The class name of the policy to retrieve", required = true)
-      @PathParam("policy") String policyType) throws Exception {
-    if (!containsPolicy(policyType)) {
-      throw notFound("Policy with type '%s' not found", policyType);
-    }
-
-    return CatalogPolicySummary.fromType(getPolicyClass(policyType));
-  }
-
-  public static class SafeReflections extends Reflections {
-      public SafeReflections(final String prefix, final Scanner... scanners) {
-          super(prefix, scanners);
-      }
-      @SuppressWarnings("unchecked")
-      public <T> Set<Class<? extends T>> getSubTypesOf(final Class<T> type) {
-          Set<String> subTypes = getStore().getSubTypesOf(type.getName());
-          List<Class<? extends T>> result = new ArrayList<Class<? extends T>>();
-          for (String className : subTypes) {
-              //noinspection unchecked
-              try {
-                  result.add((Class<? extends T>) ReflectionUtils.forName(className));
-              } catch (Throwable e) {
-                  log.warn("Unable to instantiate '"+className+"': "+e);
-              }
-          }
-          return ImmutableSet.copyOf(result);
-      }
-  }
 }
