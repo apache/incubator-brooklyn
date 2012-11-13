@@ -1,18 +1,19 @@
 package brooklyn.event.adapter
 
 import static java.util.concurrent.TimeUnit.*
-import groovy.lang.Closure
 import groovy.time.TimeDuration
-
-import java.util.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.management.Task
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
+import brooklyn.util.task.ParallelTask
+
+import com.google.common.collect.Iterables
 
 /** Captures common fields and processes for sensor adapters */
 public abstract class AbstractSensorAdapter {
@@ -53,9 +54,10 @@ public abstract class AbstractSensorAdapter {
 	protected void activateAdapter() {
         if (activated) return; //prevent double activation
 		if (log.isDebugEnabled()) log.debug "activating adapter {} for {}", this, entity
-		activationListeners.each { it.run() }
+        entity.getExecutionContext().submit(new ParallelTask(activationListeners)).get();
 		activated = true;
 	}
+    
 	protected void deactivateAdapter() {
 		if (log.isDebugEnabled()) log.debug "deactivating adapter {} for {}", this, entity
 		activated = false;
