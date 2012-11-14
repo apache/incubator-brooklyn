@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,8 @@ import brooklyn.util.Serializers;
 public class RebindTestUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(RebindTestUtils.class);
+
+    private static final long TIMEOUT_MS = 20*1000;
     
 //    // Serialize, and de-serialize with a different management context
 //    public static Application serializeAndRebind(Application app, ClassLoader classLoader) throws Exception {
@@ -99,8 +103,8 @@ public class RebindTestUtils {
         return newApps.get(0);
     }
 
-    public static void waitForPersisted(Application origApp) throws InterruptedException {
-        origApp.getManagementContext().getRebindManager().waitForPendingComplete();
+    public static void waitForPersisted(Application origApp) throws InterruptedException, TimeoutException {
+        origApp.getManagementContext().getRebindManager().waitForPendingComplete(TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
     
     public static void checkCurrentMementoSerializable(Application app) throws Exception {

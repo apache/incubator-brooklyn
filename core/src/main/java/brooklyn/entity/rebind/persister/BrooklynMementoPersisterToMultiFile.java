@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,15 +175,15 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
 
     @Override
     @VisibleForTesting
-    public void waitForWritesCompleted() throws InterruptedException {
+    public void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
         for (MementoFileWriter<?> writer : entityWriters.values()) {
-            writer.waitForWriteCompleted();
+            writer.waitForWriteCompleted(timeout, unit);
         }
         for (MementoFileWriter<?> writer : locationWriters.values()) {
-            writer.waitForWriteCompleted();
+            writer.waitForWriteCompleted(timeout, unit);
         }
         for (MementoFileWriter<?> writer : policyWriters.values()) {
-            writer.waitForWriteCompleted();
+            writer.waitForWriteCompleted(timeout, unit);
         }
     }
 

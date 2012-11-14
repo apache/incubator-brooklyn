@@ -1,6 +1,8 @@
 package brooklyn.entity.rebind;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import brooklyn.entity.Application;
 import brooklyn.mementos.BrooklynMemento;
@@ -28,5 +30,5 @@ public interface RebindManager {
     public void stop();
 
     @VisibleForTesting
-    public void waitForPendingComplete() throws InterruptedException;
+    public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
 }

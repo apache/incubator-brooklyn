@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,10 +89,10 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     @VisibleForTesting
-    public void waitForPendingComplete() throws InterruptedException {
+     public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
         if (persister == null || !running) return;
-        realChangeListener.waitForPendingComplete();
-        if (persister != null) persister.waitForWritesCompleted();
+        realChangeListener.waitForPendingComplete(timeout, unit);
+        persister.waitForWritesCompleted(timeout, unit);
     }
     
     @Override
