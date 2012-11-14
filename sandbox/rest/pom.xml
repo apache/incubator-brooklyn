@@ -1,12 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>brooklyn-rest-SANDBOX</artifactId>
-    <packaging>bundle</packaging>
-    <name>Brooklyn Rest</name>
+    <packaging>war</packaging>
+    <name>Brooklyn REST API</name>
     <description>
-        Brooklyn Rest endpoint
+        Brooklyn REST Endpoint
     </description>
 
     <parent>
@@ -17,45 +16,66 @@
     </parent>
 
     <properties>
-        <dropwizard.version>0.4.4</dropwizard.version>
         <slf4j.version>1.6.4</slf4j.version>
-        <reflections.version>0.9.5</reflections.version>
-        <jersey.multipart.version>1.12</jersey.multipart.version>
         <jetty.version>8.1.4.v20120524</jetty.version>
+        <jersey.version>1.12</jersey.version>
+        <jersey.json.version>1.12</jersey.json.version>
+        <jersey.multipart.version>1.12</jersey.multipart.version>
+        <jackson.version>1.9.9</jackson.version>
+        <reflections.version>0.9.5</reflections.version>
+        <dropwizard.version>0.4.4</dropwizard.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-core</artifactId>
-            <version>${dropwizard.version}</version>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-client</artifactId>
-            <version>${dropwizard.version}</version>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-servlet</artifactId>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-views</artifactId>
-            <version>${dropwizard.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-auth</artifactId>
-            <version>${dropwizard.version}</version>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+            <version>${jersey.json.version}</version>
         </dependency>
 
-    <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-json</artifactId>
-        <version>1.8</version>
-    </dependency>
-    
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <version>${jersey.multipart.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-jaxrs</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-xc</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>1.0.0.GA</version>
+        </dependency>
+
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-webapp</artifactId>
@@ -70,39 +90,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        
-        
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-software-database</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-software-messaging</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-software-nosql</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-software-osgi</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-software-webapp</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yammer.dropwizard</groupId>
-            <artifactId>dropwizard-testing</artifactId>
-            <version>${dropwizard.version}</version>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-test-support</artifactId>
@@ -116,23 +104,29 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-core</artifactId>
-            <version>${project.version}</version>
-            <classifier>tests</classifier>
+            <artifactId>brooklyn-policy</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-software-base</artifactId>
+            <artifactId>brooklyn-software-nosql</artifactId>
             <version>${project.version}</version>
-            <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.wordnik</groupId>
-            <artifactId>swagger-jaxrs_2.9.1</artifactId>
-            <version>1.0.1</version>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-webapp</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.yammer.dropwizard</groupId>
+            <artifactId>dropwizard-testing</artifactId>
+            <version>${dropwizard.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- swagger annotations used -->
         <dependency>
             <groupId>com.wordnik</groupId>
             <artifactId>swagger-core_2.9.1</artifactId>
@@ -144,43 +138,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.iq80.cli</groupId>
-            <artifactId>git-like-cli</artifactId>
-            <version>${git-like-cli.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>1.8</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.7</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-multipart</artifactId>
-            <version>${jersey.multipart.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-multipart</artifactId>
-            <version>${jersey.multipart.version}</version>
-        </dependency>
+        <!-- <dependency> <groupId>com.wordnik</groupId> <artifactId>swagger-jaxrs_2.9.1</artifactId> <version>1.0.1</version> </dependency> 
+            <dependency> <groupId>org.iq80.cli</groupId> <artifactId>git-like-cli</artifactId> <version>${git-like-cli.version}</version> </dependency> 
+            <dependency> <groupId>com.sun.jersey</groupId> <artifactId>jersey-client</artifactId> <version>${jersey.version}</version> </dependency> -->
+
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
-                <directory>${project.basedir}/src/main/resources</directory>
-            </resource>
-            <resource>
-                <directory>${project.basedir}/src/test/resources/fixtures</directory>
-                <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -213,36 +177,6 @@
                             <mainClass>brooklyn.rest.BrooklynService</mainClass>
                         </manifest>
                     </archive>
-                </configuration>
-            </plugin>
-            <!-- run js tests with: $ mvn clean process-resources jasmine:test -->
-            <plugin>
-                <groupId>com.github.searls</groupId>
-                <artifactId>jasmine-maven-plugin</artifactId>
-                <version>1.2.0.0</version>
-                <!-- avoid double phase executions https://github.com/searls/jasmine-maven-plugin/pull/54 -->
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <id>FIREFOX_3</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <browserVersion>FIREFOX_3</browserVersion>
-                    <junitXmlReportFileName>TEST-FIREFOX_3-jasmine.xml</junitXmlReportFileName>
-                    <manualSpecRunnerHtmlFileName>FIREFOX_3-ManualSpecRunner.html</manualSpecRunnerHtmlFileName>
-                    <specRunnerHtmlFileName>FIREFOX_3-SpecRunner.html</specRunnerHtmlFileName>
-                    <jsSrcDir>${project.basedir}/src/main/resources/assets</jsSrcDir>
-                    <jsTestSrcDir>${project.basedir}/src/test/javascript/specs</jsTestSrcDir>
-                    <specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
-                    <scriptLoaderPath>js/libs/require.js</scriptLoaderPath>
-                    <customRunnerConfiguration>
-                        ${project.basedir}/src/test/javascript/config.txt
-                    </customRunnerConfiguration>
                 </configuration>
             </plugin>
         </plugins>

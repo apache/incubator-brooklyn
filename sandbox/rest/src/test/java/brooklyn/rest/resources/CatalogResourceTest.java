@@ -10,14 +10,14 @@ import javax.ws.rs.core.Response;
 
 import org.testng.annotations.Test;
 
-import brooklyn.rest.BaseResourceTest;
-import brooklyn.rest.api.CatalogEntitySummary;
+import brooklyn.rest.domain.CatalogEntitySummary;
+import brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 
-public class CatalogResourceTest extends BaseResourceTest {
+public class CatalogResourceTest extends BrooklynRestResourceTest {
 
   @Override
   protected void setUpResources() throws Exception {

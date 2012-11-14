@@ -14,7 +14,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.rest.api.ConfigSummary;
+import brooklyn.rest.domain.ConfigSummary;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -28,7 +28,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/applications/{application}/entities/{entity}/config")
 @Api(value = "/v1/applications/{application}/entities/{entity}/config", description = "Manage configuration for each application entity")
 @Produces("application/json")
-public class ConfigResource extends BrooklynResourceBase {
+public class ConfigResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Fetch the config keys for a specific application entity",

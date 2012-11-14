@@ -24,11 +24,11 @@ import org.codehaus.jackson.node.ObjectNode;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
-import brooklyn.rest.api.ApplicationSpec;
-import brooklyn.rest.api.ApplicationSummary;
-import brooklyn.rest.api.EntitySpec;
-import brooklyn.rest.api.TaskSummary;
-import brooklyn.rest.core.WebResourceUtils;
+import brooklyn.rest.domain.ApplicationSpec;
+import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.collect.Collections2;
 import com.wordnik.swagger.core.Api;
@@ -40,7 +40,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/applications")
 @Api(value = "/v1/applications", description = "Manage applications")
 @Produces(MediaType.APPLICATION_JSON)
-public class ApplicationResource extends BrooklynResourceBase {
+public class ApplicationResource extends AbstractBrooklynRestResource {
 
 //  private final ApplicationManager manager;
 //  private final CatalogResource catalog;

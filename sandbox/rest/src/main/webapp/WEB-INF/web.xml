@@ -4,19 +4,52 @@
 
 <web-app>
     <display-name>Brooklyn REST API v1</display-name>
-<!-- 
-  <servlet>
-    <servlet-name>Brooklyn REST API v1</servlet-name>
-    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-    <init-param>
-        <param-name>com.sun.jersey.config.property.packages</param-name>
-        <param-value>brooklyn.rest.resources</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Brooklyn REST API v1</servlet-name>
-    <url-pattern>/v1/*</url-pattern>
-  </servlet-mapping>
+
+<!-- run as a filter; replace filter tags with the commented-out servlet tags 
+     (the lines immediately below, then the matching tag and mapping at the bottom   
+    <servlet>
+        <servlet-name>Brooklyn REST API v1 Servlet</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
  -->
+    <filter>
+        <filter-name>Brooklyn REST API v1 Filter</filter-name>
+        <filter-class>com.sun.jersey.spi.container.servlet.ServletContainer</filter-class>
+
+        <!-- load our REST API jersey resources -->
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>brooklyn.rest.resources</param-value>
+        </init-param>
+
+        <!-- install Jackson and turn on pojo/json serialization (could add org.codehaus.jackson.jaxrs 
+             above but seems cleaner to pull in just the class -->
+        <init-param>  
+            <param-name>com.sun.jersey.config.property.classnames</param-name>
+            <param-value>org.codehaus.jackson.jaxrs.JacksonJsonProvider</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        
+        <!-- no need for WADL. of course you can turn it back on it you want. --> 
+        <init-param>
+            <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn REST API v1 Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+<!-- run as a filter; replace lines aboe with those below to run as servlet 
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Brooklyn REST API v1 Servlet</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+-->
+
 </web-app>

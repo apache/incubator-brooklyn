@@ -16,13 +16,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.EffectorUtils;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
-import brooklyn.rest.api.EffectorSummary;
-import brooklyn.rest.api.TaskSummary;
-import brooklyn.rest.core.WebResourceUtils;
+import brooklyn.rest.domain.EffectorSummary;
+import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.Time;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -33,15 +36,15 @@ import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
-import com.yammer.dropwizard.logging.Log;
 
 @Path("/v1/applications/{application}/entities/{entity}/effectors")
 @Api(value = "/v1/applications/{application}/entities/{entity}/effectors", description = "Manage effectors")
 @Produces("application/json")
-public class EffectorResource extends BrooklynResourceBase {
+public class EffectorResource extends AbstractBrooklynRestResource {
 
-  public static final Log LOG = Log.forClass(EffectorResource.class);
-
+    @SuppressWarnings("unused")
+    private static final Logger log = LoggerFactory.getLogger(EffectorResource.class);
+    
   @GET
   @ApiOperation(value = "Fetch the list of effectors",
       responseClass = "brooklyn.rest.api.EffectorSummary",

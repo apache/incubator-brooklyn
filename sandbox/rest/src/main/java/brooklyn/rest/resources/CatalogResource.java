@@ -16,9 +16,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import brooklyn.rest.api.CatalogEntitySummary;
-import brooklyn.rest.api.CatalogPolicySummary;
-import brooklyn.rest.core.WebResourceUtils;
+import brooklyn.rest.domain.CatalogEntitySummary;
+import brooklyn.rest.domain.CatalogPolicySummary;
+import brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
@@ -33,7 +33,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/catalog")
 @Api(value = "/v1/catalog", description = "Manage entities and policies available on the server")
 @Produces(MediaType.APPLICATION_JSON)
-public class CatalogResource extends BrooklynResourceBase {
+public class CatalogResource extends AbstractBrooklynRestResource {
 
 
     @POST

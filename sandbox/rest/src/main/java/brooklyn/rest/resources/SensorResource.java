@@ -16,7 +16,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.rest.api.SensorSummary;
+import brooklyn.rest.domain.SensorSummary;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -31,7 +31,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/applications/{application}/entities/{entity}/sensors")
 @Api(value = "/v1/applications/{application}/entities/{entity}/sensors", description = "Manage sensors for each application entity")
 @Produces("application/json")
-public class SensorResource extends BrooklynResourceBase {
+public class SensorResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Fetch the sensor list for a specific application entity",

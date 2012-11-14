@@ -15,12 +15,12 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.rest.BaseResourceTest;
-import brooklyn.rest.api.ApplicationSpec;
-import brooklyn.rest.api.ApplicationSummary;
-import brooklyn.rest.api.EntitySpec;
-import brooklyn.rest.api.EntitySummary;
-import brooklyn.rest.api.SensorSummary;
+import brooklyn.rest.domain.ApplicationSpec;
+import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.domain.SensorSummary;
+import brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +30,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 
 @Test(singleThreaded = true)
-public class ApplicationResourceIntegrationTest extends BaseResourceTest {
+public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 

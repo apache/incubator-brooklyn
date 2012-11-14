@@ -12,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/v1/version")
 @Api(value = "/v1/version", description = "Get brooklyn version")
 @Produces(MediaType.APPLICATION_JSON)
-public class VersionResource extends BrooklynResourceBase {
+public class VersionResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Get brooklyn version", responseClass = "String", multiValueResponse = false)

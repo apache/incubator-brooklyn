@@ -18,9 +18,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import brooklyn.location.Location;
-import brooklyn.rest.api.LocationSpec;
-import brooklyn.rest.api.LocationSummary;
-import brooklyn.rest.core.EntityLocationUtils;
+import brooklyn.rest.domain.LocationSpec;
+import brooklyn.rest.domain.LocationSummary;
+import brooklyn.rest.util.EntityLocationUtils;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
@@ -32,7 +32,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/locations")
 @Api(value = "/v1/locations", description = "Manage locations")
 @Produces(MediaType.APPLICATION_JSON)
-public class LocationResource extends BrooklynResourceBase {
+public class LocationResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Fetch the list of locations",

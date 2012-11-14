@@ -10,7 +10,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import brooklyn.entity.Entity;
-import brooklyn.rest.api.EntitySummary;
+import brooklyn.rest.domain.EntitySummary;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -23,7 +23,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/applications/{application}/entities")
 @Api(value = "/v1/applications/{application}/entities", description = "Manage entities")
 @Produces("application/json")
-public class EntityResource extends BrooklynResourceBase {
+public class EntityResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Fetch the list of entities for a given application",

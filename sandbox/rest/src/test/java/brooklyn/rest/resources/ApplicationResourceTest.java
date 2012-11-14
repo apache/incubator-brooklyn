@@ -21,18 +21,19 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.rest.BaseResourceTest;
-import brooklyn.rest.api.ApiError;
-import brooklyn.rest.api.ApplicationSpec;
-import brooklyn.rest.api.ApplicationSummary;
-import brooklyn.rest.api.ConfigSummary;
-import brooklyn.rest.api.EffectorSummary;
-import brooklyn.rest.api.EntitySpec;
-import brooklyn.rest.api.EntitySummary;
-import brooklyn.rest.api.PolicySummary;
-import brooklyn.rest.api.SensorSummary;
-import brooklyn.rest.mock.CapitalizePolicy;
-import brooklyn.rest.mock.RestMockSimpleEntity;
+import brooklyn.rest.domain.ApiError;
+import brooklyn.rest.domain.ApplicationSpec;
+import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.ConfigSummary;
+import brooklyn.rest.domain.EffectorSummary;
+import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.domain.PolicySummary;
+import brooklyn.rest.domain.SensorSummary;
+import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.rest.testing.mocks.CapitalizePolicy;
+import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +45,7 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 @Test(singleThreaded = true)
-public class ApplicationResourceTest extends BaseResourceTest {
+public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceTest.class);
     
@@ -74,14 +75,25 @@ public class ApplicationResourceTest extends BaseResourceTest {
     }
   }
 
+  private static void assertRegexMatches(String actual, String patternExpected) {
+      if (actual==null) Assert.fail("Actual value is null; expected "+patternExpected);
+      if (!actual.matches(patternExpected)) {
+          Assert.fail("Text '"+actual+"' does not match expected pattern "+patternExpected);
+      }
+  }
+  
   @Test
   public void testDeployApplication() throws InterruptedException, TimeoutException {
     ClientResponse response = client().resource("/v1/applications")
         .post(ClientResponse.class, simpleSpec);
 
     assertEquals(getManagementContext().getApplications().size(), 1);
-    assertEquals(response.getLocation().getPath(), "/v1/applications/simple-app");
-    assertEquals(response.getEntity(String.class), getManagementContext().getApplications().iterator().next().getApplicationId());
+    assertRegexMatches(response.getLocation().getPath(), "/v1/applications/.*");
+//    Object taskO = response.getEntity(Object.class);
+    TaskSummary task = response.getEntity(TaskSummary.class);
+    log.info("deployed, got "+task);
+    assertEquals(task.getEntityId(), 
+            getManagementContext().getApplications().iterator().next().getApplicationId());
 
     waitForApplicationToBeRunning(response.getLocation());
   }
@@ -142,7 +154,7 @@ public class ApplicationResourceTest extends BaseResourceTest {
         .get(new GenericType<Set<ApplicationSummary>>() {
         });
     for (ApplicationSummary app: applications) {
-        if (app.getSpec().equals(simpleSpec)) return;
+        if (simpleSpec.getName().equals(app.getSpec().getName())) return;
     }
     Assert.fail("simple-app not found in list of applications: "+applications);
   }

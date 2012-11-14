@@ -1,8 +1,8 @@
 package brooklyn.rest.resources;
 
-import brooklyn.rest.BaseResourceTest;
+import brooklyn.rest.testing.BrooklynRestResourceTest;
 
-public class ActivityResourceTest extends BaseResourceTest {
+public class ActivityResourceTest extends BrooklynRestResourceTest {
 
     
   @Override

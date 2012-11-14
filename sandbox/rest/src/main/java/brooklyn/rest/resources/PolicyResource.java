@@ -22,8 +22,8 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.basic.Policies;
-import brooklyn.rest.api.PolicySummary;
-import brooklyn.rest.core.WebResourceUtils;
+import brooklyn.rest.domain.PolicySummary;
+import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
@@ -38,7 +38,7 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/applications/{application}/entities/{entity}/policies")
 @Api(value = "/v1/applications/{application}/entities/{entity}/policies", description = "Manage policies for each application entity")
 @Produces("application/json")
-public class PolicyResource extends BrooklynResourceBase {
+public class PolicyResource extends AbstractBrooklynRestResource {
 
     private static final Logger log = LoggerFactory.getLogger(PolicyResource.class);
     

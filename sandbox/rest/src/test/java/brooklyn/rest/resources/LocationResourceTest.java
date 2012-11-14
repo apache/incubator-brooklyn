@@ -10,12 +10,14 @@ import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import brooklyn.rest.BrooklynMgrResourceTest;
-import brooklyn.rest.api.LocationSpec;
-import brooklyn.rest.api.LocationSummary;
-import brooklyn.rest.core.LocationStore;
+import brooklyn.rest.domain.LocationSpec;
+import brooklyn.rest.domain.LocationSummary;
+import brooklyn.rest.legacy.LocationStore;
+import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.test.TestUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -23,9 +25,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 
 @Test(singleThreaded = true)
-public class LocationResourceTest extends BrooklynMgrResourceTest {
-
-  private LocationStore store;
+public class LocationResourceTest extends BrooklynRestResourceTest {
 
   @Override
   protected void setUpResources() throws Exception {
@@ -66,10 +66,15 @@ public class LocationResourceTest extends BrooklynMgrResourceTest {
 
   @Test(dependsOnMethods = {"testAddNewLocation"})
   public void testDeleteLocation() {
-    assertThat(store.entries().size(), is(2));
+    final int size = getLocationStore().entries().size();
 
-    ClientResponse response = client().resource("/v1/locations/1").delete(ClientResponse.class);
+    ClientResponse response = client().resource("/v1/locations/0").delete(ClientResponse.class);
     assertThat(response.getStatus(), is(Response.Status.NO_CONTENT.getStatusCode()));
-    assertThat(store.entries().size(), is(1));
+    TestUtils.assertEventually(new Runnable() {
+       @Override
+       public void run() {
+           assertThat(getLocationStore().entries().size(), is(size-1));
+       } 
+    });
   }
 }
