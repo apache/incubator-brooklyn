@@ -3,6 +3,8 @@ package brooklyn.entity.rebind.persister;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.util.Serializers;
@@ -26,7 +28,7 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
     
     @VisibleForTesting
     @Override
-    public void waitForWritesCompleted() throws InterruptedException {
+    public void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
         // TODO Could wait for concurrent checkpoint/delta, but don't need to for tests
         // because first waits for checkpoint/delta to have been called by RebindManagerImpl.
         return;

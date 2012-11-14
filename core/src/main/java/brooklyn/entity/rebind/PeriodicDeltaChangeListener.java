@@ -2,6 +2,8 @@ package brooklyn.entity.rebind;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -13,6 +15,7 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.policy.Policy;
+import brooklyn.util.Time;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 
@@ -88,13 +91,24 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
      * This method must only be used for testing. If required in production, then revisit implementation!
      */
     @VisibleForTesting
-    public void waitForPendingComplete() throws InterruptedException {
-        long mods = writeCount.get();
+    public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        // Every time we finish writing, we increment a counter. We note the current val, and then
+        // wait until we can guarantee that a complete additional write has been done. Not sufficient
+        // to wait for `writeCount > origWriteCount` because we might have read the value when almost 
+        // finished a write.
+        
+        long startTime = System.currentTimeMillis();
+        long maxEndtime = (timeout > 0) ? (startTime + unit.toMillis(timeout)) : Long.MAX_VALUE;
+        long origWriteCount = writeCount.get();
         while (true) {
             if (!isActive()) {
                 return; // no pending activity;
-            } else if (writeCount.get() > mods) {
+            } else if (writeCount.get() > (origWriteCount+1)) {
                 return;
+            }
+            
+            if (System.currentTimeMillis() > maxEndtime) {
+                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeString(timeout, unit));
             }
             Thread.sleep(1);
         }
@@ -106,37 +120,40 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private void persistNow() {
         if (isActive()) {
-            // Atomically switch the delta, so subsequent modifications will be done in the
-            // next scheduled persist
-            DeltaCollector prevDeltaCollector;
-            synchronized (this) {
-                prevDeltaCollector = deltaCollector;
-                deltaCollector = new DeltaCollector();
-            }
-            
-            // Generate mementos for everything that has changed in this time period
-            if (prevDeltaCollector.isEmpty()) {
-                if (LOG.isTraceEnabled()) LOG.trace("No changes to persist since last delta");
-            } else {
-                PersisterDeltaImpl persisterDelta = new PersisterDeltaImpl();
-                for (Location location : prevDeltaCollector.locations) {
-                    persisterDelta.locations.add(location.getRebindSupport().getMemento());
+            try {
+                // Atomically switch the delta, so subsequent modifications will be done in the
+                // next scheduled persist
+                DeltaCollector prevDeltaCollector;
+                synchronized (this) {
+                    prevDeltaCollector = deltaCollector;
+                    deltaCollector = new DeltaCollector();
                 }
-                for (Entity entity : prevDeltaCollector.entities) {
-                    persisterDelta.entities.add(entity.getRebindSupport().getMemento());
-                }
-                for (Policy policy : prevDeltaCollector.policies) {
-                    persisterDelta.policies.add(policy.getRebindSupport().getMemento());
-                }
-                persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
-                persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
-                persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
                 
-                // Tell the persister to persist it
-                persister.delta(persisterDelta);
+                // Generate mementos for everything that has changed in this time period
+                if (prevDeltaCollector.isEmpty()) {
+                    if (LOG.isTraceEnabled()) LOG.trace("No changes to persist since last delta");
+                } else {
+                    PersisterDeltaImpl persisterDelta = new PersisterDeltaImpl();
+                    for (Location location : prevDeltaCollector.locations) {
+                        persisterDelta.locations.add(location.getRebindSupport().getMemento());
+                    }
+                    for (Entity entity : prevDeltaCollector.entities) {
+                        persisterDelta.entities.add(entity.getRebindSupport().getMemento());
+                    }
+                    for (Policy policy : prevDeltaCollector.policies) {
+                        persisterDelta.policies.add(policy.getRebindSupport().getMemento());
+                    }
+                    persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
+                    persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
+                    persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
+                    
+                    // Tell the persister to persist it
+                    persister.delta(persisterDelta);
+                }
+
+            } finally {
+                writeCount.incrementAndGet();
             }
-            
-            writeCount.incrementAndGet();
         }
     }
     
