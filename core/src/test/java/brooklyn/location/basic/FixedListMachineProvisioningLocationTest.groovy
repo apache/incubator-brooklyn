@@ -6,13 +6,11 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.test.TestUtils
 import brooklyn.util.MutableMap
 
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
 import com.google.common.io.Closeables
 
 /**
@@ -20,8 +18,8 @@ import com.google.common.io.Closeables
  */
 public class FixedListMachineProvisioningLocationTest {
     SshMachineLocation machine;
-    MachineProvisioningLocation<SshMachineLocation> provisioner
-    MachineProvisioningLocation<SshMachineLocation> provisioner2
+    FixedListMachineProvisioningLocation<SshMachineLocation> provisioner
+    FixedListMachineProvisioningLocation<SshMachineLocation> provisioner2
     
     @BeforeMethod(alwaysRun=true)
     public void createProvisioner() {
@@ -95,6 +93,110 @@ public class FixedListMachineProvisioningLocationTest {
         fail "Did not throw IllegalStateException as expected"
     }
     
+    @Test
+    public void testCanAddMachineToPool() {
+        SshMachineLocation machine2 = new SshMachineLocation(address:Inet4Address.getByName('192.168.144.200'));
+        provisioner2 = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines:[]);
+        provisioner2.addMachine(machine2)
+        
+        assertEquals(provisioner2.getChildLocations() as List, [machine2]);
+        assertEquals(provisioner2.getAvailable(), [machine2] as Set);
+        
+        SshMachineLocation obtained = provisioner2.obtain();
+        assertEquals(obtained, machine2);
+        
+        // Can only obtain the added machien once though (i.e. not added multiple times somehow)
+        try {
+            SshMachineLocation obtained2 = provisioner2.obtain();
+            fail("obtained="+obtained2);
+        } catch (NoMachinesAvailableException e) {
+            // success
+        }
+    }
+
+    @Test
+    public void testCanRemoveAvailableMachineFromPool() {
+        provisioner.removeMachine(machine)
+        
+        assertEquals(provisioner.getChildLocations() as List, []);
+        assertEquals(provisioner.getAvailable(), [] as Set);
+        
+        try {
+            SshMachineLocation obtained = provisioner.obtain();
+            fail("obtained="+obtained);
+        } catch (NoMachinesAvailableException e) {
+            // success
+        }
+    }
+
+    @Test
+    public void testCanRemoveObtainedMachineFromPoolSoNotReallocated() {
+        SshMachineLocation obtained = provisioner.obtain();
+        provisioner.removeMachine(obtained)
+        
+        // Continue to know about the machine until it is returned
+        assertEquals(provisioner.getChildLocations() as List, [machine]);
+        assertEquals(provisioner.getAvailable(), [] as Set);
+
+        // When released, the machine is then removed entirely
+        provisioner.release(obtained);
+
+        assertEquals(provisioner.getChildLocations() as List, []);
+        assertEquals(provisioner.getAvailable(), [] as Set);
+
+        // So no machines left; cannot re-obtain
+        try {
+            SshMachineLocation obtained2 = provisioner2.obtain();
+            fail("obtained="+obtained2);
+        } catch (NoMachinesAvailableException e) {
+            // success
+        }
+    }
+
+    @Test
+    public void testObtainDesiredMachineThrowsIfNotKnown() {
+        SshMachineLocation machine2 = new SshMachineLocation(address:Inet4Address.getByName('192.168.144.201'));
+        try {
+            SshMachineLocation obtained = provisioner.obtain(MutableMap.of("desiredMachine", machine2));
+            fail("obtained="+obtained);
+        } catch (IllegalStateException e) {
+            if (!e.toString().contains("machine unknown")) throw e;
+        }
+    }
+
+    @Test
+    public void testObtainDesiredMachineThrowsIfInUse() {
+        provisioner.addMachine(new SshMachineLocation(address:'192.168.144.201'));
+        SshMachineLocation obtained = provisioner.obtain();
+        try {
+            SshMachineLocation obtained2 = provisioner.obtain(MutableMap.of("desiredMachine", obtained));
+            fail("obtained2="+obtained2);
+        } catch (IllegalStateException e) {
+            if (!e.toString().contains("machine in use")) throw e;
+        }
+    }
+
+    @Test
+    public void testObtainDesiredMachineReturnsDesired() {
+        int desiredMachineIndex = 10;
+        SshMachineLocation desiredMachine = null;
+        for (int i = 0; i < 20; i++) {
+            SshMachineLocation newMachine = new SshMachineLocation(address:'192.168.144.'+(201+i));
+            if (i == desiredMachineIndex) desiredMachine = newMachine;
+            provisioner.addMachine(newMachine);
+        }
+        SshMachineLocation obtained = provisioner.obtain(MutableMap.of("desiredMachine", desiredMachine));
+        assertEquals(obtained, desiredMachine);
+    }
+
+    @Test
+    public void testPreReservedPortsNotUsed() {
+        SshMachineLocation newMachine = new SshMachineLocation(address:'192.168.144.201', usedPorts:[8000]);
+        provisioner.o
+        SshMachineLocation obtained = provisioner.obtain(MutableMap.of("desiredMachine", desiredMachine));
+        assertEquals(obtained, desiredMachine);
+    }
+
     private static void assertUserAndHost(SshMachineLocation l, String user, String host) {
         assertEquals(l.getUser(), user);
         assertEquals(l.getAddress().getHostAddress(), host);
