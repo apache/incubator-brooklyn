@@ -14,25 +14,25 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.ConfigSummary;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/applications/{application}/entities/{entity}/config")
-@Api(value = "/v1/applications/{application}/entities/{entity}/config", description = "Manage configuration for each application entity")
+@Apidoc("Entity config")
 @Produces("application/json")
 public class ConfigResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Fetch the config keys for a specific application entity",
-      responseClass = "brooklyn.rest.api.SensorSummary",
+      responseClass = "brooklyn.rest.domain.SensorSummary",
       multiValueResponse = true)
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application or entity")

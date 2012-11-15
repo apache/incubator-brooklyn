@@ -10,24 +10,24 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import brooklyn.entity.Entity;
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.EntitySummary;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/applications/{application}/entities")
-@Api(value = "/v1/applications/{application}/entities", description = "Manage entities")
+@Apidoc("Application entities")
 @Produces("application/json")
 public class EntityResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Fetch the list of entities for a given application",
-      responseClass = "brooklyn.rest.api.EntitySummary",
+      responseClass = "brooklyn.rest.domain.EntitySummary",
       multiValueResponse = true)
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application not found")
@@ -41,7 +41,7 @@ public class EntityResource extends AbstractBrooklynRestResource {
   @GET
   @Path("/{entity}")
   @ApiOperation(value = "Fetch details about a specific application entity",
-      responseClass = "brooklyn.rest.api.EntitySummary")
+      responseClass = "brooklyn.rest.domain.EntitySummary")
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application or entity missing")
   })

@@ -1,7 +1,5 @@
 package brooklyn.rest;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -23,18 +21,7 @@ import brooklyn.rest.commands.catalog.LoadClassCommand;
 import brooklyn.rest.commands.locations.AddLocationCommand;
 import brooklyn.rest.commands.locations.ListLocationsCommand;
 import brooklyn.rest.health.GeneralHealthCheck;
-import brooklyn.rest.legacy.BrooklynRestApi;
-import brooklyn.rest.resources.ActivityResource;
-import brooklyn.rest.resources.ApplicationResource;
 import brooklyn.rest.resources.AbstractBrooklynRestResource;
-import brooklyn.rest.resources.CatalogResource;
-import brooklyn.rest.resources.ConfigResource;
-import brooklyn.rest.resources.EffectorResource;
-import brooklyn.rest.resources.EntityResource;
-import brooklyn.rest.resources.LocationResource;
-import brooklyn.rest.resources.PolicyResource;
-import brooklyn.rest.resources.SensorResource;
-import brooklyn.rest.resources.VersionResource;
 import brooklyn.rest.views.SwaggerUiResource;
 import brooklyn.rest.views.WebClientResource;
 

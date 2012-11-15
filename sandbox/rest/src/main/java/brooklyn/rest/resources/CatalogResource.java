@@ -16,6 +16,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogPolicySummary;
 import brooklyn.rest.util.WebResourceUtils;
@@ -24,20 +25,19 @@ import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
-import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/catalog")
-@Api(value = "/v1/catalog", description = "Manage entities and policies available on the server")
+@Apidoc("Catalog")
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource extends AbstractBrooklynRestResource {
 
 
     @POST
-    @ApiOperation(value = "Create a new entity by uploading a Groovy script from browser using multipart/form-data",
+    @ApiOperation(value = "Add a new entity or policy type to the catalog by uploading a Groovy script from browser using multipart/form-data",
         responseClass = "String")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response createFromMultipart(
@@ -49,7 +49,7 @@ public class CatalogResource extends AbstractBrooklynRestResource {
     }
     
     @POST
-    @ApiOperation(value = "Create new entity or policy by uploading a Groovy script", responseClass = "String")
+    @ApiOperation(value = "Add a new entity or policy type by uploading a Groovy script", responseClass = "String")
     public Response create(
             @ApiParam(name = "groovyCode", value = "Groovy code for the entity or policy", required = true)
             @Valid String groovyCode
@@ -59,7 +59,7 @@ public class CatalogResource extends AbstractBrooklynRestResource {
 
     @GET
     @Path("/entities")
-    @ApiOperation(value = "Fetch a list of entities matching a query", responseClass = "String", multiValueResponse = true)
+    @ApiOperation(value = "List available entity types matching a query", responseClass = "String", multiValueResponse = true)
     public Iterable<String> listEntities(
         @ApiParam(name = "name", value = "Query to filter entities by")
         final @QueryParam("name") @DefaultValue("") String name

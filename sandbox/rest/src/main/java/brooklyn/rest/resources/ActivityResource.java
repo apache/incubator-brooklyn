@@ -10,14 +10,14 @@ import javax.ws.rs.core.MediaType;
 
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.TaskSummary;
 
 import com.google.common.collect.Collections2;
-import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiOperation;
 
 @Path("/v1/applications/{application}/entities/{entity}/activities")
-@Api(value = "/v1/applications/{application}/activities", description = "Inspect applications activity")
+@Apidoc("Activities")
 @Produces(MediaType.APPLICATION_JSON)
 public class ActivityResource extends AbstractBrooklynRestResource {
 

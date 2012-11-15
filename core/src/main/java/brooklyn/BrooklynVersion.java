@@ -1,8 +1,10 @@
 package brooklyn;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import java.io.IOException;
 import static java.lang.String.format;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 public class BrooklynVersion {
@@ -13,16 +15,21 @@ public class BrooklynVersion {
 
   private static final BrooklynVersion INSTANCE = new BrooklynVersion();
 
+  private final String versionFromClasspath;
+  private final String versionFromStatic = "0.5.0_SNAPSHOT"; // BROOKLYN_VERSION
   private final String version;
 
   public BrooklynVersion() {
-    this.version = readVersionPropertyFromClasspath(BrooklynVersion.class.getClassLoader());
+    this.versionFromClasspath = readVersionPropertyFromClasspath(BrooklynVersion.class.getClassLoader());
+    this.version = versionFromClasspath==null ? versionFromStatic : versionFromClasspath;
   }
 
   private String readVersionPropertyFromClasspath(ClassLoader resourceLoader) {
     Properties versionProperties = new Properties();
     try {
-      versionProperties.load(checkNotNull(resourceLoader.getResourceAsStream(VERSION_RESOURCE_FILE), VERSION_RESOURCE_FILE));
+      InputStream versionStream = resourceLoader.getResourceAsStream(VERSION_RESOURCE_FILE);
+      if (versionStream==null) return null;
+      versionProperties.load(checkNotNull(versionStream));
     } catch (IOException exception) {
       throw new IllegalStateException(format("Unable to load version resource file '%s'", VERSION_RESOURCE_FILE), exception);
     }

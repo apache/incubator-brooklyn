@@ -77,8 +77,7 @@ public class BrooklynRestApiLauncher {
         ManagementContext managementContext = new LocalManagementContext();
         
         ResourceConfig config = new DefaultResourceConfig();
-        config.getSingletons().add(new JacksonJsonProvider());
-        for (Object r: BrooklynRestApi.getBrooklynRestResources())
+        for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
         
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -92,13 +91,13 @@ public class BrooklynRestApiLauncher {
     
     public static void installAsServletFilter(ServletContextHandler context) {
         ResourceConfig config = new DefaultResourceConfig();
-        // load all our REST API modules
-        for (Object r: BrooklynRestApi.getBrooklynRestResources())
+        // load all our REST API modules, JSON, and Swagger
+        for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
-        // and Jackson JSON serializer
-        config.getSingletons().add(new JacksonJsonProvider());
-        // configure to match empty path, or any thing which looks like a file path with extension, automatically as web page
-        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]+\\.[A-Za-z0-9_]+)");
+        
+        // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
+        // and treat that as static content
+        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/asserts/[^?]+\\.[A-Za-z0-9_]+)");
         // and anything which is not matched as a servlet also falls through (but more expensive than a regex check?)
         config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
         // finally create this as a _filter_ which falls through to a web app or something (optionally)

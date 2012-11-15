@@ -2,7 +2,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>brooklyn-rest-SANDBOX</artifactId>
-    <packaging>war</packaging>
+    <packaging>bundle</packaging>
     <name>Brooklyn REST API</name>
     <description>
         Brooklyn REST Endpoint
@@ -24,6 +24,7 @@
         <jackson.version>1.9.9</jackson.version>
         <reflections.version>0.9.5</reflections.version>
         <dropwizard.version>0.4.4</dropwizard.version>
+        <swagger.version>1.0.1</swagger.version>
     </properties>
 
     <dependencies>
@@ -120,17 +121,22 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-database</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.yammer.dropwizard</groupId>
             <artifactId>dropwizard-testing</artifactId>
             <version>${dropwizard.version}</version>
             <scope>test</scope>
         </dependency>
 
-        <!-- swagger annotations used -->
         <dependency>
             <groupId>com.wordnik</groupId>
             <artifactId>swagger-core_2.9.1</artifactId>
-            <version>1.0.1</version>
+            <version>${swagger.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -138,47 +144,46 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- <dependency> <groupId>com.wordnik</groupId> <artifactId>swagger-jaxrs_2.9.1</artifactId> <version>1.0.1</version> </dependency> 
-            <dependency> <groupId>org.iq80.cli</groupId> <artifactId>git-like-cli</artifactId> <version>${git-like-cli.version}</version> </dependency> 
-            <dependency> <groupId>com.sun.jersey</groupId> <artifactId>jersey-client</artifactId> <version>${jersey.version}</version> </dependency> -->
-
+        <dependency>
+            <groupId>com.wordnik</groupId>
+            <artifactId>swagger-jaxrs_2.9.1</artifactId>
+            <version>${swagger.version}</version>
+        </dependency>
+                
     </dependencies>
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.2</version>
                 <executions>
                     <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
+                        <id>make-skinny-war</id>
+                        <phase>install</phase>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>war</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/lib
-                            </outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <classifier>skinny</classifier>
+                            <packagingExcludes>WEB-INF/lib/*.jar,WEB-INF/classes/**/*.class</packagingExcludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>make-full-war</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>war</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>full</classifier>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>brooklyn.rest.BrooklynService</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
+
         </plugins>
     </build>
 </project>

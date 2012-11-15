@@ -18,7 +18,10 @@
         <!-- load our REST API jersey resources -->
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
+            <!-- swagger v1.1.1 (currently in snapshot) is required is swaggering with filters
             <param-value>brooklyn.rest.resources</param-value>
+            -->
+            <param-value>brooklyn.rest.resources;brooklyn.rest.apidoc</param-value>
         </init-param>
 
         <!-- install Jackson and turn on pojo/json serialization (could add org.codehaus.jackson.jaxrs 

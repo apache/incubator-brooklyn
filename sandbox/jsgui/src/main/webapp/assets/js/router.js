@@ -1,7 +1,7 @@
 define([
     'underscore', 'jquery', 'backbone', "model/application", "model/app-tree", "model/location",
-    "view/home", "view/application-explorer", "view/catalog", "text!tpl/help/page.html"
-], function (_, $, Backbone, Application, AppTree, Location, HomeView, ExplorerView, CatalogView, HelpHtml) {
+    "view/home", "view/application-explorer", "view/catalog", "view/hack", "text!tpl/help/page.html"
+], function (_, $, Backbone, Application, AppTree, Location, HomeView, ExplorerView, CatalogView, HackView, HelpHtml) {
 
     // add close method to all views for clean-up
 	// (NB we have to update the prototype _here_ before any views are instantiated;
@@ -33,6 +33,7 @@ define([
             'v1/applications':'applicationsPage',
             'v1/locations':'catalogPage',
             'v1/catalog':'catalogPage',
+            'v1/hack':'hackPage',
             'v1/help':'helpPage',
             '*path':'defaultRoute'
         },
@@ -86,11 +87,17 @@ define([
                 that.showView("#application-content", catalogResource)
             }})
         },
+        hackPage:function () {
+            var hackResource = new HackView({})
+            this.showView("#application-content", hackResource)
+            $(".nav1").removeClass("active")
+            $(".nav1_hack").addClass("active")
+        },
         helpPage:function () {
             var that = this
             $("#application-content").html(_.template(HelpHtml, {}))
-            $(".nav1").removeClass("active");
-            $(".nav1_help").addClass("active");
+            $(".nav1").removeClass("active")
+            $(".nav1_help").addClass("active")
         }
     })
 

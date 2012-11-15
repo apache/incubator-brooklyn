@@ -5,14 +5,19 @@ require.config({
 
     paths:{
         // libraries
-        "jquery":"libs/jquery-1.7.2",
+        "jquery":"libs/jquery",
         "underscore":"libs/underscore",
         "backbone":"libs/backbone",
-        "bootstrap":"libs/bootstrap.min",
+        "bootstrap":"libs/bootstrap",
         "formatJson":"libs/json-formatter",
         "jquery-form":"libs/jquery.form",
-        "tablesorter":"libs/jquery.dataTables.min",
+        "tablesorter":"libs/jquery.dataTables",
         "async":"libs/async",
+        "jquery-slideto":"libs/jquery.slideto.min",
+        "jquery-wiggle":"libs/jquery.wiggle.min",
+        "jquery-ba-bbq":"libs/jquery.ba-bbq.min",
+        "handlebars":"libs/handlebars-1.0.rc.1",
+
         "googlemaps":"view/googlemaps",
         "text":"libs/text",
         "tpl":"../tpl"

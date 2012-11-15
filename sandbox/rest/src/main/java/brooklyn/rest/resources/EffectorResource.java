@@ -23,6 +23,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.basic.EffectorUtils;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.util.WebResourceUtils;
@@ -31,14 +32,13 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/applications/{application}/entities/{entity}/effectors")
-@Api(value = "/v1/applications/{application}/entities/{entity}/effectors", description = "Manage effectors")
+@Apidoc("Entity effectors")
 @Produces("application/json")
 public class EffectorResource extends AbstractBrooklynRestResource {
 
@@ -47,7 +47,7 @@ public class EffectorResource extends AbstractBrooklynRestResource {
     
   @GET
   @ApiOperation(value = "Fetch the list of effectors",
-      responseClass = "brooklyn.rest.api.EffectorSummary",
+      responseClass = "brooklyn.rest.domain.EffectorSummary",
       multiValueResponse = true)
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application or entity")

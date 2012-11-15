@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import brooklyn.location.Location;
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.util.EntityLocationUtils;
@@ -25,18 +26,17 @@ import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/locations")
-@Api(value = "/v1/locations", description = "Manage locations")
+@Apidoc("Locations")
 @Produces(MediaType.APPLICATION_JSON)
 public class LocationResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Fetch the list of locations",
-      responseClass = "brooklyn.rest.api.LocationSummary",
+      responseClass = "brooklyn.rest.domain.LocationSummary",
       multiValueResponse = true)
   public List<LocationSummary> list() {
     return Lists.newArrayList(transform(brooklyn().getLocationStore().entries(),
@@ -71,7 +71,7 @@ public class LocationResource extends AbstractBrooklynRestResource {
   @GET
   @Path("/{location}")
   @ApiOperation(value = "Fetch details about a location",
-      responseClass = "brooklyn.rest.api.LocationSummary",
+      responseClass = "brooklyn.rest.domain.LocationSummary",
       multiValueResponse = true)
   public LocationSummary get(
       @ApiParam(value = "Location id to fetch", required = true)

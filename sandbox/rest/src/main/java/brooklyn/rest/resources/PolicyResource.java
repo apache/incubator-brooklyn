@@ -22,6 +22,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.basic.Policies;
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.PolicySummary;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -29,14 +30,13 @@ import brooklyn.util.exceptions.Exceptions;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/applications/{application}/entities/{entity}/policies")
-@Api(value = "/v1/applications/{application}/entities/{entity}/policies", description = "Manage policies for each application entity")
+@Apidoc("Entity policies")
 @Produces("application/json")
 public class PolicyResource extends AbstractBrooklynRestResource {
 
@@ -44,7 +44,7 @@ public class PolicyResource extends AbstractBrooklynRestResource {
     
   @GET
   @ApiOperation(value = "Fetch the policies attached to a specific application entity",
-      responseClass = "brooklyn.rest.api.PolicySummary",
+      responseClass = "brooklyn.rest.domain.PolicySummary",
       multiValueResponse = true)
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application or entity")

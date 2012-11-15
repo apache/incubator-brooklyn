@@ -82,14 +82,11 @@
     <build>
         <resources>
             <resource>
-                <directory>${project.basedir}/src/main/resources</directory>
-            </resource>
-            <resource>
                 <directory>${project.basedir}/src/test/resources/fixtures</directory>
                 <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
             </resource>
             <resource>
-		<!-- TODO read from artifact! -->
+		<!-- TODO read from artifact -->
                 <directory>${project.basedir}/../rest/src/test/resources/fixtures</directory>
                 <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
             </resource>
@@ -116,7 +113,7 @@
                     <junitXmlReportFileName>TEST-FIREFOX_3-jasmine.xml</junitXmlReportFileName>
                     <manualSpecRunnerHtmlFileName>FIREFOX_3-ManualSpecRunner.html</manualSpecRunnerHtmlFileName>
                     <specRunnerHtmlFileName>FIREFOX_3-SpecRunner.html</specRunnerHtmlFileName>
-                    <jsSrcDir>${project.basedir}/src/main/resources/assets</jsSrcDir>
+                    <jsSrcDir>${project.basedir}/src/main/webapp/assets</jsSrcDir>
                     <jsTestSrcDir>${project.basedir}/src/test/javascript/specs</jsTestSrcDir>
                     <specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
                     <scriptLoaderPath>js/libs/require.js</scriptLoaderPath>

@@ -24,6 +24,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.EntitySpec;
@@ -31,29 +32,17 @@ import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.collect.Collections2;
-import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/applications")
-@Api(value = "/v1/applications", description = "Manage applications")
+@Apidoc("Applications")
 @Produces(MediaType.APPLICATION_JSON)
 public class ApplicationResource extends AbstractBrooklynRestResource {
 
-//  private final ApplicationManager manager;
-//  private final CatalogResource catalog;
-//  private final LocationStore locations;
   private final ObjectMapper mapper = new ObjectMapper();
-
-//  public ApplicationResource(
-//      ApplicationManager manager, LocationStore locations, CatalogResource catalog
-//  ) {
-//    this.manager = checkNotNull(manager, "manager");
-//    this.locations = checkNotNull(locations, "locations");
-//    this.catalog = checkNotNull(catalog, "catalog");
-//  }
 
   @GET
   @Path("/tree")
@@ -87,7 +76,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   @GET
   @ApiOperation(
       value = "Fetch list of applications",
-      responseClass = "brooklyn.rest.api.ApplicationSummary"
+      responseClass = "brooklyn.rest.domain.ApplicationSummary"
   )
   public Iterable<ApplicationSummary> list() {
     return Collections2.transform(mgmt().getApplications(), ApplicationSummary.FROM_APPLICATION);
@@ -97,7 +86,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   @Path("/{application}")
   @ApiOperation(
       value = "Fetch a specific application",
-      responseClass = "brooklyn.rest.api.Application"
+      responseClass = "brooklyn.rest.domain.Application"
   )
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application not found")

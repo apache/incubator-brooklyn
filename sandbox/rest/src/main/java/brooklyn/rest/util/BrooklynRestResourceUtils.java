@@ -42,7 +42,9 @@ public class BrooklynRestResourceUtils {
     private static final Logger log = LoggerFactory.getLogger(BrooklynRestResourceUtils.class);
 
     // TODO move these to mgmt context -- so REST API is stateless
-    private static LocationStore locationStore = new LocationStore(); 
+    private static LocationStore locationStore = new LocationStore();
+    static { locationStore.put(new LocationSpec("localhost", new MutableMap<String,String>())); }
+    
     private static BrooklynCatalog catalog = new BrooklynCatalog(); 
     public static void changeLocationStore(LocationStore locationStore) {
         BrooklynRestResourceUtils.locationStore = locationStore;
