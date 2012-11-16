@@ -58,6 +58,11 @@ public class RestMockSimpleEntity extends SoftwareProcessEntity {
     }
 
     @Override
+    public void waitForServiceUp() {
+        return;
+    }
+    
+    @Override
     public Class getDriverInterface() {
         return MockSshDriver.class;
     }
