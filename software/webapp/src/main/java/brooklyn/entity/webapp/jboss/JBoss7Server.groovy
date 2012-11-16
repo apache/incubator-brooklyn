@@ -28,6 +28,10 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     // see https://community.jboss.org/thread/197780
     // 7.2.0.Final should be out during Q3 2012
 
+    public static final BasicConfigKey<String> BIND_ADDRESS =
+            new BasicConfigKey<String>(String.class, "jboss.bind.address", "Address of interface JBoss should listen on, "+ 
+                "defaulting 0.0.0.0 (but could set e.g. to attributeWhenReady(HOSTNAME)", "0.0.0.0");
+
     @SetFromFlag("managementPort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT =
             new PortAttributeSensorAndConfigKey("webapp.jboss.managementPort", "Management port", "9990+");
