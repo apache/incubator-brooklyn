@@ -189,14 +189,6 @@ public class FixedListMachineProvisioningLocationTest {
         assertEquals(obtained, desiredMachine);
     }
 
-    @Test
-    public void testPreReservedPortsNotUsed() {
-        SshMachineLocation newMachine = new SshMachineLocation(address:'192.168.144.201', usedPorts:[8000]);
-        provisioner.o
-        SshMachineLocation obtained = provisioner.obtain(MutableMap.of("desiredMachine", desiredMachine));
-        assertEquals(obtained, desiredMachine);
-    }
-
     private static void assertUserAndHost(SshMachineLocation l, String user, String host) {
         assertEquals(l.getUser(), user);
         assertEquals(l.getAddress().getHostAddress(), host);
