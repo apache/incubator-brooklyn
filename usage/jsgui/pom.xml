@@ -63,13 +63,19 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-software-nosql</artifactId>
+            <artifactId>brooklyn-software-webapp</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-software-webapp</artifactId>
+            <artifactId>brooklyn-software-database</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-nosql</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

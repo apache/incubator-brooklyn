@@ -30,6 +30,8 @@ define([
     var Router = Backbone.Router.extend({
         routes:{
             'v1/home':'homePage',
+            'v1/applications/:app/entities/*trail':'applicationsPage',
+            'v1/applications/*trail':'applicationsPage',
             'v1/applications':'applicationsPage',
             'v1/locations':'catalogPage',
             'v1/catalog':'catalogPage',
@@ -66,7 +68,8 @@ define([
                 that.showView("#application-content", homeView);
             }})
         },
-        applicationsPage:function () {
+        applicationsPage:function (app, trail) {
+            if (trail === undefined) trail = app
             var that = this
             this.appTree.fetch({success:function () {
                 var appExplorer = new ExplorerView({
@@ -74,6 +77,7 @@ define([
                     appRouter:that
                 })
                 that.showView("#application-content", appExplorer)
+                if (trail !== undefined) appExplorer.show(trail)
             }})
         },
         catalogPage:function () {

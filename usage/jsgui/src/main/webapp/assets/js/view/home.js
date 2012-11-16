@@ -163,6 +163,7 @@ define([
         render:function () {
             this.$el.html(this.template({
                 cid:this.model.cid,
+                link:this.model.getLinkByName("self"),
                 name:this.model.getSpec().get("name"),
                 status:this.model.get("status")
             }))

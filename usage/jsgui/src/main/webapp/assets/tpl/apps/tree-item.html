@@ -4,7 +4,9 @@
         if (type == "leaf") { %> leaf<% } 
         if (type == "application") { %> application<% } 
         %>" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
-        <%= displayName %>
+        <a href="#/v1/applications/<%= parentApp %>/entities/<%= id %>">
+            <%= displayName %>
+        </a>
     </span>
     <% if (type != "leaf") { %> </label> <% } %>
     <% if (type != "leaf") { %>

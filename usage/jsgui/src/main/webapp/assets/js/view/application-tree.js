@@ -81,9 +81,12 @@ define([
             _.each(application.get("children"), function (entity) {
                 $tree.append(treeFromEntity(new AppTree.Model(entity)))
             })
+            $('a', $tree).click(function(e) { e.preventDefault(); })
+            
             return $template
         },
         displayEntity:function (eventName) {
+            window.history.pushState($(eventName.currentTarget).attr("id"), "", $('a', $(eventName.currentTarget)).attr('href'));
         	this.displayEntityId($(eventName.currentTarget).attr("id"), $(eventName.currentTarget).data("parent-app"));
         },
         displayEntityId:function (id, appName) {
@@ -91,7 +94,9 @@ define([
                 that = this
             this.highlightEntity(id)
 
-
+            if (appName === undefined)
+                appName = $("span.entity_tree_node#"+id).data("parent-app")
+            
             var app = new Application.Model()
             app.url = "/v1/applications/" + appName
             app.fetch({async:false})

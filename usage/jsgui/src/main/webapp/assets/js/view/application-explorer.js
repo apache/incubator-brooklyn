@@ -43,6 +43,9 @@ define([
             this.collection.fetch()
             return false
         },
+        show: function(trail) {
+            this.treeView.displayEntityId(trail)
+        },
         
         createApplication:function () {
         	var that = this;
