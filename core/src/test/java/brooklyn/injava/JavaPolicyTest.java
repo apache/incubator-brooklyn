@@ -6,6 +6,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.location.basic.SimulatedLocation;
@@ -20,17 +21,17 @@ public class JavaPolicyTest {
     TestApplication app;
     ExampleJavaEntity entity;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = new TestApplication();
         entity = new ExampleJavaEntity(app);
-        app.startManagement();
+        Entities.startManagement(app);
         app.start(ImmutableList.of(new SimulatedLocation()));
     }
     
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        app.stop();
+        if (app != null) Entities.destroy(app);
     }
     
     @Test

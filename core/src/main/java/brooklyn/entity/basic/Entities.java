@@ -30,6 +30,7 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.policy.Policy;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.FlagUtils;
@@ -202,6 +203,13 @@ public class Entities {
     		out.append(currentIndentation+tab+tab+"Members: "+members.toString()+"\n");
 		}
 		
+        for (Policy policy : e.getPolicies()) {
+            out.append(currentIndentation+tab+tab+"Policy: ");
+            out.append(policy.getId()+"; "+policy.getClass()+"; "+policy.getName()+"; ");
+            out.append(policy.isRunning() ? "running" : (policy.isDestroyed() ? "destroyed" : (policy.isSuspended() ? "suspended" : "state-unknown")));
+            out.append("\n");
+        }
+        
 		for (Entity it : e.getOwnedChildren()) {
 			dumpInfo(it, out, currentIndentation+tab, tab);
 		}
@@ -392,7 +400,7 @@ public class Entities {
     }
 
     public static boolean isManaged(Entity e) {
-        return ((AbstractEntity)e).getManagementSupport().isDeployed();
+        return ((AbstractEntity)e).getManagementSupport().isDeployed() && ((AbstractEntity)e).getManagementSupport().getManagementContext(true).isRunning();
     }
     
     /** brings this entity under management iff its ancestor is managed, returns true in that case;

@@ -220,7 +220,7 @@ public class FlagUtils {
                     
                 }
                 if (key != null) {
-                    String flagName = elvis(cf.value(), (key != null ? key.getName() : null));
+                    String flagName = elvis(cf.value(), key.getName());
                     if (truth(flagName) && remaining.containsKey(flagName)) {
                         Object v = remaining.remove(flagName);
                         entity.setConfig(key, v);

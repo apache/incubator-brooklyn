@@ -1,19 +1,19 @@
 package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
-
-import brooklyn.config.BrooklynProperties;
 import groovy.util.ObservableList;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -38,6 +38,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
 
+    protected final Map<String,Entity> preManagedEntitiesById = new WeakHashMap<String, Entity>();
     protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
     protected final ObservableList entities = new ObservableList();
     protected final Set<Application> applications = Sets.newLinkedHashSet();
@@ -55,7 +56,35 @@ public class LocalManagementContext extends AbstractManagementContext {
        super(brooklynProperties);
     }
 
-     protected synchronized boolean manageNonRecursive(Entity e) {
+    @Override
+    protected synchronized boolean isPreManaged(Entity e) {
+        return preManagedEntitiesById.containsKey(e.getId());
+    }
+
+    /**
+     * Records that the given entity is about to be managed (used for answering {@link isPreManaged(Entity)}.
+     * Note that refs to the given entity are stored in a a weak hashmap so if the subsequent management
+     * attempt fails then this reference to the entity will eventually be discarded (if no-one else holds 
+     * a reference).
+     */
+    @Override
+    protected synchronized boolean preManageNonRecursive(Entity e) {
+        Object old = preManagedEntitiesById.put(e.getId(), e);
+        if (old!=null) {
+            if (old == e) {
+                log.warn("{} redundant call to pre-start management of entity {}", this, e);
+            } else {
+                throw new IllegalStateException("call to pre-manage entity "+e+" but different entity "+old+" already known under that id at "+this);
+            }
+            return false;
+        } else {
+            if (log.isTraceEnabled()) log.trace("{} pre-start management of entity {}", this, e);
+            return true;
+        }
+    }
+
+    @Override
+    protected synchronized boolean manageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = MANAGED_LOCALLY;
         Object old = entitiesById.put(e.getId(), e);
         if (old!=null) {
@@ -67,6 +96,7 @@ public class LocalManagementContext extends AbstractManagementContext {
             return false;
         } else {
             if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
+            preManagedEntitiesById.remove(e.getId());
             if (e instanceof Application) {
                 applications.add((Application)e);
             }
@@ -75,6 +105,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
     }
 
+    @Override
     protected synchronized boolean unmanageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = null;
         e.clearOwner();
@@ -98,14 +129,18 @@ public class LocalManagementContext extends AbstractManagementContext {
     public synchronized Collection<Application> getApplications() {
         return new ArrayList<Application>(applications);
     }
+    
+    @Override
     public synchronized Collection<Entity> getEntities() {
         return new ArrayList<Entity>(entitiesById.values());
     }
     
+    @Override
     public Entity getEntity(String id) {
         return entitiesById.get(id);
 	}
     
+    @Override
     public synchronized  SubscriptionManager getSubscriptionManager() {
         if (subscriptions == null) {
             subscriptions = new LocalSubscriptionManager(getExecutionManager());
@@ -113,6 +148,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         return subscriptions;
     }
 
+    @Override
     public synchronized ExecutionManager getExecutionManager() {
         if (execution == null) {
             execution = new BasicExecutionManager();
@@ -126,21 +162,28 @@ public class LocalManagementContext extends AbstractManagementContext {
         if (execution != null) execution.shutdownNow();
     }
     
+    @Override
     public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, (elvis(flags.get("displayName"), flags.get("description"), flags, c)));
         return getExecutionContext(entity).submit(flags, c);
     }
 
+    @Override
     public boolean isManagedLocally(Entity e) {
         return true;
     }
 
+    @Override
     public void addEntitySetListener(CollectionChangeListener<Entity> listener) {
-        entities.addPropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener));
+    	//must notify listener in a different thread to avoid deadlock (issue #378)
+    	AsyncCollectionChangeAdapter<Entity> wrappedListener = new AsyncCollectionChangeAdapter<Entity>(getExecutionManager(), listener);
+        entities.addPropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(wrappedListener));
     }
 
+    @Override
     public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
-        entities.removePropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(listener));
+    	AsyncCollectionChangeAdapter<Entity> wrappedListener = new AsyncCollectionChangeAdapter<Entity>(getExecutionManager(), listener);
+        entities.removePropertyChangeListener(new GroovyObservablesPropertyChangeToCollectionChangeAdapter(wrappedListener));
     }
     
     @Override

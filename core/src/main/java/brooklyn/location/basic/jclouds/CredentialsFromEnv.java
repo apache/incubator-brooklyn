@@ -155,9 +155,8 @@ public class CredentialsFromEnv {
         String f = getProviderSpecificValue(type);
         if (!truth(f)) return null;
         
-        String home=null;
         if (f.startsWith("~/")) {
-            if (home==null) home = sysProps.getFirst(MutableMap.of("defaultIfNone", null), "user.home");
+            String home = sysProps.getFirst(MutableMap.of("defaultIfNone", null), "user.home");
             if (home==null) home = System.getProperty("user.home");
             f = home + f.substring(1);
         }

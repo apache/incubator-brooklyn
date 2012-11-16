@@ -1,6 +1,7 @@
 package brooklyn.entity.proxy.nginx;
 
 import static brooklyn.test.TestUtils.urlRespondsStatusCode;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -17,6 +18,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
@@ -54,7 +56,7 @@ public class NginxClusterIntegrationTest {
     
     @BeforeMethod(groups = "Integration")
     public void setup() throws Exception {
-        war = getClass().getClassLoader().getResource("hello-world.war");
+        war = checkNotNull(getClass().getClassLoader().getResource("hello-world.war"), "hello-world.war not on classpath");
         localhostProvisioningLoc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
         app = new TestApplication();
         nginxFactory = new BasicConfigurableEntityFactory<NginxController>(NginxController.class);
@@ -63,7 +65,7 @@ public class NginxClusterIntegrationTest {
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
     public void shutdown() {
-        if (app != null) app.stop();
+        if (app != null) Entities.destroy(app);
     }
 
     @Test(groups = "Integration")
@@ -75,6 +77,8 @@ public class NginxClusterIntegrationTest {
                         .build(),
                 app);
         loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
+        
+        Entities.startManagement(app);
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
@@ -107,6 +111,8 @@ public class NginxClusterIntegrationTest {
                         .build(),
                 app);
         loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
+        
+        Entities.startManagement(app);
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
@@ -145,6 +151,8 @@ public class NginxClusterIntegrationTest {
                         .build(),
                 app);
 
+        Entities.startManagement(app);
+        
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
         assertEquals(findNginxs().size(), 1);
@@ -163,6 +171,8 @@ public class NginxClusterIntegrationTest {
                         .build(),
                 app);
         loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
+        
+        Entities.startManagement(app);
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         TestUtils.assertAttributeContinually(loadBalancerCluster, Startable.SERVICE_UP, false);
@@ -185,6 +195,8 @@ public class NginxClusterIntegrationTest {
                 app);
         loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
         loadBalancerCluster.setConfig(NginxController.PROXY_HTTP_PORT.getConfigKey(), PortRanges.fromString("8765+"));
+        
+        Entities.startManagement(app);
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         

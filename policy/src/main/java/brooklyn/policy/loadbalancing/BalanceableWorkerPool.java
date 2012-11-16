@@ -145,7 +145,7 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
             onContainerAdded((BalanceableContainer<?>)existingContainer);
         }
         for (Entity existingItem : itemGroup.getMembers()) {
-            onItemAdded((Entity)existingItem);
+            onItemAdded(existingItem);
         }
     }
     

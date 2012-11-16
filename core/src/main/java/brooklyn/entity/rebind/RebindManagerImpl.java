@@ -124,7 +124,7 @@ public class RebindManagerImpl implements RebindManager {
             
             Location location = newLocation(locMemento, reflections);
             locations.put(locMemento.getId(), location);
-            rebindContext.registerLocation(locMemento.getId(), (Location) location);
+            rebindContext.registerLocation(locMemento.getId(), location);
         }
         
         // Instantiate entities
@@ -134,7 +134,7 @@ public class RebindManagerImpl implements RebindManager {
             
             Entity entity = newEntity(entityMemento, reflections);
             entities.put(entityMemento.getId(), entity);
-            rebindContext.registerEntity(entityMemento.getId(), (Entity) entity);
+            rebindContext.registerEntity(entityMemento.getId(), entity);
         }
         
         // Instantiate policies

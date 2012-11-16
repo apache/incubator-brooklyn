@@ -109,7 +109,7 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
     public Map<ConfigKey<?>,Object> getLocalConfig() {
         Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(ownConfig.size());
         result.putAll(ownConfig);
-        return Collections.unmodifiableMap(result);        
+        return Collections.unmodifiableMap(result);
     }
     
     public Object setConfig(ConfigKey<?> key, Object v) {

@@ -20,6 +20,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.rebind.RebindTestUtils;
@@ -72,8 +73,8 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         	monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
-        if (newApp != null && newApp.getManagementSupport().getManagementContext(true).isManaged(newApp)) newApp.stop();
-        if (origApp != null && origApp.getManagementSupport().getManagementContext(true).isManaged(origApp)) origApp.stop();
+        if (newApp != null) Entities.destroy(newApp);
+        if (origApp != null) Entities.destroy(origApp);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 

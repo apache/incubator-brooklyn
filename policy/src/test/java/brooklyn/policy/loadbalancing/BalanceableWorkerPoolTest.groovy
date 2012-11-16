@@ -1,7 +1,7 @@
 package brooklyn.policy.loadbalancing
 
-import static org.testng.Assert.*
 import static brooklyn.test.TestUtils.*
+import static org.testng.Assert.*
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,6 +13,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Resizable
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
@@ -46,7 +47,7 @@ class BalanceableWorkerPoolTest {
     
     @AfterMethod(alwaysRun=true)
     public void after() {
-        if (app != null) app.stop()
+        if (app != null) Entities.destroy(app);
     }
     
     @Test(expectedExceptions=UnsupportedOperationException.class)

@@ -8,6 +8,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.TestUtils
@@ -36,7 +37,7 @@ public class HttpSensorAdapterTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (registry != null) registry.close();
-        if (app != null) app.stop();
+        if (app != null) Entities.destroy(app);
     }
 
 	@Test
