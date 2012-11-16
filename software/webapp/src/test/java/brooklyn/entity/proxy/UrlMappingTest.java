@@ -43,7 +43,7 @@ public class UrlMappingTest {
     private DynamicCluster cluster;
     private UrlMapping urlMapping;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
@@ -69,7 +69,7 @@ public class UrlMappingTest {
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app != null && Entities.isManaged(app)) app.stop();
+        if (app != null) Entities.destroy(app);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 

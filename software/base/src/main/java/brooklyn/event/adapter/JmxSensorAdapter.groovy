@@ -1,10 +1,10 @@
 package brooklyn.event.adapter;
 
-import groovy.lang.Closure
 import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
 
+import javax.management.ObjectInstance
 import javax.management.ObjectName
 
 import org.slf4j.Logger
@@ -29,7 +29,7 @@ import brooklyn.entity.basic.EntityLocal
 public class JmxSensorAdapter extends AbstractSensorAdapter {
 
     public static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);
-	public static final long JMX_CONNECTION_TIMEOUT_MS = 120*1000;
+	public static final long JMX_CONNECTION_TIMEOUT_MS = 0; // i.e. by default don't block
 	
 	JmxHelper helper
 	private volatile long jmxConnectionTimeout = JMX_CONNECTION_TIMEOUT_MS
@@ -74,7 +74,21 @@ public class JmxSensorAdapter extends AbstractSensorAdapter {
 
     public JmxObjectNameAdapter objectName(ObjectName val) { return new JmxObjectNameAdapter(this, val); }
     
-    /** blocks for 15s until bean might exist */
+    public boolean checkObjectNameExistsNow(ObjectName objectName) {
+        boolean connected = helper.connect(0);
+        if (!connected) {
+            log.warn("JMX management can't connect (using "+helper.url+"), to confirm existance of MBean "+objectName);
+            return false;
+        }
+        
+        Set<ObjectInstance> beans = helper.findMBeans(objectName);
+        if (beans.isEmpty()) {
+            log.warn("JMX management can't find MBean "+objectName+" (using "+helper.url+")");
+        }
+        return beans.size() > 0;
+    }
+    
+    /** blocks (for default of 15s) until bean exists */
     public boolean checkObjectNameExists(ObjectName objectName, TimeDuration timeout=15*TimeUnit.SECONDS) {
         def beans = helper.doesMBeanExistsEventually(objectName, timeout);
         if (!beans) {

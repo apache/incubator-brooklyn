@@ -44,7 +44,7 @@ public class NetworkUtilsTest {
     
     @Test
     public void testIsPortAvailableReportsTrueWhenPortIsFree() throws Exception {
-        int port = 58768;
+        int port = 58769;
         for (int i = 0; i < 10; i++) {
             assertTrue(NetworkUtils.isPortAvailable(port));
         }

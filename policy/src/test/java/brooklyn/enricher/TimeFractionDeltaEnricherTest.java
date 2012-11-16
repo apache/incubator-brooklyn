@@ -9,6 +9,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -32,7 +33,7 @@ public class TimeFractionDeltaEnricherTest {
     AttributeSensor<Double> fractionSensor;
     SubscriptionContext subscription;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void before() {
         app = new TestApplication();
         producer = new TestEntity(app);
@@ -45,7 +46,7 @@ public class TimeFractionDeltaEnricherTest {
 
     @AfterMethod(alwaysRun=true)
     public void after() {
-        if (app != null) app.stop();
+        if (app != null) Entities.destroy(app);
     }
 
     @Test

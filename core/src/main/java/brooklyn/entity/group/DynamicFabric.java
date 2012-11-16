@@ -155,7 +155,6 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
         Entity entity = factoryToUse.newEntity(creation, this);
                 
         Preconditions.checkNotNull(entity, this+" factory.newEntity call returned null");
-        Preconditions.checkState(entity instanceof Entity, this+" factory.newEntity call returned an object that is not an Entity");
         if (locationName != null) {
             if (entity.getDisplayName()==null)
                 ((AbstractEntity)entity).setDisplayName(entity.getClass().getSimpleName() +" ("+locationName+")");

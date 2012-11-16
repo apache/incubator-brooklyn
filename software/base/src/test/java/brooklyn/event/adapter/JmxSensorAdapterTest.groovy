@@ -218,49 +218,6 @@ public class JmxSensorAdapterTest {
         }
     }
 
-    @Test(expectedExceptions=[IllegalStateException.class])
-    public void jmxCheckInstanceExistsEventuallyThrowsIfNotFound() {
-        jmxHelper.connect(TIMEOUT)
-        
-        jmxHelper.assertMBeanExistsEventually(new ObjectName('Brooklyn:type=DoesNotExist,name=doesNotExist'), 1*TimeUnit.MILLISECONDS)
-    }
-
-    @Test
-    public void jmxObjectCheckExistsEventuallyReturnsIfFoundImmediately() {
-        GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
-        jmxHelper.connect(TIMEOUT)
-        
-        jmxHelper.assertMBeanExistsEventually(jmxObjectName, 1*TimeUnit.MILLISECONDS)
-    }
-
-    @Test
-    public void jmxObjectCheckExistsEventuallyTakingLongReturnsIfFoundImmediately() {
-        GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
-        jmxHelper.connect(TIMEOUT)
-        
-        jmxHelper.assertMBeanExistsEventually(jmxObjectName, 1L)
-    }
-
-    @Test
-    public void jmxObjectCheckExistsEventuallyReturnsIfCreatedDuringPolling() {
-        jmxHelper.connect(TIMEOUT)
-        
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    Thread.sleep(SHORT_WAIT)
-                    GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName)
-                }})
-        try {
-            t.start()
-            
-            jmxHelper.assertMBeanExistsEventually(jmxObjectName, TIMEOUT)
-        } finally {
-            t.interrupt()
-            t.join(TIMEOUT)
-            assertFalse(t.isAlive())
-        }        
-    }
-
     @Test
     public void jmxAttributeOfTypeTabularDataProviderConvertedToMap() {
         // Create the CompositeType and TabularData
@@ -432,34 +389,6 @@ public class JmxSensorAdapterTest {
         }
     }
 
-    @Test
-    public void testSubscribeToJmxNotificationsDirectlyWithJmxHelper() {
-        StandardEmitterMBean mbean = jmxService.registerMBean(["one"], objectName)
-        int sequence = 0
-        List<Notification> received = []
-
-        jmxHelper.connect(TIMEOUT)
-        jmxHelper.addNotificationListener(jmxObjectName, {Notification notif, Object callback ->
-                    received.add(notif) } as NotificationListener)
-
-        Notification notif = sendNotification(mbean, "one", sequence++, "abc")
-
-        TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
-            assertEquals received.size(), 1
-            assertNotificationsEqual(received.getAt(0), notif)
-        }
-    }
-
-    @Test
-    public void testSetAttribute() {
-        DynamicMBean mbean = jmxService.registerMBean(["myattr":"myval"], objectName)
-
-        jmxHelper.connect(TIMEOUT)
-        jmxHelper.setAttribute(jmxObjectName, "myattr", "abc")
-        Object actual = jmxHelper.getAttribute(jmxObjectName, "myattr")
-        assertEquals(actual, "abc")
-    }
-
     // Test reproduces functionality used in Monterey, for Venue entity being told of requestActor
     @Test
     public void testSubscribeToJmxNotificationAndEmitCorrespondingNotificationSensor() {
@@ -487,32 +416,6 @@ public class JmxSensorAdapterTest {
         }
     }
     
-    // Visual-inspection test that LOG.warn happens only once; TODO setup a listener to the logging output
-    @Test
-    public void testMBeanNotFoundLoggedOnlyOncePerUrl() {
-        ObjectName wrongObjectName = new ObjectName('DoesNotExist:type=DoesNotExist')
-        jmxHelper.connect();
-
-        // Expect just one log message about:
-        //     JMX object DoesNotExist:type=DoesNotExist not found at service:jmx:rmi://localhost:1099/jndi/rmi://localhost:9001/jmxrmi"
-        for (int i = 0; i < 10; i++) {
-            jmxHelper.findMBean(wrongObjectName)
-        }
-
-        jmxService.shutdown();
-        jmxHelper.disconnect()
-        
-        jmxService = new JmxService("127.0.0.1", (int)(11000+(100*Math.random())))
-        jmxHelper = new JmxHelper(jmxService.getUrl())
-        jmxHelper.connect()
-        
-        // Expect just one log message about:
-        //     JMX object DoesNotExist:type=DoesNotExist not found at service:jmx:rmi://127.0.0.1:1099/jndi/rmi://localhost:9001/jmxrmi"
-        for (int i = 0; i < 10; i++) {
-            jmxHelper.findMBean(wrongObjectName)
-        }
-    }
-
     static class EntityWithEmitter extends AbstractEntity {
         public EntityWithEmitter(Map flags=[:], Entity owner=null) {
             super(flags, owner)

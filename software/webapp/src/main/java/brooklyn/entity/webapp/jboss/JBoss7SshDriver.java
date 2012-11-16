@@ -15,7 +15,7 @@ import java.util.Map;
 import static java.lang.String.format;
 
 
-class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
+public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
 
     /*
       * TODO
@@ -102,10 +102,9 @@ class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
                 // Increase deployment timeout to ten minutes
                 format("sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' %s", CONFIG_FILE),
 
-                // Bind interfaces to entity hostname
-                format("sed -i.bk 's/\\(inet-address value=.*\\)127.0.0.1/\\1%s/' %s", getHostname(), CONFIG_FILE)
+                // Bind interfaces -- to all (does this work?)
+                format("sed -i.bk 's/\\(inet-address value=.*\\)127.0.0.1/\\1%s/' %s", entity.getConfig(JBoss7Server.BIND_ADDRESS), CONFIG_FILE)
         ).execute();
-
         ((JBoss7Server) entity).deployInitialWars();
     }
 

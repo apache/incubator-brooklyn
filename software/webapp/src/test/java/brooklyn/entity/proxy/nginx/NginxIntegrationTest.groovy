@@ -11,16 +11,15 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Entity
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestUtils
-import brooklyn.test.WebAppMonitor;
+import brooklyn.test.HttpTestUtils
+import brooklyn.test.WebAppMonitor
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
@@ -44,7 +43,7 @@ public class NginxIntegrationTest {
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
     public void shutdown() {
-        app?.stop()
+        if (app != null) Entities.destroy(app);
     }
 
     /**
@@ -60,6 +59,8 @@ public class NginxIntegrationTest {
                 "serverPool" : serverPool,
                 "domain" : "localhost"
             ])
+        
+        Entities.startManagement(app);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
@@ -83,6 +84,8 @@ public class NginxIntegrationTest {
 	            "domain" : "localhost",
 	            "portNumberSensor" : WebAppService.HTTP_PORT,
             ])
+        
+        Entities.startManagement(app);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
@@ -125,6 +128,8 @@ public class NginxIntegrationTest {
                 "serverPool" : serverPool,
                 "portNumberSensor" : WebAppService.HTTP_PORT,
             ])
+        
+        Entities.startManagement(app);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
@@ -169,6 +174,8 @@ public class NginxIntegrationTest {
             "port" : "14000+"
         ])
 
+        Entities.startManagement(app);
+        
         app.start([ new LocalhostMachineProvisioningLocation() ])
 
         String url1 = nginx1.getAttribute(NginxController.ROOT_URL)
@@ -197,6 +204,9 @@ public class NginxIntegrationTest {
         serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
         
         nginx = new NginxController(app, serverPool: serverPool);
+        
+        Entities.startManagement(app);
+        
         app.start([ new LocalhostMachineProvisioningLocation() ])
 
         assertEventually {        
@@ -254,6 +264,9 @@ public class NginxIntegrationTest {
         serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
         
         nginx = new NginxController(app, serverPool: serverPool);
+        
+        Entities.startManagement(app);
+        
         app.start([ new LocalhostMachineProvisioningLocation() ])
 
         String nginxUrl = nginx.getAttribute(WebAppService.ROOT_URL);

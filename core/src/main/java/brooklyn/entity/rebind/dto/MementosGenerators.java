@@ -1,5 +1,7 @@
 package brooklyn.entity.rebind.dto;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.lang.reflect.Modifier;
 import java.util.Map;
 
@@ -70,8 +72,9 @@ public class MementosGenerators {
         builder.type = entity.getClass().getName();
         builder.isTopLevelApp = (entity instanceof Application && entity.getOwner() == null);
         
-        for (Map.Entry<ConfigKey<?>, Object> entry : ((AbstractEntity)entity).getConfigMap().getLocalConfig().entrySet()) {
-            ConfigKey<?> key = entry.getKey();
+        Map<ConfigKey<?>, Object> localConfig = ((AbstractEntity)entity).getConfigMap().getLocalConfig();
+        for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
+            ConfigKey<?> key = checkNotNull(entry.getKey(), localConfig);
             Object value = entry.getValue();
             Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
             if (transformedValue != value) {
@@ -85,8 +88,9 @@ public class MementosGenerators {
             builder.config.put(key, transformedValue); 
         }
         
-        for (Map.Entry<AttributeSensor, Object> entry : ((AbstractEntity)entity).getAllAttributes().entrySet()) {
-            AttributeSensor<?> key = entry.getKey();
+        Map<AttributeSensor, Object> allAttributes = ((AbstractEntity)entity).getAllAttributes();
+        for (Map.Entry<AttributeSensor, Object> entry : allAttributes.entrySet()) {
+            AttributeSensor<?> key = checkNotNull(entry.getKey(), allAttributes);
             Object value = entry.getValue();
             Object transformedValue = MementoTransformer.transformEntitiesToIds(value);
             if (transformedValue != value) {

@@ -3,6 +3,8 @@ package brooklyn.entity.rebind.persister;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,7 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     
     @VisibleForTesting
     @Override
-    public void waitForWritesCompleted() throws InterruptedException {
+    public void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
         // TODO Could wait for concurrent checkpoint/delta, but don't need to for tests
         // because they first wait for checkpoint/delta to have been called by RebindManagerImpl.
         return;

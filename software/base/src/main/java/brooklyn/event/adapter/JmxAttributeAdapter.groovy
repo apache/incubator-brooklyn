@@ -67,7 +67,7 @@ public class JmxAttributeAdapter extends AbstractSensorAdapter {
     protected void activateAdapter() {
         super.activateAdapter();
         try {
-            if (adapter.checkObjectNameExists(objectName, new TimeDuration(0, 0, 0, 0))) {
+            if (adapter.checkObjectNameExistsNow(objectName)) {
                 if (log.isDebugEnabled()) 
                     log.debug("For $entity ${adapter.helper.url}, MBean ${objectName} exists");
             } else {

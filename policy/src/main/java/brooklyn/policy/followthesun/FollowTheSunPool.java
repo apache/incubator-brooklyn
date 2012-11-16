@@ -96,9 +96,9 @@ public class FollowTheSunPool extends AbstractEntity implements Resizable {
             } else if (sensor.equals(Startable.SERVICE_UP)) {
                 // TODO What if start has failed? Is there a sensor to indicate that?
                 if ((Boolean)value) {
-                    onContainerUp((Entity) source);
+                    onContainerUp(source);
                 } else {
-                    onContainerDown((Entity) source);
+                    onContainerDown(source);
                 }
             } else if (sensor.equals(Movable.CONTAINER)) {
                 onItemMoved(source, (Entity) value);

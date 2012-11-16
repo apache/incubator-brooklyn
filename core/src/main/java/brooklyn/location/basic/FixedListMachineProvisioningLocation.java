@@ -20,6 +20,7 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -36,6 +37,11 @@ import com.google.common.io.Closeables;
 //TODO combine with jclouds BYON
 public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, CoordinatesProvider, Closeable {
 
+    // TODO Synchronization looks very wrong for accessing machines/inUse 
+    // e.g. removeChildLocation doesn't synchronize when doing machines.remove(...),
+    // and getMachines() and getInUse() return the real sets risking 
+    // ConcurrentModificationException in the caller if it iterates over them etc.
+    
     private Object lock;
     
     @SetFromFlag
@@ -44,6 +50,9 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     @SetFromFlag
     protected Set<T> inUse;
 
+    @SetFromFlag
+    protected Set<T> pendingRemoval;
+    
     public FixedListMachineProvisioningLocation() {
         this(Maps.newLinkedHashMap());
     }
@@ -61,10 +70,11 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     }
 
     protected void configure(Map properties) {
-        if (!truth(lock)) {
+        if (lock == null) {
             lock = new Object();
             machines = Sets.newLinkedHashSet();
             inUse = Sets.newLinkedHashSet();
+            pendingRemoval = Sets.newLinkedHashSet();
         }
         super.configure(properties);
     }
@@ -73,6 +83,33 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     public void close() {
         for (T machine : machines) {
             if (machine instanceof Closeable) Closeables.closeQuietly((Closeable)machine);
+        }
+    }
+    
+    public void addMachine(T machine) {
+        synchronized (lock) {
+            if (machines.contains(machine)) {
+                throw new IllegalArgumentException("Cannot add "+machine+" to "+toString()+", because already contained");
+            }
+            
+            Location existingParent = ((Location)machine).getParentLocation();
+            if (existingParent != null && !existingParent.equals(this))
+                throw new IllegalStateException("Machine "+machine+" must not have a parent location to be added to "+toString()+", but parent is already set to '"+existingParent+"'");
+            addChildLocation((Location)machine);
+            
+            machines.add(machine);
+        }
+    }
+    
+    public void removeMachine(T machine) {
+        synchronized (lock) {
+            if (inUse.contains(machine)) {
+                pendingRemoval.add(machine);
+            } else {
+                machines.remove(machine);
+                pendingRemoval.remove(machine);
+                removeChildLocation((Location)machine);
+            }
         }
     }
     
@@ -96,6 +133,10 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         Set<T> a = Sets.newLinkedHashSet(machines);
         a.removeAll(inUse);
         return a;
+    }   
+     
+    public Set<T> getAllMachines() {
+        return ImmutableSet.copyOf(machines);
     }   
      
     @Override
@@ -123,17 +164,28 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     @Override
     public T obtain(Map<String,? extends Object> flags) throws NoMachinesAvailableException {
         T machine;
+        T desiredMachine = (T) flags.get("desiredMachine");
+        
         synchronized (lock) {
             Set<T> a = getAvailable();
-            if (!truth(a)) {
+            if (a.isEmpty()) {
                 if (canProvisionMore()) {
                     provisionMore(1);
                     a = getAvailable();
                 }
-                if (!truth(a))
+                if (a.isEmpty())
                     throw new NoMachinesAvailableException(this);
             }
-            machine = a.iterator().next();
+            if (desiredMachine != null) {
+                if (a.contains(desiredMachine)) {
+                    machine = desiredMachine;
+                } else {
+                    throw new IllegalStateException("Desired machine "+desiredMachine+" not available in "+toString()+"; "+
+                            (inUse.contains(desiredMachine) ? "machine in use" : "machine unknown"));
+                }
+            } else {
+                machine = a.iterator().next();
+            }
             inUse.add(machine);
         }
         return machine;
@@ -145,6 +197,10 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
             if (inUse.contains(machine) == false)
                 throw new IllegalStateException("Request to release machine "+machine+", but this machine is not currently allocated");
             inUse.remove(machine);
+            
+            if (pendingRemoval.contains(machine)) {
+                removeMachine(machine);
+            }
         }
     }
 

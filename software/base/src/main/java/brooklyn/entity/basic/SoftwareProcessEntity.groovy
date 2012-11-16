@@ -29,6 +29,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.mementos.EntityMemento
 import brooklyn.util.MutableMap
+import brooklyn.util.Time;
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
 import brooklyn.util.task.Tasks
@@ -122,6 +123,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 	
     protected void postActivation() {
+        waitForServiceUp();
+    }
+    
+    protected void postRestart() {
+        waitForServiceUp();
     }
     
     // TODO Only do this when first being managed; not when moving
@@ -363,8 +369,12 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 			if (log.isDebugEnabled()) log.debug "checked {}, is running returned: {}", this, isRunningResult
 		}
 		if (!isRunningResult) {
-            log.warn("Software process entity ${this} did not appear to start; setting state to indicate problem; consult logs for more details")
+            String msg = "Software process entity "+this+" did not appear to start within "+
+                    Time.makeTimeString(System.currentTimeMillis()-startTime)+
+                    "; setting state to indicate problem and throwing; consult logs for more details";
+            log.warn(msg);
 			setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE)
+            throw new IllegalStateException(msg);
 		}
 	}
 
@@ -416,9 +426,11 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	}
 
 	public void restart() {
-		if (driver) driver.restart()
-		else throw new IllegalStateException("entity "+this+" not set up for operations (restart)")
-        //if successfully restarts
+		if (!driver) throw new IllegalStateException("entity "+this+" not set up for operations (restart)");
+        
+        driver.restart()
+        waitForEntityStart();
+        postRestart();
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
 	}
 }

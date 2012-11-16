@@ -16,10 +16,10 @@ import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.event.Sensor
-import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.task.DeferredSupplier
 
 import com.google.common.collect.Iterables
 
@@ -92,9 +92,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         log.debug("creating cluster child for {}", this);
         cachedCluster = new DynamicWebAppCluster(this,
             factory: factory,
-            // FIXME Establish if definitely want to change how we treat closures like this
-            //initialSize: { getConfig(INITIAL_SIZE) } );
-            initialSize: getConfig(INITIAL_SIZE));
+            initialSize: new DeferredSupplier<Integer>() { public Integer get() { return getConfig(INITIAL_SIZE); } } );
         if (Entities.isManaged(this)) Entities.manage(cachedCluster);
         return cachedCluster;
     }

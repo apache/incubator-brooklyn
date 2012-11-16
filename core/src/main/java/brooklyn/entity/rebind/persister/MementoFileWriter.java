@@ -3,6 +3,8 @@ package brooklyn.entity.rebind.persister;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -10,6 +12,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.jclouds.concurrent.MoreExecutors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.util.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -85,10 +89,17 @@ public class MementoFileWriter<T> {
      * This method must only be used for testing. If required in production, then revisit implementation!
      */
     @VisibleForTesting
-    public void waitForWriteCompleted() throws InterruptedException {
-        long mods = modCount.get();
+    public void waitForWriteCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        // Every time we finish writing, we increment a counter. We note the current val, and then
+        // wait until we can guarantee that a complete additional write has been done. Not sufficient
+        // to wait for `writeCount > origWriteCount` because we might have read the value when it was 
+        // almost finished a write.
+        
+        long startTime = System.currentTimeMillis();
+        long maxEndtime = (timeout > 0) ? (startTime + unit.toMillis(timeout)) : Long.MAX_VALUE;
+        long origModCount = modCount.get();
         while (true) {
-            if (modCount.get() > mods) {
+            if (modCount.get() > (origModCount+1)) {
                 return;
             } else if (requireWrite.get() != null) {
                 // must continue waiting for mods+1
@@ -96,6 +107,10 @@ public class MementoFileWriter<T> {
                 // must wait for either this invocation to complete, or mods+1 (because might have already updated)
             } else {
                 return;
+            }
+            
+            if (System.currentTimeMillis() > maxEndtime) {
+                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeString(timeout, unit));
             }
             Thread.sleep(1);
         }

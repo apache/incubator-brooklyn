@@ -61,6 +61,10 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         // group itself has been told that it is unmanaged).
     }
     
+    public boolean isRunning() {
+        return running;
+    }
+    
     @Override
     public RebindManager getRebindManager() {
         return rebindManager;
@@ -106,6 +110,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         
         final ManagementTransitionInfo info = new ManagementTransitionInfo(this, ManagementTransitionMode.NORMAL);
         recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
+            preManageNonRecursive(it);
             it.getManagementSupport().onManagementStarting(info); 
             return manageNonRecursive(it);
         } });
@@ -131,6 +136,18 @@ public abstract class AbstractManagementContext implements ManagementContext  {
             }
         }
     }
+
+    /**
+     * Whether the entity is in the process of being managed.
+     */
+    protected abstract boolean isPreManaged(Entity e);
+    
+    /**
+     * Implementor-supplied internal method.
+     * <p>
+     * Should ensure that the entity is now known about, but should not be accessible from other entities yet.
+     */
+    protected abstract boolean preManageNonRecursive(Entity e);
 
     /**
      * Implementor-supplied internal method.
@@ -215,11 +232,15 @@ public abstract class AbstractManagementContext implements ManagementContext  {
             return; // TODO Still a race for terminate being called, and then isManaged below returning false
         } else if (((AbstractEntity)entity).hasEverBeenManaged()) {
             return;
-        } else if (!isManaged(entity)) {
+        } else if (isManaged(entity)) {
+            return;
+        } else if (isPreManaged(entity)) {
+            return;
+        } else {
             Entity rootUnmanaged = entity;
             while (true) {
                 Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();
-                if (candidateUnmanagedOwner == null || getEntity(candidateUnmanagedOwner.getId()) != null)
+                if (candidateUnmanagedOwner == null || isManaged(candidateUnmanagedOwner) || isPreManaged(candidateUnmanagedOwner))
                     break;
                 rootUnmanaged = candidateUnmanagedOwner;
             }
