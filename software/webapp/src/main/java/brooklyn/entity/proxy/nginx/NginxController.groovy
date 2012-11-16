@@ -88,13 +88,13 @@ public class NginxController extends AbstractController {
         Group urlMappings = getConfig(URL_MAPPINGS);
         if (urlMappings != null) {
             // Listen to the targets of each url-mapping changing
-            subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, { updateNonEffector(); } as SensorEventListener);
+            subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
             
             // Listen to url-mappings being added and removed
             AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
-                @Override protected void onEntityChange(Entity member) { updateNonEffector(); }
-                @Override protected void onEntityAdded(Entity member) { updateNonEffector(); }
-                @Override protected void onEntityRemoved(Entity member) { updateNonEffector(); }
+                @Override protected void onEntityChange(Entity member) { update(); }
+                @Override protected void onEntityAdded(Entity member) { update(); }
+                @Override protected void onEntityRemoved(Entity member) { update(); }
             };
             addPolicy(policy);
             policy.setGroup(urlMappings);
