@@ -62,7 +62,7 @@ public class EffectorResource extends BaseResource {
       @ApiParam(name = "entity", value = "Entity name", required = true)
       @PathParam("entity") final String entityIdOrName
   ) {
-    final Application application = getApplicationOr404(manager.registry(), applicationName);
+    final Application application = getApplicationOr404(manager, applicationName);
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
     return Lists.newArrayList(transform(
@@ -105,7 +105,7 @@ public class EffectorResource extends BaseResource {
       @Valid 
       Map<String, String> parameters
   ) {
-    final Application application = getApplicationOr404(manager.registry(), applicationName);
+    final Application application = getApplicationOr404(manager, applicationName);
     final EntityLocal entity = getEntityOr404(application, entityIdOrName);
 
     final Effector<?> effector = EffectorUtils.findEffectorMatching(entity.getEntityType().getEffectors(), effectorName, parameters);

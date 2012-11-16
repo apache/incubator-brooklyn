@@ -1,14 +1,20 @@
 define([
-    "underscore", "view/effector", "model/effector-summary"
-], function (_, EffectorView, EffectorSummary) {
+    "underscore", "view/effector", "model/effector-summary", "model/entity"
+], function (_, EffectorView, EffectorSummary, Entity) {
 
     var modalView, collection = new EffectorSummary.Collection()
     collection.url = "fixtures/effector-summary-list.json"
     collection.fetch()
+    
+    var entityFixture = new Entity.Collection
+    entityFixture.url = 'fixtures/entity.json'
+    entityFixture.fetch({async:true})
+
     modalView = new EffectorView({
         tagName:"div",
         className:"modal",
-        model:collection.at(0)
+        model:collection.at(0),
+        entity:entityFixture.at(0)
     })
 
     describe("view/effector", function () {
@@ -20,8 +26,9 @@ define([
             expect(modalView.$(".modal-footer").length).toBe(1)
         })
 
-        it("must have effector name and description in header", function () {
+        it("must have effector name, entity name, and effector description in header", function () {
             expect(modalView.$(".modal-header h3").html()).toContain("start")
+            expect(modalView.$(".modal-header h3").html()).toContain("Vanilla")
             expect(modalView.$(".modal-header p").html()).toBe("Start the process/service represented by an entity")
         })
 

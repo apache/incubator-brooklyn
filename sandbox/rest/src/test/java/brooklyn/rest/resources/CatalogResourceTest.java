@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 import org.testng.annotations.Test;
 
 import brooklyn.rest.BaseResourceTest;
+import brooklyn.rest.api.CatalogEntitySummary;
 
 import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.api.client.ClientResponse;
@@ -48,10 +49,9 @@ public class CatalogResourceTest extends BaseResourceTest {
         });
     assertTrue(entities.contains("brooklyn.rest.entities.custom.DummyEntity"));
 
-    Set<String> configKeys = client().resource(response.getLocation())
-        .get(new GenericType<Set<String>>() {
-        });
-    assertEquals(configKeys, ImmutableSet.of("dummy.config"));
+    CatalogEntitySummary entity = client().resource(response.getLocation())
+        .get(CatalogEntitySummary.class);
+    assertTrue(entity.toString().contains("dummy.config"));
   }
 
   @Test
@@ -71,12 +71,12 @@ public class CatalogResourceTest extends BaseResourceTest {
   }
 
   @Test
-  public void testGetConfigKeys() {
-    Set<String> keys = client().resource(
-        URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore"))
-        .get(new GenericType<Set<String>>() {
-        });
-    assertTrue(keys.containsAll(ImmutableSet.of("redis.port", "install.version", "run.dir")));
+  public void testGetCatalogEntityDetails() {
+      CatalogEntitySummary details = client().resource(
+              URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore"))
+              .get(CatalogEntitySummary.class);
+      assertTrue(details.toString().contains("redis.port"));
+      assertTrue(details.toString().contains("run.dir"));
   }
 
   @Test

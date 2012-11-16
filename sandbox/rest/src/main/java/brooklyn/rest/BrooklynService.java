@@ -1,5 +1,10 @@
 package brooklyn.rest;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import brooklyn.rest.auth.BasicAuthFilter;
 import brooklyn.rest.auth.ConfigBasedAuthenticator;
 import brooklyn.rest.auth.User;
@@ -11,7 +16,7 @@ import brooklyn.rest.commands.applications.QuerySensorsCommand;
 import brooklyn.rest.commands.applications.StartApplicationCommand;
 import brooklyn.rest.commands.catalog.ListCatalogEntitiesCommand;
 import brooklyn.rest.commands.catalog.ListCatalogPoliciesCommand;
-import brooklyn.rest.commands.catalog.ListConfigKeysCommand;
+import brooklyn.rest.commands.catalog.CatalogEntityDetailsCommand;
 import brooklyn.rest.commands.catalog.LoadClassCommand;
 import brooklyn.rest.commands.locations.AddLocationCommand;
 import brooklyn.rest.commands.locations.ListLocationsCommand;
@@ -21,14 +26,18 @@ import brooklyn.rest.health.GeneralHealthCheck;
 import brooklyn.rest.resources.ActivityResource;
 import brooklyn.rest.resources.ApplicationResource;
 import brooklyn.rest.resources.CatalogResource;
+import brooklyn.rest.resources.ConfigResource;
 import brooklyn.rest.resources.EffectorResource;
 import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
+import brooklyn.rest.resources.PolicyResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.SwaggerUiResource;
 import brooklyn.rest.resources.VersionResource;
 import brooklyn.rest.resources.WebClientResource;
+
 import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilderSpec;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.auth.Authenticator;
 import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
@@ -36,11 +45,6 @@ import com.yammer.dropwizard.auth.basic.BasicCredentials;
 import com.yammer.dropwizard.bundles.AssetsBundle;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.views.ViewBundle;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Application entry point. Configures and starts the embedded web-server.
@@ -55,7 +59,8 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
 
   protected BrooklynService() {
     super("brooklyn-rest");
-    addBundle(new AssetsBundle("/assets"));
+    AssetsBundle ab = new AssetsBundle("/assets", CacheBuilderSpec.disableCaching());
+    addBundle(ab);
     addBundle(new ViewBundle());
   }
 
@@ -85,14 +90,16 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
         locationStore, catalogResource, managedExecutor);
     environment.manage(applicationManager);
 
-    environment.addResource(new LocationResource(locationStore));
+    environment.addResource(new LocationResource(applicationManager, locationStore));
     environment.addResource(catalogResource);
 
     environment.addResource(new ApplicationResource(applicationManager, locationStore, catalogResource));
 
     environment.addResource(new EntityResource(applicationManager));
+    environment.addResource(new ConfigResource(applicationManager));
     environment.addResource(new SensorResource(applicationManager));
     environment.addResource(new EffectorResource(applicationManager));
+    environment.addResource(new PolicyResource(applicationManager));
     environment.addResource(new ActivityResource(applicationManager));
     environment.addResource(new SwaggerUiResource());
     environment.addResource(new VersionResource());
@@ -156,7 +163,7 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
     service.addCommand(new ListLocationsCommand());
     service.addCommand(new AddLocationCommand());
 
-    service.addCommand(new ListConfigKeysCommand());
+    service.addCommand(new CatalogEntityDetailsCommand());
     service.addCommand(new ListCatalogEntitiesCommand());
     service.addCommand(new ListCatalogPoliciesCommand());
     service.addCommand(new LoadClassCommand());

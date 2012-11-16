@@ -1,13 +1,14 @@
-<li>
-    <% if (type == "leaf") { %>
-    <a href="#" id="<%= id %>" class="name entity" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
+<li class="<%= type %>">
+    <% if (type != "leaf") { %> <label> <% } %>
+      <span id="<%= id %>" class="name entity entity_tree_node<%
+        if (type == "leaf") { %> leaf<% } 
+        if (type == "application") { %> application<% } 
+        %>" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
         <%= displayName %>
-    </a>
-    <% } else { %>
-    <label id="<%= id %>" class="name entity" data-entity-type="<%= type %>" data-parent-app="<%= parentApp %>">
-        <%= displayName %>
-    </label>
-    <input type="checkbox"/>
+    </span>
+    <% if (type != "leaf") { %> </label> <% } %>
+    <% if (type != "leaf") { %>
+    <input type="checkbox" checked="true"/>
     <ol class="tree entities"/>
     <% } %>
 </li>

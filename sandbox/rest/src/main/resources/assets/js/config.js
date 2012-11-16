@@ -12,6 +12,8 @@ require.config({
         "formatJson":"libs/json-formatter",
         "jquery-form":"libs/jquery.form",
         "tablesorter":"libs/jquery.dataTables.min",
+        "async":"libs/async",
+        "googlemaps":"view/googlemaps",
         "text":"libs/text",
         "tpl":"../tpl"
     },

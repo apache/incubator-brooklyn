@@ -1,10 +1,16 @@
 <!-- Applications page template -->
 <div class="row" id="application-resource">
-    <div id="new-application-resource">
-        <button id="add-new-application" type="button" class="btn btn-info">Add Application
-        </button>
+
+<div class="home-summaries-row"></div>
+<br/>
+
+<div class="home-widgets-row">
+  <div class="map-container">
+    <div id="circles-map" class="circles-map">
+      <div id="circles-map-message" class="circles-map-message">(map loading)</div>
     </div>
-    <dl class="dl-horizontal"></dl>
+  </div>
+  <div class="apps-summary-container">
     <div id="applications">
         <table class="table table-striped table-bordered table-condensed">
             <thead>
@@ -16,5 +22,13 @@
             </tbody>
         </table>
     </div>
+    <dl class="dl-horizontal"></dl>
+    <div id="new-application-resource">
+        <button id="add-new-application" type="button" class="btn btn-info">
+            Add Application</button>
+    </div>
+  </div>
+</div>
+
 </div>
 <div id="modal-container"></div>

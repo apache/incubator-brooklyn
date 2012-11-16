@@ -40,3 +40,7 @@ logging:
     brooklyn.util.internal.ssh: ERROR
     net.schmizz.sshj: ERROR
 
+http:
+  port: 8090
+  adminPort: 8091
+

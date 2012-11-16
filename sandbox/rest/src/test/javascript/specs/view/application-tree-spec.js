@@ -17,10 +17,12 @@ define([
 
         it("builds the entity tree for each application", function () {
             expect(view.$("#riBZUjMq").length).toBe(1)
-            expect(view.$("a#fXyyQ7Ap").length).toBe(1)
+            expect(view.$("#fXyyQ7Ap").length).toBe(1)
             expect(view.$("#child-02").length).toBe(1)
-            expect(view.$("a#child-03").length).toBe(1)
-            expect(view.$("a#child-04").length).toBe(1)
+            expect(view.$("#child-03").length).toBe(1)
+            expect(view.$("#child-04").length).toBe(1)
+            
+            expect(view.$("#child-nonesuch").length).toBe(0)
         })
     })
 })

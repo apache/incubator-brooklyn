@@ -29,17 +29,22 @@ define([
         render:function () {
             var that = this,
                 $tbody = this.$("#activities-table tbody").empty()
-            this.collection.each(function (task) {
-                $tbody.append(that.taskRow({
-                    cid:task.cid,
-                    displayName:task.get("displayName"),
-                    submitTimeUtc:task.get("submitTimeUtc"),
-                    startTimeUtc:task.get("startTimeUtc"),
-                    endTimeUtc:task.get("endTimeUtc"),
-                    currentStatus:task.get("currentStatus"),
-                    entityDisplayName:task.get("entityDisplayName")
-                }))
+            if (this.collection.length==0) {
+                this.$(".has-no-activities").show();
+            } else {                
+                this.$(".has-no-activities").hide();
+                this.collection.each(function (task) {
+                    $tbody.append(that.taskRow({
+                        cid:task.cid,
+                        displayName:task.get("displayName"),
+                        submitTimeUtc:task.get("submitTimeUtc"),
+                        startTimeUtc:task.get("startTimeUtc"),
+                        endTimeUtc:task.get("endTimeUtc"),
+                        currentStatus:task.get("currentStatus"),
+                        entityDisplayName:task.get("entityDisplayName")
+                    }))
             })
+            }
             return this
         },
         showFullActivity:function (eventName) {

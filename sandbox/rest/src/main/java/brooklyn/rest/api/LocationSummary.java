@@ -1,20 +1,18 @@
 package brooklyn.rest.api;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import org.codehaus.jackson.annotate.JsonProperty;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.codehaus.jackson.annotate.JsonProperty;
+
+import brooklyn.entity.basic.Entities;
+
+import com.google.common.collect.ImmutableMap;
 
 public class LocationSummary {
-
-  private final static Set<String> SENSITIVE_CONFIGS =
-      ImmutableSet.of("credential", "privateKeyFile", "sshPrivateKey", "rootSshPrivateKey", "password");
 
   private final String provider;
   private final Map<String, String> config;
@@ -27,7 +25,7 @@ public class LocationSummary {
   ) {
     this.provider = checkNotNull(provider, "provider");
     this.config = (config == null) ? Collections.<String, String>emptyMap()
-        : ImmutableMap.copyOf(config);
+            : ImmutableMap.copyOf(config);
     this.links = ImmutableMap.copyOf(links);
   }
 
@@ -39,10 +37,15 @@ public class LocationSummary {
     );
   }
 
-  private Map<String, String> copyConfigsExceptSensitiveKeys(LocationSpec locationSpec) {
+  public static LocationSummary newInstance(String id, LocationSpec locationSpec) {
+      return new LocationSummary(locationSpec.getProvider(), copyConfigsExceptSensitiveKeys(locationSpec),
+              ImmutableMap.of("self", URI.create("/v1/locations/" + id)) );
+  }
+  
+  private static Map<String, String> copyConfigsExceptSensitiveKeys(LocationSpec locationSpec) {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : locationSpec.getConfig().entrySet()) {
-      if (!SENSITIVE_CONFIGS.contains(entry.getKey())) {
+      if (!Entities.isSecret(entry.getKey())) {
         builder.put(entry);
       }
     }

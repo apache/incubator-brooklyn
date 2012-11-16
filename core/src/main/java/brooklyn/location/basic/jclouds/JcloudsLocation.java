@@ -38,6 +38,7 @@ import org.jclouds.compute.domain.NodeMetadataBuilder;
 import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
+import org.jclouds.compute.domain.TemplateBuilderSpec;
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Credentials;
@@ -843,6 +844,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             .put("imageNameRegex", new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, Map props, Object v) {
                         tb.imageNameMatches(((CharSequence)v).toString());
+                    }})
+            .put("templateSpec", new CustomizeTemplateBuilder() {
+                public void apply(TemplateBuilder tb, Map props, Object v) {
+                        tb.from(TemplateBuilderSpec.parse(((CharSequence)v).toString()));
                     }})
             .put("defaultImageId", new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, Map props, Object v) {

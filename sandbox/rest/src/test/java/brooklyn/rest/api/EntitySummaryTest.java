@@ -25,7 +25,8 @@ public class EntitySummaryTest {
     links.put("activities", URI.create("fixtures/task-summary-list.json"));
   }
 
-  static final EntitySummary entitySummary = new EntitySummary("brooklyn.entity.webapp.tomcat.TomcatServer", links);
+  static final EntitySummary entitySummary = new EntitySummary(
+          "zQsqdXzi", "MyTomcat", "brooklyn.entity.webapp.tomcat.TomcatServer", links);
 
   @Test
   public void testSerializeToJSON() throws IOException {

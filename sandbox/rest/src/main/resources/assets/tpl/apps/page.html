@@ -1,8 +1,18 @@
 <div class="row row-fluid">
-    <div class="span4 well sidebar-nav" id="tree">
-        <h3>Applications <i class="icon-refresh refresh"/></h3>
-        <div id="tree-list"></div>
-    </div>
+	<div class="span4" id="tree">
+		<div class="navbar_top">
+			<h3>Applications</h3>
+			<div class="apps-tree-toolbar">
+				<i id="add-new-application" class="icon-plus-sign handy" />
+				&nbsp;
+				<i class="icon-refresh refresh handy" />
+			</div>
+		</div>
+		<div class="navbar_main_wrapper cssninja">
+		  <div id="tree-list" class="navbar_main"></div>
+		</div>
+	</div>
 
-    <div class="span8" id="details"></div>
+	<div class="span8" id="details"></div>
 </div>
+<div id="modal-container"></div>

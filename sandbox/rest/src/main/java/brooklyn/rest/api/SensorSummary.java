@@ -1,18 +1,24 @@
 package brooklyn.rest.api;
 
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.event.Sensor;
-import com.google.common.collect.ImmutableMap;
-import org.codehaus.jackson.annotate.JsonProperty;
-
 import java.net.URI;
 import java.util.Map;
+
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.event.Sensor;
+
+import com.google.common.collect.ImmutableMap;
 
 public class SensorSummary {
 
   private final String name;
   private final String type;
+  @JsonSerialize(include=Inclusion.NON_NULL)
   private final String description;
+  @JsonSerialize(include=Inclusion.NON_NULL)
   private final Map<String, URI> links;
 
   public SensorSummary(
@@ -24,7 +30,7 @@ public class SensorSummary {
     this.name = name;
     this.type = type;
     this.description = description;
-    this.links = ImmutableMap.copyOf(links);
+    this.links = links != null ? ImmutableMap.copyOf(links) : null;
   }
 
   public SensorSummary(Application application, EntityLocal entity, Sensor<?> sensor) {
@@ -40,6 +46,11 @@ public class SensorSummary {
         .put("application", URI.create(applicationUri))
         .put("entity", URI.create(entityUri))
         .build();
+  }
+
+  public static SensorSummary forCatalog(Sensor<?> sensor) {
+      return new SensorSummary(sensor.getName(), sensor.getTypeName(),
+              sensor.getDescription(), null);
   }
 
   public String getName() {

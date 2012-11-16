@@ -28,21 +28,27 @@ define([
         render:function () {
             var that = this
             var $tableBody = this.$('#effectors-table tbody').empty()
-            this._effectors.each(function (effector) {
-                $tableBody.append(that.effectorRow({
-                    name:effector.get("name"),
-                    description:effector.get("description"),
-                    cid:effector.cid
-                }))
-            })
+            if (this._effectors.length==0) {
+                this.$(".has-no-effectors").show();
+            } else {                
+                this.$(".has-no-effectors").hide();
+                this._effectors.each(function (effector) {
+                    $tableBody.append(that.effectorRow({
+                        name:effector.get("name"),
+                        description:effector.get("description"),
+                        cid:effector.cid
+                    }))
+                })
+            }
             return this
         },
         showEffectorModal:function (eventName) {
-            // get the model that we need to show, create it's view and show it
+            // get the model that we need to show, create its view and show it
             var cid = $(eventName.currentTarget).attr("id")
             this._modal = new EffectorView({
                 el:"#effector-modal",
-                model:this._effectors.getByCid(cid)
+                model:this._effectors.getByCid(cid),
+                entity:this.model
             })
             this._modal.render().$el.modal('show')
         }

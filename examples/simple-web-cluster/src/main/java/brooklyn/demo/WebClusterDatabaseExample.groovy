@@ -1,7 +1,9 @@
 package brooklyn.demo
 
-import static brooklyn.event.basic.DependentConfiguration.valueWhenAttributeReady
+import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady
+import static brooklyn.event.basic.DependentConfiguration.formatString
 import static brooklyn.entity.java.JavaEntityMethods.javaSysProp
+import static brooklyn.entity.webapp.WebAppServiceConstants.HTTP_PORT
 import groovy.transform.InheritConstructors
 
 import org.slf4j.Logger
@@ -33,29 +35,26 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     
     public static final String DB_SETUP_SQL_URL = "classpath://visitors-creation-script.sql"
     
+    public static final String DB_TABLE = "visitors"
     public static final String DB_USERNAME = "brooklyn"
     public static final String DB_PASSWORD = "br00k11n"
     
-    public static String makeJdbcUrl(String dbUrl) {
-        //jdbc:mysql://192.168.1.2:3306/visitors?user=brooklyn&password=br00k11n
-        return "jdbc:"+dbUrl+"visitors"+"?"+"user="+DB_USERNAME+"\\&"+"password="+DB_PASSWORD;
-    }
-
     
     ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
     MySqlNode mysql = new MySqlNode(this, creationScriptUrl: DB_SETUP_SQL_URL);
 
     {
-        web.factory.
-            configure(httpPort: "8080+").
+        web.configure(HTTP_PORT, "8080+").
             configure(javaSysProp("brooklyn.example.db.url"),
-                valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, this.&makeJdbcUrl));
+                formatString("jdbc:%s%s?user=%s\\&password=%s",
+                    attributeWhenReady(mysql, MySqlNode.MYSQL_URL),
+                    DB_TABLE, DB_USERNAME, DB_PASSWORD));
 
-        web.cluster.addPolicy(AutoScalerPolicy.builder()
-                .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
-                .sizeRange(1, 5)
-                .metricRange(10, 100)
-                .build());
+        web.cluster.addPolicy(AutoScalerPolicy.builder().
+            metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
+            sizeRange(1, 5).
+            metricRange(10, 100).
+            build());
     }
 
     public static void main(String[] argv) {

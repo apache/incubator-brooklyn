@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -26,16 +27,22 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
+import org.reflections.scanners.Scanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EntityTypes;
 import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.rest.api.CatalogEntitySummary;
+import brooklyn.rest.api.CatalogPolicySummary;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -51,6 +58,8 @@ import com.wordnik.swagger.core.ApiParam;
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource extends BaseResource {
 
+    private static final Logger log = LoggerFactory.getLogger(CatalogResource.class);
+    
   private volatile boolean scanNeeded = true;
   private Map<String, Class<? extends AbstractEntity>> scannedEntities = Collections.emptyMap();
   private final Map<String, Class<? extends AbstractEntity>> registeredEntities = Maps.newConcurrentMap();
@@ -67,7 +76,7 @@ public class CatalogResource extends BaseResource {
   }
   
   private <T> Map<String, Class<? extends T>> buildMapOfSubTypesOf(String prefix, Class<T> clazz) {
-    Reflections reflections = new Reflections(prefix);
+    Reflections reflections = new SafeReflections(prefix);
     ImmutableMap.Builder<String, Class<? extends T>> builder = ImmutableMap.builder();
     for (Class<? extends T> candidate : reflections.getSubTypesOf(clazz)) {
       if (!Modifier.isAbstract(candidate.getModifiers()) &&
@@ -88,6 +97,17 @@ public class CatalogResource extends BaseResource {
     scanIfNeeded();
     if (scannedEntities.containsKey(entityName)) return true;
     return false;
+  }
+
+  public boolean containsPolicy(String policyName) {
+      if (registeredPolicies.containsKey(policyName)) return true;
+      if (scanNeeded) {
+          // test early to avoid scan
+          if (forName(policyName, false)!=null) return true;
+      }
+      scanIfNeeded();
+      if (scannedPolicies.containsKey(policyName)) return true;
+      return false;
   }
 
   @SuppressWarnings("unchecked")
@@ -164,6 +184,20 @@ public class CatalogResource extends BaseResource {
       @ApiParam(name = "name", value = "Query to filter entities by")
       final @QueryParam("name") @DefaultValue("") String name
   ) {
+      return listEntitiesMatching(name, false);
+  }
+
+  @GET
+  @Path("/applications")
+  @ApiOperation(value = "Fetch a list of application templates matching a query", responseClass = "String", multiValueResponse = true)
+  public Iterable<String> listApplications(
+      @ApiParam(name = "name", value = "Query to filter application templates by")
+      final @QueryParam("name") @DefaultValue("") String name
+  ) {
+      return listEntitiesMatching(name, true);
+  }
+
+  protected Iterable<String> listEntitiesMatching(String name, boolean onlyApps) {
     scanIfNeeded();
     List<String> result = new ArrayList<String>();
     result.addAll(registeredEntities.keySet());
@@ -172,27 +206,34 @@ public class CatalogResource extends BaseResource {
       final String normalizedName = name.toLowerCase();
       Iterator<String> ri = result.iterator();
       while (ri.hasNext()) {
-          if (!ri.next().toLowerCase().contains(normalizedName)) ri.remove(); 
+          if (!ri.next().toLowerCase().contains(normalizedName)) ri.remove();
       }
     }
+    if (onlyApps) {
+        Iterator<String> ri = result.iterator();
+        while (ri.hasNext()) {
+            Class<? extends AbstractEntity> type = getEntityClass(ri.next());
+            if (!Application.class.isAssignableFrom(type)) ri.remove();
+        }
+    }
+    Collections.sort(result);
     return result;
   }
 
   @GET
   @Path("/entities/{entity}")
-  @ApiOperation(value = "Fetch an entity", responseClass = "String", multiValueResponse = true)
+  @ApiOperation(value = "Fetch an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Entity not found")
   })
-  // TODO should return more than config keys?
-  public List<String> getEntity(
-      @ApiParam(name = "entity", value = "The name of the entity to retrieve", required = true)
+  public CatalogEntitySummary getEntity(
+      @ApiParam(name = "entity", value = "The class name of the entity to retrieve", required = true)
       @PathParam("entity") String entityType) throws Exception {
     if (!containsEntity(entityType)) {
       throw notFound("Entity with type '%s' not found", entityType);
     }
 
-    return Lists.newArrayList(EntityTypes.getDefinedConfigKeys(getEntityClass(entityType)).keySet());
+    return CatalogEntitySummary.fromType(getEntityClass(entityType));
   }
 
   @GET
@@ -203,6 +244,43 @@ public class CatalogResource extends BaseResource {
       List<String> result = new ArrayList<String>();
       result.addAll(registeredPolicies.keySet());
       result.addAll(scannedPolicies.keySet());
+      Collections.sort(result);
       return result;
+  }
+  
+  @GET
+  @Path("/policies/{policy}")
+  @ApiOperation(value = "Fetch a policy's definition from the catalog", responseClass = "String", multiValueResponse = true)
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Entity not found")
+  })
+  public CatalogPolicySummary getPolicy(
+      @ApiParam(name = "policy", value = "The class name of the policy to retrieve", required = true)
+      @PathParam("policy") String policyType) throws Exception {
+    if (!containsPolicy(policyType)) {
+      throw notFound("Policy with type '%s' not found", policyType);
+    }
+
+    return CatalogPolicySummary.fromType(getPolicyClass(policyType));
+  }
+
+  public static class SafeReflections extends Reflections {
+      public SafeReflections(final String prefix, final Scanner... scanners) {
+          super(prefix, scanners);
+      }
+      @SuppressWarnings("unchecked")
+      public <T> Set<Class<? extends T>> getSubTypesOf(final Class<T> type) {
+          Set<String> subTypes = getStore().getSubTypesOf(type.getName());
+          List<Class<? extends T>> result = new ArrayList<Class<? extends T>>();
+          for (String className : subTypes) {
+              //noinspection unchecked
+              try {
+                  result.add((Class<? extends T>) ReflectionUtils.forName(className));
+              } catch (Throwable e) {
+                  log.warn("Unable to instantiate '"+className+"': "+e);
+              }
+          }
+          return ImmutableSet.copyOf(result);
+      }
   }
 }

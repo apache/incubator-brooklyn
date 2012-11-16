@@ -1,38 +1,58 @@
 <!-- Catalog page template -->
-<div id="catalog-resource">
-    <div>
-        <button id="add-new-entity" type="button" class="btn btn-info btn-mini">Add entity/policy</button>
-        <button id="add-new-location" type="button" class="btn btn-info btn-mini">Add Location</button>
-    </div>
-    <dl class="dl-horizontal"></dl>
-    <div class="tabbable">
-        <ul class="nav nav-tabs">
-            <li class="active"><a href="#entities" data-toggle="tab">Entities</a></li>
-            <li><a href="#policies" data-toggle="tab">Policies</a></li>
-            <li><a href="#locations" data-toggle="tab">Locations</a></li>
-        </ul>
-        <div class="tab-content">
-            <div class="tab-pane active" id="entities">
-                <ul></ul>
-            </div>
-            <div class="tab-pane" id="policies">
-                <ul></ul>
-            </div>
-            <div class="tab-pane" id="locations">
-                <table id="locations-table" class="table table-bordered table-condensed">
-                    <thead>
-                    <tr>
-                        <th style="text-align: center; vertical-align: middle">Provider</th>
-                        <th style="text-align: center; vertical-align: middle">Config</th>
-                        <th style="text-align: center; vertical-align: middle">Options</th>
-                    </tr>
-                    </thead>
-                    <tbody id="locations-table-body"></tbody>
-                </table>
+<div id="catalog-resource">    
+<div class="row row-fluid">
+    <div class="span4" id="accord">
+        <div class="navbar_top">
+            <h3>Catalog</h3>
+            <div class="apps-tree-toolbar">
+                <i id="add-new-thing" class="icon-plus-sign handy" />
+                &nbsp;
+                <i class="icon-refresh refresh handy" />
             </div>
         </div>
-    </div>
+        <div class="navbar_main_wrapper cssninja">
+
+<div id="accordion-empty-to-create-info-message" class="label-message hide">
+    <div class="label-important full-width">ERROR</div>
+        No category selected.
+        Select the category of the item type you wish to add.
 </div>
+
+<div id="applications" class="accordion-item">
+    <div class="accordion-head">
+        Applications
+    </div>
+    <div class="accordion-body hide"></div>
+</div>
+<div id="entities" class="accordion-item">
+    <div class="accordion-head">
+        Entities
+    </div>
+    <div class="accordion-body hide"></div>
+</div>
+<div id="policies" class="accordion-item">
+    <div class="accordion-head">
+        Policies
+    </div>
+    <div class="accordion-body hide"></div>
+</div>
+<div id="locations" class="accordion-item">
+    <div class="accordion-head">
+        Locations
+    </div>
+    <div class="accordion-body hide"></div>
+</div>
+        
+        </div>
+        
+    </div>
+    <div class="span8" id="details">
+        <div id="details-applications" class="catalog-details hide"/>
+        <div id="details-entities" class="catalog-details hide"/>
+        <div id="details-policies" class="catalog-details hide"/>
+        <div id="details-locations" class="catalog-details hide"/>
+    </div>
+</div></div>
 
 <div class="modal hide fade" id="new-entity-modal">
     <form class="form-vertical" id="new-entity-form">

@@ -28,7 +28,7 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
         super(properties, owner)
     }
     
-    public Entity configure(Map properties) {
+    public JMSBroker configure(Map properties) {
         if (queueNames==null) queueNames = []
         if (properties.queue) queueNames.add properties.remove('queue')
         if (properties.queues) queueNames.addAll properties.remove('queues')

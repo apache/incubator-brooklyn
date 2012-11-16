@@ -8,10 +8,8 @@
  * - we test that rendering produces the right stuff
  */
 define([
-    "underscore", "jquery", "model/application", "view/home",
-    "text!tpl/home/location-option.html", "text!tpl/home/location-entry.html", "text!tpl/home/entry.html",
-    "text!tpl/home/key-value.html"
-], function (_, $, Application, HomeView, LocationOptionHtml, LocationEntryHtml, EntryHtml, KeyValueHtml) {
+    "underscore", "jquery", "model/application", "model/location", "view/home"
+], function (_, $, Application, Location, HomeView) {
 
     Backbone.View.prototype.callPeriodically = function (callback, interval) {
         if (!this._periodicFunctions) {
@@ -22,44 +20,20 @@ define([
 
     describe('view/home-spec', function () {
 
-        describe('tpl/home templates', function () {
-
-            it('tpl/home/key-value.html must contain i.remove and two span inside a li', function () {
-                var $template = $(KeyValueHtml)
-                expect($template.is('li')).toBeTruthy()
-                expect($template.find('span').length).toEqual(2)
-                expect($template.find('i.remove').length).toEqual(1)
-            })
-            it('tpl/home/entry.html must contain i.remove and a span inside a li', function () {
-                var $template = $(EntryHtml)
-                expect($template.is('li')).toBeTruthy()
-                expect($template.find('span').length).toEqual(1)
-                expect($template.find('i.remove').length).toEqual(1)
-            })
-
-            it('tpl/home/location-option.html must have <option/> and some <span/>', function () {
-                var $locationOptionTemplate = $(LocationOptionHtml)
-                expect($locationOptionTemplate.is('option')).toBeTruthy()
-                expect($locationOptionTemplate.find('span').length).toEqual(2)
-            })
-
-            it('tpl/home/location-entry.html must have a <li/> and 3 spans', function () {
-                var $locationEntryTemplate = $(LocationEntryHtml)
-                expect($locationEntryTemplate.is('li')).toBeTruthy()
-                expect($locationEntryTemplate.find('span').length).toEqual(3)
-                expect($locationEntryTemplate.find('i.remove').length).toEqual(1)
-            })
-        })
-
         describe('view/home HomePageView', function () {
             var view,
-                apps = new Application.Collection
+                apps = new Application.Collection,
+                locs = new Location.Collection
             apps.url = "fixtures/application-list.json"
             apps.fetch({async:false})
+            locs.url = "fixtures/location-list.json"
+        	locs.fetch({async:false})
 
             beforeEach(function () {
                 view = new HomeView({
-                    collection:apps
+                    collection:apps,
+                    locations:locs,
+                    offline:true
                 }).render()
             })
 
@@ -67,11 +41,11 @@ define([
                 view.close()
             })
 
-            it('must be div#application-resource', function () {
+            it('should be a div#application-resource', function () {
                 expect(view.$('div#application-resource').length).toEqual(1)
             })
 
-            it('div#application-resource must have div#new-application-resource and div#applications', function () {
+            it('should contain an apps table and a new button', function () {
                 expect(view.$('div#new-application-resource').length).toEqual(1)
                 expect(view.$('div#applications').length).toEqual(1)
             })

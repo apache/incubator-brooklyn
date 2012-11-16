@@ -1,11 +1,9 @@
 package brooklyn.rest.resources;
 
-import static com.google.common.collect.Iterables.find;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,32 +11,26 @@ import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.Response;
 
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
-import brooklyn.rest.api.ApiError;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
-import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.EntitySummary;
 import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
-import brooklyn.rest.mock.RestMockSimpleEntity;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.UniformInterfaceException;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceIntegrationTest extends BaseResourceTest {
@@ -46,9 +38,10 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
   private ApplicationManager manager;
   private ExecutorService executorService;
 
-  private final ApplicationSpec redisSpec = new ApplicationSpec("redis-app",
-      ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")),
-      ImmutableSet.of("/v1/locations/0"));
+  private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").
+      entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
+      locations(ImmutableSet.of("/v1/locations/0")).
+      build();
 
   @Override
   protected void setUpResources() throws Exception {
@@ -62,6 +55,7 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
     addResource(new EntityResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager));
+    addResource(new PolicyResource(manager));
   }
 
   @AfterClass
@@ -77,7 +71,7 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
     ClientResponse response = client().resource("/v1/applications")
         .post(ClientResponse.class, redisSpec);
 
-    assertEquals(manager.registry().size(), 1);
+    assertEquals(manager.registryById().size(), 1);
     assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
 
     waitForApplicationToBeRunning(response.getLocation());
@@ -129,14 +123,14 @@ public class ApplicationResourceIntegrationTest extends BaseResourceTest {
   }
   @Test(groups="Integration", dependsOnMethods = "testTriggerRedisStopEffector" )
   public void testDeleteRedisApplication() throws TimeoutException, InterruptedException {
-    int size = manager.registry().size();
+    int size = manager.registryById().size();
     ClientResponse response = client().resource("/v1/applications/redis-app")
         .delete(ClientResponse.class);
 
     waitForPageNotFoundResponse("/v1/applications/redis-app", Application.class);
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-    assertEquals(manager.registry().size(), size-1);
+    assertEquals(manager.registryById().size(), size-1);
   }
 
 }

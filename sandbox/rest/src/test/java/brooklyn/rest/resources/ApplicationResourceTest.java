@@ -13,21 +13,30 @@ import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.location.Location;
+import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.rest.BaseResourceTest;
 import brooklyn.rest.BrooklynConfiguration;
 import brooklyn.rest.api.ApiError;
 import brooklyn.rest.api.Application;
 import brooklyn.rest.api.ApplicationSpec;
+import brooklyn.rest.api.ConfigSummary;
 import brooklyn.rest.api.EffectorSummary;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.api.EntitySummary;
+import brooklyn.rest.api.PolicySummary;
 import brooklyn.rest.api.SensorSummary;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
+import brooklyn.rest.mock.CapitalizePolicy;
 import brooklyn.rest.mock.RestMockSimpleEntity;
 
 import com.google.common.base.Predicate;
@@ -42,12 +51,15 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BaseResourceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(ApplicationResourceTest.class);
+    
   private ApplicationManager manager;
   private ExecutorService executorService;
 
-  private final ApplicationSpec simpleSpec = new ApplicationSpec("simple-app",
-          ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())),
-          ImmutableSet.of("/v1/locations/0"));
+  private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
+          entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
+          locations(ImmutableSet.of("/v1/locations/0")).
+          build();
 
   @Override
   protected void setUpResources() throws Exception {
@@ -59,8 +71,12 @@ public class ApplicationResourceTest extends BaseResourceTest {
 
     addResource(new ApplicationResource(manager, locationStore, new CatalogResource()));
     addResource(new EntityResource(manager));
+    addResource(new ConfigResource(manager));
     addResource(new SensorResource(manager));
     addResource(new EffectorResource(manager));
+    addResource(new PolicyResource(manager));
+    addResource(new ActivityResource(manager));
+    addResource(new LocationResource(manager, locationStore));
   }
 
   @AfterClass
@@ -85,8 +101,9 @@ public class ApplicationResourceTest extends BaseResourceTest {
     ClientResponse response = client().resource("/v1/applications")
         .post(ClientResponse.class, simpleSpec);
 
-    assertEquals(manager.registry().size(), 1);
+    assertEquals(manager.registryById().size(), 1);
     assertEquals(response.getLocation().getPath(), "/v1/applications/simple-app");
+    assertEquals(response.getEntity(String.class), manager.registryById().keySet().iterator().next());
 
     waitForApplicationToBeRunning(response.getLocation());
   }
@@ -95,9 +112,10 @@ public class ApplicationResourceTest extends BaseResourceTest {
   public void testDeployWithInvalidEntityType() {
     try {
       client().resource("/v1/applications").post(
-          new ApplicationSpec("invalid-app",
-              ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity")),
-              ImmutableSet.<String>of("/v1/locations/0"))
+          ApplicationSpec.builder().name("invalid-app").
+              entities(ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity"))).
+              locations(ImmutableSet.<String>of("/v1/locations/0")).
+              build()
       );
 
     } catch (UniformInterfaceException e) {
@@ -110,9 +128,10 @@ public class ApplicationResourceTest extends BaseResourceTest {
   public void testDeployWithInvalidLocation() {
     try {
       client().resource("/v1/applications").post(
-          new ApplicationSpec("invalid-app",
-              ImmutableSet.<EntitySpec>of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())),
-              ImmutableSet.of("/v1/locations/3423"))
+          ApplicationSpec.builder().name("invalid-app").
+              entities(ImmutableSet.<EntitySpec>of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
+              locations(ImmutableSet.of("/v1/locations/3423")).
+              build()
       );
 
     } catch (UniformInterfaceException e) {
@@ -127,6 +146,8 @@ public class ApplicationResourceTest extends BaseResourceTest {
         .get(new GenericType<Set<EntitySummary>>() {
         });
 
+    assertEquals(entities.size(), 1);
+    
     for (EntitySummary entity : entities) {
       client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
 
@@ -164,6 +185,15 @@ public class ApplicationResourceTest extends BaseResourceTest {
   }
 
   @Test(dependsOnMethods = "testDeployApplication")
+  public void testListConfig() {
+    Set<ConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/config")
+        .get(new GenericType<Set<ConfigSummary>>() {
+        });
+    assertTrue(config.size() > 0);
+    System.out.println(("CONFIG: "+config));
+  }
+  
+  @Test(dependsOnMethods = "testDeployApplication")
   public void testListEffectors() {
     Set<EffectorSummary> effectors = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors")
         .get(new GenericType<Set<EffectorSummary>>() {
@@ -193,7 +223,15 @@ public class ApplicationResourceTest extends BaseResourceTest {
   }
 
   @Test(dependsOnMethods = "testTriggerSampleEffector")
-  public void testReadAllSensors() {
+  public void testBatchSensorValues() {
+    Map<String,String> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors/current-state")
+        .get(new GenericType<Map<String,String>>() {});
+    assertTrue(sensors.size() > 0);
+    assertEquals(sensors.get(RestMockSimpleEntity.SAMPLE_SENSOR.getName()), "foo4");
+  }
+
+  @Test(dependsOnMethods = "testBatchSensorValues")
+  public void testReadEachSensor() {
     Set<SensorSummary> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors")
         .get(new GenericType<Set<SensorSummary>>() {
         });
@@ -206,17 +244,79 @@ public class ApplicationResourceTest extends BaseResourceTest {
     assertEquals(readings.get(RestMockSimpleEntity.SAMPLE_SENSOR.getName()), "foo4");
   }
 
+  @Test(dependsOnMethods = "testTriggerSampleEffector")
+  public void testPolicyWhichCapitalizes() {
+      String policiesEndpoint = "/v1/applications/simple-app/entities/simple-ent/policies";
+      Set<PolicySummary> policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
+      assertEquals(policies.size(), 0);
+      
+      ClientResponse response = client().resource(policiesEndpoint).
+          queryParam("type", CapitalizePolicy.class.getCanonicalName()).
+          post(ClientResponse.class, Maps.newHashMap());
+      assertEquals(response.getStatus(), 200);
+      String newPolicyId = response.getEntity(String.class);
+      log.info("POLICY CREATED: "+newPolicyId);
+      policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
+      assertEquals(policies.size(), 1);
+      
+      String status = client().resource(policiesEndpoint+"/"+newPolicyId).
+          get(String.class);
+      log.info("POLICY STATUS: "+status);
+      
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/start").
+              post(ClientResponse.class);
+      assertEquals(response.getStatus(), 200);
+      status = client().resource(policiesEndpoint+"/"+newPolicyId).
+              get(String.class);
+      assertEquals(status, Lifecycle.RUNNING.name());
+      
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/stop").
+              post(ClientResponse.class);
+      assertEquals(response.getStatus(), 200);
+      status = client().resource(policiesEndpoint+"/"+newPolicyId).
+              get(String.class);
+      assertEquals(status, Lifecycle.STOPPED.name());
+      
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/destroy").
+              post(ClientResponse.class);
+      assertTrue(response.getStatus()==200 || response.getStatus()==404);
+      response = client().resource(policiesEndpoint+"/"+newPolicyId).get(ClientResponse.class);
+      log.info("POLICY STATUS RESPONSE AFTER DESTROY: "+response.getStatus());
+      assertTrue(response.getStatus()==200 || response.getStatus()==404);
+      if (response.getStatus()==200) {
+          assertEquals(response.getEntity(String.class), Lifecycle.DESTROYED.name());
+      }
+      
+      policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
+      assertEquals(0, policies.size());      
+  }
 
-  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadAllSensors"})
+  @SuppressWarnings({ "rawtypes" })
+  @Test(dependsOnMethods = "testDeployApplication")
+  public void testLocatedLocation() {
+    Location l = manager.getManagementContext().getApplications().iterator().next().getLocations().iterator().next();
+    if (!l.getLocationProperties().containsKey("latitude")) {
+        log.info("Supplying fake locations for localhost because could not be autodetected");
+        ((AbstractLocation)l).setHostGeoInfo(new HostGeoInfo("localhost", "localhost", 50, 0));
+    }
+    Map result = client().resource("/v1/locations/usage/LocatedLocations")
+        .get(Map.class);
+    log.info("LOCATIONS: "+result);
+    assertEquals(result.size(), 1);
+    Map details = (Map) result.values().iterator().next();
+    assertEquals(details.get("leafEntityCount"), 1);
+  }
+
+  @Test(dependsOnMethods = {"testListEffectors", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
-    int size = manager.registry().size();
+    int size = manager.registryById().size();
     ClientResponse response = client().resource("/v1/applications/simple-app")
         .delete(ClientResponse.class);
 
     waitForPageNotFoundResponse("/v1/applications/simple-app", Application.class);
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-    assertEquals(manager.registry().size(), size-1);
+    assertEquals(manager.registryById().size(), size-1);
   }
   
 }

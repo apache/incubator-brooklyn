@@ -7,12 +7,15 @@ import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Lists.newLinkedList;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
+import scala.actors.threadpool.Arrays;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.location.Location;
@@ -38,7 +41,8 @@ public class ApplicationManager implements Managed {
   private final static Log LOG = Log.forClass(ApplicationManager.class);
 
   private final LocationStore locationStore;
-  private final ConcurrentMap<String, Application> applications;
+  private final ConcurrentMap<String, Application> applicationsById;
+  private final ConcurrentMap<String, Application> applicationsByName;
 
   private final ExecutorService executorService;
   private final BrooklynConfiguration configuration;
@@ -55,10 +59,15 @@ public class ApplicationManager implements Managed {
     this.locationStore = checkNotNull(locationStore, "locationStore");
     this.executorService = checkNotNull(executorService, "executorService");
     this.catalog = checkNotNull(catalog, "catalog");
-    this.applications = Maps.newConcurrentMap();
+    this.applicationsById = Maps.newConcurrentMap();
+    this.applicationsByName = Maps.newConcurrentMap();
     this.managementContext = configuration.getManagementContextClass().newInstance();
   }
 
+  public ManagementContext getManagementContext() {
+    return managementContext;
+  }
+  
   @Override
   public void start() throws Exception {
     // TODO load data about running applications from external storage
@@ -74,56 +83,65 @@ public class ApplicationManager implements Managed {
   }
 
   private void waitForAllApplicationsToStopOrError() throws InterruptedException {
-    while (applications.size() != 0) {
+    while (applicationsById.size() != 0) {
       Thread.sleep(2000);
-      if (all(applications.values(), status(Application.Status.ERROR))) {
+      if (all(applicationsById.values(), status(Application.Status.ERROR))) {
         break;
       }
     }
   }
 
+  /** @deprecated use registryByXxx */
   public ConcurrentMap<String, Application> registry() {
-    return applications;
+    return registryByName();
   }
-
+  
+  public ConcurrentMap<String, Application> registryById() {
+      return applicationsById;
+  }
+  public ConcurrentMap<String, Application> registryByName() {
+      return applicationsByName;
+  }
 
   public void injectApplication(final AbstractApplication instance, Application.Status status) {
     String name = instance.getDisplayName();
-    ApplicationSpec spec = new ApplicationSpec(name, Collections.<EntitySpec>emptySet(), Collections.<String>emptySet());
-    applications.put(name, new Application(spec, status, instance));
+    ApplicationSpec spec = ApplicationSpec.builder().name(name).type(instance.getClass().getCanonicalName()).locations(Collections.<String>emptySet()).build();
+    Application app = new Application(spec, status, instance);
+    applicationsById.put(instance.getId(), app);
+    applicationsByName.put(name, app);
   }
 
-  public void startInBackground(final ApplicationSpec spec) {
+  @SuppressWarnings("serial")
+public Application startInBackground(final ApplicationSpec spec) {
     LOG.info("Creating application instance for {}", spec);
 
-    final AbstractApplication instance = new AbstractApplication() {
-    };
-    instance.setDisplayName(spec.getName());
+    final AbstractApplication instance;
+    
+    try {
+        if (spec.getType()!=null) {
+            instance = (AbstractApplication) newEntityInstance(spec.getType(), null, spec.getConfig());
+        } else {
+            instance = new AbstractApplication() {};
+        }
+        if (spec.getName()!=null && !spec.getName().isEmpty()) instance.setDisplayName(spec.getName());
 
-    for (EntitySpec entitySpec : spec.getEntities()) {
-      try {
-        LOG.info("Creating instance for entity {}", entitySpec.getType());
-        Class<? extends AbstractEntity> clazz = catalog.getEntityClass(entitySpec.getType());
-
-        Constructor constructor = clazz.getConstructor(new Class[]{Map.class, brooklyn.entity.Entity.class});
-
-        // TODO parse & rebuild config map as needed
-        Map<String, String> config = Maps.newHashMap(entitySpec.getConfig());
-        config.put("displayName", entitySpec.getName());
-
-        constructor.newInstance(config, instance);
-
-      } catch (Exception e) {
-        LOG.error(e, "Failed to create instance for entity {}", entitySpec);
+        if (spec.getEntities()!=null) for (EntitySpec entitySpec : spec.getEntities()) {
+            LOG.info("Creating instance for entity {}", entitySpec.getType());
+            AbstractEntity entity = newEntityInstance(entitySpec.getType(), instance, entitySpec.getConfig());
+            if (entitySpec.getName()!=null && !spec.getName().isEmpty()) entity.setDisplayName(entitySpec.getName());
+        }
+    } catch (Exception e) {
+        LOG.error(e, "Failed to create application: "+e);
         throw Throwables.propagate(e);
-      }
     }
 
     LOG.info("Placing '{}' under management", spec.getName());
     managementContext.manage(instance);
     
     LOG.info("Adding '{}' application to registry with status ACCEPTED", spec.getName());
-    applications.put(spec.getName(), new Application(spec, Application.Status.ACCEPTED, instance));
+    Application app = new Application(spec, Application.Status.ACCEPTED, instance);
+    applicationsById.put(instance.getId(), app);
+    applicationsByName.put(spec.getName(), app);
 
     // Start all the managed entities by asking the app instance to start in background
     executorService.submit(new Runnable() {
@@ -160,16 +178,72 @@ public class ApplicationManager implements Managed {
         }
       }
     });
+    
+    return app;
   }
 
-  private void transitionTo(String name, Application.Status status) {
-    Application target = checkNotNull(applications.get(name), "No application found with name '%'", name);
-    LOG.info("Transitioning '{}' application from {} to {}", name, target.getStatus(), status);
+  private AbstractEntity newEntityInstance(String type, Entity owner, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    Class<? extends AbstractEntity> clazz = catalog.getEntityClass(type);
+    Map<String, String> config = Maps.newHashMap(configO);
+    Constructor<?>[] constructors = clazz.getConstructors();
+    AbstractEntity result = null;
+    if (owner==null) {
+        result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
+        if (result!=null) return result;
+    }
+    result = tryInstantiateEntity(constructors, new Class[] { Map.class, Entity.class }, new Object[] { config, owner });
+    if (result!=null) return result;
 
-    boolean replaced = applications.replace(name, target, target.transitionTo(status));
+    result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
+    if (result!=null) {
+        if (owner!=null) ((AbstractEntity)result).setOwner(owner);
+        return result;
+    }
+
+    result = tryInstantiateEntity(constructors, new Class[] { Entity.class }, new Object[] { owner });
+    if (result!=null) {
+        ((AbstractEntity)result).configure(config);
+        return result;
+    }
+
+    result = tryInstantiateEntity(constructors, new Class[] {}, new Object[] {});
+    if (result!=null) {
+        if (owner!=null) ((AbstractEntity)result).setOwner(owner);
+        ((AbstractEntity)result).configure(config);
+        return result;
+    }
+    
+    throw new IllegalStateException("No suitable constructor for instantiating entity "+type);
+  }
+
+  private AbstractEntity tryInstantiateEntity(Constructor<?>[] constructors, Class<?>[] classes, Object[] objects) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    for (Constructor<?> c: constructors) {
+        if (Arrays.equals(c.getParameterTypes(), classes)) {
+            return (AbstractEntity) c.newInstance(objects);
+        }
+    }
+    return null;
+  }
+
+@Deprecated
+  private void transitionTo(String name, Application.Status status) {
+      transitionAppByNameTo(name, status);
+  }
+  
+  private void transitionAppByNameTo(String name, Application.Status status) {
+    Application target = checkNotNull(applicationsByName.get(name), "No application found with name '%'", name);
+    transitionAppByIdTo(target.getInstance().getId(), status);
+  }
+  private void transitionAppByIdTo(String id, Application.Status status) {
+    Application target = checkNotNull(applicationsById.get(id), "No application found with id '%'", id);
+    LOG.info("Transitioning '{}' ({}) application from {} to {}", target.getInstance().getDisplayName(), id, target.getStatus(), status);
+
+    Application newAppState = target.transitionTo(status);
+    boolean replaced = applicationsById.replace(target.getInstance().getId(), target, newAppState); 
+    applicationsByName.put(target.getInstance().getDisplayName(), newAppState);
     if (!replaced) {
       throw new ConcurrentModificationException("Unable to transition '" +
-          name + "' application to " + status);
+          id + "' application to " + status);
     }
   }
 
@@ -178,17 +252,22 @@ public class ApplicationManager implements Managed {
    *
    * @param name application name
    */
+  @Deprecated
   public void destroyInBackground(final String name) {
-    if (applications.containsKey(name)) {
+      destroyAppByNameInBackground(name);
+  }
+  public void destroyAppByNameInBackground(final String name) {
+    if (applicationsByName.containsKey(name)) {
       executorService.submit(new Runnable() {
         @Override
         public void run() {
           transitionTo(name, Application.Status.STOPPING);
-          AbstractApplication instance = applications.get(name).getInstance();
+          AbstractApplication instance = applicationsByName.get(name).getInstance();
           try {
             instance.stop();
             LOG.info("Removing '{}' application from registry", name);
-            applications.remove(name);
+            applicationsByName.remove(name);
+            applicationsById.remove(instance.getId());
 
           } catch (Exception e) {
             LOG.error(e, "Failed to stop application instance {}", instance);
@@ -202,13 +281,46 @@ public class ApplicationManager implements Managed {
       });
     }
   }
+  public void destroyAppByIdInBackground(final String id) {
+      if (applicationsById.containsKey(id)) {
+        executorService.submit(new Runnable() {
+          @Override
+          public void run() {
+            transitionAppByIdTo(id, Application.Status.STOPPING);
+            AbstractApplication instance = applicationsById.get(id).getInstance();
+            try {
+              instance.stop();
+              LOG.info("Removing '{}' application from registry", id);
+              applicationsById.remove(id);
+              applicationsByName.remove(instance.getDisplayName());
+
+            } catch (Exception e) {
+              LOG.error(e, "Failed to stop application instance {}", instance);
+              transitionAppByIdTo(id, Application.Status.ERROR);
+
+              throw Throwables.propagate(e);
+            } finally {
+                managementContext.unmanage(instance);
+            }
+          }
+        });
+      }
+    }
 
   /**
    * Destroy all running applications
    */
   public void destroyAllInBackground() {
-    for (String name : applications.keySet()) {
-      destroyInBackground(name);
+    for (String id : applicationsById.keySet()) {
+      destroyAppByIdInBackground(id);
     }
   }
+
+  /** Returns an App given id or name; else false */
+  public Application getApp(String idOrName) {
+      Application app = applicationsById.get(idOrName);
+      if (app!=null) return app;
+      return applicationsByName.get(idOrName);
+  }
+  
 }

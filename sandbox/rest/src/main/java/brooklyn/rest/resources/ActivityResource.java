@@ -36,10 +36,11 @@ public class ActivityResource extends BaseResource {
   )
   public Iterable<TaskSummary> list(@PathParam("application") String name,
                                     @PathParam("entity") String entityIdOrName) {
-    if (manager.registry().containsKey(name)) {
-      Application application = manager.registry().get(name);
+    Application application = manager.getApp(name);
+    if (application!=null) {
       Entity entity = getEntityOr404(application, entityIdOrName);
-      Set<Task<?>> tasks = application.getInstance().getManagementContext().getExecutionManager().getTasksWithTag(entity);
+      Set<Task<?>> tasks = application.getInstance().getManagementSupport().getManagementContext(true).
+              getExecutionManager().getTasksWithTag(entity);
       return Collections2.transform(tasks, new Function<Task<?>, TaskSummary>() {
         @Override
         public TaskSummary apply(@Nullable Task<?> input) {

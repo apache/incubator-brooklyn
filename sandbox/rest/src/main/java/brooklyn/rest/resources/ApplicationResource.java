@@ -6,6 +6,7 @@ import brooklyn.rest.api.ApplicationSpec;
 import brooklyn.rest.api.EntitySpec;
 import brooklyn.rest.core.ApplicationManager;
 import brooklyn.rest.core.LocationStore;
+import brooklyn.util.exceptions.Exceptions;
 import static com.google.common.base.Preconditions.checkNotNull;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiError;
@@ -56,7 +57,7 @@ public class ApplicationResource extends BaseResource {
   )
   public JsonNode applicationTree() {
     ArrayNode apps = mapper.createArrayNode();
-    for (Application application : manager.registry().values()) {
+    for (Application application : manager.registryById().values()) {
       apps.add(recursiveTreeFromEntity(application.getInstance()));
     }
     return apps;
@@ -88,7 +89,7 @@ public class ApplicationResource extends BaseResource {
       responseClass = "brooklyn.rest.api.Application"
   )
   public Iterable<Application> list() {
-    return manager.registry().values();
+    return manager.registryById().values();
   }
 
   @GET
@@ -102,12 +103,11 @@ public class ApplicationResource extends BaseResource {
   })
   public Application get(
       @ApiParam(
-          value = "Name of application that needs to be fetched",
+          value = "ID or name of application that needs to be fetched",
           required = true)
       @PathParam("application") String name) {
-    if (manager.registry().containsKey(name)) {
-      return manager.registry().get(name);
-    }
+    Application app = manager.getApp(name);
+    if (app!=null) return app;
     throw notFound("Application '%s' not found.", name);
   }
 
@@ -122,20 +122,24 @@ public class ApplicationResource extends BaseResource {
   public Response create(
       @ApiParam(
           name = "applicationSpec",
-          value = "Specification for application to be created",
+          value = "Specification for application to be created, with name, locations, and entities or type fields",
           required = true)
       @Valid ApplicationSpec applicationSpec) {
-    checkAllEntityTypesAreValid(applicationSpec);
-    checkAllLocationsAreValid(applicationSpec);
+      try {
+    checkApplicationTypesAreValid(applicationSpec);
+    checkLocationsAreValid(applicationSpec);
 
-    if (manager.registry().containsKey(applicationSpec.getName())) {
-      throw preconditionFailed("Application '%s' already registered.",
-          applicationSpec.getName());
+    if (manager.getApp(applicationSpec.getName())!=null) {
+      throw preconditionFailed("Application '%s' already registered.", applicationSpec.getName());
     }
-    manager.startInBackground(applicationSpec);
+    Application app = manager.startInBackground(applicationSpec);
 
     URI ref = URI.create(applicationSpec.getName());
-    return created(ref).build();
+    return created(ref).entity(app.getId()).build();
+      } catch (Exception e) {
+          e.printStackTrace();
+          throw Exceptions.propagate(e);
+      }
   }
 
 
@@ -154,14 +158,24 @@ public class ApplicationResource extends BaseResource {
           required = true
       )
       @PathParam("application") String application) {
-    if (!manager.registry().containsKey(application))
+    Application app = manager.getApp(application);
+    if (app==null)
       throw notFound("Application '%s' not found.", application);
 
-    manager.destroyInBackground(application);
+    manager.destroyAppByIdInBackground(app.getInstance().getId());
     return status(ACCEPTED).build();
   }
 
-  private void checkAllEntityTypesAreValid(ApplicationSpec applicationSpec) {
+  private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {
+    if (applicationSpec.getType()!=null) {
+        if (!catalog.containsEntity(applicationSpec.getType())) {
+            throw notFound("Undefined application type '%s'", applicationSpec.getType());
+        }
+        if (applicationSpec.getEntities()!=null) {
+            throw preconditionFailed("Application given explicit type '%s' must not define entities", applicationSpec.getType());
+        }
+        return;
+    }
     for (EntitySpec entitySpec : applicationSpec.getEntities()) {
       if (!catalog.containsEntity(entitySpec.getType())) {
         throw notFound("Undefined entity type '%s'", entitySpec.getType());
@@ -169,7 +183,7 @@ public class ApplicationResource extends BaseResource {
     }
   }
 
-  private void checkAllLocationsAreValid(ApplicationSpec applicationSpec) {
+  private void checkLocationsAreValid(ApplicationSpec applicationSpec) {
     for (String locationRef : applicationSpec.getLocations()) {
       if (locations.getByRef(locationRef) == null) {
         throw notFound("Undefined location '%s'", locationRef);

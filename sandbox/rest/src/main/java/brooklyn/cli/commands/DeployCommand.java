@@ -79,11 +79,13 @@ public class DeployCommand extends BrooklynCommand {
             // app is the path of a groovy file
             String appClassName = uploadGroovyFile(app);
 
-            ApplicationSpec applicationSpec = new ApplicationSpec(
-                    appClassName, // name
-                    Sets.newHashSet(new EntitySpec(appClassName)), // entities
-                    Sets.newHashSet("/v1/locations/1") // locations
-            );
+            ApplicationSpec applicationSpec = ApplicationSpec.builder().
+                    // TODO support name being set, or being left off and computed based on ID
+                    name(appClassName).
+                    type(appClassName).
+                    locations(Sets.newHashSet("/v1/locations/1")).
+                    // TODO support config ?
+                    build();
             objectJsonString = getJsonParser().writeValueAsString(applicationSpec);
 
         } else if(format.equals(JSON_FORMAT)) {
@@ -93,11 +95,12 @@ public class DeployCommand extends BrooklynCommand {
 
         } else if (format.equals(CLASS_FORMAT)) { // CLASS_FORMAT or GROOVY_FORMAT
             // app is the fully qualified classname for an app; so create json for app
-            ApplicationSpec applicationSpec = new ApplicationSpec(
-                    app, // name
-                    Sets.newHashSet(new EntitySpec(app)), // entities
-                    Sets.newHashSet("/v1/locations/1") // locations
-            );
+            ApplicationSpec applicationSpec = ApplicationSpec.builder().
+                    name(app).
+                    type(app).
+                    locations(Sets.newHashSet("/v1/locations/1")).
+                // TODO name and config, as above
+                build();
             objectJsonString = getJsonParser().writeValueAsString(applicationSpec);
 
         } else {
@@ -116,6 +119,9 @@ public class DeployCommand extends BrooklynCommand {
 
         // Wait for app to start (i.e. side-effect of above request)
         waitForAppStarted(clientResponse.getLocation());
+        
+        // TODO really wait?
+        // TODO return ID
     }
 
     private void waitForAppStarted(URI appUri) throws InterruptedException, CommandExecutionException, IOException {

@@ -11,6 +11,7 @@ define([
         defaults:function () {
             return {
                 name:"",
+                type:null,
                 entities:[],
                 locations:[]
             }
@@ -19,13 +20,11 @@ define([
             if (location) return _.include(this.get('locations'), location)
         },
         addLocation:function (location) {
-            if (!this.hasLocation(location)) {
-                var locations = this.get('locations')
-                locations.push(location)
-                this.set('locations', locations)
-                this.trigger("change")
-                this.trigger("change:locations")
-            }
+        	var locations = this.get('locations')
+        	locations.push(location)
+        	this.set('locations', locations)
+        	this.trigger("change")
+        	this.trigger("change:locations")
         },
         removeLocation:function (location) {
             var newLocations = [],
@@ -33,6 +32,26 @@ define([
             for (var index in currentLocations) {
                 if (currentLocations[index] != location && index != null)
                     newLocations.push(currentLocations[index])
+            }
+            this.set('locations', newLocations)
+        },
+        removeLocationIndex:function (locationNumber) {
+            var newLocations = [],
+                currentLocations = this.get("locations")
+            for (var index=0; index<currentLocations.length; index++) {
+                if (index != locationNumber)
+                    newLocations.push(currentLocations[index])
+            }
+            this.set('locations', newLocations)
+        },
+        setLocationAtIndex:function (locationNumber, val) {
+            var newLocations = [],
+                currentLocations = this.get("locations")
+            for (var index=0; index<currentLocations.length; index++) {
+                if (index != locationNumber)
+                    newLocations.push(currentLocations[index])
+                else
+                    newLocations.push(val)
             }
             this.set('locations', newLocations)
         },
@@ -44,6 +63,15 @@ define([
                 this.trigger("change")
                 this.trigger("change:entities")
             }
+        },
+        removeEntityIndex:function (indexToRemove) {
+            var newEntities = [],
+                currentEntities = this.get("entities")
+            for (var index=0; index<currentEntities.length; index++) {
+                if (index != indexToRemove)
+                    newEntities.push(currentEntities[index])
+            }
+            this.set('entities', newEntities)
         },
         removeEntityByName:function (name) {
             var newEntities = [],

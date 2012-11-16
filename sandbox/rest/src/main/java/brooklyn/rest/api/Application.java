@@ -53,6 +53,11 @@ public class Application {
   }
 
   @JsonIgnore
+  public Object getId() {
+    return instance.getId();
+  }
+
+  @JsonIgnore
   public AbstractApplication getInstance() {
     return instance;
   }
@@ -62,6 +67,7 @@ public class Application {
   }
 
   /* only to make jackson happy */
+  @SuppressWarnings("unused")
   private void setLinks(Map<String, URI> _) {
   }
 
@@ -109,4 +115,5 @@ public class Application {
         ", instance=" + instance +
         '}';
   }
+
 }

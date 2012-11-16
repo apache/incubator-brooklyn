@@ -22,6 +22,11 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 
+/** This is the actual type of an entity instance at runtime,
+ * which can change from the static {@link EntityType}, and can change over time;
+ * for this reason it does *not* implement EntityType, but 
+ * callers can call {@link #getSnapshot()} to get a snapshot such instance  
+ */
 public class EntityDynamicType {
 
     protected static final Logger LOG = LoggerFactory.getLogger(EntityDynamicType.class);

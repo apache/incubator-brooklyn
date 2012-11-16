@@ -6,6 +6,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.rest.api.ApiError;
 import brooklyn.rest.api.Application;
+import brooklyn.rest.core.ApplicationManager;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -53,7 +54,8 @@ public abstract class BaseResource {
     return null;
   }
 
-  protected AttributeSensor<Object> getSensorOr404(EntityLocal entity, String sensorName) {
+  @SuppressWarnings("unchecked")
+protected AttributeSensor<Object> getSensorOr404(EntityLocal entity, String sensorName) {
     if (!entity.getEntityType().hasSensor(sensorName)) {
       throw notFound("Entity '%s' has no sensor with name '%s'", entity.getId(), sensorName);
     }
@@ -64,6 +66,13 @@ public abstract class BaseResource {
     }
 
     return (AttributeSensor<Object>) sensor;
+  }
+
+  protected Application getApplicationOr404(ApplicationManager manager, String applicationIdOrName) {
+      Application app = manager.getApp(applicationIdOrName);
+      if (app==null)
+          throw notFound("Application '%s' not found.", applicationIdOrName);
+      return app;
   }
 
   protected Application getApplicationOr404(Map<String, Application> registry, String application) {

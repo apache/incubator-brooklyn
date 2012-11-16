@@ -1,21 +1,23 @@
 package brooklyn.entity.basic;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.util.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityReferences.SelfEntityReference;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.internal.AbstractManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.SetFromFlag;
 
 public abstract class AbstractApplication extends AbstractEntity implements Startable, Application {
@@ -34,6 +36,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
                        "potentially bypassing explicitly loaded properties");
     }
 
+    /** Usual constructor, takes a set of properties;
+     * also (experimental) permits defining a brooklynProperties source */
     public AbstractApplication(Map properties) {
         super(properties);
         this.application = new SelfEntityReference(this);
@@ -42,13 +46,38 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             mgmt = (AbstractManagementContext) properties.remove("mgmt");
         }
 
-        if(properties.containsKey("brooklyn.properties")){
-            brooklynProperties = (BrooklynProperties) properties.remove("brooklyn.properties");
-        }else{
+        // TODO decide whether this is the best way to inject properties like this
+        Object propsSource=null;
+        if (properties.containsKey("brooklynProperties")) {
+            propsSource = properties.remove("brooklynProperties");
+        } else if (properties.containsKey("brooklyn.properties")) {
+            propsSource = properties.remove("brooklyn.properties");
+        } 
+        if (propsSource instanceof String) {
+            Properties p = new Properties();
+            try {
+                p.load(new ResourceUtils(this).getResourceFromUrl((String)propsSource));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Invalid brooklyn properties source "+propsSource+": "+e, e);
+            }
+            propsSource = p;
+        }
+        if (propsSource instanceof BrooklynProperties) {
+            brooklynProperties = (BrooklynProperties) propsSource;
+        } else if (propsSource instanceof Map) {
+            brooklynProperties = BrooklynProperties.Factory.newEmpty().addFromMap((Map)propsSource);
+        } else {
+            if (propsSource!=null) 
+                throw new IllegalArgumentException("Invalid brooklyn properties source "+propsSource);
             brooklynProperties = BrooklynProperties.Factory.newDefault();
         }
 
         setAttribute(SERVICE_UP, false);
+    }
+
+    /** Constructor for when application is nested inside another application */
+    public AbstractApplication(Map properties, Entity owner) {
+        super(properties, owner);
     }
 
     /**

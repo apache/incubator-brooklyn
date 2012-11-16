@@ -5,6 +5,8 @@ define(["underscore", "backbone"], function (_, Backbone) {
     EntitySummary.Model = Backbone.Model.extend({
         defaults:function () {
             return {
+                'id':'',
+                'name':'',
                 'type':'',
                 'links':{}
             }
@@ -13,6 +15,8 @@ define(["underscore", "backbone"], function (_, Backbone) {
             if (name) return this.get("links")[name]
         },
         getDisplayName:function () {
+        	var name = this.get("name")
+        	if (name) return name;
             var type = this.get("type")
             var appId = this.getLinkByName('self')
             if (type && appId) {
@@ -21,6 +25,9 @@ define(["underscore", "backbone"], function (_, Backbone) {
         },
         getSensorUpdateUrl:function () {
             return this.getLinkByName("self") + "/sensors/current-state"
+        },
+        getConfigUpdateUrl:function () {
+            return this.getLinkByName("self") + "/config/current-state"
         }
     })
 
