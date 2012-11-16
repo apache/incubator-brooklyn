@@ -83,8 +83,11 @@ public class WebAppIntegrationTest {
     public void shutdownApp() {
         if (entity != null) {
             AbstractApplication app = entity.getApplication();
-            entity.stop();
-            if (app != null) app.stop();
+            try {
+                entity.stop();
+            } finally {
+                if (app != null) Entities.destroy(app);
+            }
         }
     }
 

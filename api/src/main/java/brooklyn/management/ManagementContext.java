@@ -92,4 +92,9 @@ public interface ManagementContext {
      * Defaults to reading ~/.brooklyn/brooklyn.properties but configurable in the management context.
      */
     StringConfigMap getConfig();
+    
+    /**
+     * Whether this management context is still running, or has been terminated.
+     */
+    public boolean isRunning();
 }

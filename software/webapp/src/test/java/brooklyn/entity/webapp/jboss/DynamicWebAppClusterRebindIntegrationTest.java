@@ -71,8 +71,8 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         	monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
-        if (newApp != null) newApp.stop();
-        if (origApp != null && Entities.isManaged(origApp) && origManagementContext.isRunning()) origApp.stop();
+        if (newApp != null) Entities.destroy(newApp);
+        if (origApp != null) Entities.destroy(origApp);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 

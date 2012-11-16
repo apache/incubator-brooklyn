@@ -1,7 +1,6 @@
 package brooklyn.entity.proxy.nginx;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 
 import java.net.URL;
 
@@ -14,8 +13,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
-import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.StubAppServer;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -44,10 +43,7 @@ public class NginxLightIntegrationTest {
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app != null) app.stop();
-        
-        // Confirm nginx has stopped
-        if (nginx != null) assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        if (app != null) Entities.destroy(app);
     }
 
     // FIXME Fails because getting addEntity callback for group members while nginx is still starting,

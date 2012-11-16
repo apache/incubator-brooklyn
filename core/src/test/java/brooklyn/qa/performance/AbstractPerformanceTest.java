@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.internal.DoubleSystemProperty;
@@ -45,7 +46,7 @@ public class AbstractPerformanceTest {
     protected TestApplication app;
     protected SimulatedLocation loc;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         for (int i = 0; i < 5; i++) System.gc();
         loc = new SimulatedLocation();
@@ -54,10 +55,7 @@ public class AbstractPerformanceTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app.isDeployed()) {
-            app.stop();
-            app.getManagementContext().unmanage(app);
-        }
+        if (app != null) Entities.destroy(app);
     }
     
     protected void measureAndAssert(String prefix, int numIterations, double minRatePerSec, Runnable r) {

@@ -35,7 +35,7 @@ public class MemberFailureDetectionPolicyTest {
     private TestApplication app;
     private List<SensorEvent<FailureDescriptor>> events;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         events = new CopyOnWriteArrayList<SensorEvent<FailureDescriptor>>();
         app = new TestApplication();
@@ -60,9 +60,9 @@ public class MemberFailureDetectionPolicyTest {
                 });
     }
     
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) app.stop();
+        if (app != null) Entities.destroy(app);
     }
     
     @Test(groups="Integration") // Has a 1 second wait

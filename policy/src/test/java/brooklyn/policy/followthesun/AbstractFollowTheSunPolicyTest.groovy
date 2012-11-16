@@ -16,6 +16,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
@@ -71,7 +72,7 @@ public class AbstractFollowTheSunPolicyTest {
     @AfterMethod(alwaysRun=true)
     public void after() {
         if (pool != null && policy != null) pool.removePolicy(policy)
-        if (app != null) app.stop()
+        if (app != null) Entities.destroy(app);
         MockItemEntity.totalMoveCount.set(0)
     }
     

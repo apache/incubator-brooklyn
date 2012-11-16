@@ -77,6 +77,12 @@ public class NonDeploymentManagementContext implements ManagementContext {
     }
 
     @Override
+    public boolean isRunning() {
+        // Assume that the real management context has not been terminated, so always true
+        return true;
+    }
+
+    @Override
     public ExecutionManager getExecutionManager() {
         throw new IllegalStateException("Executions cannot be performed prior to management. (Non-deployment context "+this+" is not valid for this operation.)");
     }

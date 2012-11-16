@@ -3,8 +3,6 @@ package brooklyn.entity.proxy.nginx
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -12,8 +10,8 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicCluster
-import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -50,12 +48,7 @@ public class NginxAmazonTest {
 
     @AfterMethod(groups = "Live")
     public void shutdown() {
-        if (cluster != null && cluster.getAttribute(Startable.SERVICE_UP)) {
-            cluster.stop();
-        }
-        if (nginx != null && nginx.getAttribute(Startable.SERVICE_UP)) {
-            nginx.stop();
-        }
+        if (app != null) Entities.destroy(app);
     }
     
     @BeforeMethod(groups = "Live")

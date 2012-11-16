@@ -65,7 +65,7 @@ public class NginxClusterIntegrationTest {
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
     public void shutdown() {
-        if (app != null && Entities.isManaged(app)) app.stop();
+        if (app != null) Entities.destroy(app);
     }
 
     @Test(groups = "Integration")

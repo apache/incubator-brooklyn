@@ -400,7 +400,7 @@ public class Entities {
     }
 
     public static boolean isManaged(Entity e) {
-        return ((AbstractEntity)e).getManagementSupport().isDeployed();
+        return ((AbstractEntity)e).getManagementSupport().isDeployed() && ((AbstractEntity)e).getManagementSupport().getManagementContext(true).isRunning();
     }
     
     /** brings this entity under management iff its ancestor is managed, returns true in that case;

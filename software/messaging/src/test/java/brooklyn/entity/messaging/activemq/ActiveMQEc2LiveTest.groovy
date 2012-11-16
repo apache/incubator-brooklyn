@@ -17,6 +17,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
@@ -39,7 +40,7 @@ class ActiveMQEc2LiveTest {
     TestApplication app
     ActiveMQBroker activeMQ
 
-    @BeforeMethod(groups = "Live")
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         URL resource = getClass().getClassLoader().getResource("jclouds/id_rsa.private")
         assertNotNull resource
@@ -70,10 +71,10 @@ class ActiveMQEc2LiveTest {
         app = new TestApplication()
     }
 
-    @AfterMethod(groups = "Live")
+    @AfterMethod(alwaysRun=true)
     public void tearDown() {
         try {
-            if (app) app.stop()
+            if (app != null) Entities.destroy(app);
         } finally {
             List<Exception> exceptions = []
             machines.each {

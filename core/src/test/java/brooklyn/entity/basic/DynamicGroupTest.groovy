@@ -87,7 +87,7 @@ public class DynamicGroupTest {
         
         app.manage(e3);
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(group.getMembers(), [e3])
         }
     }
@@ -113,14 +113,14 @@ public class DynamicGroupTest {
         // When changed (such that subscription spots it), then entity added
         e1.setAttribute(MY_ATTRIBUTE, "yes")
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(group.getMembers(), [e1])
         }
 
         // When it stops matching, entity is removed        
         e1.setAttribute(MY_ATTRIBUTE, "no")
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(group.getMembers(), [])
         }
     }
@@ -138,7 +138,7 @@ public class DynamicGroupTest {
         e1.setAttribute(MY_ATTRIBUTE, "yes")
         e2.setAttribute(MY_ATTRIBUTE, "yes")
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(group.getMembers(), [e2])
         }
     }
@@ -150,7 +150,7 @@ public class DynamicGroupTest {
         
         app.getManagementContext().unmanage(e1)
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(group.getMembers(), [])
         }
     }
@@ -351,7 +351,7 @@ public class DynamicGroupTest {
             t2.interrupt();
         }
         
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(group2.getMembers(), [e3]);
         }
     }
