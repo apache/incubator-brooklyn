@@ -5,6 +5,7 @@ import org.testng.annotations.Test
 
 import static org.testng.Assert.*
 
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -16,7 +17,8 @@ import brooklyn.util.internal.ssh.SshException
 
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
+import com.google.common.io.Closeables
 import com.google.common.io.Files
 
 /**
@@ -30,6 +32,11 @@ public class SshMachineLocationTest {
         host = new SshMachineLocation(address: InetAddress.getLocalHost());
     }
 
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (host != null) Closeables.closeQuietly(host);
+    }
+    
     // Note: requires `ssh localhost` to be setup such that no password is required    
     @Test(groups = "Integration")
     public void testSshRun() throws Exception {
@@ -148,5 +155,12 @@ public class SshMachineLocationTest {
         host.releasePort(lowerPort)
         assertEquals host.obtainPort(range), lowerPort
         assertEquals host.obtainPort(range), -1
+    }
+    
+    @Test
+    public void testObtainPortDoesNotUsePreReservedPorts() {
+        host = new SshMachineLocation(MutableMap.of("address", InetAddress.getLocalHost(), "usedPorts", ImmutableSet.of(8000)));
+        assertEquals(host.obtainPort(PortRanges.fromString("8000")), -1);
+        assertEquals(host.obtainPort(PortRanges.fromString("8000+")), 8001);
     }
 }

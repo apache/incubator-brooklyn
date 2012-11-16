@@ -3,12 +3,10 @@ package brooklyn.location.basic;
 import static brooklyn.util.GroovyJavaMethods.truth;
 import groovy.lang.Closure;
 
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -60,9 +58,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
-import com.google.common.io.Files;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -97,6 +93,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag
     transient WithMutexes mutexSupport;
     
+    @SetFromFlag
+    private Set<Integer> usedPorts;
+
     /** any property that should be passed as ssh config (connection-time) 
      *  can be prefixed with this and . and will be passed through (with the prefix removed),
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
@@ -112,8 +111,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             "keyFiles", "publicKey", "privateKey");
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");
-    
-    private final Set<Integer> ports = Sets.newLinkedHashSet();
 
     private final Pool<SshTool> vanillaSshToolPool;
     
@@ -123,6 +120,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     public SshMachineLocation(Map properties) {
         super(properties);
+        
+        usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
         
         vanillaSshToolPool = BasicPool.<SshTool>builder()
                 .name(name+":"+address+":"+System.identityHashCode(this))
@@ -592,10 +591,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      */
     public boolean obtainSpecificPort(int portNumber) {
 	    // TODO Does not yet check if the port really is free on this machine
-        if (ports.contains(portNumber)) {
+        if (usedPorts.contains(portNumber)) {
             return false;
         } else {
-            ports.add(portNumber);
+            usedPorts.add(portNumber);
             return true;
         }
     }
@@ -608,7 +607,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     public void releasePort(int portNumber) {
-        ports.remove((Object) portNumber);
+        usedPorts.remove((Object) portNumber);
     }
 
     public boolean isSshable() {
