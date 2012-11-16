@@ -39,7 +39,7 @@ define([
         })
         it("must have two buttons in the footer", function () {
             expect(modalView.$(".modal-footer button").length).toBe(2)
-            expect(modalView.$(".modal-footer button.trigger-effector").length).toBe(1)
+            expect(modalView.$(".modal-footer button.invoke-effector").length).toBe(1)
         })
 
         it("must properly extract parameters from table", function () {

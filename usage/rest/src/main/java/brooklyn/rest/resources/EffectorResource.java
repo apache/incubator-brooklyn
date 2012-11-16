@@ -9,11 +9,11 @@ import java.util.concurrent.TimeoutException;
 
 import javax.validation.Valid;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -76,7 +76,7 @@ public class EffectorResource extends AbstractBrooklynRestResource {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application, entity or effector")
   })
-  public Response trigger(
+  public Response invoke(
       @ApiParam(name = "application", value = "Application ID or name", required = true)
       @PathParam("application") String application,
       
@@ -92,7 +92,7 @@ public class EffectorResource extends AbstractBrooklynRestResource {
       		"'0' means 'always' return task activity ID; " +
       		"and e.g. '1000' or '1s' will return a result if available within one second otherwise status 202 and the activity task ID", 
       		required = false, defaultValue = "never")
-      @HeaderParam("timeout")
+      @QueryParam("timeout")
       String timeout,
       
       @ApiParam(name = "parameters", value = "Effector parameters (as key value pairs)", required = false)
@@ -106,6 +106,7 @@ public class EffectorResource extends AbstractBrooklynRestResource {
       throw WebResourceUtils.notFound("Entity '%s' has no effector with name '%s'", entityToken, effectorName);
     }
 
+    log.info("REST invocation of "+entity+"."+effector+" "+parameters);
     Task<?> t = entity.invoke(effector, parameters);
     
     try {

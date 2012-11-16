@@ -11,7 +11,8 @@ define([
         effectorParam:_.template(ParamHtml),
         effectorParamList:_.template(ParamListHtml),
         events:{
-            "click .trigger-effector":"triggerEffector"
+            "click .invoke-effector":"invokeEffector",
+            "shown":"unfade"
         },
         render:function () {
             var that = this, params = this.model.get("parameters")
@@ -36,32 +37,50 @@ define([
             this.$(".modal-body").find('*[rel="tooltip"]').tooltip()
             return this
         },
+        unfade: function() {
+            this.$el.fadeTo(500,1);
+        },
         extractParamsFromTable:function () {
             var parameters = {}
             // iterate over the rows
             this.$(".effector-param").each(function (index) {
                 var key = $(this).find(".param-name").text(),
-                    value = $(this).find(".param-value").text()
+                    value = $(this).find(".param-value").val()
                 // we need to create an object out of the input so it will send as the server expects: java Map
                 parameters[key] = $.parseJSON(value)
             })
             return parameters
         },
-        triggerEffector:function () {
+        invokeEffector:function () {
             var that = this
             var url = this.model.getLinkByName("self")
             var parameters = this.extractParamsFromTable()
-            // trigger the event by ajax with attached parameters
+            this.$el.fadeTo(500,0.5);
             $.ajax({
                 type:"POST",
-                url:url,
+                url:url+"?timeout=0",
                 data:JSON.stringify(parameters),
                 contentType:"application/json",
                 success:function (data) {
-                    // hide the modal
                     that.$el.modal("hide")
+                    that.$el.fadeTo(500,1);
+                    // data.id contains the task, if we wanted to switch to showing it
+                    // NB we now timeout immediately, so always run in background
+                    // ideally we might have a timeout of 300ms
+                    // switch to task if it is still running
+                    // otherwise show the answer
+                    // ... or simpler, just switch to task, so response can be shown
+                },
+                error: function(data) {
+                    that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
+                    // TODO render the error better than poor-man's flashing
+                    // (would just be connection error -- with timeout=0 we get a task even for invalid input)
+                    
+                    // console.log might throw error but that's okay...
+                    console.log("ERROR invoking effector")
+                    console.log(data)
                 }})
-            // un-delegate trigger events
+            // un-delegate events
             this.undelegateEvents()
         }
     })

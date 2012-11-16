@@ -96,6 +96,9 @@ define([
 
             if (appName === undefined)
                 appName = $("span.entity_tree_node#"+id).data("parent-app")
+            if (appName === undefined)
+                // no such app
+                return
             
             var app = new Application.Model()
             app.url = "/v1/applications/" + appName
