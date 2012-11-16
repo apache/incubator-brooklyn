@@ -31,6 +31,13 @@ Other examples:
   brooklyn launch --app brooklyn.demo.WebClusterDatabaseExampleAltJava --location localhost
 
 
+Redistributable embedded example:
+
+  # To build a redistributable tar.gz with a start.sh script
+  # which invokes the `main` method in the example class to start
+  # (the redistributable will be at:  target/brooklyn-*-bin.tar.gz )
+  mvn clean assembly:assembly
+
 For more information, please visit:
 
   http://brooklyncentral.github.com/use/examples/webcluster/
