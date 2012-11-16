@@ -2,13 +2,18 @@ package brooklyn.launcher;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import javax.servlet.DispatcherType;
 
 import org.eclipse.jetty.http.ssl.SslContextFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +23,7 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
+import brooklyn.rest.BrooklynRestApi;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
@@ -28,6 +34,9 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 import com.google.common.base.Throwables;
+import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 /**
  * Starts the web-app running, connected to the given management context
@@ -162,6 +171,23 @@ public class BrooklynWebServer {
         return this;
     }
 
+    public static void installAsServletFilter(ServletContextHandler context) {
+        ResourceConfig config = new DefaultResourceConfig();
+        // load all our REST API modules, JSON, and Swagger
+        for (Object r: BrooklynRestApi.getAllResources())
+            config.getSingletons().add(r);
+        
+        // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
+        // and treat that as static content
+        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/asserts/[^?]+\\.[A-Za-z0-9_]+)");
+        // and anything which is not matched as a servlet also falls through (but more expensive than a regex check?)
+        config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
+        // finally create this as a _filter_ which falls through to a web app or something (optionally)
+        FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
+        
+        context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
+    }
+
     ContextHandlerCollectionHotSwappable handlers = new ContextHandlerCollectionHotSwappable();
     
     /**
@@ -212,7 +238,8 @@ public class BrooklynWebServer {
             deploy(pathSpec, warUrl);
         }
 
-        deploy("/", war);
+        WebAppContext rootContext = deploy("/", war);
+        installAsServletFilter(rootContext);
 
         server.setHandler(handlers);
         server.start();

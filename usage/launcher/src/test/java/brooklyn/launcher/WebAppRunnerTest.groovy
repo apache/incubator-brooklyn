@@ -63,7 +63,7 @@ public class WebAppRunnerTest {
     }
 
     public static void assertBrooklynEventuallyAt(String url) {
-        HttpTestUtils.assertContentEventuallyContainsText(url, "Brooklyn Web Console", "Dashboard");
+        HttpTestUtils.assertContentEventuallyContainsText(url, "Brooklyn Web Console");
     }
     
     @Test

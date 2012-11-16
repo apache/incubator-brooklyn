@@ -55,12 +55,12 @@
     
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-rest-SANDBOX</artifactId>
+            <artifactId>brooklyn-rest</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-rest-SANDBOX</artifactId>
+            <artifactId>brooklyn-rest</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
