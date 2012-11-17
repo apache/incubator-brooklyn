@@ -7,7 +7,6 @@ import java.util.EnumSet;
 
 import javax.servlet.DispatcherType;
 
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -20,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.WildcardGlobs;
@@ -56,7 +56,7 @@ public class BrooklynRestApiLauncher {
         log.info("Press Ctrl-C to quit.");
     }
     
-    final static int FAVOURITE_PORT = 8080;
+    final static int FAVOURITE_PORT = 8081;
     
     public static Server startRestResourcesViaFilter() throws Exception {
         ManagementContext managementContext = new LocalManagementContext();
@@ -86,15 +86,23 @@ public class BrooklynRestApiLauncher {
         context.addServlet(servletHolder, "/*");
         context.setContextPath("/");
         
+        installBrooklynPropertiesSecurityFilter(context);
+        
         return startServer(context, "programmatic Jersey ServletContainer servlet");
     }
     
+    public static void installBrooklynPropertiesSecurityFilter(ServletContextHandler context) {
+        context.addFilter(BrooklynPropertiesSecurityFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+    }
+    
     public static void installAsServletFilter(ServletContextHandler context) {
+        installBrooklynPropertiesSecurityFilter(context);
+        
+        // now set up the REST servlet resources
         ResourceConfig config = new DefaultResourceConfig();
         // load all our REST API modules, JSON, and Swagger
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
-        
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/asserts/[^?]+\\.[A-Za-z0-9_]+)");
@@ -102,11 +110,11 @@ public class BrooklynRestApiLauncher {
         config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
         // finally create this as a _filter_ which falls through to a web app or something (optionally)
         FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
-        
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
     }
 
     public static Server startRestResourcesViaWebXml() throws Exception {
+        // TODO add security to web.xml
         ManagementContext managementContext = new LocalManagementContext();
 
         WebAppContext context;

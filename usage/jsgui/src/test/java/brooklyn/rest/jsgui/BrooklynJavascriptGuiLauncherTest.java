@@ -4,6 +4,7 @@ import org.eclipse.jetty.server.Server;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
+import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.test.HttpTestUtils;
 
 /** Convenience and demo for launching programmatically. */
@@ -28,6 +29,7 @@ public class BrooklynJavascriptGuiLauncherTest {
     @Test
     public void testJavascriptWithRest() throws Exception {
         server = BrooklynJavascriptGuiLauncher.startJavascriptAndRest();
+        BrooklynRestApiLauncherTest.enableAnyoneLogin(server);
         checkUrlContains("/index.html", "Brooklyn");
         checkUrlContains("/v1/catalog/entities", "Tomcat");
     }

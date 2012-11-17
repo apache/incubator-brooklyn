@@ -2,6 +2,8 @@ package brooklyn.util.internal;
 
 public class StringSystemProperty {
 
+    // TODO replace usages of this and related items with ConfigKeys
+    
     public StringSystemProperty(String name) {
         this.propertyName = name;
     }

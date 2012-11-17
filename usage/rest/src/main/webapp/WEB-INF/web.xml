@@ -5,8 +5,19 @@
 <web-app>
     <display-name>Brooklyn REST API v1</display-name>
 
-<!-- run as a filter; replace filter tags with the commented-out servlet tags 
-     (the lines immediately below, then the matching tag and mapping at the bottom   
+    <filter>
+        <filter-name>Brooklyn Properties Authentication Filter</filter-name>
+        <filter-class>brooklyn.rest.security.BrooklynPropertiesSecurityFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn Properties Authentication Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
+<!-- Brooklyn REST is usu run as a filter so static content can be placed in a webapp
+     to which this is added; to run as a servlet directly, replace the filter tags 
+     below (after the comment) with the servlet tags (commented out immediately below),
+     (and do the same for the matching tags at the bottom)
     <servlet>
         <servlet-name>Brooklyn REST API v1 Servlet</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
@@ -18,9 +29,6 @@
         <!-- load our REST API jersey resources -->
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
-            <!-- swagger v1.1.1 (currently in snapshot) is required is swaggering with filters
-            <param-value>brooklyn.rest.resources</param-value>
-            -->
             <param-value>brooklyn.rest.resources;brooklyn.rest.apidoc</param-value>
         </init-param>
 
@@ -46,7 +54,8 @@
         <filter-name>Brooklyn REST API v1 Filter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
-<!-- run as a filter; replace lines aboe with those below to run as servlet 
+<!-- Brooklyn REST as a filter above; replace above 5 lines with those commented out below,
+     to run it as a servlet (see note above) 
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>
