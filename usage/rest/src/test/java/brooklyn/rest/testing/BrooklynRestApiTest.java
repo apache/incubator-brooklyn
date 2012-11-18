@@ -11,6 +11,7 @@ import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.legacy.LocationStore;
 import brooklyn.rest.resources.AbstractBrooklynRestResource;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
+import brooklyn.rest.util.NullHttpServletRequestProvider;
 import brooklyn.rest.util.NullServletConfigProvider;
 
 import com.yammer.dropwizard.testing.ResourceTest;
@@ -38,6 +39,7 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
         // seems we have to provide our own injector because the jersey test framework 
         // doesn't inject ServletConfig and it all blows up
         addProvider(NullServletConfigProvider.class);
+        addProvider(NullHttpServletRequestProvider.class);
         
       super.addResource(resource);
       if (resource instanceof AbstractBrooklynRestResource) {

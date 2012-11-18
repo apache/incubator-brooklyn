@@ -42,7 +42,6 @@ import com.wordnik.swagger.core.ApiParam;
 @Produces("application/json")
 public class EffectorResource extends AbstractBrooklynRestResource {
 
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(EffectorResource.class);
     
   @GET

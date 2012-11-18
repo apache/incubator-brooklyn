@@ -13,7 +13,6 @@ import org.testng.annotations.Test;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 
-import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 

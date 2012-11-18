@@ -10,12 +10,10 @@ import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
-import brooklyn.rest.legacy.LocationStore;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.TestUtils;
 

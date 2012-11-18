@@ -32,6 +32,7 @@ import com.sun.jersey.api.client.GenericType;
 @Test(singleThreaded = true)
 public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
   private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").

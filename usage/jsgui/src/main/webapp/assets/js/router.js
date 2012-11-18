@@ -1,7 +1,10 @@
 define([
     'underscore', 'jquery', 'backbone', "model/application", "model/app-tree", "model/location",
-    "view/home", "view/application-explorer", "view/catalog", "view/hack", "text!tpl/help/page.html"
-], function (_, $, Backbone, Application, AppTree, Location, HomeView, ExplorerView, CatalogView, HackView, HelpHtml) {
+    "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy", 
+    "text!tpl/help/page.html"
+], function (_, $, Backbone, Application, AppTree, Location, 
+        HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
+        HelpHtml) {
 
     // add close method to all views for clean-up
 	// (NB we have to update the prototype _here_ before any views are instantiated;
@@ -35,7 +38,8 @@ define([
             'v1/applications':'applicationsPage',
             'v1/locations':'catalogPage',
             'v1/catalog':'catalogPage',
-            'v1/hack':'hackPage',
+            'v1/apidoc':'apidocPage',
+            'v1/script/groovy':'scriptGroovyPage',
             'v1/help':'helpPage',
             '*path':'defaultRoute'
         },
@@ -91,11 +95,21 @@ define([
                 that.showView("#application-content", catalogResource)
             }})
         },
-        hackPage:function () {
-            var hackResource = new HackView({})
-            this.showView("#application-content", hackResource)
+        apidocPage:function () {
+            var apidocResource = new ApidocView({})
+            this.showView("#application-content", apidocResource)
             $(".nav1").removeClass("active")
-            $(".nav1_hack").addClass("active")
+            $(".nav1_script").addClass("active")
+            $(".nav1_apidoc").addClass("active")
+        },
+        scriptGroovyPage:function () {
+            console.log(this.scriptGroovyResource)
+            if (this.scriptGroovyResource === undefined)
+                this.scriptGroovyResource = new ScriptGroovyView({})
+            this.showView("#application-content", this.scriptGroovyResource)
+            $(".nav1").removeClass("active")
+            $(".nav1_script").addClass("active")
+            $(".nav1_script_groovy").addClass("active")
         },
         helpPage:function () {
             var that = this

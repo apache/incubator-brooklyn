@@ -29,13 +29,13 @@ define([
                 collection:this.collection
             })
             this.$('div#tree-list').html(this.treeView.render().el)
+            this.treeView.render()
         },
         beforeClose:function () {
             this.collection.off("reset", this.render)
             this.treeView.close()
         },
         render:function () {
-            this.treeView.render()
             return this
         },
         

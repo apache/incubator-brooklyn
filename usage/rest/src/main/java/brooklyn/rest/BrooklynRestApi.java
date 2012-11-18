@@ -16,6 +16,7 @@ import brooklyn.rest.resources.EffectorResource;
 import brooklyn.rest.resources.EntityResource;
 import brooklyn.rest.resources.LocationResource;
 import brooklyn.rest.resources.PolicyResource;
+import brooklyn.rest.resources.ScriptResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.VersionResource;
 
@@ -34,6 +35,7 @@ public class BrooklynRestApi {
         resources.add(new EffectorResource());
         resources.add(new PolicyResource());
         resources.add(new ActivityResource());
+        resources.add(new ScriptResource());
         resources.add(new VersionResource());
         return resources;
     }
