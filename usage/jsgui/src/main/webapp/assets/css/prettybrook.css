@@ -491,26 +491,26 @@ div.for-empty-table {
     -moz-border-radius: 4px;
     border-radius: 4px;
 }
-.step2-entity-config input {
+.app-add-wizard-create-entity-config input {
     margin-bottom: 0px;	
 }
-.step2-entity-label-newline {
+.app-add-wizard-create-entity-label-newline {
     padding-left: 2px;
     padding-bottom: 3px;	
 }
-.step2-entity-label {
+.app-add-wizard-create-entity-label {
     width: 4em;
     float: left;
     padding-top: 3px;
 }
-.step2-entity-input {
+.app-add-wizard-create-entity-input {
 	width: 300px;
 }
-.step2-entity-config {
+.app-add-wizard-create-entity-config {
 	margin-bottom: 9px;
 	margin-top: 2px;
 }
-.step2-entity-config button {
+.app-add-wizard-create-entity-config button {
 	margin-left: 8px;
 }
 #add-app-entity {

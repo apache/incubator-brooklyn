@@ -3,10 +3,10 @@
  */
 
 define([
-    "underscore", "jquery", "backbone", "./modal-wizard", "model/location",
+    "underscore", "jquery", "backbone", "./application-add-wizard", "model/location",
     "text!tpl/home/applications.html", "text!tpl/home/summaries.html", "text!tpl/home/app-entry.html", 
     "bootstrap"
-], function (_, $, Backbone, ModalWizard, Location, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
+], function (_, $, Backbone, AppAddWizard, Location, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
 
     var HomeView = Backbone.View.extend({
         tagName:"div",
@@ -115,7 +115,7 @@ define([
                 this._modal.close()
             }
             var that = this;
-            var wizard = new ModalWizard({appRouter:this.options.appRouter})
+            var wizard = new AppAddWizard({appRouter:this.options.appRouter})
             this._modal = wizard
             this.$("#modal-container").html(wizard.render().el)
             this.$("#modal-container .modal")
