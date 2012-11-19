@@ -972,7 +972,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         Template template;
         try {
             template = templateBuilder.build();
-            if (template.getImage().getName().contains(".rc-")) {
+            if (template==null) throw new NullPointerException("No template found (templateBuilder.build returned null)");
+            LOG.debug(""+this+" got template "+template+" (image "+template.getImage()+")");
+            if (template.getImage()==null) throw new NullPointerException("Template does not contain an image (templateBuilder.build returned invalid template)");
+            String name = template.getImage().getName();
+            if (name != null && name.contains(".rc-")) {
                 // release candidates might break things :(
                 if (templateBuilder instanceof PortableTemplateBuilder) {
                     if (((PortableTemplateBuilder)templateBuilder).getOsFamily()==null) {
