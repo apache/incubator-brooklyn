@@ -4,26 +4,25 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.Random
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 
-import com.google.common.base.Preconditions;
-
-import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.Entities
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.Repeater
+
+import com.google.common.base.Preconditions
 
 public class AbstractLoadBalancingPolicyTest {
     
@@ -71,7 +70,7 @@ public class AbstractLoadBalancingPolicyTest {
     
     @AfterMethod(alwaysRun=true)
     public void after() {
-        if (app != null) app.stop()
+        if (app != null) Entities.destroy(app);
     }
     
     // Using this utility, as it gives more info about the workrates of all containers rather than just the one that differs    

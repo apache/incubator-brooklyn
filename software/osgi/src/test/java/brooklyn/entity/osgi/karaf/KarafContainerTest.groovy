@@ -12,7 +12,8 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.trait.Startable;
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.util.internal.LanguageUtils
@@ -32,7 +33,7 @@ public class KarafContainerTest {
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app != null) app.stop()
+        if (app != null) Entities.destroy(app);
     }
 
     @Test(groups = "Integration")

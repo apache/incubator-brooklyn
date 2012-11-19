@@ -17,6 +17,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.EntityStartException
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
@@ -90,6 +91,7 @@ public class TomcatServerIntegrationTest {
         try {
             app = new TestApplication()
             tc = new TomcatServer(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),app);
+            Entities.startManagement(app);
             try {
                 try {
                     tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])

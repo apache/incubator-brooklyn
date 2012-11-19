@@ -86,7 +86,7 @@ public class ItemsInContainersGroup extends DynamicGroup {
     }
 
     boolean acceptsItem(Movable e, BalanceableContainer c) {
-        return (containerGroup != null && c != null) ? itemFilter.apply(e) && containerGroup.hasMember((Entity)c) : false;
+        return (containerGroup != null && c != null) ? itemFilter.apply(e) && containerGroup.hasMember(c) : false;
     }
 
     public void setContainers(Group containerGroup) {

@@ -69,6 +69,11 @@ public class TypeCoercions {
             return stringToPrimitive((String)value, targetType);
         }
 
+        //deal with primitive->string
+        if (isPrimitiveOrBoxer(value.getClass()) && targetType.equals(String.class)) {
+            return (T) value.toString();
+        }
+
         //look for value.asType where Type is castable to targetType
         String targetTypeSimpleName = getVerySimpleName(targetType);
         if (targetTypeSimpleName!=null && targetTypeSimpleName.length()>0) {

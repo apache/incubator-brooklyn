@@ -125,6 +125,10 @@ public class BasicExecutionManager implements ExecutionManager {
         runner.shutdownNow();
     }
     
+    public boolean isShutdown() {
+        return runner.isShutdown();
+    }
+    
     public long getTotalTasksSubmitted() {
         return totalTaskCount.get();
     }

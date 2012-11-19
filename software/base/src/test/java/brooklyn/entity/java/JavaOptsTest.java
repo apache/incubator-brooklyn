@@ -21,6 +21,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication;
@@ -63,7 +64,7 @@ public class JavaOptsTest {
     private SshMachineLocation loc;
     List<ExecCmd> execScriptCmds;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         execScriptCmds = new CopyOnWriteArrayList<ExecCmd>();
         app = new TestApplication();
@@ -80,9 +81,9 @@ public class JavaOptsTest {
                 });
     }
     
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null && app.getManagementSupport().isDeployed()) app.stop();
+        if (app != null) Entities.destroy(app);
     }
     
     @Test
@@ -245,6 +246,7 @@ public class JavaOptsTest {
         VanillaJavaApp javaProcess = new VanillaJavaApp(props, app) {
             protected void connectSensors() {
                 /* nothing here */
+                setAttribute(SERVICE_UP, true);
             }
         };
         app.startManagement();

@@ -9,6 +9,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessDriver
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver
@@ -17,9 +18,10 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Identifiers
 
 public class JavaSoftwareProcessSshDriverIntegrationTest {
 
@@ -30,12 +32,12 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new AbstractApplication() {}
+        app = new TestApplication();
     }
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app) app.stop()
+        if (app != null) Entities.destroy(app);
     }
 
     @Test(groups = "Integration")

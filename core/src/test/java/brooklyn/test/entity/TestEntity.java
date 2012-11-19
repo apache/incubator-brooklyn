@@ -12,7 +12,9 @@ import org.testng.collections.Lists;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -38,6 +40,8 @@ public class TestEntity extends AbstractEntity implements Startable {
     public static final BasicAttributeSensor<Integer> SEQUENCE = new BasicAttributeSensor<Integer>(Integer.class, "test.sequence", "Test Sequence");
     public static final BasicAttributeSensor<String> NAME = new BasicAttributeSensor<String>(String.class, "test.name", "Test name");
     public static final BasicNotificationSensor<Integer> MY_NOTIF = new BasicNotificationSensor<Integer>(Integer.class, "test.myNotif", "Test notification");
+    
+    public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
     
     public static final Effector<Void> MY_EFFECTOR = new MethodEffector<Void>(TestEntity.class, "myEffector");
     
@@ -83,15 +87,19 @@ public class TestEntity extends AbstractEntity implements Startable {
 
     public void start(Collection<? extends Location> locs) {
         LOG.trace("Starting {}", this);
+        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         counter.incrementAndGet();
         // FIXME: Shouldn't need to clear() the locations, but for the dirty workaround implemented in DynamicFabric
         getLocations().clear(); ;
         getLocations().addAll(locs);
+        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
     }
 
     public void stop() { 
         LOG.trace("Stopping {}", this);
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
         counter.decrementAndGet();
+        setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
     }
 
     public void restart() {

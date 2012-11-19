@@ -19,6 +19,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -53,13 +54,15 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     public void setUp() {
     	String warPath = "hello-world.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
+        
+        executor = Executors.newCachedThreadPool();
 
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         origApp = new TestApplication();
-        executor = Executors.newCachedThreadPool();
+        origManagementContext.manage(origApp);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
@@ -68,8 +71,8 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         	monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
-        if (newApp != null) newApp.stop();
-        if (origApp != null && origApp.getManagementSupport().getManagementContext(true).isManaged(origApp)) origApp.stop();
+        if (newApp != null) Entities.destroy(newApp);
+        if (origApp != null) Entities.destroy(origApp);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 
@@ -99,6 +102,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     					.put("initialSize", 1)
     					.build(),
     			origApp);
+        Entities.manage(origCluster);
     	
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         JBoss7Server origJboss = (JBoss7Server) Iterables.find(origCluster.getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));

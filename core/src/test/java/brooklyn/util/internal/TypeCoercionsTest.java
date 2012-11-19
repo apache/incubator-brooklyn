@@ -18,8 +18,8 @@ public class TypeCoercionsTest {
 
     @Test
     public void testCoerceCharSequenceToString() {
-        assertEquals(TypeCoercions.coerce(new StringBuilder("abc"), String.class), (String)"abc");
-        assertEquals(TypeCoercions.coerce(new GStringImpl(new Object[0], new String[0]), String.class), (String)"");
+        assertEquals(TypeCoercions.coerce(new StringBuilder("abc"), String.class), "abc");
+        assertEquals(TypeCoercions.coerce(new GStringImpl(new Object[0], new String[0]), String.class), "");
     }
     
     @Test
