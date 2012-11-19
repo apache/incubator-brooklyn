@@ -6,8 +6,8 @@
  */
 define([
     "underscore", "jquery", "backbone", "model/effector-summary",
-    "view/effector", "text!tpl/apps/effector.html", "text!tpl/apps/effector-row.html", "bootstrap"
-], function (_, $, Backbone, EffectorSummary, EffectorView, EffectorHtml, EffectorRowHtml) {
+    "view/effector-invoke", "text!tpl/apps/effector.html", "text!tpl/apps/effector-row.html", "bootstrap"
+], function (_, $, Backbone, EffectorSummary, EffectorInvokeView, EffectorHtml, EffectorRowHtml) {
 
     var EntityEffectorsView = Backbone.View.extend({
         template:_.template(EffectorHtml),
@@ -45,7 +45,7 @@ define([
         showEffectorModal:function (eventName) {
             // get the model that we need to show, create its view and show it
             var cid = $(eventName.currentTarget).attr("id")
-            this._modal = new EffectorView({
+            this._modal = new EffectorInvokeView({
                 el:"#effector-modal",
                 model:this._effectors.getByCid(cid),
                 entity:this.model
