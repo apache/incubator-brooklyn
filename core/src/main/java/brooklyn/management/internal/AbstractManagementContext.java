@@ -22,7 +22,6 @@ import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ExecutionContext;
-import brooklyn.management.ExpirationPolicy;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
@@ -38,6 +37,7 @@ import com.google.common.base.Predicate;
 public abstract class AbstractManagementContext implements ManagementContext  {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
     public static final String EFFECTOR_TAG = "EFFECTOR";
+    public static final String NON_TRANSIENT_TASK_TAG = "NON-TRANSIENT";
 
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
@@ -45,7 +45,9 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     // TODO leaking "this" reference; yuck
     private final RebindManager rebindManager = new RebindManagerImpl(this);
-
+    
+    protected volatile BrooklynGarbageCollector gc;
+    
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
     }
@@ -176,6 +178,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
             boolean result = unmanageNonRecursive(it);            
             it.getManagementSupport().onManagementStopped(info);
             rebindManager.getChangeListener().onUnmanaged(it);
+            if (gc != null) gc.onUnmanaged(it);
             return result; 
         } });
     }
@@ -204,7 +207,6 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
         return runAtEntity(
                 MutableMap.builder()
-                        .put("expirationPolicy", ExpirationPolicy.NEVER)
                         .put("description", "invoking "+eff.getName()+" on "+entity.getDisplayName())
                         .put("displayName", eff.getName())
                         .put("tags", MutableList.of(EFFECTOR_TAG))
@@ -265,7 +267,6 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 // Wrap in a task if we aren't already in a task that is tagged with this entity
                 Task<T> task = runAtEntity(
                         MutableMap.builder()
-                                .put("expirationPolicy", ExpirationPolicy.NEVER)
                                 .put("description", "invoking "+eff.getName()+" on "+entity.getDisplayName())
                                 .put("displayName", eff.getName())
                                 .put("tags", MutableList.of(EFFECTOR_TAG))

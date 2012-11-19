@@ -1,5 +1,7 @@
 package brooklyn.util.task;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +15,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -29,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionManager;
-import brooklyn.management.ExpirationPolicy;
 import brooklyn.management.Task;
 import brooklyn.util.internal.LanguageUtils;
 
@@ -116,6 +118,8 @@ public class BasicExecutionManager implements ExecutionManager {
     
     private final AtomicInteger activeTaskCount = new AtomicInteger();
     
+    private final List<ExecutionListener> listeners = new CopyOnWriteArrayList<ExecutionListener>();
+    
 	/** for use by overriders to use custom thread factory */
 	protected ThreadFactory newThreadFactory() {
 		return Executors.defaultThreadFactory();
@@ -125,6 +129,39 @@ public class BasicExecutionManager implements ExecutionManager {
         runner.shutdownNow();
     }
     
+    public void addListener(ExecutionListener listener) {
+        listeners.add(listener);
+    }
+    
+    public void removeListener(ExecutionListener listener) {
+        listeners.remove(listener);
+    }
+    
+    /**
+     * Deletes the given tag, including all tasks using this tag.
+     * 
+     * Useful, for example, if an entity is being expunged so that we don't keep holiding
+     * a reference to it as a tag.
+     */
+    public void deleteTag(Object tag) {
+        Set<Task> tasks = tasksByTag.remove(tag);
+        if (tasks != null) {
+            for (Task task : tasks) {
+                deleteTask(task);
+            }
+        }
+    }
+
+    public void deleteTask(Task<?> task) {
+        Set<?> tags = checkNotNull((BasicTask<?>)task, "task").tags;
+        if (tags != null) {
+            for (Object tag : tags) {
+                Set<Task> tasks = getMutableTasksWithTagOrNull(tag);
+                if (tasks != null) tasks.remove(task);
+            }
+        }
+    }
+
     public boolean isShutdown() {
         return runner.isShutdown();
     }
@@ -146,6 +183,10 @@ public class BasicExecutionManager implements ExecutionManager {
             System.out.println("argph, null");
         }
         tasksByTag.putIfAbsent(tag, Collections.synchronizedSet(new LinkedHashSet<Task>()));
+        return tasksByTag.get(tag);
+    }
+
+    private Set<Task> getMutableTasksWithTagOrNull(Object tag) {
         return tasksByTag.get(tag);
     }
 
@@ -392,11 +433,11 @@ public class BasicExecutionManager implements ExecutionManager {
         ((BasicTask)task).thread = null;
         synchronized (task) { task.notifyAll(); }
 
-        ExpirationPolicy expirationPolicy = (ExpirationPolicy) flags.get("expirationPolicy");
-        if (expirationPolicy==null) expirationPolicy = ExpirationPolicy.IMMEDIATE;
-        if (expirationPolicy == ExpirationPolicy.IMMEDIATE) {
-            for (Object t : ((BasicTask)task).tags) {
-                getMutableTasksWithTag(t).remove(task);
+        for (ExecutionListener listener : listeners) {
+            try {
+                listener.onTaskDone(task);
+            } catch (Exception e) {
+                log.warn("Error notifying listener "+listener+" of task "+task+" done", e);
             }
         }
     }
@@ -523,5 +564,4 @@ public class BasicExecutionManager implements ExecutionManager {
             return (old!=null);
         }
     }
-	
 }

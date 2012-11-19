@@ -21,6 +21,7 @@ import brooklyn.management.SubscriptionManager;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 /**
@@ -134,7 +135,7 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     @Override
     public int unsubscribeAll() {
         int count = 0;
-        for (SubscriptionHandle s : getSubscriptions()) {
+        for (SubscriptionHandle s : ImmutableList.copyOf(getSubscriptions())) {
             count++; 
             boolean result = unsubscribe(s); 
             if (!result) LOG.warn("When unsubscribing from all of {}, unsubscribe of {} return false", subscriber, s);

@@ -34,7 +34,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
     private static final Object MANAGED_LOCALLY = new Object();
-    
+
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
 
@@ -142,6 +142,8 @@ public class LocalManagementContext extends AbstractManagementContext {
     
     @Override
     public synchronized  SubscriptionManager getSubscriptionManager() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        
         if (subscriptions == null) {
             subscriptions = new LocalSubscriptionManager(getExecutionManager());
         }
@@ -150,8 +152,11 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     @Override
     public synchronized ExecutionManager getExecutionManager() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        
         if (execution == null) {
             execution = new BasicExecutionManager();
+            gc = new BrooklynGarbageCollector(configMap, execution);
         }
         return execution;
     }
@@ -160,6 +165,12 @@ public class LocalManagementContext extends AbstractManagementContext {
     public void terminate() {
         super.terminate();
         if (execution != null) execution.shutdownNow();
+        if (gc != null) gc.shutdownNow();
+    }
+    
+    @Override
+    protected void finalize() {
+        terminate();
     }
     
     @Override

@@ -32,4 +32,13 @@ public class EntityPredicates {
             }
         };
     }
+    
+    public static <T> Predicate<Entity> managed() {
+        return new Predicate<Entity>() {
+            @Override
+            public boolean apply(@Nullable Entity input) {
+                return input != null && Entities.isManaged(input);
+            }
+        };
+    }
 }
