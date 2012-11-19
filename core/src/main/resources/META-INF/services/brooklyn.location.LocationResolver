@@ -1,4 +1,5 @@
-brooklyn.location.basic.LocalhostResolver
-brooklyn.location.basic.JcloudsResolver
-brooklyn.location.basic.ByonLocationResolver
+brooklyn.location.basic.DefinedLocationByIdResolver
 brooklyn.location.basic.NamedLocationResolver
+brooklyn.location.basic.LocalhostResolver
+brooklyn.location.basic.ByonLocationResolver
+brooklyn.location.basic.JcloudsResolver

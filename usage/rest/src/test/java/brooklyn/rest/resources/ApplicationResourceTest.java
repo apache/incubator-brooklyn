@@ -51,7 +51,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     
   private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
           entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
-          locations(ImmutableSet.of("/v1/locations/0")).
+          locations(ImmutableSet.of("localhost")).
           build();
 
   @Override

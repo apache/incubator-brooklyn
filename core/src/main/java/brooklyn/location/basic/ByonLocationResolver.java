@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.location.LocationRegistry;
+import brooklyn.location.LocationResolver;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.KeyValueParser;
 import brooklyn.util.MutableMap;
@@ -54,11 +56,11 @@ public class ByonLocationResolver implements RegistryLocationResolver {
     }
     
     @Override
-    public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, LocationRegistry registry, Map locationFlags) {
+    public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map locationFlags) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
     }
     
-    protected FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, LocationRegistry registry, Map properties, Map locationFlags) {
+    protected FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon(hosts=\"addr1,addr2\")");
@@ -126,4 +128,10 @@ public class ByonLocationResolver implements RegistryLocationResolver {
     public String getPrefix() {
         return BYON;
     }
+    
+    @Override
+    public boolean accepts(String spec, LocationRegistry registry) {
+        return BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true);
+    }
+
 }

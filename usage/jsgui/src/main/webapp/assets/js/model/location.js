@@ -6,7 +6,9 @@ define(["underscore", "backbone"], function (_, Backbone) {
         urlRoot:'/v1/locations',
         defaults:function () {
             return {
-                provider:'',
+                id:'',
+                name:'',
+                spec:'',
                 config:{},
                 links:{
                     self:''
@@ -14,18 +16,20 @@ define(["underscore", "backbone"], function (_, Backbone) {
             }
         },
         idFromSelfLink:function () {
-            if (this.has('links')) {
-                var links = this.get('links')
-                if (links['self'] && links['self'] != '') {
-                    var s = links['self']
-                    var id = s.substring(s.lastIndexOf('/') + 1)
-                    if (_.isEqual(s, this.urlRoot + '/' + id)) return id
-                }
-            }
-            return void 0
+            // TODO replace with get('id')
+            return this.get('id');
+//            if (this.has('links')) {
+//                var links = this.get('links')
+//                if (links['self'] && links['self'] != '') {
+//                    var s = links['self']
+//                    var id = s.substring(s.lastIndexOf('/') + 1)
+//                    if (_.isEqual(s, this.urlRoot + '/' + id)) return id
+//                }
+//            }
+//            return void 0
         },
         initialize:function () {
-            this.set({'id':this.idFromSelfLink()})
+//            this.set({'id':this.idFromSelfLink()})
         },
         addConfig:function (key, value) {
             if (key) {
@@ -55,10 +59,13 @@ define(["underscore", "backbone"], function (_, Backbone) {
             return (this.getLinkByName("self") === url)
         },
         getPrettyName: function() {
-            var suffix=this.getConfigByName("location");
-            if (suffix==null) suffix=this.getConfigByName("endpoint")
-            if (suffix!=null) suffix=":"+suffix; else suffix="";
-            return this.get("provider")+suffix
+            var name = this.get('name')
+            if (name!=null && name.length>0) return name
+            return this.get('spec')
+//            var suffix=this.getConfigByName("location");
+//            if (suffix==null) suffix=this.getConfigByName("endpoint")
+//            if (suffix!=null) suffix=":"+suffix; else suffix="";
+//            return this.get("provider")+suffix
         }
 
     })

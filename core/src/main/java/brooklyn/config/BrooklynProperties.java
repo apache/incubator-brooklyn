@@ -274,4 +274,11 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         }
         return result;
     }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, Object> asMapWithStringKeys() {
+        return this;
+    }
+    
 }

@@ -14,6 +14,9 @@ public interface RegistryLocationResolver extends LocationResolver {
      * <p>
      * introduced to support locations which refer to other locations, e.g. NamedLocationResolver  
      **/ 
-    Location newLocationFromString(String spec, LocationRegistry registry, Map locationFlags);
-    
+    Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map locationFlags);
+
+    /** whether the spec is something which should be passed to this resolver */
+    boolean accepts(String spec, brooklyn.location.LocationRegistry registry);
+
 }

@@ -7,6 +7,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
+import brooklyn.location.LocationRegistry;
 
 /**
  * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
@@ -97,4 +98,9 @@ public interface ManagementContext {
      * Whether this management context is still running, or has been terminated.
      */
     public boolean isRunning();
+    
+    LocationRegistry getLocationRegistry();
+    
+    BrooklynCatalog getCatalog();
+    
 }

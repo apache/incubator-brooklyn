@@ -11,6 +11,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
+import brooklyn.location.LocationRegistry;
+import brooklyn.management.BrooklynCatalog;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
@@ -141,6 +143,16 @@ public class NonDeploymentManagementContext implements ManagementContext {
 
     @Override
     public RebindManager getRebindManager() {
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+    }
+
+    @Override
+    public LocationRegistry getLocationRegistry() {
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+    }
+
+    @Override
+    public BrooklynCatalog getCatalog() {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
     }
 }

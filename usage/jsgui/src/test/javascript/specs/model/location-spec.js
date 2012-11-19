@@ -8,7 +8,7 @@ define([
 
     describe('model/location', function () {
         it("loads data from fixture file", function () {
-            expect(location.get("provider")).toBe("localhost")
+            expect(location.get("spec")).toBe("localhost")
             expect(location.getLinkByName("self")).toBe("/v1/locations/123")
         })
     })
@@ -21,7 +21,9 @@ define([
         it('loads all model properties defined in fixtures/location-list.json', function () {
             expect(locationFixtures.length).toEqual(1)
             var spec = locationFixtures.at(0)
-            expect(spec.get("provider")).toEqual('localhost')
+            expect(spec.get("id")).toEqual('123')
+            expect(spec.get("name")).toEqual('localhost')
+            expect(spec.get("spec")).toEqual('localhost')
             expect(spec.get("config")).toEqual({})
             expect(spec.hasSelfUrl('/v1/locations/123')).toBeTruthy()
             expect(spec.getLinkByName("self")).toEqual('/v1/locations/123')

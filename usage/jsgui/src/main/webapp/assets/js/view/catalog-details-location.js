@@ -16,6 +16,8 @@ define([
             this.$el.html(this.template({
                 title: this.model.getPrettyName(),
                 id: this.model.id,
+                name: this.model.get('name'),
+                spec: this.model.get('spec'),
                 config: this.model.get("config")
             }))
             if (_.size(this.model.get("config"))==0) {

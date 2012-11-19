@@ -162,9 +162,9 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
     }
   }
   private void checkLocationsAreValid(ApplicationSpec applicationSpec) {
-    for (String locationRef : applicationSpec.getLocations()) {
-      if (brooklyn().getLocationStore().getByRef(locationRef) == null) {
-        throw WebResourceUtils.notFound("Undefined location '%s'", locationRef);
+    for (String locationId : applicationSpec.getLocations()) {
+      if (!brooklyn().getLocationRegistry().canResolve(locationId)) {
+        throw WebResourceUtils.notFound("Undefined location '%s'", locationId);
       }
     }
   }

@@ -1,34 +1,42 @@
 package brooklyn.rest.domain;
 
-import com.google.common.collect.ImmutableMap;
-import org.codehaus.jackson.annotate.JsonProperty;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import javax.annotation.Nullable;
+
+import org.codehaus.jackson.annotate.JsonProperty;
+
+import com.google.common.collect.ImmutableMap;
 
 public class LocationSpec {
 
-  public static LocationSpec localhost() {
-    return new LocationSpec("localhost", null);
-  }
-
-  private final String provider;
+  private final String name;
+  private final String spec;
   private final Map<String, String> config;
 
+  public static LocationSpec localhost() {
+    return new LocationSpec("localhost", "localhost", null);
+  }
 
   public LocationSpec(
-      @JsonProperty("provider") String provider,
+      @JsonProperty("name") String name,
+      @JsonProperty("spec") String spec,
       @JsonProperty("config") @Nullable Map<String, String> config
   ) {
-    this.provider = checkNotNull(provider, "provider");
+    this.name = name;
+    this.spec = checkNotNull(spec, "spec");
     this.config = (config == null) ? Collections.<String, String>emptyMap() : ImmutableMap.copyOf(config);
   }
 
-  public String getProvider() {
-    return provider;
+  public String getName() {
+    return name;
+}
+  
+  public String getSpec() {
+    return spec;
   }
 
   public Map<String, String> getConfig() {
@@ -42,9 +50,11 @@ public class LocationSpec {
 
     LocationSpec that = (LocationSpec) o;
 
+    if (name != null ? !name.equals(that.name) : that.name != null)
+        return false;
+    if (spec != null ? !spec.equals(that.spec) : that.spec != null)
+        return false;
     if (config != null ? !config.equals(that.config) : that.config != null)
-      return false;
-    if (provider != null ? !provider.equals(that.provider) : that.provider != null)
       return false;
 
     return true;
@@ -52,7 +62,8 @@ public class LocationSpec {
 
   @Override
   public int hashCode() {
-    int result = provider != null ? provider.hashCode() : 0;
+    int result = spec != null ? spec.hashCode() : 0;
+    result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (config != null ? config.hashCode() : 0);
     return result;
   }
@@ -60,7 +71,8 @@ public class LocationSpec {
   @Override
   public String toString() {
     return "LocationSpec{" +
-        "provider='" + provider + '\'' +
+        "name='" + name + '\'' +
+        "spec='" + spec + '\'' +
         ", config=" + config +
         '}';
   }

@@ -8,8 +8,12 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.rest.domain.LocationSpec;
@@ -17,6 +21,7 @@ import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.TestUtils;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
@@ -25,53 +30,66 @@ import com.sun.jersey.api.client.GenericType;
 @Test(singleThreaded = true)
 public class LocationResourceTest extends BrooklynRestResourceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(LocationResourceTest.class);
+    private URI addedLocationUri;
+    
   @Override
   protected void setUpResources() throws Exception {
     addResources();
   }
 
   @Test
+  public void testAddNewLocation() {
+    Map<String, String> expectedConfig = ImmutableMap.of(
+        "identity", "bob",
+        "credential", "CR3dential",
+        "location", "us-east-1");
+    ClientResponse response = client().resource("/v1/locations")
+        .post(ClientResponse.class, new LocationSpec("my-jungle", "aws-ec2", expectedConfig));
+
+    addedLocationUri = response.getLocation();
+    log.info("added, at: "+addedLocationUri);
+    LocationSummary location = client().resource(response.getLocation()).get(LocationSummary.class);
+    log.info(" contents: "+location);
+    assertThat(location.getSpec(), is("aws-ec2"));
+
+    assertThat(location.getConfig().get("identity"), is("bob"));
+    assertFalse(location.getConfig().containsKey("CR3dential"));
+    Assert.assertTrue(addedLocationUri.toString().startsWith("/v1/locations/"));
+  }
+
+  @Test(dependsOnMethods={"testAddNewLocation"})
   public void testListAllLocations() {
     Set<LocationSummary> locations = client().resource("/v1/locations")
         .get(new GenericType<Set<LocationSummary>>() {
         });
-    LocationSummary location = Iterables.get(locations, 0);
-    assertThat(location.getProvider(), is("localhost"));
-    assertThat(location.getLinks().get("self"), is(URI.create("/v1/locations/0")));
+    Iterable<LocationSummary> matching = Iterables.filter(locations, new Predicate<LocationSummary>() {
+        @Override
+        public boolean apply(@Nullable LocationSummary l) {
+            return "my-jungle".equals(l.getName());
+        }
+    });
+    LocationSummary location = Iterables.getOnlyElement(matching);
+    assertThat(location.getSpec(), is("aws-ec2"));
+    Assert.assertEquals(location.getLinks().get("self"), addedLocationUri);
   }
 
-  @Test
+  @Test(dependsOnMethods={"testListAllLocations"})
   public void testGetASpecificLocation() {
-    LocationSummary location = client().resource("/v1/locations/0").get(LocationSummary.class);
-    assertThat(location.getProvider(), is("localhost"));
+    LocationSummary location = client().resource(addedLocationUri.toString()).get(LocationSummary.class);
+    assertThat(location.getSpec(), is("aws-ec2"));
   }
 
-  @Test
-  public void testAddNewLocation() {
-    Map<String, String> expectedConfig = ImmutableMap.of(
-        "identity", "identity",
-        "credential", "credential",
-        "location", "us-east-1");
-    ClientResponse response = client().resource("/v1/locations")
-        .post(ClientResponse.class, new LocationSpec("aws-ec2", expectedConfig));
-
-    LocationSummary location = client().resource(response.getLocation()).get(LocationSummary.class);
-    assertThat(location.getProvider(), is("aws-ec2"));
-
-    assertThat(location.getConfig().get("identity"), is("identity"));
-    assertFalse(location.getConfig().containsKey("credential"));
-  }
-
-  @Test(dependsOnMethods = {"testAddNewLocation"})
+  @Test(dependsOnMethods = {"testGetASpecificLocation"})
   public void testDeleteLocation() {
-    final int size = getLocationStore().entries().size();
+    final int size = getLocationRegistry().getDefinedLocations().size();
 
-    ClientResponse response = client().resource("/v1/locations/0").delete(ClientResponse.class);
+    ClientResponse response = client().resource(addedLocationUri).delete(ClientResponse.class);
     assertThat(response.getStatus(), is(Response.Status.NO_CONTENT.getStatusCode()));
     TestUtils.assertEventually(new Runnable() {
        @Override
        public void run() {
-           assertThat(getLocationStore().entries().size(), is(size-1));
+           assertThat(getLocationRegistry().getDefinedLocations().size(), is(size-1));
        } 
     });
   }

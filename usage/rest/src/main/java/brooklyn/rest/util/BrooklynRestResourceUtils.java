@@ -20,15 +20,12 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation;
+import brooklyn.location.LocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
-import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.legacy.BrooklynCatalog;
-import brooklyn.rest.legacy.LocationStore;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
@@ -41,14 +38,9 @@ public class BrooklynRestResourceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynRestResourceUtils.class);
 
-    // TODO move these to mgmt context -- so REST API is stateless
-    private static LocationStore locationStore = new LocationStore();
-    static { locationStore.put(new LocationSpec("localhost", new MutableMap<String,String>())); }
-    
+    // TODO to mgmt context -- so REST API is stateless
     private static BrooklynCatalog catalog = new BrooklynCatalog(); 
-    public static void changeLocationStore(LocationStore locationStore) {
-        BrooklynRestResourceUtils.locationStore = locationStore;
-    }
+
     
     private final ManagementContext mgmt;
     
@@ -61,10 +53,10 @@ public class BrooklynRestResourceUtils {
         return catalog;
     }
     
-    public LocationStore getLocationStore() {
-        return locationStore;
+    public LocationRegistry getLocationRegistry() {
+        return mgmt.getLocationRegistry();
     }
-    
+
     /** finds the entity indicated by the given ID or name
      * <p>
      * prefers ID based lookup in which case appId is optional, and if supplied will be enforced.
@@ -147,23 +139,14 @@ public class BrooklynRestResourceUtils {
     
     public Task<?> start(Application app, ApplicationSpec spec) {
         // Start all the managed entities by asking the app instance to start in background
-        Function<String, Location> buildLocationFromRef = new Function<String, Location>() {
+        Function<String, Location> buildLocationFromId = new Function<String, Location>() {
             @Override
-            public Location apply(String ref) {
-                LocationSpec locationSpec = locationStore.getByRef(ref);
-                if (locationSpec.getProvider().equals("localhost")) {
-                    return new LocalhostMachineProvisioningLocation(MutableMap.copyOf(locationSpec.getConfig()));
-                }
-
-                Map<String, String> config = Maps.newHashMap();
-                config.put("provider", locationSpec.getProvider());
-                config.putAll(locationSpec.getConfig());
-
-                return new JcloudsLocation(config);
+            public Location apply(String id) {
+                return getLocationRegistry().resolve(id);
             }
         };
 
-        ArrayList<Location> locations = Lists.newArrayList(transform(spec.getLocations(), buildLocationFromRef));
+        ArrayList<Location> locations = Lists.newArrayList(transform(spec.getLocations(), buildLocationFromId));
         return Entities.invokeEffectorWithMap((EntityLocal)app, app, Startable.START,
                 MutableMap.of("locations", locations));
     }

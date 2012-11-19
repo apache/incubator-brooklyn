@@ -21,6 +21,9 @@ import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.trait.Startable;
+import brooklyn.location.LocationRegistry;
+import brooklyn.location.basic.BasicLocationRegistry;
+import brooklyn.management.BrooklynCatalog;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
@@ -42,6 +45,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
     protected BrooklynProperties configMap;
+    protected BasicLocationRegistry locationRegistry;
 
     // TODO leaking "this" reference; yuck
     private final RebindManager rebindManager = new RebindManagerImpl(this);
@@ -305,5 +309,17 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     @Override
     public StringConfigMap getConfig() {
         return configMap;
+    }
+
+    @Override
+    public synchronized LocationRegistry getLocationRegistry() {
+        if (locationRegistry==null) locationRegistry = new BasicLocationRegistry(this);
+        return locationRegistry;
+    }
+    
+    @Override
+    public BrooklynCatalog getCatalog() {
+        // TODO
+        return null;
     }
 }
