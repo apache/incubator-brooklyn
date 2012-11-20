@@ -1,5 +1,7 @@
 package brooklyn.location.basic.jclouds;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -27,8 +29,6 @@ import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
@@ -37,8 +37,6 @@ import brooklyn.util.text.Identifiers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
-import static org.testng.Assert.assertNotNull;
 
 public class StandaloneJcloudsTest {
 
