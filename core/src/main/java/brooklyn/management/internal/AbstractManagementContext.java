@@ -29,6 +29,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.management.internal.catalog.BasicBrooklynCatalog;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
@@ -46,6 +47,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     protected BrooklynProperties configMap;
     protected BasicLocationRegistry locationRegistry;
+    protected BasicBrooklynCatalog catalog;
 
     // TODO leaking "this" reference; yuck
     private final RebindManager rebindManager = new RebindManagerImpl(this);
@@ -318,8 +320,8 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     }
     
     @Override
-    public BrooklynCatalog getCatalog() {
-        // TODO
-        return null;
+    public synchronized BrooklynCatalog getCatalog() {
+        if (catalog==null) catalog = new BasicBrooklynCatalog(this);
+        return catalog;
     }
 }

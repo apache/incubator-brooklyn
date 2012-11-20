@@ -3,11 +3,16 @@ package brooklyn.rest.util;
 import static brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
 
+import groovy.lang.GroovyClassLoader;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+
+import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +26,12 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
+import brooklyn.management.BrooklynCatalog;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
-import brooklyn.rest.legacy.BrooklynCatalog;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
@@ -38,10 +44,6 @@ public class BrooklynRestResourceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynRestResourceUtils.class);
 
-    // TODO to mgmt context -- so REST API is stateless
-    private static BrooklynCatalog catalog = new BrooklynCatalog(); 
-
-    
     private final ManagementContext mgmt;
     
     public BrooklynRestResourceUtils(ManagementContext mgmt) {
@@ -50,7 +52,7 @@ public class BrooklynRestResourceUtils {
     }
 
     public BrooklynCatalog getCatalog() {
-        return catalog;
+        return mgmt.getCatalog();
     }
     
     public LocationRegistry getLocationRegistry() {
@@ -152,7 +154,7 @@ public class BrooklynRestResourceUtils {
     }
 
     private AbstractEntity newEntityInstance(String type, Entity owner, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        Class<? extends AbstractEntity> clazz = catalog.getEntityClass(type);
+        Class<? extends Entity> clazz = getCatalog().getEntityClass(type);
         Map<String, String> config = Maps.newHashMap(configO);
         Constructor<?>[] constructors = clazz.getConstructors();
         AbstractEntity result = null;
@@ -202,6 +204,25 @@ public class BrooklynRestResourceUtils {
                 mgmt.unmanage(application);
             }
         });
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public Response createCatalogEntryFromGroovyCode(String groovyCode) {
+        ClassLoader parent = getClass().getClassLoader();
+        GroovyClassLoader loader = new GroovyClassLoader(parent);
+
+        Class clazz = loader.parseClass(groovyCode);
+
+        if (AbstractEntity.class.isAssignableFrom(clazz)) {
+            getCatalog().addEntityClass(clazz);
+            return Response.created(URI.create("entities/" + clazz.getName())).build();
+
+        } else if (AbstractPolicy.class.isAssignableFrom(clazz)) {
+            getCatalog().addPolicyClass(clazz);
+            return Response.created(URI.create("policies/" + clazz.getName())).build();
+        }
+
+        throw WebResourceUtils.preconditionFailed("Unsupported type superclass "+clazz.getSuperclass()+"; expects Entity or Policy");
     }
 
 }

@@ -1,6 +1,6 @@
 package brooklyn.rest.domain;
 
-import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.policy.Policy;
 
 public class CatalogPolicySummary {
 
@@ -14,7 +14,7 @@ public class CatalogPolicySummary {
         this.description = description;
     }
  
-    public static CatalogPolicySummary fromType(Class<? extends AbstractPolicy> policyClass) {
+    public static CatalogPolicySummary fromType(Class<? extends Policy> policyClass) {
         // TODO description. as annotation?
         return new CatalogPolicySummary(policyClass.getCanonicalName(), null);
     }

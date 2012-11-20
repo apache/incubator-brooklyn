@@ -45,7 +45,7 @@ public class CatalogResource extends AbstractBrooklynRestResource {
         @FormDataParam("groovyCode") InputStream uploadedInputStream,
         @FormDataParam("groovyCode") FormDataContentDisposition fileDetail) throws IOException {
 
-      return brooklyn().getCatalog().createFromGroovyCode(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
+      return brooklyn().createCatalogEntryFromGroovyCode(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
     }
     
     @POST
@@ -54,7 +54,7 @@ public class CatalogResource extends AbstractBrooklynRestResource {
             @ApiParam(name = "groovyCode", value = "Groovy code for the entity or policy", required = true)
             @Valid String groovyCode
     ) {
-        return brooklyn().getCatalog().createFromGroovyCode(groovyCode);
+        return brooklyn().createCatalogEntryFromGroovyCode(groovyCode);
     }
 
     @GET

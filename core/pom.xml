@@ -16,6 +16,10 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
+    <properties>
+        <reflections.version>0.9.5</reflections.version>
+    </properties>
+    
 	<dependencies>
 		<dependency>
 			<groupId>io.brooklyn</groupId>
@@ -80,6 +84,12 @@
             <artifactId>bcprov-jdk16</artifactId>
             <version>${bouncycastle.version}</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>${reflections.version}</version>
         </dependency>
 
         <dependency>
