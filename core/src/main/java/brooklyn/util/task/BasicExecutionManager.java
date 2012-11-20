@@ -241,7 +241,7 @@ public class BasicExecutionManager implements ExecutionManager {
 					    throw Throwables.propagate(e);
 				    }
 					task.runCount++;
-					if (task.period!=null) {
+					if (task.period!=null && !task.isCancelled()) {
 						task.delay = task.period;
 						submitNewScheduledTask(flags, task);
 					}

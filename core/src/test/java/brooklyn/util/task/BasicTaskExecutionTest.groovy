@@ -2,23 +2,25 @@ package brooklyn.util.task;
 
 import static org.testng.Assert.*
 
-import java.util.Map
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import com.google.common.base.Throwables;
-
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
 import brooklyn.management.ExpirationPolicy
+
+import com.google.common.base.Stopwatch
+import com.google.common.base.Throwables
+import com.google.common.collect.Lists
 
 /**
  * Test the operation of the {@link BasicTask} class.
@@ -339,6 +341,87 @@ public class BasicTaskExecutionTest {
         log.debug "BasicTask {} was submitted by {}", tb, submitter
     }
     
+    @Test
+    public void testScheduledTaskExecutedAfterDelay() {
+        int delay = 100;
+        int maxOverhead = 250;
+        int earlyReturnGrace = 10;
+        final CountDownLatch latch = new CountDownLatch(1);
+        
+        Callable<Task> taskFactory = new Callable<Task>() {
+            public Task call() {
+                return new BasicTask(new Runnable() {
+                    public void run() {
+                        latch.countDown();
+                    }});
+            }};
+        ScheduledTask t = new ScheduledTask(taskFactory).delay(delay);
+
+        em.submit(t);
+        
+        Stopwatch stopwatch = new Stopwatch().start();
+        assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        long actualDelay = stopwatch.elapsedMillis();
+        
+        assertTrue(actualDelay > (delay-earlyReturnGrace), "actualDelay="+actualDelay+"; delay="+delay);
+        assertTrue(actualDelay < (delay+maxOverhead), "actualDelay="+actualDelay+"; delay="+delay);
+    }
+
+    @Test
+    public void testScheduledTaskExecutedAtRegularPeriod() {
+        int period = 100;
+        int maxOverhead = 250;
+        int earlyReturnGrace = 10;
+        int numTimestamps = 4;
+        final CountDownLatch latch = new CountDownLatch(1);
+        final List<Long> timestamps = Lists.newArrayList();
+        final Stopwatch stopwatch = new Stopwatch().start();
+        
+        Callable<Task> taskFactory = new Callable<Task>() {
+            public Task call() {
+                return new BasicTask(new Runnable() {
+                    public void run() {
+                        timestamps.add(stopwatch.elapsedMillis());
+                        if (timestamps.size() >= numTimestamps) latch.countDown();
+                    }});
+            }};
+        ScheduledTask t = new ScheduledTask(taskFactory).delay(1).period(period);
+        em.submit(t);
+        
+        assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        
+        long prev = timestamps.get(0);
+        for (long timestamp : timestamps.subList(1, timestamps.size())) {
+            assertTrue(timestamp > prev+period-earlyReturnGrace, "timestamps="+timestamps);
+            assertTrue(timestamp < prev+period+maxOverhead, "timestamps="+timestamps);
+            prev = timestamp;
+        }
+    }
+
+    @Test
+    public void testCanCancelScheduledTask() {
+        int period = 1;
+        int maxOverhead = 250;
+        int earlyReturnGrace = 10;
+        final AtomicLong lastTimestamp = new AtomicLong();
+        
+        Callable<Task> taskFactory = new Callable<Task>() {
+            public Task call() {
+                return new BasicTask(new Runnable() {
+                    public void run() {
+                        lastTimestamp.set(System.currentTimeMillis());
+                    }});
+            }};
+        ScheduledTask t = new ScheduledTask(taskFactory).period(period);
+        em.submit(t);
+
+        t.cancel();
+        long cancelTime = System.currentTimeMillis();
+        Thread.sleep(maxOverhead);
+                
+        assertTrue(lastTimestamp.get() < cancelTime+maxOverhead, "last="+lastTimestamp+"; cancelTime="+cancelTime);
+    }
+
     // Previously, when we used a CopyOnWriteArraySet, performance for submitting new tasks was
     // terrible, and it degraded significantly as the number of previously executed tasks increased
     // (e.g. 9s for first 1000; 26s for next 1000; 42s for next 1000).
