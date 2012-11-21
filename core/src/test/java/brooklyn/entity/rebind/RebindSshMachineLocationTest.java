@@ -26,7 +26,7 @@ public class RebindSshMachineLocationTest {
     private SshMachineLocation origLoc;
     private File mementoDir;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
@@ -35,12 +35,12 @@ public class RebindSshMachineLocationTest {
         managementContext.manage(origApp);
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testMachineUsableAfterRebind() throws Exception {
         origApp.start(ImmutableList.of(origLoc));
 

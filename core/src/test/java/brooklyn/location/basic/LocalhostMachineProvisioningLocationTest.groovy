@@ -26,9 +26,8 @@ public class LocalhostMachineProvisioningLocationTest {
         LocalhostMachineProvisioningLocation provisioner2 = new LocalhostMachineProvisioningLocation(address:"1.2.3.4");
         assertEquals(((SshMachineLocation)provisioner2.obtain()).getAddress().getHostName(), "1.2.3.4");
         
-        // Assumes that /etc/hosts contains a localhost2
-        LocalhostMachineProvisioningLocation provisioner3 = new LocalhostMachineProvisioningLocation(address:"localhost2");
-        assertEquals(((SshMachineLocation)provisioner3.obtain()).getAddress().getHostName(), "localhost2");
+        LocalhostMachineProvisioningLocation provisioner3 = new LocalhostMachineProvisioningLocation(address:"127.0.0.1");
+        assertEquals(((SshMachineLocation)provisioner3.obtain()).getAddress().getHostName(), "127.0.0.1");
     }
     
     @Test(expectedExceptions = [ NoMachinesAvailableException.class ])

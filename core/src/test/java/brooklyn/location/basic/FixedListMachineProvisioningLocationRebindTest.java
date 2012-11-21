@@ -33,10 +33,10 @@ public class FixedListMachineProvisioningLocationRebindTest {
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
-        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+        managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         
     	origLoc = new FixedListMachineProvisioningLocation.Builder()
-    			.addAddresses("localhost", "localhost2")
+    			.addAddresses("localhost", "127.0.0.1")
     			.user("myuser")
     			.keyFile("/path/to/myPrivateKeyFile")
     			.keyData("myKeyData")
