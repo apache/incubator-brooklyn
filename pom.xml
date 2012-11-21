@@ -15,13 +15,13 @@
         declaring versions, profiles, and the modules to build
     </description>
 
-    <url>http://developers.cloudsoftcorp.com/</url>
+    <url>http://brooklyn.io/</url>
 
     <licenses>
         <license>
-            <name>Monterey Developer Edition</name>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
-            <url>https://ccweb.cloudsoftcorp.com/documentation/LICENSE.txt</url>
         </license>
     </licenses>
 
