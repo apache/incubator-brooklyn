@@ -1,0 +1,156 @@
+package brooklyn.util.stream;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Locale;
+
+/** PrintStream which simply delegates to the implementation of getDelegate() */
+public abstract class DelegatingPrintStream extends PrintStream {
+    
+    public DelegatingPrintStream() {
+        super(new IllegalOutputStream());
+    }
+    
+    protected abstract PrintStream getDelegate();
+
+    public int hashCode() {
+        return getDelegate().hashCode();
+    }
+
+    public void write(byte[] b) throws IOException {
+        getDelegate().write(b);
+    }
+
+    public boolean equals(Object obj) {
+        return getDelegate().equals(obj);
+    }
+
+    public String toString() {
+        return getDelegate().toString();
+    }
+
+    public void flush() {
+        getDelegate().flush();
+    }
+
+    public void close() {
+        getDelegate().close();
+    }
+
+    public boolean checkError() {
+        return getDelegate().checkError();
+    }
+
+    public void write(int b) {
+        getDelegate().write(b);
+    }
+
+    public void write(byte[] buf, int off, int len) {
+        getDelegate().write(buf, off, len);
+    }
+
+    public void print(boolean b) {
+        getDelegate().print(b);
+    }
+
+    public void print(char c) {
+        getDelegate().print(c);
+    }
+
+    public void print(int i) {
+        getDelegate().print(i);
+    }
+
+    public void print(long l) {
+        getDelegate().print(l);
+    }
+
+    public void print(float f) {
+        getDelegate().print(f);
+    }
+
+    public void print(double d) {
+        getDelegate().print(d);
+    }
+
+    public void print(char[] s) {
+        getDelegate().print(s);
+    }
+
+    public void print(String s) {
+        getDelegate().print(s);
+    }
+
+    public void print(Object obj) {
+        getDelegate().print(obj);
+    }
+
+    public void println() {
+        getDelegate().println();
+    }
+
+    public void println(boolean x) {
+        getDelegate().println(x);
+    }
+
+    public void println(char x) {
+        getDelegate().println(x);
+    }
+
+    public void println(int x) {
+        getDelegate().println(x);
+    }
+
+    public void println(long x) {
+        getDelegate().println(x);
+    }
+
+    public void println(float x) {
+        getDelegate().println(x);
+    }
+
+    public void println(double x) {
+        getDelegate().println(x);
+    }
+
+    public void println(char[] x) {
+        getDelegate().println(x);
+    }
+
+    public void println(String x) {
+        getDelegate().println(x);
+    }
+
+    public void println(Object x) {
+        getDelegate().println(x);
+    }
+
+    public PrintStream printf(String format, Object... args) {
+        return getDelegate().printf(format, args);
+    }
+
+    public PrintStream printf(Locale l, String format, Object... args) {
+        return getDelegate().printf(l, format, args);
+    }
+
+    public PrintStream format(String format, Object... args) {
+        return getDelegate().format(format, args);
+    }
+
+    public PrintStream format(Locale l, String format, Object... args) {
+        return getDelegate().format(l, format, args);
+    }
+
+    public PrintStream append(CharSequence csq) {
+        return getDelegate().append(csq);
+    }
+
+    public PrintStream append(CharSequence csq, int start, int end) {
+        return getDelegate().append(csq, start, end);
+    }
+
+    public PrintStream append(char c) {
+        return getDelegate().append(c);
+    }
+    
+}

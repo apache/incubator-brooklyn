@@ -92,9 +92,7 @@
         <testng.version>6.7</testng.version>
         <mockito.version>1.8.4</mockito.version>
         <whirr.version>0.8.1</whirr.version>
-        <mortbay.jetty.version>6.1.26</mortbay.jetty.version>
-        <slf4j.version>1.5.11</slf4j.version>
-        <!-- NB: slf4j 1.6.x seems to change some signatures which breaks e.g. grails 1.3; grails may ask for 1.5.8 but that's okay -->
+        <slf4j.version>1.6.4</slf4j.version>
         <xstream.version>1.3.1</xstream.version>
         <jackson.version>1.9.10</jackson.version>
         <jansi.version>1.2.1</jansi.version>
@@ -106,6 +104,7 @@
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
+        <jetty.version>8.1.4.v20120524</jetty.version>
         <git-like-cli.version>0.3</git-like-cli.version>
 
         <includedTestGroups />
@@ -635,7 +634,8 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>usage/web-console</module>
+                <module>usage/rest</module>
+                <module>usage/jsgui</module>
                 <module>usage/launcher</module>
                 <module>usage/cli</module>
                 <module>usage/all</module>

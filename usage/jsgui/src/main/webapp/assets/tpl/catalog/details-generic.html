@@ -1,0 +1,14 @@
+
+<div class="catalog-details catalog-details-generic">
+
+<% if ((typeof title !== 'undefined') && (title.length > 0)) { %>
+    <h3><%= title %></h3>
+<% } %>
+
+<% if (typeof json === 'undefined') { %>
+    <i>Loading...</i>
+<% } else { %>
+    <textarea readonly="readonly" rows="25" style="width:100%;"><%= json %></textarea>
+<% } %>
+
+</div>

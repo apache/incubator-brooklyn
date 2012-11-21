@@ -1,0 +1,18 @@
+
+This dir contains resources which can be useful at dev time.
+Specifically:
+
+
+# Non-minimised Javascript
+
+Where appropriate we use minimised javascript in the WAR to cut down the file size.
+To use non-minimised JS during dev/test/debug install the non-minimised versions kept here
+(and not put in the WAR) by doing:
+
+    cp src/main/dev/js/libs/*.js src/main/webapp/assets/js/libs/
+
+But be careful not to git commit the non-minimised js!
+
+
+
+

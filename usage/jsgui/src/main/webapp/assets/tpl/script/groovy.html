@@ -1,0 +1,68 @@
+<div id="message-bar" class="label-important hide">
+</div>
+
+<div id="groovy-ui-container">
+    
+    <div class="output">
+        <div class="throbber"><img src="/assets/images/throbber.gif"/></div>
+        
+        <div class="toggler-region error">
+            <div class="toggler-header">
+                <div class="toggler-icon icon-chevron-down"></div>
+                <div><b>Error</b></div>
+            </div>
+            <div class="for-textarea"><textarea readonly="readonly" placeholder="no error"></textarea></div>
+        </div>
+            
+        <div class="toggler-region result">
+            <div class="toggler-header">
+                <div class="toggler-icon icon-chevron-down"></div>
+                <div><b>Result</b></div>
+            </div>
+            <div class="for-textarea"><textarea readonly="readonly" placeholder="no result"></textarea></div>
+        </div>
+
+        <div class="toggler-region stdout">
+            <div class="toggler-header">
+                <div class="toggler-icon icon-chevron-down"></div>
+                <div><b>Output (stdout)</b></div>
+            </div>
+            <div class="for-textarea"><textarea readonly="readonly"></textarea></div>
+        </div>
+
+        <div class="toggler-region stderr">
+            <div class="toggler-header">
+                <div class="toggler-icon icon-chevron-down"></div>
+                <div><b>Output (stderr)</b></div>
+            </div>
+            <div class="for-textarea"><textarea readonly="readonly"></textarea></div>
+        </div>
+    </div>
+
+    <div class="input">
+        <div class="toggler-region">
+            <div class="toggler-header">
+                <div class="toggler-icon icon-chevron-down"></div>
+                <div><h3>Groovy Scripting</h3></div>
+            </div>
+            
+            <div class="groovy-scripting-text">
+                Enter code to run on the Brooklyn Server.
+                <p><ul>
+                <li><code>mgmt</code> is the management context</li>
+                <li><code>last</code> is the result of your last successful script</li>
+                <li><code>data</code> is user-session map for storing your data</li>
+                </ul><p>
+                <a id="load-example">Click to load an example.</a>
+            </div>
+        </div>
+        
+        <div class="toggler-region for-textarea">
+            <textarea id="script" placeholder="Enter script here"></textarea>
+        </div>
+        <div class="submit">
+            <button id="submit" class="btn btn-info btn-mini">Submit</button>
+        </div>
+    </div>
+
+</div>

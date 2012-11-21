@@ -492,4 +492,14 @@ public class Strings {
         return context.toString();
     }
 
+    /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */
+    public static void checkNonEmpty(String s) {
+        if (s==null) throw new IllegalArgumentException("String must not be null");
+        if (s.isEmpty()) throw new IllegalArgumentException("String must not be empty");
+    }
+    /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */
+    public static void checkNonEmpty(String s, String message) {
+        if (s==null || s.isEmpty()) throw new IllegalArgumentException(message);
+    }
+
 }

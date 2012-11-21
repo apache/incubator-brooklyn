@@ -80,6 +80,11 @@ public class NetworkUtils {
             }
         }
     }
+    /** returns the first port available on the local machine >= the port supplied */
+    public static int nextAvailablePort(int port) {
+        while (!isPortAvailable(port)) port++;
+        return port;
+    }
 
     public static boolean isPortValid(Integer port) {
         return (port!=null && port>=NetworkUtils.MIN_PORT_NUMBER && port<=NetworkUtils.MAX_PORT_NUMBER);
