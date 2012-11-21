@@ -1,17 +1,27 @@
 package brooklyn.util;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Closeables;
+import com.google.common.io.Files;
 
 public class ResourceUtilsTest {
 
@@ -31,7 +41,35 @@ public class ResourceUtilsTest {
     public void tearDown() throws Exception {
         if (tempFile != null) tempFile.delete();
     }
-    
+
+    @Test
+    public void testWriteStreamToTempFile() throws Exception {
+        tempFile = ResourceUtils.writeToTempFile(new ByteArrayInputStream("mycontents".getBytes()), "resourceutils-test", ".txt");
+        try {
+            List<String> lines = Files.readLines(tempFile, Charsets.UTF_8);
+            assertEquals(lines, ImmutableList.of("mycontents"));
+        } finally {
+            tempFile.delete();
+        }
+    }
+
+    @Test
+    public void testPropertiesStreamToTempFile() throws Exception {
+        Properties props = new Properties();
+        props.setProperty("mykey", "myval");
+        tempFile = ResourceUtils.writeToTempFile(props, "resourceutils-test", ".txt");
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(tempFile);
+            Properties props2 = new Properties();
+            props2.load(fis);
+            assertEquals(props2.getProperty("mykey"), "myval");
+        } finally {
+            Closeables.closeQuietly(fis);
+            tempFile.delete();
+        }
+    }
+
     @Test
     public void testGetResourceViaClasspathWithPrefix() throws Exception {
         InputStream stream = utils.getResourceFromUrl("classpath://brooklyn/config/sample.properties");

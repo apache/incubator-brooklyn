@@ -39,8 +39,8 @@ public class JmxPostProcessors {
         return out
     }
     
-    public static Map tabularDataToMapOfMaps(TabularData table) {
-        HashMap<String, Object> out = []
+    public static Map<List<?>, Map<String,Object>> tabularDataToMapOfMaps(TabularData table) {
+        HashMap<List<?>,Map<String,Object>> out = []
         table.keySet().each { k ->
             final Object[] kValues = ((List<?>)k).toArray();
             CompositeData v = (CompositeData) table.get(kValues)
@@ -49,7 +49,7 @@ public class JmxPostProcessors {
         return out
     }
     
-    public static Map compositeDataToMap(CompositeData data) {
+    public static Map<String,Object> compositeDataToMap(CompositeData data) {
         HashMap<String, Object> out = []
         data.getCompositeType().keySet().each { String key ->
             def old = out.put(key, data.get(key))
