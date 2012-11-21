@@ -22,7 +22,7 @@ import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.HttpTestUtils;
+import brooklyn.test.HttpTestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
@@ -30,6 +30,9 @@ import com.google.common.collect.Iterables
 
 /**
  * Test the operation of the {@link NginxController} class, for URL mapped groups (two different pools).
+ * 
+ * These tests require that /etc/hosts contains some extra entries, such as:
+ *     127.0.0.1       localhost localhost1 localhost2 localhost3 localhost4
  */
 public class NginxUrlMappingIntegrationTest {
     
