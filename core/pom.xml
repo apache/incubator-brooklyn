@@ -17,7 +17,7 @@
 	</parent>
 
     <properties>
-        <reflections.version>0.9.5</reflections.version>
+        <reflections.version>0.9.8</reflections.version>
     </properties>
     
 	<dependencies>

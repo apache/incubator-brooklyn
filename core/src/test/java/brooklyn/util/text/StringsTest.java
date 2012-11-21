@@ -95,4 +95,14 @@ public class StringsTest {
         assertEquals(Strings.replaceAll("xyz", MutableMap.builder().put("x","a").put("y","").build()), "az");
     }
 
+    public void testContainsLiteralCaseInsensitive() {
+        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "ell"));
+        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "H"));
+        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "O"));
+        assertFalse(Strings.containsLiteralCaseInsensitive("hello", "X"));
+        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "ELL"));
+        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "hello"));
+        assertTrue(Strings.containsLiteralCaseInsensitive("hELlo", "Hello"));
+        assertFalse(Strings.containsLiteralCaseInsensitive("hello", "!"));
+    }
 }

@@ -131,17 +131,17 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         }
     }
     
+    // TODO save / serialize
+    
     // for testing
     void disablePersistence() {
-        // TODO Auto-generated method stub
-        
+        // persistence isn't enabled yet anyway (have to manually save things,
+        // defining the format and file etc)
     }
 
     BasicLocationDefinition localhost(String id) {
         return new BasicLocationDefinition(id, "localhost", "localhost", null);
     }
-
-    // TODO save
     
     /** to catch circular references */
     protected ThreadLocal<Set<String>> specsSeen = new ThreadLocal<Set<String>>();

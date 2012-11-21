@@ -20,6 +20,8 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -29,6 +31,7 @@ import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.collect.Collections2;
@@ -42,6 +45,9 @@ import com.wordnik.swagger.core.ApiParam;
 @Produces(MediaType.APPLICATION_JSON)
 public class ApplicationResource extends AbstractBrooklynRestResource {
 
+  @SuppressWarnings("unused")
+  private static final Logger log = LoggerFactory.getLogger(ApplicationResource.class);
+  
   private final ObjectMapper mapper = new ObjectMapper();
 
   @GET
@@ -147,7 +153,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
 
   private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {
     if (applicationSpec.getType()!=null) {
-        if (!brooklyn().getCatalog().containsEntity(applicationSpec.getType())) {
+        if (brooklyn().getCatalog().getCatalogItem(applicationSpec.getType())==null) {
             throw WebResourceUtils.notFound("Undefined application type '%s'", applicationSpec.getType());
         }
         if (applicationSpec.getEntities()!=null) {
@@ -156,13 +162,15 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
         return;
     }
     for (EntitySpec entitySpec : applicationSpec.getEntities()) {
-      if (!brooklyn().getCatalog().containsEntity(entitySpec.getType())) {
+      if (brooklyn().getCatalog().getCatalogItem(entitySpec.getType())==null) {
         throw WebResourceUtils.notFound("Undefined entity type '%s'", entitySpec.getType());
       }
     }
   }
+  @SuppressWarnings("deprecation")
   private void checkLocationsAreValid(ApplicationSpec applicationSpec) {
     for (String locationId : applicationSpec.getLocations()) {
+        locationId = BrooklynRestResourceUtils.fixLocation(locationId);
       if (!brooklyn().getLocationRegistry().canResolve(locationId)) {
         throw WebResourceUtils.notFound("Undefined location '%s'", locationId);
       }

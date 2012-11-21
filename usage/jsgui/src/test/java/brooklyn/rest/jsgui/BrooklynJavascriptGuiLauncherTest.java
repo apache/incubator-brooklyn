@@ -29,6 +29,7 @@ public class BrooklynJavascriptGuiLauncherTest {
     @Test
     public void testJavascriptWithRest() throws Exception {
         server = BrooklynJavascriptGuiLauncher.startJavascriptAndRest();
+        BrooklynRestApiLauncherTest.enableJavaClassPathUrlsForScanning(server);
         BrooklynRestApiLauncherTest.enableAnyoneLogin(server);
         checkUrlContains("/index.html", "Brooklyn");
         checkUrlContains("/v1/catalog/entities", "Tomcat");

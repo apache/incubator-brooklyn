@@ -136,7 +136,17 @@ public class ResourceUtilsTest {
         InputStream stream = utils.getResourceFromUrl("sftp://"+user+"@localhost:"+tempFile.getAbsolutePath());
         assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
     }
-    
+
+    @Test
+    public void testDataUrl() throws Exception {
+        assertEquals(utils.getResourceAsString("data:,hello"), "hello");
+        assertEquals(utils.getResourceAsString("data:,hello%20world"), "hello world");
+        // above is correct. below are not valid ... but we accept them anyway
+        assertEquals(utils.getResourceAsString("data:hello"), "hello");
+        assertEquals(utils.getResourceAsString("data://hello"), "hello");
+        assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
+    }
+
     @Test
     public void testMergePaths() throws Exception {
         assertEquals(ResourceUtils.mergePaths("a","b"), "a/b");

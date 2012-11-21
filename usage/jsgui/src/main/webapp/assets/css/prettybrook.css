@@ -666,3 +666,11 @@ div.for-textarea > textarea {
     text-decoration: underline;
     cursor: hand; cursor: pointer;
 }
+
+/** input type="file" should be display:none with hand-rolled nicer looking widgets used instead
+    (the native ones can't be much modified, and are notoriously ugly; but line-height 0 at least makes them line up) */
+input[type="file"] {
+    line-height: 0;
+    width: 300px;
+}
+

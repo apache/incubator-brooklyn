@@ -2,6 +2,7 @@ package brooklyn.rest;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.reflections.util.ClasspathHelper;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
@@ -9,6 +10,8 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.testing.mocks.RestMockApp;
 import brooklyn.util.ResourceUtils;
@@ -42,9 +45,15 @@ public class BrooklynRestApiLauncherTest {
 
     private static void checkRestCatalogApplications(Server server) {
         enableAnyoneLogin(server);
+        enableJavaClassPathUrlsForScanning(server);
         String rootUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort();
         String catalogApplications = new ResourceUtils(null).getResourceAsString(rootUrl+"/v1/catalog/applications");
         Assert.assertTrue(catalogApplications.contains(RestMockApp.class.getCanonicalName()));
+    }
+
+    public static void enableJavaClassPathUrlsForScanning(Server server) {
+        ManagementContext mgmt = (AbstractManagementContext) ((ContextHandler)server.getHandler()).getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        ((LocalManagementContext)mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
     }
 
     public static void enableAnyoneLogin(Server server) {

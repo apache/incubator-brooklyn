@@ -167,6 +167,7 @@ public class Reflections {
 	 * Returns a constructor that accepts the given arguments, or null if no such constructor is
 	 * accessible.
 	 */
+    @SuppressWarnings("unchecked")
     public static <T> Constructor<T> findCallabaleConstructor(Class<T> clazz, Object[] args) {
         Class<?>[] argTypes = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
@@ -438,7 +439,7 @@ public class Reflections {
 	            return (Class<? super T>) clazz;
 	        }
 	        inspected.add(clazz);
-	        List toAdd = Arrays.asList(clazz.getInterfaces());
+	        List<Class<?>> toAdd = Arrays.asList(clazz.getInterfaces());
 	        toinspect.addAll( toAdd );
 	        if (clazz.getSuperclass() != null) toinspect.add(clazz.getSuperclass());
 	        toinspect.removeAll(inspected);

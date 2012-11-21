@@ -16,20 +16,9 @@ define(["underscore", "backbone"], function (_, Backbone) {
             }
         },
         idFromSelfLink:function () {
-            // TODO replace with get('id')
             return this.get('id');
-//            if (this.has('links')) {
-//                var links = this.get('links')
-//                if (links['self'] && links['self'] != '') {
-//                    var s = links['self']
-//                    var id = s.substring(s.lastIndexOf('/') + 1)
-//                    if (_.isEqual(s, this.urlRoot + '/' + id)) return id
-//                }
-//            }
-//            return void 0
         },
         initialize:function () {
-//            this.set({'id':this.idFromSelfLink()})
         },
         addConfig:function (key, value) {
             if (key) {
@@ -62,10 +51,6 @@ define(["underscore", "backbone"], function (_, Backbone) {
             var name = this.get('name')
             if (name!=null && name.length>0) return name
             return this.get('spec')
-//            var suffix=this.getConfigByName("location");
-//            if (suffix==null) suffix=this.getConfigByName("endpoint")
-//            if (suffix!=null) suffix=":"+suffix; else suffix="";
-//            return this.get("provider")+suffix
         }
 
     })

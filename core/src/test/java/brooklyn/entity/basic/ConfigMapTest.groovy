@@ -195,12 +195,14 @@ public class ConfigMapTest {
 
     @InheritConstructors
     public static class MyBaseEntity extends AbstractEntity {
+        private MyBaseEntity(String ignored) { /* just here to prevent invalid class from duplicated inherited constructors */ }
         public static final BasicConfigKey SUPER_KEY_1 = [ String, "superKey1", "superKey1 key", "superKey1 default"]
         public static final BasicConfigKey SUPER_KEY_2 = [ String, "superKey2", "superKey2 key", "superKey2 default"]
     }
     
     @InheritConstructors
     public static class MySubEntity extends MyBaseEntity implements MyInterface {
+        private MySubEntity(String ignored) { /* just here to prevent invalid class from duplicated inherited constructors */ }
         public static final BasicConfigKey SUPER_KEY_1 = [ MyBaseEntity.SUPER_KEY_1, "overridden superKey1 default"]
         public static final BasicConfigKey SUB_KEY_2 = [ String, "subKey2", "subKey2 key", "subKey2 default"]
     }
@@ -211,6 +213,7 @@ public class ConfigMapTest {
     
     @InheritConstructors
     public static class MyOtherEntity extends AbstractEntity {
+        private MyOtherEntity(String ignored) { /* just here to prevent invalid class from duplicated inherited constructors */ }
         public static final BasicConfigKey<Integer> INT_KEY = [ Integer, "intKey", "int key", null]
         public static final BasicConfigKey<String> STRING_KEY = [ String, "stringKey", "string key", null]
         public static final BasicConfigKey<Object> OBJECT_KEY = [ Object, "objectKey", "object key", null]

@@ -13,4 +13,11 @@ public class Exceptions {
         return Throwables.propagate(throwable);
     }
 
+    /** propagates exceptions which are fatal, ie those which one rarely if ever wants to capture
+     * (such as InterruptedException) */
+    public static void propagateIfFatal(Throwable throwable) {
+        if (throwable instanceof InterruptedException)
+            throw new RuntimeInterruptedException((InterruptedException)throwable);
+    }
+
 }

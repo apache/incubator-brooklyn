@@ -2,6 +2,7 @@ package brooklyn.management;
 
 import java.util.Collection;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -98,9 +99,11 @@ public interface ManagementContext {
      * Whether this management context is still running, or has been terminated.
      */
     public boolean isRunning();
-    
+
+    /** Record of configured locations and location resolvers */
     LocationRegistry getLocationRegistry();
     
+    /** Record of configured Brooklyn entities (and templates and policies) which can be loaded */
     BrooklynCatalog getCatalog();
-    
+
 }

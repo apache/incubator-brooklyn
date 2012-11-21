@@ -2,7 +2,6 @@ package brooklyn.rest.util;
 
 import static brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
-
 import groovy.lang.GroovyClassLoader;
 
 import java.lang.reflect.Constructor;
@@ -17,6 +16,8 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -26,13 +27,13 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
-import brooklyn.management.BrooklynCatalog;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.util.MutableMap;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -144,6 +145,7 @@ public class BrooklynRestResourceUtils {
         Function<String, Location> buildLocationFromId = new Function<String, Location>() {
             @Override
             public Location apply(String id) {
+                id = fixLocation(id);
                 return getLocationRegistry().resolve(id);
             }
         };
@@ -154,7 +156,7 @@ public class BrooklynRestResourceUtils {
     }
 
     private AbstractEntity newEntityInstance(String type, Entity owner, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        Class<? extends Entity> clazz = getCatalog().getEntityClass(type);
+        Class<? extends Entity> clazz = getCatalog().loadClassByType(type, Entity.class);
         Map<String, String> config = Maps.newHashMap(configO);
         Constructor<?>[] constructors = clazz.getConstructors();
         AbstractEntity result = null;
@@ -206,23 +208,34 @@ public class BrooklynRestResourceUtils {
         });
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "rawtypes" })
     public Response createCatalogEntryFromGroovyCode(String groovyCode) {
-        ClassLoader parent = getClass().getClassLoader();
+        ClassLoader parent = getCatalog().getRootClassLoader();
         GroovyClassLoader loader = new GroovyClassLoader(parent);
 
         Class clazz = loader.parseClass(groovyCode);
 
         if (AbstractEntity.class.isAssignableFrom(clazz)) {
-            getCatalog().addEntityClass(clazz);
+            CatalogItem<?> item = getCatalog().addItem(clazz);
+            log.info("REST created "+item);
             return Response.created(URI.create("entities/" + clazz.getName())).build();
 
         } else if (AbstractPolicy.class.isAssignableFrom(clazz)) {
-            getCatalog().addPolicyClass(clazz);
+            CatalogItem<?> item = getCatalog().addItem(clazz);
+            log.info("REST created "+item);
             return Response.created(URI.create("policies/" + clazz.getName())).build();
         }
 
         throw WebResourceUtils.preconditionFailed("Unsupported type superclass "+clazz.getSuperclass()+"; expects Entity or Policy");
+    }
+
+    @Deprecated
+    public static String fixLocation(String locationId) {
+        if (locationId.startsWith("/v1/locations/")) {
+            log.warn("REST API using legacy URI syntax for location: "+locationId);
+            locationId = Strings.removeFromStart(locationId, "/v1/locations/");
+        }
+        return locationId;
     }
 
 }

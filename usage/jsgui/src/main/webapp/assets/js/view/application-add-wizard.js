@@ -96,6 +96,8 @@ define([
         },
         submitApplication:function (event) {
             var that = this
+            var $modal = $('#modal-container .modal')
+            $modal.fadeTo(500,0.5);
             $.ajax({
                 url:'/v1/applications',
                 type:'post',
@@ -103,11 +105,12 @@ define([
                 processData:false,
                 data:JSON.stringify(this.model.toJSON()),
                 success:function (data) {
-                    var $modal = $('#modal-container .modal')
                     $modal.modal('hide')
+                    $modal.fadeTo(500,1);
                     if (that.options.callback) that.options.callback();
                 },
                 error:function (data) {
+                    that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
                 	that.steps[that.currentStep].view.showFailure()
                 }
             })

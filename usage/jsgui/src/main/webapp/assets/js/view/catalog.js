@@ -7,7 +7,7 @@ define([
     "view/catalog-details-location",
     "view/catalog-add-location-modal", 
     
-    "formatJson", "bootstrap"
+    "formatJson", "bootstrap", "jquery-form"
 ], function (_, $, Backbone, Location, 
         CatalogPageHtml, 
         DetailsGenericHtml, 
@@ -40,7 +40,6 @@ define([
             this.genericTabs = ['applications','entities','policies']
             _.bindAll(this, "renderLocationsAccordion");
         },
-        fetchModels: function() {},
         render:function (eventName) {
             this.$el.html(_.template(CatalogPageHtml, {}))
             this.$(".accordion-body", this.$el).hide()
@@ -147,13 +146,19 @@ define([
             var $entityForm = $('#new-entity-form'),
                 $entityModal = $('#new-entity-modal'),
                 self = this
+            $entityModal.fadeTo(500,0.5);
             var options = {
+                url:'/v1/catalog/',
+                type:'post',
                 success:function (data) {
                     $entityModal.modal('hide')
-                    self.fetchModels()
+                    $entityModal.fadeTo(500,1);
+                    self.refresh()
                 },
-                url:'/v1/catalog/',
-                type:'post'
+                error: function(data) {
+                    $entityModel.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
+                    // TODO render the error (want better feedback than this poor-man's flashing)
+                }
             }
             $entityForm.ajaxSubmit(options)
             return false

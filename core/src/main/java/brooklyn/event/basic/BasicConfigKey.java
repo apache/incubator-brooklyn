@@ -129,4 +129,16 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec) throws ExecutionException, InterruptedException {
         return Tasks.resolveValue(v, type, exec);
     }
+    
+    public static class StringConfigKey extends BasicConfigKey<String> {
+        private static final long serialVersionUID = 8207099275514012088L;
+        
+        public StringConfigKey(String name) {
+            super(String.class, name);
+        }
+        public StringConfigKey(String name, String description, String defaultValue) {
+            super(String.class, name, description, defaultValue);
+        }
+    }
+    
 }
