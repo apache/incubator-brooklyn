@@ -112,18 +112,22 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");
 
-    private final Pool<SshTool> vanillaSshToolPool;
+    private transient  Pool<SshTool> vanillaSshToolPool;
     
     public SshMachineLocation() {
         this(MutableMap.of());
     }
-    
-    public SshMachineLocation(Map properties) {
+
+     public SshMachineLocation(Map properties) {
         super(properties);
         
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
         
-        vanillaSshToolPool = BasicPool.<SshTool>builder()
+        vanillaSshToolPool = buildVanillaPool();
+    }
+
+    private BasicPool<SshTool> buildVanillaPool() {
+        return BasicPool.<SshTool>builder()
                 .name(name+":"+address+":"+System.identityHashCode(this))
                 .supplier(new Supplier<SshTool>() {
                         @Override public SshTool get() {
@@ -663,4 +667,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public boolean hasMutex(String mutexId) {
         return mutexSupport.hasMutex(mutexId);
     }
+
+    //We want want the SshMachineLocation to be serializable and therefor the pool needs to be dealt with correctly.
+    //In this case we are not serializing the pool (we made the field transient) and create a new pool when deserialized.
+    //This fix is currently needed for experiments, but isn't used in normal Brooklyn usage.
+    private void readObject(java.io.ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        vanillaSshToolPool = buildVanillaPool();
+    }
+
 }
