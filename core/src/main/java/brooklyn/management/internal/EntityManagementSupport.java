@@ -1,5 +1,7 @@
 package brooklyn.management.internal;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,8 +14,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
-
-import com.google.common.base.Throwables;
+import brooklyn.util.exceptions.Exceptions;
 
 /**
  * Encapsulates management activities at an entity.
@@ -50,117 +51,114 @@ public class EntityManagementSupport {
     
     // TODO the application
     
-    protected boolean managementContextUsable = false;
-    protected boolean currentlyDeployed = false;
-    protected boolean everDeployed = false;
+    protected final AtomicBoolean managementContextUsable = new AtomicBoolean(false);
+    protected final AtomicBoolean currentlyDeployed = new AtomicBoolean(false);
+    protected final AtomicBoolean everDeployed = new AtomicBoolean(false);
+    protected final AtomicBoolean managementFailed = new AtomicBoolean(false);
     
     private volatile EntityChangeListener entityChangeListener = EntityChangeListener.NOOP;
 
-    public boolean isDeployed() { return currentlyDeployed; }
+    public boolean isDeployed() { return currentlyDeployed.get(); }
     public boolean isNoLongerManaged() {
         return wasDeployed() && !isDeployed();
     }
-    public boolean wasDeployed() { return everDeployed; }
+    public boolean wasDeployed() { return everDeployed.get(); }
 
     public void onRebind(ManagementTransitionInfo info) {
         nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_REBINDING);
     }
     
     public void onManagementStarting(ManagementTransitionInfo info) {
-        synchronized (this) {
-            assert nonDeploymentManagementContext!=null && nonDeploymentManagementContext.getMode().isPreManaged() : "Already managed: "+entity+" ("+nonDeploymentManagementContext+")";
-            assert managementContext==null || managementContext.equals(info.getManagementContext()) : "Already has management context: "+managementContext+"; can't set "+info.getManagementContext();
-            this.managementContext = info.getManagementContext();
-            nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTING);
+        try {
+            synchronized (this) {
+                if (nonDeploymentManagementContext == null || !nonDeploymentManagementContext.getMode().isPreManaged()) {
+                    throw new IllegalStateException("Already managed: "+entity+" ("+nonDeploymentManagementContext+")");
+                }
+                if (managementContext != null && !managementContext.equals(info.getManagementContext())) {
+                    throw new IllegalStateException("Already has management context: "+managementContext+"; can't set "+info.getManagementContext());
+                }
+                this.managementContext = info.getManagementContext();
+                nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTING);
+                
+                nonDeploymentManagementContext.getSubscriptionManager().setDelegate((AbstractSubscriptionManager) managementContext.getSubscriptionManager());
+                nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForSubscribing();
+    
+                managementContextUsable.set(true);
+                currentlyDeployed.set(true);
+                everDeployed.set(true);
+                
+                entityChangeListener = new EntityChangeListenerImpl();
+            }
             
-            nonDeploymentManagementContext.getSubscriptionManager().setDelegate((AbstractSubscriptionManager) managementContext.getSubscriptionManager());
-            nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForSubscribing();
-
-            managementContextUsable = true;
-            currentlyDeployed = true;
-            everDeployed = true;
+            /*
+             * TODO framework starting events - phase 1, including rebind
+             *  - establish hierarchy (child, groups, etc; construction if necessary on rebind)
+             *  - set location
+             *  - set local config values
+             *  - set saved sensor values
+             *  - register subscriptions -- BUT nothing is allowed to execute
+             *  [these operations may be done before we invoke starting also; above can happen in any order;
+             *  sensor _publications_ and executor submissions are queued]
+             *  then:  set the management context and the entity is "managed" from the perspective of external viewers (ManagementContext.isManaged(entity) returns true)
+             */
             
-            entityChangeListener = new EntityChangeListener() {
-                @Override
-                public void onChildrenChanged() {
-                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
-                }
-                @Override
-                public void onLocationsChanged() {
-                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
-                }
-                @Override
-                public void onMembersChanged() {
-                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
-                }
-                @Override
-                public void onPoliciesChanged() {
-                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
-                }
-                @Override public void onAttributeChanged(AttributeSensor<?> attribute) {
-                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
-                }
-                @Override public void onEffectorStarting(Effector<?> effector) {
-                    // ignore
-                }
-                @Override public void onEffectorCompleted(Effector<?> effector) {
-                    getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
-                }
-            };
+            entity.onManagementStarting();
+        } catch (Throwable t) {
+            managementFailed.set(true);
+            throw Exceptions.propagate(t);
         }
-        
-        // TODO framework starting events - phase 1, including rebind
-//        - establish hierarchy (child, groups, etc; construction if necessary on rebind)
-//        - set location
-//        - set local config values
-//        - set saved sensor values
-//        - register subscriptions -- BUT nothing is allowed to execute
-//        [these operations may be done before we invoke starting also; above can happen in any order;
-//        sensor _publications_ and executor submissions are queued]
-//        then:  set the management context and the entity is "managed" from the perspective of external viewers (ManagementContext.isManaged(entity) returns true)
-        
-        entity.onManagementStarting();
-
-//        synchronized (this) {
-//            nonDeploymentManagementContext.getSubscriptionManager().setDelegate((AbstractSubscriptionManager) managementContext.getSubscriptionManager());
-//            nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForSubscribing();
-//        }
     }
 
     public void onManagementStarted(ManagementTransitionInfo info) {
-        synchronized (this) {
-            assert nonDeploymentManagementContext!=null && nonDeploymentManagementContext.getMode()==NonDeploymentManagementContextMode.MANAGEMENT_STARTING : "Already managed: "+entity+" ("+nonDeploymentManagementContext+")";
-            assert managementContext == info.getManagementContext() : "Already has management context: "+managementContext+"; can't set "+info.getManagementContext();
-            nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTED);
-//        - set derived/inherited config values
-//        - publish all queued sensors
-//        - start all queued executions (e.g. subscription delivery)
-//        [above happens in exactly this order, at each entity]
-//        then: the entity internally knows it fully managed (ManagementSupport.isManaged() returns true -- though not sure we need that);
-//            subsequent sensor events and executions occur directly (no queueing)
-            nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForPublishing();
-            //TODO more of the above
-        
-            // TODO custom started activities
-        }
-        
-        entity.onManagementBecomingMaster();
-        entity.onManagementStarted();
-        
-        synchronized (this) {
-            nonDeploymentManagementContext = null;
+        try {
+            synchronized (this) {
+                if (nonDeploymentManagementContext == null || nonDeploymentManagementContext.getMode() != NonDeploymentManagementContextMode.MANAGEMENT_STARTING) {
+                    throw new IllegalStateException("Already managed: "+entity+" ("+nonDeploymentManagementContext+")");
+                }
+                if (managementContext != info.getManagementContext()) {
+                    throw new IllegalStateException("Already has management context: "+managementContext+"; can't set "+info.getManagementContext());
+                }
+                nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTED);
+                
+                /*
+                 * - set derived/inherited config values
+                 * - publish all queued sensors
+                 * - start all queued executions (e.g. subscription delivery)
+                 * [above happens in exactly this order, at each entity]
+                 * then: the entity internally knows it fully managed (ManagementSupport.isManaged() returns true -- though not sure we need that);
+                 * subsequent sensor events and executions occur directly (no queueing)
+                 */
+                
+                nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForPublishing();
+                //TODO more of the above
+            
+                // TODO custom started activities
+            }
+            
+            entity.onManagementBecomingMaster();
+            entity.onManagementStarted();
+            
+            synchronized (this) {
+                nonDeploymentManagementContext = null;
+            }
+        } catch (Throwable t) {
+            managementFailed.set(true);
+            throw Exceptions.propagate(t);
         }
     }
     
     public void onManagementStopping(ManagementTransitionInfo info) {
         synchronized (this) {
-            assert managementContext == info.getManagementContext();
-            while (nonDeploymentManagementContext!=null && nonDeploymentManagementContext.getMode()==NonDeploymentManagementContextMode.MANAGEMENT_STARTING) {
+            if (managementContext != info.getManagementContext()) {
+                throw new IllegalStateException("Has different management context: "+managementContext+"; expected "+info.getManagementContext());
+            }
+            while (!managementFailed.get() && nonDeploymentManagementContext!=null && 
+                    nonDeploymentManagementContext.getMode()==NonDeploymentManagementContextMode.MANAGEMENT_STARTING) {
                 // still becoming managed
                 try {
                     wait(100);
                 } catch (InterruptedException e) {
-                    Throwables.propagate(e);
+                    Exceptions.propagate(e);
                 }
             }
             if (nonDeploymentManagementContext==null) {
@@ -184,10 +182,12 @@ public class EntityManagementSupport {
     
     public void onManagementStopped(ManagementTransitionInfo info) {
         synchronized (this) {
-            assert managementContext == info.getManagementContext();
+            if (managementContext != info.getManagementContext()) {
+                throw new IllegalStateException("Has different management context: "+managementContext+"; expected "+info.getManagementContext());
+            }
             entityChangeListener = EntityChangeListener.NOOP;
-            managementContextUsable = false;
-            currentlyDeployed = false;
+            managementContextUsable.set(false);
+            currentlyDeployed.set(false);
             executionContext = null;
             subscriptionContext = null;
         }
@@ -201,12 +201,12 @@ public class EntityManagementSupport {
         }
     }
 
-    public synchronized boolean isManagementContextReal() {
-        return managementContextUsable;
+    public boolean isManagementContextReal() {
+        return managementContextUsable.get();
     }
     
     public synchronized ManagementContext getManagementContext(boolean returnNonDeploymentIfNotDeployed) {
-        if (managementContextUsable) return managementContext;
+        if (managementContextUsable.get()) return managementContext;
         if (returnNonDeploymentIfNotDeployed) {
             return nonDeploymentManagementContext;
         } else {
@@ -216,7 +216,7 @@ public class EntityManagementSupport {
     }
     public synchronized ExecutionContext getExecutionContext() {
         if (executionContext!=null) return executionContext;
-        if (managementContextUsable) {
+        if (managementContextUsable.get()) {
             executionContext = managementContext.getExecutionContext(entity);
             return executionContext;
         }
@@ -224,7 +224,7 @@ public class EntityManagementSupport {
     }
     public synchronized SubscriptionContext getSubscriptionContext() {
         if (subscriptionContext!=null) return subscriptionContext;
-        if (managementContextUsable) {
+        if (managementContextUsable.get()) {
             subscriptionContext = managementContext.getSubscriptionContext(entity);
             return subscriptionContext;
         }
@@ -254,5 +254,36 @@ public class EntityManagementSupport {
     
     public EntityChangeListener getEntityChangeListener() {
         return entityChangeListener;
+    }
+    
+    private class EntityChangeListenerImpl implements EntityChangeListener {
+        @Override
+        public void onChildrenChanged() {
+            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
+        public void onLocationsChanged() {
+            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
+        public void onMembersChanged() {
+            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
+        public void onPoliciesChanged() {
+            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
+        public void onAttributeChanged(AttributeSensor<?> attribute) {
+            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
+        public void onEffectorStarting(Effector<?> effector) {
+            // ignore
+        }
+        @Override
+        public void onEffectorCompleted(Effector<?> effector) {
+            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+        }
     }
 }

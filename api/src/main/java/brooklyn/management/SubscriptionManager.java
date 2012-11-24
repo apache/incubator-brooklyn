@@ -32,8 +32,8 @@ public interface SubscriptionManager {
      * </ul>
      * 
      * @param flags optional parameters to be associated with the subscription
-     * @param producer entity to listen to
-     * @param sensor sensor channel of events to listen to
+     * @param producer entity to listen to, or null to listen to all entities
+     * @param sensor sensor channel of events to listen to, or null for all sensors from the given producer(s)
      * @param listener callback to invoke when an event occurs
      * @return an id for this subscription
      * 
