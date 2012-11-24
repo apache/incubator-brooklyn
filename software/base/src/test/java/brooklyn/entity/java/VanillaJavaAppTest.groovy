@@ -24,12 +24,14 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.Lifecycle
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.adapter.JmxHelper
 import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.basic.PortRanges;
 import brooklyn.test.TestUtils
 import brooklyn.util.ResourceUtils
 import brooklyn.util.crypto.FluentKeySigner
@@ -51,7 +53,7 @@ class VanillaJavaAppTest {
     private static Class MAIN_CPU_HUNGRY_CLASS = ExampleVanillaMainCpuHungry.class;
     
     AbstractApplication app
-    SshMachineLocation loc
+    LocalhostMachineProvisioningLocation loc
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
@@ -59,12 +61,12 @@ class VanillaJavaAppTest {
             BROOKLYN_THIS_CLASSPATH = new ResourceUtils(MAIN_CLASS).getClassLoaderDir();
         }
         app = new AbstractApplication() {}
-        loc = new SshMachineLocation(address:"localhost")
+        loc = new LocalhostMachineProvisioningLocation(address:"localhost")
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        app?.stop()
+        if (app != null) Entities.destroy(app);
     }
 
     @Test
@@ -178,25 +180,27 @@ class VanillaJavaAppTest {
 
     @Test(groups=["Integration"])
     public void testStartsWithJmxPortSpecifiedInConfig() {
+        int port = 53405;
         String main = MAIN_CLASS.getCanonicalName();
         VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
-        javaProcess.setConfig(UsesJmx.JMX_PORT, 54321)
+        javaProcess.setConfig(UsesJmx.JMX_PORT, port)
         app.start([loc])
 
-        assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), 54321)
+        assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), port)
     }
 
     @Test(groups=["Integration"])
     public void testStartsWithSecureJmxPortSpecifiedInConfig() {
+        int port = 53406;
         String main = MAIN_CLASS.getCanonicalName();
         VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
-        javaProcess.setConfig(UsesJmx.JMX_PORT, 54321)
+        javaProcess.setConfig(UsesJmx.JMX_PORT, port)
         javaProcess.setConfig(UsesJmx.JMX_SSL_ENABLED, true)
         
         app.start([loc])
         // will fail above if JMX can't connect, but also do some add'l checks
         
-        assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), 54321);
+        assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), port);
 
         // good key+cert succeeds        
         new AsserterForJmxConnection(javaProcess).

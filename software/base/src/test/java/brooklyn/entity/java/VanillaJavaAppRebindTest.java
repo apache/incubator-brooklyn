@@ -12,7 +12,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -37,7 +37,7 @@ public class VanillaJavaAppRebindTest {
     private LocalManagementContext managementContext;
     private File mementoDir;
     private TestApplication app;
-    private SshMachineLocation loc;
+    private LocalhostMachineProvisioningLocation loc;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -48,13 +48,13 @@ public class VanillaJavaAppRebindTest {
             BROOKLYN_THIS_CLASSPATH = new ResourceUtils(MAIN_CLASS).getClassLoaderDir();
         }
         app = new TestApplication();
-        loc = new SshMachineLocation(MutableMap.of("address", "localhost"));
+        loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
         managementContext.manage(app);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
-        if (app != null && Entities.isManaged(app)) app.stop();
+        if (app != null) Entities.destroy(app);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
     
@@ -64,7 +64,7 @@ public class VanillaJavaAppRebindTest {
         
         app = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         managementContext = (LocalManagementContext) app.getManagementContext();
-        loc = (SshMachineLocation) Iterables.get(app.getLocations(), 0, null);
+        loc = (LocalhostMachineProvisioningLocation) Iterables.get(app.getLocations(), 0, null);
     }
     
     @Test(groups="Integration")
