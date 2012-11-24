@@ -22,25 +22,31 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class BasicPoolTest {
 
-    private AtomicInteger counter;
     private List<Integer> closedVals;
     private Supplier<Integer> supplier;
     Function<Integer,Void> closer;
     private ListeningExecutorService executor;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        counter = new AtomicInteger(0);
+        // Note we use final theCounter variable, rather than just a field, to guarantee 
+        // that each sequential test run won't be accessing the same field value if a test
+        // doesn't tear down and keeps executing in another thread for some reason.
+        
+        final AtomicInteger theCounter = new AtomicInteger(0);
         closedVals = new CopyOnWriteArrayList<Integer>();
         
         supplier = new Supplier<Integer>() {
             @Override public Integer get() {
-                return counter.getAndIncrement();
+                return theCounter.getAndIncrement();
             }
         };
         closer = new Function<Integer,Void>() {
@@ -152,14 +158,16 @@ public class BasicPoolTest {
     public void testConcurrentCallsNeverHaveSameVal() throws Exception {
         final Pool<Integer> pool = BasicPool.<Integer>builder().supplier(supplier).build();
         final Set<Lease<Integer>> leases = Collections.newSetFromMap(new ConcurrentHashMap<Lease<Integer>, Boolean>());
+        List<ListenableFuture<?>> futures = Lists.newArrayList();
         
         for (int i = 0; i < 1000; i++) {
-            executor.submit(new Runnable() {
+            futures.add(executor.submit(new Runnable() {
                 public void run() {
                     leases.add(pool.leaseObject());
                 }
-            });
+            }));
         }
+        Futures.allAsList(futures).get();
         
         Set<Integer> currentlyLeased = Sets.newLinkedHashSet();
         for (Lease<Integer> lease : leases) {
