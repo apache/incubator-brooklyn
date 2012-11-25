@@ -109,8 +109,8 @@ class EntityExecutionManagerTest {
     @Test(groups="Integration")
     public void testEffectorTasksGcedSoNoOome() throws Exception {
         BrooklynProperties brooklynProperties = new BrooklynProperties();
-        brooklynProperties.put("brooklyn.gc.period", "1");
-        brooklynProperties.put("brooklyn.gc.maxTasksPerTag", "2");
+        brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1);
+        brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
         TestEntity entity = new TestEntity([owner:app])
         Entities.startManagement(app, brooklynProperties);
@@ -133,8 +133,8 @@ class EntityExecutionManagerTest {
     public void testEffectorTasksGcedForMaxPerTag() throws Exception {
         int maxNumTasks = 2;
         BrooklynProperties brooklynProperties = new BrooklynProperties();
-        brooklynProperties.put("brooklyn.gc.period", "1000");
-        brooklynProperties.put("brooklyn.gc.maxTasksPerTag", "2");
+        brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1000);
+        brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
         TestEntity entity = new TestEntity([owner:app])
         Entities.startManagement(app, brooklynProperties);
@@ -165,8 +165,8 @@ class EntityExecutionManagerTest {
         int maxOverhead = 250;
         int earlyReturnGrace = 10;
         BrooklynProperties brooklynProperties = new BrooklynProperties();
-        brooklynProperties.put("brooklyn.gc.period", "1");
-        brooklynProperties.put("brooklyn.gc.maxTaskAge", ""+maxTaskAge);
+        brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1);
+        brooklynProperties.put(BrooklynGarbageCollector.MAX_TASK_AGE, maxTaskAge);
         
         TestEntity entity = new TestEntity([owner:app])
         Entities.startManagement(app, brooklynProperties);
