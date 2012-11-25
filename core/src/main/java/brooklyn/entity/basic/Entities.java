@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
@@ -423,7 +424,7 @@ public class Entities {
             throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
         return false;
     }
-    
+
     /** brings this entity under management, creating a local management context if necessary
      * (assuming root is an application).
      * returns existing management context if there is one (non-deployment),
@@ -451,6 +452,21 @@ public class Entities {
             throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
         ManagementContext mgmt = new LocalManagementContext();
         mgmt.manage(o);
+        return mgmt;
+    }
+
+    /**
+     * Starts managing the given (unmanaged) app, setting the given brooklyn properties on the new
+     * management context.
+     * 
+     * @see startManagement(Entity)
+     */
+    public static ManagementContext startManagement(Application app, BrooklynProperties props) {
+        if (isManaged(app)) {
+            throw new IllegalStateException("Application "+app+" is already managed, so can't set brooklyn properties");
+        }
+        ManagementContext mgmt = new LocalManagementContext(props);
+        mgmt.manage(app);
         return mgmt;
     }
     

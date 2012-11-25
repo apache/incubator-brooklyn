@@ -16,6 +16,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
@@ -44,6 +45,7 @@ public class TestEntity extends AbstractEntity implements Startable {
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
     
     public static final Effector<Void> MY_EFFECTOR = new MethodEffector<Void>(TestEntity.class, "myEffector");
+    public static final Effector<Object> IDENTITY_EFFECTOR = new MethodEffector<Object>(TestEntity.class, "identityEffector");
     
     int sequenceValue = 0;
     AtomicInteger counter = new AtomicInteger(0);
@@ -66,6 +68,12 @@ public class TestEntity extends AbstractEntity implements Startable {
     @Description("an example of a no-arg effector")
     public void myEffector() {
         if (LOG.isTraceEnabled()) LOG.trace("In myEffector for {}", this);
+    }
+    
+    @Description("returns the arg passed in")
+    public Object identityEffector(@NamedParameter("arg") @Description("val to return") Object arg) {
+        if (LOG.isTraceEnabled()) LOG.trace("In identityEffector for {}", this);
+        return arg;
     }
     
     public AtomicInteger getCounter() {

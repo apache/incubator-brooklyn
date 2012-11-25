@@ -6,7 +6,6 @@ import groovy.time.TimeDuration;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -60,8 +59,10 @@ public class TypeCoercions {
 
         //deal with primitive->primitive casting
         if (isPrimitiveOrBoxer(targetType) && isPrimitiveOrBoxer(value.getClass())) {
-            // Allow Java to do its normal casting later; don't fail here
-            return (T) value;
+            // Don't just rely on Java to do its normal casting later; if caller writes
+            // long `l = coerce(new Integer(1), Long.class)` then letting java do its casting will fail,
+            // because an Integer will not automatically be unboxed and cast to a long
+            return castPrimitive(value, targetType);
         }
 
         //deal with string->primitive
