@@ -344,7 +344,7 @@ public class BasicTaskExecutionTest {
     public void testScheduledTaskExecutedAfterDelay() {
         int delay = 100;
         int maxOverhead = 250;
-        int earlyReturnGrace = 10;
+        int earlyReturnGrace = 25; // saw 13ms early return on jenkins!
         final CountDownLatch latch = new CountDownLatch(1);
         
         Callable<Task> taskFactory = new Callable<Task>() {
@@ -370,7 +370,7 @@ public class BasicTaskExecutionTest {
     public void testScheduledTaskExecutedAtRegularPeriod() {
         int period = 100;
         int maxOverhead = 250;
-        int earlyReturnGrace = 10;
+        int earlyReturnGrace = 25; // saw 13ms early return on jenkins!
         int numTimestamps = 4;
         final CountDownLatch latch = new CountDownLatch(1);
         final List<Long> timestamps = Lists.newArrayList();
@@ -401,7 +401,7 @@ public class BasicTaskExecutionTest {
     public void testCanCancelScheduledTask() {
         int period = 1;
         int maxOverhead = 250;
-        int earlyReturnGrace = 10;
+        int earlyReturnGrace = 25; // saw 13ms early return on jenkins!
         final AtomicLong lastTimestamp = new AtomicLong();
         
         Callable<Task> taskFactory = new Callable<Task>() {
