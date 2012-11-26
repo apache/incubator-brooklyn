@@ -8,12 +8,12 @@ import java.util.Map;
 
 import javax.servlet.DispatcherType;
 
-import org.eclipse.jetty.http.ssl.SslContextFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +34,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
@@ -48,6 +49,8 @@ public class BrooklynWebServer {
 
     protected Server server;
 
+    private WebAppContext rootContext;
+    
     @SetFromFlag
     protected PortRange port = PortRanges.fromString("8081+");
     @SetFromFlag
@@ -68,10 +71,6 @@ public class BrooklynWebServer {
 
     private ManagementContext managementContext;
 
-    public BrooklynWebServer(ManagementContext managementContext) {
-        this(new LinkedHashMap(), managementContext);
-    }
-
     @SetFromFlag(defaultVal = "false")
     private boolean httpsEnabled;
 
@@ -87,6 +86,10 @@ public class BrooklynWebServer {
     @SetFromFlag
     private String trustStorePassword;
 
+
+    public BrooklynWebServer(ManagementContext managementContext) {
+        this(Maps.newLinkedHashMap(), managementContext);
+    }
 
     /**
      * accepts flags:  port,
@@ -215,7 +218,7 @@ public class BrooklynWebServer {
             }
 
             SslContextFactory sslContextFactory = new SslContextFactory();
-            sslContextFactory.setKeyStore(checkFileExists(keystorePath, "keystore"));
+            sslContextFactory.setKeyStorePath(checkFileExists(keystorePath, "keystore"));
             sslContextFactory.setKeyStorePassword(keystorePassword);
             if (!Strings.isEmpty(truststorePath)) {
                 sslContextFactory.setTrustStore(checkFileExists(truststorePath, "truststore"));
@@ -235,7 +238,7 @@ public class BrooklynWebServer {
             deploy(pathSpec, warUrl);
         }
 
-        WebAppContext rootContext = deploy("/", war);
+        rootContext = deploy("/", war);
         installAsServletFilter(rootContext);
 
         server.setHandler(handlers);
@@ -304,7 +307,7 @@ public class BrooklynWebServer {
         return context;
     }
 
-    Thread shutdownHook = null;
+    private Thread shutdownHook = null;
     protected synchronized void addShutdownHook() {
         if (shutdownHook!=null) return;
         // some webapps (eg grails) can generate a lot of output if we don't shut down the browser first 
@@ -331,5 +334,9 @@ public class BrooklynWebServer {
     
     public Server getServer() {
         return server;
+    }
+    
+    public WebAppContext getRootContext() {
+        return rootContext;
     }
 }

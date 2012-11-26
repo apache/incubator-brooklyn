@@ -39,7 +39,7 @@ public class WebAppRunnerTest {
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.putAll(bigProps);
-        brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.web.console.security.AnyoneSecurityProvider")
+        brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
         return new BrooklynWebServer(bigProps, new LocalManagementContext(brooklynProperties));
     }
     /** @deprecated since 0.4.0. user createWebServer, or better, use BrooklynLauncher.newLauncher() */
@@ -108,7 +108,7 @@ public class WebAppRunnerTest {
     @Test
     public void testStartWithLauncher() {
         BrooklynServerDetails details = BrooklynLauncher.newLauncher().
-            setAttribute("brooklyn.webconsole.security.provider",'brooklyn.web.console.security.AnyoneSecurityProvider').
+            setAttribute("brooklyn.webconsole.security.provider",'brooklyn.rest.security.provider.AnyoneSecurityProvider').
             webapp("/hello", "hello-world.war").launch();
         
         try {

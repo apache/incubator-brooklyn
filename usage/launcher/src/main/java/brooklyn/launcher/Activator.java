@@ -11,7 +11,7 @@ public class Activator implements BundleActivator {
 
     public void start(BundleContext context) throws Exception {
         //does nothing on startup, just makes resources available
-        //(maybe it wants to register a service that others could use?)
+        //TODO maybe it wants to register a service that others could use?
         log.info("Starting brooklyn-launcher OSGi bundle");
     }
 
