@@ -10,9 +10,9 @@ define([
 
     var HomeView = Backbone.View.extend({
         tagName:"div",
-        className:"container container-fluid",
         events:{
             'click #add-new-application':'createApplication',
+            'click .addApplication':'createApplication',
             'click .delete':'deleteApplication'
         },
         
@@ -57,7 +57,7 @@ define([
             }
             
             this.callPeriodically(function() {
-            	that.refresh(that);     	            	
+            	//that.refresh(that);     	            	
             }, 5000)
             this.refresh(this)
         },
@@ -96,9 +96,9 @@ define([
         renderCollection:function () {
             var $tableBody = this.$('#applications-table-body').empty()
             if (this.collection==null)
-            	$tableBody.append("<td colspan='3'><i>No data available</i></td>");
+            	$tableBody.append("<tr><td colspan='3'><i>No data available</i></td></tr>");
             else if (this.collection.isEmpty())
-            	$tableBody.append("<td colspan='3'><i>No applications deployed</i></td>");
+            	$tableBody.append("<tr><td colspan='3'><i>No applications deployed</i></td></tr>");
             else this.collection.each(function (app) {
                 var appView = new HomeView.AppEntryView({model:app})
                 if (this._appViews[app.cid]) {
