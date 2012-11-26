@@ -3,7 +3,7 @@ package brooklyn.catalog.internal;
 import brooklyn.policy.Policy;
 
 
-public class CatalogPolicyItemDto extends AbstractCatalogItem<Policy> {
+public class CatalogPolicyItemDto extends CatalogItemDtoAbstract<Policy> {
     
     @Override
     public CatalogItemType getCatalogItemType() {

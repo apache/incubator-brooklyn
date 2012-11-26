@@ -148,7 +148,7 @@ public class CatalogResource extends AbstractBrooklynRestResource {
         if (Strings.isNonEmpty(fragment))
             filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralCaseInsensitive(fragment)));
         return ImmutableList.copyOf(Iterables.transform(
-                brooklyn().getCatalog().findMatching(Predicates.and(filters)),
+                brooklyn().getCatalog().getCatalogItems(Predicates.and(filters)),
                 CatalogPredicates.ID_OF_ITEM_TRANSFORMER));        
     }
     

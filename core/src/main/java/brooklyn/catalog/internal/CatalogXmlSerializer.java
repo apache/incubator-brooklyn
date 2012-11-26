@@ -25,8 +25,8 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
         xstream.aliasType("entity", CatalogEntityItemDto.class);
         xstream.aliasType("policy", CatalogPolicyItemDto.class);
         
-        xstream.useAttributeFor(AbstractCatalogItem.class, "type");
-        xstream.useAttributeFor(AbstractCatalogItem.class, "name");
+        xstream.useAttributeFor(CatalogItemDtoAbstract.class, "type");
+        xstream.useAttributeFor(CatalogItemDtoAbstract.class, "name");
         
         xstream.useAttributeFor(CatalogClasspathDto.class, "scan");
         xstream.addImplicitCollection(CatalogClasspathDto.class, "entries", "entry", String.class);

@@ -46,11 +46,11 @@ public class CatalogDtoTest {
         
         CatalogDo m3Catalog = new CatalogDo(CatalogDto.newNamedInstance("MapR M3", null));
         m3Catalog.addToClasspath("file://~/.m2/repository/io/cloudsoft/brooklyn-mapr/1.0.0-SNAPSHOT/brooklyn-mapr.jar");
-        m3Catalog.addEntry(AbstractCatalogItem.newTemplate(
+        m3Catalog.addEntry(CatalogItemDtoAbstract.newTemplate(
                 "io.brooklyn.mapr.M3App", "M3 Application"));
-        m3Catalog.addEntry(AbstractCatalogItem.newEntity(
+        m3Catalog.addEntry(CatalogItemDtoAbstract.newEntity(
                 "io.brooklyn.mapr.m3.ZookeperWorkerNode", "M3 Zookeeper+Worker Node"));
-        m3Catalog.addEntry(AbstractCatalogItem.newEntity(
+        m3Catalog.addEntry(CatalogItemDtoAbstract.newEntity(
                 "io.brooklyn.mapr.m3.WorkerNode", "M3 Worker Node"));
         root.addCatalog(m3Catalog.dto);
         
@@ -61,7 +61,7 @@ public class CatalogDtoTest {
         cdhCatalog.addToClasspath(
                 "file://~/.m2/repository/io/cloudsoft/brooklyn-cdh/1.0.0-SNAPSHOT/brooklyn-cdh.jar",
                 "file://~/.m2/repository/io/cloudsoft/brooklyn-cdh/1.0.0-SNAPSHOT/whirr-cm.jar");
-        cdhCatalog.addEntry(AbstractCatalogItem.newTemplate(
+        cdhCatalog.addEntry(CatalogItemDtoAbstract.newTemplate(
                 "io.brooklyn.cloudera.ClouderaForHadoopWithManager",
                 "RECOMMENDED: CDH Hadoop Application with Cloudera Manager"));
         root.addCatalog(cdhCatalog.dto);

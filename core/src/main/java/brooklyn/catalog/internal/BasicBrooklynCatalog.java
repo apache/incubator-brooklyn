@@ -22,6 +22,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.thoughtworks.xstream.core.util.CompositeClassLoader;
 
@@ -30,19 +31,19 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private static final Logger log = LoggerFactory.getLogger(BasicBrooklynCatalog.class);
     
     private final ManagementContext mgmt;
-    private CatalogDo catalog;
+    private final CatalogDo catalog;
     private CatalogDo manualAdditionsCatalog;
     private LoadedClassLoader manualAdditionsClasses;
     
     public BasicBrooklynCatalog(final ManagementContext mgmt, final CatalogDto dto) {
-        this.mgmt = mgmt;
+        this.mgmt = Preconditions.checkNotNull(mgmt, "managementContext");
         this.catalog = new CatalogDo(dto);
         
         mgmt.getExecutionManager().submit(MutableMap.of("name", "loading catalog"), new Runnable() {
             public void run() {
                 log.debug("Loading catalog for "+mgmt);
                 catalog.load(mgmt, null);
-               if (log.isDebugEnabled())
+                if (log.isDebugEnabled())
                     log.debug("Loaded catalog for "+mgmt+": "+catalog);
             }
         });
@@ -71,7 +72,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (type==null || type.isAssignableFrom(result.getCatalogItemJavaType())) 
             return (CatalogItem<T>)result;
         return null;
-
     }
     
     public ClassLoader getRootClassLoader() {
@@ -82,7 +82,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @Override
     public <T> Class<? extends T> loadClass(CatalogItem<T> item) {
         if (log.isDebugEnabled())
-            log.debug("Instantiating catalog item "+item);
+            log.debug("Loading class for catalog item "+item);
         Preconditions.checkNotNull(item);
         CatalogItemDo<?> loadedItem = getCatalogItemDo(item.getId());
         if (loadedItem==null) throw new NoSuchElementException("Unable to load '"+item.getId()+"' to instantiate it");
@@ -92,7 +92,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @SuppressWarnings("unchecked")
     @Override
     public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
-        Iterable<CatalogItem<Object>> resultL = findMatching(CatalogPredicates.type(Predicates.equalTo(typeName)));
+        Iterable<CatalogItem<Object>> resultL = getCatalogItems(CatalogPredicates.type(Predicates.equalTo(typeName)));
         if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalot item for type "+typeName);
         CatalogItem<Object> resultI = resultL.iterator().next();
         if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
@@ -101,17 +101,17 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return (Class<? extends T>) loadClass(resultI);
     }
 
-    private <T> AbstractCatalogItem<T> getAbstractCatalogItem(CatalogItem<T> item) {
+    private <T> CatalogItemDtoAbstract<T> getAbstractCatalogItem(CatalogItem<T> item) {
         while (item instanceof CatalogItemDo) item = ((CatalogItemDo<T>)item).itemDto;
         if (item==null) return null;
-        if (item instanceof AbstractCatalogItem) return (AbstractCatalogItem<T>) item;
+        if (item instanceof CatalogItemDtoAbstract) return (CatalogItemDtoAbstract<T>) item;
         throw new IllegalStateException("Cannot unwrap catalog item '"+item+"' (type "+item.getClass()+") to restore DTO");
     }
 
     @Override
     public void addItem(CatalogItem<?> item) {
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
-        Preconditions.checkNotNull(item);
+        Preconditions.checkNotNull(item, "item");
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.addEntry(getAbstractCatalogItem(item));
     }
@@ -119,7 +119,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @Override
     public CatalogItem<?> addItem(Class<?> type) {
         log.debug("Adding manual catalog item to "+mgmt+": "+type);
-        Preconditions.checkNotNull(type);
+        Preconditions.checkNotNull(type, "type");
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsClasses.addClass(type);
         return manualAdditionsCatalog.classpath.addCatalogEntry(type);
@@ -161,15 +161,25 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T> Iterable<CatalogItem<T>> findMatching(Predicate<? super CatalogItem<T>> filter) {
-        Iterable<CatalogItemDo<?>> filtered = Iterables.filter(catalog.getCache().values(), (Predicate<CatalogItem<?>>)(Predicate) filter);
-        Function<CatalogItemDo<?>, CatalogItem<T>> toDto = new Function<CatalogItemDo<?>, CatalogItem<T>>() {
+    public <T> Iterable<CatalogItem<T>> getCatalogItems() {
+        return ImmutableList.copyOf((Iterable)catalog.getCache().values());
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    public <T> Iterable<CatalogItem<T>> getCatalogItems(Predicate<? super CatalogItem<T>> filter) {
+        Iterable<CatalogItemDo<T>> filtered = Iterables.filter((Iterable)catalog.getCache().values(), (Predicate<CatalogItem<T>>)(Predicate) filter);
+        return Iterables.transform(filtered, BasicBrooklynCatalog.<T,T>itemDoToDto());
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    private static <T2,T> Function<CatalogItemDo<T2>, CatalogItem<T>> itemDoToDto() {
+        return new Function<CatalogItemDo<T2>, CatalogItem<T>>() {
             @Override
-            public CatalogItem<T> apply(@Nullable CatalogItemDo<?> item) {
+            public CatalogItem<T> apply(@Nullable CatalogItemDo<T2> item) {
                 return (CatalogItem<T>) item.getDto();
             }
         };
-        return Iterables.transform(filtered, toDto);
     }
 
     transient CatalogXmlSerializer serializer;

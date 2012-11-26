@@ -20,6 +20,7 @@ import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.ReflectionScanner;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.thoughtworks.xstream.core.util.CompositeClassLoader;
@@ -43,8 +44,8 @@ public class CatalogClasspathDo {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogClasspathDo.class);
     
-    private CatalogDo catalog;
-    private CatalogClasspathDto classpath;
+    private final CatalogDo catalog;
+    private final CatalogClasspathDto classpath;
     
     boolean isLoaded = false;
     private URL[] urls;
@@ -54,7 +55,7 @@ public class CatalogClasspathDo {
     private boolean classloaderLoaded = false;
 
     public CatalogClasspathDo(CatalogDo catalog) {
-        this.catalog = catalog;
+        this.catalog = Preconditions.checkNotNull(catalog, "catalog");
         this.classpath = catalog.dto.classpath;
     }
     
@@ -63,14 +64,14 @@ public class CatalogClasspathDo {
     synchronized void load() {
         if (classpath==null) return;
 
-        if (classpath.entries==null) urls = new URL[0];
+        if (classpath.getEntries()==null) urls = new URL[0];
         else {
-            urls = new URL[classpath.entries.size()];
+            urls = new URL[classpath.getEntries().size()];
             for (int i=0; i<urls.length; i++) {
                 try {
-                    urls[i] = new URL(classpath.entries.get(i));
+                    urls[i] = new URL(classpath.getEntries().get(i));
                 } catch (MalformedURLException e) {
-                    log.error("Invalid URL "+classpath.entries.get(i)+" in definition of catalog "+catalog+"; skipping catalog");
+                    log.error("Invalid URL "+classpath.getEntries().get(i)+" in definition of catalog "+catalog+"; skipping catalog");
                     throw Exceptions.propagate(e);
                 }
             }
@@ -88,7 +89,7 @@ public class CatalogClasspathDo {
         ReflectionScanner scanner = null;
         if (!catalog.isLocal()) {
             log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);
-        } else if (classpath.entries==null || classpath.entries.isEmpty()) {
+        } else if (classpath.getEntries()==null || classpath.getEntries().isEmpty()) {
             // no entries; check if we are local, and if so scan the default classpath
             if (!catalog.isLocal()) {
                 log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);
@@ -167,7 +168,7 @@ public class CatalogClasspathDo {
     
     /** augments the given item with annotations and class data for the given class, then adds to catalog 
      * @return */
-    public CatalogItem<?> addCatalogEntry(AbstractCatalogItem<?> item, Class<?> c) {
+    public CatalogItem<?> addCatalogEntry(CatalogItemDtoAbstract<?> item, Class<?> c) {
         Catalog annotations = c.getAnnotation(Catalog.class);
         item.type = c.getName();
         item.name = firstNonEmpty(c.getSimpleName(), c.getName());
@@ -205,7 +206,7 @@ public class CatalogClasspathDo {
     /** adds the given URL as something this classloader will load
      * (however no scanning is done) */
     public void addToClasspath(URL u, boolean updateDto) {
-        if (updateDto) classpath.entries.add(u.toExternalForm());
+        if (updateDto) classpath.getEntries().add(u.toExternalForm());
         addToClasspath(new URLClassLoader(new URL[] { u }));
     }
 

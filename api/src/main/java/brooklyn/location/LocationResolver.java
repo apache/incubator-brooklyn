@@ -1,6 +1,7 @@
 package brooklyn.location;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public interface LocationResolver {
 
@@ -12,7 +13,7 @@ public interface LocationResolver {
      * (eg containing credentials for many clouds, and resolver picks out the ones applicable here) --
      * commonly it is a BrooklynProperties instance, read from .brooklyn/brooklyn.properties
      * <p>
-     * throws if not found */ 
+     * throws {@link NoSuchElementException} if not found */ 
     Location newLocationFromString(@SuppressWarnings("rawtypes") Map properties, String spec);
 
 }

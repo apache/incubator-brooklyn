@@ -2,7 +2,7 @@ package brooklyn.catalog.internal;
 
 import brooklyn.entity.Application;
 
-public class CatalogTemplateItemDto extends AbstractCatalogItem<Application> {
+public class CatalogTemplateItemDto extends CatalogItemDtoAbstract<Application> {
 
     @Override
     public CatalogItemType getCatalogItemType() {

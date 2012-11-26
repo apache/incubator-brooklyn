@@ -16,10 +16,6 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-    <properties>
-        <reflections.version>0.9.8</reflections.version>
-    </properties>
-    
 	<dependencies>
 		<dependency>
 			<groupId>io.brooklyn</groupId>

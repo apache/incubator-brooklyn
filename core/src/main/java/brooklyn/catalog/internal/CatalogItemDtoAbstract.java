@@ -2,7 +2,7 @@ package brooklyn.catalog.internal;
 
 import brooklyn.catalog.CatalogItem;
 
-public abstract class AbstractCatalogItem<T> implements CatalogItem<T> {
+public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
     
     // attributes
     String id;
@@ -56,7 +56,7 @@ public abstract class AbstractCatalogItem<T> implements CatalogItem<T> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static <T extends AbstractCatalogItem> T set(T target, String id, String type, String name, String description) {
+    private static <T extends CatalogItemDtoAbstract> T set(T target, String id, String type, String name, String description) {
         target.id = id;
         target.type = type;
         target.name = name;

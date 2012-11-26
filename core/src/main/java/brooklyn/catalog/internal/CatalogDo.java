@@ -15,6 +15,7 @@ import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Preconditions;
 import com.thoughtworks.xstream.core.util.CompositeClassLoader;
 
 public class CatalogDo {
@@ -34,7 +35,7 @@ public class CatalogDo {
     ClassLoader recursiveClassLoader;
 
     public CatalogDo(CatalogDto dto) {
-        this.dto = dto;
+        this.dto = Preconditions.checkNotNull(dto);
     }
     
     boolean isLoaded() {
@@ -114,9 +115,9 @@ public class CatalogDo {
                 cache.putAll(child.getCache());
         }
         if (dto.entries!=null) {
-            List<AbstractCatalogItem<?>> entriesReversed = new ArrayList<AbstractCatalogItem<?>>(dto.entries);
+            List<CatalogItemDtoAbstract<?>> entriesReversed = new ArrayList<CatalogItemDtoAbstract<?>>(dto.entries);
             Collections.reverse(entriesReversed);
-            for (AbstractCatalogItem<?> entry: entriesReversed)
+            for (CatalogItemDtoAbstract<?> entry: entriesReversed)
                 cache.put(entry.getId(), new CatalogItemDo(this, entry));
         }
         
@@ -134,9 +135,9 @@ public class CatalogDo {
      * callers may prefer {@link CatalogClasspathDo#addCatalogEntry(AbstractCatalogItem, Class))}
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public synchronized void addEntry(AbstractCatalogItem<?> entry) {
+    public synchronized void addEntry(CatalogItemDtoAbstract<?> entry) {
         if (dto.entries==null) 
-            dto.entries = new ArrayList<AbstractCatalogItem<?>>();
+            dto.entries = new ArrayList<CatalogItemDtoAbstract<?>>();
         dto.entries.add(entry);
         if (cache!=null)
             cache.put(entry.getId(), new CatalogItemDo(this, entry));

@@ -28,7 +28,7 @@ public class CatalogScanTest {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), "");
         defaultCatalog = new LocalManagementContext(props).getCatalog();        
-        log.info("ENTITIES loaded: "+defaultCatalog.findMatching(Predicates.alwaysTrue()));
+        log.info("ENTITIES loaded: "+defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
     @SuppressWarnings("deprecation")
@@ -38,21 +38,21 @@ public class CatalogScanTest {
         props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), 
                 "data:,"+URLEncoder.encode("<catalog><classpath scan=\"annotations\"/></catalog>"));
         annotsCatalog = new LocalManagementContext(props).getCatalog();        
-        log.info("ENTITIES loaded with annotation: "+annotsCatalog.findMatching(Predicates.alwaysTrue()));
+        log.info("ENTITIES loaded with annotation: "+annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
     @Test
     public void testDefaultScansAll() {
         loadDefaultCatalog();
         
-        Iterable<CatalogItem<Object>> bases = defaultCatalog.findMatching(CatalogPredicates.name(Predicates.containsPattern("MyBaseEntity")));
+        Iterable<CatalogItem<Object>> bases = defaultCatalog.getCatalogItems(CatalogPredicates.name(Predicates.containsPattern("MyBaseEntity")));
         Assert.assertNotEquals(Iterables.size(bases), 0);
         
-        Iterable<CatalogItem<Object>> asdfjkls = defaultCatalog.findMatching(CatalogPredicates.name(Predicates.containsPattern("__asdfjkls__shouldnotbefound")));
+        Iterable<CatalogItem<Object>> asdfjkls = defaultCatalog.getCatalogItems(CatalogPredicates.name(Predicates.containsPattern("__asdfjkls__shouldnotbefound")));
         Assert.assertEquals(Iterables.size(asdfjkls), 0);
         
-        Iterable<CatalogItem<Object>> silly1 = defaultCatalog.findMatching(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
-        Iterable<CatalogItem<Object>> silly2 = defaultCatalog.findMatching(CatalogPredicates.type(Predicates.equalTo(MySillyAppTemplate.class.getName())));
+        Iterable<CatalogItem<Object>> silly1 = defaultCatalog.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
+        Iterable<CatalogItem<Object>> silly2 = defaultCatalog.getCatalogItems(CatalogPredicates.type(Predicates.equalTo(MySillyAppTemplate.class.getName())));
         Assert.assertEquals(Iterables.getOnlyElement(silly1), Iterables.getOnlyElement(silly2));
         
         CatalogItem<Application> s1 = defaultCatalog.getCatalogItem(Application.class, silly1.iterator().next().getId());
@@ -71,7 +71,7 @@ public class CatalogScanTest {
     @Test
     public void testAnnotationLoadsSome() {
         loadAnnotationsOnlyCatalog();
-        Iterable<CatalogItem<Object>> silly1 = annotsCatalog.findMatching(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
+        Iterable<CatalogItem<Object>> silly1 = annotsCatalog.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
         Assert.assertEquals(Iterables.getOnlyElement(silly1).getDescription(), "Some silly test");
     }
     
@@ -80,8 +80,8 @@ public class CatalogScanTest {
         loadAnnotationsOnlyCatalog();
         loadDefaultCatalog();
         
-        int numFromAnnots = Iterables.size(annotsCatalog.findMatching(Predicates.alwaysTrue()));
-        int numFromTypes = Iterables.size(defaultCatalog.findMatching(Predicates.alwaysTrue()));
+        int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
+        int numFromTypes = Iterables.size(defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
         
         Assert.assertTrue(numFromAnnots < numFromTypes);
     }
