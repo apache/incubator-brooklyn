@@ -32,8 +32,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     
     private final ManagementContext mgmt;
     private final CatalogDo catalog;
-    private CatalogDo manualAdditionsCatalog;
-    private LoadedClassLoader manualAdditionsClasses;
+    private volatile CatalogDo manualAdditionsCatalog;
+    private volatile LoadedClassLoader manualAdditionsClasses;
     
     public BasicBrooklynCatalog(final ManagementContext mgmt, final CatalogDto dto) {
         this.mgmt = Preconditions.checkNotNull(mgmt, "managementContext");

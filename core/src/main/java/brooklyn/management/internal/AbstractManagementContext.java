@@ -56,7 +56,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     protected BrooklynProperties configMap;
     protected BasicLocationRegistry locationRegistry;
-    protected BasicBrooklynCatalog catalog;
+    protected volatile BasicBrooklynCatalog catalog;
     protected ClassLoader baseClassLoader;
     protected Iterable<URL> baseClassPathForScanning;
 

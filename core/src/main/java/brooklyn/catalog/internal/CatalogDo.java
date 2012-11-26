@@ -22,7 +22,7 @@ public class CatalogDo {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogDo.class);
     
-    boolean isLoaded = false;
+    volatile boolean isLoaded = false;
     final CatalogDto dto;
     ManagementContext mgmt = null;
     CatalogDo parent = null;

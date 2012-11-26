@@ -52,7 +52,7 @@ public class CatalogClasspathDo {
     private CatalogScanningModes scanMode;
     
     private CompositeClassLoader classloader = new CompositeClassLoader();
-    private boolean classloaderLoaded = false;
+    private volatile boolean classloaderLoaded = false;
 
     public CatalogClasspathDo(CatalogDo catalog) {
         this.catalog = Preconditions.checkNotNull(catalog, "catalog");

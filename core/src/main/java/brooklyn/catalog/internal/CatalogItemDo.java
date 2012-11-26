@@ -8,7 +8,7 @@ public class CatalogItemDo<T> implements CatalogItem<T> {
     protected final CatalogDo catalog;
     protected final CatalogItem<T> itemDto;
 
-    protected Class<T> javaClass; 
+    protected volatile Class<T> javaClass; 
     
     public CatalogItemDo(CatalogDo catalog, CatalogItem<T> itemDto) {
         this.catalog = catalog;
