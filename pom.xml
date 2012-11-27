@@ -32,9 +32,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/cloudsoft/brooklyn.git</connection>
-        <developerConnection>scm:git:git@github.com:cloudsoft/brooklyn.git</developerConnection>
-        <url>http://github.com/cloudsoft/brooklyn</url>
+        <connection>scm:git:git://github.com/brooklyncentral/brooklyn.git</connection>
+        <developerConnection>scm:git:git@github.com:brooklyncentral/brooklyn.git</developerConnection>
+        <url>http://github.com/brooklyncentral/brooklyn</url>
     </scm>
 
     <repositories>
