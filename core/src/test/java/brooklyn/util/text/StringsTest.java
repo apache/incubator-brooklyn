@@ -95,14 +95,27 @@ public class StringsTest {
         assertEquals(Strings.replaceAll("xyz", MutableMap.builder().put("x","a").put("y","").build()), "az");
     }
 
-    public void testContainsLiteralCaseInsensitive() {
-        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "ell"));
-        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "H"));
-        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "O"));
-        assertFalse(Strings.containsLiteralCaseInsensitive("hello", "X"));
-        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "ELL"));
-        assertTrue(Strings.containsLiteralCaseInsensitive("hello", "hello"));
-        assertTrue(Strings.containsLiteralCaseInsensitive("hELlo", "Hello"));
-        assertFalse(Strings.containsLiteralCaseInsensitive("hello", "!"));
+    public void testContainsLiteral() {
+        assertTrue(Strings.containsLiteral("hello", "ell"));
+        assertTrue(Strings.containsLiteral("hello", "h"));
+        assertFalse(Strings.containsLiteral("hello", "H"));
+        assertFalse(Strings.containsLiteral("hello", "O"));
+        assertFalse(Strings.containsLiteral("hello", "x"));
+        assertFalse(Strings.containsLiteral("hello", "ELL"));
+        assertTrue(Strings.containsLiteral("hello", "hello"));
+        assertTrue(Strings.containsLiteral("hELlo", "ELl"));
+        assertFalse(Strings.containsLiteral("hello", "!"));
     }
+    
+    public void testContainsLiteralIgnoreCase() {
+        assertTrue(Strings.containsLiteralIgnoreCase("hello", "ell"));
+        assertTrue(Strings.containsLiteralIgnoreCase("hello", "H"));
+        assertTrue(Strings.containsLiteralIgnoreCase("hello", "O"));
+        assertFalse(Strings.containsLiteralIgnoreCase("hello", "X"));
+        assertTrue(Strings.containsLiteralIgnoreCase("hello", "ELL"));
+        assertTrue(Strings.containsLiteralIgnoreCase("hello", "hello"));
+        assertTrue(Strings.containsLiteralIgnoreCase("hELlo", "Hello"));
+        assertFalse(Strings.containsLiteralIgnoreCase("hello", "!"));
+    }
+
 }

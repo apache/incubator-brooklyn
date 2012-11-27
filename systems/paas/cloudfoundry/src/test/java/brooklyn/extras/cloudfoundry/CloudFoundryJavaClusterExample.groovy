@@ -3,10 +3,10 @@ package brooklyn.extras.cloudfoundry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.catalog.Catalog
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Entities;
-import brooklyn.location.basic.LocationRegistry;
-import brooklyn.test.TestUtils
+import brooklyn.entity.basic.Entities
+import brooklyn.location.basic.LocationRegistry
 
 /**
  * example app showing how to start an cloudfoundry java war
@@ -24,7 +24,7 @@ import brooklyn.test.TestUtils
  * @author alex
  *
  */
-class CloudFoundryJavaClusterExample extends AbstractApplication {
+public class CloudFoundryJavaClusterExample extends AbstractApplication {
 
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryJavaClusterExample.class)
     

@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -29,6 +30,7 @@ import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -46,6 +48,13 @@ import com.wordnik.swagger.core.ApiParam;
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource extends AbstractBrooklynRestResource {
 
+    @SuppressWarnings("rawtypes")
+    private static final Function<CatalogItem, CatalogItemSummary> TO_CATALOG_ITEM_SUMMARY = new Function<CatalogItem, CatalogItemSummary>() {
+        @Override
+        public CatalogItemSummary apply(@Nullable CatalogItem input) {
+            return CatalogItemSummary.from(input);
+        }
+    };
 
     @POST
     @ApiOperation(value = "Add a new entity or policy type to the catalog by uploading a Groovy script from browser using multipart/form-data",
@@ -70,26 +79,26 @@ public class CatalogResource extends AbstractBrooklynRestResource {
 
     @GET
     @Path("/entities")
-    @ApiOperation(value = "List available entity types optionally matching a query", responseClass = "String", multiValueResponse = true)
-    public List<String> listEntities(
+    @ApiOperation(value = "List available entity types optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
+    public List<CatalogItemSummary> listEntities(
         @ApiParam(name = "regex", value = "Regular expression to search for")
         final @QueryParam("regex") @DefaultValue("") String regex,
         @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
         final @QueryParam("fragment") @DefaultValue("") String fragment
     ) {
-        return getCatalogItemIdsMatchingRegexFragment(CatalogPredicates.IS_ENTITY, regex, fragment);
+        return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_ENTITY, regex, fragment);
     }
 
     @GET
     @Path("/applications")
-    @ApiOperation(value = "Fetch a list of application templates optionally matching a query", responseClass = "String", multiValueResponse = true)
-    public List<String> listApplications(
+    @ApiOperation(value = "Fetch a list of application templates optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
+    public List<CatalogItemSummary> listApplications(
             @ApiParam(name = "regex", value = "Regular expression to search for")
             final @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
             final @QueryParam("fragment") @DefaultValue("") String fragment
     ) {
-        return getCatalogItemIdsMatchingRegexFragment(CatalogPredicates.IS_TEMPLATE, regex, fragment);
+        return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_TEMPLATE, regex, fragment);
     }
 
     @SuppressWarnings("unchecked")
@@ -112,18 +121,18 @@ public class CatalogResource extends AbstractBrooklynRestResource {
 
     @GET
     @Path("/policies")
-    @ApiOperation(value = "List available policies optionally matching a query", responseClass = "String", multiValueResponse = true)
-    public List<String> listPolicies(
+    @ApiOperation(value = "List available policies optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
+    public List<CatalogItemSummary> listPolicies(
             @ApiParam(name = "regex", value = "Regular expression to search for")
             final @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
             final @QueryParam("fragment") @DefaultValue("") String fragment
     ) {
-        return getCatalogItemIdsMatchingRegexFragment(CatalogPredicates.IS_POLICY, regex, fragment);
+        return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_POLICY, regex, fragment);
     }
     
     @GET
-    @Path("/policies/{policy}")
+    @Path("/policies/{policyId}")
     @ApiOperation(value = "Fetch a policy's definition from the catalog", responseClass = "CatalogItemSummary", multiValueResponse = true)
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
@@ -140,7 +149,7 @@ public class CatalogResource extends AbstractBrooklynRestResource {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private <T> List<String> getCatalogItemIdsMatchingRegexFragment(Predicate<CatalogItem<T>> type, String regex, String fragment) {
+    private <T> List<CatalogItemSummary> getCatalogItemSummariesMatchingRegexFragment(Predicate<CatalogItem<T>> type, String regex, String fragment) {
         List filters = new ArrayList();
         filters.add(type);
         if (Strings.isNonEmpty(regex))
@@ -149,7 +158,7 @@ public class CatalogResource extends AbstractBrooklynRestResource {
             filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralCaseInsensitive(fragment)));
         return ImmutableList.copyOf(Iterables.transform(
                 brooklyn().getCatalog().getCatalogItems(Predicates.and(filters)),
-                CatalogPredicates.ID_OF_ITEM_TRANSFORMER));        
+                TO_CATALOG_ITEM_SUMMARY));        
     }
     
 

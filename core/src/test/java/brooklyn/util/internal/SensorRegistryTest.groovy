@@ -65,7 +65,8 @@ public class SensorRegistryTest {
         assertApproxPeriod(callTimes, PERIOD, 500)
     }
 
-    @Test
+    // takes 500ms, so marked as integration
+    @Test(groups="Integration")
     public void sensorUpdatePeriodOverrideIsUsed() {
         final int PERIOD = 250
         // Create an entity and configure it with the above JMX service

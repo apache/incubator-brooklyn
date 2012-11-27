@@ -18,7 +18,67 @@
 	margin-top: 40px;
 	margin-bottom: 40px;
 }
-
+#application-content .modal-body {
+    padding: 0;
+}
+#application-content ul.nav-tabs {
+    margin: 15px 15px 0px 15px;
+}
+#application-content .deploy,
+#application-content .preview {
+	padding: 15px;
+}
+#application-content .tab-content {
+    max-height: 500px;
+    overflow: scroll;
+}
+#application-content .template-lozenge {
+    cursor: hand; cursor: pointer;
+}
+#application-content div.template-lozenge.frame {
+    display: inline-block;
+    border: 3px solid #EEE;
+    border-radius: 4px;
+    width: 212px;
+    overflow: scroll;
+    margin: 4px;
+    padding: 3px;
+}
+#application-content div.template-lozenge div.icon {
+	margin: 2px 8px 2px 2px;
+}
+#application-content div.template-lozenge div.icon img {
+	max-width: 50px;
+	max-height: 50px;
+	margin-top: 15px;
+}
+#application-content .template-lozenge.frame:hover {
+    border: 3px solid #CCC;
+}
+#application-content .template-lozenge.frame.selected {
+    border: 3px solid #793;
+}
+#application-content .template-lozenge .icon {
+	float: left;
+}
+#application-content .template-lozenge .blurb {
+    overflow-y: scroll;
+    height: 80px;
+}
+#application-content .template-lozenge .title {
+    font-weight: 700;
+    font-size: 90%;
+}
+#application-content .template-lozenge .description {
+	font-size: 85%;
+}
+div#create-step-template-entries {
+	width: 472px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-top: 12px;
+	padding-bottom: 36px;
+}
 /* menu bar */
 .navbar .nav>li {
 	display: block;
@@ -77,6 +137,22 @@ ul.dropdown-menu {
 	-webkit-border-radius: 5px 5px 0 0;
 	-moz-border-radius: 5px 5px 0 0;
 	border-radius: 5px 5px 0 0;
+}
+
+li.text-filter input {
+	width: 10em;
+	margin-top: 3px;
+    /* taken from datatables_filter input */	
+    background-image: url("../img/magnifying-glass-right.png");
+    background-size:12px 12px;
+    background-repeat: no-repeat;
+    background-position: 8px 5px;
+    font-size: 85%;
+    padding: 1px 4px 1px 24px;
+    margin-bottom: 2px;
+    -webkit-border-radius: 1em;
+    -moz-border-radius: 1em;
+    border-radius: 1em;
 }
 
 /* bootstrap overrides */
@@ -152,6 +228,21 @@ code {
 }
 */
 
+textarea:focus,input[type="text"]:focus,input[type="password"]:focus,
+input[type="datetime"]:focus,input[type="datetime-local"]:focus,input[type="date"]:focus,
+input[type="month"]:focus,input[type="time"]:focus,input[type="week"]:focus,input[type="number"]:focus,
+input[type="email"]:focus,input[type="url"]:focus,input[type="search"]:focus,input[type="tel"]:focus,
+input[type="color"]:focus,.uneditable-input:focus {
+	border-color: rgba(120, 180, 70, 0.8);
+	outline: 0;
+	outline: thin dotted 9;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
+		rgba(120, 180, 70, 0.6);
+	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
+		rgba(120, 180, 70, 0.6);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px
+		rgba(120, 180, 70, 0.6);
+}
 
 /* home page squares */
 
@@ -312,11 +403,15 @@ code {
 .nav-tabs {
 	margin-bottom: 0px;
 }
+.tab-content-scroller {
+    overflow: scroll;
+    height: auto;
+}
 .tab-content {
-	padding: 18px 12px 18px 12px;
+	padding: 18px 24px 18px 24px;
     border-right: 1px solid #DDD;
     border-left: 1px solid #DDD;
-    min-height: 500px;
+    min-height: 300px;
 }
 #tree-list {
 }
@@ -560,8 +655,16 @@ div.for-empty-table {
     -moz-border-radius: 4px;
     border-radius: 4px;
 }
-.app-add-wizard-create-entity-config input {
+
+.app-add-wizard-config-entry input {
     margin-bottom: 0px;	
+}
+.app-add-wizard-config-entry {
+	margin-bottom: 9px;
+	margin-top: 2px;
+}
+.app-add-wizard-config-entry button {
+	margin-left: 8px;
 }
 .app-add-wizard-create-entity-label-newline {
     padding-left: 2px;
@@ -574,13 +677,6 @@ div.for-empty-table {
 }
 .app-add-wizard-create-entity-input {
 	width: 300px;
-}
-.app-add-wizard-create-entity-config {
-	margin-bottom: 9px;
-	margin-top: 2px;
-}
-.app-add-wizard-create-entity-config button {
-	margin-left: 8px;
 }
 #add-app-entity {
 	float: right;
@@ -602,7 +698,16 @@ div.for-empty-table {
 	margin-top: 6px;
 	margin-bottom: 9px;
 }
-
+.control-group .deploy-label {
+	font-weight: 700;
+}
+.deploy .control-group {
+	margin-bottom: 18px;
+}
+.deploy input#application-name {
+	/** margin supplied by control group */
+	margin-bottom: 0px;
+}
 
 #application-explorer div#summary {
     padding-right: 16px;
@@ -629,7 +734,7 @@ div.for-empty-table {
 .accordion-body {
 	border-top: 1px dashed lightgray;
     padding: 8px 8px 12px 8px;
-    max-height: 350px;'
+    max-height: 400px;'
     overflow-x: scroll;
     overflow-y: scroll;
     background-color: white;
@@ -869,14 +974,14 @@ textarea {
     {
     -webkit-border-top-right-radius: 0 0 0 13px !important;
     -moz-border-top-right-radius: 0 0 0 13px !important;
-    border-bottom-right-radius: 13px;
+    border-bottom-left-radius: 13px;
 }
 
 .table-bordered thead:last-child tr:last-child th:last-child,.table-bordered tbody:last-child tr:last-child td:last-child
     {
     -webkit-border-top-right-radius: 0 0 13px 0 !important;
     -moz-border-top-right-radius: 0 0 13px 0 !important;
-    border-bottom-left-radius: 13px;
+    border-bottom-right-radius: 13px;
 }
 /*HOME BODY */
 
@@ -968,11 +1073,18 @@ textarea {
 }
 
 .nav-tabs>.active>a,.nav-tabs>.active {
-    color: #549e2b !important;
+    color: #549e2b;
 }
 
 .nav-tabs>.active>a,.nav-tabs>.active a {
     background: #ffffff !important;
+}
+
+.nav-tabs .dropdown-menu li > a:hover, 
+.nav-tabs .dropdown-menu .active > a,
+.nav-tabs .dropdown-menu .active > a:hover {
+    color: white;
+    background-color: #549e2b !important;
 }
 
 .nav-tabs>li>a {
@@ -987,6 +1099,17 @@ textarea {
 .nav-tabs>li>a:hover {
     color: #549e2b !important;
     background: #ffffff none !important;
+}
+.nav-tabs .dropdown-toggle .caret, .nav-pills .dropdown-toggle .caret {
+    opacity: 0.5;
+	margin-top: 6px;
+    border-top-color: #000;
+    border-bottom-color: #000;
+}
+.nav-tabs .dropdown-toggle:hover .caret, .nav-pills .dropdown-toggle:hover .caret {
+	opacity: 0.8;
+    border-top-color: #549e2b;
+    border-bottom-color: #549e2b;
 }
 
 #effectors-table th {

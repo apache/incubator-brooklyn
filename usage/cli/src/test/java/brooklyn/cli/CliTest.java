@@ -1,7 +1,6 @@
 package brooklyn.cli;
 
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 import groovy.lang.GroovyClassLoader;
 
 import org.iq80.cli.Cli;
@@ -50,11 +49,10 @@ public class CliTest {
         assertTrue(details.contains("noShutdwonOnExit=false"), details);
     }
 
-    @Test(expectedExceptions = ParseException.class, expectedExceptionsMessageRegExp = "Required option '-a' is missing")
-    public void testMissingAppOption() throws ParseException {
+    @Test
+    public void testAppOptionIsOptional() throws ParseException {
         Cli<BrooklynCommand> cli = Main.buildCli();
         cli.parse("launch", "blah", "my.App");
-        fail("Should throw ParseException");
     }
     
     public void testHelpCommand() {

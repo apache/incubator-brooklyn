@@ -1,6 +1,3 @@
-
-
-
 <catalog>
   <name>My Local Catalog</name>
   <!-- scan means it will load templates based on @CatalogTemplate annotations on entities;
@@ -14,21 +11,24 @@
        which we want included in our catalog on our brooklyn server -->
   <catalog>
     <classpath>
-      <entry>file://~/.m2/repository/io/cloudsoft/brooklyn-mapr/1.0.0-SNAPSHOT/brooklyn-mapr.jar</entry>
+      <entry>file://~/.m2/repository/io/cloudsoft/mapr/brooklyn-mapr/0.0.1-SNAPSHOT/brooklyn-mapr-0.0.1-SNAPSHOT.jar</entry>
     </classpath>
     <!-- templates explicitly listed since we didn't scan above (NB scan=false is the default) -->
-    <template type="io.brooklyn.mapr.M3App" name="M3 Application"/>
+    <template type="io.brooklyn.mapr.M3App" name="MapR M3">
+        <description>MapR Apache Hadoop M3 resizable cluster deployed to a wide variety of clouds</description>
+        <iconUrl>http://releng3.cloudsoftcorp.com/downloads/brooklyn/img/mapr_logo.png</iconUrl>
+    </template>
   </catalog>
   
   <catalog>
     <description>Extra local jars I've got on my machine, added so I can pull in the CDH easily.</description>
-    <classpath scan="types">
-      <entry>file://~/.m2/repository/io/cloudsoft/brooklyn-cdh/1.0.0-SNAPSHOT/brooklyn-cdh.jar</entry>
-      <entry>file://~/.m2/repository/io/cloudsoft/brooklyn-cdh/1.0.0-SNAPSHOT/whirr-cm.jar</entry>
+    <classpath scan="annotations">
+      <entry>file://~/.m2/repository/io/cloudsoft/cloudera/brooklyn-cdh/1.0.0-SNAPSHOT/brooklyn-cdh-1.0.0-SNAPSHOT.jar</entry>
+      <entry>file://~/.m2/repository/com/cloudera/whirr-cm/1.1-SNAPSHOT/whirr-cm-1.1-SNAPSHOT.jar</entry>
     </classpath>
     <!-- templates here were autodetected (scan=true), so we don't _need_ to list any entities;
-         but here we illustrate how we can override the name of one of them -->
-    <template type="io.brooklyn.cloudera.ClouderaForHadoopWithManager" name="MY FAV!  CDH Hadoop Application with Cloudera Manager">
+         but here we illustrate how we can add our own (or even override, if we left out id) -->
+    <template type="io.cloudsoft.cloudera.SampleClouderaManagedCluster" id="my_cdh" name="MY CDH">
       <description>I've just overrridden the default and supplied my own name and description, to show what can be done.</description>
     </template>
   </catalog>

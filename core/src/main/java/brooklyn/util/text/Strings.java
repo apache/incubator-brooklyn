@@ -507,7 +507,7 @@ public class Strings {
         return context.toString();
     }
 
-    public static boolean containsLiteralCaseInsensitive(CharSequence input, CharSequence fragment) {
+    public static boolean containsLiteralIgnoreCase(CharSequence input, CharSequence fragment) {
         if (input==null) return false;
         if (isEmpty(fragment)) return true;
         int lastValidStartPos = input.length()-fragment.length();
@@ -518,6 +518,24 @@ public class Strings {
             if (ii==f0l || ii==f0u) {
                 for (int j=1; j<fragment.length(); j++) {
                     if (Character.toLowerCase(input.charAt(i+j))!=Character.toLowerCase(fragment.charAt(j)))
+                        continue i;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean containsLiteral(CharSequence input, CharSequence fragment) {
+        if (input==null) return false;
+        if (isEmpty(fragment)) return true;
+        int lastValidStartPos = input.length()-fragment.length();
+        char f0 = fragment.charAt(0);
+        i: for (int i=0; i<=lastValidStartPos; i++) {
+            char ii = input.charAt(i);
+            if (ii==f0) {
+                for (int j=1; j<fragment.length(); j++) {
+                    if (input.charAt(i+j)!=fragment.charAt(j))
                         continue i;
                 }
                 return true;

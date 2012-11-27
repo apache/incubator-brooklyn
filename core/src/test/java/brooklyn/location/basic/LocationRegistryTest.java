@@ -75,5 +75,5 @@ public class LocationRegistryTest {
             // probably won't happen, if test fails will loop endlessly above
             Assert.fail("Circular reference resolved location");
     }
-
+    
 }

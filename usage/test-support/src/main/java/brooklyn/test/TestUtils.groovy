@@ -417,5 +417,12 @@ public class TestUtils {
         if (actualSize==expectedSize) return;
         fail("Expected collection of size "+expectedSize+" but got size "+actualSize+": "+c);
     }
+
+    public static void assertStringContainsLiteral(String string, String substring) {
+        if (string==null) fail("String is null");
+        if (substring==null) fail("Substring is null");
+        if (string.indexOf(substring)>=0) return;
+        fail("String '"+string+"' does not contain expected pattern '"+substring+"'");
+    }
     
 }

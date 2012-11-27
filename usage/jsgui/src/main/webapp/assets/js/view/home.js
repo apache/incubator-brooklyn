@@ -57,7 +57,7 @@ define([
             }
             
             this.callPeriodically(function() {
-            	//that.refresh(that);     	            	
+            	that.refresh(that);	            	
             }, 5000)
             this.refresh(this)
         },
@@ -115,14 +115,16 @@ define([
                 this._modal.close()
             }
             var that = this;
-            var wizard = new AppAddWizard({appRouter:this.options.appRouter})
-            this._modal = wizard
-            this.$("#modal-container").html(wizard.render().el)
-            this.$("#modal-container .modal")
-                .on("hidden",function () {
-                    wizard.close()
-                    that.refresh(that)
-                }).modal('show')
+            if (!this.options.offline) {
+                var wizard = new AppAddWizard({appRouter:this.options.appRouter})
+                this._modal = wizard
+                this.$("#modal-container").html(wizard.render().el)
+                this.$("#modal-container .modal")
+                    .on("hidden",function () {
+                        wizard.close()
+                        that.refresh(that)
+                    }).modal('show')
+            }
         },
 
         deleteApplication:function (event) {

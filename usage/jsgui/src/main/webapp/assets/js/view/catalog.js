@@ -42,7 +42,6 @@ define([
             
             var that = this;
             _.defer(function() {
-                console.log($("#applications div.accordion-head"))
                 that.toggleAccordionDiv($("#applications div.accordion-head"), false)
                 $("#details-empty").show()
             })
@@ -66,8 +65,8 @@ define([
         },
         renderGenericAccordion: function(accordion, data) {
             accordion.html('')
-            _.each(data, function (id, pos) {
-                accordion.append(this.entryTemplate({type:id, id:id}));
+            _.each(data, function (item, pos) {
+                accordion.append(this.entryTemplate({type:item.type, id:item.id}));
             }, this)
             accordion.find("div[id='"+this.activeItem+"']").addClass('active')
         },

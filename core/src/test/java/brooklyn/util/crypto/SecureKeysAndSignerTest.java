@@ -9,7 +9,8 @@ import org.testng.annotations.Test;
 
 public class SecureKeysAndSignerTest {
 
-    @Test
+    // a bit slow, so marked as integration (but possibly due to leftover rebind-cleanup, benign failures writing to /tmp/xx)
+    @Test(groups="Integration")
     public void testGenerateSignedKeys() throws Exception {
         FluentKeySigner signer = new FluentKeySigner("the-root").
             validForYears(2).

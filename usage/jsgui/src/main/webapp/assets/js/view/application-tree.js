@@ -123,8 +123,6 @@ define([
                     model:entitySummary,
                     application:app
                 })
-                console.log("loading")
-                console.log(that.detailsView.render().el)
                 $("div#details").html(that.detailsView.render().el)
                 // preserve the tab selected before
                 $("div#details").find("a[href=\"#"+whichTab+"\"]").tab('show')

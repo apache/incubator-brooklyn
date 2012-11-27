@@ -1,6 +1,5 @@
 package brooklyn.rest.testing;
 
-import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +10,7 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApi;
+import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.resources.AbstractBrooklynRestResource;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.NullHttpServletRequestProvider;
@@ -27,14 +27,7 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
     protected synchronized ManagementContext getManagementContext() {
         if (manager==null) {
             manager = new LocalManagementContext();
-            
-            // sets URLs for a surefire
-            ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
-            // this also works
-//            ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forPackage("brooklyn"));
-            // but this (near-default behaviour) does not
-//            ((LocalManagementContext)manager).setBaseClassLoader(getClass().getClassLoader());
-            
+            BrooklynRestApiLauncherTest.forceUseOfDefaultCatalogWithJavaClassPath(manager);
             BasicLocationRegistry.setupLocationRegistryForTesting(manager);
         }
         return manager;

@@ -12,7 +12,7 @@ define([
             return {
                 name:"",
                 type:null,
-                entities:[],
+                entities:null,
                 locations:[]
             }
         },
@@ -55,18 +55,25 @@ define([
             }
             this.set('locations', newLocations)
         },
-        addEntity:function (entity) {
+        getEntities: function() {
             var entities = this.get('entities')
-            if (!this.hasEntityWithName(entity.get("name"))) {
-                entities.push(entity.toJSON())
-                this.set('entities', entities)
-                this.trigger("change")
-                this.trigger("change:entities")
+            if (entities === undefined) return [];
+            return entities;
+        },
+        addEntity:function (entity) {
+            var entities = this.getEntities()
+            if (!entities) {
+                entities = []
+                this.set("entities", entities)
             }
+            entities.push(entity.toJSON())
+            this.set('entities', entities)
+            this.trigger("change")
+            this.trigger("change:entities")
         },
         removeEntityIndex:function (indexToRemove) {
             var newEntities = [],
-                currentEntities = this.get("entities")
+                currentEntities = this.getEntities()
             for (var index=0; index<currentEntities.length; index++) {
                 if (index != indexToRemove)
                     newEntities.push(currentEntities[index])
@@ -75,7 +82,7 @@ define([
         },
         removeEntityByName:function (name) {
             var newEntities = [],
-                currentEntities = this.get("entities")
+                currentEntities = this.getEntities()
             for (var index in currentEntities) {
                 if (currentEntities[index].name != name)
                     newEntities.push(currentEntities[index])
@@ -83,7 +90,7 @@ define([
             this.set('entities', newEntities)
         },
         hasEntityWithName:function (name) {
-            return _.any(this.get('entities'), function (entity) {
+            return _.any(this.getEntities(), function (entity) {
                 return entity.name === name
             })
         }

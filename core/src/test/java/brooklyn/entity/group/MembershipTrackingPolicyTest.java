@@ -30,7 +30,7 @@ public class MembershipTrackingPolicyTest {
     private BasicGroup group;
     private RecordingMembershipTrackingPolicy policy;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
         app = new TestApplication();
@@ -64,7 +64,7 @@ public class MembershipTrackingPolicyTest {
         assertRecordsEventually(Record.newAdded(e1), Record.newChanged(e1));
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testNotNotifiedWhenPolicySuspended() throws Exception {
         policy.suspend();
         
@@ -74,7 +74,7 @@ public class MembershipTrackingPolicyTest {
         assertRecordsContinually(new Record[0]);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testNotifiedOfEverythingWhenPolicyResumed() throws Exception {
         final TestEntity e1 = new TestEntity(group);
         app.manage(e1);

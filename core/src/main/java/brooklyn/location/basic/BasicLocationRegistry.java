@@ -69,6 +69,8 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class);
         for (LocationResolver r: loader)
             resolvers.put(r.getPrefix(), r);
+        if (log.isDebugEnabled()) log.debug("Location resolvers are: "+resolvers);
+        if (resolvers.isEmpty()) log.warn("No location resolvers detected: is src/main/resources correclty included?");
     }
 
     public Map<String,LocationDefinition> getDefinedLocations() {
@@ -126,11 +128,15 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
                 }
             }
             if (log.isDebugEnabled())
-                log.debug("Found "+count+" defined locations from properties (.named. syntax): "+definedLocations.values());
+                log.debug("Found "+count+" defined locations from properties (*.named.* syntax): "+definedLocations.values());
             if (getDefinedLocationByName("localhost")==null && !BasicOsDetails.Factory.newLocalhostInstance().isWindows()) {
                 log.debug("Adding a defined location for localhost");
+                // add 'localhost' *first*
+                ImmutableMap<String, LocationDefinition> oldDefined = ImmutableMap.copyOf(definedLocations);
+                definedLocations.clear();
                 String id = LanguageUtils.newUid();
                 definedLocations.put(id, localhost(id));
+                definedLocations.putAll(oldDefined);
             }
         }
     }
