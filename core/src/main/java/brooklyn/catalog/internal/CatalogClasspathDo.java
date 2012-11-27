@@ -1,7 +1,5 @@
 package brooklyn.catalog.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,6 +8,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,6 +103,17 @@ public class CatalogClasspathDo {
                     baseCP = ((AbstractManagementContext)catalog.mgmt).getBaseClassPathForScanning();
                 }
                 scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
+                if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
+                    try {
+                        ((AbstractManagementContext)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+                        log.info("Catalog scan of default classloader returned nothing; reverting to java.class.path");
+                        baseCP = ((AbstractManagementContext)catalog.mgmt).getBaseClassPathForScanning();
+                        scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
+                    } catch (Exception e) {
+                        log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
+                        Exceptions.propagateIfFatal(e);
+                    }
+                }
             }
         } else {
             // scan specified jars:

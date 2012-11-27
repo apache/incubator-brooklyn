@@ -93,7 +93,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @Override
     public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
         Iterable<CatalogItem<Object>> resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
-        if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalot item for type "+typeName);
+        if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalog item for type "+typeName);
         CatalogItem<Object> resultI = resultL.iterator().next();
         if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
             log.debug("Found "+Iterables.size(resultL)+" matches in catalog for type "+typeName+"; returning the first, "+resultI);
