@@ -90,6 +90,6 @@ public class JcloudsLocationResolverTest {
     }
     
     private JcloudsLocation resolve(String spec) {
-        return new JcloudsResolver().newLocationFromString(spec, registry, ImmutableMap.of());
+        return new JcloudsResolver().newLocationFromString(ImmutableMap.of(), spec, registry);
     }
 }

@@ -351,7 +351,8 @@ public abstract class AbstractManagementContext implements ManagementContext  {
             if (nonDefaultUrl!=null && !"".equals(nonDefaultUrl)) {
                 log.warn("Could not read catalog.xml at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e, e);
             } else {
-                log.warn("Error scanning catalog; trying again using default (local classpath) catalog. Error was: "+e, e);
+                if (log.isDebugEnabled())
+                    log.debug("No default catalog file available; trying again using local classpath to populate catalog. Error was: "+e);
             }
             catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDefaultLocalScanningDto(CatalogScanningModes.TYPES));
             if (log.isDebugEnabled())

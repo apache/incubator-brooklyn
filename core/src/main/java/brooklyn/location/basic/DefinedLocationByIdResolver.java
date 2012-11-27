@@ -25,7 +25,7 @@ public class DefinedLocationByIdResolver implements RegistryLocationResolver {
         throw new UnsupportedOperationException("This class must have the RegistryLocationResolver.newLocationFromString method invoked");
     }
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map locationFlags) {
+    public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         String id = spec;
         if (spec.toLowerCase().startsWith(ID+":")) {
             id = spec.substring( (ID+":").length() );

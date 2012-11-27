@@ -79,7 +79,7 @@ public class JcloudsResolver implements RegistryLocationResolver {
     }
     
     @Override
-    public JcloudsLocation newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map locationFlags) {
+    public JcloudsLocation newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
     }
 

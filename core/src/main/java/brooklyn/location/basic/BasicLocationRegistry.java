@@ -106,7 +106,9 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
     
     protected void findDefinedLocations() {
         synchronized (definedLocations) {
-            // first read (legacy) all properties starting  brooklyn.location.named.xxx
+            // first read all properties starting  brooklyn.location.named.xxx
+            // (would be nice to move to a better way, then deprecate this approach, but first
+            // we need ability/format for persisting named locations, and better support for adding+saving via REST/GUI)
             int count = 0;
             String NAMED_LOCATION_PREFIX = "brooklyn.location.named.";
             ConfigMap namedLocationProps = mgmt.getConfig().submap(ConfigPredicates.startingWith(NAMED_LOCATION_PREFIX));
@@ -169,7 +171,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
             LocationResolver resolver = getSpecResolver(spec);
 
             if (resolver instanceof RegistryLocationResolver) {
-                return ((RegistryLocationResolver)resolver).newLocationFromString(spec, this, locationFlags);
+                return ((RegistryLocationResolver)resolver).newLocationFromString(locationFlags, spec, this);
             } else if (resolver != null) {
                 if (!locationFlags.isEmpty())
                     log.warn("Ignoring location flags "+locationFlags+" when instantiating "+spec);

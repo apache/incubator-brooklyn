@@ -56,7 +56,7 @@ public class ByonLocationResolver implements RegistryLocationResolver {
     }
     
     @Override
-    public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map locationFlags) {
+    public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
     }
     

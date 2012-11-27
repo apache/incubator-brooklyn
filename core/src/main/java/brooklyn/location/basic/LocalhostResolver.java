@@ -44,7 +44,7 @@ public class LocalhostResolver implements RegistryLocationResolver {
     }
     
     @Override
-    public Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map locationFlags) {
+    public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
     }
     

@@ -38,7 +38,7 @@ public class NamedLocationResolver implements RegistryLocationResolver {
         throw new UnsupportedOperationException("This class must have the RegistryLocationResolver.newLocationFromString method invoked");
     }
     @SuppressWarnings({ "rawtypes" })
-    public Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map locationFlags) {
+    public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         String name = spec;
         if (spec.toLowerCase().startsWith(NAMED+":")) {
             name = spec.substring( (NAMED+":").length() );
