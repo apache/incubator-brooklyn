@@ -20,6 +20,7 @@ import brooklyn.location.basic.jclouds.CredentialsFromEnv;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory;
 import brooklyn.util.MutableMap;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -100,8 +101,10 @@ public class JcloudsResolver implements RegistryLocationResolver {
             } else {
                 result.providerOrApi = spec.substring(0, split);
                 result.parameter = spec.substring(split+1);
+                int numJcloudsPrefixes = 0;
                 while (result.providerOrApi.equalsIgnoreCase(JCLOUDS)) {
                     //strip any number of jclouds: prefixes, for use by static "resolve" method
+                    numJcloudsPrefixes++;
                     result.providerOrApi = result.parameter;
                     result.parameter = null;
                     split = result.providerOrApi.indexOf(':');
@@ -109,6 +112,9 @@ public class JcloudsResolver implements RegistryLocationResolver {
                         result.parameter = result.providerOrApi.substring(split+1);
                         result.providerOrApi = result.providerOrApi.substring(0, split);
                     }
+                }
+                if (!dryrun && numJcloudsPrefixes > 1) {
+                    log.warn("Use of deprecated location spec '"+spec+"'; in future use a single \"jclouds\" prefix");
                 }
             }
             
@@ -145,6 +151,9 @@ public class JcloudsResolver implements RegistryLocationResolver {
         JcloudsSpecParser details = JcloudsSpecParser.parse(spec, false);
         
         boolean isProvider = details.isProvider();
+        if (Strings.isEmpty(details.providerOrApi)) {
+            throw new IllegalArgumentException("Cloud provider/API type not specified in spec \""+spec+"\"");
+        }
         if (!isProvider && !details.isApi()) {
             throw new NoSuchElementException("Cloud provider/API type "+details.providerOrApi+" is not supported by jclouds");
         }
@@ -182,7 +191,7 @@ public class JcloudsResolver implements RegistryLocationResolver {
     @Override
     public boolean accepts(String spec, LocationRegistry registry) {
         if (BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true)) return true;
-        JcloudsSpecParser details = JcloudsSpecParser.parse(spec, false);
+        JcloudsSpecParser details = JcloudsSpecParser.parse(spec, true);
         if (details==null) return false;
         if (details.isProvider() || details.isApi()) return true;
         return false;

@@ -38,16 +38,15 @@ public class CatalogDtoUtils {
     }
 
     public static CatalogDto newDtoFromUrl(String url) {
-        log.debug("Retrieving catalog from: "+url);
+        if (log.isDebugEnabled()) log.debug("Retrieving catalog from: {}", url);
         try {
             InputStream source = new ResourceUtils(null).getResourceFromUrl(url);
-            return (CatalogDto) new CatalogXmlSerializer().deserialize(new InputStreamReader(source));
+            CatalogDto result = (CatalogDto) new CatalogXmlSerializer().deserialize(new InputStreamReader(source));
+            if (log.isDebugEnabled()) log.debug("Retrieved catalog from: {}", url);
+            return result;
         } catch (Throwable t) {
             log.debug("Unable to retrieve catalog from: "+url+" ("+t+")");
             throw Exceptions.propagate(t);
-        } finally {
-            log.debug("Retrieved catalog from: "+url);
         }
     }
-
 }

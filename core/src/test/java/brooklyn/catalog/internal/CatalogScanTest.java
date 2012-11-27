@@ -52,7 +52,7 @@ public class CatalogScanTest {
         Assert.assertEquals(Iterables.size(asdfjkls), 0);
         
         Iterable<CatalogItem<Object>> silly1 = defaultCatalog.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
-        Iterable<CatalogItem<Object>> silly2 = defaultCatalog.getCatalogItems(CatalogPredicates.type(Predicates.equalTo(MySillyAppTemplate.class.getName())));
+        Iterable<CatalogItem<Object>> silly2 = defaultCatalog.getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(MySillyAppTemplate.class.getName())));
         Assert.assertEquals(Iterables.getOnlyElement(silly1), Iterables.getOnlyElement(silly2));
         
         CatalogItem<Application> s1 = defaultCatalog.getCatalogItem(Application.class, silly1.iterator().next().getId());

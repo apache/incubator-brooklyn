@@ -1,5 +1,7 @@
 package brooklyn.catalog.internal;
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.catalog.CatalogItem;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -11,8 +13,8 @@ public class CatalogItemDo<T> implements CatalogItem<T> {
     protected volatile Class<T> javaClass; 
     
     public CatalogItemDo(CatalogDo catalog, CatalogItem<T> itemDto) {
-        this.catalog = catalog;
-        this.itemDto = itemDto;
+        this.catalog = Preconditions.checkNotNull(catalog, "catalog");
+        this.itemDto = Preconditions.checkNotNull(itemDto, "itemDto");
     }
 
     public CatalogItem<?> getDto() {

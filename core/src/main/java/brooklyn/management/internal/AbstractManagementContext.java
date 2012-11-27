@@ -348,8 +348,11 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 log.debug("Loaded catalog from "+catalogUrl+": "+catalog);
         } catch (Exception e) {
             Object nonDefaultUrl = getConfig().getRawConfig(BROOKLYN_CATALOG_URL);
-            if (nonDefaultUrl!=null && !"".equals(nonDefaultUrl))
+            if (nonDefaultUrl!=null && !"".equals(nonDefaultUrl)) {
                 log.warn("Could not read catalog.xml at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e, e);
+            } else {
+                log.warn("Error scanning catalog; trying again using default (local classpath) catalog. Error was: "+e, e);
+            }
             catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDefaultLocalScanningDto(CatalogScanningModes.TYPES));
             if (log.isDebugEnabled())
                 log.debug("Loaded default (local classpath) catalog: "+catalog);
@@ -374,7 +377,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public void setBaseClassLoader(ClassLoader cl) {
         if (baseClassLoader==cl) return;
         if (baseClassLoader!=null) throw new IllegalStateException("Cannot change base class loader (in "+this+")");
-        if (catalog!=null) throw new IllegalStateException("Cannot set base class once catalog has been loaded (in "+this+")");
+        if (catalog!=null) throw new IllegalStateException("Cannot set base class after catalog has been loaded (in "+this+")");
         this.baseClassLoader = cl;
     }
     
@@ -386,6 +389,9 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * <p>
      * ClasspathHelper.forJavaClassPath() is often a good argument to pass. */
     public void setBaseClassPathForScanning(Iterable<URL> urls) {
+        if (baseClassPathForScanning == urls) return;
+        if (baseClassPathForScanning != null) throw new IllegalStateException("Cannot change base class path for scanning (in "+this+")");
+        if (catalog != null) throw new IllegalStateException("Cannot set base class path for scanning after catalog has been loaded (in "+this+")");
         this.baseClassPathForScanning = urls;
     }
     /** @See {@link #setBaseClassPathForScanning(Iterable)} */

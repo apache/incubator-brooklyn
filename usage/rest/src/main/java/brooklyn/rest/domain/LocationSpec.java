@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 public class LocationSpec {
@@ -49,23 +50,12 @@ public class LocationSpec {
     if (o == null || getClass() != o.getClass()) return false;
 
     LocationSpec that = (LocationSpec) o;
-
-    if (name != null ? !name.equals(that.name) : that.name != null)
-        return false;
-    if (spec != null ? !spec.equals(that.spec) : that.spec != null)
-        return false;
-    if (config != null ? !config.equals(that.config) : that.config != null)
-      return false;
-
-    return true;
+    return Objects.equal(name, that.name) && Objects.equal(spec, that.spec) && Objects.equal(config, that.config);
   }
 
   @Override
   public int hashCode() {
-    int result = spec != null ? spec.hashCode() : 0;
-    result = 31 * result + (name != null ? name.hashCode() : 0);
-    result = 31 * result + (config != null ? config.hashCode() : 0);
-    return result;
+    return Objects.hashCode(spec, name, config);
   }
 
   @Override

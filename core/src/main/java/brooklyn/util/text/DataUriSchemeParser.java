@@ -10,6 +10,7 @@ import java.util.Map;
 
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.sun.jersey.core.util.Base64;
 
@@ -32,7 +33,7 @@ public class DataUriSchemeParser {
     private Map<String,String> parameters = new LinkedHashMap<String,String>();
 
     public DataUriSchemeParser(String url) {
-        this.url = url;
+        this.url = Preconditions.checkNotNull(url, "url");
     }
 
     // ---- static conveniences -----

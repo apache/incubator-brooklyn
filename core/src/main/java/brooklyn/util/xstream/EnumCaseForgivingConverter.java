@@ -30,9 +30,7 @@ public class EnumCaseForgivingConverter extends EnumConverter {
             
             Exceptions.propagateIfFatal(e);
             try {
-                @SuppressWarnings("unchecked")
-                T[] values = (T[]) type.getMethod("values").invoke(null);
-                for (T v: values)
+                for (T v: type.getEnumConstants())
                     if (v.name().equalsIgnoreCase(token)) return v;
                 throw e;
             } catch (Exception e2) {

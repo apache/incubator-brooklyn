@@ -45,7 +45,7 @@ public class CatalogPredicates {
         };
     }
 
-    public static <T> Predicate<CatalogItem<T>> type(final Predicate<? super String> filter) {
+    public static <T> Predicate<CatalogItem<T>> javaType(final Predicate<? super String> filter) {
         return new Predicate<CatalogItem<T>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T> item) {

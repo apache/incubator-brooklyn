@@ -4,11 +4,8 @@ import brooklyn.catalog.CatalogItem;
 
 public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
     
-    // attributes
     String id;
     String type;
-    
-    // fields
     String name;
     String description;
     String iconUrl;

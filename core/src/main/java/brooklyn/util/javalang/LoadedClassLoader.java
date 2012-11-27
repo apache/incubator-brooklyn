@@ -13,6 +13,7 @@ public class LoadedClassLoader extends ClassLoader {
     protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         Class<?> result = loadedClasses.get(name);
         if (result==null) throw new ClassNotFoundException(""+name+" not known here");
+        if (resolve) resolveClass(result);
         return result;
     }
 

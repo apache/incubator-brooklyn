@@ -8,7 +8,7 @@
        (from a local scan you can generate the XML for publishing by saying  
         `mgmt.getCatalog().toXmlString()` in JS gui groovy page, then tweaking.)  
        also, for a local (non-linked) reference, an empty classpath means to use the default classpath. -->
-  <classpath scan="true"/>
+  <classpath scan="types"/>
 
   <!-- now (for illustration) we define some other sources which weren't on our classpath but
        which we want included in our catalog on our brooklyn server -->
@@ -22,7 +22,7 @@
   
   <catalog>
     <description>Extra local jars I've got on my machine, added so I can pull in the CDH easily.</description>
-    <classpath scan="true">
+    <classpath scan="types">
       <entry>file://~/.m2/repository/io/cloudsoft/brooklyn-cdh/1.0.0-SNAPSHOT/brooklyn-cdh.jar</entry>
       <entry>file://~/.m2/repository/io/cloudsoft/brooklyn-cdh/1.0.0-SNAPSHOT/whirr-cm.jar</entry>
     </classpath>
@@ -30,7 +30,7 @@
          but here we illustrate how we can override the name of one of them -->
     <template type="io.brooklyn.cloudera.ClouderaForHadoopWithManager" name="MY FAV!  CDH Hadoop Application with Cloudera Manager">
       <description>I've just overrridden the default and supplied my own name and description, to show what can be done.</description>
-    </templaate>
+    </template>
   </catalog>
   
   <!-- and a few remote catalogs -->

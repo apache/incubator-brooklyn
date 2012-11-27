@@ -13,6 +13,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 public class LocationSummary extends LocationSpec {
@@ -84,17 +85,12 @@ public class LocationSummary extends LocationSpec {
   public boolean equals(Object o) {
     if (!super.equals(o)) return false;
     LocationSummary that = (LocationSummary) o;
-    if (id != null ? !id.equals(that.id) : that.id != null)
-      return false;
-    return true;
+    return Objects.equal(id, that.id);
   }
 
   @Override
   public int hashCode() {
-    int result = super.hashCode();
-    result = 31 * result + (id != null ? id.hashCode() : 0);
-    result = 31 * result + (links != null ? links.hashCode() : 0);
-    return result;
+    return Objects.hashCode(id, links);
   }
 
   @Override

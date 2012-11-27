@@ -1,5 +1,7 @@
 package brooklyn.catalog.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -46,17 +48,18 @@ public class CatalogClasspathDo {
     
     private final CatalogDo catalog;
     private final CatalogClasspathDto classpath;
+    private final CatalogScanningModes scanMode;
     
     boolean isLoaded = false;
     private URL[] urls;
-    private CatalogScanningModes scanMode;
     
-    private CompositeClassLoader classloader = new CompositeClassLoader();
+    private final CompositeClassLoader classloader = new CompositeClassLoader();
     private volatile boolean classloaderLoaded = false;
 
     public CatalogClasspathDo(CatalogDo catalog) {
         this.catalog = Preconditions.checkNotNull(catalog, "catalog");
         this.classpath = catalog.dto.classpath;
+        this.scanMode = (classpath != null) ? classpath.scan : null;
     }
     
     /** causes all scanning-based classpaths to scan the classpaths
@@ -82,7 +85,6 @@ public class CatalogClasspathDo {
         // (might also offer regex ? but that is post-load filter as opposed to native optimisation)
         String prefix = null;
 
-        scanMode = classpath.scan;
         if (scanMode==null || scanMode==CatalogScanningModes.NONE)
             return;
         

@@ -15,8 +15,12 @@ public class BasicLocationDefinition implements LocationDefinition {
     private final String spec;
     private final Map<String,Object> config;
 
+    public BasicLocationDefinition(String name, String spec, Map<String,? extends Object> config) {
+        this(LanguageUtils.newUid(), name, spec, config);
+    }
+    
     public BasicLocationDefinition(String id, String name, String spec, Map<String,? extends Object> config) {      
-        this.id = id != null ? id : LanguageUtils.newUid();
+        this.id = Preconditions.checkNotNull(id);
         this.name = name;
         this.spec = Preconditions.checkNotNull(spec);
         this.config = config==null ? ImmutableMap.<String, Object>of() : ImmutableMap.<String, Object>copyOf(config);

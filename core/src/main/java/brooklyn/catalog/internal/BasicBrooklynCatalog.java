@@ -92,7 +92,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @SuppressWarnings("unchecked")
     @Override
     public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
-        Iterable<CatalogItem<Object>> resultL = getCatalogItems(CatalogPredicates.type(Predicates.equalTo(typeName)));
+        Iterable<CatalogItem<Object>> resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
         if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalot item for type "+typeName);
         CatalogItem<Object> resultI = resultL.iterator().next();
         if (log.isDebugEnabled() && Iterables.size(resultL)>1) {

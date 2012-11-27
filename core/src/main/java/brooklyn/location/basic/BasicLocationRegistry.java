@@ -26,6 +26,7 @@ import brooklyn.util.internal.LanguageUtils;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 @SuppressWarnings({"rawtypes","unchecked"})
@@ -38,8 +39,10 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
 
     private final ManagementContext mgmt;
     /** map of defined locations by their ID */
-    Map<String,LocationDefinition> definedLocations = new LinkedHashMap<String, LocationDefinition>();
-    
+    private final Map<String,LocationDefinition> definedLocations = new LinkedHashMap<String, LocationDefinition>();
+
+    protected final Map<String,LocationResolver> resolvers = new LinkedHashMap<String, LocationResolver>();
+
     public BasicLocationRegistry(ManagementContext mgmt) {
         this.mgmt = mgmt;
         this.properties = null;
@@ -61,8 +64,6 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         this.mgmt = null;
         findServices();
     }
-        
-    protected Map<String,LocationResolver> resolvers = new LinkedHashMap<String, LocationResolver>();
     
     protected void findServices() {
         ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class);
@@ -111,6 +112,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
             ConfigMap namedLocationProps = mgmt.getConfig().submap(ConfigPredicates.startingWith(NAMED_LOCATION_PREFIX));
             for (String k: namedLocationProps.asMapWithStringKeys().keySet()) {
                 String name = k.substring(NAMED_LOCATION_PREFIX.length());
+                // If has a dot, then is a sub-property of a named location (e.g. brooklyn.location.named.prod1.user=bob)
                 if (!name.contains(".")) {
                     // this is a new named location
                     String spec = (String) namedLocationProps.asMapWithStringKeys().get(k);
@@ -133,7 +135,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
     
     // TODO save / serialize
     
-    // for testing
+    @VisibleForTesting
     void disablePersistence() {
         // persistence isn't enabled yet anyway (have to manually save things,
         // defining the format and file etc)
@@ -274,7 +276,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         return properties;
     }
 
-    // exposed for testing
+    @VisibleForTesting
     public static void setupLocationRegistryForTesting(ManagementContext mgmt) {
         // ensure localhost is added (even on windows)
         LocationDefinition l = mgmt.getLocationRegistry().getDefinedLocationByName("localhost");

@@ -38,16 +38,21 @@ public class CatalogDto {
                 "]";
     }
 
-    void copyFrom(CatalogDto source, boolean skipNulls) throws IllegalArgumentException, IllegalAccessException {
+    /**
+     * @throws NullPointerException If source is null (and !skipNulls)
+     */
+    void copyFrom(CatalogDto source, boolean skipNulls) throws IllegalAccessException {
         if (source==null) {
             if (skipNulls) return;
             throw new NullPointerException("source DTO is null, when copying to "+this);
         }
-        for (Field f: getClass().getFields()) {
-            Object value = f.get(source);
-            if (!skipNulls || value!=null)
-                f.set(this, value);
-        }
+        
+        if (!skipNulls || source.id != null) id = source.id;
+        if (!skipNulls || source.url != null) url = source.url;
+        if (!skipNulls || source.name != null) name = source.name;
+        if (!skipNulls || source.description != null) description = source.description;
+        if (!skipNulls || source.classpath != null) classpath = source.classpath;
+        if (!skipNulls || source.entries != null) entries = source.entries;
     }
 
 }
