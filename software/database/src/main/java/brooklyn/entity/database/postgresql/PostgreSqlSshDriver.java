@@ -1,7 +1,6 @@
 package brooklyn.entity.database.postgresql;
 
 import static brooklyn.entity.basic.lifecycle.CommonCommands.alternatives;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.exists;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.file;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.sudo;
@@ -11,8 +10,7 @@ import javax.annotation.Nullable;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
@@ -55,40 +51,27 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
 
     @Override
     public void install() {
-        int code = newScript("CHECK_INSTALLED").body.append(exists(getInstallDir() + "/bin")).execute();
-
-        // bail out if already binaries already linked
-        if (code == 0) return;
-
-        Iterable<String> pgbinlocator = Iterables.transform(pgctlLocations, new Function<String, String>() {
+        // Check we can actually find a usable pg_ctl
+        Collection<String> pgbinlocator = ImmutableList.copyOf(Iterables.transform(pgctlLocations, new Function<String, String>() {
             @Override
             public String apply(@Nullable String s) {
-                return "test -f " + s + "pg_ctl && test -f " + s + "psql";
-            }
-        });
-
-        code = newScript("CHECK_INSTALLED").body
-                .append(alternatives(ImmutableList.copyOf(pgbinlocator), "ECHO \"postgres binaries not found, installing...\""))
-                .execute();
-
-        List<String> commands = new LinkedList<String>();
-
-        if (code != 0) {
-            log.info("Installing PostgreSQL package");
-            // TODO tied to version 9.1 for port installs
-            commands.add(installPackage(ImmutableMap.of("yum", "postgresql postgresql-server", "port", "postgresql91 postgresql91-server"), "postgresql"));
-        }
-
-        // Link to correct binaries folder (different versions of pg_ctl and psql don't always play well together)
-        List<String> pgctlLinker = Lists.newArrayList(Iterables.transform(pgctlLocations, new Function<String, String>() {
-            @Override
-            public String apply(@Nullable String s) {
-                return file(s + "pg_ctl", "ln -s " + s + " " + getInstallDir() + "/bin");
+                return "test -f " + s + "pg_ctl";
             }
         }));
-        commands.add("mkdir -p " + getInstallDir());
-        commands.add(alternatives(ImmutableSet.copyOf(pgctlLinker), "echo \"WARNING: failed to locate postgresql binaries, will likely fail subsequently\""));
-        newScript(INSTALLING).body.append(commands).failOnNonZeroResultCode().execute();
+        // Link to correct binaries folder (different versions of pg_ctl and psql don't always play well together)
+        Collection<String> pgctlLinker = ImmutableList.copyOf(Iterables.transform(pgctlLocations, new Function<String, String>() {
+            @Override
+            public String apply(@Nullable String s) {
+                return file(s + "pg_ctl", "ln -s " + s + " bin");
+            }
+        }));
+
+        // TODO tied to version 9.1 for port installs
+        newScript(INSTALLING).body.append(
+                alternatives(pgbinlocator,
+                        installPackage(ImmutableMap.of("yum", "postgresql postgresql-server", "port", "postgresql91 postgresql91-server"), "postgresql")),
+                alternatives(pgctlLinker, "echo \"WARNING: failed to locate postgresql binaries, will likely fail subsequently\""))
+                .failOnNonZeroResultCode().execute();
     }
 
     public static String sudoAsUserAppendCommandOutputToFile(String user, String commandWhoseOutputToWrite, String file) {
@@ -103,15 +86,16 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
 
     @Override
     public void customize() {
-        newScript(CUSTOMIZING).body.append(sudo("rm -rf " + getDataDir())).execute();
+        // Some OSes start postgres during package installation
+        newScript(CUSTOMIZING).body.append(sudoAsUser("postgres", "/etc/init.d/postgresql stop")).execute();
         newScript(CUSTOMIZING).body.append(
                 sudo("mkdir -p " + getDataDir()),
                 sudo("chown postgres:postgres " + getDataDir()),
                 sudo("touch " + getLogFile()),
                 sudo("chown postgres:postgres " + getLogFile()),
-                callPgctl("initdb", false),
+                sudoAsUser("postgres", getInstallDir() + "/bin/initdb -D " + getDataDir()),
                 sudoAsUserAppendCommandOutputToFile("postgres", "echo \"listen_addresses = '*'\"", getDataDir() + "/postgresql.conf"),
-                // TODO control which hosts can connect?
+                // TODO give users control which hosts can connect and the authentication mechanism
                 sudoAsUserAppendCommandOutputToFile("postgres", "echo \"host    all         all         0.0.0.0/0             md5\"", getDataDir() + "/pg_hba.conf")
         ).failOnNonZeroResultCode().execute();
 
@@ -167,8 +151,8 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     public void stop() {
         newScript(STOPPING).body.append(callPgctl("stop", false)).failOnNonZeroResultCode().execute();
     }
-    
-    public int getPort() { 
+
+    public int getPort() {
         return getEntity().getPort();
     }
 
