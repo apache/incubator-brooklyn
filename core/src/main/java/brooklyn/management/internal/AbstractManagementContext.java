@@ -7,6 +7,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +41,12 @@ import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitio
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 
@@ -70,6 +74,23 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
+    }
+    
+    static {
+        // ensure that if ResourceUtils is given an entity as context,
+        // we use the catalog class loader (e.g. to resolve classpath URLs)
+        ResourceUtils.addClassLoaderProvider(new Function<Object, ClassLoader>() {
+            @Override 
+            public ClassLoader apply(@Nullable Object input) {
+                if (input instanceof AbstractEntity) 
+                    return apply(((AbstractEntity)input).getManagementSupport());
+                if (input instanceof EntityManagementSupport) 
+                    return apply(((EntityManagementSupport)input).getManagementContext(true));
+                if (input instanceof AbstractManagementContext) 
+                    return ((AbstractManagementContext)input).getCatalog().getRootClassLoader();
+                return null;
+            }
+        });
     }
     
     private volatile boolean running = true;

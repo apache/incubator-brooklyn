@@ -14,9 +14,9 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.AggregateClassLoader;
 
 import com.google.common.base.Preconditions;
-import com.thoughtworks.xstream.core.util.CompositeClassLoader;
 
 public class CatalogDo {
 
@@ -31,7 +31,7 @@ public class CatalogDo {
     CatalogClasspathDo classpath;
     Map<String, CatalogItemDo<?>> cache;
     
-    CompositeClassLoader childrenClassLoader = new CompositeClassLoader();
+    AggregateClassLoader childrenClassLoader = AggregateClassLoader.newInstanceWithNoLoaders();
     ClassLoader recursiveClassLoader;
 
     public CatalogDo(CatalogDto dto) {
@@ -84,7 +84,7 @@ public class CatalogDo {
         CatalogDo childL = new CatalogDo(child);
         childrenCatalogs.add(childL);
         childL.load(mgmt, this);
-        childrenClassLoader.add(childL.getRecursiveClassLoader());
+        childrenClassLoader.addFirst(childL.getRecursiveClassLoader());
         clearCache(false);
         return childL;
     }
@@ -107,7 +107,8 @@ public class CatalogDo {
         // build the cache; first from children catalogs, then from local entities
         // so that root and near-root takes precedence over deeper items;
         // and go through in reverse order so that things at the top of the file take precedence
-        // (both in the cache and in the composite class loader)
+        // (both in the cache and in the aggregate class loader);
+        // however anything added _subsequently_ will take precedence (again in both)
         if (dto.catalogs!=null) { 
             List<CatalogDo> catalogsReversed = new ArrayList<CatalogDo>(childrenCatalogs);
             Collections.reverse(catalogsReversed);
@@ -210,14 +211,18 @@ public class CatalogDo {
     
     protected synchronized void loadRecursiveClassLoader() {
         if (recursiveClassLoader!=null) return;
-        CompositeClassLoader cl = new CompositeClassLoader();
-        cl.add(childrenClassLoader);
+        AggregateClassLoader cl = AggregateClassLoader.newInstanceWithNoLoaders();
+        cl.addFirst(childrenClassLoader);
         ClassLoader local = getLocalClassLoader();
-        if (local!=null) cl.add(local);
+        if (local!=null) cl.addFirst(local);
         if (parent==null) {
-            // we are root.  include the mgmt classloader
+            // we are root.  include the mgmt base classloader and/or standard class loaders 
             ClassLoader base = ((AbstractManagementContext)mgmt).getBaseClassLoader();
-            if (base!=null) cl.add(base);
+            if (base!=null) cl.addFirst(base);
+            else {
+                cl.addFirst(getClass().getClassLoader());
+                cl.addFirst(Object.class.getClassLoader());
+            }
         }
         recursiveClassLoader = cl;
     }

@@ -185,6 +185,7 @@ public class BrooklynRestApiLauncher {
                 if (result==null || mf.lastModified() > result.lastModified()) result = mf;
             }
         }
+        if (result==null) return null;
         return result.getAbsolutePath();
     }
 
