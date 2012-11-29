@@ -101,7 +101,6 @@ define([
             $(".nav1_apidoc").addClass("active")
         },
         scriptGroovyPage:function () {
-            console.log(this.scriptGroovyResource)
             if (this.scriptGroovyResource === undefined)
                 this.scriptGroovyResource = new ScriptGroovyView({})
             this.showView("#application-content", this.scriptGroovyResource)

@@ -16,7 +16,7 @@ define([
     
     "text!tpl/app-add-wizard/preview.html",
     
-    "bootstrap"
+    "bootstrap", "brooklyn-utils"
     
 ], function (_, $, Backbone, Entity, Application, FormatJSON, Location, ModalHtml, 
 		CreateHtml, 
@@ -202,8 +202,6 @@ define([
                 $(".template-lozenge").show()
             } else {
                 _.each($(".template-lozenge"), function(it) {
-                    console.log($(it))
-                    console.log($(it).text())
                     var viz = $(it).text().toLowerCase().indexOf(filter)>=0
                     if (viz) 
                         $(it).show() 
@@ -342,8 +340,8 @@ define([
                     return true
                 }
             } else {
-                console.log("NOT IMPLEMENTED YET")
-                // other tabs not implemented yet 
+                log("NOT IMPLEMENTED YET")
+                // TODO - other tabs not implemented yet 
                 // do nothing, show error return false below
             }
             this.$('div.app-add-wizard-create-info-message').show('slow').delay(2000).hide('slow')

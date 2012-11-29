@@ -6,7 +6,8 @@ define([
     "jquery-wiggle",
     "jquery-ba-bbq",
     "handlebars",
-    "bootstrap"
+    "bootstrap",
+    "brooklyn-utils"
 ], function (_, $, Backbone, GroovyHtml) {
 
     var ScriptGroovyView = Backbone.View.extend({
@@ -57,7 +58,28 @@ define([
                     '\n'+
                     'return mgmt.applications\n')
         },
+        updateTextareaWithData: function($div, data, alwaysShow) {
+            var $ta = $("textarea", $div)
+            var show = alwaysShow
+            if (data !== undefined) {
+                $ta.val(data)
+                show = true
+            } else {
+                $ta.val("")
+            }
+            if (show) {
+                log("foo")
+                $div.show(100)
+                $ta.css("height", 50);
+                var height = Math.min($ta.prop("scrollHeight"), 350)
+                $ta.css("height", height);
+                log(height)
+            } else {
+                $div.hide()
+            }
+        },
         submitScript: function() {
+            var that = this;
             var script = $("#groovy-ui-container #script").val()
             $(".output .toggler-region", this.$el).hide()
             $(".output .throbber", this.$el).show()
@@ -69,42 +91,18 @@ define([
                 contentType:"application/text",
                 success:function (data) {
                     $(".output .throbber", this.$el).hide()
-                    
-                    if (data.result !== undefined)
-                        $(".output .result textarea").val(data.result)
-                    else
-                        $(".output .result textarea").val("")
-                    $(".output .result").show()
-                    
-                    if (data.problem !== undefined) {
-                        $(".output .error textarea").val(data.problem)
-                        $(".output .error").show()
-                    } else {
-                        $(".output .error").hide()
-                    }
-
-                    if (data.stdout !== undefined) {
-                        $(".output .stdout textarea").val(data.stdout)
-                        $(".output .stdout").show()
-                    } else {
-                        $(".output .stdout").hide()
-                    }
-
-                    if (data.stderr !== undefined) {
-                        $(".output .stderr textarea").val(data.stderr)
-                        $(".output .stderr").show()
-                    } else {
-                        $(".output .stderr").hide()
-                    }
+                    that.updateTextareaWithData($(".output .result"), data.result, true);
+                    that.updateTextareaWithData($(".output .error"), data.problem, false);
+                    that.updateTextareaWithData($(".output .stdout"), data.stdout, false);
+                    that.updateTextareaWithData($(".output .stderr"), data.stderr, false);
                 },
                 error: function(data) {
                     $(".output .throbber", this.$el).hide()
                     $("#groovy-ui-container div.error").val("ERROR: "+data)
                     $(".output .error").show()
                     
-                    // console.log might cause errors in some browsers but that's fine here (already an error)
-                    console.log("ERROR submitting script")
-                    console.log(data)
+                    log("ERROR submitting groovy script")
+                    log(data)
                 }})
         }
         

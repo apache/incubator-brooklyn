@@ -3,7 +3,7 @@
  */
 define([
     "underscore", "jquery", "backbone", "text!tpl/apps/effector-modal.html", "text!tpl/apps/param.html",
-    "text!tpl/apps/param-list.html"
+    "text!tpl/apps/param-list.html", "brooklyn-utils"
 ], function (_, $, Backbone, EffectorModalHtml, ParamHtml, ParamListHtml) {
 
     var EffectorInvokeView = Backbone.View.extend({
@@ -76,9 +76,8 @@ define([
                     // TODO render the error better than poor-man's flashing
                     // (would just be connection error -- with timeout=0 we get a task even for invalid input)
                     
-                    // console.log might throw error but that's okay...
-                    console.log("ERROR invoking effector")
-                    console.log(data)
+                    log("ERROR invoking effector")
+                    log(data)
                 }})
             // un-delegate events
             this.undelegateEvents()

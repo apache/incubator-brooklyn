@@ -6,7 +6,8 @@ define([
     "jquery-wiggle",
     "jquery-ba-bbq",
     "handlebars",
-    "bootstrap"
+    "bootstrap",
+    "brooklyn-utils"
 ], function (_, $, Backbone, SwaggerHtml) {
 
     var ApidocView = Backbone.View.extend({
@@ -35,17 +36,13 @@ define([
                 supportHeaderParams: false,
                 supportedSubmitMethods: ['get', 'post', 'put'],
                 onComplete: function(swaggerApi, swaggerUi){
-                    if(console) {
-                        console.log("Loaded SwaggerUI")
-                        console.log(swaggerApi);
-                        console.log(swaggerUi);
-                    }
+                        log("Loaded SwaggerUI")
+                        log(swaggerApi);
+                        log(swaggerUi);
                 },
                 onFailure: function(data) {
-                    if(console) {
-                        console.log("Unable to Load SwaggerUI");
-                        console.log(data);
-                    }
+                        log("Unable to Load SwaggerUI");
+                        log(data);
                 },
                 docExpansion: "none"
             });
