@@ -211,7 +211,9 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
     }
     
     @Override
-    public void preStart() {
+    public void preStop() {
+        super.preStop();
+        
         if (jmxHelper != null) jmxHelper.disconnect();
     }
 
