@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.text.DataUriSchemeParser;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Throwables;
@@ -72,31 +73,47 @@ public class ResourceUtils {
             if (url==null) throw new NullPointerException("Cannot read from null");
             if (url=="") throw new NullPointerException("Cannot read from empty string");
             String orig = url;
-            if (url.startsWith("classpath:")) {
-                try {
-                    return getResourceViaClasspath(url);
-                } catch (IOException e) {
-                    //catch the above because both orig and modified url may be interesting
-                    throw new IOException("Error accessing "+orig+": "+e, e);
+            String protocol = getProtocol(url);
+            if (protocol!=null) {
+                if ("classpath".equals(protocol)) {
+                    try {
+                        return getResourceViaClasspath(url);
+                    } catch (IOException e) {
+                        //catch the above because both orig and modified url may be interesting
+                        throw new IOException("Error accessing "+orig+": "+e, e);
+                    }
                 }
-            }
-            if (url.startsWith("sftp://")) {
-                try {
-                    return getResourceViaSftp(url);
-                } catch (IOException e) {
-                    throw new IOException("Error accessing "+orig+": "+e, e);
+                if ("sftp".equals(protocol)) {
+                    try {
+                        return getResourceViaSftp(url);
+                    } catch (IOException e) {
+                        throw new IOException("Error accessing "+orig+": "+e, e);
+                    }
                 }
-            }
-            if (url.matches("[A-Za-z][A-Za-z]+:.*")) {
-                //looks like a URL - require two letters so we don't think e.g. c:/path/ is a url
-                if (url.matches("file://[A-Za-z]:[/\\\\].*")) {
-                    // file://c:/path/to/x is sometimes mistakenly supplied
-                    // where file:///c:/path/to/x is the correct syntax.
-                    // treat the former as the latter since the former doesn't have any other interpretation
-                    if (log.isDebugEnabled())
-                        log.debug("silently changing "+url+" to file:/// prefix");
-                    url = "file:///"+url.substring(7);
+
+                if ("file".equals(protocol)) {
+                    if (url.matches("file://[A-Za-z]:[/\\\\].*")) {
+                        // file://c:/path/to/x is sometimes mistakenly supplied
+                        // where file:///c:/path/to/x is the correct syntax.
+                        // treat the former as the latter since the former doesn't have any other interpretation
+                        if (log.isDebugEnabled())
+                            log.debug("quietly changing "+url+" to file:/// prefix");
+                        url = "file:///"+url.substring(7);
+                    }
+
+                    String urlRelativeToHome = Strings.removeFromStart(url, "file://~/", "file:~/");
+                    if (!url.equals(urlRelativeToHome)) {
+                        // allow ~ syntax for home dir
+                        url = "file://"+System.getProperty("user.home")+"/"+urlRelativeToHome;
+                        if (log.isDebugEnabled())
+                            log.debug("quietly changing to "+url+" from file://~/ URL");
+                    }
                 }
+                
+                if ("data".equals(protocol)) {
+                    return new DataUriSchemeParser(url).lax().parse().getDataAsInputStream();
+                }
+                
                 return new URL(url).openStream();
             }
 
@@ -127,7 +144,27 @@ public class ResourceUtils {
             else throw new RuntimeException(e);
         }
     }
-
+    
+    /** returns the protocol (e.g. http) if one appears to be specified, or else null;
+     * 'protocol' here should consist of 2 or more _letters_ only followed by a colon
+     * (2 required to prevent  c``:\xxx being treated as a url)
+     */
+    public static String getProtocol(String url) {
+        if (url==null) return null;
+        int i=0;
+        StringBuilder result = new StringBuilder();
+        while (true) {
+            if (url.length()<=i) return null;
+            char c = url.charAt(i);
+            if (Character.isLetter(c)) result.append(c);
+            else if (c==':') {
+                if (i>=2) return result.toString();
+                return null;
+            } else return null;
+            i++;
+        }
+    }
+    
     private InputStream getResourceViaClasspath(String url) throws IOException {
         assert url.startsWith("classpath:");
         String subUrl = url.substring("classpath://".length());

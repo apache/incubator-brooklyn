@@ -3,6 +3,8 @@ package brooklyn.rest.resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -16,12 +18,21 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogPredicates;
+import brooklyn.entity.Entity;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.CatalogEntitySummary;
-import brooklyn.rest.domain.CatalogPolicySummary;
+import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.text.StringPredicates;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
@@ -45,7 +56,7 @@ public class CatalogResource extends AbstractBrooklynRestResource {
         @FormDataParam("groovyCode") InputStream uploadedInputStream,
         @FormDataParam("groovyCode") FormDataContentDisposition fileDetail) throws IOException {
 
-      return brooklyn().getCatalog().createFromGroovyCode(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
+      return brooklyn().createCatalogEntryFromGroovyCode(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
     }
     
     @POST
@@ -54,66 +65,92 @@ public class CatalogResource extends AbstractBrooklynRestResource {
             @ApiParam(name = "groovyCode", value = "Groovy code for the entity or policy", required = true)
             @Valid String groovyCode
     ) {
-        return brooklyn().getCatalog().createFromGroovyCode(groovyCode);
+        return brooklyn().createCatalogEntryFromGroovyCode(groovyCode);
     }
 
     @GET
     @Path("/entities")
-    @ApiOperation(value = "List available entity types matching a query", responseClass = "String", multiValueResponse = true)
-    public Iterable<String> listEntities(
-        @ApiParam(name = "name", value = "Query to filter entities by")
-        final @QueryParam("name") @DefaultValue("") String name
+    @ApiOperation(value = "List available entity types optionally matching a query", responseClass = "String", multiValueResponse = true)
+    public List<String> listEntities(
+        @ApiParam(name = "regex", value = "Regular expression to search for")
+        final @QueryParam("regex") @DefaultValue("") String regex,
+        @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
+        final @QueryParam("fragment") @DefaultValue("") String fragment
     ) {
-        return brooklyn().getCatalog().listEntitiesMatching(name, false);
+        return getCatalogItemIdsMatchingRegexFragment(CatalogPredicates.IS_ENTITY, regex, fragment);
     }
 
     @GET
     @Path("/applications")
-    @ApiOperation(value = "Fetch a list of application templates matching a query", responseClass = "String", multiValueResponse = true)
-    public Iterable<String> listApplications(
-        @ApiParam(name = "name", value = "Query to filter application templates by")
-        final @QueryParam("name") @DefaultValue("") String name
+    @ApiOperation(value = "Fetch a list of application templates optionally matching a query", responseClass = "String", multiValueResponse = true)
+    public List<String> listApplications(
+            @ApiParam(name = "regex", value = "Regular expression to search for")
+            final @QueryParam("regex") @DefaultValue("") String regex,
+            @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
+            final @QueryParam("fragment") @DefaultValue("") String fragment
     ) {
-        return brooklyn().getCatalog().listEntitiesMatching(name, true);
+        return getCatalogItemIdsMatchingRegexFragment(CatalogPredicates.IS_TEMPLATE, regex, fragment);
     }
 
+    @SuppressWarnings("unchecked")
     @GET
-    @Path("/entities/{entity}")
+    @Path("/entities/{entityId}")
     @ApiOperation(value = "Fetch an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public CatalogEntitySummary getEntity(
-        @ApiParam(name = "entity", value = "The class name of the entity to retrieve", required = true)
-        @PathParam("entity") String entityType) throws Exception {
-      if (!brooklyn().getCatalog().containsEntity(entityType)) {
-        throw WebResourceUtils.notFound("Entity with type '%s' not found", entityType);
+        @ApiParam(name = "entityId", value = "The ID of the entity or template to retrieve", required = true)
+        @PathParam("entityId") String entityId) throws Exception {
+      CatalogItem<?> result = brooklyn().getCatalog().getCatalogItem(entityId);
+      if (result==null) {
+        throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
       }
 
-      return CatalogEntitySummary.fromType(brooklyn().getCatalog().getEntityClass(entityType));
+      return CatalogEntitySummary.from(brooklyn(), (CatalogItem<? extends Entity>) result);
     }
 
     @GET
     @Path("/policies")
-    @ApiOperation(value = "List available policies", responseClass = "String", multiValueResponse = true)
-    public Iterable<String> listPolicies() {
-        return brooklyn().getCatalog().listPolicies();
+    @ApiOperation(value = "List available policies optionally matching a query", responseClass = "String", multiValueResponse = true)
+    public List<String> listPolicies(
+            @ApiParam(name = "regex", value = "Regular expression to search for")
+            final @QueryParam("regex") @DefaultValue("") String regex,
+            @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
+            final @QueryParam("fragment") @DefaultValue("") String fragment
+    ) {
+        return getCatalogItemIdsMatchingRegexFragment(CatalogPredicates.IS_POLICY, regex, fragment);
     }
     
     @GET
     @Path("/policies/{policy}")
-    @ApiOperation(value = "Fetch a policy's definition from the catalog", responseClass = "String", multiValueResponse = true)
+    @ApiOperation(value = "Fetch a policy's definition from the catalog", responseClass = "CatalogItemSummary", multiValueResponse = true)
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
-    public CatalogPolicySummary getPolicy(
-        @ApiParam(name = "policy", value = "The class name of the policy to retrieve", required = true)
-        @PathParam("policy") String policyType) throws Exception {
-      if (!brooklyn().getCatalog().containsPolicy(policyType)) {
-        throw WebResourceUtils.notFound("Policy with type '%s' not found", policyType);
-      }
+    public CatalogItemSummary getPolicy(
+        @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
+        @PathParam("policyId") String policyId) throws Exception {
+        CatalogItem<?> result = brooklyn().getCatalog().getCatalogItem(policyId);
+        if (result==null) {
+          throw WebResourceUtils.notFound("Policy with id '%s' not found", policyId);
+        }
 
-      return CatalogPolicySummary.fromType(brooklyn().getCatalog().getPolicyClass(policyType));
+        return CatalogItemSummary.from( result );
     }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private <T> List<String> getCatalogItemIdsMatchingRegexFragment(Predicate<CatalogItem<T>> type, String regex, String fragment) {
+        List filters = new ArrayList();
+        filters.add(type);
+        if (Strings.isNonEmpty(regex))
+            filters.add(CatalogPredicates.xml(StringPredicates.containsRegex(regex)));
+        if (Strings.isNonEmpty(fragment))
+            filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralCaseInsensitive(fragment)));
+        return ImmutableList.copyOf(Iterables.transform(
+                brooklyn().getCatalog().getCatalogItems(Predicates.and(filters)),
+                CatalogPredicates.ID_OF_ITEM_TRANSFORMER));        
+    }
+    
 
 }

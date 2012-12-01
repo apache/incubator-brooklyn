@@ -44,12 +44,12 @@ public class ResourceUtilsTest {
 
     @Test
     public void testWriteStreamToTempFile() throws Exception {
-        tempFile = ResourceUtils.writeToTempFile(new ByteArrayInputStream("mycontents".getBytes()), "resourceutils-test", ".txt");
+        File tempFileLocal = ResourceUtils.writeToTempFile(new ByteArrayInputStream("mycontents".getBytes()), "resourceutils-test", ".txt");
         try {
-            List<String> lines = Files.readLines(tempFile, Charsets.UTF_8);
+            List<String> lines = Files.readLines(tempFileLocal, Charsets.UTF_8);
             assertEquals(lines, ImmutableList.of("mycontents"));
         } finally {
-            tempFile.delete();
+            tempFileLocal.delete();
         }
     }
 
@@ -57,16 +57,16 @@ public class ResourceUtilsTest {
     public void testPropertiesStreamToTempFile() throws Exception {
         Properties props = new Properties();
         props.setProperty("mykey", "myval");
-        tempFile = ResourceUtils.writeToTempFile(props, "resourceutils-test", ".txt");
+        File tempFileLocal = ResourceUtils.writeToTempFile(props, "resourceutils-test", ".txt");
         FileInputStream fis = null;
         try {
-            fis = new FileInputStream(tempFile);
+            fis = new FileInputStream(tempFileLocal);
             Properties props2 = new Properties();
             props2.load(fis);
             assertEquals(props2.getProperty("mykey"), "myval");
         } finally {
             Closeables.closeQuietly(fis);
-            tempFile.delete();
+            tempFileLocal.delete();
         }
     }
 
@@ -136,7 +136,17 @@ public class ResourceUtilsTest {
         InputStream stream = utils.getResourceFromUrl("sftp://"+user+"@localhost:"+tempFile.getAbsolutePath());
         assertEquals(ResourceUtils.readFullyString(stream), tempFileContents);
     }
-    
+
+    @Test
+    public void testDataUrl() throws Exception {
+        assertEquals(utils.getResourceAsString("data:,hello"), "hello");
+        assertEquals(utils.getResourceAsString("data:,hello%20world"), "hello world");
+        // above is correct. below are not valid ... but we accept them anyway
+        assertEquals(utils.getResourceAsString("data:hello"), "hello");
+        assertEquals(utils.getResourceAsString("data://hello"), "hello");
+        assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
+    }
+
     @Test
     public void testMergePaths() throws Exception {
         assertEquals(ResourceUtils.mergePaths("a","b"), "a/b");

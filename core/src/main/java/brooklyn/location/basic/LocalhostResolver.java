@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import brooklyn.location.Location;
+import brooklyn.location.LocationRegistry;
 import brooklyn.util.KeyValueParser;
 import brooklyn.util.MutableMap;
 
@@ -43,11 +44,11 @@ public class LocalhostResolver implements RegistryLocationResolver {
     }
     
     @Override
-    public Location newLocationFromString(String spec, LocationRegistry registry, Map locationFlags) {
+    public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
     }
     
-    protected Location newLocationFromString(String spec, LocationRegistry registry, Map properties, Map locationFlags) {
+    protected Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like localhost or localhost(name=abc)");
@@ -81,5 +82,10 @@ public class LocalhostResolver implements RegistryLocationResolver {
         
         return new LocalhostMachineProvisioningLocation(flags);
     }
-    
+
+    @Override
+    public boolean accepts(String spec, LocationRegistry registry) {
+        return BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true);
+    }
+
 }

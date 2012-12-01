@@ -28,8 +28,10 @@ public class LocationSpecTest {
   public void testDeserializeFromJSONWithNoCredential() throws IOException {
     LocationSpec loaded = fromJson(jsonFixture("fixtures/location-without-credential.json"), LocationSpec.class);
 
+    assertEquals(loaded.getSpec(), locationSpec.getSpec());
+    
+    assertEquals(loaded.getConfig().size(), 1);
+    assertEquals(loaded.getConfig().get("identity"), "bob");
     assertNull(loaded.getConfig().get("credential"));
-    assertEquals(loaded.getProvider(), locationSpec.getProvider());
-    assertEquals(loaded.getConfig(), locationSpec.getConfig());
   }
 }

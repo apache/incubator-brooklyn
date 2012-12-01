@@ -2,16 +2,22 @@ package brooklyn.rest.util;
 
 import static brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
+import groovy.lang.GroovyClassLoader;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
+import javax.ws.rs.core.Response;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -20,16 +26,14 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation;
+import brooklyn.location.LocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
-import brooklyn.rest.domain.LocationSpec;
-import brooklyn.rest.legacy.BrooklynCatalog;
-import brooklyn.rest.legacy.LocationStore;
 import brooklyn.util.MutableMap;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -41,15 +45,6 @@ public class BrooklynRestResourceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynRestResourceUtils.class);
 
-    // TODO move these to mgmt context -- so REST API is stateless
-    private static LocationStore locationStore = new LocationStore();
-    static { locationStore.put(new LocationSpec("localhost", new MutableMap<String,String>())); }
-    
-    private static BrooklynCatalog catalog = new BrooklynCatalog(); 
-    public static void changeLocationStore(LocationStore locationStore) {
-        BrooklynRestResourceUtils.locationStore = locationStore;
-    }
-    
     private final ManagementContext mgmt;
     
     public BrooklynRestResourceUtils(ManagementContext mgmt) {
@@ -58,13 +53,13 @@ public class BrooklynRestResourceUtils {
     }
 
     public BrooklynCatalog getCatalog() {
-        return catalog;
+        return mgmt.getCatalog();
     }
     
-    public LocationStore getLocationStore() {
-        return locationStore;
+    public LocationRegistry getLocationRegistry() {
+        return mgmt.getLocationRegistry();
     }
-    
+
     /** finds the entity indicated by the given ID or name
      * <p>
      * prefers ID based lookup in which case appId is optional, and if supplied will be enforced.
@@ -147,29 +142,21 @@ public class BrooklynRestResourceUtils {
     
     public Task<?> start(Application app, ApplicationSpec spec) {
         // Start all the managed entities by asking the app instance to start in background
-        Function<String, Location> buildLocationFromRef = new Function<String, Location>() {
+        Function<String, Location> buildLocationFromId = new Function<String, Location>() {
             @Override
-            public Location apply(String ref) {
-                LocationSpec locationSpec = locationStore.getByRef(ref);
-                if (locationSpec.getProvider().equals("localhost")) {
-                    return new LocalhostMachineProvisioningLocation(MutableMap.copyOf(locationSpec.getConfig()));
-                }
-
-                Map<String, String> config = Maps.newHashMap();
-                config.put("provider", locationSpec.getProvider());
-                config.putAll(locationSpec.getConfig());
-
-                return new JcloudsLocation(config);
+            public Location apply(String id) {
+                id = fixLocation(id);
+                return getLocationRegistry().resolve(id);
             }
         };
 
-        ArrayList<Location> locations = Lists.newArrayList(transform(spec.getLocations(), buildLocationFromRef));
+        ArrayList<Location> locations = Lists.newArrayList(transform(spec.getLocations(), buildLocationFromId));
         return Entities.invokeEffectorWithMap((EntityLocal)app, app, Startable.START,
                 MutableMap.of("locations", locations));
     }
 
     private AbstractEntity newEntityInstance(String type, Entity owner, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        Class<? extends AbstractEntity> clazz = catalog.getEntityClass(type);
+        Class<? extends Entity> clazz = getCatalog().loadClassByType(type, Entity.class);
         Map<String, String> config = Maps.newHashMap(configO);
         Constructor<?>[] constructors = clazz.getConstructors();
         AbstractEntity result = null;
@@ -219,6 +206,36 @@ public class BrooklynRestResourceUtils {
                 mgmt.unmanage(application);
             }
         });
+    }
+
+    @SuppressWarnings({ "rawtypes" })
+    public Response createCatalogEntryFromGroovyCode(String groovyCode) {
+        ClassLoader parent = getCatalog().getRootClassLoader();
+        GroovyClassLoader loader = new GroovyClassLoader(parent);
+
+        Class clazz = loader.parseClass(groovyCode);
+
+        if (AbstractEntity.class.isAssignableFrom(clazz)) {
+            CatalogItem<?> item = getCatalog().addItem(clazz);
+            log.info("REST created "+item);
+            return Response.created(URI.create("entities/" + clazz.getName())).build();
+
+        } else if (AbstractPolicy.class.isAssignableFrom(clazz)) {
+            CatalogItem<?> item = getCatalog().addItem(clazz);
+            log.info("REST created "+item);
+            return Response.created(URI.create("policies/" + clazz.getName())).build();
+        }
+
+        throw WebResourceUtils.preconditionFailed("Unsupported type superclass "+clazz.getSuperclass()+"; expects Entity or Policy");
+    }
+
+    @Deprecated
+    public static String fixLocation(String locationId) {
+        if (locationId.startsWith("/v1/locations/")) {
+            log.warn("REST API using legacy URI syntax for location: "+locationId);
+            locationId = Strings.removeFromStart(locationId, "/v1/locations/");
+        }
+        return locationId;
     }
 
 }

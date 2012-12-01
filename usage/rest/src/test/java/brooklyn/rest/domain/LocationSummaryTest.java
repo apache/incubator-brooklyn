@@ -3,16 +3,18 @@ package brooklyn.rest.domain;
 import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
-import java.io.IOException;
 import static org.testng.Assert.assertEquals;
-import org.testng.annotations.Test;
 
-import brooklyn.rest.domain.LocationSpec;
-import brooklyn.rest.domain.LocationSummary;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import org.codehaus.jackson.type.TypeReference;
+import org.testng.annotations.Test;
 
 public class LocationSummaryTest {
 
-  final LocationSummary summary = new LocationSummary("123", LocationSpec.localhost());
+  final LocationSummary summary = LocationSummary.newInstance("123", LocationSpec.localhost());
 
   @Test
   public void testSerializeToJSON() throws IOException {
@@ -23,4 +25,11 @@ public class LocationSummaryTest {
   public void testDeserializeFromJSON() throws IOException {
     assertEquals(fromJson(jsonFixture("fixtures/location-summary.json"), LocationSummary.class), summary);
   }
+  
+  @Test
+  public void testDeserializeListFromJSON() throws IOException {
+    assertEquals(fromJson(jsonFixture("fixtures/location-list.json"), new TypeReference<List<LocationSummary>>() {}), 
+            Collections.singletonList(summary));
+  }
+
 }

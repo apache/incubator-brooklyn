@@ -1,7 +1,5 @@
 package brooklyn.rest.resources;
 
-import static com.google.common.collect.Iterables.transform;
-
 import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,13 +16,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import brooklyn.location.Location;
+import brooklyn.location.LocationDefinition;
+import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.util.EntityLocationUtils;
+import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.MutableMap;
+import brooklyn.util.internal.LanguageUtils;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
@@ -39,13 +42,29 @@ public class LocationResource extends AbstractBrooklynRestResource {
       responseClass = "brooklyn.rest.domain.LocationSummary",
       multiValueResponse = true)
   public List<LocationSummary> list() {
-    return Lists.newArrayList(transform(brooklyn().getLocationStore().entries(),
-        new Function<Map.Entry<Integer, LocationSpec>, LocationSummary>() {
+    return Lists.newArrayList(Iterables.transform(brooklyn().getLocationRegistry().getDefinedLocations().values(),
+        new Function<LocationDefinition, LocationSummary>() {
           @Override
-          public LocationSummary apply(Map.Entry<Integer, LocationSpec> entry) {
-            return new LocationSummary(entry.getKey().toString(), entry.getValue());
+          public LocationSummary apply(LocationDefinition l) {
+            return resolveLocationDefinition(l);
           }
         }));
+  }
+
+  protected LocationSummary resolveLocationDefinition(LocationDefinition l) {
+      return LocationSummary.newInstance(l);
+      
+//      // full config could be nice -- except it's way too much (all of brooklyn.properties and system properties!)
+//      // also, handle non-resolveable errors somewhat gracefully
+//      try {
+//          Location ll = mgmt().getLocationRegistry().resolve(l);
+//          return LocationSummary.newInstance(l, ll);
+//      } catch (Exception e) {
+//          LocationSummary s1 = LocationSummary.newInstance(l);
+//          return new LocationSummary(s1.getId(), s1.getName(), s1.getSpec(), 
+//                  new MutableMap<String,String>(s1.getConfig()).add("WARNING", "Location invalid: "+e),
+//                  s1.getLinks());
+//      }
   }
 
   // this is here to support the web GUI's circles
@@ -69,32 +88,36 @@ public class LocationResource extends AbstractBrooklynRestResource {
   }
 
   @GET
-  @Path("/{location}")
+  @Path("/{locationId}")
   @ApiOperation(value = "Fetch details about a location",
       responseClass = "brooklyn.rest.domain.LocationSummary",
       multiValueResponse = true)
   public LocationSummary get(
-      @ApiParam(value = "Location id to fetch", required = true)
-      @PathParam("location") Integer locationId) {
-    return new LocationSummary(locationId.toString(), brooklyn().getLocationStore().get(locationId));
+          @ApiParam(value = "Location id to fetch", required = true)
+          @PathParam("locationId") String locationId) {
+      LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocation(locationId);
+      if (l==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
+      return resolveLocationDefinition(l);
   }
 
   @POST
   @ApiOperation(value = "Create a new location", responseClass = "String")
   public Response create(
-      @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
-      @Valid LocationSpec locationSpec) {
-    int id = brooklyn().getLocationStore().put(locationSpec);
-    return Response.created(URI.create("" + id)).build();
+          @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
+          @Valid LocationSpec locationSpec) {
+      String id = LanguageUtils.newUid();
+      LocationDefinition l = new BasicLocationDefinition(id, locationSpec.getName(), locationSpec.getSpec(), locationSpec.getConfig());
+      brooklyn().getLocationRegistry().updateDefinedLocation(l);
+      return Response.created(URI.create(id)).build();
   }
 
   @DELETE
-  @Path("/{location}")
+  @Path("/{locationId}")
   @ApiOperation(value = "Delete a location object by id")
   public void delete(
       @ApiParam(value = "Location id to delete", required = true)
-      @PathParam("location") Integer locationId) {
-      brooklyn().getLocationStore().remove(locationId);
+      @PathParam("locationId") String locationId) {
+      brooklyn().getLocationRegistry().removeDefinedLocation(locationId);
   }
 
 }

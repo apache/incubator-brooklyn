@@ -6,7 +6,7 @@ define([
     "text!tpl/apps/param-list.html"
 ], function (_, $, Backbone, EffectorModalHtml, ParamHtml, ParamListHtml) {
 
-    var EffectorView = Backbone.View.extend({
+    var EffectorInvokeView = Backbone.View.extend({
         template:_.template(EffectorModalHtml),
         effectorParam:_.template(ParamHtml),
         effectorParamList:_.template(ParamListHtml),
@@ -84,5 +84,5 @@ define([
             this.undelegateEvents()
         }
     })
-    return EffectorView
+    return EffectorInvokeView
 })

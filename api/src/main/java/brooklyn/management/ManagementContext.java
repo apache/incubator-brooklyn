@@ -2,11 +2,13 @@ package brooklyn.management;
 
 import java.util.Collection;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
+import brooklyn.location.LocationRegistry;
 
 /**
  * This is the entry point for accessing and interacting with a realm of applications and their entities in Brooklyn.
@@ -97,4 +99,11 @@ public interface ManagementContext {
      * Whether this management context is still running, or has been terminated.
      */
     public boolean isRunning();
+
+    /** Record of configured locations and location resolvers */
+    LocationRegistry getLocationRegistry();
+    
+    /** Record of configured Brooklyn entities (and templates and policies) which can be loaded */
+    BrooklynCatalog getCatalog();
+
 }

@@ -5,9 +5,9 @@
  */
 define([
     "underscore", "jquery", "backbone", 
-    "./modal-wizard", "model/app-tree", "./application-tree", 
+    "./application-add-wizard", "model/app-tree", "./application-tree", 
     "text!tpl/apps/page.html"
-], function (_, $, Backbone, ModalWizard, AppTree, ApplicationTreeView, PageHtml) {
+], function (_, $, Backbone, AppAddWizard, AppTree, ApplicationTreeView, PageHtml) {
 
     var ApplicationExplorerView = Backbone.View.extend({
         tagName:"div",
@@ -52,7 +52,7 @@ define([
             if (this._modal) {
                 this._modal.close()
             }
-            var wizard = new ModalWizard({
+            var wizard = new AppAddWizard({
             	appRouter:that.options.appRouter,
             	callback:function() { that.refreshApplications() }
         	})

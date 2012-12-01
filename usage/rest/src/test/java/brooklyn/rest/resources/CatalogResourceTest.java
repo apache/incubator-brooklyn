@@ -4,20 +4,26 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.test.TestUtils;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 
 public class CatalogResourceTest extends BrooklynRestResourceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(CatalogResourceTest.class);
+    
   @Override
   protected void setUpResources() throws Exception {
     addResource(new CatalogResource());
@@ -55,18 +61,33 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
   @Test
   public void testListAllEntities() {
-    Set<String> entities = client().resource("/v1/catalog/entities")
-        .get(new GenericType<Set<String>>() {
+    List<String> entities = client().resource("/v1/catalog/entities")
+        .get(new GenericType<List<String>>() {
         });
     assertTrue(entities.size() > 0);
   }
 
   @Test
   public void testFilterListOfEntitiesByName() {
-    Set<String> entities = client().resource("/v1/catalog/entities")
-        .queryParam("name", "redis").get(new GenericType<Set<String>>() {
-        });
-    assertEquals(entities.size(), 4);
+    List<String> entities = client().resource("/v1/catalog/entities")
+            .queryParam("fragment", "reDISclusTER").get(new GenericType<List<String>>() {});
+    TestUtils.assertSize(entities, 1);
+
+    log.info("RedisCluster-like entities are: "+entities);
+    
+    List<String> entities2 = client().resource("/v1/catalog/entities")
+            .queryParam("regex", "[Rr]ed.[sulC]+ter").get(new GenericType<List<String>>() {});
+    TestUtils.assertSize(entities2, 1);
+    
+    assertEquals(entities, entities2);
+    
+    List<String> entities3 = client().resource("/v1/catalog/entities")
+            .queryParam("fragment", "bweqQzZ").get(new GenericType<List<String>>() {});
+    TestUtils.assertSize(entities3, 0);
+    
+    List<String> entities4 = client().resource("/v1/catalog/entities")
+            .queryParam("regex", "bweq+z+").get(new GenericType<List<String>>() {});
+    TestUtils.assertSize(entities4, 0);
   }
 
   @Test

@@ -2,9 +2,12 @@ package brooklyn.entity.basic;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
@@ -12,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
@@ -20,6 +24,7 @@ import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Sets;
 
 @SuppressWarnings("deprecation")
 public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
@@ -160,5 +165,106 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
     @Override
     public String toString() {
         return super.toString()+"[own="+Entities.sanitize(ownConfig)+"; inherited="+Entities.sanitize(inheritedConfig)+"]";
+    }
+    
+    public Map<String,Object> asMapWithStringKeys() {
+        return mapViewWithStringKeys;
+    }
+    
+    private ConfigMapViewWithStringKeys mapViewWithStringKeys = new ConfigMapViewWithStringKeys(this);
+    
+    private static class ConfigMapViewWithStringKeys implements Map<String,Object> {
+
+        private EntityConfigMap target;
+
+        private ConfigMapViewWithStringKeys(EntityConfigMap target) {
+            this.target = target;
+        }
+        
+        @Override
+        public int size() {
+            return target.getAllConfig().size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return target.ownConfig.isEmpty() && target.inheritedConfig.isEmpty();
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return keySet().contains(key);
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            return values().contains(value);
+        }
+
+        @Override
+        public Object get(Object key) {
+            return target.getConfig(new BasicConfigKey<Object>(Object.class, (String)key));
+        }
+
+        @Override
+        public Object put(String key, Object value) {
+            throw new UnsupportedOperationException("This view is read-only");
+        }
+
+        @Override
+        public Object remove(Object key) {
+            throw new UnsupportedOperationException("This view is read-only");
+        }
+
+        @Override
+        public void putAll(Map<? extends String, ? extends Object> m) {
+            throw new UnsupportedOperationException("This view is read-only");
+        }
+
+        @Override
+        public void clear() {
+            throw new UnsupportedOperationException("This view is read-only");
+        }
+
+        @Override
+        public Set<String> keySet() {
+            LinkedHashSet<String> result = Sets.newLinkedHashSet();
+            Set<Map.Entry<ConfigKey<?>, Object>> set = target.getAllConfig().entrySet();
+            for (final Map.Entry<ConfigKey<?>, Object> entry: set) {
+                result.add(entry.getKey().getName());
+            }
+            return result;
+        }
+
+        @Override
+        public Collection<Object> values() {
+            return target.getAllConfig().values();
+        }
+
+        @Override
+        public Set<Map.Entry<String, Object>> entrySet() {
+            LinkedHashSet<Map.Entry<String, Object>> result = Sets.newLinkedHashSet();
+            Set<Map.Entry<ConfigKey<?>, Object>> set = target.getAllConfig().entrySet();
+            for (final Map.Entry<ConfigKey<?>, Object> entry: set) {
+                result.add(new Map.Entry<String, Object>() {
+                    @Override
+                    public String getKey() {
+                        return entry.getKey().getName();
+                    }
+
+                    @Override
+                    public Object getValue() {
+                        return entry.getValue();
+                    }
+
+                    @Override
+                    public Object setValue(Object value) {
+                        return entry.setValue(value);
+                    }
+                });
+            }
+            return result;
+        }
+        
     }
 }

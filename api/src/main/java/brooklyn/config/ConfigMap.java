@@ -33,4 +33,9 @@ public interface ConfigMap {
     /** returns submap matching the given filter predicate; see ConfigPredicates for common predicates */
     public ConfigMap submap(Predicate<ConfigKey<?>> filter);
 
+    /** returns a read-only map view which has string keys (corresponding to the config key names);
+     * callers encouraged to use the typed keys (and so not use this method),
+     * but in some compatibility areas having a Properties-like view is useful */
+    public Map<String,Object> asMapWithStringKeys();
+    
 }

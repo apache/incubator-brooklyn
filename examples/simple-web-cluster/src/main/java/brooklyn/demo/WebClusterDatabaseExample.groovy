@@ -1,9 +1,9 @@
 package brooklyn.demo
 
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady
-import static brooklyn.event.basic.DependentConfiguration.formatString
 import static brooklyn.entity.java.JavaEntityMethods.javaSysProp
 import static brooklyn.entity.webapp.WebAppServiceConstants.HTTP_PORT
+import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady
+import static brooklyn.event.basic.DependentConfiguration.formatString
 import groovy.transform.InheritConstructors
 
 import org.slf4j.Logger
@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.mysql.MySqlNode
-import brooklyn.entity.java.UsesJava
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.launcher.BrooklynLauncher
+import brooklyn.launcher.BrooklynServerDetails
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.policy.autoscaling.AutoScalerPolicy
@@ -61,12 +61,12 @@ public class WebClusterDatabaseExample extends AbstractApplication {
         WebClusterDatabaseExample app = new WebClusterDatabaseExample(name:'Brooklyn WebApp Cluster with Database example')
         
         ArrayList args = new ArrayList(Arrays.asList(argv));
-        BrooklynLauncher.newLauncher().
+        BrooklynServerDetails server = BrooklynLauncher.newLauncher().
                 webconsolePort( CommandLineUtil.getCommandLineOption(args, "--port", "8081+") ).
                 managing(app).
                 launch();
 
-        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
+        List<Location> locations = server.getManagementContext().getLocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
         app.start(locations)
         Entities.dumpInfo(app)
     }

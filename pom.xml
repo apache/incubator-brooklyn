@@ -32,9 +32,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/cloudsoft/brooklyn.git</connection>
-        <developerConnection>scm:git:git@github.com:cloudsoft/brooklyn.git</developerConnection>
-        <url>http://github.com/cloudsoft/brooklyn</url>
+        <connection>scm:git:git://github.com/brooklyncentral/brooklyn.git</connection>
+        <developerConnection>scm:git:git@github.com:brooklyncentral/brooklyn.git</developerConnection>
+        <url>http://github.com/brooklyncentral/brooklyn</url>
     </scm>
 
     <repositories>
@@ -104,6 +104,7 @@
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
+        <reflections.version>0.9.8</reflections.version>
         <jetty.version>8.1.4.v20120524</jetty.version>
         <git-like-cli.version>0.3</git-like-cli.version>
 

@@ -86,14 +86,12 @@ define([
         },
         catalogPage:function () {
             var that = this
-            this.locations.fetch({ success:function () {
-                var catalogResource = new CatalogView({
-                    locations:that.locations,
-                    appRouter:that
-                })
-                catalogResource.fetchModels()
-                that.showView("#application-content", catalogResource)
-            }})
+            var catalogResource = new CatalogView({
+                locations:that.locations,
+                appRouter:that
+            })
+            that.showView("#application-content", catalogResource)
+            catalogResource.refresh()
         },
         apidocPage:function () {
             var apidocResource = new ApidocView({})

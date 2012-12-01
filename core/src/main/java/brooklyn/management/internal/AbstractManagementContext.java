@@ -1,5 +1,6 @@
 package brooklyn.management.internal;
 
+import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -8,7 +9,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
+import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -21,6 +27,9 @@ import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.location.LocationRegistry;
+import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
@@ -39,9 +48,17 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public static final String EFFECTOR_TAG = "EFFECTOR";
     public static final String NON_TRANSIENT_TASK_TAG = "NON-TRANSIENT";
 
+    public static final ConfigKey<String> BROOKLYN_CATALOG_URL = new StringConfigKey("brooklyn.catalog.url",
+            "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +
+            "or empty for no URL (use default scanner)", "file://~/.brooklyn/catalog.xml");
+    
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
     protected BrooklynProperties configMap;
+    protected BasicLocationRegistry locationRegistry;
+    protected volatile BasicBrooklynCatalog catalog;
+    protected ClassLoader baseClassLoader;
+    protected Iterable<URL> baseClassPathForScanning;
 
     // TODO leaking "this" reference; yuck
     private final RebindManager rebindManager = new RebindManagerImpl(this);
@@ -306,4 +323,81 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public StringConfigMap getConfig() {
         return configMap;
     }
+
+    @Override
+    public synchronized LocationRegistry getLocationRegistry() {
+        if (locationRegistry==null) locationRegistry = new BasicLocationRegistry(this);
+        return locationRegistry;
+    }
+
+    @Override
+    public BrooklynCatalog getCatalog() {
+        if (catalog==null) loadCatalog();
+        return catalog;
+    }
+
+    protected synchronized void loadCatalog() {
+        if (catalog!=null) return;
+        
+        BasicBrooklynCatalog catalog;
+        
+        try {
+            String catalogUrl = getConfig().getConfig(BROOKLYN_CATALOG_URL);
+            catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDtoFromUrl(catalogUrl));
+            if (log.isDebugEnabled())
+                log.debug("Loaded catalog from "+catalogUrl+": "+catalog);
+        } catch (Exception e) {
+            Object nonDefaultUrl = getConfig().getRawConfig(BROOKLYN_CATALOG_URL);
+            if (nonDefaultUrl!=null && !"".equals(nonDefaultUrl)) {
+                log.warn("Could not read catalog.xml at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e, e);
+            } else {
+                if (log.isDebugEnabled())
+                    log.debug("No default catalog file available; trying again using local classpath to populate catalog. Error was: "+e);
+            }
+            catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDefaultLocalScanningDto(CatalogScanningModes.TYPES));
+            if (log.isDebugEnabled())
+                log.debug("Loaded default (local classpath) catalog: "+catalog);
+        }
+        catalog.getCatalog().load(this, null);
+        
+        this.catalog = catalog;
+    }
+
+    /** Optional class-loader that this management context should use as its base,
+     * as the first-resort in the catalog, and for scanning (if scanning the default in the catalog).
+     * In most instances the default classloader (ManagementContext.class.getClassLoader(), assuming
+     * this was in the JARs used at boot time) is fine, and in those cases this method normally returns null.
+     * (Surefire does some weird stuff, but the default classloader is fine for loading;
+     * however it requires a custom base classpath to be set for scanning.)
+     */
+    public ClassLoader getBaseClassLoader() {
+        return baseClassLoader;
+    }
+    
+    /** See {@link #getBaseClassLoader()}.  Only settable once and must be invoked before catalog is loaded. */
+    public void setBaseClassLoader(ClassLoader cl) {
+        if (baseClassLoader==cl) return;
+        if (baseClassLoader!=null) throw new IllegalStateException("Cannot change base class loader (in "+this+")");
+        if (catalog!=null) throw new IllegalStateException("Cannot set base class after catalog has been loaded (in "+this+")");
+        this.baseClassLoader = cl;
+    }
+    
+    /** Optional mechanism for setting the classpath which should be scanned by the catalog, if the catalog
+     * is scanning the default classpath.  Usually it infers the right thing, but some classloaders
+     * (e.g. surefire) do funny things which the underlying org.reflections.Reflectiosn library can't see in to. 
+     * <p>
+     * Only settable once, before catalog is loaded.
+     * <p>
+     * ClasspathHelper.forJavaClassPath() is often a good argument to pass. */
+    public void setBaseClassPathForScanning(Iterable<URL> urls) {
+        if (baseClassPathForScanning == urls) return;
+        if (baseClassPathForScanning != null) throw new IllegalStateException("Cannot change base class path for scanning (in "+this+")");
+        if (catalog != null) throw new IllegalStateException("Cannot set base class path for scanning after catalog has been loaded (in "+this+")");
+        this.baseClassPathForScanning = urls;
+    }
+    /** @See {@link #setBaseClassPathForScanning(Iterable)} */
+    public Iterable<URL> getBaseClassPathForScanning() {
+        return baseClassPathForScanning;
+    }
+    
 }

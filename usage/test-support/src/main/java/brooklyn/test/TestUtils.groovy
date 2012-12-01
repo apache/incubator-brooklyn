@@ -1,9 +1,5 @@
 package brooklyn.test
 
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.SSLSession
-
 import static org.testng.Assert.*
 import groovy.time.TimeDuration
 
@@ -21,6 +17,7 @@ import brooklyn.event.AttributeSensor
 
 import com.google.common.base.Predicate
 import com.google.common.base.Supplier
+import com.google.common.collect.Iterables
 
 /**
  * Helper functions for tests of Tomcat, JBoss and others.
@@ -408,6 +405,17 @@ public class TestUtils {
         if (!s.isEmpty()) fail("First argument contains additional contents: "+s);
         s.clear(); s.addAll(c2); s.removeAll(c1);
         if (!s.isEmpty()) fail("Second argument contains additional contents: "+s);
+    }
+    
+    public static <T> void assertNonEmpty(Iterable<T> c) {
+        if (c.iterator().hasNext()) return;
+        fail("Expected non-empty set");
+    }
+
+    public static <T> void assertSize(Iterable<T> c, int expectedSize) {
+        int actualSize = Iterables.size(c);
+        if (actualSize==expectedSize) return;
+        fail("Expected collection of size "+expectedSize+" but got size "+actualSize+": "+c);
     }
     
 }

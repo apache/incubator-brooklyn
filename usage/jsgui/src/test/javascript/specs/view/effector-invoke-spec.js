@@ -1,6 +1,6 @@
 define([
-    "underscore", "view/effector", "model/effector-summary", "model/entity"
-], function (_, EffectorView, EffectorSummary, Entity) {
+    "underscore", "view/effector-invoke", "model/effector-summary", "model/entity"
+], function (_, EffectorInvokeView, EffectorSummary, Entity) {
 
     var modalView, collection = new EffectorSummary.Collection()
     collection.url = "fixtures/effector-summary-list.json"
@@ -10,14 +10,14 @@ define([
     entityFixture.url = 'fixtures/entity.json'
     entityFixture.fetch({async:true})
 
-    modalView = new EffectorView({
+    modalView = new EffectorInvokeView({
         tagName:"div",
         className:"modal",
         model:collection.at(0),
         entity:entityFixture.at(0)
     })
 
-    describe("view/effector", function () {
+    describe("view/effector-invoke", function () {
         // render and keep the reference to the view
         modalView.render()
         it("must render a bootstrap modal", function () {

@@ -1,14 +1,16 @@
 package brooklyn.rest.testing;
 
+import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.location.LocationRegistry;
+import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApi;
-import brooklyn.rest.legacy.LocationStore;
 import brooklyn.rest.resources.AbstractBrooklynRestResource;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.NullHttpServletRequestProvider;
@@ -25,13 +27,21 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
     protected synchronized ManagementContext getManagementContext() {
         if (manager==null) {
             manager = new LocalManagementContext();
-            BrooklynRestResourceUtils.changeLocationStore(LocationStore.withLocalhost());
+            
+            // sets URLs for a surefire
+            ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+            // this also works
+//            ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forPackage("brooklyn"));
+            // but this (near-default behaviour) does not
+//            ((LocalManagementContext)manager).setBaseClassLoader(getClass().getClassLoader());
+            
+            BasicLocationRegistry.setupLocationRegistryForTesting(manager);
         }
         return manager;
     }
     
-    public LocationStore getLocationStore() {
-        return new BrooklynRestResourceUtils(getManagementContext()).getLocationStore();
+    public LocationRegistry getLocationRegistry() {
+        return new BrooklynRestResourceUtils(getManagementContext()).getLocationRegistry();
     }
 
     @Override

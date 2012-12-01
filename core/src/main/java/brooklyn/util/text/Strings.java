@@ -24,6 +24,21 @@ public class Strings {
         return s == null || s.length()==0;
     }
 
+    /** ! {@link #isEmpty(CharSequence)} */
+    public static boolean isNonEmpty(CharSequence s) {
+        return !isEmpty(s);
+    }
+
+    /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */
+    public static void checkNonEmpty(CharSequence s) {
+        if (s==null) throw new IllegalArgumentException("String must not be null");
+        if (s.length()==0) throw new IllegalArgumentException("String must not be empty");
+    }
+    /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */
+    public static void checkNonEmpty(CharSequence s, String message) {
+        if (isEmpty(s)) throw new IllegalArgumentException(message);
+    }
+
 	/** removes the first suffix in the list which is present at the end of string
 	 * and returns that string; ignores subsequent suffixes if a matching one is found;
 	 * returns the original string if no suffixes are at the end
@@ -492,14 +507,23 @@ public class Strings {
         return context.toString();
     }
 
-    /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */
-    public static void checkNonEmpty(String s) {
-        if (s==null) throw new IllegalArgumentException("String must not be null");
-        if (s.isEmpty()) throw new IllegalArgumentException("String must not be empty");
-    }
-    /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */
-    public static void checkNonEmpty(String s, String message) {
-        if (s==null || s.isEmpty()) throw new IllegalArgumentException(message);
+    public static boolean containsLiteralCaseInsensitive(CharSequence input, CharSequence fragment) {
+        if (input==null) return false;
+        if (isEmpty(fragment)) return true;
+        int lastValidStartPos = input.length()-fragment.length();
+        char f0u = Character.toUpperCase(fragment.charAt(0));
+        char f0l = Character.toLowerCase(fragment.charAt(0));
+        i: for (int i=0; i<=lastValidStartPos; i++) {
+            char ii = input.charAt(i);
+            if (ii==f0l || ii==f0u) {
+                for (int j=1; j<fragment.length(); j++) {
+                    if (Character.toLowerCase(input.charAt(i+j))!=Character.toLowerCase(fragment.charAt(j)))
+                        continue i;
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
 }

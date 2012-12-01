@@ -51,7 +51,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     
   private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
           entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
-          locations(ImmutableSet.of("/v1/locations/0")).
+          locations(ImmutableSet.of("localhost")).
           build();
 
   @Override
@@ -120,13 +120,13 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
       client().resource("/v1/applications").post(
           ApplicationSpec.builder().name("invalid-app").
               entities(ImmutableSet.<EntitySpec>of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
-              locations(ImmutableSet.of("/v1/locations/3423")).
+              locations(ImmutableSet.of("3423")).
               build()
       );
 
     } catch (UniformInterfaceException e) {
       ApiError error = e.getResponse().getEntity(ApiError.class);
-      assertEquals(error.getMessage(), "Undefined location '/v1/locations/3423'");
+      assertEquals(error.getMessage(), "Undefined location '3423'");
     }
   }
 

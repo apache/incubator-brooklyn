@@ -74,7 +74,7 @@ public class BasicOsDetails implements OsDetails {
     }
     
     public static class Factory {
-        public OsDetails newLocalhostInstance() {
+        public static OsDetails newLocalhostInstance() {
             return new BasicOsDetails(System.getProperty("os.name"), System.getProperty("os.arch"), System.getProperty("os.version"));
         }
         
@@ -83,6 +83,6 @@ public class BasicOsDetails implements OsDetails {
     }
     
     public static void main(String[] args) {
-        System.out.println("ARCH: "+new Factory().newLocalhostInstance().toString());
+        System.out.println("ARCH: "+Factory.newLocalhostInstance().toString());
     }
 }
