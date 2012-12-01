@@ -213,7 +213,7 @@ public class JcloudsUtil {
             }
         }
 
-        String endpoint = (String) unusedConf.remove(Constants.PROPERTY_ENDPOINT);
+        String endpoint = (String) conf.get(Constants.PROPERTY_ENDPOINT); unusedConf.remove(Constants.PROPERTY_ENDPOINT);
         if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
         if (allowReuse) {

@@ -115,7 +115,9 @@ public class CredentialsFromEnv {
     protected String getProviderSpecificValue(@SuppressWarnings("rawtypes") Map flags, String typeCamel) {
         String type = convertFromCamelToProperty(typeCamel);
         return sysProps.getFirst(flags,
-            // this is now preferred:
+            // unadorned value (e.g. "identity") may be injected by a named location, stripping off the named-location prefix
+            typeCamel,
+            // this is now preferred if above not supplied
             getProvider() != null ? "brooklyn.jclouds."+getProvider()+"."+typeCamel : null,
             "brooklyn.jclouds."+typeCamel,
             // legacy:

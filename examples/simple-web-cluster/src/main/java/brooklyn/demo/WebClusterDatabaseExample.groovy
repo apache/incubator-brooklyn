@@ -66,7 +66,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
                 managing(app).
                 launch();
 
-        List<Location> locations = server.getManagementContext().getLocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
+        List<Location> locations = server.getManagementContext().getLocationRegistry().resolve(args ?: [DEFAULT_LOCATION])
         app.start(locations)
         Entities.dumpInfo(app)
     }

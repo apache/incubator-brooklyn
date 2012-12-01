@@ -161,6 +161,7 @@ public class JcloudsResolver implements RegistryLocationResolver {
         Map tmpProperties = new LinkedHashMap();
         if (registry!=null) tmpProperties.putAll(registry.getProperties());
         tmpProperties.putAll(properties);
+        tmpProperties.putAll(locationFlags);
 
         Map jcloudsProperties = new LinkedHashMap();
         jcloudsProperties.putAll(new CredentialsFromEnv(tmpProperties, details.providerOrApi).asMap());
