@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.java.UsesJmx
 import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
+import brooklyn.entity.java.UsesJmx
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.MachineLocation
 
 /**
  * An {@link brooklyn.entity.Entity} that represents an Infinispan service
@@ -35,7 +35,8 @@ public class Infinispan5Server extends SoftwareProcessEntity implements UsesJmx 
         return result
     }
 
-    public SshBasedAppSetup newDriver(SshMachineLocation machine) {
+    @Override
+    public SshBasedAppSetup newDriver(MachineLocation machine) {
         return Infinispan5Setup.newInstance(this, machine)
     }
 

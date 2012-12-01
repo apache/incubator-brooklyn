@@ -12,7 +12,6 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.CommandLineLocations
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.CommandLineUtil;
 import brooklyn.extras.whirr.core.WhirrCluster
 

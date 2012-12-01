@@ -27,7 +27,6 @@ import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.management.Task
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.policy.basic.AbstractPolicy

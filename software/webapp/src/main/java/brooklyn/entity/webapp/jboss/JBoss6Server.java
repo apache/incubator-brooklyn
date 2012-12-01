@@ -83,10 +83,6 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
                 }});
     }
 
-//    public JBoss6SshDriver newDriver(SshMachineLocation machine) {
-//        return new JBoss6SshDriver(this, machine);
-//    }
-
     @Override
     public Class<JBoss6Driver> getDriverInterface() {
         return JBoss6Driver.class;
