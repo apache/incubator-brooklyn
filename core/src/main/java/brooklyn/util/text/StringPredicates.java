@@ -11,16 +11,25 @@ public class StringPredicates {
         return new Predicate<CharSequence>() {
             @Override
             public boolean apply(@Nullable CharSequence input) {
-                return Strings.containsLiteralCaseInsensitive(input, fragment);
+                return Strings.containsLiteralIgnoreCase(input, fragment);
             }
         };
     }
 
+    public static Predicate<CharSequence> containsLiteral(final String fragment) {
+        return new Predicate<CharSequence>() {
+            @Override
+            public boolean apply(@Nullable CharSequence input) {
+                return Strings.containsLiteral(input, fragment);
+            }
+        };
+    }
+    
     public static Predicate<CharSequence> containsRegex(final String regex) {
         // "Pattern" ... what a bad name :)
         return Predicates.containsPattern(regex);
     }
-    
+
     // TODO globs, matches regex, etc ... add as you need them!
     
 }

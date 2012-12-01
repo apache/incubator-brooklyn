@@ -39,6 +39,12 @@ define([
             this.activeItem = null
             this.genericTabs = ['applications','entities','policies']
             _.bindAll(this, "renderLocationsAccordion");
+            
+            var that = this;
+            _.defer(function() {
+                that.toggleAccordionDiv($("#applications div.accordion-head"), false)
+                $("#details-empty").show()
+            })
         },
         render:function (eventName) {
             this.$el.html(_.template(CatalogPageHtml, {}))
@@ -59,8 +65,8 @@ define([
         },
         renderGenericAccordion: function(accordion, data) {
             accordion.html('')
-            _.each(data, function (id, pos) {
-                accordion.append(this.entryTemplate({type:id, id:id}));
+            _.each(data, function (item, pos) {
+                accordion.append(this.entryTemplate({type:item.type, id:item.id}));
             }, this)
             accordion.find("div[id='"+this.activeItem+"']").addClass('active')
         },
@@ -78,13 +84,24 @@ define([
             accordion.find("div[id='"+this.activeItem+"']").addClass('active')
         },
         toggleAccordion: function(event) {
-            var hidden = $(event.currentTarget).next()[0].style.display!='block'
-            $(event.currentTarget).parent().parent().find('.accordion-head').removeClass('active')
-            $(event.currentTarget).parent().parent().find('.accordion-body').hide('fast')
+            this.toggleAccordionDiv($(event.currentTarget), true)
+        },
+        toggleAccordionDiv: function(elt, animation) {
+            var hidden = elt.next()[0].style.display!='block'
+            elt.parent().parent().find('.accordion-head').removeClass('active')
+            if (animation)
+                elt.parent().parent().find('.accordion-body').hide('fast')
+            else
+                elt.parent().parent().find('.accordion-body').hide()
+                
             if (hidden) {
-                $(event.currentTarget).addClass('active')
-                $(event.currentTarget).next().show('fast')
-                this.activeAccordion = $(event.currentTarget).parent().attr('id')
+                elt.addClass('active')
+                if (animation)
+                    elt.next().show('fast')
+                else
+                    elt.next().show()
+                    
+                this.activeAccordion = elt.parent().attr('id')
             } else {
                 this.activeAccordion = null
             }

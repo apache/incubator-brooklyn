@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.location.Location;
 import brooklyn.location.basic.CommandLineLocations;
 import brooklyn.location.basic.LocationRegistry;
@@ -101,7 +102,7 @@ public class Main {
             "Note that a BROOKLYN_CLASSPATH environment variable needs to be set up beforehand " +
             "to point to the user application classpath.")
     public static class LaunchCommand extends BrooklynCommand {
-        @Option(name = { "-a", "--app" }, required = true, title = "application class or file",
+        @Option(name = { "-a", "--app" }, title = "application class or file",
                 description = "The Application to start. " +
                         "For example my.AppName or file://my/AppName.groovy or classpath://my/AppName.groovy")
         public String app;
@@ -151,7 +152,11 @@ public class Main {
             log.debug("Invoked launch command");
 
             if (verbose) {
-                System.out.println("Launching brooklyn app: "+app+" in "+locations);
+                if (app!=null) {
+                    System.out.println("Launching brooklyn app: "+app+" in "+locations);
+                } else {
+                    System.out.println("Launching brooklyn server (no app)");
+                }
             }
             BrooklynLauncher launcher = BrooklynLauncher.newLauncher();
             
@@ -171,8 +176,10 @@ public class Main {
             launcher.webconsole(!noConsole);
             
             if (locations==null || locations.isEmpty()) {
-                log.warn("Locations parameter not supplied: assuming localhost");
-                locations = "localhost";
+                if (app!=null) {
+                    log.warn("Locations parameter not supplied: assuming localhost");
+                    locations = "localhost";
+                }
             }
 
             //todo: in the future we can load application level properties
@@ -180,7 +187,8 @@ public class Main {
             //brooklynproperties need to be injected.
             BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
             // lean on getLocationsById to do parsing
-            List<Location> brooklynLocations = new LocationRegistry(brooklynProperties).getLocationsById(Arrays.asList(locations));
+            List<Location> brooklynLocations = locations!=null ?
+                    new LocationRegistry(brooklynProperties).getLocationsById(Arrays.asList(locations)) : null;
             
             // Create the instance of the brooklyn app
             AbstractApplication application = null;
@@ -192,7 +200,7 @@ public class Main {
             
             // Launch server
             log.info("Launching Brooklyn web console management");
-            launcher.launch();
+            BrooklynServerDetails server = launcher.launch();
             
             // Start application
             if (application!=null) {
@@ -211,14 +219,17 @@ public class Main {
                 if (application!=null) Entities.dumpInfo(application);
             }
             
+            // force load of catalog (so web console is up to date)
+            server.getManagementContext().getCatalog().getCatalogItems();
+            
             if(stopOnKeyPress){
             	// Wait for the user to type a key
-            	log.info("Application started. Press return to stop.");
+            	log.info("Server started. Press return to stop.");
             	System.in.read();
             	application.stop();
             } else {
                 // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
-                log.info("Launched application; now blocking to wait for cntrl-c or kill");
+                log.info("Launched Brooklyn; now blocking to wait for cntrl-c or kill");
                 waitUntilInterrupted();
             }
             return null;

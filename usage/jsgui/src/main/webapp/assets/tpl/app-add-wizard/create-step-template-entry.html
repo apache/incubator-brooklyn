@@ -1,0 +1,13 @@
+<div class="template-lozenge frame" id="<%= id %>">
+    <% if (iconUrl) { %>
+    <div class="icon">
+        <img src="<%= iconUrl %>" alt="(icon)" />
+    </div>
+    <% } %>
+    <div class="blurb">
+        <div class="title"><%= name %></div>
+        <div class="description">
+            <%= description ? description : "" %>
+        </div>
+    </div>
+</div>

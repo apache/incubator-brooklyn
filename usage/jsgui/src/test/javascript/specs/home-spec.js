@@ -41,8 +41,9 @@ define([
                 view.close()
             })
 
-            it('should be a div#application-resource', function () {
-                expect(view.$('div#application-resource').length).toEqual(1)
+            it('should have a div#home-first-row and div#home-second-row', function () {
+                expect(view.$('div.home-first-row').length).toEqual(1)
+                expect(view.$('div.home-second-row').length).toEqual(1)
             })
 
             it('should contain an apps table and a new button', function () {

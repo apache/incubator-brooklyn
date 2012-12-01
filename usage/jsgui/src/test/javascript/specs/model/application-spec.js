@@ -97,12 +97,12 @@ define([
             expect(spec.trigger).toHaveBeenCalled()
         })
 
-        it('does not allow you to add the same entity twice', function () {
+        it('allows you to add the same entity twice', function () {
             var spec = new Application.Spec,
                 entity = new Entity.Model({ name:'test-entity'})
             spec.addEntity(entity)
             spec.addEntity(entity)
-            expect(spec.get("entities").length).toEqual(1)
+            expect(spec.get("entities").length).toEqual(2)
         })
     })
 })

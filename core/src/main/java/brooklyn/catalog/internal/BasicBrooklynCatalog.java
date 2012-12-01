@@ -16,6 +16,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.MutableMap;
 import brooklyn.util.Time;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
 
 import com.google.common.base.Function;
@@ -24,7 +25,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.thoughtworks.xstream.core.util.CompositeClassLoader;
 
 public class BasicBrooklynCatalog implements BrooklynCatalog {
 
@@ -44,7 +44,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 log.debug("Loading catalog for "+mgmt);
                 catalog.load(mgmt, null);
                 if (log.isDebugEnabled())
-                    log.debug("Loaded catalog for "+mgmt+": "+catalog);
+                    log.debug("Loaded catalog for "+mgmt+": "+catalog+"; search classpath is "+catalog.getRootClassLoader());
             }
         });
     }
@@ -93,7 +93,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @Override
     public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
         Iterable<CatalogItem<Object>> resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
-        if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalot item for type "+typeName);
+        if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalog item for type "+typeName);
         CatalogItem<Object> resultI = resultL.iterator().next();
         if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
             log.debug("Found "+Iterables.size(resultL)+" matches in catalog for type "+typeName+"; returning the first, "+resultI);
@@ -153,7 +153,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         
         log.debug("Creating manual additions catalog for "+mgmt+": "+manualAdditionsCatalog);
         manualAdditionsClasses = new LoadedClassLoader();
-        ((CompositeClassLoader)manualAdditionsCatalog.classpath.getLocalClassLoader()).add(manualAdditionsClasses);
+        ((AggregateClassLoader)manualAdditionsCatalog.classpath.getLocalClassLoader()).addFirst(manualAdditionsClasses);
         
         // expose when we're all done
         this.manualAdditionsCatalog = manualAdditionsCatalog;

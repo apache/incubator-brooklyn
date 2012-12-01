@@ -15,32 +15,19 @@
 				<li><a tabindex="-1" data-toggle="tab" href="#xmlTab">XML</a></li>
 				<li class="divider"></li>
 				<li><a tabindex="-1" data-toggle="tab" href="#groovyTab">Groovy</a></li>
-				<li class="divider"></li>
+				<li><a tabindex="-1" data-toggle="tab" href="#appClassTab">App Class</a></li>
 				<li><a tabindex="-1" data-toggle="tab" href="#uploadTab">JAR</a></li>
-			</ul></li>
+			</ul>
+		</li>
+	   <li class="text-filter pull-right"><input type="text"/></li>
 	</ul>
 
-  <div class="tab-content">
+ <div class="tab-content-scroller">
+ <div class="tab-content">
+ 
   <div class="tab-pane active" id="templateTab">
-  
-        <div class="control-group">
-            <div class="app-add-wizard-create-entity-label-newline">Type</div>
-            <div class="controls app-type">
-                <input id="entity-type" type="text" name="type" class="input-large app-add-wizard-create-entity-input application-type-input" placeholder="type">
-            </div>
-        </div>
-
-        <div class="control-group">
-            <div class="app-add-wizard-create-entity-label-newline">Configuration</div>
-            <div class="controls">
-            </div>
-            <div>
-                <button id="add-config" class="btn btn-mini btn-info">
-                    Add Config Key</button>
-            </div>
-        </div>
+    <div id="create-step-template-entries"/>
   </div>
-
   
   <div class="tab-pane" id="entitiesTab">
     <div id="entitiesAccordionish"></div>
@@ -59,4 +46,16 @@
   <div class="tab-pane" id="uploadTab">
     <br/><br/><i>coming soon!</i>
   </div>
+  
+  
+  <div class="tab-pane" id="appClassTab">
+        <div class="control-group">
+            <div class="app-add-wizard-create-entity-label-newline">Type</div>
+            <div class="controls app-type">
+                <input id="app-java-type" type="text" name="type" class="input-large app-add-wizard-create-entity-input application-type-input" placeholder="type">
+            </div>
+        </div>
+  </div>
+  
+ </div></div>
 </div>

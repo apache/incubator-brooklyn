@@ -1,10 +1,13 @@
 package brooklyn.management.internal;
 
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,10 +41,14 @@ import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitio
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 
 public abstract class AbstractManagementContext implements ManagementContext  {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
@@ -67,6 +74,23 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
+    }
+    
+    static {
+        // ensure that if ResourceUtils is given an entity as context,
+        // we use the catalog class loader (e.g. to resolve classpath URLs)
+        ResourceUtils.addClassLoaderProvider(new Function<Object, ClassLoader>() {
+            @Override 
+            public ClassLoader apply(@Nullable Object input) {
+                if (input instanceof AbstractEntity) 
+                    return apply(((AbstractEntity)input).getManagementSupport());
+                if (input instanceof EntityManagementSupport) 
+                    return apply(((EntityManagementSupport)input).getManagementContext(true));
+                if (input instanceof AbstractManagementContext) 
+                    return ((AbstractManagementContext)input).getCatalog().getRootClassLoader();
+                return null;
+            }
+        });
     }
     
     private volatile boolean running = true;
@@ -339,21 +363,30 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     protected synchronized void loadCatalog() {
         if (catalog!=null) return;
         
-        BasicBrooklynCatalog catalog;
+        BasicBrooklynCatalog catalog = null;
+        String catalogUrl = getConfig().getConfig(BROOKLYN_CATALOG_URL);
         
         try {
-            String catalogUrl = getConfig().getConfig(BROOKLYN_CATALOG_URL);
-            catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDtoFromUrl(catalogUrl));
-            if (log.isDebugEnabled())
-                log.debug("Loaded catalog from "+catalogUrl+": "+catalog);
-        } catch (Exception e) {
-            Object nonDefaultUrl = getConfig().getRawConfig(BROOKLYN_CATALOG_URL);
-            if (nonDefaultUrl!=null && !"".equals(nonDefaultUrl)) {
-                log.warn("Could not read catalog.xml at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e, e);
-            } else {
+            if (!Strings.isEmpty(catalogUrl)) {
+                catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDtoFromUrl(catalogUrl));
                 if (log.isDebugEnabled())
-                    log.debug("No default catalog file available; trying again using local classpath to populate catalog. Error was: "+e);
+                    log.debug("Loaded catalog from "+catalogUrl+": "+catalog);
             }
+        } catch (Exception e) {
+            if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
+                Object nonDefaultUrl = getConfig().getRawConfig(BROOKLYN_CATALOG_URL);
+                if (nonDefaultUrl!=null && !"".equals(nonDefaultUrl)) {
+                    log.warn("Could not find catalog XML specified at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e);
+                } else {
+                    if (log.isDebugEnabled())
+                        log.debug("No default catalog file available; trying again using local classpath to populate catalog. Error was: "+e);
+                }
+            } else {
+                log.warn("Error importing catalog XML at "+catalogUrl+"; using default (local classpath) catalog. Error was: "+e, e);                
+            }
+        }
+        if (catalog==null) {
+            // retry, either an error, or was blank
             catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDefaultLocalScanningDto(CatalogScanningModes.TYPES));
             if (log.isDebugEnabled())
                 log.debug("Loaded default (local classpath) catalog: "+catalog);

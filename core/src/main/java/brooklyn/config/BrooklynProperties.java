@@ -84,17 +84,24 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         return this;
     }
 
-    @SuppressWarnings("unchecked")
     public BrooklynProperties addFrom(InputStream i) {
-        Properties p = new Properties();
+        @SuppressWarnings({ "serial" })
+        Properties p = new Properties() {
+            @Override
+            public synchronized Object put(Object key, Object value) {
+                // ugly way to load them in order
+                // (Properties is a hashtable so loses order otherwise)
+                return BrooklynProperties.this.put(key, value);
+            }
+        };
         try {
             p.load(i);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
-        putAll(p);
         return this;
     }
+    
     public BrooklynProperties addFrom(File f) {
         if (!f.exists()) {
             LOG.warn("Unable to find file '"+f.getAbsolutePath()+"' when loading properties; ignoring");

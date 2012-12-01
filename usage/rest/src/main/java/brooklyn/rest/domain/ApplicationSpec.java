@@ -87,7 +87,7 @@ public class ApplicationSpec {
       @JsonProperty("locations") Collection<String> locations,
       @JsonProperty("config") Map<String, String> config
   ) {
-    this.name = checkNotNull(name, "name must be provided for an application spec");
+    this.name = name;
     this.type = type;
     if (entities==null) this.entities = null;
     else this.entities = (entities.isEmpty() && type!=null) ? null : ImmutableSet.copyOf(entities);

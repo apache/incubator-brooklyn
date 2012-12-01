@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +22,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.text.DataUriSchemeParser;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
@@ -40,11 +44,28 @@ public class ResourceUtils {
     /** contextObject used for classloading, contextMessage used for errors */
     public ResourceUtils(Object contextObject, String contextMessage) {
         this(contextObject==null ? null : 
-            contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
-                contextObject instanceof ClassLoader ? ((ClassLoader)contextObject) : 
-                    contextObject.getClass().getClassLoader(), 
+            getClassLoaderForObject(contextObject), 
             contextObject, contextMessage);
     }
+    
+    private static List<Function<Object,ClassLoader>> classLoaderProviders =
+        new CopyOnWriteArrayList<Function<Object,ClassLoader>>(); 
+    
+    /** used to register custom mechanisms for getting classloaders given an object */
+    public static void addClassLoaderProvider(Function<Object,ClassLoader> provider) {
+        classLoaderProviders.add(provider);
+    }
+    
+    public static ClassLoader getClassLoaderForObject(Object contextObject) {
+        for (Function<Object,ClassLoader> provider: classLoaderProviders) {
+            ClassLoader result = provider.apply(contextObject);
+            if (result!=null) return result;
+        }
+        return contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
+            contextObject instanceof ClassLoader ? ((ClassLoader)contextObject) : 
+                contextObject.getClass().getClassLoader();
+    }
+    
     /** uses the classloader of the given object, and the phrase object's toString (preceded by the word 'for') as the context string used in errors */
     public ResourceUtils(Object context) {
         this(context, Strings.toString(context));
@@ -91,24 +112,8 @@ public class ResourceUtils {
                     }
                 }
 
-                if ("file".equals(protocol)) {
-                    if (url.matches("file://[A-Za-z]:[/\\\\].*")) {
-                        // file://c:/path/to/x is sometimes mistakenly supplied
-                        // where file:///c:/path/to/x is the correct syntax.
-                        // treat the former as the latter since the former doesn't have any other interpretation
-                        if (log.isDebugEnabled())
-                            log.debug("quietly changing "+url+" to file:/// prefix");
-                        url = "file:///"+url.substring(7);
-                    }
-
-                    String urlRelativeToHome = Strings.removeFromStart(url, "file://~/", "file:~/");
-                    if (!url.equals(urlRelativeToHome)) {
-                        // allow ~ syntax for home dir
-                        url = "file://"+System.getProperty("user.home")+"/"+urlRelativeToHome;
-                        if (log.isDebugEnabled())
-                            log.debug("quietly changing to "+url+" from file://~/ URL");
-                    }
-                }
+                if ("file".equals(protocol))
+                    url = tidyFileUrl(url);
                 
                 if ("data".equals(protocol)) {
                     return new DataUriSchemeParser(url).lax().parse().getDataAsInputStream();
@@ -143,6 +148,37 @@ public class ResourceUtils {
                 throw new RuntimeException("Error getting resource for "+context+": "+e, e);
             else throw new RuntimeException(e);
         }
+    }
+    
+    public static URL tidy(URL url) {
+        try {
+            if ("file".equals(url.getProtocol()))
+                return new URL(tidyFileUrl(url.toString()));
+            return url;
+        } catch (MalformedURLException e) {
+            /* see comments on MalformedURLException in org.reflections.utils.ClasspathHelper */
+            return url;
+        }
+    }
+    
+    public static String tidyFileUrl(String url) {
+        if (url.matches("file://[A-Za-z]:[/\\\\].*")) {
+            // file://c:/path/to/x is sometimes mistakenly supplied
+            // where file:///c:/path/to/x is the correct syntax.
+            // treat the former as the latter since the former doesn't have any other interpretation
+            if (log.isDebugEnabled())
+                log.debug("quietly changing "+url+" to file:/// prefix");
+            url = "file:///"+url.substring(7);
+        }
+
+        String urlRelativeToHome = Strings.removeFromStart(url, "file://~/", "file:~/");
+        if (!url.equals(urlRelativeToHome)) {
+            // allow ~ syntax for home dir
+            url = "file://"+System.getProperty("user.home")+"/"+urlRelativeToHome;
+            if (log.isDebugEnabled())
+                log.debug("quietly changing to "+url+" from file://~/ URL");
+        }
+        return url;
     }
     
     /** returns the protocol (e.g. http) if one appears to be specified, or else null;

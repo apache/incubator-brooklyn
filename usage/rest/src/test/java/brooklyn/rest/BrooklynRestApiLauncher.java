@@ -173,6 +173,7 @@ public class BrooklynRestApiLauncher {
         final File f = new File(filename);
         if (f.exists()) return filename;
         File dir = f.getParentFile();
+        File result = null;
         if (dir.exists()) {
             File[] matchingFiles = dir.listFiles(new FilenameFilter() {
                 @Override
@@ -180,12 +181,12 @@ public class BrooklynRestApiLauncher {
                     return WildcardGlobs.isGlobMatched(f.getName(), name);
                 }
             });
-            File result = null;
             for (File mf: matchingFiles) {
                 if (result==null || mf.lastModified() > result.lastModified()) result = mf;
             }
         }
-        return null;
+        if (result==null) return null;
+        return result.getAbsolutePath();
     }
 
     /** create a directory with a simple index.html so we have some content being served up */

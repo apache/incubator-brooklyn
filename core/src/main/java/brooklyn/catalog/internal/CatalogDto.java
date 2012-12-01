@@ -1,6 +1,5 @@
 package brooklyn.catalog.internal;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 public class CatalogDto {

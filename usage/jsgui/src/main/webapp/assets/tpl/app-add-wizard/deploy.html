@@ -1,28 +1,35 @@
 <!-- New application wizard step 1: set name and locations -->
+<div class="deploy">
 
-<div class="info-message label-message hide">
-        <span class="label-important">Important</span>
-        Name and location must be specified
-</div>
-<div class="info-nolocs-message label-message hide">
-        <span class="label-important">Important</span> 
-        Missing or unconfigured locations
-</div>
+	<div class="info-message label-message hide">
+		<span class="label-important">Important</span> Location must be specified
+	</div>
+	<div class="info-nolocs-message label-message hide">
+		<span class="label-important">Important</span> Missing or unconfigured locations
+	</div>
 
-
-<div class="control-group">
-    <label for="application-name">Name</label>
-
-    <div class="controls">
-        <input id="application-name" name="name" type="text" style="width:80%">
+    <div id="app-locations" class="control-group">
+        <div class="deploy-label">Locations</div>
+        <div id="selector-container"></div>
+        <button id="add-selector-container" class="btn btn-info btn-mini">
+            Add Additional Location</button>
     </div>
-</div>
 
-<div id="app-locations">
-    <div>Locations</div>
-    <div id="selector-container" class="control-group">
-    </div>
-    <button id="add-selector-container" class="btn btn-info btn-mini">Add Additional Location</button>
-</div>
+	<div class="control-group">
+		<div class="application-name-label deploy-label">Name (optional)</div>
+		<div class="controls">
+			<input id="application-name" name="name" type="text"
+				style="width: 80%">
+		</div>
+	</div>
+
+	<div class="control-group">
+		<div class="app-add-wizard-create-entity-label-newline deploy-label">Configuration</div>
+		<div class="controls"></div>
+		<div>
+			<button id="add-config" class="btn btn-mini btn-info">
+			 Add Configuration</button>
+		</div>
+	</div>
 
 </div>

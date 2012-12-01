@@ -1,15 +1,13 @@
 package brooklyn.catalog.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,12 +18,13 @@ import brooklyn.entity.Entity;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.ReflectionScanner;
+import brooklyn.util.javalang.UrlClassLoader;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.thoughtworks.xstream.core.util.CompositeClassLoader;
 
 public class CatalogClasspathDo {
 
@@ -53,7 +52,7 @@ public class CatalogClasspathDo {
     boolean isLoaded = false;
     private URL[] urls;
     
-    private final CompositeClassLoader classloader = new CompositeClassLoader();
+    private final AggregateClassLoader classloader = AggregateClassLoader.newInstanceWithNoLoaders();
     private volatile boolean classloaderLoaded = false;
 
     public CatalogClasspathDo(CatalogDo catalog) {
@@ -104,6 +103,17 @@ public class CatalogClasspathDo {
                     baseCP = ((AbstractManagementContext)catalog.mgmt).getBaseClassPathForScanning();
                 }
                 scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
+                if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
+                    try {
+                        ((AbstractManagementContext)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+                        log.info("Catalog scan of default classloader returned nothing; reverting to java.class.path");
+                        baseCP = ((AbstractManagementContext)catalog.mgmt).getBaseClassPathForScanning();
+                        scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
+                    } catch (Exception e) {
+                        log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
+                        Exceptions.propagateIfFatal(e);
+                    }
+                }
             }
         } else {
             // scan specified jars:
@@ -200,7 +210,7 @@ public class CatalogClasspathDo {
     protected synchronized void loadLocalClassLoader() {
         if (classloaderLoaded) return;
         if (urls==null) return;
-        classloader.add(new URLClassLoader(urls));
+        classloader.addFirst(new UrlClassLoader(urls));
         classloaderLoaded = true;
         return;
     }
@@ -209,7 +219,7 @@ public class CatalogClasspathDo {
      * (however no scanning is done) */
     public void addToClasspath(URL u, boolean updateDto) {
         if (updateDto) classpath.getEntries().add(u.toExternalForm());
-        addToClasspath(new URLClassLoader(new URL[] { u }));
+        addToClasspath(new UrlClassLoader(u));
     }
 
     /** adds the given URL as something this classloader will load
@@ -217,7 +227,7 @@ public class CatalogClasspathDo {
      * <p>
      * the DTO will _not_ be updated. */
     public void addToClasspath(ClassLoader loader) {
-        classloader.add(loader);
+        classloader.addFirst(loader);
     }
 
 }

@@ -11,6 +11,7 @@
         "jquery-wiggle":"js/libs/jquery.wiggle.min",
         "jquery-ba-bbq":"js/libs/jquery.ba-bbq.min",
         "handlebars":"js/libs/handlebars-1.0.rc.1",
+        "brooklyn-utils":"js/libs/brooklyn-utils",
         "text":"js/libs/text",
         "model":"js/model",
         "view":"js/view",

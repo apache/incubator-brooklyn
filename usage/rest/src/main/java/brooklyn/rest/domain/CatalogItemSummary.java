@@ -3,6 +3,7 @@ package brooklyn.rest.domain;
 import java.net.URI;
 import java.util.Map;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
@@ -10,6 +11,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.util.MutableMap;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 /** variant of Catalog*ItemDto objects for JS/JSON serialization;
@@ -77,7 +79,17 @@ public class CatalogItemSummary {
 
     @Override
     public String toString() {
-        return super.toString()+"["+ "id="+getId() + "]";
+        return Objects.toStringHelper(this).add("id", id).toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id, name, type);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
     }
     
 }

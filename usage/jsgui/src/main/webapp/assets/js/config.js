@@ -17,6 +17,7 @@ require.config({
         "jquery-wiggle":"libs/jquery.wiggle.min",
         "jquery-ba-bbq":"libs/jquery.ba-bbq.min",
         "handlebars":"libs/handlebars-1.0.rc.1",
+        "brooklyn-utils":"libs/brooklyn-utils",
 
         "googlemaps":"view/googlemaps",
         "text":"libs/text",

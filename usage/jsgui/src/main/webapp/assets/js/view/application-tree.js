@@ -4,8 +4,8 @@
  */
 define([
     "underscore", "jquery", "backbone", "model/app-tree", "./entity-details", "model/entity-summary",
-    "model/application", "text!tpl/apps/tree-item.html"
-], function (_, $, Backbone, AppTree, EntityDetailsView, EntitySummary, Application, TreeItemHtml) {
+    "model/application", "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html"
+], function (_, $, Backbone, AppTree, EntityDetailsView, EntitySummary, Application, TreeItemHtml, EntityDetailsEmptyHtml) {
 
     var ApplicationTreeView = Backbone.View.extend({
         tagName:"ol",
@@ -28,6 +28,9 @@ define([
             this.collection.each(function (app) {
                 that.$el.append(that.buildTree(app))
             })
+            if (this.collection.size()==0) {
+                that.$el.append("<li><i>No applications</i></li>")
+            }
             this.highlightEntity();
             if (this.detailsView) {
             	this.detailsView.render()
@@ -39,6 +42,11 @@ define([
             			if (!that.selectedEntityId)
             				that.displayEntityId(app0, app0) 
         			});
+            	} else {
+            	    _.defer(function() {
+            	        $("div#details").html( _.template(EntityDetailsEmptyHtml, {}) )
+            	        $("div#details").find("a[href=\"#"+"summary"+"\"]").tab('show')
+            	    })
             	}
             }
             return this

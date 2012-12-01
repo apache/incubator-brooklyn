@@ -202,11 +202,8 @@ public class BrooklynWebServer {
                 throw new IllegalStateException("Unable to provision port for web console (wanted "+(httpsEnabled?httpsPort:port)+")");
         }
 
-        if(httpsEnabled){
-            log.info("Starting secured Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
-        } else{
-            log.info("Starting unsecured Brooklyn console at " + getRootUrl() + ", running " + war + (wars != null ? " and " + wars.values() : ""));
-        }
+        if (log.isDebugEnabled())
+            log.debug("Starting Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
 
         server = new Server(actualPort);
 
@@ -246,11 +243,7 @@ public class BrooklynWebServer {
         //reinit required because grails wipes our language extension bindings
         BrooklynLanguageExtensions.reinit();
 
-        if(httpsEnabled){
-            log.info("Started secured Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
-        }else{
-            log.info("Started unsecured Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
-        }
+        log.info("Started Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
     }
 
     private String checkFileExists(String path, String name) {
@@ -267,7 +260,8 @@ public class BrooklynWebServer {
         if (server==null) return;
         String root = getRootUrl();
         ResourceUtils.removeShutdownHook(shutdownHook);
-        log.info("Stopping Brooklyn web console at "+root+ " (" + war + (wars != null ? " and " + wars.values() : "") + ")");
+        if (log.isDebugEnabled())
+            log.debug("Stopping Brooklyn web console at "+root+ " (" + war + (wars != null ? " and " + wars.values() : "") + ")");
 
         server.stop();
         try {
@@ -278,7 +272,8 @@ public class BrooklynWebServer {
         server = null;
         LocalhostMachineProvisioningLocation.releasePort(getAddress(), actualPort);
         actualPort = -1;
-        log.info("Stopped Brooklyn web console at "+root);
+        if (log.isDebugEnabled())
+            log.debug("Stopped Brooklyn web console at "+root);
     }
 
     /** serve given WAR at the given pathSpec; if not yet started, it is simply remembered until start;
