@@ -182,16 +182,14 @@ public class BrooklynLauncher {
                 webServer = new BrooklynWebServer(webconsoleFlags, context);
                 webServer.setPort(port);
                 webServer.putAttributes(brooklynProperties);
+                if (installSecurityFilter) {
+                    webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
+                }
                 
                 for (Map.Entry<String, String> webapp : webApps.entrySet())
                     webServer.deploy(webapp.getKey(), webapp.getValue());
                 
                 webServer.start();
-                
-                if (installSecurityFilter) {
-                    ServletContextHandler context = webServer.getRootContext();
-                    context.addFilter(BrooklynPropertiesSecurityFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-                }
                 
             } catch (Exception e) {
                 LOG.warn("Failed to start Brooklyn web-console: "+e, e);

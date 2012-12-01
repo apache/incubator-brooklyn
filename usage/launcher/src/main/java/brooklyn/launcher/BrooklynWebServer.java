@@ -24,6 +24,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApi;
+import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
@@ -86,6 +87,7 @@ public class BrooklynWebServer {
     @SetFromFlag
     private String trustStorePassword;
 
+    private Class<BrooklynPropertiesSecurityFilter> securityFilterClazz;
 
     public BrooklynWebServer(ManagementContext managementContext) {
         this(Maps.newLinkedHashMap(), managementContext);
@@ -110,6 +112,10 @@ public class BrooklynWebServer {
 
     public BrooklynWebServer(ManagementContext managementContext, int port, String warUrl) {
         this(MutableMap.of("port", port, "war", warUrl), managementContext);
+    }
+
+    public void setSecurityFilter(Class<BrooklynPropertiesSecurityFilter> filterClazz) {
+        this.securityFilterClazz = filterClazz;
     }
 
     public BrooklynWebServer setPort(Object port) {
@@ -239,6 +245,9 @@ public class BrooklynWebServer {
         }
 
         rootContext = deploy("/", war);
+        if (securityFilterClazz != null) {
+            rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
+        }
         installAsServletFilter(rootContext);
 
         server.setHandler(handlers);
@@ -308,6 +317,7 @@ public class BrooklynWebServer {
     }
 
     private Thread shutdownHook = null;
+
     protected synchronized void addShutdownHook() {
         if (shutdownHook!=null) return;
         // some webapps (eg grails) can generate a lot of output if we don't shut down the browser first 
