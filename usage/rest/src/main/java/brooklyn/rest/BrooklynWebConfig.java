@@ -8,7 +8,7 @@ public class BrooklynWebConfig {
 
     public final static String BASE_NAME = "brooklyn.webconsole";
 
-    /** e.g. brooklyn.security.provider=brooklyn.web.console.security.AnyoneSecurityProvider will allow anyone to log in;
+    /** e.g. brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.AnyoneSecurityProvider will allow anyone to log in;
      * default is explicitly named users, using SECURITY_PROVIDER_EXPLICIT__USERS  */
     public final static ConfigKey<String> SECURITY_PROVIDER_CLASSNAME = new BasicConfigKey<String>(String.class, 
             BASE_NAME+".security.provider", "class name of a Brooklyn SecurityProvider",

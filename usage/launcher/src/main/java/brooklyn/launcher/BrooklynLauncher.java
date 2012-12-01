@@ -1,10 +1,14 @@
 package brooklyn.launcher;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.DispatcherType;
+
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +22,9 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.NonDeploymentManagementContext;
+import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
+
+import com.google.common.collect.Maps;
 
 public class BrooklynLauncher {
 
@@ -69,7 +76,9 @@ public class BrooklynLauncher {
     private PortRange port = PortRanges.fromString("8081+");
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
     //private Map<String, Object> attributes = new LinkedHashMap<String, Object>();
-
+    private Map<String, ?> webconsoleFlags = Maps.newLinkedHashMap();
+    private boolean installSecurityFilter = true;
+    
     /** Specifies the management context this launcher should use. 
      * If not specified a new {@link LocalManagementContext} is used. */
     public BrooklynLauncher management(ManagementContext context) {
@@ -90,7 +99,12 @@ public class BrooklynLauncher {
         this.startWebApps = startWebApps;
         return this;
     }
-    
+
+    public BrooklynLauncher installSecurityFilter(boolean val) {
+        this.installSecurityFilter = val;
+        return this;
+    }
+
     /** Specifies the port where the web console (and any additional webapps specified) will listed; 
      * default "8081+" being the first available >= 8081. */ 
     public BrooklynLauncher webconsolePort(int port) {
@@ -107,6 +121,12 @@ public class BrooklynLauncher {
      * default "8081+" being the first available >= 8081. */ 
     public BrooklynLauncher webconsolePort(PortRange port) {
         this.port = port;
+        return this;
+    }
+
+    /**Specifies additional flags to be passed to {@link BrooklynWebServer}. */ 
+    public BrooklynLauncher webServerFlags(Map<String,?> webServerFlags) {
+        this.webconsoleFlags  = webServerFlags;
         return this;
     }
 
@@ -159,14 +179,18 @@ public class BrooklynLauncher {
         BrooklynWebServer webServer = null;
         if (startWebApps) {
             try {
-                webServer = new BrooklynWebServer(context);
+                webServer = new BrooklynWebServer(webconsoleFlags, context);
                 webServer.setPort(port);
                 webServer.putAttributes(brooklynProperties);
+                if (installSecurityFilter) {
+                    webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
+                }
                 
                 for (Map.Entry<String, String> webapp : webApps.entrySet())
                     webServer.deploy(webapp.getKey(), webapp.getValue());
                 
                 webServer.start();
+                
             } catch (Exception e) {
                 LOG.warn("Failed to start Brooklyn web-console: "+e, e);
             }

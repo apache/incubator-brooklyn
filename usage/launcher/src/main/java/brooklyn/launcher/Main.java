@@ -4,6 +4,12 @@ import brooklyn.config.BrooklynServiceAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Launches just the brooklyn web-console.
+ * 
+ * @deprecated See brooklyn.cli.Main
+ */
+@Deprecated
 public class Main {
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 

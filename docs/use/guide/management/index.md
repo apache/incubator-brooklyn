@@ -156,7 +156,7 @@ The Detail view contains a breadcrumb trail, showing the current entitiy's posit
 
 ### Security
 
-Security providers can be configured by specifying `brooklyn.security.provider` equal 
+Security providers can be configured by specifying `brooklyn.webconsole.security.provider` equal 
 to the name of a class implementing `SecurityProvider`.
 An implementation of this could point to Spring, LDAP, OpenID or another identity management system.
 
@@ -165,16 +165,16 @@ which should be specified as configuration parameters e.g. in `brooklyn.properti
 This configuration could look like:
 
 {% highlight properties %}
-brooklyn.security.explicit.users=admin
-brooklyn.security.explicit.user.admin=password
+brooklyn.webconsole.security.explicit.users=admin
+brooklyn.webconsole.security.explicit.user.admin=password
 {% endhighlight %}
 
 The `users` line should contain a comma-separated list. The special value `*` is accepted to permit all users.
 If no values are specified at all the above setting (`admin`/`password`) is used by default.
 
 If not using the web console, you should specify
-`brooklyn.security.provider=brooklyn.web.console.security.BlackholeSecurityProvider` to prevent inadvertant logins.
-During dev/test you can specify `brooklyn.security.provider=brooklyn.web.console.security.AnyoneSecurityProvider`
+`brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.BlackholeSecurityProvider` to prevent inadvertant logins.
+During dev/test you can specify `brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.AnyoneSecurityProvider`
 to allow logins with no credentials. 
 
  
