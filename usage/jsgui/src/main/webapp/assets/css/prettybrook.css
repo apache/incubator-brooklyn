@@ -18,8 +18,8 @@
 	margin-top: 40px;
 	margin-bottom: 40px;
 }
-#application-content .modal-body {
-    padding: 0;
+.no-padding {
+    padding: 0 !important;
 }
 #application-content ul.nav-tabs {
     margin: 15px 15px 0px 15px;
@@ -71,6 +71,14 @@
 }
 #application-content .template-lozenge .description {
 	font-size: 85%;
+}
+#application-content .sensor-value {
+	font-weight: 700;
+	max-width: 500px;
+	max-height: 40px;
+	white-space: nowrap;
+	overflow-x: hidden;
+	overflow-y: scroll;
 }
 div#create-step-template-entries {
 	width: 472px;

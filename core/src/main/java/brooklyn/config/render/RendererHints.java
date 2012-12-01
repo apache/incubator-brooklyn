@@ -1,14 +1,15 @@
 package brooklyn.config.render;
 
-import brooklyn.entity.Entity;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
 import groovy.lang.Closure;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
+import brooklyn.entity.Entity;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
 
 /** registry of hints for displaying items such as sensors, e.g. in the web console */
 public class RendererHints {
@@ -31,10 +32,14 @@ public class RendererHints {
     /** abstract superclass (marker) for 'hints' */
     public static abstract class Hint<T> {}
 
+    public static interface NamedAction {
+        String getActionName();
+    }
+    
     /** this hint describes a named action possible on something, e.g. a sensor;
      * currently used in web client to show actions on sensors
      */
-    public static class NamedActionWithUrl extends Hint<Sensor> {
+    public static class NamedActionWithUrl extends Hint<Sensor> implements NamedAction {
         private final String actionName;
         private final Closure postProcessing;
 
