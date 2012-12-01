@@ -57,6 +57,19 @@ public class CommonCommands {
         return format("(test $UID -eq 0 && ( %s ) || sudo -E -n -s -- %s )", command, command);
     }
 
+    /** some machines require a tty for sudo; brooklyn by default does not use a tty
+     * (so that it can get separate error+stdout streams); you can enable a tty as an
+     * option to every ssh command, or you can do it once and 
+     * modify the machine so that a tty is not subsequently required.
+     * <p>
+     * this command must be run with allocatePTY set as a flag to ssh. 
+     * <p>
+     * (having a tty for sudo seems like another case of imaginary security which is just irritating.
+     * like water restrictions at airport security.) */
+    public static String dontRequireTtyForSudo() {
+        return sudo("bash -c 'sed -i s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers'");
+    }
+
     /**
      * Returns a command that runs only 1f the operating system is as specified; Checks {@code /etc/issue} for the specified name
      */
@@ -179,4 +192,5 @@ public class CommonCommands {
     public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
         return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
     }
+
 }
