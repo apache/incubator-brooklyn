@@ -57,8 +57,8 @@ define([
             	callback:function() { that.refreshApplications() }
         	})
             this._modal = wizard
-            this.$("#modal-container").html(wizard.render().el)
-            this.$("#modal-container .modal")
+            this.$("#modal-container.add-app").html(wizard.render().el)
+            this.$("#modal-container.add-app .modal")
                 .on("hidden",function () {
                     wizard.close()
                 }).modal('show')

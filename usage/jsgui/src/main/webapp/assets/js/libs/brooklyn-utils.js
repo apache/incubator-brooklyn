@@ -17,3 +17,8 @@ function log(obj) {
         console.log(obj);
     }
 }
+
+function setVisibility(obj, visible) {
+    if (visible) obj.show()
+    else obj.hide()
+}

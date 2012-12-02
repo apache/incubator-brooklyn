@@ -73,7 +73,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             brooklynProperties = BrooklynProperties.Factory.newDefault();
         }
 
-        setAttribute(SERVICE_UP, false);a
+        setAttribute(SERVICE_UP, false);
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.CREATED);
     }
 
     /** Constructor for when application is nested inside another application */

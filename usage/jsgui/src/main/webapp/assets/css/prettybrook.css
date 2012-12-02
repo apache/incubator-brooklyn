@@ -18,8 +18,14 @@
 	margin-top: 40px;
 	margin-bottom: 40px;
 }
-.no-padding {
-    padding: 0 !important;
+.add-app .modal-body {
+    padding: 0;
+}
+#application-content div#application-explorer {
+    padding-left: 52px;
+}
+#application-content div#details {
+	margin-left: 8px !important;
 }
 #application-content ul.nav-tabs {
     margin: 15px 15px 0px 15px;
@@ -72,7 +78,11 @@
 #application-content .template-lozenge .description {
 	font-size: 85%;
 }
-#application-content .sensor-value {
+#preview_step {
+	margin-left: 18px;
+}
+#application-content .sensor-value,
+#application-content .config-value {
 	font-weight: 700;
 	max-width: 500px;
 	max-height: 40px;
@@ -416,7 +426,7 @@ input[type="color"]:focus,.uneditable-input:focus {
     height: auto;
 }
 .tab-content {
-	padding: 18px 24px 18px 24px;
+	padding: 18px;
     border-right: 1px solid #DDD;
     border-left: 1px solid #DDD;
     min-height: 300px;
@@ -439,7 +449,7 @@ ol.tree {
 /*    margin: 0; */
 }
 #tree-list span.leaf {
-    margin-left: 16px !important;
+    margin-left: 17px !important;
 }
 #tree-list li.application {
 	margin-top: 6px !important;
@@ -725,6 +735,7 @@ div.for-empty-table {
 #application-explorer div#summary textarea {
 	width: 100%;
 	cursor: auto;
+	margin-bottom: 2px;
 }
 
 /* catalog */

@@ -118,8 +118,8 @@ define([
             if (!this.options.offline) {
                 var wizard = new AppAddWizard({appRouter:this.options.appRouter})
                 this._modal = wizard
-                this.$("#modal-container").html(wizard.render().el)
-                this.$("#modal-container .modal")
+                this.$("#modal-container.add-app").html(wizard.render().el)
+                this.$("#modal-container.add-app .modal")
                     .on("hidden",function () {
                         wizard.close()
                         that.refresh(that)
