@@ -18,6 +18,7 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
 public abstract class AbstractApplication extends AbstractEntity implements Startable, Application {
@@ -72,7 +73,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             brooklynProperties = BrooklynProperties.Factory.newDefault();
         }
 
-        setAttribute(SERVICE_UP, false);
+        setAttribute(SERVICE_UP, false);a
     }
 
     /** Constructor for when application is nested inside another application */
@@ -87,11 +88,19 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public void start(Collection<? extends Location> locations) {
         this.addLocations(locations);
 
-        preStart(locations);
-        StartableMethods.start(this, locations);
-        postStart(locations);
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        try {
+            preStart(locations);
+            StartableMethods.start(this, locations);
+            postStart(locations);
+        } catch (Exception e) {
+            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            log.warn("Error starting application " + this + " (rethrowing): "+e);
+            throw Exceptions.propagate(e);
+        }
 
         setAttribute(SERVICE_UP, true);
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
         deployed = true;
 
         log.info("Started application " + this);
@@ -118,7 +127,15 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         log.info("Stopping application " + this);
 
         setAttribute(SERVICE_UP, false);
-        StartableMethods.stop(this);
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+        try {
+            StartableMethods.stop(this);
+        } catch (Exception e) {
+            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            log.warn("Error stopping application " + this + " (rethrowing): "+e);
+            throw Exceptions.propagate(e);
+        }
+        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPED);
 
         synchronized (this) {
             deployed = false;
