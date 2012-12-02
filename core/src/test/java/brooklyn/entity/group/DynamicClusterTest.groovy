@@ -17,9 +17,9 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Resizable
-import brooklyn.event.EntityStartException
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
@@ -268,7 +268,7 @@ class DynamicClusterTest {
         assertEquals(cluster.currentSize, 2)
         assertEquals(cluster.ownedChildren.size(), 2)
         cluster.ownedChildren.each {
-            assertFalse(((FailingEntity)it).fail)
+            assertFalse(((FailingEntity)it).failOnStart)
         }
     }
     
@@ -290,12 +290,12 @@ class DynamicClusterTest {
         assertEquals(cluster.members.size, 2)
         assertEquals(Iterables.size(Iterables.filter(cluster.ownedChildren, Predicates.instanceOf(FailingEntity.class))), 3)
         cluster.members.each {
-            assertFalse(((FailingEntity)it).fail)
+            assertFalse(((FailingEntity)it).failOnStart)
         }
         
         assertEquals(cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).members.size(), 1)
         cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).members.each {
-            assertTrue(((FailingEntity)it).fail)
+            assertTrue(((FailingEntity)it).failOnStart)
         }
     }
     
@@ -537,6 +537,31 @@ class DynamicClusterTest {
         assertEquals(cluster.members as Set, ImmutableSet.of(member));
     }
     
+    @Test
+    public void testReplaceMemberRemovesAndThowsIfFailToStopOld() {
+        final int failNum = 1
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = new DynamicCluster(app,  
+                initialSize:1,
+                factory:{ properties -> 
+                    int num = counter.incrementAndGet();
+                    return new FailingEntity(properties, false, (num==failNum), IllegalStateException.class) 
+                })
+        
+        cluster.start([loc])
+        Entity member = Iterables.get(cluster.members, 0);
+        
+        try {
+            cluster.replaceMember(member.getId());
+            fail();
+        } catch (Exception e) {
+            if (!e.toString().contains("Simulating entity stop failure")) throw e;
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+        }
+        assertFalse(Entities.isManaged(member));
+        assertEquals(cluster.members.size(), 1);
+    }
+    
     private Throwable unwrapException(Throwable e) {
         if (e instanceof ExecutionException) {
             return unwrapException(e.cause)
@@ -549,24 +574,38 @@ class DynamicClusterTest {
 }
 
 class FailingEntity extends TestEntity {
-    boolean fail;
-    Class<? extends Exception> exceptionClazz;
-    
-    FailingEntity(Map flags, boolean fail) {
-        this(flags, fail, EntityStartException.class);
+    final boolean failOnStart;
+    final boolean failOnStop;
+    final Class<? extends Exception> exceptionClazz;
+
+    public FailingEntity(Map flags, boolean failOnStart) {
+        this(flags, failOnStart, false);
     }
-    FailingEntity(Map flags, boolean fail, Class<? extends Exception> exceptionClazz) {
+    
+    public FailingEntity(Map flags, boolean failOnStart, boolean failOnStop) {
+        this(flags, failOnStart, failOnStop, IllegalStateException.class);
+    }
+    
+    public FailingEntity(Map flags, boolean failOnStart, boolean failOnStop, Class<? extends Exception> exceptionClazz) {
         super(flags)
-        this.fail = fail
+        this.failOnStart = failOnStart;
+        this.failOnStop = failOnStop;
         this.exceptionClazz = exceptionClazz;
     }
     
     @Override
     public void start(Collection<? extends Location> locs) {
-        if (fail) {
+        if (failOnStart) {
             Exception e = exceptionClazz.getConstructor(String.class).newInstance("Simulating entity start failure for test");
             throw e;
-            throw new EntityStartException("Simulating entity start failure for test")
+        }
+    }
+    
+    @Override
+    public void stop() {
+        if (failOnStop) {
+            Exception e = exceptionClazz.getConstructor(String.class).newInstance("Simulating entity stop failure for test");
+            throw e;
         }
     }
 }
