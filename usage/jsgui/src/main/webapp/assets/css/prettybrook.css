@@ -625,9 +625,17 @@ table.nonDatatables {
 table.nonDatatables thead {
     border-bottom: 1px solid black;
 }
+table.nonDatatables thead th {
+    background: #ffffff;
+    padding: 3px 18px 3px 5px;
+}
 table.table.nonDatatables tbody > tr:first-child > td {
 	/* need both bottom of head, and top of body, to support empty table and override non-empty row top border */
 	border-top: 1px black solid;
+}
+table.table.nonDatatables tbody tr.selected,
+table.table.nonDatatables tbody tr.selected td {
+    background: #AC8;
 }
 /* we keep the thin gray line between rows for manual tables,
    subtle difference but seems nice */
@@ -980,12 +988,12 @@ textarea {
 }
 
 .table-condensed th {
-    background-color: #f7f7f7 !important;
+    background-color: #f7f7f7;
     padding: 8px;
 }
 
 .table-bordered tr td {
-    background-color: #f7f7f7 !important;
+    background-color: #f7f7f7;
     padding: 8px;
 }
 
@@ -1129,10 +1137,6 @@ textarea {
 	opacity: 0.8;
     border-top-color: #549e2b;
     border-bottom-color: #549e2b;
-}
-
-#effectors-table th {
-    background: #ffffff !important
 }
 /*APP PAGE*/
 

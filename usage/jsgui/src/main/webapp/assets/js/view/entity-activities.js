@@ -10,7 +10,7 @@ define([
         template:_.template(ActivitiesHtml),
         taskRow:_.template(ActivityRowHtml),
         events:{
-            "click button.details":"showFullActivity"
+            "click #activities-table tr":"rowClick"
         },
         initialize:function () {
             var that = this
@@ -23,7 +23,6 @@ define([
             }, 5000)
         },
         beforeClose:function () {
-            if (this.detailsModal) this.detailsModal.close()
             this.collection.off("reset", this.render)
         },
         render:function () {
@@ -35,7 +34,7 @@ define([
                 this.$(".has-no-activities").hide();
                 this.collection.each(function (task) {
                     $tbody.append(that.taskRow({
-                        cid:task.cid,
+                        cid:task.get("id"),
                         displayName:task.get("displayName"),
                         submitTimeUtc:task.get("submitTimeUtc"),
                         startTimeUtc:task.get("startTimeUtc"),
@@ -43,34 +42,40 @@ define([
                         currentStatus:task.get("currentStatus"),
                         entityDisplayName:task.get("entityDisplayName")
                     }))
+                if (that.activeTask) {
+                    $("#activities-table tr[id="+that.activeTask+"]").addClass("selected")
+                    that.showFullActivity(that.activeTask)
+                }
             })
             }
             return this
         },
-        showFullActivity:function (eventName) {
-            var cid = $(eventName.currentTarget).attr("id"),
-                task = this.collection.getByCid(cid)
-            // clean the old modal view !!
-            if (this.detailsModal) this.detailsModal.close()
-            this.detailsModal = new ActivitiesView.Modal({
-                model:task
+        rowClick: function(evt) {
+            var row = $(evt.currentTarget).closest("tr")
+            var id = row.attr("id")
+            $("#activities-table tr").removeClass("selected")
+            if (this.activeTask == id) {
+                // deselected
+                this.activeTask = null
+                this.$("#activity-details").hide(100)
+            } else {
+                row.addClass("selected")
+                this.activeTask = id
+                this.showFullActivity(id)
+            }
+        },
+        showFullActivity:function (id) {
+            var task = this.collection.get(id)
+            var html = _.template(ActivityDetailsHtml, {
+                displayName:this.model.get("displayName"),
+                description:FormatJSON(task.toJSON())                
             })
-            this.$("#activity-modal").html(this.detailsModal.render().el)
-            // show the big fat modal
-            this.$("#activity-modal .modal").modal("show").css({
-                "min-width":500,
-                "max-width":940,
-                width:function () {
-                    return ($(document).width() * .9) + "px";
-                },
-                "margin-left":function () {
-                    return -($(this).width() / 2)
-                }
-            })
+            this.$("#activity-details").html(html)
+            this.$("#activity-details").show(100)
         }
     })
 
-    ActivitiesView.Modal = Backbone.View.extend({
+    ActivitiesView.Details = Backbone.View.extend({
         tagName:"div",
         className:"modal hide",
         template:_.template(ActivityDetailsHtml),
