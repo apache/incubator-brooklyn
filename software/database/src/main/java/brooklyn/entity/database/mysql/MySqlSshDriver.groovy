@@ -71,8 +71,9 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         commands.add(CommonCommands.INSTALL_TAR);
         commands.add("echo installing extra packages")
         commands.add(installPackage(yum: "libgcc_s.so.1 libaio.so.1 libncurses.so.5", apt: "libaio1", null));
-        commands.add(ok(installPackage(yum: "libaio", null)));
-        commands.add(ok(installPackage(apt: "ia32-libs", null)));
+
+        // these deps are needed on some OS versions but others don't need them so ignore failures (ok(...))
+        commands.add(ok(installPackage(yum: "libaio", apt: "ia32-libs", null)));
         commands.add("echo finished installing extra packages")
         commands.addAll(downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
         commands.add("tar xfvz ${saveAs}");
