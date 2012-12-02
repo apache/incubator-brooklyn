@@ -43,8 +43,11 @@ define([
             this.collection.fetch()
             return false
         },
-        show: function(trail) {
-            this.treeView.displayEntityId(trail)
+        show: function(entityId) {
+            this.treeView.displayEntityId(entityId)
+        },
+        preselectTab: function(tab) {
+            this.treeView.preselectTab(tab)
         },
         
         createApplication:function () {

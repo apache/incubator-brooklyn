@@ -43,7 +43,7 @@ define([
                         entityDisplayName:task.get("entityDisplayName")
                     }))
                 if (that.activeTask) {
-                    $("#activities-table tr[id="+that.activeTask+"]").addClass("selected")
+                    $("#activities-table tr[id='"+that.activeTask+"']").addClass("selected")
                     that.showFullActivity(that.activeTask)
                 }
             })
@@ -66,6 +66,10 @@ define([
         },
         showFullActivity:function (id) {
             var task = this.collection.get(id)
+            if (task==null) {
+                this.activeTask = null
+                this.$("#activity-details").hide(100)                
+            }
             var html = _.template(ActivityDetailsHtml, {
                 displayName:this.model.get("displayName"),
                 description:FormatJSON(task.toJSON())                
