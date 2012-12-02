@@ -191,49 +191,49 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
     }
 
     //install ok; failure to connect
-    @Test(groups = ["Integration"])
+    @Test(groups = ["Live"])
     public void test_Debian_6() {
         test("Debian 6");
     }
 
     //working
-    @Test(groups = ["Integration"])
+    @Test(groups = ["Live"])
     public void test_Ubuntu_10_0() {
         test("Ubuntu 10.0");
     }
 
     //working
-    @Test(groups = ["Integration"])
+    @Test(groups = ["Live"])
     public void test_Ubuntu_11_0() {
         test("Ubuntu 11.0");
     }
 
     //working
-    @Test(groups = ["Integration"])
+    @Test(groups = ["Live"])
     public void test_Ubuntu_12_0() {
         test("Ubuntu 12.0");
     }
 
     //working
-    @Test(groups = ["Integration"])
+    @Test(groups = ["Live"])
     public void test_CentOS_6_0() {
         test("CentOS 6.0");
     }
 
     //working
-    @Test(groups = ["Integration"])
+    @Test(groups = ["Live"])
     public void test_CentOS_5_6() {
         test("CentOS 5.6");
     }
 
     //working
-    @Test(groups = ["Integration"])
+    @Test(groups = ["Live"])
     public void test_Fedora_17() {
         test("Fedora 17");
     }
 
     //working
-    @Test(groups = ["Integration"])
+    @Test(groups = ["Live"])
     public void test_Red_Hat_Enterprise_Linux_6() {
         test("Red Hat Enterprise Linux 6");
     }
@@ -263,8 +263,8 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
             int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
             new VogellaExampleAccess().readDataBase(host, port);
         } finally {
-            //mysql.stop();
-            //tapp.destroy();
+            mysql.stop();
+            tapp.destroy();
         }
     }
 }
