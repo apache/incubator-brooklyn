@@ -124,11 +124,22 @@ define([
                     $("#details-"+that.activeAccordion).html(_.template(DetailsGenericHtml, {
                         title: that.activeItem
                     }));
-                    $.get(url, function (data) {
-                        $("#details-"+that.activeAccordion).html(_.template(DetailsGenericHtml, {
-                            title: that.activeItem,
-                            json: FormatJSON(data)
-                        }))
+                    console.log("LOADING")
+                    $.ajax({ url: url,
+                        
+                        success: function(data) {
+                            $("#details-"+that.activeAccordion).html(_.template(DetailsGenericHtml, {
+                                    title: that.activeItem,
+                                    json: FormatJSON(data)
+                            }))
+                        },
+                        error: function(xhr, textStatus, error) {
+                            $("#details-"+that.activeAccordion).html(_.template(DetailsGenericHtml, {
+                                title: that.activeItem,
+                                json: FormatJSON({ "status": textStatus, "error": error })
+                            }))
+                            // xhr has a lot more data, including responseText, which we could show 
+                        }
                     })
                 } else {
                     that.showLocationDetails(that.activeItem)
