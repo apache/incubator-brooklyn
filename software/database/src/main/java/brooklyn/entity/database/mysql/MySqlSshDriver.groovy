@@ -11,7 +11,11 @@ import brooklyn.location.basic.BasicOsDetails.OsArchs
 import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
 import brooklyn.util.ResourceUtils
-import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Identifiers
+
+import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs
+import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage
+import static brooklyn.entity.basic.lifecycle.CommonCommands.ok;
 
 /**
  * The SSH implementation of the {@link MySlDriver}.
@@ -65,8 +69,12 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         String saveAs  = "${basename}.tar.gz"
         List<String> commands = new LinkedList<String>();
         commands.add(CommonCommands.INSTALL_TAR);
-        commands.add(CommonCommands.installPackage(yum: "libgcc_s.so.1 libaio.so.1 libncurses.so.5", apt: "libaio1 ia32-libs", null));
-        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
+        commands.add("echo installing extra packages")
+        commands.add(installPackage(yum: "libgcc_s.so.1 libaio.so.1 libncurses.so.5", apt: "libaio1", null));
+        commands.add(ok(installPackage(yum: "libaio", null)));
+        commands.add(ok(installPackage(apt: "ia32-libs", null)));
+        commands.add("echo finished installing extra packages")
+        commands.addAll(downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
         commands.add("tar xfvz ${saveAs}");
 
         newScript(INSTALLING).
