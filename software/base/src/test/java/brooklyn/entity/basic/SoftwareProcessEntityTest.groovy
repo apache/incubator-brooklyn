@@ -1,17 +1,18 @@
 package brooklyn.entity.basic;
 
-import groovy.transform.InheritConstructors
-
+import org.jclouds.util.Throwables2;
 import org.testng.Assert
 import org.testng.annotations.Test
 
 import brooklyn.config.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.trait.Startable;
+import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
+
+import com.google.common.collect.ImmutableSet
 
 
 public class SoftwareProcessEntityTest {
@@ -46,7 +47,29 @@ public class SoftwareProcessEntityTest {
         entity.stop();
     }
     
-    @InheritConstructors
+    @Test
+    public void testReleaseEvenIfErrorDuringStop() {
+        SshMachineLocation machine = new SshMachineLocation(address:"localhost");
+        FixedListMachineProvisioningLocation loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
+        TestApplication app = new TestApplication();
+        MyService entity = new MyService(app) {
+            @Override public Class getDriverInterface() {
+                return SimulatedFailOnStopDriver.class;
+            }
+        };
+        Entities.startManagement(app);
+        
+        entity.start([loc]);
+        try {
+            entity.stop();
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertEquals(loc.getAvailable(), ImmutableSet.of(machine));
+            IllegalStateException cause = Throwables2.getFirstThrowableOfType(e, IllegalStateException.class);
+            if (cause == null || !cause.toString().contains("Simulating stop error")) throw e; 
+        }
+    }
+    
     public static class MyService extends SoftwareProcessEntity {
         public MyService(Entity owner) {
             super(owner);
@@ -65,14 +88,24 @@ public class SoftwareProcessEntityTest {
     }
 }
 
-public class SimulatedDriver extends AbstractSoftwareProcessDriver {
-    private volatile boolean launched = false;
-    
-    SimulatedDriver(EntityLocal entity, SshMachineLocation machine) {
+public class SimulatedFailOnStopDriver extends SimulatedDriver {
+    public SimulatedFailOnStopDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine)
     }
+    
+    @Override
+    public void stop() {
+        throw new IllegalStateException("Simulating stop error");
+    }
+}
 
+public class SimulatedDriver extends AbstractSoftwareProcessDriver {
     public List<String> events = new ArrayList<String>();
+    private volatile boolean launched = false;
+    
+    public SimulatedDriver(EntityLocal entity, SshMachineLocation machine) {
+        super(entity, machine)
+    }
     
     @Override
     public boolean isRunning() {
