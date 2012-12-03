@@ -1,21 +1,14 @@
 package brooklyn.entity.database.mysql
 
-import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.basic.LocationRegistry
-import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.MutableMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import java.sql.*
-
-import static java.util.Arrays.asList
 
 /** Runs the popular Vogella MySQL tutorial,
  * from
@@ -24,21 +17,24 @@ import static java.util.Arrays.asList
 public class MySqlIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(MySqlIntegrationTest.class);
+    TestApplication tapp
 
-    @BeforeMethod(groups = ["Integration"])
-    public void ensureNoInstance() {
+    @BeforeMethod(alwaysRun = true)
+    public void before() {
+        tapp = new TestApplication(name: "MySqlIntegrationTest");
+
     }
 
-    @AfterMethod(groups = ["Integration"])
+    @BeforeMethod(alwaysRun = true)
     public void ensureShutDown() {
+        if (tapp != null) {
+            Entities.destroy(tapp)
+            tapp = null;
+        };
     }
 
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines
 
-
-    //private final static String SCRIPT = "create database drupal; " +
-    //          "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON drupal.* TO 'drupal'@'%'  IDENTIFIED BY 'password'; " +
-    //          "FLUSH PRIVILEGES;";
     //from http://www.vogella.de/articles/MySQLJava/article.html
     public static final String CREATION_SCRIPT = """
 create database feedback;
@@ -63,24 +59,6 @@ CREATE TABLE COMMENTS (
 INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );
 """;
 
-    @Test(groups = ["Integration"])
-    public void runIt() {
-        TestApplication tapp = new TestApplication(name: "MySqlIntegrationTest");
-        MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
-
-        try {
-            tapp.start([new LocalhostMachineProvisioningLocation()]);
-
-            log.info("MySQL started");
-
-            new VogellaExampleAccess().readDataBase("localhost", mysql.getPort());
-
-            log.info("Ran vogella MySQL example -- SUCCESS");
-        } finally {
-            mysql.stop();
-            tapp.destroy();
-        }
-    }
 
     static class VogellaExampleAccess {
         private Connection connect = null;
@@ -94,10 +72,9 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
                 Class.forName("com.mysql.jdbc.Driver");
                 // Setup the connection with the DB
                 def connectString = "jdbc:mysql://${host}:${port}/feedback?user=sqluser&password=sqluserpw";
-                log.info("Connecting to:"+connectString)
+                log.info("Connecting to:" + connectString)
                 connect = DriverManager.getConnection(connectString);
                 log.info("Connected successfully")
-
 
                 // Statements allow to issue SQL queries to the database
                 statement = connect.createStatement();
@@ -135,7 +112,6 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
             } finally {
                 close();
             }
-
         }
 
         private void writeMetaData(ResultSet resultSet) throws SQLException {
@@ -190,81 +166,16 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
         }
     }
 
-    //install ok; failure to connect
-    @Test(groups = ["Live"])
-    public void test_Debian_6() {
-        test("Debian 6");
-    }
-
-    //working
-    @Test(groups = ["Live"])
-    public void test_Ubuntu_10_0() {
-        test("Ubuntu 10.0");
-    }
-
-    //working
-    @Test(groups = ["Live"])
-    public void test_Ubuntu_11_0() {
-        test("Ubuntu 11.0");
-    }
-
-    //working
-    @Test(groups = ["Live"])
-    public void test_Ubuntu_12_0() {
-        test("Ubuntu 12.0");
-    }
-
-    //working
-    @Test(groups = ["Live"])
-    public void test_CentOS_6_0() {
-        test("CentOS 6.0");
-    }
-
-    //working
-    @Test(groups = ["Live"])
-    public void test_CentOS_5_6() {
-        test("CentOS 5.6");
-    }
-
-    //working
-    @Test(groups = ["Live"])
-    public void test_Fedora_17() {
-        test("Fedora 17");
-    }
-
-    //working
-    @Test(groups = ["Live"])
-    public void test_Red_Hat_Enterprise_Linux_6() {
-        test("Red Hat Enterprise Linux 6");
-    }
-
-    public void test(String osRegex) throws Exception {
-        TestApplication tapp = new TestApplication(name: "MySqlIntegrationTest");
-
+    @Test(groups = ["Integration"])
+    public void test_localhost() {
         MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
 
-        try {
-            BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-            brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
-            brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
-            brooklynProperties.put("inboundPorts",[22,3306]);
-            LocationRegistry locationRegistry = new LocationRegistry(brooklynProperties);
+        tapp.start([new LocalhostMachineProvisioningLocation()]);
 
-            JcloudsLocation jcloudsLocation = (JcloudsLocation) locationRegistry.resolve("cloudservers-uk");
+        log.info("MySQL started");
 
-            Entities.startManagement(tapp);
-            tapp.start(asList(jcloudsLocation));
+        new VogellaExampleAccess().readDataBase("localhost", mysql.getPort());
 
-            JcloudsLocation.JcloudsSshMachineLocation l = mysql.getLocations().iterator().next();
-            //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
-            l.exec(asList("iptables -I INPUT -p tcp --dport 3306 -j ACCEPT"))
-
-            String host = mysql.getAttribute(MySqlNode.HOSTNAME);
-            int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
-            new VogellaExampleAccess().readDataBase(host, port);
-        } finally {
-            mysql.stop();
-            tapp.destroy();
-        }
+        log.info("Ran vogella MySQL example -- SUCCESS");
     }
 }
