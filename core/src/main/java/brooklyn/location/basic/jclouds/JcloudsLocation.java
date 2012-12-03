@@ -35,6 +35,7 @@ import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
+import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
@@ -975,12 +976,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             if (template==null) throw new NullPointerException("No template found (templateBuilder.build returned null)");
             LOG.debug(""+this+" got template "+template+" (image "+template.getImage()+")");
             if (template.getImage()==null) throw new NullPointerException("Template does not contain an image (templateBuilder.build returned invalid template)");
-            String name = template.getImage().getName();
-            if (name != null && name.contains(".rc-")) {
-                // release candidates might break things :(
+            if (isBadTemplate(template.getImage())) {
+                // release candidates might break things :(   TODO get the list and score them
                 if (templateBuilder instanceof PortableTemplateBuilder) {
                     if (((PortableTemplateBuilder)templateBuilder).getOsFamily()==null) {
-                        templateBuilder.osFamily(OsFamily.UBUNTU);
+                        templateBuilder.osFamily(OsFamily.UBUNTU).osVersionMatches("11.04").os64Bit(true);
                         Template template2 = templateBuilder.build();
                         if (template2!=null) {
                             LOG.debug(""+this+" preferring template {} over {}", template2, template);
@@ -1055,6 +1055,24 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         
         LOG.debug("jclouds using template {} / options {} to provision machine in {} for {}", new Object[] {template, options, this, setup.getCallerContext()});
         return template;
+    }
+
+    // TODO we really need a better way to decide which images are preferred
+    // though to be fair this is similar to jclouds strategies
+    // we fall back to the "bad" images (^^^ above) if we can't find a good one above
+    // ---
+    // but in practice in AWS images name "rc-" and from "alphas" break things badly
+    // (apt repos don't work, etc)
+    private boolean isBadTemplate(Image image) {
+        String name = image.getName();
+        if (name != null && name.contains(".rc-")) return true;
+        OperatingSystem os = image.getOperatingSystem();
+        if (os!=null) {
+            String description = os.getDescription();
+            if (description != null && description.contains("-alpha"))
+                return true;
+        }
+        return false;
     }
 
     private String getPublicHostname(NodeMetadata node, BrooklynJcloudsSetupHolder setup) {
