@@ -58,7 +58,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public void install() {
         newScript("disable requiretty").
             setFlag("allocatePTY", true).
-            body.append(CommonCommands.sudo("bash -c 'sed -i s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers'")).
+            body.append(CommonCommands.dontRequireTtyForSudo()).
             execute();
         
         String nginxUrl = format("http://nginx.org/download/nginx-%s.tar.gz", getVersion());

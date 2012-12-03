@@ -132,7 +132,7 @@ public class NginxController extends AbstractController {
                 // Accept any nginx response (don't assert specific version), so that sub-classing
                 // for a custom nginx build is not strict about custom version numbers in headers
                 def actual = headerLists.get("Server")
-                return actual != null && actual.size() == 1 && actual.get(0).startsWith("nginx/"); 
+                return actual != null && actual.size() == 1 && actual.get(0).startsWith("nginx");
             })
         }
     }
@@ -243,8 +243,9 @@ public class NginxController extends AbstractController {
         // TODO Give nicer page back 
         if (getDomain()!=null || serverPoolAddresses==null || serverPoolAddresses.isEmpty()) {
             config.append("  server {\n");
+            config.append(getCodeForServerConfig());
             config.append("    listen "+getPort()+";\n")
-            config.append("    return 404;\n")
+            config.append(getCodeFor404());
             config.append("  }\n");
         }
         
@@ -259,6 +260,7 @@ public class NginxController extends AbstractController {
             }
             config.append("  }\n")
             config.append("  server {\n");
+            config.append(getCodeForServerConfig());
             config.append("    listen "+getPort()+";\n")
             if (getDomain()!=null)
                 config.append("    server_name "+getDomain()+";\n")
@@ -295,6 +297,7 @@ public class NginxController extends AbstractController {
         
         for (String domain : mappingsByDomain.keySet()) {
             config.append("  server {\n");
+            config.append(getCodeForServerConfig());
             config.append("    listen "+getPort()+";\n")
             config.append("    server_name "+domain+";\n")
             boolean hasRoot = false;
@@ -359,7 +362,7 @@ public class NginxController extends AbstractController {
             }
             if (!hasRoot) {
                 //provide a root block giving 404 if there isn't one for this server
-                config.append("    location / { return 404; }\n");
+                config.append("    location / { \n"+getCodeFor404()+"    }\n");
             }
             config.append("  }\n");
         }
@@ -369,6 +372,18 @@ public class NginxController extends AbstractController {
         return config.toString();
     }
 
+    protected String getCodeForServerConfig() {
+        return ''+
+            // this prevents nginx from reporting version number on error pages
+            '    server_tokens off;\n'+
+            // this prevents nginx from using the internal proxy_pass codename as Host header passed upstream
+            '    proxy_set_header Host $http_host;\n';
+    }
+    
+    protected String getCodeFor404() {
+        return "    return 404;\n"
+    }
+    
     void verifyConfig(ProxySslConfig proxySslConfig) {
           if(Strings.isEmpty(proxySslConfig.certificateDestination) && Strings.isEmpty(proxySslConfig.certificateSourceUrl)){
             throw new IllegalStateException("ProxySslConfig can't have a null certificateDestination and null certificateSourceUrl. One or both need to be set")
