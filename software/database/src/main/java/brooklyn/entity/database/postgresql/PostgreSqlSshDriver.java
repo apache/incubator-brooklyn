@@ -108,7 +108,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     }
 
     protected void customizeUserCreationScript() {
-        log.info("Copying creation script");
+        log.info("Copying creation script " + getEntity().toString());
         String creationScriptUrl = entity.getConfig(PostgreSqlNode.CREATION_SCRIPT_URL);
         Reader creationScript;
         if (creationScriptUrl != null)
@@ -143,6 +143,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
         newScript(LAUNCHING).body.append(callPgctl("start", false)).failOnNonZeroResultCode().execute();
     }
 
+    @Override
     public boolean isRunning() {
         return newScript(CHECK_RUNNING).body.append(callPgctl("status", false)).execute() == 0;
     }
@@ -150,10 +151,6 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     @Override
     public void stop() {
         newScript(STOPPING).body.append(callPgctl("stop", false)).failOnNonZeroResultCode().execute();
-    }
-
-    public int getPort() {
-        return getEntity().getPort();
     }
 
     @Override

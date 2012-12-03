@@ -1,4 +1,4 @@
-package brooklyn.entity.database.mysql;
+package brooklyn.entity.database.postgresql;
 
 
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -8,15 +8,7 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
-
-import java.sql.Connection
-import java.sql.Date
-import java.sql.DriverManager
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Statement
-import brooklyn.entity.database.postgresql.PostgreSqlNode
+import brooklyn.entity.database.VogellaExampleAccess
 
 /**
  * Runs the popular Vogella MySQL tutorial against PostgreSQL

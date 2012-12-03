@@ -1,4 +1,4 @@
-package brooklyn.entity.database.mysql;
+package brooklyn.entity.database;
 
 import java.sql.Connection;
 import java.sql.Date;

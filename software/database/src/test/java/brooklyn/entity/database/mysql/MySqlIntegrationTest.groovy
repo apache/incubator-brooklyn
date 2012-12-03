@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
+import brooklyn.entity.database.VogellaExampleAccess
 
 /**
  * Runs a slightly modified version of the popular Vogella MySQL tutorial,
