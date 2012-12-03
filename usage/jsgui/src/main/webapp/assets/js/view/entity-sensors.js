@@ -4,7 +4,7 @@
  */
 define([
     "underscore", "jquery", "backbone", "view/viewutils", "model/sensor-summary", "text!tpl/apps/sensors.html",
-    "text!tpl/apps/sensor-row.html", "tablesorter"
+    "text!tpl/apps/sensor-row.html", "tablesorter", "brooklyn-utils"
 ], function (_, $, Backbone, ViewUtils, SensorSummary, SensorsHtml, SensorRowHtml) {
 
     var EntitySensorsView = Backbone.View.extend({
@@ -59,7 +59,7 @@ define([
         updateSensorsPeriodically:function (that) {
             var self = this;
             that.updateSensorsNow(that)
-            that.callPeriodically(function() { self.updateSensorsNow(that) }, 3000)
+            that.callPeriodically("entity-sensors", function() { self.updateSensorsNow(that) }, 3000)
         },
         updateSensorsNow:function (that) {
             // NB: this won't add new dynamic sensors
@@ -75,7 +75,7 @@ define([
                         $table.dataTable().fnUpdate(_.escape(v), row, 2)
                     })
                 })
-            }
-        })
+        }
+    })
     return EntitySensorsView
 })

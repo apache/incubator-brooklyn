@@ -7,7 +7,7 @@ define([
         return "fixtures/sensor-current-state.json"
     }
 
-    Backbone.View.prototype.callPeriodically = function (callback, interval) {
+    Backbone.View.prototype.callPeriodically = function (uid, callback, interval) {
         if (!this._periodicFunctions) {
             this._periodicFunctions = []
         }

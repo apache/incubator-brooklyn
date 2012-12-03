@@ -4,7 +4,7 @@
  */
 define([
     "underscore", "jquery", "backbone", "model/app-tree", "./entity-details", "model/entity-summary",
-    "model/application", "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html"
+    "model/application", "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html", "brooklyn-utils"
 ], function (_, $, Backbone, AppTree, EntityDetailsView, EntitySummary, Application, TreeItemHtml, EntityDetailsEmptyHtml) {
 
     var ApplicationTreeView = Backbone.View.extend({
@@ -104,6 +104,8 @@ define([
             }
             window.history.pushState(stateId, "", href)
         	this.displayEntityId(entityId, $(eventName.currentTarget).data("parent-app"));
+            // don't traverse the link further (not sure this is needed)
+            return false
         },
         displayEntityId:function (id, appName) {
             var entitySummary = new EntitySummary.Model,
@@ -137,6 +139,8 @@ define([
                     that.detailsView.close()
                 }
             }
+            if (that.detailsView)
+                that.detailsView.close()
             that.detailsView = new EntityDetailsView({
                 model:entitySummary,
                 application:app

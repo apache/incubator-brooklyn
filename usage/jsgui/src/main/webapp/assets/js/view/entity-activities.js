@@ -18,7 +18,7 @@ define([
             this.collection.url = this.model.getLinkByName("activities")
             this.collection.fetch()
             this.collection.on("reset", this.render, this)
-            this.callPeriodically(function () {
+            this.callPeriodically("entity-activities", function () {
                 that.collection.fetch()
             }, 5000)
         },

@@ -52,7 +52,7 @@ define([
         updateConfigPeriodically:function (that) {
             var self = this;
             that.updateConfigNow(that)
-            that.callPeriodically(function() { self.updateConfigNow(that) }, 3000)
+            that.callPeriodically("entity-config", function() { self.updateConfigNow(that) }, 3000)
         },
         updateConfigNow:function (that) {
             // NB: this won't add new dynamic config

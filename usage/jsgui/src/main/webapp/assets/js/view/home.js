@@ -48,7 +48,7 @@ define([
             			        )
             			var locatedLocations = new Location.UsageLocated()
             			that.updateCircles(that, locatedLocations, GoogleMaps, map)
-            			that.callPeriodically(function() {
+            			that.callPeriodically("circles", function() {
             			    that.updateCircles(that, locatedLocations, GoogleMaps, map)
             			}, 10000)
             		}, function (error) {
@@ -56,7 +56,7 @@ define([
             	});
             }
             
-            this.callPeriodically(function() {
+            this.callPeriodically("home", function() {
             	that.refresh(that);	            	
             }, 5000)
             this.refresh(this)

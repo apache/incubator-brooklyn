@@ -14,19 +14,21 @@ define([
         if (this.beforeClose) {
             this.beforeClose()
         }
-        for (var index in this._periodicFunctions) {
-            clearInterval(this._periodicFunctions[index])
-        }
+        _.each(this._periodicFunctions, function(i) {
+            clearInterval(i)
+        })
         this.remove()
         this.unbind()
     }
     
     // registers a callback (cf setInterval) but it cleanly gets unregistered when view closes
-    Backbone.View.prototype.callPeriodically = function (callback, interval) {
+    Backbone.View.prototype.callPeriodically = function (uid, callback, interval) {
         if (!this._periodicFunctions) {
-            this._periodicFunctions = []
+            this._periodicFunctions = {}
         }
-        this._periodicFunctions.push(setInterval(callback, interval))
+        var old = this._periodicFunctions[uid]
+        if (old) clearInterval(old)
+        this._periodicFunctions[uid] = setInterval(callback, interval)
     }
 
 
