@@ -4,7 +4,7 @@
  */
 define([
     "underscore", "jquery", "backbone", "model/app-tree", "./entity-details", "model/entity-summary",
-    "model/application", "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html"
+    "model/application", "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html", "brooklyn-utils"
 ], function (_, $, Backbone, AppTree, EntityDetailsView, EntitySummary, Application, TreeItemHtml, EntityDetailsEmptyHtml) {
 
     var ApplicationTreeView = Backbone.View.extend({
@@ -94,8 +94,18 @@ define([
             return $template
         },
         displayEntity:function (eventName) {
-            window.history.pushState($(eventName.currentTarget).attr("id"), "", $('a', $(eventName.currentTarget)).attr('href'));
-        	this.displayEntityId($(eventName.currentTarget).attr("id"), $(eventName.currentTarget).data("parent-app"));
+            var entityId = $(eventName.currentTarget).attr("id"),
+                stateId = entityId
+            var href = $('a', $(eventName.currentTarget)).attr('href');
+            var tab = $(this.detailsView.el).find(".tab-pane.active").attr("id")
+            if (tab) {
+                href = href+"/"+tab
+                stateId = entityId+"/"+tab
+            }
+            window.history.pushState(stateId, "", href)
+        	this.displayEntityId(entityId, $(eventName.currentTarget).data("parent-app"));
+            // don't traverse the link further (not sure this is needed)
+            return false
         },
         displayEntityId:function (id, appName) {
             var entitySummary = new EntitySummary.Model,
@@ -113,21 +123,31 @@ define([
             app.fetch({async:false})
 
             entitySummary.url = "/v1/applications/" + appName + "/entities/" + id
-            entitySummary.fetch({success:function () {
-            	var whichTab="summary";
+            entitySummary.fetch({success:function () { that.showDetails(that, app, entitySummary) }})
+            return
+        },
+        preselectTab: function(tab) {
+            this.currentTab = tab
+            // not applied immediately, but on next rendering
+        },
+        showDetails: function(that, app, entitySummary) {
+            var whichTab = this.currentTab
+            if (whichTab===undefined) {
+                whichTab="summary";
                 if (that.detailsView) {
-                	whichTab = $(that.detailsView.el).find(".tab-pane.active").attr("id");
-                	that.detailsView.close()
+                    whichTab = $(that.detailsView.el).find(".tab-pane.active").attr("id");
+                    that.detailsView.close()
                 }
-                that.detailsView = new EntityDetailsView({
-                    model:entitySummary,
-                    application:app
-                })
-                $("div#details").html(that.detailsView.render().el)
-                // preserve the tab selected before
-                $("div#details").find("a[href=\"#"+whichTab+"\"]").tab('show')
-            }})
-            return false;
+            }
+            if (that.detailsView)
+                that.detailsView.close()
+            that.detailsView = new EntityDetailsView({
+                model:entitySummary,
+                application:app
+            })
+            $("div#details").html(that.detailsView.render().el)
+            // preserve the tab selected before
+            $("div#details").find("a[href=\"#"+whichTab+"\"]").tab('show')            
         },
         highlightEntity:function (id) {
         	if (id) this.selectedEntityId = id

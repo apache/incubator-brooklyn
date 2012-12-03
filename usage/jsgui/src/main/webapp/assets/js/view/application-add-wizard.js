@@ -30,8 +30,10 @@ define([
         tagName:'div',
         className:'modal hide fade',
         events:{
+            'click #prev_step':'prevStep',
             'click #next_step':'nextStep',
-            'click #prev_step':'prevStep'
+            'click #preview_step':'previewStep',
+            'click #finish_step':'finishStep'
         },
         template:_.template(ModalHtml),
         initialize:function () {
@@ -73,8 +75,6 @@ define([
         renderCurrentStep:function () {
             this.title = this.$("h3#step_title")
             this.instructions = this.$("p#step_instructions")
-            this.nextStepButton = this.$("#next_step")
-            this.prevStepButton = this.$("#prev_step")
 
             var currentStep = this.steps[this.currentStep]
             this.title.html(currentStep.title)
@@ -84,21 +84,14 @@ define([
             // delegate to sub-views !!
             this.$(".modal-body").replaceWith(this.currentView.render().el)
 
-            if (this.currentStep > 0) {
-                this.prevStepButton.html("Previous").show()
-            } else {
-                this.prevStepButton.hide()
-            }
-            
-            if (this.currentStep < 2) {
-                this.nextStepButton.html("Next")
-            } else {
-                this.nextStepButton.html("Finish")
-            }
+            setVisibility(this.$("#prev_step"), (this.currentStep > 0))
+            setVisibility(this.$("#next_step"), (this.currentStep < 1))
+            setVisibility(this.$("#preview_step"), (this.currentStep == 1))
+            setVisibility(this.$("#finish_step"), (this.currentStep >= 1))
         },
         submitApplication:function (event) {
             var that = this
-            var $modal = $('#modal-container .modal')
+            var $modal = $('#modal-container.add-app .modal')
             $modal.fadeTo(500,0.5);
             $.ajax({
                 url:'/v1/applications',
@@ -118,20 +111,28 @@ define([
             })
             return false
         },
-        // TODO prev and next not so simple anymore, are they?
-        nextStep:function () {
-            if (this.currentView.validate()) {
-                if (this.currentStep < 2) {
-                    this.currentStep += 1
-                    this.renderCurrentStep()
-                } else {
-                    this.submitApplication()
-                }
-            }
-        },
         prevStep:function () {
             this.currentStep -= 1
             this.renderCurrentStep()
+        },
+        nextStep:function () {
+            if (this.currentStep < 2) {
+                if (this.currentView.validate()) {
+                    this.currentStep += 1
+                    this.renderCurrentStep()
+                }
+            } else {
+                this.finishStep()
+            }
+        },
+        previewStep:function () {
+            // slight cheat, but good enough for now
+            this.nextStep()
+        },
+        finishStep:function () {
+            if (this.currentView.validate()) {
+                this.submitApplication()
+            }
         }
     })
     

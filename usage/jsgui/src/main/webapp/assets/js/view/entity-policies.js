@@ -23,7 +23,7 @@ define([
             this._policies = new PolicySummary.Collection()
             // fetch the list of policies and create a view for each one
             this._policies.url = this.model.getLinkByName("policies")
-            this.callPeriodically(function() { that.refresh() }, 3000)
+            this.callPeriodically("entity-policies", function() { that.refresh() }, 3000)
             this.refresh()
         },
         refresh: function() {

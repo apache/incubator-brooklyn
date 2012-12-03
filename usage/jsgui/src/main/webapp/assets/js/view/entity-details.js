@@ -10,6 +10,9 @@ define([
 
     var EntityDetailsView = Backbone.View.extend({
         template:_.template(DetailsHtml),
+        events:{
+            'click .entity-tabs a':'tabSelected'
+        },
         initialize:function () {
             this.$el.html(this.template({}))
             this.summaryView = new SummaryView({
@@ -55,6 +58,13 @@ define([
             this.policiesView.render()
             this.activitiesView.render()
             return this;
+        },
+        tabSelected: function(event) {
+            var tabName = $(event.currentTarget).attr("href").slice(1)
+            var entityId = $(".applications span.active").attr("id")
+            var entityHref = $(".applications span.active a").attr("href")
+            window.history.pushState(entityId+"/"+tabName, "", 
+                    entityHref+"/"+tabName);
         }
     });
     return EntityDetailsView;

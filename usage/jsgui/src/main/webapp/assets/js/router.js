@@ -14,25 +14,28 @@ define([
         if (this.beforeClose) {
             this.beforeClose()
         }
-        for (var index in this._periodicFunctions) {
-            clearInterval(this._periodicFunctions[index])
-        }
+        _.each(this._periodicFunctions, function(i) {
+            clearInterval(i)
+        })
         this.remove()
         this.unbind()
     }
     
     // registers a callback (cf setInterval) but it cleanly gets unregistered when view closes
-    Backbone.View.prototype.callPeriodically = function (callback, interval) {
+    Backbone.View.prototype.callPeriodically = function (uid, callback, interval) {
         if (!this._periodicFunctions) {
-            this._periodicFunctions = []
+            this._periodicFunctions = {}
         }
-        this._periodicFunctions.push(setInterval(callback, interval))
+        var old = this._periodicFunctions[uid]
+        if (old) clearInterval(old)
+        this._periodicFunctions[uid] = setInterval(callback, interval)
     }
 
 
     var Router = Backbone.Router.extend({
         routes:{
             'v1/home':'homePage',
+            'v1/applications/:app/entities/:trail/:tab':'applicationsPage',
             'v1/applications/:app/entities/*trail':'applicationsPage',
             'v1/applications/*trail':'applicationsPage',
             'v1/applications':'applicationsPage',
@@ -72,7 +75,7 @@ define([
                 that.showView("#application-content", homeView);
             }})
         },
-        applicationsPage:function (app, trail) {
+        applicationsPage:function (app, trail, tab) {
             if (trail === undefined) trail = app
             var that = this
             this.appTree.fetch({success:function () {
@@ -81,6 +84,7 @@ define([
                     appRouter:that
                 })
                 that.showView("#application-content", appExplorer)
+                if (tab !== undefined) appExplorer.preselectTab(tab)
                 if (trail !== undefined) appExplorer.show(trail)
             }})
         },

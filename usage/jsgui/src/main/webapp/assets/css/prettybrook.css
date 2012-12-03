@@ -18,8 +18,14 @@
 	margin-top: 40px;
 	margin-bottom: 40px;
 }
-#application-content .modal-body {
+.add-app .modal-body {
     padding: 0;
+}
+#application-content div#application-explorer {
+    padding-left: 52px;
+}
+#application-content div#details {
+	margin-left: 8px !important;
 }
 #application-content ul.nav-tabs {
     margin: 15px 15px 0px 15px;
@@ -71,6 +77,18 @@
 }
 #application-content .template-lozenge .description {
 	font-size: 85%;
+}
+#preview_step {
+	margin-left: 18px;
+}
+#application-content .sensor-value,
+#application-content .config-value {
+	font-weight: 700;
+	max-width: 500px;
+	max-height: 40px;
+	white-space: nowrap;
+	overflow-x: hidden;
+	overflow-y: scroll;
 }
 div#create-step-template-entries {
 	width: 472px;
@@ -408,7 +426,7 @@ input[type="color"]:focus,.uneditable-input:focus {
     height: auto;
 }
 .tab-content {
-	padding: 18px 24px 18px 24px;
+	padding: 18px;
     border-right: 1px solid #DDD;
     border-left: 1px solid #DDD;
     min-height: 300px;
@@ -431,7 +449,7 @@ ol.tree {
 /*    margin: 0; */
 }
 #tree-list span.leaf {
-    margin-left: 16px !important;
+    margin-left: 17px !important;
 }
 #tree-list li.application {
 	margin-top: 6px !important;
@@ -607,9 +625,17 @@ table.nonDatatables {
 table.nonDatatables thead {
     border-bottom: 1px solid black;
 }
+table.nonDatatables thead th {
+    background: #ffffff;
+    padding: 3px 18px 3px 5px;
+}
 table.table.nonDatatables tbody > tr:first-child > td {
 	/* need both bottom of head, and top of body, to support empty table and override non-empty row top border */
 	border-top: 1px black solid;
+}
+table.table.nonDatatables tbody tr.selected,
+table.table.nonDatatables tbody tr.selected td {
+    background: #AC8;
 }
 /* we keep the thin gray line between rows for manual tables,
    subtle difference but seems nice */
@@ -717,6 +743,7 @@ div.for-empty-table {
 #application-explorer div#summary textarea {
 	width: 100%;
 	cursor: auto;
+	margin-bottom: 2px;
 }
 
 /* catalog */
@@ -961,12 +988,12 @@ textarea {
 }
 
 .table-condensed th {
-    background-color: #f7f7f7 !important;
+    background-color: #f7f7f7;
     padding: 8px;
 }
 
 .table-bordered tr td {
-    background-color: #f7f7f7 !important;
+    background-color: #f7f7f7;
     padding: 8px;
 }
 
@@ -1110,10 +1137,6 @@ textarea {
 	opacity: 0.8;
     border-top-color: #549e2b;
     border-bottom-color: #549e2b;
-}
-
-#effectors-table th {
-    background: #ffffff !important
 }
 /*APP PAGE*/
 
