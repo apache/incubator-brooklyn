@@ -87,7 +87,7 @@ class OpenshiftExpressJavaWebAppCluster extends AbstractEntity implements Starta
 //        setAttribute(SERVICE_STATE, Lifecycle.RUNNING)
     }
 
-    public void startInLocation(Collection<Location> locations) {
+    public void startInLocation(Collection<? extends Location> locations) {
         Preconditions.checkArgument locations.size() == 1
         Location location = Iterables.getOnlyElement(locations)
         startInLocation(location)

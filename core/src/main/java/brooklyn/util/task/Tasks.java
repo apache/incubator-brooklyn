@@ -36,7 +36,7 @@ public class Tasks {
      * <code> withBlockingDetails("sleeping 5s") { Thread.sleep(5000); } </code>.
      * if code block is null, the description is set until further notice (not cleareed). */
     @SuppressWarnings("rawtypes")
-    public static Object withBlockingDetails(String description, Callable code) throws Exception {
+    public static <T> T withBlockingDetails(String description, Callable<T> code) throws Exception {
         Task current = current();
         if (code==null) {
             log.warn("legacy invocation of withBlockingDetails with null code block, ignoring");
