@@ -320,7 +320,7 @@ public class BrooklynWebServer {
 
     protected synchronized void addShutdownHook() {
         if (shutdownHook!=null) return;
-        // some webapps (eg grails) can generate a lot of output if we don't shut down the browser first 
+        // some webapps can generate a lot of output if we don't shut down the browser first
         shutdownHook = ResourceUtils.addShutdownHook(new Runnable() {
             @Override
             public void run() {
