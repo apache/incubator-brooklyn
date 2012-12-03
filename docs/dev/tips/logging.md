@@ -61,8 +61,6 @@ which depend on your project; you can remove it to force the import your logging
 
 * SLF4J **version >= 1.6** is **not compatible** with 1.5.x and breaks certain things (such as the web console written in Grails).
 
-* The **webapp** can clobber logging settings in strange ways; setting ``grails``, ``grails.app``, and ``grails.app.brooklyn`` to INFO seems to help.
-
 * Logging for **tests** isn't picked up correctly in some environments (some Eclipse flavours).
   The root cause seems to be a rogue log4j.properties included in the groovy-all OSGi bundle bsf.jar which sets a FATAL threshhold.
   To resolve this add an explicit project dependency on test-support, 

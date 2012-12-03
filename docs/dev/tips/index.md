@@ -15,10 +15,10 @@ toc: /toc.json
  
 * Use tests heavily!  These are pretty good to run in the IDE (once you've completed [IDE setup]({{site.url}}/dev/build/ide.html)),
   and far quicker to spot problems than runtime, plus we get early-warning of problems introduced in the future.
-  (In particular, groovy's laxity with compilation means it is easy to introduce silly errors which good test coverage will find much faster.)
+  (In particular, Groovy's laxity with compilation means it is easy to introduce silly errors which good test coverage will find much faster.)
   
-* If you hit inexplicable problems at runtime, try clearing you Maven and Ivy (for grails) caches,
-  or the brooklyn-relevant parts, under ``~/.m2/repository`` and ``~/.ivy2/cache``.
+* If you hit inexplicable problems at runtime, try clearing your Maven caches,
+  or the brooklyn-relevant parts, under ``~/.m2/repository``.
   Also note your IDE might be recompiling at the same time as a Maven command-line build,
   so consider turning off auto-build.
 
