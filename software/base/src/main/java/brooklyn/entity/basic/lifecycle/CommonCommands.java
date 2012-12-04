@@ -160,6 +160,7 @@ public class CommonCommands {
     public static final String INSTALL_TAR = installExecutable("tar");
     public static final String INSTALL_CURL = installExecutable("curl");
     public static final String INSTALL_WGET = installExecutable("wget");
+    public static final String INSTALL_ZIP = installExecutable("zip");
 
     /**
      * Returns command for downloading from a url and saving to a file;

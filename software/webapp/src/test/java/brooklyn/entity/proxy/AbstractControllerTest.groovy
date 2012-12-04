@@ -14,7 +14,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.driver.MockSshBasedSoftwareSetup
+import brooklyn.entity.driver.MockSshDriver
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.trait.Startable
@@ -73,7 +73,7 @@ class AbstractControllerTest {
 
             @Override
             public Class getDriverInterface() {
-                return MockSshBasedSoftwareSetup.class;
+                return MockSshDriver.class;
             }
             public void reload() {
                 // no-op
