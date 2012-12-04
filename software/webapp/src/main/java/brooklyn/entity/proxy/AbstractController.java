@@ -224,8 +224,8 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     }
     
     @Override
-    protected void postStart() {
-        super.postStart();
+    protected void connectSensors() {
+        super.connectSensors();
         LOG.info("Adding policy {} to {}, during start", serverPoolMemberTrackerPolicy, this);
         addPolicy(serverPoolMemberTrackerPolicy);
         if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
@@ -240,6 +240,7 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
         update();
     }
 
+    @Override
     protected void preStop() {
         super.preStop();
         serverPoolMemberTrackerPolicy.reset();

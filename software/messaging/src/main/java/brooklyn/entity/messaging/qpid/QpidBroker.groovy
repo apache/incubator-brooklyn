@@ -1,5 +1,7 @@
 package brooklyn.entity.messaging.qpid
 
+import java.util.concurrent.TimeUnit
+
 import javax.management.ObjectName
 
 import org.slf4j.Logger
@@ -19,6 +21,7 @@ import brooklyn.entity.messaging.jms.JMSDestination
 import brooklyn.event.adapter.JmxHelper
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
+import brooklyn.event.basic.AttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
@@ -54,6 +57,12 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     @SetFromFlag("runtimeFiles")
     public static final BasicConfigKey<Map> RUNTIME_FILES = [ Map, "qpid.files.runtime", "Map of files to be copied, keyed by destination name relative to runDir" ]
 
+    @SetFromFlag("jmxUser")
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_USER, "admin");
+    
+    @SetFromFlag("jmxPassword")
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_PASSWORD, "admin");
+
     //TODO if this is included, AbstractEntity complains about multiple sensors;
 //    //should be smart enough to exclude;
 //    //also, we'd prefer to hide this from being configurable full stop
@@ -66,10 +75,6 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
 
     public QpidBroker(Map properties=[:], Entity owner=null) {
         super(properties, owner)
-
-        // TODO test, then change keys to be jmxUser, jmxPassword, configurable on the keys themselves
-        setConfigIfValNonNull(Attributes.JMX_USER, properties.user ?: "admin")
-        setConfigIfValNonNull(Attributes.JMX_PASSWORD, properties.password ?: "admin")
     }
 
     public void setBrokerUrl() {
@@ -77,8 +82,9 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
         setAttribute(BROKER_URL, String.format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)))
     }
 
-    public void waitForServiceUp() {
-        super.waitForServiceUp();
+    @Override
+    public void waitForServiceUp(long duration, TimeUnit units) {
+        super.waitForServiceUp(duration, units);
 
         // Also wait for the MBean to exist (as used when creating queue/topic)
         String virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME)
@@ -86,7 +92,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
         JmxHelper helper = new JmxHelper(this)
         helper.connect();
         try {
-            helper.assertMBeanExistsEventually(virtualHostManager, 60*1000);
+            helper.assertMBeanExistsEventually(virtualHostManager, units.toMillis(duration));
         } finally {
             helper.disconnect();
         }
@@ -139,10 +145,6 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
                 log.warn("ProductVersion is ${it}, requested version is {}", getConfig(SUGGESTED_VERSION))
                 return false
             }
-        jmxAdapter.activateAdapter()
-        
-		setAttribute(Attributes.JMX_USER)
-		setAttribute(Attributes.JMX_PASSWORD)
     }
 
     @Override

@@ -91,7 +91,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         
 	public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 	
-	private SoftwareProcessDriver driver;
+	private transient SoftwareProcessDriver driver;
 	protected transient SensorRegistry sensorRegistry;
 
 	public SoftwareProcessEntity() {
@@ -124,25 +124,70 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         return getManagementContext().getEntityDriverFactory().build(this,(Location)loc);
     }
 
+  	/**
+  	 * Called before driver.start; guarantees the driver will exist, locations will have been set
+  	 * and sensorRegistry will be set (but not yet activated).
+  	 */
     protected void preStart() {
-        if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-        ConfigSensorAdapter.apply(this);
     }
     
-	protected void postStart() {
-		connectSensors();
-		checkAllSensorsConnected();
-	}
-	
+    /**
+     * Called after driver.start(). Default implementation is to wait to confirm the driver 
+     * definitely started the process.
+     */
+    protected void postDriverStart() {
+        waitForEntityStart();
+    }
+
+    /**
+     * For binding to the running app (e.g. connecting sensors to registry). Will be called
+     * on start() and on rebind().
+     */
+    protected void connectSensors() {
+    }
+
     protected void postActivation() {
         waitForServiceUp();
+    }
+    
+    /**
+     * Called after the rest of start has completed.
+     */
+    protected void postStart() {
+    }
+    
+    protected void postDriverRestart() {
+        waitForEntityStart();
     }
     
     protected void postRestart() {
         waitForServiceUp();
     }
     
-    // TODO Only do this when first being managed; not when moving
+    protected void preStop() {
+    }
+
+    protected void postRebind() {
+        postActivation();
+    }
+    
+    protected void callStartHooks() {
+        preStart();
+        driver.start();
+        postDriverStart();
+        connectSensors();
+        sensorRegistry.activateAdapters();
+        postActivation();
+        postStart();
+    }
+    
+    protected void callRebindHooks() {
+        connectSensors();
+        sensorRegistry.activateAdapters();
+        postActivation();
+        postRebind();
+    }
+
     @Override 
     public void onManagementStarting() {
         Lifecycle state = getAttribute(SERVICE_STATE);
@@ -170,9 +215,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         // FIXME What if location not set?
         log.info("Connecting to pre-running service: {}", this);
         
-        Iterable<MachineLocation> machineLocations = Iterables.filter(getLocations(), MachineLocation.class);
-        if (!Iterables.isEmpty(machineLocations)) {
-            initDriver(Iterables.get(machineLocations, 0));
+        MachineLocation machine = Iterables.get(Iterables.filter(getLocations(), MachineLocation.class), 0, null);
+        if (machine != null) {
+            initDriver(machine);
             driver.rebind();
             if (log.isDebugEnabled()) log.debug("On rebind of {}, re-created driver {}", this, driver);
         } else {
@@ -181,36 +226,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         }
         
         if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-        postStart();
-        sensorRegistry.activateAdapters();
+        
+        callRebindHooks();
     }
-    
-    protected void postRebind() {
-        postActivation();
-    }
-    
-	/** lifecycle message for connecting sensors to registry;
-	 * typically overridden by subclasses */
-	protected void connectSensors() {
-	}
-
-	protected void checkAllSensorsConnected() {
-		//TODO warn if we don't have sensors wired up to something
-		/*
-				what about sensors where it doesn't necessarily make sense to register them here, e.g.:
-				  config -- easy to exclude (by type)
-				  lifecycle, member added -- ??
-				  enriched sensors -- could add the policies here
-		
-				proposed solution:
-				  - ignore if registered
-				  - ignore is has a value
-				  - ignore if manually excluded (registered with "manual provider"), e.g.
-   						sensorRegistry.register(ManualSensorAdaptor).register(SOME_MANUAL_SENSOR)
-				  
-				those which are updated by a policy need to get recorded somehow
-		*/
-	}
     
     public void waitForServiceUp() {
         waitForServiceUp(60, TimeUnit.SECONDS);
@@ -239,19 +257,13 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         throw new IllegalStateException("Cannot configure entity "+this+" in state "+state);
     }
 
-	protected void preStop() { }
-
     @Override
 	public void start(Collection<? extends Location> locations) {
         checkNotNull(locations, "locations");
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         try {
-    		if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-            
     		startInLocation(locations);
-    		postStart();
-    		sensorRegistry.activateAdapters();
-            postActivation();
+    		
     		if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
                 setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         } catch (Throwable t) {
@@ -356,12 +368,16 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     protected void startInLocation(MachineLocation machine) {
         log.info("Starting {} on machine {}", this, machine);
-        
         addLocations(ImmutableList.of((Location)machine));
+        
         initDriver(machine);
+        if (driver == null) {
+            throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no driver available");
+        }
         
         // Note: must only apply config-sensors after adding to locations and creating driver; 
         // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
+        if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         ConfigSensorAdapter.apply(this);
         
 		setAttribute(HOSTNAME, machine.getAddress().getHostName());
@@ -370,16 +386,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         // Opportunity to block startup until other dependent components are available
         Object val = getConfig(START_LATCH);
         if (val != null) log.debug("{} finished waiting for start-latch; continuing...", this, val);
-        
-		if (driver != null) {
-            preStart();
-			driver.start();
-			waitForEntityStart();
-		} else {
-			throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no setup class found");
-		}
-	}
 
+        callStartHooks();
+	}
+    
     protected void initDriver(MachineLocation machine) {
         if (driver!=null) {
             if ((driver instanceof AbstractSoftwareProcessDriver) && machine.equals(((AbstractSoftwareProcessDriver)driver).getLocation())) {
@@ -492,8 +502,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         if (driver == null) throw new IllegalStateException("entity "+this+" not set up for operations (restart)");
         
         driver.restart();
-        waitForEntityStart();
-        postRestart();
+        postDriverRestart();
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
     }
 }

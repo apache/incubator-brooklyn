@@ -12,7 +12,6 @@ import brooklyn.entity.nosql.DataStore
 import brooklyn.entity.nosql.Shard
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
-import brooklyn.event.adapter.legacy.OldSshSensorAdapter
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
@@ -55,7 +54,7 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
                     }}));
         serviceUpAdapter.poll(SERVICE_UP);
         
-        // TODO IF desired, port this (because legacy sshAdapter is deleted)
+        // TODO IF desired, port this for setting UPTIME (because legacy sshAdapter is deleted)
 //        String output = sshAdapter.newOutputValueProvider("${driver.runDir}/bin/redis-cli info").compute()
 //        for (String line : output.split("\n")) {
 //            if (line =~ /^uptime_in_seconds:/) {

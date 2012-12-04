@@ -17,6 +17,8 @@ import brooklyn.entity.messaging.jms.JMSDestination
 import brooklyn.event.adapter.JmxHelper
 import brooklyn.event.adapter.JmxSensorAdapter
 import brooklyn.event.adapter.SensorRegistry
+import brooklyn.event.basic.AttributeSensorAndConfigKey
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
 import brooklyn.util.flags.SetFromFlag
@@ -40,16 +42,17 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
     @SetFromFlag("tgzUrl")
     public static final BasicConfigKey<String> TGZ_URL = [ String, "activemq.install.tgzUrl", "URL of TGZ download file", null ]
 
-
     @SetFromFlag("openWirePort")
 	public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = [ "openwire.port", "OpenWire port", "61616+" ]
 
+    @SetFromFlag("jmxUser")
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_USER, "admin");
+    
+    @SetFromFlag("jmxPassword")
+    public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_PASSWORD, "admin");
+
 	public ActiveMQBroker(Map properties=[:], Entity owner=null) {
 		super(properties, owner)
-
-        //TODO test, then change keys to be jmxUser, jmxPassword, configurable on the keys themselves
-		setConfigIfValNonNull(Attributes.JMX_USER, properties.user ?: "admin")
-		setConfigIfValNonNull(Attributes.JMX_PASSWORD, properties.password ?: "activemq")
 	}
 
 	public void setBrokerUrl() {
@@ -70,11 +73,9 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
         return result;
 	}
 
-    transient JmxSensorAdapter jmxAdapter;
-    
     @Override     
     protected void connectSensors() {
-       jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
+       JmxSensorAdapter jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
        jmxAdapter.objectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
            .attribute("BrokerId")
            .subscribe(SERVICE_UP) { it as Boolean }
@@ -87,7 +88,7 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
     }
 
     @Override
-    Class getDriverInterface() {
+    public Class getDriverInterface() {
         return ActiveMQDriver.class;
     }
 }

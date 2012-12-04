@@ -202,8 +202,8 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
     }
     
     @Override
-    public void postStart() {
-		super.postStart();
+    protected void postDriverStart() {
+		super.postDriverStart();
         uploadPropertyFiles(getConfig(NAMED_PROPERTY_FILES));
         
         jmxHelper = new JmxHelper(this);
@@ -211,7 +211,7 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
     }
     
     @Override
-    public void preStop() {
+    protected void preStop() {
         super.preStop();
         
         if (jmxHelper != null) jmxHelper.disconnect();

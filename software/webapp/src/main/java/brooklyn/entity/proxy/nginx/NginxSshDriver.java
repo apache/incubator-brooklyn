@@ -230,7 +230,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // (e.g. due to a cluster-resize), the restart() would leave nginx running even after stop() had returned.
         //
         // Now we rely on NginxController always calling update (and thus reload) once it has started. This is
-        // done in AbstractController.postStart().
+        // done in AbstractController.postActivation().
         //
         // If our blocking check sees that !isRunning() (and if a separate thread is starting it, and subsequently
         // calling waitForEntityStart()), we can guarantee that the start-thread's call to update will happen after 
