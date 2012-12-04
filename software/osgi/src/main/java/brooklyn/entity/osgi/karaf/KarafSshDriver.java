@@ -1,15 +1,18 @@
 package brooklyn.entity.osgi.karaf;
 
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
+import static java.lang.String.format;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static java.lang.String.format;
+import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.NetworkUtils;
+
+import com.google.common.collect.ImmutableList;
 
 public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements KarafDriver {
 
@@ -39,12 +42,17 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
     public void install() {
         String url = format("http://apache.mirror.anlx.net/karaf/%s/apache-karaf-%s.tar.gz",getVersion(),getVersion());
         String saveAs = format("apache-karaf-%s.tar.gz",getVersion());
-        newScript(INSTALLING).
-                failOnNonZeroResultCode().
-                body.append(
-                format("curl -L \"%s\" -o %s || exit 9", url, saveAs),
-                format("tar xzfv %s", saveAs)
-        ).execute();
+        
+        List<String> commands = ImmutableList.<String>builder()
+                .addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
+                .add(CommonCommands.INSTALL_TAR)
+                .add("tar xzfv " + saveAs)
+                .build();
+        
+        newScript(INSTALLING)
+                .failOnNonZeroResultCode()
+                .body.append(commands)
+                .execute();
     }
 
     @Override

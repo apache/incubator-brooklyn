@@ -28,6 +28,17 @@ import com.rabbitmq.client.QueueingConsumer
 
 /**
  * Test the operation of the {@link RabbitBroker} class.
+ * 
+ * TODO If you're having problems running this test successfully, here are a few tips:
+ * 
+ *  - Is `erl` on your path for a non-interactive ssh session?
+ *    Look in rabbit's $RUN_DIR/console-err.log (e.g. /tmp/brooklyn-aled/apps/someappid/entities/RabbitBroker_2.8.7_JROYTcSL/console-err.log)
+ *    I worked around that (with a temporary hack) by adding "source /Users/aled/.profile" to in RabbitSshDriver.launch, isRunning and stop.
+ *    
+ *  - Is the hostname resolving properly?
+ *    Look in $RUN_DIR/console-out.log; is there a message like:
+ *      ERROR: epmd error for host "Aleds-MacBook-Pro": timeout (timed out establishing tcp connection)
+ *    I got around that with disabling my wifi and running when not connected to the internet.
  */
 public class RabbitIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(RabbitIntegrationTest.class)
