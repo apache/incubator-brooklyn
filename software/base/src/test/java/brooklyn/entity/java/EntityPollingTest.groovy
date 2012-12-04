@@ -11,7 +11,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.location.basic.SimulatedLocation
+import brooklyn.location.MachineLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.GeneralisedDynamicMBean
 import brooklyn.test.JmxService
@@ -55,11 +55,11 @@ public class EntityPollingTest {
             }
 
             Class getDriverInterface() {
-                return null  //To change body of implemented methods use File | Settings | File Templates.
+                return null;
             }
 
             @Override
-            public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) {
+            public VanillaJavaAppSshDriver newDriver(MachineLocation loc) {
                 new VanillaJavaAppSshDriver(this, loc) {
                     @Override public void install() {
                         // no-op

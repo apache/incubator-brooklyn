@@ -1,7 +1,6 @@
 package brooklyn.entity.basic
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import static com.google.common.base.Preconditions.checkNotNull
 import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
@@ -25,18 +24,17 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.location.PortRange
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.mementos.EntityMemento
 import brooklyn.util.MutableMap
-import brooklyn.util.Time;
+import brooklyn.util.Time
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.Repeater
 import brooklyn.util.task.Tasks
 
-import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
 import com.google.common.base.Predicates
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
 
@@ -108,7 +106,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     
 	public SoftwareProcessDriver getDriver() { driver }
 
-  	protected SoftwareProcessDriver newDriver(SshMachineLocation loc){
+  	protected SoftwareProcessDriver newDriver(MachineLocation loc){
         return getManagementContext().getEntityDriverFactory().build(this,loc);
     }
 
@@ -158,13 +156,13 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         // FIXME What if location not set?
         LOG.info("Connecting to pre-running service: {}", this);
         
-        Iterable<SshMachineLocation> sshMachineLocations = Iterables.filter(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-        if (!Iterables.isEmpty(sshMachineLocations)) {
-            initDriver(Iterables.get(sshMachineLocations, 0));
+        Iterable<MachineLocation> machineLocations = Iterables.filter(getLocations(), Predicates.instanceOf(MachineLocation.class));
+        if (!Iterables.isEmpty(machineLocations)) {
+            initDriver(Iterables.get(machineLocations, 0));
             driver.rebind();
             if (LOG.isDebugEnabled()) LOG.debug("On rebind of {}, re-created driver {}", this, driver);
         } else {
-            LOG.info("On rebind of {}, no SshMachineLocation found (with locations {}) so not generating driver",
+            LOG.info("On rebind of {}, no MachineLocation found (with locations {}) so not generating driver",
                     this, getLocations());
         }
         
@@ -229,14 +227,19 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public void start(Collection<? extends Location> locations) {
         checkNotNull(locations, "locations");
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING)
-		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
-        
-		startInLocation locations
-		postStart()
-		sensorRegistry.activateAdapters()
-        postActivation()
-		if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
-            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+        try {
+    		if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
+            
+    		startInLocation locations
+    		postStart()
+    		sensorRegistry.activateAdapters()
+            postActivation()
+    		if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
+                setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+        } catch (Throwable t) {
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(t);
+        }
 	}
 
     public void startInLocation(Collection<Location> locations) {
@@ -269,7 +272,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         if (!(location in LocalhostMachineProvisioningLocation))
             LOG.info("Starting {}, obtaining a new location instance in {} with ports {}", this, location, flags.inboundPorts)
 		setAttribute(PROVISIONING_LOCATION, location);
-        SshMachineLocation machine;
+        MachineLocation machine;
         Tasks.withBlockingDetails("Provisioning machine in "+location) {
             machine = location.obtain(flags);
         }
@@ -302,23 +305,22 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	    String hostname = null
         if (where in JcloudsSshMachineLocation)
             hostname = ((JcloudsSshMachineLocation) where).getSubnetHostname()
-        if (!hostname && where in SshMachineLocation)
-            hostname = ((SshMachineLocation) where).getAddress()?.hostAddress
+        if (!hostname && where in MachineLocation)
+            hostname = ((MachineLocation) where).getAddress()?.hostAddress
         log.debug("computed hostname ${hostname} for ${this}")
         if (!hostname)
             throw new IllegalStateException("Cannot find hostname for ${this} at location ${where}")
         return hostname
 	}
 
-    public void startInLocation(SshMachineLocation machine) {
+    public void startInLocation(MachineLocation machine) {
         log.info("Starting {} on machine {}", this, machine);
         
-        locations.add(machine)
-        initDriver(machine)
+        addLocations(ImmutableList.of(machine));
+        initDriver(machine);
         
         // Note: must only apply config-sensors after adding to locations and creating driver; 
         // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
-        // TODO use different method naming/overriding pattern, so as we have more things than SshMachineLocation they all still get called?
         ConfigSensorAdapter.apply(this);
         
 		setAttribute(HOSTNAME, machine.address.hostName)
@@ -337,9 +339,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 		}
 	}
 
-    protected void initDriver(SshMachineLocation machine) {
+    protected void initDriver(MachineLocation machine) {
         if (driver!=null) {
-            if ((driver in AbstractSoftwareProcessSshDriver) && ( ((AbstractSoftwareProcessSshDriver)driver).location==machine)) {
+            if ((driver in AbstractSoftwareProcessDriver) && ( ((AbstractSoftwareProcessDriver)driver).location==machine)) {
                 //just reuse
             } else {
                 log.warn("driver/location change for {} is untested: cannot start ${this} on ${machine}: driver already created");

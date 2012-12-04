@@ -19,7 +19,6 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
-import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
@@ -34,7 +33,6 @@ class ActiveMQEc2LiveTest {
     private final String provider
     protected JcloudsLocation loc;
     protected JcloudsLocationFactory locFactory;
-    private Collection<SshMachineLocation> machines = []
     private File sshPrivateKey
     private File sshPublicKey
     TestApplication app
@@ -73,23 +71,7 @@ class ActiveMQEc2LiveTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        try {
-            if (app != null) Entities.destroy(app);
-        } finally {
-            List<Exception> exceptions = []
-            machines.each {
-                try {
-                    loc?.release(it)
-                } catch (Exception e) {
-                    LOG.warn("Error releasing machine $it; continuing...", e)
-                    exceptions.add(e)
-                }
-            }
-            if (exceptions) {
-                throw exceptions.get(0)
-            }
-            machines.clear()
-        }
+        if (app != null) Entities.destroy(app);
     }
 
     /**
@@ -103,17 +85,6 @@ class ActiveMQEc2LiveTest {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
         }
         assertFalse activeMQ.getAttribute(Startable.SERVICE_UP)
-    }
-
-    protected SshMachineLocation obtainMachine(Map flags) {
-        SshMachineLocation result = loc.obtain(flags)
-        machines.add(result)
-        return result
-    }
-
-    protected SshMachineLocation release(SshMachineLocation machine) {
-        machines.remove(machine)
-        loc.release(machine)
     }
 
     /**

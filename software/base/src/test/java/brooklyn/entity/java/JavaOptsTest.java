@@ -22,6 +22,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication;
@@ -188,8 +189,8 @@ public class JavaOptsTest {
                 .put("useJmx", false)
                 .build(), 
                 app) {
-            @Override public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) {
-                return new VanillaJavaAppSshDriver(this, loc) {
+            @Override public VanillaJavaAppSshDriver newDriver(MachineLocation loc) {
+                return new VanillaJavaAppSshDriver(this, (SshMachineLocation)loc) {
                     @Override protected List<String> getCustomJavaConfigOptions() {
                         return MutableList.<String>builder()
                                 .addAll(super.getCustomJavaConfigOptions())

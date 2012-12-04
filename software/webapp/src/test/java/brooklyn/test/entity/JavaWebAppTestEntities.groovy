@@ -27,9 +27,6 @@ public class TestJavaWebAppEntity extends VanillaJavaApp {
 
 	public void waitForHttpPort() { }
 
-	//public VanillaJavaAppSshDriver newDriver(SshMachineLocation loc) { null }
-
-
     @Override
 	public void start(Collection<? extends Location> loc) {
         LOG.trace "Starting {}", this
