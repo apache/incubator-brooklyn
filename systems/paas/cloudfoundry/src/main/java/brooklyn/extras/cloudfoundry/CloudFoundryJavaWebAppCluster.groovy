@@ -81,7 +81,7 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
         startInLocation locations
     }
 
-    public void startInLocation(Collection<Location> locations) {
+    public void startInLocation(Collection<? extends Location> locations) {
         Preconditions.checkArgument locations.size() == 1
         Location location = Iterables.getOnlyElement(locations)
         startInLocation(location)
