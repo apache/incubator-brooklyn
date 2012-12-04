@@ -91,7 +91,7 @@ define([
         },
         submitApplication:function (event) {
             var that = this
-            var $modal = $('#modal-container.add-app .modal')
+            var $modal = $('.add-app #modal-container .modal')
             $modal.fadeTo(500,0.5);
             $.ajax({
                 url:'/v1/applications',
