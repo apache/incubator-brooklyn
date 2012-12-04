@@ -13,20 +13,4 @@ define([
         })
     })
 
-    describe("view/entity-activity details modal view", function () {
-        var tasks, view
-
-        beforeEach(function () {
-            tasks = new TaskSummary.Collection
-            tasks.url = "fixtures/task-summary-list.json"
-            tasks.fetch({async:false})
-            view = new ActivityView.Modal({
-                model:tasks.at(0)
-            }).render()
-        })
-
-        it("renders as a bootstrap modal", function () {
-            expect(view.$el.is("div.modal")).toBe(true)
-        })
-    })
 })
