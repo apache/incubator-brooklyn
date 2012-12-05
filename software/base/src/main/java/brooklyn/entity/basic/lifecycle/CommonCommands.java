@@ -1,5 +1,14 @@
 package brooklyn.entity.basic.lifecycle;
 
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.jclouds.JcloudsLocation;
+import brooklyn.util.MutableMap;
+import com.google.common.base.Throwables;
+import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.scriptbuilder.statements.java.InstallJDK;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static java.lang.String.format;
 
 import java.util.Arrays;
@@ -11,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 public class CommonCommands {
+
+    public static final Logger log = LoggerFactory.getLogger(CommonCommands.class);
+
 
     /**
      * Returns a string for checking whether the given executable is available,
@@ -193,4 +205,12 @@ public class CommonCommands {
         return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
     }
 
+    /**
+     * Returns the command that installs Java 1.6.
+     *
+     * @return the command that install Java 1.6.
+     */
+    public static String installJava6() {
+        return installPackage(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
+    }
 }
