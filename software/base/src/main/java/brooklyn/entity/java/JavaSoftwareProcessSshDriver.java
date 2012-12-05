@@ -284,8 +284,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                                 + getLocation() + ":\n" + result2.getOutput() + "\n" + result2.getError());
                 } else {
                     result = newScript("INSTALL_OPENJDK").body.append(
-                            CommonCommands.installPackage(MutableMap.of("apt", "openjdk-6-jdk",
-                                            "yum", "java-1.6.0-openjdk-devel"), null)
+                            CommonCommands.installJava6()
                             // TODO the following complains about yum-install not defined
                             // even though it is set as an alias (at the start of the first file)
 //                            new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
