@@ -455,23 +455,45 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	    return null;
 	}
 
-	public void stopInLocation(MachineLocation machine) {
-	    MachineProvisioningLocation provisioner = getAttribute(PROVISIONING_LOCATION);
-		if (sensorRegistry != null) sensorRegistry.close();
-		if (driver != null) driver.stop();
+    public void stopInLocation(MachineLocation machine) {
+        MachineProvisioningLocation provisioner = getAttribute(PROVISIONING_LOCATION);
+        Throwable err = null;
+        
+        try {
+            if (sensorRegistry != null) sensorRegistry.close();
+            if (driver != null) driver.stop();
+            
+        } catch (Throwable t) {
+            LOG.warn("Error stopping "+this+" on machine "+machine+
+                    (provisioner != null ? ", releasing machine and rethrowing" : ", rethrowing"), 
+                    t);
+            err = t;
+            
+        } finally {
+            // Release this machine (even if error trying to stop it)
+            // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
+            try {
+                if (provisioner != null) provisioner.release(machine);
+            } catch (Throwable t) {
+                if (err != null) {
+                    LOG.warn("Error releasing machine "+machine+" while stopping "+this+"; rethrowing earlier exception", t);
+                } else {
+                    LOG.warn("Error releasing machine "+machine+" while stopping "+this+"; rethrowing ("+t+")");
+                    err = t;
+                }
+            }
+            driver = null;
+        }
+        
+        if (err != null) throw Exceptions.propagate(err);
+    }
 
-		// Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
-		if (provisioner != null) provisioner.release(machine);
-
-		driver = null;
-	}
-
-	public void restart() {
-		if (driver == null) throw new IllegalStateException("entity "+this+" not set up for operations (restart)");
+    public void restart() {
+        if (driver == null) throw new IllegalStateException("entity "+this+" not set up for operations (restart)");
         
         driver.restart();
         waitForEntityStart();
         postRestart();
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
-	}
+    }
 }

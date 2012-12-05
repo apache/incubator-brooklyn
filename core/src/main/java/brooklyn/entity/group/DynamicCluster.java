@@ -382,14 +382,17 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     protected void stopAndRemoveNode(Entity member) {
         removeMember(member);
         
-        if (member instanceof Startable) {
-            Task<?> task = member.invoke(Startable.STOP, Collections.<String,Object>emptyMap());
-            try {
-                task.get();
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
+        try {
+            if (member instanceof Startable) {
+                Task<?> task = member.invoke(Startable.STOP, Collections.<String,Object>emptyMap());
+                try {
+                    task.get();
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
+                }
             }
+        } finally {
+            Entities.unmanage(member);
         }
-        Entities.unmanage(member);
     }
 }
