@@ -34,10 +34,11 @@ public class JmxReachableAdapter extends AbstractSensorAdapter {
 	public JmxReachableAdapter(Map flags, JmxSensorAdapter adapter, ObjectName objectName) {
 		super(flags);
 		this.adapter = adapter;
-        adapter.addActivationLifecycleListeners(
-                new Runnable() { public void run() { activateAdapter(); } },
-                new Runnable() { public void run() { deactivateAdapter(); } });
+// FIXME        adapter.addActivationLifecycleListeners(
+//                new Runnable() { public void run() { activateAdapter(); } },
+//                new Runnable() { public void run() { deactivateAdapter(); } });
 		poller = new ReachablePollHelper(adapter, objectName);
+		poller.init();
 		this.objectName = objectName;
 	}
 	

@@ -62,6 +62,7 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 	public ActiveMQQueue createQueue(Map properties) {
 		ActiveMQQueue result = new ActiveMQQueue(properties);
         Entities.manage(result);
+        result.init();
         result.create();
         return result;
 	}
@@ -69,18 +70,20 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
 	public ActiveMQTopic createTopic(Map properties) {
 		ActiveMQTopic result = new ActiveMQTopic(properties);
         Entities.manage(result);
+        result.init();
         result.create();
         return result;
 	}
 
     @Override     
     protected void connectSensors() {
-       JmxSensorAdapter jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
-       jmxAdapter.objectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
-           .attribute("BrokerId")
-           .subscribe(SERVICE_UP) { it as Boolean }
-       jmxAdapter.activateAdapter()
-	}
+        setAttribute(BROKER_URL, String.format("tcp://%s:%d", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)))
+        
+        JmxSensorAdapter jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
+        jmxAdapter.objectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
+                .attribute("BrokerId")
+                .subscribe(SERVICE_UP) { it as Boolean }
+    }
 
 	@Override
     protected ToStringHelper toStringHelper() {
@@ -131,7 +134,6 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
 		jmxAdapter.helper.operation(broker, "addQueue", name)
         
         connectSensors();
-        sensorRegistry.activateAdapters();
 	}
 
 	public void delete() {
@@ -164,7 +166,6 @@ public class ActiveMQTopic extends ActiveMQDestination implements Topic {
 	public void create() {
 		jmxAdapter.helper.operation(broker, "addTopic", name)
 		connectSensors()
-        sensorRegistry.activateAdapters();
 	}
 
 	public void delete() {

@@ -106,8 +106,6 @@ public abstract class JMSDestination extends AbstractEntity {
         super(properties, owner)
 
         Preconditions.checkNotNull name, "Name must be specified"
-
-        init()
     }
 
 	public String getName() { getDisplayName() }

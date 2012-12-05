@@ -29,8 +29,9 @@ public class JmxAttributeAdapter extends AbstractSensorAdapter {
 	public JmxAttributeAdapter(Map flags=[:], JmxSensorAdapter adapter, ObjectName objectName, String attributeName) {
 		super(flags);
 		this.adapter = adapter;
-        adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
+// FIXME        adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
 		poller = new AttributePollHelper(adapter, objectName, attributeName);
+        poller.init();
 		this.objectName = objectName;
 		this.attributeName = attributeName;
 	}

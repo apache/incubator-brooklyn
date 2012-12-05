@@ -141,6 +141,7 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
         if (!target) return;
         cfAccess.setTarget(target)
     }
+    
     public void connectSensors() {
         String apiHostname = ((CloudFoundryLocation)Iterables.getOnlyElement(locations)).hostname;
         setAttribute(API_HOSTNAME, apiHostname);
@@ -157,7 +158,6 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
             poll(CPU_USAGE, { CloudFoundryAppStats stats -> stats.average.cpuUsage });
             poll(MEMORY_USED_FRACTION, { CloudFoundryAppStats stats -> stats.average.memUsedFraction });
         }
-        sensorRegistry.activateAdapters();
     }
 
     public String getWebAppAddress() {

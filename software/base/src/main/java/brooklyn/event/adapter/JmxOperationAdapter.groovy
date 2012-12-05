@@ -21,12 +21,13 @@ public class JmxOperationAdapter extends AbstractSensorAdapter {
 	
 	public JmxOperationAdapter(Map flags=[:], JmxSensorAdapter adapter, ObjectName objectName, String methodName, Object ...args) {
 		super(flags);
-        adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
+        //FIXME adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
 		this.adapter = adapter;
 		this.objectName = objectName;
 		this.methodName = methodName;
 		this.args = args;
 		poller = new OperationPollHelper(adapter, objectName, methodName, args);
+        poller.init();
 	}
 			
 	protected final OperationPollHelper poller;

@@ -99,8 +99,6 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
                     period:10*TimeUnit.SECONDS,
                     isRunningCallable));
 
-       sensorRegistry.activateAdapters();
-
        serviceUpAdapter.poll(SERVICE_UP);
        
        setBrokerUrl();
@@ -139,7 +137,6 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
 
     public void create() {
         connectSensors()
-        sensorRegistry.activateAdapters()
     }
     
     public void delete() {

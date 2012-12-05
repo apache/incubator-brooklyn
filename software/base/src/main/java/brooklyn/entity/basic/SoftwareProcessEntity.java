@@ -124,6 +124,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         return getManagementContext().getEntityDriverFactory().build(this,(Location)loc);
     }
 
+    protected MachineLocation getMachineOrNull() {
+        return Iterables.get(Iterables.filter(getLocations(), MachineLocation.class), 0, null);
+    }
+    
   	/**
   	 * Called before driver.start; guarantees the driver will exist, locations will have been set
   	 * and sensorRegistry will be set (but not yet activated).
@@ -146,10 +150,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     protected void connectSensors() {
     }
 
-    protected void postActivation() {
-        waitForServiceUp();
-    }
-    
     /**
      * Called after the rest of start has completed.
      */
@@ -167,8 +167,10 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     protected void preStop() {
     }
 
+    /**
+     * Called after this entity is fully rebound (i.e. it is fully managed).
+     */
     protected void postRebind() {
-        postActivation();
     }
     
     protected void callStartHooks() {
@@ -176,16 +178,13 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         driver.start();
         postDriverStart();
         connectSensors();
-        sensorRegistry.activateAdapters();
-        postActivation();
+        waitForServiceUp();
         postStart();
     }
     
     protected void callRebindHooks() {
         connectSensors();
-        sensorRegistry.activateAdapters();
-        postActivation();
-        postRebind();
+        waitForServiceUp();
     }
 
     @Override 
@@ -204,7 +203,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	
     @Override 
     public void onManagementStarted() {
-        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) {
+        Lifecycle state = getAttribute(SERVICE_STATE);
+        if (state != null && state != Lifecycle.CREATED) {
             postRebind();
         }
     }
@@ -215,7 +215,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         // FIXME What if location not set?
         log.info("Connecting to pre-running service: {}", this);
         
-        MachineLocation machine = Iterables.get(Iterables.filter(getLocations(), MachineLocation.class), 0, null);
+        MachineLocation machine = getMachineOrNull();
         if (machine != null) {
             initDriver(machine);
             driver.rebind();
@@ -244,7 +244,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                         return getAttribute(SERVICE_UP);
                     }})
                 .run()) {
-            throw new IllegalStateException("Timeout waiting for SERVICE_UP from ${this}");
+            throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+this);
         }
         log.debug("Detected SERVICE_UP for software {}", this);
     }
@@ -371,9 +371,6 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         addLocations(ImmutableList.of((Location)machine));
         
         initDriver(machine);
-        if (driver == null) {
-            throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no driver available");
-        }
         
         // Note: must only apply config-sensors after adding to locations and creating driver; 
         // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
@@ -389,17 +386,29 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
         callStartHooks();
 	}
-    
-    protected void initDriver(MachineLocation machine) {
+
+    private void initDriver(MachineLocation machine) {
+        SoftwareProcessDriver newDriver = doInitDriver(machine);
+        if (newDriver == null) {
+            throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no driver available");
+        }
+        driver = newDriver;
+    }
+
+    /**
+     * Creates the driver (if does not already exist or needs replaced for some reason). Returns either the existing driver
+     * or a new driver. Must not return null.
+     */
+    protected SoftwareProcessDriver doInitDriver(MachineLocation machine) {
         if (driver!=null) {
             if ((driver instanceof AbstractSoftwareProcessDriver) && machine.equals(((AbstractSoftwareProcessDriver)driver).getLocation())) {
-                //just reuse
+                return driver; //just reuse
             } else {
-                log.warn("driver/location change for {} is untested: cannot start on {}: driver already created", this, machine);
-                driver = newDriver(machine);
+                log.warn("driver/location change is untested for {} at {}; changing driver and continuing", this, machine);
+                return newDriver(machine);
             }
         } else {
-            driver = newDriver(machine);
+            return newDriver(machine);
         }
     }
     

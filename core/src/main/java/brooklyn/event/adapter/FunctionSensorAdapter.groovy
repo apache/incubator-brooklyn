@@ -31,7 +31,7 @@ public class FunctionSensorAdapter extends AbstractSensorAdapter {
 	public static final long CALL_TIMEOUT_MS = 120*1000;
 
     protected final Callable callable;
-    protected final FunctionBasePollHelper poller = new FunctionBasePollHelper(this);
+    protected final FunctionBasePollHelper poller;
     
     public FunctionSensorAdapter(Map flags=[:]) {
         this(flags, {null});
@@ -39,6 +39,8 @@ public class FunctionSensorAdapter extends AbstractSensorAdapter {
 	public FunctionSensorAdapter(Map flags=[:], Callable c) {
 		super(flags)
         this.callable = c;
+        poller = new FunctionBasePollHelper(this);
+        poller.init();
 	}
 
     public void poll(Sensor s, Closure c={it}) {
@@ -100,6 +102,7 @@ public class FunctionCallAdapter extends AbstractSensorAdapter {
         this.parent = parentPoller.adapter;
         this.function = f;
         this.poller = new FunctionChainPollHelper(this);
+        poller.init();
         parentPoller.addSubPoller(this.poller);
     }
 

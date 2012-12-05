@@ -234,8 +234,15 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     }
     
     @Override
-    protected void postActivation() {
-        super.postActivation();
+    protected void postStart() {
+        super.postStart();
+        isActive = true;
+        update();
+    }
+
+    @Override
+    protected void postRebind() {
+        super.postRebind();
         isActive = true;
         update();
     }

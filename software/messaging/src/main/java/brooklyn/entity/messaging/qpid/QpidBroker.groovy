@@ -101,6 +101,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     public QpidQueue createQueue(Map properties) {
         QpidQueue result = new QpidQueue(properties, this)
         Entities.manage(result);
+        result.init();
         result.create();
         return result;
     }
@@ -108,6 +109,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     public QpidTopic createTopic(Map properties) {
         QpidTopic result = new QpidTopic(properties, this);
         Entities.manage(result);
+        result.init();
         result.create();
         return result;
     }
@@ -185,7 +187,6 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
         jmxAdapter.helper.operation(virtualHostManager, "createNewQueue", name, getOwner().getAttribute(Attributes.JMX_USER), true)
         jmxAdapter.helper.operation(exchange, "createNewBinding", name, name)
         connectSensors()
-        sensorRegistry.activateAdapters()
     }
     
     public void delete() {

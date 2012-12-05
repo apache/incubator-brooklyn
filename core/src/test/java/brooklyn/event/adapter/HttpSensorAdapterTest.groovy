@@ -30,6 +30,8 @@ public class HttpSensorAdapterTest {
     public void setUp() throws Exception {
         app = new TestApplication();
         entity = new TestEntity(app);
+        Entities.startManagement(app);
+        
         registry = new SensorRegistry(entity);
         adapter = registry.register(new HttpSensorAdapter("http://bogus.url.is.definitely.wrong.efaege3"))
     }
@@ -75,7 +77,6 @@ public class HttpSensorAdapterTest {
         BasicAttributeSensor<Exception> exceptionSensor = new BasicAttributeSensor(Exception.class, "test.exception", "mydescr");
         try {
             adapter.poll(exceptionSensor, {error});
-            registry.activateAdapters();
             
             TestUtils.executeUntilSucceeds {
                 Object val = entity.getAttribute(exceptionSensor);

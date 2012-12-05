@@ -4,24 +4,42 @@ import static org.testng.Assert.assertTrue
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Application
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 public class ShellSensorAdapterTest {
     static final Logger log = LoggerFactory.getLogger(ShellSensorAdapterTest)
 
-    final EntityLocal entity = new TestEntity();
-    final SensorRegistry entityRegistry = new SensorRegistry(entity);
+    Application app;
+    EntityLocal entity;
+    SensorRegistry entityRegistry;
 
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        app = new TestApplication();
+        entity = new TestEntity(app);
+        Entities.startManagement(app);
+        entityRegistry = new SensorRegistry(entity);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroy(app);
+    }
+    
     ShellSensorAdapter adapter;
     public ShellSensorAdapter registerAdapter(ShellSensorAdapter adapter=null) {
         if (adapter!=null) this.adapter = adapter;
         else adapter = this.adapter;
         adapter.pollPeriod = null;
         entityRegistry.register(adapter);
-        entityRegistry.activateAdapters();
         adapter;
     }
     
