@@ -1,11 +1,6 @@
 package brooklyn.entity.basic.lifecycle;
 
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation;
 import brooklyn.util.MutableMap;
-import com.google.common.base.Throwables;
-import org.jclouds.compute.domain.ExecResponse;
-import org.jclouds.scriptbuilder.statements.java.InstallJDK;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 public class CommonCommands {
-
-    public static final Logger log = LoggerFactory.getLogger(CommonCommands.class);
-
 
     /**
      * Returns a string for checking whether the given executable is available,
