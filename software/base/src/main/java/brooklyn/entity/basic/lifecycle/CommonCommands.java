@@ -1,5 +1,7 @@
 package brooklyn.entity.basic.lifecycle;
 
+import brooklyn.util.MutableMap;
+
 import static java.lang.String.format;
 
 import java.util.Arrays;
@@ -193,4 +195,12 @@ public class CommonCommands {
         return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
     }
 
+    /**
+     * Returns the command that installs Java 1.6.
+     *
+     * @return the command that install Java 1.6.
+     */
+    public static String installJava6() {
+        return installPackage(MutableMap.of("apt", "openjdk-6-jdk","yum", "java-1.6.0-openjdk-devel"), null);
+    }
 }
