@@ -4,65 +4,36 @@ title: Logging
 toc: /toc.json
 ---
 
-## A Quick Overview
+## Logging: A Quick Overview
 
-For logging, we use the ``slf4j`` facade, usually hooked up to a ``log4j`` implementation.
+For logging, we use **logback** which implements the slf4j API.
+This means you can use any slf4j compliant logging framework,
+or if you just want something that works logback will work out of the box.
 
-Tests have debug logging across the board, included by default from ``usage/test-support``
+The CLI launcher includes a ``logback.xml`` which logs at DEBUG level 
+to a file ``./brooklyn.log`` and INFO to the console,
+with a few exceptions.  Exceptions --- and the inverse, favourites which
+you might want to enable even if the root logger level is bumped to INFO ---
+are in files in ``core/src/main/resources/brooklyn/`` which can easily
+be included in your own ``logback.xml`` (one of the nicest features of logback).
 
-Launcher (and all) define a log4j.properties which logs at INFO level with a few selected categories at DEBUG
-(debug output goes only to a file, ``./brooklyn.log``).
+Tests have debug logging across the board, included by default from 
+``usage/test-support/src/main/resources/logback-tests.xml``.
 
-Some categories are quite useful, as you'll see in the ``log4j.properties`` files in the project:
+You can set a specific logback config file to use with:
 
-* brooklyn
-* brooklyn.SSH
-* org.jclouds
-
-
-## Dependencies
-
-### log4j.properties
-
-If you've not inherited brooklyn-launcher (or brooklyn-all) you'll need a ``log4j.properties`` 
-(or ``log4j.xml``, which will dominate).
-There are plenty of other valid reasons for wanting to supply your own logging as well.
-
-A good starting point is the configuration file in 
-[launcher](https://github.com/brooklyncentral/brooklyn/blob/master/usage/launcher/src/main/resources/log4j.properties).
-
-Once you've tweaked this, place it in your classpath, 
-or specify ``-Dlog4j.configuration=/path/to/your/log4j.properties``. 
-For more information see [logging.apache.org/log4j](http://logging.apache.org/log4j/1.2/manual.html).
-
-### Maven
-
-If you've not inherited brooklyn-launcher (or brooklyn-all) you may not have an SLF4J implementation project
-on your classpath (you'll see some SLF4J complaints at runtime).
-Adding a dependency on an implementation, such as ``log4j12``, should resolve the problem:
-
-{% highlight xml %}
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-            <optional>true</optional>
-        </dependency>
-{% endhighlight %} 
-
-As of this writing we use 1.5.11 for the version,
-as per the [root pom](https://github.com/brooklyncentral/brooklyn/blob/master/pom.xml).
-The ``optional`` line means the dependency should not be passed to any projects
-which depend on your project; you can remove it to force the import your logging implementation choice.
-(You can of course use a differing slf4j-compliant logger, such as ``java.util.logging`` or ``ch.qos.logback``.)
-
+    -Dlogback.configurationFile=/path/to/config.xml
 
 ## Caveats
 
-* SLF4J **version >= 1.6** is **not compatible** with 1.5.x and breaks certain things (such as the web console written in Grails).
+* logback uses SLF4J version 1.6 which is **not compatible** with 1.5.x. 
+  If you have dependent projects using 1.5.x (such as older Grails) things may break.
 
-* Logging for **tests** isn't picked up correctly in some environments (some Eclipse flavours).
-  The root cause seems to be a rogue log4j.properties included in the groovy-all OSGi bundle bsf.jar which sets a FATAL threshhold.
-  To resolve this add an explicit project dependency on test-support, 
-  or create your own log4j.properties file.
+* If you're not getting the logging you expect in the IDE, make sure 
+  ``src/main/resources`` is included in the classpath.
+  (In eclipse, right-click the project, the Build Path -> Configure,
+  then make sure all dirs are included (All) and excluded (None) -- 
+  ``mvn clean install`` should do this for you.)
+  You may find that your IDE logs to a file ``brooklyn-tests.log`` 
+  if it doesn't distinguish between test build classpaths and normal classpaths.
 
