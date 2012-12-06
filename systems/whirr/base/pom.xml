@@ -47,17 +47,11 @@
                 <artifactId>slf4j-log4j12</artifactId>
               </exclusion>
               <exclusion>
-                <!-- solr pulls v1.6 of this in. but it breaks 1.5 compatibility needed elsewhere.
-                     solr may not work until brooklyn (grails) allows 1.6 -->
+                <!-- solr pulls v1.6 of this in. used to break things. might be okay now (now using logback). -->
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
               </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
         </dependency>
         
         <dependency>

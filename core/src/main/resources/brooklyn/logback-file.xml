@@ -1,0 +1,11 @@
+<included>
+
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>brooklyn.log</file>
+    <append>true</append>
+    <encoder>
+      <pattern>%d %-5level %logger{30} [%thread{15}]: %msg%n</pattern>
+    </encoder>
+  </appender>
+
+</included>

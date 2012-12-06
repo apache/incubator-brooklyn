@@ -1,0 +1,16 @@
+<included>
+    
+    <!-- schmizz (sshj) very noisy, profligate with errors, put to file only, at warn level -->
+    <logger name="net.schmizz" level="WARN" additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
+
+    <!-- quite noisy at INFO, and uninteresting -->
+    <logger name="org.eclipse.jetty" level="WARN"/>
+    
+    <!-- quite noisy at INFO, but poss interesting; put to file only -->
+    <logger name="org.apache.whirr.service.ComputeCache" level="DEBUG" additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
+
+</included>

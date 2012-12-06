@@ -20,11 +20,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
@@ -105,8 +100,7 @@
                 <artifactId>slf4j-log4j12</artifactId>
               </exclusion>
               <exclusion>
-                <!-- solr pulls v1.6 of this in. but it breaks 1.5 compatibility needed elsewhere.
-                     solr may not work until brooklyn (grails) allows 1.6 -->
+                <!-- solr pulls v1.6 of this in. might be okay now... -->
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
               </exclusion>
