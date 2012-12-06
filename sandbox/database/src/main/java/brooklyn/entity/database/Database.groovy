@@ -29,5 +29,7 @@ public interface Schema {
 
     void create();
     
-    void load();
+    void remove();
+    
+    String getName();
 }

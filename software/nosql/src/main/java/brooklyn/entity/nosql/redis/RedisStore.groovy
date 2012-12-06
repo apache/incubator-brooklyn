@@ -48,9 +48,9 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
     @Override
     protected void connectSensors() {
         FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
-                period:10*1000,
-                new Callable<Integer>() {
-                    public Integer call() {
+                period:1*1000,
+                new Callable<Boolean>() {
+                    public Boolean call() {
                         return getDriver().isRunning()
                     }}));
         serviceUpAdapter.poll(SERVICE_UP);
