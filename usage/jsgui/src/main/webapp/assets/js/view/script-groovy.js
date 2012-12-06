@@ -1,5 +1,6 @@
 define([
     "underscore", "jquery", "backbone",
+    "view/viewutils",
     "text!tpl/script/groovy.html", 
     
     "jquery-slideto",
@@ -7,8 +8,8 @@ define([
     "jquery-ba-bbq",
     "handlebars",
     "bootstrap",
-    "brooklyn-utils"
-], function (_, $, Backbone, GroovyHtml) {
+    "brooklyn-utils",
+], function (_, $, Backbone, ViewUtils, GroovyHtml) {
 
     var ScriptGroovyView = Backbone.View.extend({
         tagName:"div",
@@ -26,23 +27,10 @@ define([
             this.$el.html(_.template(GroovyHtml, {}))
             $(".output", this.$el).hide()
             $(".output .toggler-region", this.$el).hide()
-            $(".toggler-header", this.$el).click(this.toggleNext)
+            ViewUtils.attachToggler(this.$el)
         },
         render:function (eventName) {
             return this
-        },
-        toggleNext: function(event) {
-            var root = $(event.currentTarget).closest(".toggler-header");
-            root.toggleClass("user-hidden");
-            $(".toggler-icon", root).
-                toggleClass("icon-chevron-left").
-                toggleClass("icon-chevron-down");
-                
-            var next = root.next();
-            if (root.hasClass("user-hidden")) 
-                next.hide('fast');
-            else 
-                next.show('fast')
         },
         loadExample: function() {
             $(".input textarea").val(
@@ -59,24 +47,7 @@ define([
                     'return mgmt.applications\n')
         },
         updateTextareaWithData: function($div, data, alwaysShow) {
-            var $ta = $("textarea", $div)
-            var show = alwaysShow
-            if (data !== undefined) {
-                $ta.val(data)
-                show = true
-            } else {
-                $ta.val("")
-            }
-            if (show) {
-                log("foo")
-                $div.show(100)
-                $ta.css("height", 50);
-                var height = Math.min($ta.prop("scrollHeight"), 350)
-                $ta.css("height", height);
-                log(height)
-            } else {
-                $div.hide()
-            }
+            ViewUtils.updateTextareaWithData($div, data, alwaysShow, 50, 350) 
         },
         submitScript: function() {
             var that = this;

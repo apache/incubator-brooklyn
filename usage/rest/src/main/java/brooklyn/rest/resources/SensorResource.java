@@ -98,6 +98,7 @@ public class SensorResource extends AbstractBrooklynRestResource {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application, entity or sensor")
   })
+  @Produces("text/plain")
   public String get(
           @ApiParam(value = "Application ID or name", required = true)
           @PathParam("application") final String application,

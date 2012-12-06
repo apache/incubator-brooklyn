@@ -20,7 +20,6 @@ define([
                 $table = this.$('#config-table'),
                 $tableBody = this.$('tbody').empty(),
                 that = this
-            this.viewUtils = new ViewUtils({})
             configCollection.url = this.model.getLinkByName('config')
             var success = function () {
                 configCollection.each(function (config) {
@@ -32,7 +31,7 @@ define([
                     }))
                 })
                 that.updateConfigPeriodically(that)
-                that.viewUtils.myDataTable($table)
+                ViewUtils.myDataTable($table)
                 // TODO tooltip doesn't work on 'i' elements in table (bottom left toolbar)
                 $table.find('*[rel="tooltip"]').tooltip()
             }
@@ -43,7 +42,7 @@ define([
             return this
         },
         toggleFilterEmpty: function() {
-            this.viewUtils.toggleFilterEmpty(this.$('#config-table'), 1)
+            ViewUtils.toggleFilterEmpty(this.$('#config-table'), 1)
         },
         refreshConfig:function () {
             this.updateConfigNow(this);  

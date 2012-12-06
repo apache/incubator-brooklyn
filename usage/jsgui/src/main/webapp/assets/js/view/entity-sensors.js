@@ -20,7 +20,6 @@ define([
                 $table = this.$('#sensors-table'),
                 $tableBody = this.$('tbody').empty(),
                 that = this
-            this.viewUtils = new ViewUtils({})
             sensorsCollection.url = this.model.getLinkByName('sensors')
             var success = function () {
                 sensorsCollection.each(function (sensor) {
@@ -39,7 +38,7 @@ define([
                     }))
                 })
                 that.updateSensorsPeriodically(that)
-                that.viewUtils.myDataTable($table)
+                ViewUtils.myDataTable($table)
                 // TODO tooltip doesn't work on 'i' elements in table (bottom left toolbar)
                 $table.find('*[rel="tooltip"]').tooltip()
             }
@@ -50,7 +49,7 @@ define([
             return this
         },
         toggleFilterEmpty: function() {
-            this.viewUtils.toggleFilterEmpty(this.$('#sensors-table'), 2)
+            ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 2)
         },
         refreshSensors:function () {
             this.updateSensorsNow(this);  

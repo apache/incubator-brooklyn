@@ -2,7 +2,7 @@ define([
         "underscore", "jquery", "backbone"
         ], function (_, $, Backbone) {
 
-    var ViewUtils = Backbone.View.extend({
+    var ViewUtils = {
 
         myDataTable:function($table) {
             $table.dataTable({
@@ -39,8 +39,51 @@ define([
                 toggleClass('icon-eye-open icon-eye-close').hasClass('icon-eye-close')
             if (hideEmpties) $table.dataTable().fnFilter('.+', column, true);
             else $table.dataTable().fnFilter('.*', column, true);
+        },
+
+        attachToggler: function($scope) {
+            var $togglers;
+            if ($scope === undefined) $togglers = $(".toggler-header")
+            else $togglers = $(".toggler-header", $scope);
+            $togglers.click(this.onTogglerClick)
+        },
+        onTogglerClick: function(event) {
+            var root = $(event.currentTarget).closest(".toggler-header");
+            root.toggleClass("user-hidden");
+            $(".toggler-icon", root).
+                toggleClass("icon-chevron-left").
+                toggleClass("icon-chevron-down");
+                
+            var next = root.next();
+            if (root.hasClass("user-hidden")) 
+                next.hide('fast');
+            else 
+                next.show('fast')
+        },
+        
+        updateTextareaWithData: function($div, data, alwaysShow, minPx, maxPx) {
+            var $ta = $("textarea", $div)
+            var show = alwaysShow
+            if (data !== undefined) {
+                $ta.val(data)
+                show = true
+            } else {
+                $ta.val("")
+            }
+            if (show) {
+                $div.show(100)
+                $ta.css("height", minPx);
+                // scrollHeight prop works sometimes (e.g. groovy page) but not others (e.g. summary)
+                var height = $ta.prop("scrollHeight")
+                height = Math.min(height, maxPx)
+                height = Math.max(height, minPx)
+                $ta.css("height", height);
+            } else {
+                $div.hide()
+            }
         }
 
-    })
+    }
+    
     return ViewUtils
 })
