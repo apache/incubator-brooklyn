@@ -1,14 +1,18 @@
 package brooklyn.entity.messaging.rabbit;
 
+import static java.lang.String.format;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.*
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
+import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.entity.messaging.amqp.AmqpServer
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.util.NetworkUtils
+
+import com.google.common.collect.ImmutableList
 
 /**
  * TODO javadoc
@@ -35,7 +39,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         String url = "http://www.rabbitmq.com/releases/rabbitmq-server/v${version}/rabbitmq-server-generic-unix-${version}.tar.gz";
         String saveAs = "rabbitmq-server-generic-unix-${version}.tar.gz";
 
-        List<String> commands = ImmutableList.builder()
+        List<String> commands = ImmutableList.<String>builder()
                 .add(installPackage("erlang", // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
                         apt:"erlang-nox erlang-dev",
                         port:"erlang@${erlangVersion}+ssl"))

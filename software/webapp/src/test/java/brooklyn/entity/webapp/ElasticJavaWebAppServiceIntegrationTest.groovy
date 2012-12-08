@@ -33,6 +33,6 @@ public class ElasticJavaWebAppServiceIntegrationTest {
         app.start([new LocalhostMachineProvisioningLocation()]);
         String url = svc.getAttribute(ElasticJavaWebAppService.ROOT_URL);
         Assert.assertNotNull(url);
-        HttpTestUtils.assertContentContainsText(url, "Hello");
+        HttpTestUtils.assertContentEventuallyContainsText(url, "Hello");
     }
 }

@@ -76,9 +76,14 @@ public class ReflectionScanner extends Reflections {
         for (String className : subTypes) {
             //noinspection unchecked
             try {
-                result.add((Class<? extends T>) loadClass(className));
+                Class<? extends T> subClazz = (Class<? extends T>) loadClass(className);
+                if (subClazz != null) {
+                    result.add(subClazz);
+                } else {
+                    log.warn("Unable to instantiate '"+className+"' (sub-type of "+type+")");
+                }
             } catch (Throwable e) {
-                log.warn("Unable to instantiate '"+className+"': "+e);
+                log.warn("Unable to instantiate '"+className+"' (sub-type of "+type+"): "+e);
             }
         }
         return ImmutableSet.copyOf(result);
