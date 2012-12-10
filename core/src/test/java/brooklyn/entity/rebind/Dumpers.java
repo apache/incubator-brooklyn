@@ -77,11 +77,10 @@ public class Dumpers {
         };
         deepVisitInternal(root, SERIALIZED_FIELD_PREDICATE, Lists.newArrayList(), new LinkedList<Object>(), visitor);
         
-        StringBuilder msg = new StringBuilder("Not serializable: \n");
+        LOG.warn("Not serializable ("+root+"):");
         for (Map.Entry<List<Object>, Class<?>> entry : unserializablePaths.entrySet()) {
-            msg.append("\ttype="+entry.getValue()+"; chain="+entry.getKey() + "\n");
+            LOG.warn("\t"+"type="+entry.getValue()+"; chain="+entry.getKey());
         }
-        LOG.warn(msg.toString());
     }
     
     public static void deepDumpSerializableness(Object o) {
