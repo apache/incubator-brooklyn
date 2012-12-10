@@ -30,6 +30,7 @@ define([
                 $tbody = this.$("#activities-table tbody").empty()
             if (this.collection.length==0) {
                 this.$(".has-no-activities").show();
+                this.$("#activity-details-none-selected").hide()
             } else {                
                 this.$(".has-no-activities").hide();
                 this.collection.each(function (task) {
@@ -45,6 +46,8 @@ define([
                 if (that.activeTask) {
                     $("#activities-table tr[id='"+that.activeTask+"']").addClass("selected")
                     that.showFullActivity(that.activeTask)
+                } else {
+                    this.$("#activity-details-none-selected").show()                    
                 }
             })
             }
@@ -56,8 +59,7 @@ define([
             $("#activities-table tr").removeClass("selected")
             if (this.activeTask == id) {
                 // deselected
-                this.activeTask = null
-                this.$("#activity-details").hide(100)
+                this.showFullActivity(null)
             } else {
                 row.addClass("selected")
                 this.activeTask = id
@@ -65,16 +67,25 @@ define([
             }
         },
         showFullActivity:function (id) {
+            this.$("#activity-details-none-selected").hide(100)
             var task = this.collection.get(id)
             if (task==null) {
                 this.activeTask = null
                 this.$("#activity-details").hide(100)                
+                this.$("#activity-details-none-selected").show(100)
+                return
             }
-            var html = _.template(ActivityDetailsHtml, {
-                displayName:this.model.get("displayName"),
-                description:FormatJSON(task.toJSON())                
-            })
-            this.$("#activity-details").html(html)
+            
+            var $ta = this.$("#activity-details textarea")
+            if ($ta.length) {
+                $ta.val(FormatJSON(task.toJSON()))
+            } else {
+                var html = _.template(ActivityDetailsHtml, {
+                    displayName:this.model.get("displayName"),
+                    description:FormatJSON(task.toJSON())                
+                })
+                this.$("#activity-details").html(html)
+            }
             this.$("#activity-details").show(100)
         }
     })

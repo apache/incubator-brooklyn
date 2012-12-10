@@ -1,1 +1,41 @@
-<textarea readonly="readonly" rows="25"><%= entity %></textarea>
+<div class="app-summary">
+
+  <div class="name">
+    <h2><%= entity.get('name') %></h2>
+  </div>
+
+  <div class="id inforow">
+    <div class="name">ID</div>
+    <div class="value"><%= entity.get('id') %></div>
+  </div>
+
+  <div class="status inforow hide">
+    <div class="name">Status</div>
+    <div class="value"><i>Loading...</i></div>
+  </div>
+  <div class="serviceUp inforow hide">
+    <div class="name">Available</div>
+    <div class="value"><i>Loading...</i></div>
+  </div>
+  <!-- TODO
+	<div class="toggler-region location inforow">
+		<div class="name">Location</div>
+		<div class="value"><i>Loading...</i></div>
+	</div>
+	-->
+  <!-- TODO
+    parent, app, children
+    map
+  -->
+
+  <div class="toggler-region json">
+    <div class="toggler-header">
+      <div class="toggler-icon icon-chevron-down"></div>
+      <div><b>JSON</b></div>
+    </div>
+    <div class="for-textarea">
+      <textarea id="json-textrea" readonly="readonly"><%= entityJson %></textarea>
+    </div>
+  </div>
+
+</div>
