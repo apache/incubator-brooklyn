@@ -21,11 +21,13 @@ import brooklyn.util.internal.TimeExtras
 class CassandraClusterEc2LiveTest {
     protected static final Logger LOG = LoggerFactory.getLogger(CassandraClusterEc2LiveTest.class)
 
-    static { TimeExtras.init() }
+    static {
+        TimeExtras.init()
+    }
 
     private final String provider
-    protected JcloudsLocation loc;
-    protected JcloudsLocationFactory locFactory;
+    protected JcloudsLocation loc
+    protected JcloudsLocationFactory locFactory
     private Collection<SshMachineLocation> machines = []
     private File sshPrivateKey
     private File sshPublicKey
@@ -42,24 +44,26 @@ class CassandraClusterEc2LiveTest {
         assertNotNull resource
         sshPublicKey = new File(resource.path)
 
-        CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
+        CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2")
+        String identity = creds.identity
+        String credential = creds.credential
+
         locFactory = new JcloudsLocationFactory([
-                provider:"aws-ec2",
-                identity:creds.getIdentity(),
-                credential:creds.getCredential(),
-                sshPublicKey:sshPublicKey,
-                sshPrivateKey:sshPrivateKey])
+            provider:"aws-ec2",
+            identity:identity,
+            credential:credential,
+            sshPublicKey:sshPublicKey,
+            sshPrivateKey:sshPrivateKey ])
 
         String regionName = "eu-west-1"
         String imageId = "eu-west-1/ami-89def4fd"
         String imageOwner = "411009282317"
 
         loc = locFactory.newLocation(regionName)
-        loc.setTagMapping([(CassandraServer.class.getName()):[
-            imageId:imageId,
-            imageOwner:imageOwner,
-            securityGroups:["brooklyn-all"]
-        ]])
+        loc.setTagMapping([ (CassandraServer.class.getName()):[
+                imageId:imageId,
+                imageOwner:imageOwner,
+                securityGroups:[ "brooklyn-all" ]]])
 
         app = new TestApplication()
     }
@@ -88,10 +92,10 @@ class CassandraClusterEc2LiveTest {
     /**
      * Test that the server starts up and sets SERVICE_UP correctly.
      */
-    @Test(groups = [ "Live" ])
+    @Test(groups = ["Live"])
     public void canStartupAndShutdown() {
-        cluster = new CassandraCluster(owner:app, initialSize:2, clusterName:'Amazon Cluster');
-        app.start([ loc ])
+        cluster = new CassandraCluster(owner:app, initialSize:2, clusterName:'Amazon Cluster')
+        app.start([loc])
         executeUntilSucceeds(cluster) {
             assertTrue cluster.currentSize == 2
             cluster.members.each {
