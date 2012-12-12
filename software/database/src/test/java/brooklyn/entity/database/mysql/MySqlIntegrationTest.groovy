@@ -26,7 +26,7 @@ public class MySqlIntegrationTest {
 
     }
 
-    @AfterMethod(groups = ["Integration"])
+    @AfterMethod(alwaysRun=true)
     public void ensureShutDown() {
         if (tapp != null) {
             Entities.destroy(tapp)
@@ -61,7 +61,7 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
 """;
 
     @Test(groups = ["Integration"])
-    public void test_localhost() {
+    public void test_localhost() throws Exception {
         MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
 
         tapp.start([new LocalhostMachineProvisioningLocation()]);
