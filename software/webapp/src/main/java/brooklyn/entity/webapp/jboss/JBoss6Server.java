@@ -5,6 +5,7 @@ import groovy.time.TimeDuration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +21,12 @@ import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
+import brooklyn.event.feed.jmx.JmxAttributePollConfig;
+import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 
 public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAppService, UsesJmx {
 
@@ -46,6 +50,8 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final MapConfigKey<Map> PROPERTY_FILES =
             new MapConfigKey<Map>(Map.class, "java.properties.environment", "Property files to be generated, referenced by an environment variable");
 
+    private JmxFeed jmxFeed;
+    
     public JBoss6Server(Entity parent) {
         this(new LinkedHashMap(), parent);
     }
@@ -62,27 +68,34 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public void connectSensors() {
         super.connectSensors();
 
-        sensorRegistry.register(new ConfigSensorAdapter());
-
-        Map<String, Object> flags = new HashMap<String, Object>();
-        flags.put("period", new TimeDuration(0, 0, 0, 500));
-        JmxSensorAdapter jmx = sensorRegistry.register(new JmxSensorAdapter(flags));
-        JmxObjectNameAdapter objectNameAdapter = jmx.objectName("jboss.web:type=GlobalRequestProcessor,name=http-*");
-        objectNameAdapter.attribute("errorCount").subscribe(ERROR_COUNT);
-        objectNameAdapter.attribute("requestCount").subscribe(REQUEST_COUNT);
-        objectNameAdapter.attribute("processingTime").subscribe(TOTAL_PROCESSING_TIME);
-        jmx.objectName("jboss.system:type=Server").attribute("Started").subscribe(SERVICE_UP);
+        String requestProcessorMbeanName = "jboss.web:type=GlobalRequestProcessor,name=http-*";
+        String serverMbeanName = "jboss.system:type=Server";
         
-        // If MBean is unreachable, then mark as service-down
-        jmx.objectName("jboss.system:type=Server").reachable().poll(new Function<Boolean,Void>() {
-                @Override public Void apply(Boolean input) {
-                    if (input != null && Boolean.FALSE.equals(input)) {
-                        setAttribute(SERVICE_UP, false);
-                    }
-                    return null;
-                }});
+        jmxFeed = JmxFeed.builder()
+                .entity(this)
+                .period(500, TimeUnit.MILLISECONDS)
+                .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
+                        .objectName(requestProcessorMbeanName)
+                        .attributeName("errorCount"))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
+                        .objectName(requestProcessorMbeanName)
+                        .attributeName("requestCount"))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
+                        .objectName(requestProcessorMbeanName)
+                        .attributeName("processingTime"))
+                .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+                        .objectName(serverMbeanName)
+                        .attributeName("Started")
+                        .onError(Functions.constant(false)))
+                .build();
     }
 
+    @Override
+    public void disconnectSensors() {
+        super.disconnectSensors();
+        if (jmxFeed != null) jmxFeed.stop();
+    }
+    
     @Override
     public Class<JBoss6Driver> getDriverInterface() {
         return JBoss6Driver.class;

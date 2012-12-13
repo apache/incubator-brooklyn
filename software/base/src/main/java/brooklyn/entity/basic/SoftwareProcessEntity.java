@@ -165,6 +165,13 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
     }
     
     protected void preStop() {
+        disconnectSensors();
+    }
+
+    /**
+     * For disconneting from the running app. Will be called on stop.
+     */
+    protected void disconnectSensors() {
     }
 
     /**
