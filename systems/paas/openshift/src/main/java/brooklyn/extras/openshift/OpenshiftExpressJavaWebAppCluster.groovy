@@ -1,21 +1,17 @@
 package brooklyn.extras.openshift
 
 import brooklyn.event.basic.BasicConfigKey;
-import java.util.Collection
-import java.util.Map
-
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.extras.openshift.OpenshiftExpressAccess.OpenshiftExpressApplicationAccess
 import brooklyn.location.Location
-import brooklyn.entity.basic.lifecycle.legacy.SshBasedAppSetup
 import brooklyn.util.internal.duplicates.ExecUtils
 
 import com.google.common.base.Preconditions
@@ -127,7 +123,7 @@ class OpenshiftExpressJavaWebAppCluster extends AbstractEntity implements Starta
         //checkout app
         String server = getAppName()+"-"+userInfo.namespace+"."+userInfo.rhc_domain;
         String gitUrl = "ssh://"+appInfo.uuid+"@"+server+"/~/git/"+getAppName()+".git/"
-        String openshiftDir = SshBasedAppSetup.BROOKLYN_HOME_DIR+"/"+application.id+"/openshift-"+id;
+        String openshiftDir = AbstractSoftwareProcessSshDriver.BROOKLYN_HOME_DIR+"/"+application.id+"/openshift-"+id;
         String openshiftGitDir = openshiftDir + "/git";
         
         log.debug "{} gitting app {}, ", this, getAppName()
