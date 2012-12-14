@@ -122,19 +122,19 @@ public class NginxUrlMappingIntegrationTest {
             for (int i = 0; i < 2; i++) {
                 assertUrlHasText("http://localhost1:${port}", "Hello");
                 assertUrlHasText("http://localhost1:${port}/", "Hello");
-                assertUrlHasText("http://localhost1:${port}/hello/frank", "http://"+u0.id+"/hello/frank");
+                assertUrlHasText("http://localhost1:${port}/hello/frank", "http://localhost1:${port}/hello/frank");
             }
             //cluster 1
             for (int i = 0; i < 2; i++) {
                 assertUrlHasText("http://localhost2:${port}/hello-world", "Hello");
                 assertUrlHasText("http://localhost2:${port}/hello-world/", "Hello");
-                assertUrlHasText("http://localhost2:${port}/hello-world/hello/bob", "http://"+u1.id+"/hello-world/hello/bob");
+                assertUrlHasText("http://localhost2:${port}/hello-world/hello/bob", "http://localhost2:${port}/hello-world/hello/bob");
             }
             //cluster 2
             for (int i = 0; i < 2; i++) {
                 assertUrlHasText("http://localhost3:${port}/c2", "Hello");
                 assertUrlHasText("http://localhost3:${port}/c2/", "Hello");
-                assertUrlHasText("http://localhost3:${port}/c2/hello/joe", "http://"+u2.id+"/c2/hello/new%20joe");
+                assertUrlHasText("http://localhost3:${port}/c2/hello/joe", "http://localhost3:${port}/c2/hello/new%20joe");
             }
         }
         
@@ -273,24 +273,24 @@ public class NginxUrlMappingIntegrationTest {
         executeUntilSucceeds {
             // health check
             assertUrlHasText("http://localhost1:${port}", "Hello");
-            assertUrlHasText("http://localhost1:${port}/hello/frank", "http://"+u0.id+"/hello/frank");
+            assertUrlHasText("http://localhost1:${port}/hello/frank", "http://localhost1:${port}/hello/frank");
             
             // goodbye rewritten to hello
-            assertUrlHasText("http://localhost1:${port}/goodbye/frank", "http://"+u0.id+"/hello/frank");
+            assertUrlHasText("http://localhost1:${port}/goodbye/frank", "http://localhost1:${port}/hello/frank");
             // hello al rewritten to hello Big Al
-            assertUrlHasText("http://localhost1:${port}/hello/aled", "http://"+u0.id+"/hello/Big%20Aled");
+            assertUrlHasText("http://localhost1:${port}/hello/aled", "http://localhost1:${port}/hello/Big%20Aled");
             // hello andrew rewritten to hello Sir Andrew
-            assertUrlHasText("http://localhost1:${port}/hello/andrew", "http://"+u0.id+"/hello/Sir%20Andrew");
+            assertUrlHasText("http://localhost1:${port}/hello/andrew", "http://localhost1:${port}/hello/Sir%20Andrew");
             
             // goodbye alex rewritten to hello Big Alex (two rewrites)
-            assertUrlHasText("http://localhost1:${port}/goodbye/alex", "http://"+u0.id+"/hello/Big%20Alex");
+            assertUrlHasText("http://localhost1:${port}/goodbye/alex", "http://localhost1:${port}/hello/Big%20Alex");
             // but goodbye andrew rewritten only to hello Andrew -- test the "break" logic above (won't continue rewriting)
-            assertUrlHasText("http://localhost1:${port}/goodbye/andrew", "http://"+u0.id+"/hello/andrew");
+            assertUrlHasText("http://localhost1:${port}/goodbye/andrew", "http://localhost1:${port}/hello/andrew");
             
             // al rewrite can be anywhere
-            assertUrlHasText("http://localhost1:${port}/hello/hello/alex", "http://"+u0.id+"/hello/hello/Big%20Alex");
+            assertUrlHasText("http://localhost1:${port}/hello/hello/alex", "http://localhost1:${port}/hello/hello/Big%20Alex");
             // but an rewrite must be at beginning
-            assertUrlHasText("http://localhost1:${port}/hello/hello/andrew", "http://"+u0.id+"/hello/hello/andrew");
+            assertUrlHasText("http://localhost1:${port}/hello/hello/andrew", "http://localhost1:${port}/hello/hello/andrew");
         }
     }
     
