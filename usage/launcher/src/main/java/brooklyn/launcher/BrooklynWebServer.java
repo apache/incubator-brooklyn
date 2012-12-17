@@ -1,7 +1,11 @@
 package brooklyn.launcher;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.net.InetAddress;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
@@ -31,6 +36,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
@@ -87,6 +93,8 @@ public class BrooklynWebServer {
     @SetFromFlag
     private String trustStorePassword;
 
+    private File webappTempDir;
+    
     private Class<BrooklynPropertiesSecurityFilter> securityFilterClazz;
 
     public BrooklynWebServer(ManagementContext managementContext) {
@@ -104,6 +112,9 @@ public class BrooklynWebServer {
         Map leftovers = FlagUtils.setFieldsFromFlags(flags, this);
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
+        
+        String brooklynDataDir = checkNotNull(managementContext.getConfig().getConfig(ConfigKeys.BROOKLYN_DATA_DIR));
+        this.webappTempDir = new File(brooklynDataDir, "jetty");
     }
 
     public BrooklynWebServer(ManagementContext managementContext, int port) {
@@ -241,10 +252,13 @@ public class BrooklynWebServer {
         for (Map.Entry<String, String> entry : wars.entrySet()) {
             String pathSpec = entry.getKey();
             String warUrl = entry.getValue();
-            deploy(pathSpec, warUrl);
+            WebAppContext webapp = deploy(pathSpec, warUrl);
+            webapp.setTempDirectory(ResourceUtils.mkdirs(new File(webappTempDir, newTimestampedDirName("war", 8))));
         }
 
         rootContext = deploy("/", war);
+        rootContext.setTempDirectory(ResourceUtils.mkdirs(new File(webappTempDir, "war-root")));
+
         if (securityFilterClazz != null) {
             rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
         }
@@ -258,6 +272,10 @@ public class BrooklynWebServer {
         log.info("Started Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
     }
 
+    private String newTimestampedDirName(String prefix, int randomSuffixLength) {
+        return prefix + "-" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + "-" + Identifiers.makeRandomId(randomSuffixLength);
+    }
+    
     private String checkFileExists(String path, String name) {
         if(!new File(path).exists()){
             throw new IllegalArgumentException("Could not find "+name+": "+path);

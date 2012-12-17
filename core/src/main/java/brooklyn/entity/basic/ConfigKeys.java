@@ -10,7 +10,10 @@ import brooklyn.event.basic.BasicConfigKey;
 public class ConfigKeys {
     
     // FIXME Rename to VERSION, instead of SUGGESTED_VERSION? And declare as BasicAttributeSensorAndConfigKey?
-    
+
+    public static final ConfigKey<String> BROOKLYN_DATA_DIR = new BasicConfigKey<String>(
+            String.class, "brooklyn.datadir", "Directory for writing all brooklyn data", "/tmp/brooklyn-"+System.getProperty("user.name"));
+
     public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(
             String.class, "install.version", "Suggested version");
     public static final BasicConfigKey<String> SUGGESTED_INSTALL_DIR = new BasicConfigKey<String>(
