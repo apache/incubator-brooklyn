@@ -1,5 +1,7 @@
 package brooklyn.event.adapter;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import javax.management.NotificationListener
 
 import org.slf4j.Logger
@@ -25,7 +27,10 @@ public abstract class AbstractPushHelper {
 	boolean lastWasSuccessful = false;
 	
 	public AbstractPushHelper(AbstractSensorAdapter adapter) {
-		this.adapter = adapter;
+		this.adapter = checkNotNull(adapter, "adapter");
+	}
+    
+    public void init() {
 		adapter.addActivationLifecycleListeners({ activatePushing() }, { deactivatePushing() })
 	}
     

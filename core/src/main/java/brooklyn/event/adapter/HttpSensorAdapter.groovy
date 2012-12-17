@@ -12,12 +12,14 @@ public class HttpSensorAdapter extends AbstractSensorAdapter {
 	public static final Logger log = LoggerFactory.getLogger(HttpSensorAdapter.class)
 
 	protected String baseUrl
-	protected final HttpPollHelper poller = new HttpPollHelper(this)
+	protected final HttpPollHelper poller;
 	protected final Map urlVars=[:]
 
     public HttpSensorAdapter(Map flags=[:], String url) {
         super(flags)
         this.baseUrl = url
+        poller = new HttpPollHelper(this);
+        poller.init();
     }
 
 	protected boolean isPost = false;

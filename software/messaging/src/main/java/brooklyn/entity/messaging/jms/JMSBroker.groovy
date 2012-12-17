@@ -41,15 +41,18 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
     }
 
     @Override
-    public void postStart() {
+    protected void connectSensors() {
+        super.connectSensors();
+        setBrokerUrl();
+    }
+
+    // FIXME Need this to be "really" post-start, so called after sensor-polling is activated etc
+    @Override
+    protected void postStart() {
 		super.postStart()
-		
-		//need to wait for JMX operations to be available
-		waitForServiceUp()
 		
         queueNames.each { String name -> addQueue(name) }
         topicNames.each { String name -> addTopic(name) }
-        setBrokerUrl();
     }
 	
     public abstract void setBrokerUrl();
@@ -103,8 +106,6 @@ public abstract class JMSDestination extends AbstractEntity {
         super(properties, owner)
 
         Preconditions.checkNotNull name, "Name must be specified"
-
-        init()
     }
 
 	public String getName() { getDisplayName() }

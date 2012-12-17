@@ -5,7 +5,6 @@ import static org.testng.Assert.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-import javax.management.DynamicMBean
 import javax.management.MBeanOperationInfo
 import javax.management.MBeanParameterInfo
 import javax.management.Notification
@@ -29,6 +28,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Entities
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
@@ -82,6 +82,7 @@ public class JmxSensorAdapterTest {
                         entity.setAttribute(Attributes.JMX_CONTEXT)
                     }
         };
+        Entities.startManagement(app);
         app.start([new SimulatedLocation()])
 
         registry = new SensorRegistry(entity);
@@ -105,7 +106,6 @@ public class JmxSensorAdapterTest {
         jmxAdapter.objectName(objectName).with {
             attribute(attributeName).subscribe(intAttribute)
         }
-        registry.activateAdapters()
         
         // Starts with value defined when registering...
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
@@ -127,7 +127,6 @@ public class JmxSensorAdapterTest {
         jmxAdapter.objectName(objectName).with {
             attribute(attributeName).subscribe(intAttribute)
         }
-        registry.activateAdapters()
 
         jmxService = new JmxService(entity);
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(objectName, (attributeName): 42)
@@ -148,7 +147,6 @@ public class JmxSensorAdapterTest {
         jmxAdapter.objectName(objectName).with {
             reachable().poll( { isup = it } )
         }
-        registry.activateAdapters()
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
             assertFalse(isup);
@@ -201,8 +199,6 @@ public class JmxSensorAdapterTest {
             }
             objectNameAdapter.reachable().poll( { isup = it } );
             
-            registry.activateAdapters();
-            
             TestUtils.executeUntilSucceeds(timeout:TIMEOUT) {
                 assertTrue(isup);
             }
@@ -247,7 +243,6 @@ public class JmxSensorAdapterTest {
         jmxAdapter.objectName(objectName).with {
             attribute(attributeName).subscribe(mapAttribute, JmxPostProcessors.tabularDataToMap())
         }
-        registry.activateAdapters()
         
         // Starts with value defined when registering...
         TestUtils.executeUntilSucceeds {
@@ -271,7 +266,6 @@ public class JmxSensorAdapterTest {
         jmxAdapter.objectName(objectName).with {
             operation(opName).poll(intAttribute)
         }
-        registry.activateAdapters()
         
         TestUtils.executeUntilSucceeds {
             assertTrue invocationCount.get() > 0, "invocationCount=$invocationCount"
@@ -290,7 +284,6 @@ public class JmxSensorAdapterTest {
         jmxAdapter.objectName(objectName).with {
             operation(opName, "myprefix").poll(stringAttribute)
         }
-        registry.activateAdapters()
         
         TestUtils.executeUntilSucceeds {
             assertEquals entity.getAttribute(stringAttribute), "myprefix"+"suffix"
@@ -306,7 +299,6 @@ public class JmxSensorAdapterTest {
         jmxAdapter.objectName(objectName).with {
             notification(one).subscribe(intAttribute)
         }
-        registry.activateAdapters()
         
         // Notification updates the sensor
         sendNotification(mbean, one, sequence++, 123)
@@ -333,7 +325,6 @@ public class JmxSensorAdapterTest {
             notification(one).subscribe({Notification notif, Object callback -> 
                     received.add(notif) } as NotificationListener)
         }
-        registry.activateAdapters()
         
         Notification notif = sendNotification(mbean, one, sequence++, 123)
         
@@ -354,7 +345,6 @@ public class JmxSensorAdapterTest {
             notification(".*").subscribe({Notification notif, Object callback -> 
                     received.add(notif) } as NotificationListener)
         }
-        registry.activateAdapters()
         
         Notification notif = sendNotification(mbean, one, sequence++, 123)
         Notification notif2 = sendNotification(mbean, two, sequence++, 456)
@@ -377,7 +367,6 @@ public class JmxSensorAdapterTest {
             notification(".*").subscribe({Notification notif, Object callback ->
                     received.add(notif) } as NotificationListener)
         }
-        registry.activateAdapters()
         
         Notification notif = sendNotification(mbean, one, sequence++, 123)
         Notification notif2 = sendNotification(mbean, one, sequence++, 456)

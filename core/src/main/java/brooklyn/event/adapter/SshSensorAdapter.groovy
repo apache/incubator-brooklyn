@@ -25,12 +25,14 @@ public class SshSensorAdapter extends AbstractSensorAdapter {
 	@SetFromFlag
 	String command
 
-	protected final SshPollHelper poller = new SshPollHelper(this)
+	protected final SshPollHelper poller;
 	protected final SshMachineLocation location;
 
 	public SshSensorAdapter(Map flags=[:], SshMachineLocation location) {
 		super(flags)
 		this.location = Preconditions.checkNotNull(location, "location")
+        poller = new SshPollHelper(this);
+        poller.init();
         if (!env) env = [:]
     }
 

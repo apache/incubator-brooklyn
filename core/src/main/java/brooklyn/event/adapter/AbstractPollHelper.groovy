@@ -1,5 +1,7 @@
 package brooklyn.event.adapter;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
 
 import org.slf4j.Logger
@@ -22,11 +24,17 @@ public abstract class AbstractPollHelper {
 
     boolean lastWasSuccessful = false;
 
+    // TODO Can't make this final because sub-classes want to override getAdapter() to have a more specific return type
     AbstractSensorAdapter adapter;
+    
     public AbstractPollHelper(AbstractSensorAdapter adapter) {
-        this.adapter = adapter;
+        this.adapter = checkNotNull(adapter, "adapter");
+    }
+    
+    public void init() {
         adapter.addActivationLifecycleListeners({ activatePoll() }, { deactivatePoll() })
     }
+    
     public EntityLocal getEntity() { adapter.entity }
 
     public void addSensor(Sensor s, Closure c) {

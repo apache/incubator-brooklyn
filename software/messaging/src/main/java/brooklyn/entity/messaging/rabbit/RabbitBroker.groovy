@@ -53,18 +53,15 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
         super(properties, owner)
     }
 
+    // FIXME Need this to be "really" post-start, so called after sensor-polling is activated etc
     @Override
-    public void postStart() {
+    protected void postStart() {
         super.postStart()
 
-        waitForServiceUp()
-
         driver.configure()
-
+        
         // TODO implement this using AMQP connection, no external mechanism available
 		// queueNames.each { String name -> addQueue(name) }
-
-        setBrokerUrl();
     }
 
     public void setBrokerUrl() {
@@ -102,9 +99,9 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
                     period:10*TimeUnit.SECONDS,
                     isRunningCallable));
 
-       sensorRegistry.activateAdapters();
-
        serviceUpAdapter.poll(SERVICE_UP);
+       
+       setBrokerUrl();
     }
 
     @Override
@@ -140,7 +137,6 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
 
     public void create() {
         connectSensors()
-        sensorRegistry.activateAdapters()
     }
     
     public void delete() {

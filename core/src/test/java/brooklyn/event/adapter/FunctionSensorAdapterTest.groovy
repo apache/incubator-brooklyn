@@ -38,7 +38,6 @@ public class FunctionSensorAdapterTest {
         else adapter = this.adapter;
         if (clearPollPeriod) adapter.pollPeriod = null;
         entityRegistry.register(adapter);
-        entityRegistry.activateAdapters();
         adapter;
     }
     

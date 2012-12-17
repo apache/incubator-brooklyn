@@ -1,8 +1,6 @@
 package brooklyn.event.adapter
 
-import groovy.lang.Closure
-
-import java.util.List
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -20,6 +18,13 @@ import brooklyn.event.adapter.legacy.ValueProvider
 /**
  * This class manages the periodic polling of a set of sensors, to update the attribute values 
  * of a particular {@link Entity}.
+ * 
+ * When a "sensor adapter" is registered, it is immediately activated which will cause it to 
+ * begin polling. When the registry is closed (e.g. on entity-stop), all registered 
+ * sensor-adapters will automatically be de-activated.
+ * 
+ * It is strongly recommended to not modify a sensor-adapter while concurrently registering it
+ * (e.g. adding additional sensors to it in a separate thread).
  */
 @SuppressWarnings("deprecation")
 public class SensorRegistry {
@@ -27,6 +32,11 @@ public class SensorRegistry {
  
     final EntityLocal entity
 
+    volatile boolean activated = true;
+    
+    private final List<Runnable> activationListeners = new CopyOnWriteArrayList<Runnable>();
+    private final List<Runnable> deactivationListeners = new CopyOnWriteArrayList<Runnable>();
+    
     /**
      * @deprecated in 0.4. use new SensorAdapter model.
      */
@@ -79,21 +89,36 @@ public class SensorRegistry {
 	// TODO might be useful to have a lookup mechanism, or register ignore duplicates
 	//	sensorRegistry.adapters.find({ it in OldJmxSensorAdapter })?.connect(block: true, publish: (getEntityType().hasSensor(JMX_URL)))
 	
-	boolean activated = false;
-	
-	private List<Runnable> activationListeners = []
-	private List<Runnable> deactivationListeners = []
+    /**
+     * TODO If called in separate thread concurrently with activateAdapters or deactivateAdapters/close, 
+     * then listener could be called twice. Recommend not adding activation listeners like that!
+     */
 	void addActivationLifecycleListeners(Runnable onUp, Runnable onDown) {
 		activationListeners << onUp
 		deactivationListeners << onDown
+        
+        if (activated) {
+            onUp.run();
+        } else {
+            onDown.run();
+        }
 	}
+    
+    /**
+     * @deprecated activated automatically, as soon as constructed.
+     */
+    @Deprecated
 	public void activateAdapters() {
-		if (log.isDebugEnabled()) log.debug "activating adapters at sensor registry for {}", this, entity
-		activated = true;
-		activationListeners.each { it.run() }
+		log.warn("explicitly activating adapters deprecated (happens automatically), for sensor registry {} of {}", this, entity);
+        if (!activated) {
+            activated = true;
+            activationListeners.each { it.run() }
+        }
 	}
+    
 	public void deactivateAdapters() {
 		if (log.isDebugEnabled()) log.debug "deactivating adapters at sensor registry for {}", this, entity
+        activated = false;
 		deactivationListeners.each { it.run() }
 	}
 

@@ -91,7 +91,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         
 	public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 	
-	private SoftwareProcessDriver driver;
+	private transient SoftwareProcessDriver driver;
 	protected transient SensorRegistry sensorRegistry;
 
 	public SoftwareProcessEntity() {
@@ -124,25 +124,69 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         return getManagementContext().getEntityDriverFactory().build(this,(Location)loc);
     }
 
-    protected void preStart() {
-        if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-        ConfigSensorAdapter.apply(this);
+    protected MachineLocation getMachineOrNull() {
+        return Iterables.get(Iterables.filter(getLocations(), MachineLocation.class), 0, null);
     }
     
-	protected void postStart() {
-		connectSensors();
-		checkAllSensorsConnected();
-	}
-	
-    protected void postActivation() {
-        waitForServiceUp();
+  	/**
+  	 * Called before driver.start; guarantees the driver will exist, locations will have been set
+  	 * and sensorRegistry will be set (but not yet activated).
+  	 */
+    protected void preStart() {
+    }
+    
+    /**
+     * Called after driver.start(). Default implementation is to wait to confirm the driver 
+     * definitely started the process.
+     */
+    protected void postDriverStart() {
+        waitForEntityStart();
+    }
+
+    /**
+     * For binding to the running app (e.g. connecting sensors to registry). Will be called
+     * on start() and on rebind().
+     */
+    protected void connectSensors() {
+    }
+
+    /**
+     * Called after the rest of start has completed.
+     */
+    protected void postStart() {
+    }
+    
+    protected void postDriverRestart() {
+        waitForEntityStart();
     }
     
     protected void postRestart() {
         waitForServiceUp();
     }
     
-    // TODO Only do this when first being managed; not when moving
+    protected void preStop() {
+    }
+
+    /**
+     * Called after this entity is fully rebound (i.e. it is fully managed).
+     */
+    protected void postRebind() {
+    }
+    
+    protected void callStartHooks() {
+        preStart();
+        driver.start();
+        postDriverStart();
+        connectSensors();
+        waitForServiceUp();
+        postStart();
+    }
+    
+    protected void callRebindHooks() {
+        connectSensors();
+        waitForServiceUp();
+    }
+
     @Override 
     public void onManagementStarting() {
         Lifecycle state = getAttribute(SERVICE_STATE);
@@ -159,7 +203,8 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	
     @Override 
     public void onManagementStarted() {
-        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) {
+        Lifecycle state = getAttribute(SERVICE_STATE);
+        if (state != null && state != Lifecycle.CREATED) {
             postRebind();
         }
     }
@@ -170,9 +215,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         // FIXME What if location not set?
         log.info("Connecting to pre-running service: {}", this);
         
-        Iterable<MachineLocation> machineLocations = Iterables.filter(getLocations(), MachineLocation.class);
-        if (!Iterables.isEmpty(machineLocations)) {
-            initDriver(Iterables.get(machineLocations, 0));
+        MachineLocation machine = getMachineOrNull();
+        if (machine != null) {
+            initDriver(machine);
             driver.rebind();
             if (log.isDebugEnabled()) log.debug("On rebind of {}, re-created driver {}", this, driver);
         } else {
@@ -181,36 +226,9 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         }
         
         if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-        postStart();
-        sensorRegistry.activateAdapters();
+        
+        callRebindHooks();
     }
-    
-    protected void postRebind() {
-        postActivation();
-    }
-    
-	/** lifecycle message for connecting sensors to registry;
-	 * typically overridden by subclasses */
-	protected void connectSensors() {
-	}
-
-	protected void checkAllSensorsConnected() {
-		//TODO warn if we don't have sensors wired up to something
-		/*
-				what about sensors where it doesn't necessarily make sense to register them here, e.g.:
-				  config -- easy to exclude (by type)
-				  lifecycle, member added -- ??
-				  enriched sensors -- could add the policies here
-		
-				proposed solution:
-				  - ignore if registered
-				  - ignore is has a value
-				  - ignore if manually excluded (registered with "manual provider"), e.g.
-   						sensorRegistry.register(ManualSensorAdaptor).register(SOME_MANUAL_SENSOR)
-				  
-				those which are updated by a policy need to get recorded somehow
-		*/
-	}
     
     public void waitForServiceUp() {
         waitForServiceUp(60, TimeUnit.SECONDS);
@@ -226,7 +244,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
                         return getAttribute(SERVICE_UP);
                     }})
                 .run()) {
-            throw new IllegalStateException("Timeout waiting for SERVICE_UP from ${this}");
+            throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+this);
         }
         log.debug("Detected SERVICE_UP for software {}", this);
     }
@@ -239,19 +257,13 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         throw new IllegalStateException("Cannot configure entity "+this+" in state "+state);
     }
 
-	protected void preStop() { }
-
     @Override
 	public void start(Collection<? extends Location> locations) {
         checkNotNull(locations, "locations");
 		setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         try {
-    		if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-            
     		startInLocation(locations);
-    		postStart();
-    		sensorRegistry.activateAdapters();
-            postActivation();
+    		
     		if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) 
                 setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         } catch (Throwable t) {
@@ -356,12 +368,13 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 
     protected void startInLocation(MachineLocation machine) {
         log.info("Starting {} on machine {}", this, machine);
-        
         addLocations(ImmutableList.of((Location)machine));
+        
         initDriver(machine);
         
         // Note: must only apply config-sensors after adding to locations and creating driver; 
         // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
+        if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         ConfigSensorAdapter.apply(this);
         
 		setAttribute(HOSTNAME, machine.getAddress().getHostName());
@@ -370,26 +383,32 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         // Opportunity to block startup until other dependent components are available
         Object val = getConfig(START_LATCH);
         if (val != null) log.debug("{} finished waiting for start-latch; continuing...", this, val);
-        
-		if (driver != null) {
-            preStart();
-			driver.start();
-			waitForEntityStart();
-		} else {
-			throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no setup class found");
-		}
+
+        callStartHooks();
 	}
 
-    protected void initDriver(MachineLocation machine) {
+    private void initDriver(MachineLocation machine) {
+        SoftwareProcessDriver newDriver = doInitDriver(machine);
+        if (newDriver == null) {
+            throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no driver available");
+        }
+        driver = newDriver;
+    }
+
+    /**
+     * Creates the driver (if does not already exist or needs replaced for some reason). Returns either the existing driver
+     * or a new driver. Must not return null.
+     */
+    protected SoftwareProcessDriver doInitDriver(MachineLocation machine) {
         if (driver!=null) {
             if ((driver instanceof AbstractSoftwareProcessDriver) && machine.equals(((AbstractSoftwareProcessDriver)driver).getLocation())) {
-                //just reuse
+                return driver; //just reuse
             } else {
-                log.warn("driver/location change for {} is untested: cannot start on {}: driver already created", this, machine);
-                driver = newDriver(machine);
+                log.warn("driver/location change is untested for {} at {}; changing driver and continuing", this, machine);
+                return newDriver(machine);
             }
         } else {
-            driver = newDriver(machine);
+            return newDriver(machine);
         }
     }
     
@@ -492,8 +511,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         if (driver == null) throw new IllegalStateException("entity "+this+" not set up for operations (restart)");
         
         driver.restart();
-        waitForEntityStart();
-        postRestart();
+        postDriverRestart();
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
     }
 }

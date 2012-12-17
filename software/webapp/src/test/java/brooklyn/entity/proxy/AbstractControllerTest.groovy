@@ -60,6 +60,7 @@ class AbstractControllerTest {
 
             @Override
             public void connectSensors() {
+                super.connectSensors();
                 setAttribute(SERVICE_UP, true);
             }
             

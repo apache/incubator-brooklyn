@@ -79,28 +79,6 @@ public class NginxController extends AbstractController {
         super(properties, owner);
     }
 
-    //public void onManagementBecomingMaster() {
-    @Override
-    protected void postStart() {
-        super.postStart();
-        
-        // Now can guarantee that owner/managementContext has been set
-        Group urlMappings = getConfig(URL_MAPPINGS);
-        if (urlMappings != null) {
-            // Listen to the targets of each url-mapping changing
-            subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
-            
-            // Listen to url-mappings being added and removed
-            AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
-                @Override protected void onEntityChange(Entity member) { update(); }
-                @Override protected void onEntityAdded(Entity member) { update(); }
-                @Override protected void onEntityRemoved(Entity member) { update(); }
-            };
-            addPolicy(policy);
-            policy.setGroup(urlMappings);
-        }
-    }
-    
     @Override
     public void reload() {
         NginxSshDriver driver = (NginxSshDriver)getDriver();
@@ -134,6 +112,22 @@ public class NginxController extends AbstractController {
                 def actual = headerLists.get("Server")
                 return actual != null && actual.size() == 1 && actual.get(0).startsWith("nginx");
             })
+        }
+        
+        // Can guarantee that owner/managementContext has been set
+        Group urlMappings = getConfig(URL_MAPPINGS);
+        if (urlMappings != null) {
+            // Listen to the targets of each url-mapping changing
+            subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, { update(); } as SensorEventListener);
+            
+            // Listen to url-mappings being added and removed
+            AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
+                @Override protected void onEntityChange(Entity member) { update(); }
+                @Override protected void onEntityAdded(Entity member) { update(); }
+                @Override protected void onEntityRemoved(Entity member) { update(); }
+            };
+            addPolicy(policy);
+            policy.setGroup(urlMappings);
         }
     }
 

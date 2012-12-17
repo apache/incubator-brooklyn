@@ -32,8 +32,9 @@ class JmxNotificationAdapter extends AbstractSensorAdapter {
     public JmxNotificationAdapter(Map flags=[:], JmxSensorAdapter adapter, ObjectName objectName, String notificationType) {
         super(flags);
         this.adapter = adapter;
-        adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
+        //FIXME adapter.addActivationLifecycleListeners({activateAdapter()},{deactivateAdapter()});
         pusher = new NotificationPushHelper(adapter, objectName, notificationType);
+        pusher.init();
         this.objectName = objectName;
         this.notificationType = notificationType;
     }
@@ -67,7 +68,7 @@ class JmxNotificationAdapter extends AbstractSensorAdapter {
         @Override
         protected void deactivatePushing() {
             if (LOG.isTraceEnabled()) LOG.trace("Deactivating notification listener on $objectName with filter '$notificationFilter'")
-            adapter.helper.removeNotificationListener(objectName, notificationListener)
+            adapter?.helper?.removeNotificationListener(objectName, notificationListener)
         }
         protected void addListener(NotificationListener listener) {
             pushedListeners.add(listener)

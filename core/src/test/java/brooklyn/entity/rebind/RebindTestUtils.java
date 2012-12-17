@@ -25,23 +25,6 @@ public class RebindTestUtils {
 
     private static final long TIMEOUT_MS = 20*1000;
     
-//    // Serialize, and de-serialize with a different management context
-//    public static Application serializeAndRebind(Application app, ClassLoader classLoader) throws Exception {
-//    	BrooklynMemento memento = serialize(app);
-//    	return rebind(memento, classLoader);
-//    }
-//
-//    public static BrooklynMemento serialize(Application app) throws Exception {
-//    	return serializeAndDeserialize(app.getManagementContext().getRebindManager().getMemento());
-//    }
-//    
-//    public static Application rebind(BrooklynMemento memento, ClassLoader classLoader) throws Exception {
-//        LocalManagementContext managementContext = new LocalManagementContext();
-//    	List<Application> newApps = managementContext.getRebindManager().rebind(memento, classLoader);
-//        assertEquals(newApps.size(), 1, "apps="+newApps);
-//        return newApps.get(0);
-//    }
-    
     @SuppressWarnings("unchecked")
 	public static <T> T serializeAndDeserialize(T memento) throws Exception {
     	try {
@@ -50,9 +33,10 @@ public class RebindTestUtils {
     	    try {
     	        Dumpers.logUnserializableChains(memento);
     	        //Dumpers.deepDumpSerializableness(memento);
-    	    } finally {
-    	        throw e;
+    	    } catch (Throwable t) {
+    	        LOG.warn("Error logging unserializable chains for memento "+memento+" (propagating original exception)", t);
     	    }
+    	    throw e;
     	}
     }
     

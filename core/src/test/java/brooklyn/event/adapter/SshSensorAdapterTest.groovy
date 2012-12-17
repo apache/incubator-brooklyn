@@ -4,13 +4,17 @@ import static brooklyn.event.adapter.SshResultContextTest.*
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.with
 import static org.testng.Assert.*
 
+import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
 
+import brooklyn.entity.Application
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 public class SshSensorAdapterTest {
@@ -22,15 +26,22 @@ public class SshSensorAdapterTest {
 	final static BasicAttributeSensor SENSOR_LONG = [ Long.class, "name.long", "Long" ]
 	final static BasicAttributeSensor SENSOR_BOOLEAN = [ Boolean.class, "name.bool", "Boolean" ]
 
-	final EntityLocal entity = new TestEntity();
+    final Application app = new TestApplication();
+	final EntityLocal entity = new TestEntity(app);
 	final SshSensorAdapter adapter = [ machine ]
 	final SensorRegistry registry = new SensorRegistry(entity)
 
-    @BeforeClass
+    @BeforeClass(alwaysRun=true)
     public void registerAdapter() {
+        Entities.startManagement(app);
 		def ad2 = registry.register(adapter)
 		assertEquals(ad2, adapter)
 	}
+
+    @AfterClass(alwaysRun=true)
+    public void tearDown() {
+        if (app != null) Entities.destroy(app);
+    }
 
 	@Test
 	public void testContentEvaluation() {

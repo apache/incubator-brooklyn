@@ -3,7 +3,7 @@ package brooklyn.event.adapter;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import com.google.common.base.Charsets;
+import com.google.common.base.Charsets
 
 /**
  * Captures output and exit code for {@link SshSensorAdapter}.
@@ -14,13 +14,14 @@ protected class SshPollHelper extends AbstractPollHelper {
 
     public static final Logger log = LoggerFactory.getLogger(SshPollHelper.class);
 
-    final SshSensorAdapter adapter
-
     public SshPollHelper(SshSensorAdapter adapter) {
         super(adapter);
-        this.adapter = adapter;
     }
 
+    SshSensorAdapter getAdapter() {
+        return (SshSensorAdapter) super.getAdapter();
+    }
+    
     @Override
     protected String getOptionalContextForErrors(AbstractSensorEvaluationContext response) {
         response?.stdout

@@ -1,19 +1,19 @@
 package brooklyn.event.adapter
 
+import static com.google.common.base.Preconditions.checkNotNull
 import static java.util.concurrent.TimeUnit.*
 import groovy.time.TimeDuration
+
+import java.util.concurrent.CopyOnWriteArrayList
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.management.Task
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
 import brooklyn.util.task.ParallelTask
-
-import com.google.common.collect.Iterables
 
 /** Captures common fields and processes for sensor adapters */
 public abstract class AbstractSensorAdapter {
@@ -40,17 +40,29 @@ public abstract class AbstractSensorAdapter {
 		if (this.registry!=null) throw new IllegalStateException("cannot change registry for ${this}: from ${this.registry} to ${registry}")
 		if (!registry.adapters.contains(this)) 
 			throw new IllegalStateException("${this}.register should only be called by ${registry}");
-		this.registry = registry;
-		this.entity = registry.entity;
+		this.registry = checkNotNull(registry, "registry");
+		this.entity = checkNotNull(registry.entity, "entity");
 		registry.addActivationLifecycleListeners({ activateAdapter() }, { deactivateAdapter() })
 	}
 	
-	private List<Runnable> activationListeners = []
-	private List<Runnable> deactivationListeners = []
+	private final List<Runnable> activationListeners = new CopyOnWriteArrayList<Runnable>();
+	private final List<Runnable> deactivationListeners = new CopyOnWriteArrayList<Runnable>();
+    
+    /**
+     * TODO If called in separate thread concurrently with register() then listener could be called twice.
+     * Recommend not adding activation listeners like that!
+     */
 	protected void addActivationLifecycleListeners(Runnable onUp, Runnable onDown) {
-		activationListeners << onUp
-		deactivationListeners << onDown
+		activationListeners << checkNotNull(onUp, "onUp");
+		deactivationListeners << checkNotNull(onDown, "onDown");
+        
+        if (activated) {
+            onUp.call();
+        } else {
+            onDown.call();
+        }
 	}
+    
 	protected void activateAdapter() {
         if (activated) return; //prevent double activation
 		if (log.isDebugEnabled()) log.debug "activating adapter {} for {}", this, entity
