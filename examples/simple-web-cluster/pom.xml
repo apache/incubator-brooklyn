@@ -19,6 +19,12 @@
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-logback-xml</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
@@ -91,7 +97,6 @@
                 <!-- optional, with this block, `mvn assembly:assembly` will build a redistributable tgz -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2.2</version>
                 <configuration>
                     <descriptors>
                         <descriptor>src/main/assembly/assembly.xml</descriptor>
