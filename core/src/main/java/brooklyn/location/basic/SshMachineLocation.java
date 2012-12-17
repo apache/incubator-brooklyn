@@ -110,7 +110,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             // they generate a warning where used 
             "keyFiles", "publicKey", "privateKey");
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
-    public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", "sshPublicKeyData", "sshPrivateKeyData");
+    public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", 
+            "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport");
 
     private transient  Pool<SshTool> vanillaSshToolPool;
     
