@@ -96,6 +96,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag
     private Set<Integer> usedPorts;
 
+    @SetFromFlag
+    private File localTempDir;
+    
     /** any property that should be passed as ssh config (connection-time) 
      *  can be prefixed with this and . and will be passed through (with the prefix removed),
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
@@ -111,7 +114,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             "keyFiles", "publicKey", "privateKey");
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", 
-            "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport");
+            "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport", "localTempDir");
 
     private transient  Pool<SshTool> vanillaSshToolPool;
     
@@ -123,6 +126,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         super(properties);
         
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
+        localTempDir = (localTempDir != null) ? new File(localTempDir, "tmpssh") : new File(System.getProperty("java.io.tmpdir"), "tmpssh");
         
         vanillaSshToolPool = buildVanillaPool();
     }
@@ -515,26 +519,37 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyTo(final Map<String,?> props, InputStream src, long filesize, final String destination) {
 	    final long finalFilesize;
 	    final InputStream finalSrc;
+	    File tempFile = null;
 	    
-		if (filesize==-1) {
-		    try {
-		        File tempFile = ResourceUtils.writeToTempFile(src, "sshcopy", "data");
-		        finalFilesize = tempFile.length();
-		        finalSrc = new FileInputStream(tempFile);
-		    } catch (IOException e) {
-		        throw Throwables.propagate(e);
-		    } finally {
-		        Closeables.closeQuietly(src);
-		    }
-		} else {
-		    finalFilesize = filesize;
-		    finalSrc = src;
-		}
-		
-        return execSsh(props, new Function<SshTool,Integer>() {
-            public Integer apply(SshTool ssh) {
-                return ssh.createFile(props, destination, finalSrc, finalFilesize);
-            }});
+	    try {
+    		if (filesize==-1) {
+    		    try {
+    		        // TODO Use ConfigKeys.BROOKLYN_DATA_DIR, but how to get access to that here?
+    		        tempFile = ResourceUtils.writeToTempFile(src, localTempDir, "sshcopy", "data");
+    		        tempFile.setReadable(false, false);
+                    tempFile.setReadable(true, true);
+    	            tempFile.setWritable(false);
+    	            tempFile.setExecutable(false);
+    		        finalFilesize = tempFile.length();
+    		        finalSrc = new FileInputStream(tempFile);
+    		    } catch (IOException e) {
+    		        throw Throwables.propagate(e);
+    		    } finally {
+    		        Closeables.closeQuietly(src);
+    		    }
+    		} else {
+    		    finalFilesize = filesize;
+    		    finalSrc = src;
+    		}
+    		
+            return execSsh(props, new Function<SshTool,Integer>() {
+                public Integer apply(SshTool ssh) {
+                    return ssh.createFile(props, destination, finalSrc, finalFilesize);
+                }});
+            
+	    } finally {
+	        if (tempFile != null) tempFile.delete();
+	    }
     }
 
     // FIXME the return code is not a reliable indicator of success or failure

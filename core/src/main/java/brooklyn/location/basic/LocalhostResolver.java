@@ -1,11 +1,13 @@
 package brooklyn.location.basic;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.util.KeyValueParser;
@@ -66,7 +68,7 @@ public class LocalhostResolver implements RegistryLocationResolver {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
         }
 
-        MutableMap flags = new MutableMap();
+        MutableMap<String,Object> flags = new MutableMap<String,Object>();
         // legacy syntax
         flags.addIfNotNull("privateKeyFile", properties.get("brooklyn.localhost.private-key-file"));
         flags.addIfNotNull("privateKeyPassphrase", properties.get("brooklyn.localhost.private-key-passphrase"));
@@ -78,6 +80,12 @@ public class LocalhostResolver implements RegistryLocationResolver {
         flags.add(locationFlags);
         if (namePart != null) {
             flags.put("name", namePart);
+        }
+        if (registry != null) {
+            String brooklynDataDir = (String) registry.getProperties().get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
+            if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
+                flags.put("localTempDir", new File(brooklynDataDir));
+            }
         }
         
         return new LocalhostMachineProvisioningLocation(flags);

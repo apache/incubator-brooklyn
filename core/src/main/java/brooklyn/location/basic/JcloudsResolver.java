@@ -1,5 +1,6 @@
 package brooklyn.location.basic;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.jclouds.CredentialsFromEnv;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
@@ -164,6 +166,12 @@ public class JcloudsResolver implements RegistryLocationResolver {
         tmpProperties.putAll(locationFlags);
 
         Map jcloudsProperties = new LinkedHashMap();
+        if (registry != null) {
+            String brooklynDataDir = (String) registry.getProperties().get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
+            if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
+                jcloudsProperties.put("localTempDir", new File(brooklynDataDir));
+            }
+        }
         jcloudsProperties.putAll(new CredentialsFromEnv(tmpProperties, details.providerOrApi).asMap());
         // adding properties here so that user can programmatically pass things through to JcloudsLocation for provisioning;
         // above will filter by location, below may in constructor but should also accept unqualified properties
