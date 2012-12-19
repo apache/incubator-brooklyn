@@ -4,16 +4,13 @@ package brooklyn.entity.database.postgresql;
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.database.mysql.MySqlIntegrationTest
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation
-import brooklyn.test.entity.TestApplication
 import org.testng.annotations.Test
 
 import static java.util.Arrays.asList
-import brooklyn.entity.database.BaseDatabaseLiveTest
 
 /**
  * The PostgreSqlLiveTest installs Postgresql on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
@@ -66,8 +63,6 @@ public class PostgreSqlLiveTest extends PostgreSqlIntegrationTest {
     }
     
     public void test(String osRegex) throws Exception {
-        TestApplication tapp = new TestApplication(name: "PostgreSqlLiveTest");
-
         PostgreSqlNode psql = new PostgreSqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
@@ -81,12 +76,12 @@ public class PostgreSqlLiveTest extends PostgreSqlIntegrationTest {
         Entities.startManagement(tapp);
         tapp.start(asList(jcloudsLocation));
 
-        SshMachineLocation l = (SshMachineLocation) mysql.getLocations().iterator().next();
-        //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
+        SshMachineLocation l = (SshMachineLocation) psql.getLocations().iterator().next();
+        //hack to get the port for postgresql open; is the inbounds property not respected on rackspace??
         l.exec(asList("iptables -I INPUT -p tcp --dport 5432 -j ACCEPT"))
 
-        String host = mysql.getAttribute(MySqlNode.HOSTNAME);
-        int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
+        String host = psql.getAttribute(PostgreSqlNode.HOSTNAME);
+        int port = psql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT);
         new VogellaExampleAccess().readDataBase("org.postgresql.Driver", "postgresql", host, port);
     }
 }

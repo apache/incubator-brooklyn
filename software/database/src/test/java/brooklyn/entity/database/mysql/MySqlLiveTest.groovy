@@ -6,7 +6,6 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.jclouds.JcloudsLocation
-import brooklyn.test.entity.TestApplication
 import org.testng.annotations.Test
 
 import static java.util.Arrays.asList
@@ -63,8 +62,6 @@ public class MySqlLiveTest extends MySqlIntegrationTest {
     }
 
     public void test(String osRegex) throws Exception {
-        TestApplication tapp = new TestApplication(name: "MySqlIntegrationTest");
-
         MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
@@ -85,5 +82,6 @@ public class MySqlLiveTest extends MySqlIntegrationTest {
         String host = mysql.getAttribute(MySqlNode.HOSTNAME);
         int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
         new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", host, port);
+       
     } 
 }
