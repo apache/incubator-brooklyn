@@ -1,21 +1,22 @@
-package brooklyn.entity.database.mysql;
+package brooklyn.entity.database.postgresql;
 
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
+import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.location.basic.LocationRegistry
+import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import org.testng.annotations.Test
 
 import static java.util.Arrays.asList
-import brooklyn.location.basic.SshMachineLocation
 
 /**
- * The MySqlLiveTest installs MySQL on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
- * MySQL works like expected on these Operating Systems.
+ * The PostgreSqlLiveTest installs Postgresql on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
+ * PostgreSql works like expected on these Operating Systems.
  */
-public class MySqlLiveTest extends MySqlIntegrationTest {
+public class PostgreSqlLiveTest extends PostgreSqlIntegrationTest {
     @Test(groups = ["Live"])
     public void test_Debian_6() {
         test("Debian 6");
@@ -60,14 +61,14 @@ public class MySqlLiveTest extends MySqlIntegrationTest {
     public void test_localhost() throws Exception {
         super.test_localhost();
     }
-
+    
     public void test(String osRegex) throws Exception {
-        MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
+        PostgreSqlNode psql = new PostgreSqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
         brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
-        brooklynProperties.put("inboundPorts", [22, 3306]);
+        brooklynProperties.put("inboundPorts", [22, 5432]);
         LocationRegistry locationRegistry = new LocationRegistry(brooklynProperties);
 
         JcloudsLocation jcloudsLocation = (JcloudsLocation) locationRegistry.resolve("cloudservers-uk");
@@ -75,13 +76,12 @@ public class MySqlLiveTest extends MySqlIntegrationTest {
         Entities.startManagement(tapp);
         tapp.start(asList(jcloudsLocation));
 
-        SshMachineLocation l = (SshMachineLocation) mysql.getLocations().iterator().next();
-        //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
-        l.exec(asList("iptables -I INPUT -p tcp --dport 3306 -j ACCEPT"))
+        SshMachineLocation l = (SshMachineLocation) psql.getLocations().iterator().next();
+        //hack to get the port for postgresql open; is the inbounds property not respected on rackspace??
+        l.exec(asList("iptables -I INPUT -p tcp --dport 5432 -j ACCEPT"))
 
-        String host = mysql.getAttribute(MySqlNode.HOSTNAME);
-        int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
-        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", host, port);
-       
-    } 
+        String host = psql.getAttribute(PostgreSqlNode.HOSTNAME);
+        int port = psql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT);
+        new VogellaExampleAccess().readDataBase("org.postgresql.Driver", "postgresql", host, port);
+    }
 }

@@ -5,12 +5,13 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
+import brooklyn.entity.database.VogellaExampleAccess
 
-import java.sql.*
-
-/** Runs the popular Vogella MySQL tutorial,
+/**
+ * Runs a slightly modified version of the popular Vogella MySQL tutorial,
  * from
  * http://www.vogella.de/articles/MySQLJava/article.html
  */
@@ -25,7 +26,7 @@ public class MySqlIntegrationTest {
 
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @AfterMethod(alwaysRun=true)
     public void ensureShutDown() {
         if (tapp != null) {
             Entities.destroy(tapp)
@@ -59,122 +60,15 @@ CREATE TABLE COMMENTS (
 INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );
 """;
 
-
-    static class VogellaExampleAccess {
-        private Connection connect = null;
-        private Statement statement = null;
-        private PreparedStatement preparedStatement = null;
-        private ResultSet resultSet = null;
-
-        public void readDataBase(String host, int port) throws Exception {
-            try {
-                // This will load the MySQL driver, each DB has its own driver
-                Class.forName("com.mysql.jdbc.Driver");
-                // Setup the connection with the DB
-                def connectString = "jdbc:mysql://${host}:${port}/feedback?user=sqluser&password=sqluserpw";
-                log.info("Connecting to:" + connectString)
-                connect = DriverManager.getConnection(connectString);
-                log.info("Connected successfully")
-
-                // Statements allow to issue SQL queries to the database
-                statement = connect.createStatement();
-                // Result set get the result of the SQL query
-                resultSet = statement.executeQuery("select * from COMMENTS");
-                writeResultSet(resultSet);
-
-                // PreparedStatements can use variables and are more efficient
-                preparedStatement = connect.prepareStatement("insert into  COMMENTS values (default, ?, ?, ?, ? , ?, ?)");
-                // "myuser, webpage, datum, summary, COMMENTS from FEEDBACK.COMMENTS");
-                // Parameters start with 1
-                preparedStatement.setString(1, "Test");
-                preparedStatement.setString(2, "TestEmail");
-                preparedStatement.setString(3, "TestWebpage");
-                preparedStatement.setDate(4, new java.sql.Date(2009, 12, 11));
-                preparedStatement.setString(5, "TestSummary");
-                preparedStatement.setString(6, "TestComment");
-                preparedStatement.executeUpdate();
-
-                preparedStatement = connect.prepareStatement("SELECT myuser, webpage, datum, summary, COMMENTS from COMMENTS");
-                resultSet = preparedStatement.executeQuery();
-                writeResultSet(resultSet);
-
-                // Remove again the insert comment
-                preparedStatement = connect
-                        .prepareStatement("delete from COMMENTS where myuser= ? ; ");
-                preparedStatement.setString(1, "Test");
-                preparedStatement.executeUpdate();
-
-                resultSet = statement.executeQuery("select * from COMMENTS");
-                writeMetaData(resultSet);
-
-            } catch (Exception e) {
-                throw e;
-            } finally {
-                close();
-            }
-        }
-
-        private void writeMetaData(ResultSet resultSet) throws SQLException {
-            //  Now get some metadata from the database
-            // Result set get the result of the SQL query
-
-            log.info("The columns in the table are: ");
-
-            log.info("Table: " + resultSet.getMetaData().getTableName(1));
-            for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-                log.info("Column " + i + " " + resultSet.getMetaData().getColumnName(i));
-            }
-        }
-
-        private void writeResultSet(ResultSet resultSet) throws SQLException {
-            // ResultSet is initially before the first data set
-            while (resultSet.next()) {
-                // It is possible to get the columns via name
-                // also possible to get the columns via the column number
-                // which starts at 1
-                // e.g. resultSet.getSTring(2);
-                String user = resultSet.getString("myuser");
-                String website = resultSet.getString("webpage");
-                String summary = resultSet.getString("summary");
-                Date date = resultSet.getDate("datum");
-                String comment = resultSet.getString("comments");
-                log.info("User: " + user);
-                log.info("Website: " + website);
-                log.info("Summary: " + summary);
-                log.info("Date: " + date);
-                log.info("Comment: " + comment);
-            }
-        }
-
-        // You need to close the resultSet
-        private void close() {
-            try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-
-                if (statement != null) {
-                    statement.close();
-                }
-
-                if (connect != null) {
-                    connect.close();
-                }
-            } catch (Exception e) {
-
-            }
-        }
-    }
-
     @Test(groups = ["Integration"])
-    public void test_localhost() {
+    public void test_localhost() throws Exception {
         MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
 
         tapp.start([new LocalhostMachineProvisioningLocation()]);
 
         log.info("MySQL started");
 
-        new VogellaExampleAccess().readDataBase("localhost", mysql.getPort());
+        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", "localhost", mysql.getPort());
 
         log.info("Ran vogella MySQL example -- SUCCESS");
     }
