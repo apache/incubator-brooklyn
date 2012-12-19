@@ -631,6 +631,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
+                <module>usage/logback-xml</module>
                 <module>usage/rest</module>
                 <module>usage/jsgui</module>
                 <module>usage/launcher</module>
