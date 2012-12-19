@@ -1,0 +1,9 @@
+<configuration>
+
+  <include resource="brooklyn/logback-stdout.xml"/>
+  <include resource="brooklyn/logback-file.xml"/>
+
+  <include resource="brooklyn/logback-excludes.xml"/>
+  <include resource="brooklyn/logback-debug.xml"/>
+
+</configuration>

@@ -16,7 +16,7 @@ if [ -z "${JAVA_OPTS}" ] ; then
 fi
 
 # set up the classpath; specify additional CP args in BROOKLYN_CLASSPATH
-BROOKLYN_CLASSPATH=${BROOKLYN_CLASSPATH}:${BROOKLYN_HOME}/lib/*
+BROOKLYN_CLASSPATH=${BROOKLYN_CLASSPATH}:${BROOKLYN_HOME}/conf:${BROOKLYN_HOME}/lib/*
 
 # force resolution of localhost to be loopback, otherwise we hit problems (should be changed in code)
 JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
