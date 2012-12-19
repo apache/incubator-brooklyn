@@ -17,6 +17,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
+import brooklyn.rest.util.URLParamEncoder;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableMap;
@@ -57,7 +58,7 @@ protected SensorSummary(Entity entity, Sensor<?> sensor) {
 
     String applicationUri = "/v1/applications/" + entity.getApplicationId();
     String entityUri = applicationUri + "/entities/" + entity.getId();
-    String selfUri = entityUri + "/sensors/" + sensor.getName();
+    String selfUri = entityUri + "/sensors/" + URLParamEncoder.encode(sensor.getName());
     
     ImmutableMap.Builder<String, URI> lb = ImmutableMap.<String, URI>builder()
         .put("self", URI.create(selfUri))
