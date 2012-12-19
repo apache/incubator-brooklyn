@@ -112,7 +112,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         for (int i=0; i<size; i++) {
             Map flags = MutableMap.of(
                     "parentLocation", this, 
-                    "address", elvis(address, lookupLocalHost()));
+                    "address", elvis(address, lookupLocalHost()),
+                    "localTempDir", localTempDir);
             for (String k: SshMachineLocation.SSH_PROPS) {
                 Object v = findLocationProperty(k);
                 if (v!=null) flags.put(k, v);

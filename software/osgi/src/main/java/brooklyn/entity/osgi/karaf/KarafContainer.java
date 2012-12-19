@@ -318,8 +318,7 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
             }
             
             File local = ResourceUtils.writeToTempFile(props, "karaf-"+getId(), ".cfg");
-            local.setReadable(false, false);
-            local.setReadable(false, true);
+            local.setReadable(true);
             try {
                 File remote = new File(getDriver().getRunDir(), file);
                 getDriver().copyFile(local, remote);

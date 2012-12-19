@@ -18,6 +18,7 @@ import brooklyn.util.internal.ssh.SshException
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables
 import com.google.common.io.Files
 
@@ -69,7 +70,7 @@ public class SshMachineLocationTest {
     
     // Note: requires `ssh localhost` to be setup such that no password is required    
     @Test(groups = "Integration")
-    public void testCopyTo() throws Exception {
+    public void testCopyFileTo() throws Exception {
         File dest = new File(System.getProperty("java.io.tmpdir"), "sssMachineLocationTest_dest.tmp")
         File src = File.createTempFile("sssMachineLocationTest_src", "tmp")
         try {
@@ -78,6 +79,19 @@ public class SshMachineLocationTest {
             assertEquals("abc", Files.readFirstLine(dest, Charsets.UTF_8))
         } finally {
             src.delete()
+            dest.delete()
+        }
+    }
+
+    // Note: requires `ssh localhost` to be setup such that no password is required    
+    @Test(groups = "Integration")
+    public void testCopyStreamTo() throws Exception {
+        String contents = "abc";
+        File dest = new File(System.getProperty("java.io.tmpdir"), "sssMachineLocationTest_dest.tmp")
+        try {
+            host.copyTo(new ByteArrayInputStream(contents.getBytes()), dest.getAbsolutePath())
+            assertEquals("abc", Files.readFirstLine(dest, Charsets.UTF_8))
+        } finally {
             dest.delete()
         }
     }
