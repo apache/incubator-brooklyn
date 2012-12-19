@@ -105,7 +105,7 @@ public class SensorRegistryTest {
         sensorRegistry.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
 
         TimeExtras.init();
-        TestUtils.executeUntilSucceeds(period:10*TimeUnit.MILLISECONDS, timeout:1*TimeUnit.SECONDS, { entity.getAttribute(FOO)!=null }); 
+        TestUtils.executeUntilSucceeds(period:10*TimeUnit.MILLISECONDS, timeout:1*TimeUnit.SECONDS, { entity.getAttribute(FOO)!=null });
         assertEquals(entity.getAttribute(FOO), 1)
         
         sensorRegistry.removeSensor(FOO)
@@ -115,10 +115,10 @@ public class SensorRegistryTest {
         // TODO Nicer way than a sleep?  (see comment in TestUtils about need for blockUntilTrue)
         
         int nn = 1;
-        TestUtils.executeUntilSucceeds(period:10*TimeUnit.MILLISECONDS, timeout:1*TimeUnit.SECONDS, 
+        TestUtils.executeUntilSucceeds(period:10*TimeUnit.MILLISECONDS, timeout:1*TimeUnit.SECONDS,
             {
                 desiredVal.set(++nn);
-                TestUtils.assertSucceedsContinually(period:10*TimeUnit.MILLISECONDS, 
+                TestUtils.assertSucceedsContinually(period:10*TimeUnit.MILLISECONDS,
                     timeout:1000*TimeUnit.MILLISECONDS, {
                         entity.getAttribute(FOO)!=nn
                     });
@@ -165,14 +165,21 @@ public class SensorRegistryTest {
 
     private void assertApproxPeriod(List<Long> actual, int expectedInterval, long expectedDuration) {
         final long ACCEPTABLE_VARIANCE = 200
+        final long ACCEPTABLE_DURATION_VARIANCE = 1000
         long minNextExpected = actual.get(0);
         actual.each {
-            assertTrue it >= minNextExpected && it <= (minNextExpected+ACCEPTABLE_VARIANCE), 
+            assertTrue it >= minNextExpected && it <= (minNextExpected+ACCEPTABLE_VARIANCE),
                     "expected=$minNextExpected, actual=$it, interval=$expectedInterval, series=$actual, duration=$expectedDuration"
             minNextExpected += expectedInterval
         }
-        int expectedSize = expectedDuration/expectedInterval
-        assertTrue Math.abs(actual.size()-expectedSize) <= 1, "actualSize=${actual.size()}, series=$actual, duration=$expectedDuration, interval=$expectedInterval"
+        
+        // Previously was stricter: Math.abs(actual.size()-expectedSize) <= 1
+        // But that failed in jenkins once: actualSize=5, duration=500, interval=250, time between first and last 1011ms
+        // Therefore be more relaxed (particularly because it's testing deprecated code)
+        int expectedMinSize = expectedDuration/expectedInterval - 1;
+        int expectedMaxSize = (expectedDuration+ACCEPTABLE_DURATION_VARIANCE)/expectedInterval + 1;
+        int actualSize = actual.size();
+        assertTrue(actualSize >= expectedMinSize && actualSize <= expectedMaxSize, "actualSize=$actualSize, series=$actual, duration=$expectedDuration, interval=$expectedInterval");
     }
     
 }
