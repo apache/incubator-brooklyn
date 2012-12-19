@@ -18,10 +18,10 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.rest.util.URLParamEncoder;
+import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 
 public class SensorSummary {
 
@@ -60,7 +60,7 @@ protected SensorSummary(Entity entity, Sensor<?> sensor) {
     String entityUri = applicationUri + "/entities/" + entity.getId();
     String selfUri = entityUri + "/sensors/" + URLParamEncoder.encode(sensor.getName());
     
-    ImmutableMap.Builder<String, URI> lb = ImmutableMap.<String, URI>builder()
+    MutableMap.Builder<String, URI> lb = MutableMap.<String, URI>builder()
         .put("self", URI.create(selfUri))
         .put("application", URI.create(applicationUri))
         .put("entity", URI.create(entityUri))
@@ -71,13 +71,13 @@ protected SensorSummary(Entity entity, Sensor<?> sensor) {
   }
 
   @SuppressWarnings("rawtypes")
-  private void addRendererHint(Builder<String, URI> lb, Hint h, Entity entity, Sensor<?> sensor) {
+  private void addRendererHint(MutableMap.Builder<String, URI> lb, Hint h, Entity entity, Sensor<?> sensor) {
       if (!(h instanceof NamedAction))
           return;
       if (h instanceof RendererHints.NamedActionWithUrl) {
           try {
               String v = ((RendererHints.NamedActionWithUrl)h).getUrl(entity, (AttributeSensor<?>) sensor);
-              if (v!=null && !v.isEmpty()) lb.put("action:open", URI.create(v));
+              if (v!=null && !v.isEmpty()) lb.putIfAbsent("action:open", URI.create(v));
           } catch (Exception e) {
               Exceptions.propagateIfFatal(e);
               log.warn("Unable to make use of URL sensor "+sensor+" on "+entity+": "+e);

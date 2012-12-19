@@ -128,6 +128,11 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
             return this;
         }
 
+        public Builder<K, V> putIfAbsent(K key, V value) {
+            if (!result.containsKey(key)) result.put(key, value);
+            return this;
+        }
+
         public Builder<K, V> put(Entry<? extends K, ? extends V> entry) {
             result.put(entry.getKey(), entry.getValue());
             return this;
