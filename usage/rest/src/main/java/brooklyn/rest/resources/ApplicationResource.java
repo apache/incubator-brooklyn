@@ -92,7 +92,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   @Path("/{application}")
   @ApiOperation(
       value = "Fetch a specific application",
-      responseClass = "brooklyn.rest.domain.Application"
+      responseClass = "brooklyn.rest.domain.ApplicationSummary"
   )
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application not found")
@@ -108,7 +108,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   @POST
   @ApiOperation(
       value = "Create and start a new application",
-      responseClass = "brooklyn.rest.resources.TaskSummary"
+      responseClass = "brooklyn.rest.domain.TaskSummary"
   )
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Undefined entity or location"),
@@ -134,7 +134,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   @Path("/{application}")
   @ApiOperation(
       value = "Delete a specified application",
-      responseClass = "brooklyn.rest.resources.TaskSummary"
+      responseClass = "brooklyn.rest.domain.TaskSummary"
   )
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application not found")
