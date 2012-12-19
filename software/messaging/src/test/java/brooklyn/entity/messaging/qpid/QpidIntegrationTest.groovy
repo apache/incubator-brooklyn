@@ -68,6 +68,9 @@ public class QpidIntegrationTest {
 
     /**
      * Test that the broker starts up and sets SERVICE_UP correctly when plugins are configured.
+     * 
+     * TODO the custom plugin was written against qpid 0.14, so that's the version we need to run
+     * this test against. We should update this plugin.
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithPlugin() {
@@ -84,6 +87,7 @@ public class QpidIntegrationTest {
                    ('etc/config.xml'):new File('software/messaging/'+configfile) ]
         }
         qpid = new QpidBroker(owner:app, runtimeFiles:qpidRuntimeFiles);
+        qpid.setConfig(QpidBroker.SUGGESTED_VERSION, "0.14");
         Entities.startManagement(app);
         qpid.start([ testLocation ])
         //TODO assert the files/plugins were installed?

@@ -249,7 +249,7 @@ public class JmxHelper {
             //ideally WSO2 will fix this bug and we can remove this code.
             boolean thrownByWso2 = npe.getStackTrace()[0].toString().contains("org.wso2.carbon.core.security.CarbonJMXAuthenticator.authenticate");
             if (thrownByWso2) {
-                throw new IOException("Failed to connect to url ${url}. NullPointerException is thrown, but replaced by an IOException to fix a WSO2 JMX problem", npe);
+                throw new IOException("Failed to connect to url "+url+". NullPointerException is thrown, but replaced by an IOException to fix a WSO2 JMX problem", npe);
             } else {
                 throw npe;
             }

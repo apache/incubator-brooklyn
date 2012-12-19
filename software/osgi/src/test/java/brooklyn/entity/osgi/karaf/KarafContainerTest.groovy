@@ -21,7 +21,7 @@ import brooklyn.util.internal.TimeExtras
 public class KarafContainerTest {
     static { TimeExtras.init() }
 
-    MachineProvisioningLocation localhost = new LocalhostMachineProvisioningLocation(name:'localhost', count:2, address:"localhost")
+    MachineProvisioningLocation localhost = new LocalhostMachineProvisioningLocation(name:'localhost', address:"localhost")
     TestApplication app
     KarafContainer karaf
 
