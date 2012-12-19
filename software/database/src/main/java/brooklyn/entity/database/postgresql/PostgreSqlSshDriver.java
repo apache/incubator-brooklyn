@@ -1,6 +1,7 @@
 package brooklyn.entity.database.postgresql;
 
 import static brooklyn.entity.basic.lifecycle.CommonCommands.alternatives;
+import static brooklyn.entity.basic.lifecycle.CommonCommands.dontRequireTtyForSudo;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.file;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.sudo;
@@ -50,7 +51,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     }
 
     @Override
-    public void install() {
+    public void install() {        
         // Check we can actually find a usable pg_ctl
         Collection<String> pgbinlocator = ImmutableList.copyOf(Iterables.transform(pgctlLocations, new Function<String, String>() {
             @Override
@@ -68,6 +69,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
 
         // TODO tied to version 9.1 for port installs
         newScript(INSTALLING).body.append(
+                dontRequireTtyForSudo(),
                 alternatives(pgbinlocator,
                         installPackage(ImmutableMap.of("yum", "postgresql postgresql-server", "port", "postgresql91 postgresql91-server"), "postgresql")),
                 alternatives(pgctlLinker, "echo \"WARNING: failed to locate postgresql binaries, will likely fail subsequently\""))
