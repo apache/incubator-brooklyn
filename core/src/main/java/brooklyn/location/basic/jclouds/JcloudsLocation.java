@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,6 +99,9 @@ import com.google.common.util.concurrent.ListenableFuture;
  *  - loginUser (if should initially login as someone other that root / default VM superuser)
  *  - loginUser.privateKeyFile
  *  - loginUser.privateKeyPasspharse
+ *  
+ *  - customizer (implementation of {@link JcloudsLocationCustomizer})
+ *  - customizers (collection of {@link JcloudsLocationCustomizer} instances)
  *  
  *  // deprecated
  *  - sshPublicKey
@@ -259,10 +263,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         String privateKeyData, privateKeyPassphrase, publicKeyData, password;
         /** @deprecated */
         String sshPublicKeyData, sshPrivateKeyData;
+        List<JcloudsLocationCustomizer> customizers = new LinkedList<JcloudsLocationCustomizer>();
 
         String loginUser;
         String loginUser_privateKeyData, loginUser_privateKeyPassphrase, loginUser_password;
         
+        @SuppressWarnings("unchecked")
         BrooklynJcloudsSetupHolder apply() {
             try {
                 if (use("provider"))
@@ -355,6 +361,12 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                 use("privateKeyPassphrase");
                 use("password");
                 use("noDefaultSshKeys");
+                
+                if (use("customizer"))
+                    customizers.add((JcloudsLocationCustomizer) get("customizer"));
+                if (use("customizers")) {
+                    customizers.addAll((Collection<JcloudsLocationCustomizer>) get("customizers"));
+                }
                 
                 return this;
             } catch (IOException e) {
@@ -606,6 +618,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                         
             sshLocByHostname.setParentLocation(this);
             vmInstanceIds.put(sshLocByHostname, node.getId());
+            
+            // Apply any optional app-specific customization.
+            for (JcloudsLocationCustomizer customizer : setup.customizers) {
+                customizer.customize(computeService, sshLocByHostname);
+            }
             
             return sshLocByHostname;
         } catch (RunNodesException e) {
@@ -952,7 +969,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             templateBuilder = new PortableTemplateBuilder();
         else
             LOG.debug("jclouds using templateBuilder {} as base for provisioning in {} for {}", new Object[] {templateBuilder, this, setup.getCallerContext()});
- 
+
         if (setup.providerLocationId!=null) {
             templateBuilder.locationId(setup.providerLocationId);
         }
@@ -975,6 +992,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             }
         }
 
+        // Finally, apply any optional app-specific customization.
+        for (JcloudsLocationCustomizer customizer : setup.customizers) {
+            customizer.customize(computeService, templateBuilder);
+        }
+        
         Template template;
         try {
             template = templateBuilder.build();
@@ -1056,6 +1078,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         } else if (truth(setup.publicKeyData)) {
             // don't create the user, but authorize the public key for the default user
             options.authorizePublicKey(setup.publicKeyData);
+        }
+        
+        // Finally, apply any optional app-specific customization.
+        for (JcloudsLocationCustomizer customizer : setup.customizers) {
+            customizer.customize(computeService, options);
         }
         
         LOG.debug("jclouds using template {} / options {} to provision machine in {} for {}", new Object[] {template, options, this, setup.getCallerContext()});
