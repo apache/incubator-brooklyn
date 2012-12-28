@@ -8,7 +8,9 @@ import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,9 +69,17 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     @Override
     public void launch() {
         List<String> commands = new LinkedList<String>();
-
-        String command = String.format("%s/bin/mongod --config %s --pidfilepath %s --fork --dbpath %s --logpath %s > out.log 2> err.log < /dev/null",
-                getMongoInstallDir(), getConfFile(), getPidFile(), getDataDir(), getLogFile());
+        String bindIpAddress = entity.getAttribute(SoftwareProcessEntity.HOSTNAME);
+        Integer port = entity.getAttribute(MongoDbServer.PORT);
+        String args = Joiner.on(" ").join(ImmutableList.of(
+                "--config", getConfFile(),
+                "--pidfilepath", getPidFile(),
+                "--dbpath", getDataDir(),
+                "--logpath", getLogFile(),
+                "--port", port,
+                "--bind_ip", bindIpAddress,
+                "--fork"));
+        String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getMongoInstallDir(), args);
         commands.add(command);
         log.info(command);
         newScript(LAUNCHING)
