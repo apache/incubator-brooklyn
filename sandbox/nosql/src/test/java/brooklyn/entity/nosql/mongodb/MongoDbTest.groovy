@@ -22,12 +22,16 @@ import com.mongodb.MongoClient
 import com.mongodb.DB
 import com.mongodb.DBCollection
 import com.mongodb.BasicDBObject
-import com.mongodb.DBObject;
+import com.mongodb.DBObject
+import org.bson.types.ObjectId
 
 public class MongoDbTest {
 
+    private static final TEST_DB = "test-db";
+    private static final TEST_COLLECTION = "test-collection";
+
     TestApplication testApplication;
-    SoftwareProcessEntity entity;
+    MongoDbServer entity;
 
     @BeforeMethod(groups = "Integration")
     public void newTestApplication() {
@@ -64,20 +68,48 @@ public class MongoDbTest {
     @Test(groups = "Integration")
     public void testCanReadAndWrite() {
         this.entity = new MongoDbServer(owner: testApplication);
-
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london')]);
 
-        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcessEntity.HOSTNAME));
-        DB db = mongoClient.getDB("test-db");
-        DBCollection testCollection = db.getCollection("testCollection");
-        BasicDBObject doc = new BasicDBObject("hello", "world!")
-
-        testCollection.insert(doc);
-        assertEquals(testCollection.getCount(), 1L);
-
-        DBObject docOut = testCollection.findOne();
+        String id = insert(entity, "hello", "world!");
+        DBObject docOut = getById(entity, id);
         assertEquals(docOut.get("hello"), "world!")
 
         entity.stop();
+    }
+
+    @Test(groups = "Integration")
+    public void testPollInsertCountSensor() {
+        this.entity = new MongoDbServer(owner: testApplication);
+        entity.start([ new LocalhostMachineProvisioningLocation(name:'london')]);
+
+        insert(entity, "a", Boolean.TRUE);
+        insert(entity, "b", Boolean.FALSE);
+
+        executeUntilSucceeds(timeout: 30*SECONDS) {
+            assertEquals(entity.getAttribute(MongoDbServer.OPCOUNTERS_INSERTS), 2);
+        }
+
+        entity.stop();
+    }
+
+    /** Inserts new object with { key: value } at given server, returns new document's id */
+    private String insert(MongoDbServer entity, String key, Object value) {
+        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcessEntity.HOSTNAME));
+        DB db = mongoClient.getDB(TEST_DB);
+        DBCollection testCollection = db.getCollection(TEST_COLLECTION);
+        BasicDBObject doc = new BasicDBObject(key, value);
+        testCollection.insert(doc);
+        mongoClient.close();
+        return doc.get("_id");
+    }
+
+    /** Returns DBObject representing object with given id */
+    private DBObject getById(MongoDbServer entity, String id) {
+        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcessEntity.HOSTNAME));
+        DB db = mongoClient.getDB(TEST_DB);
+        DBCollection testCollection = db.getCollection(TEST_COLLECTION);
+        DBObject doc = testCollection.findOne(new BasicDBObject("_id", new ObjectId(id)));
+        mongoClient.close();
+        return doc;
     }
 }
