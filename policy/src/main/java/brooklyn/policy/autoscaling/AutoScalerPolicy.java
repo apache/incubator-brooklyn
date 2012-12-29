@@ -56,6 +56,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         private String id;
         private String name;
         private AttributeSensor<? extends Number> metric;
+        private Entity entityWithMetric;
         private Number metricUpperBound;
         private Number metricLowerBound;
         private int minPoolSize = 0;
@@ -77,6 +78,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         }
         public Builder metric(AttributeSensor<? extends Number> val) {
             this.metric = val; return this;
+        }
+        public Builder entityWithMetric(Entity val) {
+            this.entityWithMetric = val; return this;
         }
         public Builder metricLowerBound(Number val) {
             this.metricLowerBound = val; return this;
@@ -132,6 +136,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     .putIfNotNull("id", id)
                     .put("name", name)
                     .put("metric", metric)
+                    .put("entityWithMetric", entityWithMetric)
                     .put("metricUpperBound", metricUpperBound)
                     .put("metricLowerBound", metricLowerBound)
                     .put("minPoolSize", minPoolSize)
@@ -178,6 +183,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     @SetFromFlag
     private AttributeSensor<? extends Number> metric;
+
+    @SetFromFlag
+    private Entity entityWithMetric;
     
     @SetFromFlag
     private Number metricLowerBound;
@@ -332,7 +340,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
         this.poolEntity = entity;
         
         if (metric != null) {
-            subscribe(entity, metric, metricEventHandler);
+            Entity entityToSubscribeTo = (entityWithMetric != null) ? entityWithMetric : entity;
+            subscribe(entityToSubscribeTo, metric, metricEventHandler);
         }
         subscribe(poolEntity, poolColdSensor, utilizationEventHandler);
         subscribe(poolEntity, poolHotSensor, utilizationEventHandler);
