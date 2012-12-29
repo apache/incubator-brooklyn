@@ -66,14 +66,14 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
     aRoot.put("name", entity.getDisplayName());
     aRoot.put("id", entity.getId());
     aRoot.put("type", entity.getEntityType().getName());
-    if (entity.getOwnedChildren().size() != 0) {
+    if (entity.getChildren().size() != 0) {
       aRoot.put("children", childEntitiesAsArray(entity));
     }
     return aRoot;
   }
   private ArrayNode childEntitiesAsArray(Entity entity) {
     ArrayNode node = mapper.createArrayNode();
-    for (Entity e : entity.getOwnedChildren()) {
+    for (Entity e : entity.getChildren()) {
       node.add(recursiveTreeFromEntity(e));
     }
     return node;

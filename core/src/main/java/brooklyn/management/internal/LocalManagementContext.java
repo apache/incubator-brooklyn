@@ -108,7 +108,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     protected synchronized boolean unmanageNonRecursive(Entity e) {
         ((AbstractEntity)e).managementData = null;
-        e.clearOwner();
+        e.clearParent();
         if (e instanceof Application) applications.remove(e);
         entities.remove(e);
         Object old = entitiesById.remove(e.getId());

@@ -66,11 +66,11 @@ public class ItemsInContainersGroup extends DynamicGroup {
     public ItemsInContainersGroup(Map props) {
         this(props, null);
     }
-    public ItemsInContainersGroup(Entity owner) {
-        this(MutableMap.of(), owner);
+    public ItemsInContainersGroup(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public ItemsInContainersGroup(Map props, Entity owner) {
-        super(props, owner);
+    public ItemsInContainersGroup(Map props, Entity parent) {
+        super(props, parent);
         setEntityFilter(new Predicate<Entity>() {
             @Override public boolean apply(Entity e) {
                 return acceptsEntity(e);

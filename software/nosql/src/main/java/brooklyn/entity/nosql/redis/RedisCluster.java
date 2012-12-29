@@ -31,11 +31,11 @@ public class RedisCluster extends AbstractEntity implements Startable {
     public RedisCluster(Map properties) {
         this(properties, null);
     }
-    public RedisCluster(Entity owner) {
-        this(MutableMap.of(), owner);
+    public RedisCluster(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public RedisCluster(Map properties, Entity owner) {
-        super(properties, owner);
+    public RedisCluster(Map properties, Entity parent) {
+        super(properties, parent);
 
         redisProperties.putAll(properties);
         redisProperties.put("factory", new BasicConfigurableEntityFactory(RedisSlave.class));

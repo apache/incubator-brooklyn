@@ -66,8 +66,8 @@ class DynamicFabricTest {
         app.manage(fabric);
         app.start(locs)
         
-        assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
-        fabric.ownedChildren.each {
+        assertEquals(fabric.children.size(), locs.size(), Joiner.on(",").join(fabric.children))
+        fabric.children.each {
             TestEntity child = it
             assertEquals(child.counter.get(), 1)
             assertEquals(child.locations.size(), 1, Joiner.on(",").join(child.locations))
@@ -81,8 +81,8 @@ class DynamicFabricTest {
         List<Entity> entitiesAdded = new CopyOnWriteArrayList<Entity>()
         
         DynamicFabric fabric = new DynamicFabric(
-                factory:{ properties, owner -> 
-                        def result = new TestEntity(properties, owner)
+                factory:{ properties, parent -> 
+                        def result = new TestEntity(properties, parent)
                         entitiesAdded.add(result)
                         result },
                 app)
@@ -91,14 +91,14 @@ class DynamicFabricTest {
         app.start([loc1,loc2])
         
         assertEquals(entitiesAdded.size(), 2)
-        assertEquals(entitiesAdded as Set, fabric.ownedChildren as Set)
+        assertEquals(entitiesAdded as Set, fabric.children as Set)
     }
     
     @Test
     public void testSizeEnricher() {
         Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
-        DynamicFabric fabric = new DynamicFabric(factory:{ fabricProperties, owner ->
-            return new DynamicCluster(owner:owner, initialSize:0,
+        DynamicFabric fabric = new DynamicFabric(factory:{ fabricProperties, parent ->
+            return new DynamicCluster(parent:parent, initialSize:0,
                 factory:{ clusterProperties -> return new TestEntity(clusterProperties) })
             }, app)
         app.manage(fabric);
@@ -106,8 +106,8 @@ class DynamicFabricTest {
         
         int i = 0, total = 0
         
-        assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
-        fabric.ownedChildren.each { Cluster child ->
+        assertEquals(fabric.children.size(), locs.size(), Joiner.on(",").join(fabric.children))
+        fabric.children.each { Cluster child ->
             total += ++i
             child.resize(i)
         }
@@ -150,9 +150,9 @@ class DynamicFabricTest {
                 .until { task.isDone() }
                 .run()
 
-        assertEquals(fabric.ownedChildren.size(), locs.size(), Joiner.on(",").join(fabric.ownedChildren))
+        assertEquals(fabric.children.size(), locs.size(), Joiner.on(",").join(fabric.children))
                 
-        fabric.ownedChildren.each {
+        fabric.children.each {
             assertEquals(it.counter.get(), 1)
         }
     }
@@ -189,8 +189,8 @@ class DynamicFabricTest {
         
         assertEquals(shutdownLatches.size(), locs.size())
         assertEquals(executingShutdownNotificationLatches.size(), locs.size())
-        assertEquals(fabric.ownedChildren.size(), locs.size())
-        Collection<BlockingEntity> children = fabric.ownedChildren
+        assertEquals(fabric.children.size(), locs.size())
+        Collection<BlockingEntity> children = fabric.children
         
         // On stop, expect each child to get as far as blocking on its latch
         Task task = fabric.invoke(Startable.STOP)
@@ -208,7 +208,7 @@ class DynamicFabricTest {
         }
 
         executeUntilSucceeds(timeout:10*1000) {
-            fabric.ownedChildren.each {
+            fabric.children.each {
                 def count = it.counter.get();
                 assertEquals(count, 0, "$it counter reports $count")
             }
@@ -224,7 +224,7 @@ class DynamicFabricTest {
         
         try {
             fabric.start([loc1])
-            assertEquals(fabric.ownedChildren.size(), 1)
+            assertEquals(fabric.children.size(), 1)
         } catch (ExecutionException e) {
             Throwable unwrapped = unwrapThrowable(e)
             if (unwrapped instanceof IllegalStateException && (unwrapped.getMessage()?.contains("is not Startable"))) {
@@ -245,7 +245,7 @@ class DynamicFabricTest {
         app.manage(fabric);
         fabric.start([loc1])
         
-        AbstractEntity extraChild = new AbstractEntity(owner:fabric) {}
+        AbstractEntity extraChild = new AbstractEntity(parent:fabric) {}
         
         fabric.stop()
     }
@@ -271,19 +271,19 @@ class DynamicFabricTest {
         
 		app.start([ new SimulatedLocation() ])
         
-		assertEquals(fabric.ownedChildren.size(), 1)
-		assertEquals(fabric.ownedChildren[0].ownedChildren.size(), 1)
-		assertEquals(fabric.ownedChildren[0].ownedChildren[0].getConfig(Attributes.HTTP_PORT)?.toString(), "1234")
-		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.a, null)
-		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.b, "avail")
-		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.fromCluster, "passed to base entity")
-		assertEquals(fabric.ownedChildren[0].ownedChildren[0].constructorProperties.fromFabric, null)
+		assertEquals(fabric.children.size(), 1)
+		assertEquals(fabric.children[0].children.size(), 1)
+		assertEquals(fabric.children[0].children[0].getConfig(Attributes.HTTP_PORT)?.toString(), "1234")
+		assertEquals(fabric.children[0].children[0].constructorProperties.a, null)
+		assertEquals(fabric.children[0].children[0].constructorProperties.b, "avail")
+		assertEquals(fabric.children[0].children[0].constructorProperties.fromCluster, "passed to base entity")
+		assertEquals(fabric.children[0].children[0].constructorProperties.fromFabric, null)
         
-        fabric.ownedChildren[0].resize(2)
-        assertEquals(fabric.ownedChildren[0].ownedChildren[1].getConfig(Attributes.HTTP_PORT)?.toString(), "1234")
-        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.a, null)
-        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.b, "avail")
-        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.fromCluster, "passed to base entity")
-        assertEquals(fabric.ownedChildren[0].ownedChildren[1].constructorProperties.fromFabric, null)
+        fabric.children[0].resize(2)
+        assertEquals(fabric.children[0].children[1].getConfig(Attributes.HTTP_PORT)?.toString(), "1234")
+        assertEquals(fabric.children[0].children[1].constructorProperties.a, null)
+        assertEquals(fabric.children[0].children[1].constructorProperties.b, "avail")
+        assertEquals(fabric.children[0].children[1].constructorProperties.fromCluster, "passed to base entity")
+        assertEquals(fabric.children[0].children[1].constructorProperties.fromFabric, null)
 	}
 }

@@ -111,11 +111,11 @@ public class FollowTheSunPool extends AbstractEntity implements Resizable {
     public FollowTheSunPool(Map properties) {
         this(properties, null);
     }
-    public FollowTheSunPool(Entity owner) {
-        this(Collections.emptyMap(), owner);
+    public FollowTheSunPool(Entity parent) {
+        this(Collections.emptyMap(), parent);
     }
-    public FollowTheSunPool(Map properties, Entity owner) {
-        super(properties, owner);
+    public FollowTheSunPool(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     public void setContents(Group containerGroup, Group itemGroup) {

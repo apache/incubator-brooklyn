@@ -21,8 +21,8 @@ class OpenshiftExpressJavaWebAppCluster extends AbstractEntity implements Starta
 
     private static final Logger log = LoggerFactory.getLogger(OpenshiftExpressJavaWebAppCluster.class)
     
-    public OpenshiftExpressJavaWebAppCluster(Map flags=[:], Entity owner=null) {
-        super(flags, owner)
+    public OpenshiftExpressJavaWebAppCluster(Map flags=[:], Entity parent=null) {
+        super(flags, parent)
         setConfigIfValNonNull(ROOT_WAR, flags.war)
         setConfigIfValNonNull(APP_NAME, flags.appName)
         setAttribute(AbstractService.SERVICE_STATUS, "uninitialized")

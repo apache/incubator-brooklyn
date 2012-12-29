@@ -26,7 +26,7 @@ public class TestEffector extends AbstractEffector {
 
 class TestApplication extends AbstractApplication {
     public static final BasicAttributeSensor<Integer> CHILDREN = new BasicAttributeSensor<Integer>(Integer.class, "Children",
-            "Owned children of this application");
+            "Children of this application");
         
     public static final BasicAttributeSensor<String> DATA_RATE = new BasicAttributeSensor<String>(String.class, "DataRate");
 
@@ -45,19 +45,19 @@ class TestApplication extends AbstractApplication {
                     if (tierName =~ /^tomcat/) {
                         Entity testTomcat = new TestTomcatEntity(cluster, "tomcat node " + clusterName + "." + i)
                         testTomcat.addGroup(testExtraGroup);
-                        cluster.addOwnedChild(testTomcat)
+                        cluster.addChild(testTomcat)
                         setUpAddingSensor(testTomcat)
                     } else {
-                        cluster.addOwnedChild(new TestDataEntity(cluster, "data node " + clusterName + "." + i))
+                        cluster.addChild(new TestDataEntity(cluster, "data node " + clusterName + "." + i))
                     }
 
                 }
-                tier.addOwnedChild(cluster)
+                tier.addChild(cluster)
             }
-            addOwnedChild(tier)
+            addChild(tier)
         }
 
-        setAttribute(CHILDREN, getOwnedChildren().size())
+        setAttribute(CHILDREN, getChildren().size())
     }
 
     public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
@@ -85,14 +85,14 @@ class TestApplication extends AbstractApplication {
                 "Direct children of this group");
         public static final BasicAttributeSensor<String> DATA_RATE = new BasicAttributeSensor<String>(String.class, "DataRate");
             
-        TestGroupEntity(Entity owner, String displayName) {
-            super([:], owner)
+        TestGroupEntity(Entity parent, String displayName) {
+            super([:], parent)
             this.displayName = displayName
         }
 
-        TestGroupEntity addOwnedChild(Entity child) {
-            super.addOwnedChild(child)
-            setAttribute(CHILDREN, ownedChildren.size())
+        TestGroupEntity addChild(Entity child) {
+            super.addChild(child)
+            setAttribute(CHILDREN, children.size())
             return this
         }
 
@@ -113,8 +113,8 @@ class TestApplication extends AbstractApplication {
         public static final TestEffector RESTART_DB = new TestEffector("Restart DB", "This will restart the DB",
                 new ArrayList<ParameterType<?>>());
 
-        TestDataEntity(Entity owner, String displayName) {
-            super([:], owner)
+        TestDataEntity(Entity parent, String displayName) {
+            super([:], parent)
 
             this.displayName = displayName
             //this.locations = ["Fairbanks, Alaska", "Dubai"]
@@ -159,8 +159,8 @@ class TestApplication extends AbstractApplication {
                 "test.sensor": 10
         ]
 
-        public TestTomcatEntity(Entity owner, String displayName) {
-            super([:], owner)
+        public TestTomcatEntity(Entity parent, String displayName) {
+            super([:], parent)
             this.displayName = displayName
             this.locations = [
                     new SimulatedLocation([name: "US-East-1", displayName: "US-East-1", streetAddress: "Northern Virginia, USA", description: "Northern Virginia (approx)",

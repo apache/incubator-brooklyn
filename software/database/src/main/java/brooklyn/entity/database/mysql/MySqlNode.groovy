@@ -38,12 +38,12 @@ public class MySqlNode extends SoftwareProcessEntity {
 
     public static final BasicAttributeSensor<String> MYSQL_URL = [ String, "mysql.url", "URL to access mysql (e.g. mysql://localhost:3306/)" ]
 
-    public MySqlNode(Entity owner) {
-        this([:], owner)
+    public MySqlNode(Entity parent) {
+        this([:], parent)
     }
 
-    public MySqlNode(Map flags=[:], Entity owner=null) {
-        super(flags, owner)
+    public MySqlNode(Map flags=[:], Entity parent=null) {
+        super(flags, parent)
     }
 
     @Override

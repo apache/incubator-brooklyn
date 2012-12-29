@@ -51,8 +51,8 @@ public class ActiveMQBroker extends JMSBroker<ActiveMQQueue, ActiveMQTopic> impl
     @SetFromFlag("jmxPassword")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_PASSWORD, "admin");
 
-	public ActiveMQBroker(Map properties=[:], Entity owner=null) {
-		super(properties, owner)
+	public ActiveMQBroker(Map properties=[:], Entity parent=null) {
+		super(properties, parent)
 	}
 
 	public void setBrokerUrl() {
@@ -101,15 +101,15 @@ public abstract class ActiveMQDestination extends JMSDestination {
 	protected transient SensorRegistry sensorRegistry
 	protected transient JmxSensorAdapter jmxAdapter
 
-	public ActiveMQDestination(Map properties=[:], Entity owner=null) {
-		super(properties, owner)
+	public ActiveMQDestination(Map properties=[:], Entity parent=null) {
+		super(properties, parent)
 	}
     
 	public void init() {
         //assume just one BrokerName at this endpoint
 		broker = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker")
         if (!sensorRegistry) sensorRegistry = new SensorRegistry(this)
-        def helper = new JmxHelper(owner)
+        def helper = new JmxHelper(parent)
         helper.connect();
         jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(helper));
 	}
@@ -118,8 +118,8 @@ public abstract class ActiveMQDestination extends JMSDestination {
 public class ActiveMQQueue extends ActiveMQDestination implements Queue {
     public static final Logger log = LoggerFactory.getLogger(ActiveMQQueue.class);
             
-	public ActiveMQQueue(Map properties=[:], Entity owner=null) {
-		super(properties, owner)
+	public ActiveMQQueue(Map properties=[:], Entity parent=null) {
+		super(properties, parent)
 	}
 
 	@Override
@@ -152,8 +152,8 @@ public class ActiveMQQueue extends ActiveMQDestination implements Queue {
 }
 
 public class ActiveMQTopic extends ActiveMQDestination implements Topic {
-	public ActiveMQTopic(Map properties=[:], Entity owner=null) {
-		super(properties, owner)
+	public ActiveMQTopic(Map properties=[:], Entity parent=null) {
+		super(properties, parent)
 	}
 
 	@Override

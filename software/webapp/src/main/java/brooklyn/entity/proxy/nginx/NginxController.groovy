@@ -67,16 +67,16 @@ public class NginxController extends AbstractController {
     public static final BasicConfigKey<Long> HTTP_POLL_PERIOD =
         new BasicConfigKey<Long>(Long.class, "nginx.sensorpoll.http", "poll period (in milliseconds)", 1000);
 
-    public NginxController(Entity owner) {
-        this(new LinkedHashMap(), owner);
+    public NginxController(Entity parent) {
+        this(new LinkedHashMap(), parent);
     }
 
     public NginxController(Map properties){
         this(properties,null);
     }
 
-    public NginxController(Map properties, Entity owner) {
-        super(properties, owner);
+    public NginxController(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class NginxController extends AbstractController {
             })
         }
         
-        // Can guarantee that owner/managementContext has been set
+        // Can guarantee that parent/managementContext has been set
         Group urlMappings = getConfig(URL_MAPPINGS);
         if (urlMappings != null) {
             // Listen to the targets of each url-mapping changing

@@ -31,7 +31,7 @@ public class DynamicWebAppClusterTest {
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
             initialSize: 2,
             factory: { properties -> new TestJavaWebAppEntity(properties) },
-            owner:app)
+            parent:app)
         app.startManagement();
         cluster.start([new SimulatedLocation()])
         
@@ -55,7 +55,7 @@ public class DynamicWebAppClusterTest {
         TestApplication app = new TestApplication()
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
             factory: { properties -> new TestJavaWebAppEntity(properties + ["a": 1]) },
-            owner:app) {
+            parent:app) {
                 protected Map getCustomChildFlags() { ["c":3] }
         }
         cluster.factory.configure(b: 2);

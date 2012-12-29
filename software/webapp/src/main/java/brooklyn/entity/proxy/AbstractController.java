@@ -102,17 +102,17 @@ public abstract class AbstractController extends SoftwareProcessEntity implement
     public AbstractController(Map properties) {
         this(properties, null, null);
     }
-    public AbstractController(Entity owner) {
-        this(MutableMap.of(), owner, null);
+    public AbstractController(Entity parent) {
+        this(MutableMap.of(), parent, null);
     }
-    public AbstractController(Map properties, Entity owner) {
-        this(properties, owner, null);
+    public AbstractController(Map properties, Entity parent) {
+        this(properties, parent, null);
     }
-    public AbstractController(Entity owner, Cluster cluster) {
-        this(MutableMap.of(), owner, cluster);
+    public AbstractController(Entity parent, Cluster cluster) {
+        this(MutableMap.of(), parent, cluster);
     }
-    public AbstractController(Map properties, Entity owner, Cluster cluster) {
-        super(properties, owner);
+    public AbstractController(Map properties, Entity parent, Cluster cluster) {
+        super(properties, parent);
 
         serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Controller targets tracker")) {
             protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }

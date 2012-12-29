@@ -44,11 +44,11 @@ public class RedisStore extends SoftwareProcessEntity implements DataStore {
     public RedisStore(Map properties) {
         this(properties, null);
     }
-    public RedisStore(Entity owner) {
-        this(MutableMap.of(), owner);
+    public RedisStore(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public RedisStore(Map properties, Entity owner) {
-        super(properties, owner);
+    public RedisStore(Map properties, Entity parent) {
+        super(properties, parent);
 
         setConfigIfValNonNull(REDIS_PORT, properties.get("redisPort"));
         setConfigIfValNonNull(REDIS_CONFIG_FILE, properties.get("configFile"));

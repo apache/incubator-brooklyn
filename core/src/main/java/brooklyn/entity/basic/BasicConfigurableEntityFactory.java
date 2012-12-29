@@ -28,10 +28,10 @@ public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractCo
         this.clazzName = clazz.getName();
     }
 
-    public T newEntity2(Map flags, Entity owner) {
+    public T newEntity2(Map flags, Entity parent) {
         try {
             Constructor<T> constructor = clazz.getConstructor(Map.class, Entity.class);
-            return constructor.newInstance(flags, owner);
+            return constructor.newInstance(flags, parent);
         } catch (InstantiationException e) {
             throw Throwables.propagate(e);
         } catch (IllegalAccessException e) {

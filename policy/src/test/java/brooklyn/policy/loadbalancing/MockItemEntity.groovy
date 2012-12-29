@@ -29,8 +29,8 @@ public class MockItemEntity extends AbstractEntity implements Movable {
     
     private final ReentrantLock _lock = new ReentrantLock();
     
-    public MockItemEntity (Map props=[:], Entity owner=null) {
-        super(props, owner)
+    public MockItemEntity (Map props=[:], Entity parent=null) {
+        super(props, parent)
     }
     
     public String getContainerId() {

@@ -171,7 +171,7 @@ public class EntityManagementSupport {
         // TODO custom stopping activities
         // TODO framework stopping events - no more sensors, executions, etc
         
-        if (entity.getOwner()!=null) entity.getOwner().removeOwnedChild(entity);
+        if (entity.getParent()!=null) entity.getParent().removeChild(entity);
         // new subscriptions will be queued / not allowed
         nonDeploymentManagementContext.getSubscriptionManager().stopDelegatingForSubscribing();
         // new publications will be queued / not allowed
@@ -244,9 +244,9 @@ public class EntityManagementSupport {
         }
         if ("start".equals(effectorName)) {
             Entity e=entity;
-            if (e.getOwner()!=null && ((AbstractEntity)e.getOwner()).getManagementSupport().isDeployed()) { 
+            if (e.getParent()!=null && ((AbstractEntity)e.getParent()).getManagementSupport().isDeployed()) { 
                 log.warn("Autodeployment in parent's management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
-                ((AbstractEntity)e.getOwner()).getManagementSupport().getManagementContext(false).manage(entity);
+                ((AbstractEntity)e.getParent()).getManagementSupport().getManagementContext(false).manage(entity);
                 return;
             }
         }

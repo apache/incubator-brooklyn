@@ -131,7 +131,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         for (String childId : memento.getChildren()) {
             Entity child = rebindContext.getEntity(childId);
             if (child != null) {
-                entity.addOwnedChild(child);
+                entity.addChild(child);
             } else {
                 LOG.warn("Entity not found; discarding child {} of entity {}({})",
                         new Object[] {childId, memento.getType(), memento.getId()});
@@ -142,7 +142,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     protected void setParent(RebindContext rebindContext, EntityMemento memento) {
         Entity parent = (memento.getParent() != null) ? rebindContext.getEntity(memento.getParent()) : null;
         if (parent != null) {
-            entity.setOwner(parent);
+            entity.setParent(parent);
         } else if (memento.getParent() != null){
             LOG.warn("Entity not found; discarding parent {} of entity {}({}), so entity will be orphaned and unmanaged",
                     new Object[] {memento.getParent(), memento.getType(), memento.getId()});

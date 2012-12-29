@@ -118,8 +118,8 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         
         // Rebind
         newApp = rebind();
-        NginxController newNginx = (NginxController) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(NginxController.class));
-        ControlledDynamicWebAppCluster newCluster = (ControlledDynamicWebAppCluster) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(ControlledDynamicWebAppCluster.class));
+        NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
+        ControlledDynamicWebAppCluster newCluster = (ControlledDynamicWebAppCluster) Iterables.find(newApp.getChildren(), Predicates.instanceOf(ControlledDynamicWebAppCluster.class));
 
         assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
         assertHttpStatusCodeEquals(rootUrl, 200);
@@ -128,7 +128,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         assertEquals(newCluster.getCurrentSize(), (Integer)1);
         newCluster.resize(2);
         
-        Iterable<Entity> newJbosses = Iterables.filter(newCluster.getCluster().getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));
+        Iterable<Entity> newJbosses = Iterables.filter(newCluster.getCluster().getChildren(), Predicates.instanceOf(JBoss7Server.class));
         assertEquals(Iterables.size(newJbosses), 2);
         
         Thread.sleep(1000);

@@ -50,7 +50,7 @@ public class MembershipTrackingPolicyTest {
         
         assertRecordsEventually(Record.newAdded(e1));
         
-        e1.clearOwner();
+        e1.clearParent();
         assertRecordsEventually(Record.newAdded(e1), Record.newRemoved(e1));
     }
 

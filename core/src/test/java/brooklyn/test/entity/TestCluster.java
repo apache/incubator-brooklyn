@@ -10,8 +10,8 @@ import brooklyn.entity.trait.Startable;
 public class TestCluster extends DynamicCluster {
    public int size;
 
-   public TestCluster(Entity owner, int initialSize) {
-       super(owner);
+   public TestCluster(Entity parent, int initialSize) {
+       super(parent);
        size = initialSize;
        setAttribute(Startable.SERVICE_UP, true);
    }

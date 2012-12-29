@@ -52,11 +52,11 @@ public class RabbitBroker extends SoftwareProcessEntity implements MessageBroker
     public RabbitBroker(Map properties) {
         this(properties, null);
     }
-    public RabbitBroker(Entity owner) {
-        this(MutableMap.of(), owner);
+    public RabbitBroker(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public RabbitBroker(Map properties, Entity owner) {
-        super(properties, owner);
+    public RabbitBroker(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     @Override

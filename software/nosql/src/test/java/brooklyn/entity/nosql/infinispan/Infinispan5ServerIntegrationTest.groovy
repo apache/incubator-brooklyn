@@ -65,7 +65,7 @@ class Infinispan5ServerIntegrationTest {
 
     @Test(groups = [ "Integration", "WIP" ])
     public void testInfinispanStartsAndStops() {
-        final Infinispan5Server infini = new Infinispan5Server(owner:new TestApplication())
+        final Infinispan5Server infini = new Infinispan5Server(parent:new TestApplication())
         infini.setConfig(Infinispan5Server.PORT.getConfigKey(), DEFAULT_PORT)
         infini.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         try {

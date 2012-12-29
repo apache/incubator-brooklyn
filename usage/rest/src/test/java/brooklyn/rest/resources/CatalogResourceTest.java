@@ -42,8 +42,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         "" +
         "class DummyEntity extends AbstractEntity {\n" +
         "  public static final BasicConfigKey<String> DUMMY_CFG = [ String, \"dummy.config\", \"Dummy Config\" ]\n" +
-        "  public DummyEntity(Map properties=[:], Entity owner=null) {\n" +
-        "        super(properties, owner)" +
+        "  public DummyEntity(Map properties=[:], Entity parent=null) {\n" +
+        "        super(properties, parent)" +
         "  }" +
         "}\n";
 

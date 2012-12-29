@@ -42,8 +42,8 @@ public class MockContainerEntity extends AbstractGroup implements BalanceableCon
 
     ReentrantLock _lock = new ReentrantLock();
 
-    public MockContainerEntity (Map props=[:], Entity owner, long delay=0) {
-        super(props, owner)
+    public MockContainerEntity (Map props=[:], Entity parent, long delay=0) {
+        super(props, parent)
         this.delay = delay
     }
 

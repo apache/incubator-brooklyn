@@ -38,7 +38,7 @@ public class KarafContainerTest {
 
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        karaf = new KarafContainer(owner:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiServerPort:"9099+");
+        karaf = new KarafContainer(parent:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiServerPort:"9099+");
         Entities.manage(karaf);
         
         app.start([ localhost ]);
@@ -55,7 +55,7 @@ public class KarafContainerTest {
     
     @Test(groups = "Integration")
     public void testCanInstallAndUninstallBundle() {
-        karaf = new KarafContainer(owner:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiServerPort:"9099+");
+        karaf = new KarafContainer(parent:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiServerPort:"9099+");
         Entities.manage(karaf);
         
         app.start([ localhost ]);

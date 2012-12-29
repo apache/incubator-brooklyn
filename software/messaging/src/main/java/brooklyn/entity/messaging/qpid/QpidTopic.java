@@ -21,11 +21,11 @@ public class QpidTopic extends QpidDestination implements Topic {
     public QpidTopic(Map properties) {
         super(properties, null);
     }
-    public QpidTopic(Entity owner) {
-        super(MutableMap.of(), owner);
+    public QpidTopic(Entity parent) {
+        super(MutableMap.of(), parent);
     }
-    public QpidTopic(Map properties, Entity owner) {
-        super(properties, owner);
+    public QpidTopic(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class QpidTopic extends QpidDestination implements Topic {
         setAttribute(TOPIC_NAME, getName());
         super.init();
         try {
-            String virtualHost = getOwner().getVirtualHost();
+            String virtualHost = getParent().getVirtualHost();
             exchange = new ObjectName(format("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"%s\",name=\"%s\",ExchangeType=topic", virtualHost, getExchangeName()));
         } catch (MalformedObjectNameException e) {
             throw Exceptions.propagate(e);

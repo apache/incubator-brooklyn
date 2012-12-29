@@ -111,7 +111,7 @@ public class NginxUrlMappingIntegrationTest {
 
         app.start([ new LocalhostMachineProvisioningLocation() ])
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
-        c2.getOwnedChildren().each { it.deploy(war.toString(), "c2.war") }
+        c2.getChildren().each { it.deploy(war.toString(), "c2.war") }
     
         Entities.dumpInfo(app);
         
@@ -157,7 +157,7 @@ public class NginxUrlMappingIntegrationTest {
         DynamicCluster c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
         
         nginx = new NginxController([
-                "owner" : app,
+                "parent" : app,
                 "domain" : "localhost",
                 "port" : "8000+",
                 "portNumberSensor" : WebAppService.HTTP_PORT,
@@ -170,10 +170,10 @@ public class NginxUrlMappingIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
-        for (Entity child : c0.getOwnedChildren()) {
+        for (Entity child : c0.getChildren()) {
             ((JBoss7Server)child).deploy(war.toString(), "atC0.war")
         }
-        for (Entity child : c1.getOwnedChildren()) {
+        for (Entity child : c1.getChildren()) {
             ((JBoss7Server)child).deploy(war.toString(), "atC1.war")
         }
 
@@ -199,7 +199,7 @@ public class NginxUrlMappingIntegrationTest {
         UrlMapping u0 = new UrlMapping(urlMappingsGroup, domain: "localhost2", target: c0);
         
         nginx = new NginxController([
-                "owner" : app,
+                "parent" : app,
                 "domain" : "localhost",
                 "port" : "8000+",
                 "portNumberSensor" : WebAppService.HTTP_PORT,
@@ -228,7 +228,7 @@ public class NginxUrlMappingIntegrationTest {
         coreCluster.setConfig(JavaWebAppService.ROOT_WAR, war.path);
                 
         nginx = new NginxController([
-	            "owner" : app,
+	            "parent" : app,
 	            "cluster" : coreCluster,
 	            "domain" : "localhost",
 	            "port" : "8000+",
@@ -299,7 +299,7 @@ public class NginxUrlMappingIntegrationTest {
         checkExtraLocalhosts();
         
         nginx = new NginxController([
-                "owner" : app,
+                "parent" : app,
                 "domain" : "localhost",
                 "port" : "8000+",
                 "portNumberSensor" : WebAppService.HTTP_PORT,
@@ -313,7 +313,7 @@ public class NginxUrlMappingIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
-        Entity c1jboss = Iterables.getOnlyElement(c1.getOwnedChildren());
+        Entity c1jboss = Iterables.getOnlyElement(c1.getChildren());
         
         // Wait for app-server to be responsive, and url-mapping to update its TARGET_ADDRESSES (through async subscription)
         executeUntilSucceeds {
@@ -328,7 +328,7 @@ public class NginxUrlMappingIntegrationTest {
         
         // Resize target cluster of url-mapping
         c1.resize(2);
-        List c1jbosses = new ArrayList(c1.getOwnedChildren());
+        List c1jbosses = new ArrayList(c1.getChildren());
         c1jbosses.remove(c1jboss);
         Entity c1jboss2 = Iterables.getOnlyElement(c1jbosses);
 
@@ -357,12 +357,12 @@ public class NginxUrlMappingIntegrationTest {
     @Test(groups = "Integration")
     public void testUrlMappingWithEmptyCoreCluster() {
         def serverFactory = { throw new UnsupportedOperationException(); }
-        DynamicCluster nullCluster = new DynamicCluster(owner:app, factory:serverFactory, initialSize:0)
+        DynamicCluster nullCluster = new DynamicCluster(parent:app, factory:serverFactory, initialSize:0)
 
         DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
         
         nginx = new NginxController([
-                "owner" : app,
+                "parent" : app,
                 "cluster" : nullCluster,
                 "domain" : "localhost",
                 "port" : "8000+",
@@ -375,7 +375,7 @@ public class NginxUrlMappingIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT)
         
-        for (Entity child : c0.getOwnedChildren()) {
+        for (Entity child : c0.getChildren()) {
             ((JBoss7Server)child).deploy(war.toString(), "atC0.war")
         }
 

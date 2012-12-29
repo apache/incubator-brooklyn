@@ -22,8 +22,8 @@ class WhirrInstance extends AbstractGroup {
         
     public static final BasicAttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
 
-    public WhirrInstance(Map<?,?> props, Entity owner) {
-        super(props, owner);
+    public WhirrInstance(Map<?,?> props, Entity parent) {
+        super(props, parent);
         setAttribute(Changeable.GROUP_SIZE, 0);
         Cluster.Instance instance = getConfig(INSTANCE);
         if (instance) setAttribute(HOSTNAME, instance.publicHostName);
@@ -37,8 +37,8 @@ class WhirrInstance extends AbstractGroup {
         this(props, null);
     }
         
-    public WhirrInstance(Entity owner) {
-        this(Collections.emptyMap(), owner);
+    public WhirrInstance(Entity parent) {
+        this(Collections.emptyMap(), parent);
     }
     
     public String getRole() {

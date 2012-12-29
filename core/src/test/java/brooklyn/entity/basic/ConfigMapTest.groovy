@@ -41,7 +41,7 @@ public class ConfigMapTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = new TestApplication()
-        entity = new MySubEntity(owner:app)
+        entity = new MySubEntity(parent:app)
         Entities.startManagement(app);
         executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         executionManager = app.getManagementContext().getExecutionManager();
@@ -86,7 +86,7 @@ public class ConfigMapTest {
 
     @Test(expectedExceptions=IllegalArgumentException.class)
     public void testFailFastOnInvalidConfigKeyCoercion() throws Exception {
-        MyOtherEntity entity2 = new MyOtherEntity(owner:app)
+        MyOtherEntity entity2 = new MyOtherEntity(parent:app)
         entity2.setConfig(MyOtherEntity.INT_KEY, "thisisnotanint");
     }
     
@@ -102,7 +102,7 @@ public class ConfigMapTest {
     
     @Test
     public void testGetConfigOfPredicateTaskReturnsCoercedClosure() throws Exception {
-        MyOtherEntity entity2 = new MyOtherEntity(owner:app)
+        MyOtherEntity entity2 = new MyOtherEntity(parent:app)
         entity2.setConfig(MyOtherEntity.PREDICATE_KEY, { return it != null } );
         Entities.manage(entity2);
         
@@ -133,7 +133,7 @@ public class ConfigMapTest {
         LatchingCallable work = new LatchingCallable("abc");
         Future<String> future = executor.submit(work);
 
-        MyOtherEntity entity2 = new MyOtherEntity(owner:app)
+        MyOtherEntity entity2 = new MyOtherEntity(parent:app)
         entity2.setConfig(MyOtherEntity.STRING_KEY, future);
         Entities.manage(entity2);
         
@@ -154,7 +154,7 @@ public class ConfigMapTest {
         LatchingCallable work = new LatchingCallable("abc");
         Task<String> task = executionManager.submit(work);
 
-        MyOtherEntity entity2 = new MyOtherEntity(owner:app)
+        MyOtherEntity entity2 = new MyOtherEntity(parent:app)
         entity2.setConfig(MyOtherEntity.STRING_KEY, task);
         Entities.manage(entity2);
         
@@ -176,7 +176,7 @@ public class ConfigMapTest {
         LatchingCallable work = new LatchingCallable("abc");
         Task<String> task = new BasicTask<String>(work);
 
-        MyOtherEntity entity2 = new MyOtherEntity(owner:app)
+        MyOtherEntity entity2 = new MyOtherEntity(parent:app)
         entity2.setConfig(MyOtherEntity.STRING_KEY, task);
         Entities.manage(entity2);
         

@@ -43,8 +43,8 @@ public class WhirrHadoopCluster extends WhirrCluster {
 
     protected HadoopProxy proxy = null;
 
-    public WhirrHadoopCluster(Map flags = [:], Entity owner = null) {
-        super(flags, owner)
+    public WhirrHadoopCluster(Map flags = [:], Entity parent = null) {
+        super(flags, parent)
         generateWhirrClusterRecipe();
     }
 

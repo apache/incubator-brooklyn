@@ -18,14 +18,14 @@ public class ClosureEntityFactory<T extends Entity> extends AbstractConfigurable
         this.closure = closure;
     }
 
-    public T newEntity2(Map flags, Entity owner) {
+    public T newEntity2(Map flags, Entity parent) {
         if (closure.getMaximumNumberOfParameters()>1)
-            return closure.call(flags, owner);
+            return closure.call(flags, parent);
         else {
-            //leaving out the owner is discouraged
+            //leaving out the parent is discouraged
             T entity = closure.call(flags);
-            if(owner!=null && entity.getOwner()==null){
-                entity.setOwner(owner);
+            if(parent!=null && entity.getParent()==null){
+                entity.setParent(parent);
             }
 
             return entity;

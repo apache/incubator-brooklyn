@@ -40,7 +40,7 @@ public class EntityPollingTest {
 		 * Create an entity, using real entity code, but that swaps out the external process
 		 * for a JmxService that we can control in the test.        
 		 */
-        entity = new VanillaJavaApp(owner:app,
+        entity = new VanillaJavaApp(parent:app,
                 jmxPort:40123,
                 jmxContext:null,
                 mxbeanStatsEnabled:false) {

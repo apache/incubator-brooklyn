@@ -12,7 +12,7 @@ class TomcatServerApp extends AbstractApplication {
 
     static BrooklynProperties sysProps = BrooklynProperties.Factory.newWithSystemAndEnvironment().addFromUrl("file:///~/brooklyn.properties");
     
-    def tomcat = new TomcatServer(owner: this, httpPort: 8080, war: sysProps.getFirst("brooklyn.example.war", defaultIfNone: "/tmp/swf-booking-mvc.war"))
+    def tomcat = new TomcatServer(parent: this, httpPort: 8080, war: sysProps.getFirst("brooklyn.example.war", defaultIfNone: "/tmp/swf-booking-mvc.war"))
 
         
     public static void main(String... args) {

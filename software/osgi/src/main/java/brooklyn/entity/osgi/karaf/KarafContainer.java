@@ -138,12 +138,12 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
         super(properties, null);
     }
 
-    public KarafContainer(Entity owner) {
-        super(Maps.newLinkedHashMap(), owner);
+    public KarafContainer(Entity parent) {
+        super(Maps.newLinkedHashMap(), parent);
     }
 
-    public KarafContainer(Map properties, Entity owner) {
-        super(properties, owner);
+    public KarafContainer(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     @Override

@@ -24,8 +24,8 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
     Map<String, Q> queues = [:];
     Map<String, T> topics = [:];
 
-    public JMSBroker(Map properties = [:], Entity owner = null) {
-        super(properties, owner)
+    public JMSBroker(Map properties = [:], Entity parent = null) {
+        super(properties, parent)
     }
     
     public JMSBroker configure(Map properties) {
@@ -83,7 +83,7 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
     /** TODO make this an effector */
     public void addQueue(String name, Map properties=[:]) {
 		checkModifiable()
-        properties.owner = this
+        properties.parent = this
         properties.name = name
         queues.put name, createQueue(properties)
     }
@@ -93,7 +93,7 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
     /** TODO make this an effector */
     public void addTopic(String name, Map properties=[:]) {
 		checkModifiable()
-        properties.owner = this
+        properties.parent = this
         properties.name = name
         topics.put name, createTopic(properties)
     }
@@ -102,8 +102,8 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
 }
 
 public abstract class JMSDestination extends AbstractEntity {
-    public JMSDestination(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
+    public JMSDestination(Map properties=[:], Entity parent=null) {
+        super(properties, parent)
 
         Preconditions.checkNotNull name, "Name must be specified"
     }

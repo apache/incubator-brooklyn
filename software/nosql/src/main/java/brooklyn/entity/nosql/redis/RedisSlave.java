@@ -21,11 +21,11 @@ public class RedisSlave extends RedisStore {
     public RedisSlave(Map properties) {
         this(properties, null);
     }
-    public RedisSlave(Entity owner) {
-        this(MutableMap.of(), owner);
+    public RedisSlave(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public RedisSlave(Map properties, Entity owner) {
-        super(properties, owner);
+    public RedisSlave(Map properties, Entity parent) {
+        super(properties, parent);
 
         Preconditions.checkArgument(properties.containsKey("master"), "The Redis master entity must be specified");
         master = (RedisStore) properties.get("master");
@@ -34,7 +34,7 @@ public class RedisSlave extends RedisStore {
     @Override
     public String getConfigData(int port, boolean include) {
         String masterAddress = master.getAddress();
-        int masterPort = getOwner().getAttribute(REDIS_PORT);
+        int masterPort = getParent().getAttribute(REDIS_PORT);
 
         return super.getConfigData(port, include) + "slaveof "+masterAddress+" "+masterPort;
     }

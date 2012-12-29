@@ -105,7 +105,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         Entities.manage(origCluster);
     	
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
-        JBoss7Server origJboss = (JBoss7Server) Iterables.find(origCluster.getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));
+        JBoss7Server origJboss = (JBoss7Server) Iterables.find(origCluster.getChildren(), Predicates.instanceOf(JBoss7Server.class));
         String jbossUrl = origJboss.getAttribute(JBoss7Server.ROOT_URL);
         
         assertHttpStatusCodeEventuallyEquals(jbossUrl, 200);
@@ -113,7 +113,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         
         // Rebind
         newApp = rebind();
-        DynamicWebAppCluster newCluster = (DynamicWebAppCluster) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(DynamicWebAppCluster.class));
+        DynamicWebAppCluster newCluster = (DynamicWebAppCluster) Iterables.find(newApp.getChildren(), Predicates.instanceOf(DynamicWebAppCluster.class));
 
         assertHttpStatusCodeEquals(jbossUrl, 200);
 
@@ -121,7 +121,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         assertEquals(newCluster.getCurrentSize(), (Integer)1);
         newCluster.resize(2);
 
-        Iterable<Entity> newJbosses = Iterables.filter(newCluster.getOwnedChildren(), Predicates.instanceOf(JBoss7Server.class));
+        Iterable<Entity> newJbosses = Iterables.filter(newCluster.getChildren(), Predicates.instanceOf(JBoss7Server.class));
         assertEquals(Iterables.size(newJbosses), 2);
         for (Entity j : newJbosses) {
             assertHttpStatusCodeEventuallyEquals(j.getAttribute(JBoss7Server.ROOT_URL), 200);

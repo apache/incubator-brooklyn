@@ -11,15 +11,15 @@ public class BasicEntity extends AbstractEntity {
         super(Maps.newLinkedHashMap(), null);
     }
 
-    public BasicEntity(Entity owner) {
-        super(Maps.newLinkedHashMap(), owner);
+    public BasicEntity(Entity parent) {
+        super(Maps.newLinkedHashMap(), parent);
     }
 
     public BasicEntity(Map flags) {
         this(flags, null);
     }
     
-    public BasicEntity(Map flags, Entity owner) {
-        super(flags, owner);
+    public BasicEntity(Map flags, Entity parent) {
+        super(flags, parent);
     }
 }

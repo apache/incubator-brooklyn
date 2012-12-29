@@ -57,14 +57,14 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     public VanillaJavaApp() {
         super(MutableMap.of(), null);
     }
-    public VanillaJavaApp(Entity owner) {
-        super(MutableMap.of(), owner);
+    public VanillaJavaApp(Entity parent) {
+        super(MutableMap.of(), parent);
     }
     public VanillaJavaApp(Map flags) {
         super(flags, null);
     }
-    public VanillaJavaApp(Map props, Entity owner) {
-        super(props, owner);
+    public VanillaJavaApp(Map props, Entity parent) {
+        super(props, parent);
     }
     
     public String getMainClass() { return getConfig(MAIN_CLASS); }

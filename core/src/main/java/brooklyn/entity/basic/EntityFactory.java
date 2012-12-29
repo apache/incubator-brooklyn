@@ -10,5 +10,5 @@ import java.util.Map;
  * @param <T>
  */
 public interface EntityFactory<T extends Entity> {
-    T newEntity(Map flags, Entity owner);
+    T newEntity(Map flags, Entity parent);
 }

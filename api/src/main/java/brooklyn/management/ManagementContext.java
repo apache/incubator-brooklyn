@@ -16,7 +16,7 @@ import brooklyn.location.LocationRegistry;
  * For example, policies and the management console(s) (web-app, etc) can use this to interact with entities; 
  * policies, web-app, and entities share the realm for subscribing to events, executing tasks, and generally co-existing.      
  * <p>
- * It may refer to several applications, and it refers to all the entities owned by those applications.
+ * It may refer to several applications, and it refers to all the entities descended from those applications.
  */
 public interface ManagementContext {
 

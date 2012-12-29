@@ -11,8 +11,8 @@ class WhirrRole extends AbstractEntity {
     public static final BasicConfigKey<String> ROLE =
         [String, "whirr.instance.role", "Apache Whirr instance role"]
 
-    public WhirrRole(Map flags = [:], Entity owner = null) {
-        super(flags, owner)
+    public WhirrRole(Map flags = [:], Entity parent = null) {
+        super(flags, parent)
     }
 
     public String getRole() {

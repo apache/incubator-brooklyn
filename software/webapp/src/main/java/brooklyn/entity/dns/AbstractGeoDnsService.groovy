@@ -43,8 +43,8 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
     transient protected Set<Entity> entitiesWithoutGeoInfo = new HashSet<Entity>();
     
 
-    public AbstractGeoDnsService(Map properties = [:], Entity owner = null) {
-        super(properties, owner);
+    public AbstractGeoDnsService(Map properties = [:], Entity parent = null) {
+        super(properties, parent);
     }
     
     @Override
@@ -124,7 +124,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
                 return;
             if (targetEntityProvider instanceof DynamicGroup)
                 ((DynamicGroup) targetEntityProvider).rescanEntities();
-            Set<Entity> pool = [] + (targetEntityProvider instanceof Group ? targetEntityProvider.members : targetEntityProvider.ownedChildren);
+            Set<Entity> pool = [] + (targetEntityProvider instanceof Group ? targetEntityProvider.members : targetEntityProvider.children);
             
             boolean changed = false;
             Set<Entity> previousOnes = [] + targetHosts.keySet();

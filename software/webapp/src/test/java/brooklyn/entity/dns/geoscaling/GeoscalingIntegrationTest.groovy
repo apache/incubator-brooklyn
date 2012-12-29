@@ -35,7 +35,7 @@ class GeoscalingIntegrationTest {
     @Test(groups=["Integration"])
     public void testRoutesToExpectedLocation() {
         AbstractApplication app = new TestApplication()
-        TestEntity target = new TestEntity(owner:app)
+        TestEntity target = new TestEntity(parent:app)
         target.setAttribute(Attributes.HOSTNAME,addr.getHostName())
         DynamicGroup group = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) })
         

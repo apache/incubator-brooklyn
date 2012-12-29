@@ -58,7 +58,7 @@ public class ActiveMQIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        activeMQ = new ActiveMQBroker(owner:app);
+        activeMQ = new ActiveMQBroker(parent:app);
         Entities.startManagement(app);
         activeMQ.start([ testLocation ])
         executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
@@ -73,7 +73,7 @@ public class ActiveMQIntegrationTest {
     */
    @Test(groups = "Integration")
    public void canStartupAndShutdownWithCustomJmx() {
-       activeMQ = new ActiveMQBroker(owner:app, jmxPort: "11099+");
+       activeMQ = new ActiveMQBroker(parent:app, jmxPort: "11099+");
        Entities.startManagement(app);
        app.start([ testLocation ])
        executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
@@ -92,7 +92,7 @@ public class ActiveMQIntegrationTest {
         String content = "01234567890123456789012345678901"
 
         // Start broker with a configured queue
-        activeMQ = new ActiveMQBroker(owner:app, queue:queueName);
+        activeMQ = new ActiveMQBroker(parent:app, queue:queueName);
         Entities.startManagement(app);
         activeMQ.start([ testLocation ])
         executeUntilSucceeds {
@@ -104,7 +104,7 @@ public class ActiveMQIntegrationTest {
             assertFalse activeMQ.queueNames.isEmpty()
             assertEquals activeMQ.queueNames.size(), 1
             assertTrue activeMQ.queueNames.contains(queueName)
-            assertEquals activeMQ.ownedChildren.size(), 1
+            assertEquals activeMQ.children.size(), 1
             assertFalse activeMQ.queues.isEmpty()
             assertEquals activeMQ.queues.size(), 1
 

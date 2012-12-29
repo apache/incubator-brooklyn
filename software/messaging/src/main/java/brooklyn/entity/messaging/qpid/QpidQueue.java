@@ -21,11 +21,11 @@ public class QpidQueue extends QpidDestination implements Queue {
     public QpidQueue(Map properties) {
         this(properties, null);
     }
-    public QpidQueue(Entity owner) {
-        this(MutableMap.of(), owner);
+    public QpidQueue(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public QpidQueue(Map properties, Entity owner) {
-        super(properties, owner);
+    public QpidQueue(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     @Override

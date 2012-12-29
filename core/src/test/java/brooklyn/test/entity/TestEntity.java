@@ -57,11 +57,11 @@ public class TestEntity extends AbstractEntity implements Startable {
     public TestEntity(Map properties) {
         this(properties, null);
     }
-    public TestEntity(Entity owner) {
-        this(MutableMap.of(), owner);
+    public TestEntity(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public TestEntity(Map properties, Entity owner) {
-        super(properties, owner);
+    public TestEntity(Map properties, Entity parent) {
+        super(properties, parent);
         this.constructorProperties = properties;
     }
     

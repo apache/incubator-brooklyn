@@ -25,7 +25,7 @@ class BrooklynMetricsTest {
     public void setUp() {
         app = new TestApplication()
         loc = new SimulatedLocation()
-        brooklynMetrics = new BrooklynMetrics(updatePeriod:10L, owner:app)
+        brooklynMetrics = new BrooklynMetrics(updatePeriod:10L, parent:app)
     }
     
     @Test
@@ -45,7 +45,7 @@ class BrooklynMetricsTest {
     
     @Test
     public void testBrooklynMetricsIncremented() {
-        TestEntity e = new TestEntity(owner:app)
+        TestEntity e = new TestEntity(parent:app)
         app.start([loc])
 
         executeUntilSucceeds(timeout:TIMEOUT_MS) {

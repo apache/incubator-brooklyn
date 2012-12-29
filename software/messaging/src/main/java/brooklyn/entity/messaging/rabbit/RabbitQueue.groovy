@@ -6,8 +6,8 @@ import brooklyn.event.adapter.SshSensorAdapter
 
 public class RabbitQueue extends RabbitDestination implements Queue {
 
-    public RabbitQueue(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
+    public RabbitQueue(Map properties=[:], Entity parent=null) {
+        super(properties, parent)
     }
 
     public String getName() { getDisplayName() }
@@ -19,7 +19,7 @@ public class RabbitQueue extends RabbitDestination implements Queue {
     }
 
     public void connectSensors() {
-        def queueAdapter = sshAdapter.command("${owner.driver.runDir}/sbin/rabbitmqctl list_queues -p /${virtualHost}  | grep '${queueName}'")
+        def queueAdapter = sshAdapter.command("${parent.driver.runDir}/sbin/rabbitmqctl list_queues -p /${virtualHost}  | grep '${queueName}'")
         queueAdapter.poll(QUEUE_DEPTH_BYTES) {
             if (it == null || exitStatus != 0) return -1
             return 0 // TODO parse out queue depth from output

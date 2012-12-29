@@ -17,7 +17,7 @@ class PolicyRegistrationTest {
     @BeforeMethod
     public void setUp() {
         app = new AbstractApplication() {}
-        entity = new AbstractEntity(owner:app) {}
+        entity = new AbstractEntity(parent:app) {}
         policy1 = new AbstractPolicy() {}
         policy2 = new AbstractPolicy() {}
     }

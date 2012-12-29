@@ -14,10 +14,10 @@ public class RedisShard extends AbstractEntity implements Shard {
     public RedisShard(Map properties) {
         this(properties, null);
     }
-    public RedisShard(Entity owner) {
-        this(MutableMap.of(), owner);
+    public RedisShard(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public RedisShard(Map properties, Entity owner) {
-        super(properties, owner);
+    public RedisShard(Map properties, Entity parent) {
+        super(properties, parent);
     }
 }

@@ -57,11 +57,11 @@ public class DerbySchema extends AbstractEntity implements Schema {
     public DerbySchema(Map properties) {
         super(properties, null);
     }
-    public DerbySchema(Entity owner) {
-        this(MutableMap.of(), owner);
+    public DerbySchema(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public DerbySchema(Map properties, Entity owner) {
-        super(properties, owner);
+    public DerbySchema(Map properties, Entity parent) {
+        super(properties, parent);
     }
     
     @Override
@@ -70,8 +70,8 @@ public class DerbySchema extends AbstractEntity implements Schema {
     }
     
     @Override
-    public DerbyDatabase getOwner() {
-        return (DerbyDatabase) super.getOwner();
+    public DerbyDatabase getParent() {
+        return (DerbyDatabase) super.getParent();
     }
     
     /**
@@ -86,7 +86,7 @@ public class DerbySchema extends AbstractEntity implements Schema {
             create();
             
             sensorRegistry = new SensorRegistry(this);
-            jmxHelper = new JmxHelper(getOwner());
+            jmxHelper = new JmxHelper(getParent());
             jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(jmxHelper));
             
             ObjectName schema = new ObjectName(format("org.apache.derby:type=VirtualHost.Schema,VirtualHost=\"%s\",name=\"%s\"", virtualHost, name));
@@ -99,7 +99,7 @@ public class DerbySchema extends AbstractEntity implements Schema {
     }
 
     public void create() {
-        jmxHelper.operation(virtualHostManager, "createNewSchema", name, getOwner().getAttribute(Attributes.JMX_USER), true);
+        jmxHelper.operation(virtualHostManager, "createNewSchema", name, getParent().getAttribute(Attributes.JMX_USER), true);
         jmxHelper.operation(exchange, "createNewBinding", name, name);
     }
 
