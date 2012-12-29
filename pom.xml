@@ -84,13 +84,13 @@
         <brooklyn.version>0.5.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
 
         <cobertura.version>1.9.4.1</cobertura.version>
-        <surefire.version>2.12.3</surefire.version>
+        <surefire.version>2.13</surefire.version>
         <plantuml.version>6121</plantuml.version>
-        <ant.version>1.8.2</ant.version>
+        <ant.version>1.8.4</ant.version>
 
         <groovy.version>1.8.6</groovy.version>
-        <testng.version>6.7</testng.version>
-        <mockito.version>1.8.4</mockito.version>
+        <testng.version>6.8</testng.version>
+        <mockito.version>1.9.5</mockito.version>
         <whirr.version>0.8.1</whirr.version>
         <slf4j.version>1.6.4</slf4j.version>
         <xstream.version>1.3.1</xstream.version>
@@ -99,8 +99,7 @@
         <guava.version>13.0.1</guava.version>
         <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
-        <jclouds.version>1.5.2</jclouds.version>
-        <spring.version>3.0.5.RELEASE</spring.version>
+        <jclouds.version>1.5.4</jclouds.version>
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
@@ -133,27 +132,6 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>brooklyn-policy</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-beans</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-core</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-aop</artifactId>
-                <version>${spring.version}</version>
             </dependency>
 
             <dependency>
