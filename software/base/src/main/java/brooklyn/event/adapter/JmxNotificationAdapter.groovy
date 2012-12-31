@@ -19,7 +19,10 @@ import brooklyn.event.Sensor
  * Adapter that subscribes to a JMX notification.
  * 
  * @see {@link JmxSensorAdapter} for recommended way of using this
+ * 
+ * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
+@Deprecated
 class JmxNotificationAdapter extends AbstractSensorAdapter {
     
     private static final Logger LOG = LoggerFactory.getLogger(JmxNotificationAdapter.class)

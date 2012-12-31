@@ -1,11 +1,16 @@
 package brooklyn.event.adapter;
 
 import org.slf4j.Logger
+
 import org.slf4j.LoggerFactory
 
 import brooklyn.util.crypto.SslTrustUtils
 import brooklyn.util.text.StringEscapes
 
+/**
+ * @deprecated See brooklyn.event.feed.http.HttpFeed
+ */
+@Deprecated
 protected class HttpPollHelper extends AbstractPollHelper {
     public static final Logger log = LoggerFactory.getLogger(HttpPollHelper.class);
 

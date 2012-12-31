@@ -30,7 +30,10 @@ import brooklyn.util.ShellUtils
  *
  * @see FunctionSensorAdapter
  * @see SshSensorAdapter
+ * 
+ * @deprecated See brooklyn.event.feed.ssh.SshFeed
  */
+@Deprecated
 public class SshShellSensorAdapter extends ShellSensorAdapter {
     
     public static final Logger log = LoggerFactory.getLogger(SshShellSensorAdapter.class)

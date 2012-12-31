@@ -14,7 +14,10 @@ import brooklyn.location.basic.SshMachineLocation
 
 /**
  * Context object for evaluating sensor closures with ssh command results.
+ * 
+ * @deprecated See brooklyn.event.feed.ssh.SshFeed
  */
+@Deprecated
 public class SshResultContext extends AbstractSensorEvaluationContext {
 	
 	public static final Logger log = LoggerFactory.getLogger(SshResultContext.class);

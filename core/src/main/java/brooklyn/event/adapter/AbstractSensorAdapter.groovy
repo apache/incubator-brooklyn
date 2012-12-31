@@ -15,7 +15,12 @@ import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.internal.TimeExtras
 import brooklyn.util.task.ParallelTask
 
-/** Captures common fields and processes for sensor adapters */
+/** 
+ * Captures common fields and processes for sensor adapters
+ * 
+ * @deprecated See brooklyn.event.feed.*
+ */
+@Deprecated
 public abstract class AbstractSensorAdapter {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractSensorAdapter)

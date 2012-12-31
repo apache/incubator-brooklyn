@@ -17,7 +17,10 @@ import brooklyn.event.Sensor
  * by an entity developer for evaluating a sensor; fields can be made explicit, to be shared
  * among multiple sensors; and specific per-sensor evaluation properties can be passed as 
  * "extraProperties" which exist only for that evaluation context duration
+ * 
+ * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
+@Deprecated
 public abstract class AbstractSensorEvaluationContext {
 
 	public static final Logger log = LoggerFactory.getLogger(AbstractSensorEvaluationContext.class);

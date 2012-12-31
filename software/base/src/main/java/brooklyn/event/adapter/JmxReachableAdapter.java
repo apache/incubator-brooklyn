@@ -20,7 +20,10 @@ import com.google.common.base.Function;
  * "Attribute" here refers to the JMX concept, rather than the brooklyn concept.
  * 
  * @see {@link JmxSensorAdapter} for recommended way of using this
+ * 
+ * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
+@Deprecated
 public class JmxReachableAdapter extends AbstractSensorAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(JmxReachableAdapter.class);
     

@@ -16,7 +16,10 @@ import brooklyn.event.Sensor
  * "Attribute" here refers to the JMX concept, rather than the brooklyn concept.
  * 
  * @see {@link JmxSensorAdapter} for recommended way of using this
+ * 
+ * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
+@Deprecated
 @InheritConstructors
 public class JmxAttributeAdapter extends AbstractSensorAdapter {
     public static final Logger log = LoggerFactory.getLogger(JmxAttributeAdapter.class);

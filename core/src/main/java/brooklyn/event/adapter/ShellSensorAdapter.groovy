@@ -24,7 +24,10 @@ import brooklyn.util.ShellUtils
  * </code>
  * <p>
  * See also FunctionSensorAdapter (for arbitrary functions) and SshSensorAdapter (to run on remote machines).
+ * 
+ * @deprecated See brooklyn.event.feed.shell.ShellFeed
  */
+@Deprecated
 public class ShellSensorAdapter extends FunctionSensorAdapter {
     
     public static final Logger log = LoggerFactory.getLogger(ShellSensorAdapter.class);

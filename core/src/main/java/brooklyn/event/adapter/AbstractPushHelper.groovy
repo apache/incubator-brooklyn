@@ -17,7 +17,10 @@ import brooklyn.event.Sensor
  * 
  * For example, a JMX notification subscription would push notifications here, to be 
  * turned into sensor updates.
+ * 
+ * @deprecated See brooklyn.event.feed.*
  */
+@Deprecated
 public abstract class AbstractPushHelper {
 	public static final Logger log = LoggerFactory.getLogger(AbstractPushHelper.class);
 	

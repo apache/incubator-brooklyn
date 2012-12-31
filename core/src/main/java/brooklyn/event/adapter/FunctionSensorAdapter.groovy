@@ -25,7 +25,10 @@ import com.google.common.base.Function
  *   //or, field1 access can also be written:
  *   fnSensorAdaptor.poll(MY_BROOKLYN_ATTRIBUTE_1, { MyStruct.parse(it).field1 } )
  * </code>
+ * 
+ * @deprecated See brooklyn.event.feed.function.FunctionFeed
  */
+@Deprecated
 public class FunctionSensorAdapter extends AbstractSensorAdapter {
 
 	public static final long CALL_TIMEOUT_MS = 120*1000;

@@ -25,7 +25,10 @@ import brooklyn.entity.basic.EntityLocal
  *       notification("myJmxNotification").subscribe(MY_BROOKLYN_ATTRIBUTE_3)
  *   }
  * </code>
+ * 
+ * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
+@Deprecated
 public class JmxSensorAdapter extends AbstractSensorAdapter {
 
     public static final Logger log = LoggerFactory.getLogger(JmxSensorAdapter.class);

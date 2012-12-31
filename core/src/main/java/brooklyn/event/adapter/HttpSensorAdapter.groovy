@@ -6,7 +6,10 @@ import org.slf4j.LoggerFactory
 import brooklyn.event.Sensor
 import brooklyn.util.flags.FlagUtils
 
-
+/**
+ * @deprecated See brooklyn.event.feed.http.HttpFeed
+ */
+@Deprecated
 public class HttpSensorAdapter extends AbstractSensorAdapter {
 
 	public static final Logger log = LoggerFactory.getLogger(HttpSensorAdapter.class)

@@ -14,7 +14,12 @@ import brooklyn.util.task.BasicTask
 import brooklyn.util.task.ScheduledTask
 
 
-/** captures common fields and processes for pollers that support sensor adapters */
+/** 
+ * captures common fields and processes for pollers that support sensor adapters
+ * 
+ * @deprecated See brooklyn.event.feed.*
+ */
+@Deprecated
 public abstract class AbstractPollHelper {
     public static final Logger log = LoggerFactory.getLogger(AbstractPollHelper.class);
 

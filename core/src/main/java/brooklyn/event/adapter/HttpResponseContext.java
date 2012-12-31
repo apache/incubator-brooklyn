@@ -20,7 +20,12 @@ import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 
 
-/** context object for evaluating sensor closures with http data handy */
+/** 
+ * context object for evaluating sensor closures with http data handy
+ * 
+ * @deprecated See brooklyn.event.feed.http.HttpFeed
+ */
+@Deprecated
 public class HttpResponseContext extends AbstractSensorEvaluationContext {
 	
 	public static final Logger log = LoggerFactory.getLogger(HttpResponseContext.class);
