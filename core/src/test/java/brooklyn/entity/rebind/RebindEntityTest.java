@@ -64,14 +64,14 @@ public class RebindEntityTest {
     private MyApplication origApp;
     private File mementoDir;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = new MyApplication();
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         managementContext.terminate();
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
