@@ -68,7 +68,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         this.executionManager = executionManager;
         this.persister = persister;
         
-        Callable<Task> taskFactory = new Callable<Task>() {
+        Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
             @Override public Task<Void> call() {
                 return new BasicTask<Void>(new Callable<Void>() {
                     public Void call() {
