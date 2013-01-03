@@ -10,20 +10,20 @@ Lifecycle and ManagementContext
 
 A Brooklyn deployment consists of many entities in a hierarchical tree, with  the privileged *application* entity at the top level.
 
-An application entity (``Application`` class) defines a management context  (``ManagementContext`` instance) and is responsible for starting the deployment of the entire entity tree under its ownership. Only an application entity can define the ``ManagementContext``.
+An application entity (``Application`` class) defines a management context  (``ManagementContext`` instance) and is responsible for starting the deployment of all its child entities (i.e. the entire entity tree under its ownership). Only an application entity can define the ``ManagementContext``.
 
-An ``Application``'s ``start()`` method begins provisioning the management plane and distributing the management of entities owned by the application (and their entities, recursively). 
+An ``Application``'s ``start()`` method begins provisioning the management plane and distributing the management of child entities of the application (and their entities, recursively). 
 
 Provisioning of entities typically happens in parallel automatically,
 although this can be customized. This is implemented as ***tasks*** which are tracked by the management plane and is visible in the [web-based management console]({{site.url}}/use/guide/management/index.html#console).
 
 Customized provisioning can be useful where two starting entities depend on each other. For example, it is often necessary to delay start of one entity until another entity reaches a certain state, and to supply run-time information about the latter to the former.
 
-When new entities join an existing network, the entity is deployed to the management plane when it is wired in to an application i.e. by giving it an owner. Templates for new entities are also deployed to the management plane in the same manner.
+When new entities join an existing network, the entity is deployed to the management plane when it is wired in to an application i.e. by giving it a parent. Templates for new entities are also deployed to the management plane in the same manner.
 
 Typically a Brooklyn deployment has a single management context which records all the entities under management, as well as:
 
-*	the state associated with each entity owned (directly or recursively) by any application,
+*	the state associated with each entity parented (directly or recursively) by any application,
 *	subscribers (listeners) to sensor events arising from the entities,
 *	active tasks (jobs) associated with any the entity,
 *	which Brooklyn management node is mastering (managing) each entity.
