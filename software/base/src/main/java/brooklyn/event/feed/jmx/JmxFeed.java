@@ -122,6 +122,10 @@ public class JmxFeed extends AbstractFeed {
         }
     }
 
+    public String getJmxUri() {
+        return jmxUri;
+    }
+    
     @SuppressWarnings("unchecked")
     private Poller<Object> getPoller() {
         return (Poller<Object>) poller;
