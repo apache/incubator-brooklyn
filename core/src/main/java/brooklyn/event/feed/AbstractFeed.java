@@ -22,25 +22,25 @@ import brooklyn.entity.basic.EntityLocal;
  */
 public abstract class AbstractFeed {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractFeed.class);
-	
-	protected final EntityLocal entity;
-	protected final Poller<?> poller;
-	private volatile boolean running;
+    private static final Logger log = LoggerFactory.getLogger(AbstractFeed.class);
+    
+    protected final EntityLocal entity;
+    protected final Poller<?> poller;
+    private volatile boolean running;
 
-	public AbstractFeed(EntityLocal entity) {
-	    this.entity = checkNotNull(entity, "entity");;
+    public AbstractFeed(EntityLocal entity) {
+        this.entity = checkNotNull(entity, "entity");;
         this.poller = new Poller<Object>(entity);
-	}
-	
-	public boolean isActivated() {
-	    return running;
-	}
-	
-	public EntityLocal getEntity() {
-	    return entity;
-	}
-	
+    }
+    
+    public boolean isActivated() {
+        return running;
+    }
+    
+    public EntityLocal getEntity() {
+        return entity;
+    }
+    
     protected boolean isConnected() {
         // TODO Default impl will result in multiple logs for same error if becomes unreachable
         // (e.g. if ssh gets NoRouteToHostException, then every AttributePollHandler for that
@@ -61,18 +61,18 @@ public abstract class AbstractFeed {
         poller.start();
     }
 
-	public void stop() {
-		if (log.isDebugEnabled()) log.debug("stopping feed {} for {}", this, entity);
+    public void stop() {
+        if (log.isDebugEnabled()) log.debug("stopping feed {} for {}", this, entity);
         if (!running) { 
             throw new IllegalStateException(String.format("Attempt to stop feed %s of entity %s when not running", 
                     this, entity));
         }
         
-		running = false;
-		preStop();
-		poller.stop();
-		postStop();
-	}
+        running = false;
+        preStop();
+        poller.stop();
+        postStop();
+    }
 
     /**
      * For overriding.
@@ -86,9 +86,9 @@ public abstract class AbstractFeed {
     protected void preStop() {
     }
     
-	/**
-	 * For overriding.
-	 */
+    /**
+     * For overriding.
+     */
     protected void postStop() {
     }
 }

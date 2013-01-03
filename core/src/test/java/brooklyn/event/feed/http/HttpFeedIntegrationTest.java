@@ -14,9 +14,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.entity.TestApplication;
@@ -30,21 +27,19 @@ import com.google.mockwebserver.MockWebServer;
 
 public class HttpFeedIntegrationTest {
 
-    // FIXME Do we definitely want to remove the registry stuff?!
+    final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
+    final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
 
-	final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
-	final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
-
-	private static final long TIMEOUT_MS = 10*1000;
-	
+    private static final long TIMEOUT_MS = 10*1000;
+    
     private MockWebServer server;
     private URL baseUrl;
     
     private Location loc;
     private TestApplication app;
-	private EntityLocal entity;
-	private HttpFeed feed;
-	
+    private EntityLocal entity;
+    private HttpFeed feed;
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         server = new MockWebServer();
@@ -68,8 +63,8 @@ public class HttpFeedIntegrationTest {
         if (app != null) Entities.destroy(app);
     }
     
-	@Test
-	public void testPollsAndParsesHttpGetResponse() throws Exception {
+    @Test
+    public void testPollsAndParsesHttpGetResponse() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
                 .baseUrl(baseUrl)
@@ -83,8 +78,8 @@ public class HttpFeedIntegrationTest {
         
         assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
-	}
-	
+    }
+    
     @Test
     public void testPollsAndParsesHttpPostResponse() throws Exception {
         feed = HttpFeed.builder()

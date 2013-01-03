@@ -60,8 +60,9 @@ public class HttpFeed extends AbstractFeed {
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<HttpPollConfig<?>> polls = Lists.newArrayList();
-        public Map<String, String> baseUriVars = Maps.newLinkedHashMap();
-        public Map<String, String> headers = Maps.newLinkedHashMap();
+        private Map<String, String> baseUriVars = Maps.newLinkedHashMap();
+        private Map<String, String> headers = Maps.newLinkedHashMap();
+        private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
             this.entity = val;
@@ -112,9 +113,14 @@ public class HttpFeed extends AbstractFeed {
             return this;
         }
         public HttpFeed build() {
+            built = true;
             HttpFeed result = new HttpFeed(this);
             result.start();
             return result;
+        }
+        @Override
+        protected void finalize() {
+            if (!built) log.warn("HttpFeed.Builder created, but build() never called");
         }
     }
     

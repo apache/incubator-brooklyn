@@ -47,6 +47,7 @@ public class JmxFeed extends AbstractFeed {
         private List<JmxAttributePollConfig<?>> attributePolls = Lists.newArrayList();
         private List<JmxOperationPollConfig<?>> operationPolls = Lists.newArrayList();
         private List<JmxNotificationSubscriptionConfig<?>> notificationSubscriptions = Lists.newArrayList();
+        private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
             this.entity = val;
@@ -77,9 +78,14 @@ public class JmxFeed extends AbstractFeed {
             return this;
         }
         public JmxFeed build() {
+            built = true;
             JmxFeed result = new JmxFeed(this);
             result.start();
             return result;
+        }
+        @Override
+        protected void finalize() {
+            if (!built) log.warn("JmxFeed.Builder created, but build() never called");
         }
     }
 

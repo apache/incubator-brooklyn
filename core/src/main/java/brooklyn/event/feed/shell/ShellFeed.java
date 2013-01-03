@@ -58,6 +58,7 @@ public class ShellFeed extends AbstractFeed {
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<ShellPollConfig<?>> polls = Lists.newArrayList();
+        private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
             this.entity = val;
@@ -76,9 +77,14 @@ public class ShellFeed extends AbstractFeed {
             return this;
         }
         public ShellFeed build() {
+            built = true;
             ShellFeed result = new ShellFeed(this);
             result.start();
             return result;
+        }
+        @Override
+        protected void finalize() {
+            if (!built) log.warn("ShellFeed.Builder created, but build() never called");
         }
     }
     

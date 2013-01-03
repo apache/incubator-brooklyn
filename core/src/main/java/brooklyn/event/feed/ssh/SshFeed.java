@@ -48,6 +48,7 @@ public class SshFeed extends AbstractFeed {
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<SshPollConfig<?>> polls = Lists.newArrayList();
+        private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
             this.entity = val;
@@ -70,9 +71,14 @@ public class SshFeed extends AbstractFeed {
             return this;
         }
         public SshFeed build() {
+            built = true;
             SshFeed result = new SshFeed(this);
             result.start();
             return result;
+        }
+        @Override
+        protected void finalize() {
+            if (!built) log.warn("SshFeed.Builder created, but build() never called");
         }
     }
     

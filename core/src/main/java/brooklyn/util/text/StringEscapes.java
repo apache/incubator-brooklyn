@@ -6,6 +6,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import brooklyn.util.net.URLParamEncoder;
+
 import com.google.common.base.Throwables;
 
 public class StringEscapes {
@@ -29,8 +31,24 @@ public class StringEscapes {
         return isWrappedInDoubleQuotes(s) || isWrappedInSingleQuotes(s);
     }
 
-    /** encodes a string suitable for use as a URL: space to +, and high-numbered chars assuming UTF-8 */
-    public static String escapeHttpUrl(String url) {
+    /**
+     * Encodes a string suitable for use as a parameter in a URL.
+     */
+    public static String escapeUrlParam(String input) {
+        return URLParamEncoder.encode(input);
+    }
+
+    /** 
+     * Encodes a string suitable for use as a URL in an HTML form: space to +, and high-numbered chars assuming UTF-8.
+     * However, it will also convert the first "http://" to "http%3A%2F%2F" so is not suitable for converting an 
+     * entire URL.
+     * 
+     * Also note that parameter-conversion doesn't work in way you'd expect when trying to create a "normal" url.
+     * See http://stackoverflow.com/questions/724043/http-url-address-encoding-in-java
+     * 
+     * @see escapeUrlParam(String), and consider using that instead.
+     */
+    public static String escapeHtmlFormUrl(String url) {
         try {
             return URLEncoder.encode(url, "UTF-8");
         } catch (UnsupportedEncodingException e) {

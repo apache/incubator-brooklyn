@@ -32,7 +32,7 @@ public class HttpSensorAdapterIntegrationTest {
     
     private Location loc;
     private TestApplication app;
-	private EntityLocal entity;
+    private EntityLocal entity;
 	private HttpSensorAdapter adapter;
 	private SensorRegistry registry;
 

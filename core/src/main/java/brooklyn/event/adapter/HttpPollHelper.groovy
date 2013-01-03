@@ -26,8 +26,8 @@ protected class HttpPollHelper extends AbstractPollHelper {
         String url = adapter.baseUrl;
         if (adapter.urlVars) {
             def args = adapter.urlVars.collect { k,v ->
-                StringEscapes.escapeHttpUrl(k.toString()) +
-                        (v != null ? "=" + StringEscapes.escapeHttpUrl(v.toString()) : "")
+                StringEscapes.escapeUrlParam(k.toString()) +
+                        (v != null ? "=" + StringEscapes.escapeUrlParam(v.toString()) : "")
             }
             url += "?" + args.join("&")
         }

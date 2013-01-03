@@ -42,7 +42,8 @@ public class FunctionFeed extends AbstractFeed {
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<FunctionPollConfig<?,?>> polls = Lists.newArrayList();
-        
+        private volatile boolean built;
+
         public Builder entity(EntityLocal val) {
             this.entity = val;
             return this;
@@ -60,9 +61,14 @@ public class FunctionFeed extends AbstractFeed {
             return this;
         }
         public FunctionFeed build() {
+            built = true;
             FunctionFeed result = new FunctionFeed(this);
             result.start();
             return result;
+        }
+        @Override
+        protected void finalize() {
+            if (!built) log.warn("FunctionFeed.Builder created, but build() never called");
         }
     }
     

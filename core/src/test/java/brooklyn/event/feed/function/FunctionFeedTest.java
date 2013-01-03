@@ -33,14 +33,14 @@ import com.google.common.util.concurrent.Callables;
 
 public class FunctionFeedTest {
 
-	final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
-	final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
+    final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
+    final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
 
     private Location loc;
     private TestApplication app;
-	private EntityLocal entity;
-	private FunctionFeed feed;
-	
+    private EntityLocal entity;
+    private FunctionFeed feed;
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
@@ -139,14 +139,14 @@ public class FunctionFeedTest {
             }});
     }
     
-	private static class IncrementingCallable implements Callable<Integer> {
-	    private final AtomicInteger next = new AtomicInteger(0);
-	    
-	    @Override public Integer call() {
-	        return next.getAndIncrement();
+    private static class IncrementingCallable implements Callable<Integer> {
+        private final AtomicInteger next = new AtomicInteger(0);
+        
+        @Override public Integer call() {
+            return next.getAndIncrement();
         }
-	}
-	
+    }
+    
     private static class AddOneFunction implements Function<Integer, Integer> {
         @Override public Integer apply(@Nullable Integer input) {
             return (input != null) ? (input + 1) : null;
