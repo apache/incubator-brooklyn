@@ -11,6 +11,8 @@ import com.google.gson.JsonParser;
 
 public class JsonFunctions {
 
+    private JsonFunctions() {} // instead use static utility methods
+    
     public static Function<String, JsonElement> asJson() {
         return new Function<String, JsonElement>() {
             @Override public JsonElement apply(String input) {

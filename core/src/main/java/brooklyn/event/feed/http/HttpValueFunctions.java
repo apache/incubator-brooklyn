@@ -9,6 +9,8 @@ import com.google.gson.JsonElement;
 
 public class HttpValueFunctions {
 
+    private HttpValueFunctions() {} // instead use static utility methods
+    
     public static Function<HttpPollValue, Integer> responseCode() {
         return new Function<HttpPollValue, Integer>() {
             @Override public Integer apply(HttpPollValue input) {

@@ -14,6 +14,10 @@ import com.google.common.base.Function;
 /**
  * Handler for when polling an entity's attribute. On each poll result the entity's attribute is set.
  * 
+ * Calls to onSuccess and onError will happen sequentially, but may be called from different threads 
+ * each time. Note that no guarantees of a synchronized block exist, so additional synchronization 
+ * would be required for the Java memory model's "happens before" relationship.
+ * 
  * @author aled
  */
 public class AttributePollHandler<V> implements PollHandler<V> {
@@ -23,8 +27,8 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     private final FeedConfig<V,?,?> config;
     private final EntityLocal entity;
     private final AttributeSensor sensor;
-    private boolean lastWasSuccessful = false;
     private final AbstractFeed feed;
+    private volatile boolean lastWasSuccessful = false;
     
     public AttributePollHandler(FeedConfig config, EntityLocal entity, AbstractFeed feed) {
         this.config = checkNotNull(config, "config");

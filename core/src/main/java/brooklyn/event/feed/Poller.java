@@ -1,5 +1,7 @@
 package brooklyn.event.feed;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -72,6 +74,11 @@ public class Poller<V> {
         // Is that ok, are can we do better?
         
         if (log.isDebugEnabled()) log.debug("Starting poll for {} (using {})", new Object[] {entity, this});
+        if (running) { 
+            throw new IllegalStateException(String.format("Attempt to start poller %s of entity %s when already running", 
+                    this, entity));
+        }
+        
         running = true;
         
         for (final PollJob<V> pollJob : pollJobs) {
@@ -90,6 +97,11 @@ public class Poller<V> {
     
     public void stop() {
         if (log.isDebugEnabled()) log.debug("Stopping poll for {} (using {})", new Object[] {entity, this});
+        if (!running) { 
+            throw new IllegalStateException(String.format("Attempt to stop poller %s of entity %s when not running", 
+                    this, entity));
+        }
+        
         running = false;
         for (ScheduledTask task : tasks) {
             task.cancel();

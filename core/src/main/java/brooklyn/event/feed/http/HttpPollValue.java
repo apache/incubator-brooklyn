@@ -2,6 +2,7 @@ package brooklyn.event.feed.http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,14 +14,16 @@ import org.apache.http.HttpResponse;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 
 public class HttpPollValue {
 
+    private final Object mutex = new Object();
     private final HttpResponse response;
     private int responseCode;
     private Map<String,List<String>> headerLists;
     private byte[] content;
-
+    
     public HttpPollValue(HttpResponse response) {
         this.response = response;
         
@@ -41,36 +44,46 @@ public class HttpPollValue {
     }
     
     public int getResponseCode() {
-        if (responseCode == 0) {
-            responseCode = response.getStatusLine().getStatusCode();
+        synchronized (mutex) {
+            if (responseCode == 0) {
+                responseCode = response.getStatusLine().getStatusCode();
+            }
         }
         return responseCode;
     }
     
     public Map<String, List<String>> getHeaderLists() {
-        if (headerLists == null) {
-            headerLists = Maps.newLinkedHashMap();
-            for (Header header : response.getAllHeaders()) {
-                List<String> vals = headerLists.get(header.getName());
-                if (vals == null) {
-                    vals = new ArrayList<String>();
-                    headerLists.put(header.getName(), vals);
+        synchronized (mutex) {
+            if (headerLists == null) {
+                Map<String, List<String>> headerListsMutable = Maps.newLinkedHashMap();
+                for (Header header : response.getAllHeaders()) {
+                    List<String> vals = headerListsMutable.get(header.getName());
+                    if (vals == null) {
+                        vals = new ArrayList<String>();
+                        headerListsMutable.put(header.getName(), vals);
+                    }
+                    vals.add(header.getValue());
                 }
-                vals.add(header.getValue());
+                headerLists = Collections.unmodifiableMap(headerListsMutable);
             }
-            headerLists = Collections.unmodifiableMap(headerLists);
         }
         return headerLists;
     }
     
     public byte[] getContent() {
-        if (content == null) {
-            try {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                ByteStreams.copy(response.getEntity().getContent(), out);
-                content = out.toByteArray();
-            } catch (IOException e) {
-                throw Throwables.propagate(e);
+        synchronized (mutex) {
+            if (content == null) {
+                InputStream in = null;
+                try {
+                    in = response.getEntity().getContent();
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    ByteStreams.copy(in, out);
+                    content = out.toByteArray();
+                } catch (IOException e) {
+                    throw Throwables.propagate(e);
+                } finally {
+                    Closeables.closeQuietly(in);
+                }
             }
         }
         return content;

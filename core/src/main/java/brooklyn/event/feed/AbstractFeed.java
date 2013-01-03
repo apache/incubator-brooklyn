@@ -11,6 +11,14 @@ import brooklyn.entity.basic.EntityLocal;
  * Captures common fields and processes for sensor feeds.
  * These generally poll or subscribe to get sensor values for an entity.
  * They make it easy to poll over http, jmx, etc.
+ * 
+ * Assumes:
+ *   <ul>
+ *     <li>There will not be concurrent calls to start and stop.
+ *     <li>There will only be one call to start and that will be done immediately after construction,
+ *         in the same thread.
+ *     <li>Once stopped, the feed will not be re-started.
+ *   </ul>
  */
 public abstract class AbstractFeed {
 
@@ -18,7 +26,7 @@ public abstract class AbstractFeed {
 	
 	protected final EntityLocal entity;
 	protected final Poller<?> poller;
-	private volatile boolean running = true;
+	private volatile boolean running;
 
 	public AbstractFeed(EntityLocal entity) {
 	    this.entity = checkNotNull(entity, "entity");;
@@ -43,12 +51,23 @@ public abstract class AbstractFeed {
 
     protected void start() {
         if (log.isDebugEnabled()) log.debug("Starting feed {} for {}", this, entity);
+        if (running) { 
+            throw new IllegalStateException(String.format("Attempt to start feed %s of entity %s when already running", 
+                    this, entity));
+        }
+        
+        running = true;
         preStart();
         poller.start();
     }
 
 	public void stop() {
 		if (log.isDebugEnabled()) log.debug("stopping feed {} for {}", this, entity);
+        if (!running) { 
+            throw new IllegalStateException(String.format("Attempt to stop feed %s of entity %s when not running", 
+                    this, entity));
+        }
+        
 		running = false;
 		preStop();
 		poller.stop();
