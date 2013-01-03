@@ -169,8 +169,8 @@ public class SetFromFlagTest {
         @SetFromFlag(defaultVal="true")
         Boolean bool2;
 
-        MyEntity(Map flags=[:], Entity owner=null) {
-            super(flags, owner)
+        MyEntity(Map flags=[:], Entity parent=null) {
+            super(flags, parent)
         }
     }
 }

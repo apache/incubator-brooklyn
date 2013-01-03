@@ -19,8 +19,8 @@ public interface ElasticJavaWebAppService extends JavaWebAppService, Startable {
     public static class Factory extends AbstractConfigurableEntityFactory<ElasticJavaWebAppService>
     implements EntityFactoryForLocation<ElasticJavaWebAppService> {
 
-        public ElasticJavaWebAppService newEntity2(Map flags, Entity owner) {
-            new ControlledDynamicWebAppCluster(flags, owner);
+        public ElasticJavaWebAppService newEntity2(Map flags, Entity parent) {
+            new ControlledDynamicWebAppCluster(flags, parent);
         }
 
         public ConfigurableEntityFactory<ElasticJavaWebAppService> newFactoryForLocation(Location l) {

@@ -119,11 +119,11 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     public BalanceableWorkerPool(Map properties) {
         this(properties, null);
     }
-    public BalanceableWorkerPool(Entity owner) {
-        this(MutableMap.of(), owner);
+    public BalanceableWorkerPool(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public BalanceableWorkerPool(Map properties, Entity owner) {
-        super(properties, owner);
+    public BalanceableWorkerPool(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     public void setResizable(Resizable resizable) {

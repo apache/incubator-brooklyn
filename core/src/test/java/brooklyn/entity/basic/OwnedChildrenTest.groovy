@@ -12,147 +12,157 @@ public class OwnedChildrenTest {
 
     private Application app
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = new AbstractApplication() {}
     }
     
+    // Tests that the deprecated "owner" still works
     @Test
     public void testSetOwnerInConstructorMap() {
         Entity e = new AbstractEntity(owner:app) {}
         
-        assertEquals(e.getOwner(), app)
-        assertEquals(app.getOwnedChildren(), [e])
+        assertEquals(e.getParent(), app)
+        assertEquals(app.getChildren(), [e])
         assertEquals(e.getApplication(), app)
     }
     
     @Test
-    public void testSetOwnerInConstructorArgument() {
+    public void testSetParentInConstructorMap() {
+        Entity e = new AbstractEntity(parent:app) {}
+        
+        assertEquals(e.getParent(), app)
+        assertEquals(app.getChildren(), [e])
+        assertEquals(e.getApplication(), app)
+    }
+    
+    @Test
+    public void testSetParentInConstructorArgument() {
         Entity e = new AbstractEntity(app) {}
         
-        assertEquals(e.getOwner(), app)
-        assertEquals(app.getOwnedChildren(), [e])
+        assertEquals(e.getParent(), app)
+        assertEquals(app.getChildren(), [e])
         assertEquals(e.getApplication(), app)
     }
     
     @Test
-    public void testSetOwnerInSetterMethod() {
+    public void testSetParentInSetterMethod() {
         Entity e = new AbstractEntity() {}
-        e.setOwner(app)
+        e.setParent(app)
         
-        assertEquals(e.getOwner(), app)
-        assertEquals(app.getOwnedChildren(), [e])
+        assertEquals(e.getParent(), app)
+        assertEquals(app.getChildren(), [e])
         assertEquals(e.getApplication(), app)
     }
 
     @Test
-    public void testAddOwnedChild() {
+    public void testAddChild() {
         Entity e = new AbstractEntity() {}
-        app.addOwnedChild(e)
+        app.addChild(e)
         
-        assertEquals(e.getOwner(), app)
-        assertEquals(app.getOwnedChildren(), [e])
+        assertEquals(e.getParent(), app)
+        assertEquals(app.getChildren(), [e])
         assertEquals(e.getApplication(), app)
     }
     
     @Test
-    public void testSetOwnerWhenMatchesOwnerSetInConstructor() {
-        Entity e = new AbstractEntity(owner:app) {}
-        e.setOwner(app)
+    public void testSetParentWhenMatchesParentSetInConstructor() {
+        Entity e = new AbstractEntity(parent:app) {}
+        e.setParent(app)
         
-        assertEquals(e.getOwner(), app)
-        assertEquals(app.getOwnedChildren(), [e])
+        assertEquals(e.getParent(), app)
+        assertEquals(app.getChildren(), [e])
     }
     
     @Test(expectedExceptions = [ UnsupportedOperationException.class ])
-    public void testSetOwnerWhenDiffersFromOwnerSetInConstructor() {
-        Entity e = new AbstractEntity(owner:app) {}
+    public void testSetParentWhenDiffersFromParentSetInConstructor() {
+        Entity e = new AbstractEntity(parent:app) {}
         Entity e2 = new AbstractEntity() {}
-        e.setOwner(e2)
+        e.setParent(e2)
         fail();
     }
     
     @Test
-    public void testOwnerCanHaveMultipleChildren() {
-        Entity e = new AbstractEntity(owner:app) {}
-        Entity e2 = new AbstractEntity(owner:app) {}
+    public void testParentCanHaveMultipleChildren() {
+        Entity e = new AbstractEntity(parent:app) {}
+        Entity e2 = new AbstractEntity(parent:app) {}
         
-        assertEquals(e.getOwner(), app)
-        assertEquals(e2.getOwner(), app)
-        assertEquals(app.getOwnedChildren(), [e,e2])
+        assertEquals(e.getParent(), app)
+        assertEquals(e2.getParent(), app)
+        assertEquals(app.getChildren(), [e,e2])
     }
     
     @Test
     public void testHierarchyOfOwners() {
-        Entity e = new AbstractEntity(owner:app) {}
-        Entity e2 = new AbstractEntity(owner:e) {}
-        Entity e3 = new AbstractEntity(owner:e2) {}
+        Entity e = new AbstractEntity(parent:app) {}
+        Entity e2 = new AbstractEntity(parent:e) {}
+        Entity e3 = new AbstractEntity(parent:e2) {}
         
-        assertEquals(app.getOwner(), null)
-        assertEquals(e.getOwner(), app)
-        assertEquals(e2.getOwner(), e)
-        assertEquals(e3.getOwner(), e2)
+        assertEquals(app.getParent(), null)
+        assertEquals(e.getParent(), app)
+        assertEquals(e2.getParent(), e)
+        assertEquals(e3.getParent(), e2)
         
-        assertEquals(app.getOwnedChildren(), [e])
-        assertEquals(e.getOwnedChildren(), [e2])
-        assertEquals(e2.getOwnedChildren(), [e3])
-        assertEquals(e3.getOwnedChildren(), [])
+        assertEquals(app.getChildren(), [e])
+        assertEquals(e.getChildren(), [e2])
+        assertEquals(e2.getChildren(), [e3])
+        assertEquals(e3.getChildren(), [])
     }
     
     @Test(enabled = false) // FIXME fails currently
-    public void testRemoveOwnedChild() {
-        Entity e = new AbstractEntity(owner:app) {}
-        app.removeOwnedChild(e)
+    public void testRemoveChild() {
+        Entity e = new AbstractEntity(parent:app) {}
+        app.removeChild(e)
         
-        assertEquals(app.getOwnedChildren(), [])
-        assertEquals(e.getOwner(), null)
+        assertEquals(app.getChildren(), [])
+        assertEquals(e.getParent(), null)
     }
     
     @Test
-    public void testOwnershipLoopForbiddenViaAddOwnedChild() {
+    public void testParentalLoopForbiddenViaAddChild() {
         Entity e = new AbstractEntity() {}
-        Entity e2 = new AbstractEntity(owner:e) {}
+        Entity e2 = new AbstractEntity(parent:e) {}
         try {
-            e2.addOwnedChild(e)
+            e2.addChild(e)
             fail()
         } catch (IllegalStateException ex) {
             // success
         }
         
-        assertEquals(e.getOwnedChildren(), [e2])
-        assertEquals(e2.getOwnedChildren(), [])
-        assertEquals(e.getOwner(), null)
-        assertEquals(e2.getOwner(), e)
+        assertEquals(e.getChildren(), [e2])
+        assertEquals(e2.getChildren(), [])
+        assertEquals(e.getParent(), null)
+        assertEquals(e2.getParent(), e)
     }
     
     @Test
-    public void testOwnershipLoopForbiddenViaSetOwner() {
+    public void testParentalLoopForbiddenViaSetParent() {
         Entity e = new AbstractEntity() {}
-        Entity e2 = new AbstractEntity(owner:e) {}
+        Entity e2 = new AbstractEntity(parent:e) {}
         try {
-            e.setOwner(e2)
+            e.setParent(e2)
             fail()
         } catch (IllegalStateException ex) {
 			ex.printStackTrace();
             // success
         }
-        assertEquals(e.getOwnedChildren(), [e2])
-        assertEquals(e2.getOwnedChildren(), [])
-        assertEquals(e.getOwner(), null)
-        assertEquals(e2.getOwner(), e)
+        assertEquals(e.getChildren(), [e2])
+        assertEquals(e2.getChildren(), [])
+        assertEquals(e.getParent(), null)
+        assertEquals(e2.getParent(), e)
     }
     
     @Test(expectedExceptions = [ IllegalStateException.class ])
-    public void testOwningOneselfForbidden() {
+    public void testParentingOneselfForbidden() {
         AbstractEntity e = new AbstractEntity() {}
-        e.addOwnedChild(e)
+        e.addChild(e)
         fail()
     }
     
     @Test
     public void testIsAncestor() {
-        AbstractEntity e = new AbstractEntity(owner:app) {}
-        AbstractEntity e2 = new AbstractEntity(owner:e) {}
+        AbstractEntity e = new AbstractEntity(parent:app) {}
+        AbstractEntity e2 = new AbstractEntity(parent:e) {}
         
 		use (Entities) {
 			assertTrue(e2.isAncestor(app))
@@ -163,8 +173,8 @@ public class OwnedChildrenTest {
     
     @Test
     public void testIsDescendant() {
-        AbstractEntity e = new AbstractEntity(owner:app) {}
-        AbstractEntity e2 = new AbstractEntity(owner:e) {}
+        AbstractEntity e = new AbstractEntity(parent:app) {}
+        AbstractEntity e2 = new AbstractEntity(parent:e) {}
 
 		use (Entities) {
 			assertTrue(app.isDescendant(e))

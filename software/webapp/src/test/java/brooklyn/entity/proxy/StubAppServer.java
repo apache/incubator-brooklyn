@@ -28,8 +28,8 @@ public class StubAppServer extends AbstractEntity implements Startable {
         super(flags);
     }
     
-    public StubAppServer(Map flags, Entity owner) {
-        super(flags, owner);
+    public StubAppServer(Map flags, Entity parent) {
+        super(flags, parent);
     }
     
     @Override

@@ -17,8 +17,8 @@ import brooklyn.entity.webapp.WebAppServiceConstants
 public class TestJavaWebAppEntity extends VanillaJavaApp {
 	protected static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity)
 
-    public TestJavaWebAppEntity(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
+    public TestJavaWebAppEntity(Map properties=[:], Entity parent=null) {
+        super(properties, parent)
     }
     
     @SetFromFlag int a;

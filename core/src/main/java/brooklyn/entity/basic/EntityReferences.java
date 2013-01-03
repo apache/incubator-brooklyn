@@ -60,7 +60,7 @@ public class EntityReferences {
         protected synchronized T find() {
             if (entity != null) return entity;
             if (referrer == null)
-                throw new IllegalStateException("EntityReference "+id+" should have been initialised with a reference owner");
+                throw new IllegalStateException("EntityReference "+id+" should have been initialised with a reference parent");
             entity = (T) ((AbstractEntity)referrer).getManagementContext().getEntity(id);
             return entity;
         }
@@ -164,7 +164,7 @@ public class EntityReferences {
         protected synchronized Collection<T> find() {
             if (entities!=null) return entities.values();
             if (referrer == null)
-                throw new IllegalStateException("EntityReference should have been initialised with a reference owner");
+                throw new IllegalStateException("EntityReference should have been initialised with a reference parent");
             Map<String,T> result = new LinkedHashMap<String,T>();
             for (String it : entityRefs) {
                 Entity e = ((AbstractEntity)referrer).getManagementSupport().getManagementContext(true).getEntity(it); 

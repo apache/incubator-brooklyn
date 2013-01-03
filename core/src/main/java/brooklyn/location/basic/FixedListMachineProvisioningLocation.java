@@ -4,6 +4,7 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.Closeable;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,6 +53,9 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
 
     @SetFromFlag
     protected Set<T> pendingRemoval;
+    
+    @SetFromFlag
+    protected File localTempDir;
     
     public FixedListMachineProvisioningLocation() {
         this(Maps.newLinkedHashMap());
@@ -227,6 +231,8 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         String privateKeyPassphrase;
         String privateKeyFile;
         String privateKeyData;
+        File localTempDir;
+
         List machines = Lists.newArrayList();
         public Builder user(String user) {
             this.user = user;
@@ -242,6 +248,10 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         }
         public Builder keyData(String keyData) {
             this.privateKeyData = keyData;
+            return this;
+        }
+        public Builder localTempDir(File val) {
+            this.localTempDir = val;
             return this;
         }
         /** adds the locations; user and keyfile set in the builder are _not_ applied to the machine
@@ -284,6 +294,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
             if (truth(privateKeyPassphrase)) config.put("sshconfig.privateKeyPassphrase", privateKeyPassphrase);
             if (truth(privateKeyFile)) config.put("sshconfig.privateKeyFile", privateKeyFile);
             if (truth(privateKeyData)) config.put("sshconfig.privateKey", privateKeyData);
+            if (truth(localTempDir)) config.put("localTempDir", localTempDir);
             return config;
         }
         public FixedListMachineProvisioningLocation build() {
@@ -293,6 +304,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
                     .put("privateKeyPassphrase", privateKeyPassphrase)
                     .put("privateKeyFile", privateKeyFile)
                     .put("privateKeyData", privateKeyData)
+                    .put("localTempDir", localTempDir)
                     .build());
         }        
     }

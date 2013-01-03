@@ -1,5 +1,6 @@
 package brooklyn.location.basic;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +11,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
-import brooklyn.location.LocationResolver;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.KeyValueParser;
 import brooklyn.util.MutableMap;
@@ -118,6 +119,12 @@ public class ByonLocationResolver implements RegistryLocationResolver {
         flags.put("machines", machines);
         if (user != null) flags.put("user", user);
         if (name != null) flags.put("name", name);
+        if (registry != null) {
+            String brooklynDataDir = (String) registry.getProperties().get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
+            if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
+                flags.put("localTempDir", new File(brooklynDataDir));
+            }
+        }
 
         log.debug("Created BYON location "+name+": "+machines);
         

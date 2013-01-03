@@ -34,8 +34,8 @@ public class BrooklynMetrics extends AbstractEntity {
     
     private ScheduledExecutorService executor;
     
-    public BrooklynMetrics(Map props, Entity owner=null) {
-        super(props, owner)
+    public BrooklynMetrics(Map props, Entity parent=null) {
+        super(props, parent)
     }
     
     public void onManagementBecomingMaster() {

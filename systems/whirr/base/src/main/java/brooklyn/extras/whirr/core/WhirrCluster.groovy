@@ -50,8 +50,8 @@ public class WhirrCluster extends AbstractEntity implements Startable {
     /**
      * General entity initialisation
      */
-    public WhirrCluster(Map flags = [:], Entity owner = null) {
-        super(flags, owner)
+    public WhirrCluster(Map flags = [:], Entity parent = null) {
+        super(flags, parent)
     }
 
     /**
@@ -157,7 +157,7 @@ public class WhirrCluster extends AbstractEntity implements Startable {
             def rolesGroup = new WhirrInstance(displayName: "Instance:" + instance.id, instance: instance, this);
             for (String role: instance.roles) {
                 log.info("Creating entity for '" + role + "' on instance " + instance.id)
-                rolesGroup.addOwnedChild(new WhirrRole(displayName: "Role:" + role, role: role, rolesGroup))
+                rolesGroup.addChild(new WhirrRole(displayName: "Role:" + role, role: role, rolesGroup))
             }
             addGroup(rolesGroup)
         }

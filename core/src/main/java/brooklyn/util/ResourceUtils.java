@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.DataUriSchemeParser;
 import brooklyn.util.text.Strings;
 
@@ -308,11 +309,24 @@ public class ResourceUtils {
         output.flush();
     }
 
+    public static File mkdirs(File dir) {
+        if (dir.isDirectory()) return dir;
+        boolean success = dir.mkdirs();
+        if (!success) throw Exceptions.propagate(new IOException("Failed to create directory " + dir + 
+                (dir.isFile() ? "(is file)" : "")));
+        return dir;
+    }
+
     public static File writeToTempFile(InputStream is, String prefix, String suffix) {
+        return writeToTempFile(is, new File(System.getProperty("java.io.tmpdir")), prefix, suffix);
+    }
+    
+    public static File writeToTempFile(InputStream is, File tempDir, String prefix, String suffix) {
         if (is == null) throw new NullPointerException("Input stream required to create temp file for "+prefix+"*"+suffix);
+        mkdirs(tempDir);
         File tempFile;
         try {
-            tempFile = File.createTempFile(prefix, suffix);
+            tempFile = File.createTempFile(prefix, suffix, tempDir);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -332,10 +346,14 @@ public class ResourceUtils {
     }
 
     public static File writeToTempFile(Properties props, String prefix, String suffix) {
+        return writeToTempFile(props, new File(System.getProperty("java.io.tmpdir")), prefix, suffix);
+    }
+    
+    public static File writeToTempFile(Properties props, File tempDir, String prefix, String suffix) {
         if (props == null) throw new NullPointerException("Properties required to create temp file for "+prefix+"*"+suffix);
         File tempFile;
         try {
-            tempFile = File.createTempFile(prefix, suffix);
+            tempFile = File.createTempFile(prefix, suffix, tempDir);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

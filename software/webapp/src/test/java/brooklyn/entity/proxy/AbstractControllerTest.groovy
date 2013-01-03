@@ -49,11 +49,11 @@ class AbstractControllerTest {
         updates = new CopyOnWriteArrayList();
         
         app = new TestApplication()
-        cluster = new DynamicCluster(owner:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
+        cluster = new DynamicCluster(parent:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
         
         final AtomicInteger invokeCountForStart = new AtomicInteger(0);
         controller = new AbstractController(
-                owner:app, 
+                parent:app, 
                 serverPool:cluster, 
                 portNumberSensor:ClusteredEntity.HTTP_PORT,
                 domain:"mydomain") {
@@ -88,7 +88,7 @@ class AbstractControllerTest {
     public void testUpdateCalledWithAddressesOfNewChildren() {
         // First child
         cluster.resize(1)
-        EntityLocal child = cluster.ownedChildren.first()
+        EntityLocal child = cluster.children.first()
         
         def u = new ArrayList(updates);
         assertEquals(u, [], "expected empty list but got $u")
@@ -99,8 +99,8 @@ class AbstractControllerTest {
 
         // Second child
         cluster.resize(2)
-        executeUntilSucceeds { cluster.ownedChildren.size() == 2 }
-        EntityLocal child2 = cluster.ownedChildren.asList().get(1)
+        executeUntilSucceeds { cluster.children.size() == 2 }
+        EntityLocal child2 = cluster.children.asList().get(1)
         
         child2.setAttribute(ClusteredEntity.HTTP_PORT, 1234)
         child2.setAttribute(Startable.SERVICE_UP, true)
@@ -127,7 +127,7 @@ class AbstractControllerTest {
     public void testUpdateCalledWithAddressesRemovedForStoppedChildren() {
         // Get some children, so we can remove one...
         cluster.resize(2)
-        cluster.ownedChildren.each {
+        cluster.children.each {
             it.setAttribute(ClusteredEntity.HTTP_PORT, 1234)
             it.setAttribute(Startable.SERVICE_UP, true)
         }
@@ -135,16 +135,16 @@ class AbstractControllerTest {
 
         // Now remove one child
         cluster.resize(1)
-        assertEquals(cluster.ownedChildren.size(), 1)
+        assertEquals(cluster.children.size(), 1)
         assertEventuallyAddressesMatchCluster()
     }
 
     private void assertEventuallyAddressesMatchCluster() {
         executeUntilSucceeds(timeout:5000) {
             def u = new ArrayList(updates);
-            log.debug "test ${u.size()} updates, expecting ${locationsToAddresses(1234, cluster.ownedChildren)} = ${u ? u.last() : 'empty'}"
+            log.debug "test ${u.size()} updates, expecting ${locationsToAddresses(1234, cluster.children)} = ${u ? u.last() : 'empty'}"
             assertTrue(u.size() > 0);
-            assertTrue(u.last() == locationsToAddresses(1234, cluster.ownedChildren), "actual="+u.last()+" expected="+locationsToAddresses(1234, cluster.ownedChildren));
+            assertTrue(u.last() == locationsToAddresses(1234, cluster.children), "actual="+u.last()+" expected="+locationsToAddresses(1234, cluster.children));
         }
     }
     
@@ -162,8 +162,8 @@ class AbstractControllerTest {
 }
 
 class ClusteredEntity extends TestEntity {
-    public ClusteredEntity(Map flags=[:], Entity owner=null) { super(flags,owner) }
-    public ClusteredEntity(Entity owner) { this([:],owner) }
+    public ClusteredEntity(Map flags=[:], Entity parent=null) { super(flags,parent) }
+    public ClusteredEntity(Entity parent) { this([:],parent) }
     
     @SetFromFlag("hostname")
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;

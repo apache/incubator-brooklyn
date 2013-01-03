@@ -168,7 +168,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     
     protected void recursively(Entity e, Predicate<AbstractEntity> action) {
         action.apply( (AbstractEntity)e );
-        EntityCollectionReference<?> ref = ((AbstractEntity)e).getOwnedChildrenReference();
+        EntityCollectionReference<?> ref = ((AbstractEntity)e).getChildrenReference();
         for (String ei: ref.getIds()) {
             Entity entity = ref.peek(ei);
             if (entity==null) entity = getEntity(ei);
@@ -282,10 +282,10 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         } else {
             Entity rootUnmanaged = entity;
             while (true) {
-                Entity candidateUnmanagedOwner = rootUnmanaged.getOwner();
-                if (candidateUnmanagedOwner == null || isManaged(candidateUnmanagedOwner) || isPreManaged(candidateUnmanagedOwner))
+                Entity candidateUnmanagedParent = rootUnmanaged.getParent();
+                if (candidateUnmanagedParent == null || isManaged(candidateUnmanagedParent) || isPreManaged(candidateUnmanagedParent))
                     break;
-                rootUnmanaged = candidateUnmanagedOwner;
+                rootUnmanaged = candidateUnmanagedParent;
             }
             if (context == Startable.START.getName())
                 log.info("Activating local management for {} on start", rootUnmanaged);

@@ -138,12 +138,12 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
         super(properties, null);
     }
 
-    public KarafContainer(Entity owner) {
-        super(Maps.newLinkedHashMap(), owner);
+    public KarafContainer(Entity parent) {
+        super(Maps.newLinkedHashMap(), parent);
     }
 
-    public KarafContainer(Map properties, Entity owner) {
-        super(properties, owner);
+    public KarafContainer(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     @Override
@@ -318,8 +318,7 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
             }
             
             File local = ResourceUtils.writeToTempFile(props, "karaf-"+getId(), ".cfg");
-            local.setReadable(false, false);
-            local.setReadable(false, true);
+            local.setReadable(true);
             try {
                 File remote = new File(getDriver().getRunDir(), file);
                 getDriver().copyFile(local, remote);

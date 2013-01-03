@@ -170,7 +170,7 @@ class CustomAggregatingEnricherTest {
     @Test
     public void testAggregatesNewMembersOfGroup() {
         try {
-            AbstractGroup group = new AbstractGroup(owner:app) {}
+            AbstractGroup group = new AbstractGroup(parent:app) {}
             Entities.manage(group);
             SimpleEntity p1 = app.newSimpleChild(); 
             SimpleEntity p2 = app.newSimpleChild();
@@ -239,7 +239,7 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAppliesFilterWhenAggregatingMembersOfGroup() {
-        AbstractGroup group = new AbstractGroup(owner:app) {}
+        AbstractGroup group = new AbstractGroup(parent:app) {}
         SimpleEntity p1 = app.newSimpleChild();
         SimpleEntity p2 = app.newSimpleChild();
         SimpleEntity p3 = app.newSimpleChild();

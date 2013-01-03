@@ -64,6 +64,7 @@ import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.util.KeyValueParser;
 import brooklyn.util.MutableMap;
 import brooklyn.util.Time;
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.text.Identifiers;
@@ -143,6 +144,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
+
+    @SetFromFlag
+    private File localTempDir;
 
     public JcloudsLocation(Map conf) {
         super(conf);
@@ -595,6 +599,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                             .put("displayName", vmHostname)
                             .put("user", setup.user)
                             .put("config", sshConfig)
+                            .put("localTempDir", localTempDir)
                             .build(),
                     this, 
                     node);

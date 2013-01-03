@@ -97,14 +97,14 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
 	public SoftwareProcessEntity() {
         super(MutableMap.of(), null);
     }
-    public SoftwareProcessEntity(Entity owner) {
-        this(MutableMap.of(), owner);
+    public SoftwareProcessEntity(Entity parent) {
+        this(MutableMap.of(), parent);
     }
     public SoftwareProcessEntity(Map properties) {
         this(properties, null);
     }
-	public SoftwareProcessEntity(Map properties, Entity owner) {
-		super(properties, owner);
+	public SoftwareProcessEntity(Map properties, Entity parent) {
+		super(properties, parent);
 	}
 
     protected void setProvisioningLocation(MachineProvisioningLocation val) {

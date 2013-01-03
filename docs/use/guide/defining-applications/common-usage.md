@@ -9,7 +9,7 @@ categories: [use, guide, defining-applications]
 
 By convention in Brooklyn the following words have a particular meaning, both as types (which extend ``Group``, which extends ``Entity``) and when used as words in other entities (such as ``TomcatFabric``):
 
-- *Tier* - anything which is homogeneous (has a template and type)
+- *Tier* - anything which is homogeneous (has an entity factory and type)
     - *Cluster* - an in-location tier
     - *Fabric* - a multi-location tier
 - *Stack* - heterogeneous (mixed types of children)
@@ -19,13 +19,12 @@ By convention in Brooklyn the following words have a particular meaning, both as
 TODO
 -->
 
--	*template* entities are often used by groups to define how to instantiate themselves and scale-out.
-  A template is an entity which does not have an owner and which is not an application.
+-	*entity factories* are often used by clusters/groups to define how to instantiate new children.
 -	*traits* (mixins) providing certain capabilities, such as Resizable and Balanceable
--	*Resizable*
--	*Balanceable*
--	*Moveable*
--	*MoveableWithCost*
+-	*Resizable* entities can re-sized dynamically, to increase/decrease the number of child entities.
+-	*Movable* entities can be migrated between *balanceable containers*.
+-	*Balanceable containers* can contain *movable* entities, where each contained entity is normally associated with
+    a piece of work within that container.
 
 ### Off-the-Shelf Entities
 

@@ -69,7 +69,7 @@ public class FederatingManagementContext extends AbstractManagementContext {
 //            knownEntities.put(e.getId(), e);
 //        }
 //        if (e instanceof Application) apps << e
-//        for (Entity ei : e.getOwnedChildren())
+//        for (Entity ei : e.getChildren())
 //            manage(ei);
     }
     public synchronized void unmanage(Entity e) {
@@ -105,7 +105,7 @@ public class FederatingManagementContext extends AbstractManagementContext {
 
         moveToManagementPlaneJustThis(e);
                     
-        for (Entity ec : e.getOwnedChildren()) {
+        for (Entity ec : e.getChildren()) {
             moveToManagementPlaneRecursively(ec)
         } 
     }

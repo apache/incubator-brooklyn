@@ -45,46 +45,82 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
     String getApplicationId();
 
     /**
-     * The owner of this entity, null if no owner.
+     * The parent of this entity, null if no parent.
      *
-     * The owner is normally the entity responsible for creating/destroying this entity.
+     * The parent is normally the entity responsible for creating/destroying/managing this entity.
      *
-     * @see #setOwner(Group)
-     * @see #clearOwner
+     * @see #setParent(Entity)
+     * @see #clearParent
      */
-    Entity getOwner();
-
+    Entity getParent();
+    
     /** 
-     * Return the entities that are owned by this entity
+     * Return the entities that are children of (i.e. "owned by") this entity
      */
-    Collection<Entity> getOwnedChildren();
+    Collection<Entity> getChildren();
     
     /**
-     * Sets the owner of this entity. Returns this entity, for convenience.
+     * Sets the parent (i.e. "owner") of this entity. Returns this entity, for convenience.
      *
-     * @see #getOwner
-     * @see #clearOwner
+     * @see #getParent
+     * @see #clearParent
      */
-    Entity setOwner(Entity group);
+    Entity setParent(Entity parent);
     
     /**
-     * Clears the owner of this entity. Also cleans up any references within its parent entity.
+     * Clears the parent (i.e. "owner") of this entity. Also cleans up any references within its parent entity.
      *
-     * @see #getOwner
-     * @see #setOwner
+     * @see #getParent
+     * @see #setParent
      */
-    void clearOwner();
+    void clearParent();
     
     /** 
-     * Add a child {@link Entity}, and set this entity as its owner.
+     * Add a child {@link Entity}, and set this entity as its parent.
      */
-    Entity addOwnedChild(Entity child);
+    Entity addChild(Entity child);
     
     /** 
-     * Removes the specified child {@link Entity}; its owner will be set to null.
+     * Removes the specified child {@link Entity}; its parent will be set to null.
      * 
      * @return True if the given entity was contained in the set of children
      */
+    boolean removeChild(Entity child);
+    
+    /**
+     * @deprecated see getParent()
+     */
+    @Deprecated
+    Entity getOwner();
+
+    /** 
+     * @deprecated see getChildren()
+     */
+    @Deprecated
+    Collection<Entity> getOwnedChildren();
+    
+    /**
+     * @deprecated see setOwner(Entity)
+     */
+    @Deprecated
+    Entity setOwner(Entity group);
+    
+    /**
+     * @deprecated see clearParent()
+     */
+    @Deprecated
+    void clearOwner();
+    
+    /** 
+     * @deprecated see addChild(Entity)
+     */
+    @Deprecated
+    Entity addOwnedChild(Entity child);
+    
+    /** 
+     * @deprecated see removeChild(Entity)
+     */
+    @Deprecated
     boolean removeOwnedChild(Entity child);
     
     /**
@@ -124,7 +160,7 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
 
     /**
      * Gets the given configuration value for this entity, which may be inherited from
-     * its owner.
+     * its parent.
      */
     <T> T getConfig(ConfigKey<T> key);
     

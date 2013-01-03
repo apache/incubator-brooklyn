@@ -40,9 +40,9 @@ public class DynamicGroupTest {
     @BeforeMethod
     public void setUp() {
         app = new TestApplication()
-        group = new DynamicGroup(owner:app)
-        e1 = new TestEntity(owner:app)
-        e2 = new TestEntity(owner:app)
+        group = new DynamicGroup(parent:app)
+        e1 = new TestEntity(parent:app)
+        e2 = new TestEntity(parent:app)
         app.startManagement();
     }
     
@@ -81,7 +81,7 @@ public class DynamicGroupTest {
     public void testGroupDetectsNewlyManagedMatchingMember() {
         Entity e3 = new AbstractEntity() {}
         group.setEntityFilter( { it.getId().equals(e3.getId()) } )
-        e3.setOwner(app);
+        e3.setParent(app);
         
         assertEquals(group.getMembers(), [])
         
@@ -162,7 +162,7 @@ public class DynamicGroupTest {
         assertEquals(group.getMembers(), [e1, e2])
         group.stop()
         
-        e3.setOwner(app)
+        e3.setParent(app)
         app.getManagementContext().manage(e3)
         assertSucceedsContinually(timeout:VERY_SHORT_WAIT_MS) {
             assertEquals(group.getMembers(), [e1, e2])
@@ -217,7 +217,7 @@ public class DynamicGroupTest {
             } as SensorEventListener);
 
         for (i in 1..NUM_CYCLES) {
-            TestEntity entity = new TestEntity(owner:app)
+            TestEntity entity = new TestEntity(parent:app)
             app.getManagementContext().manage(entity);
             executeUntilSucceeds {
                 entitiesNotified.contains(entity);
@@ -281,7 +281,7 @@ public class DynamicGroupTest {
         Entities.manage(group2);
         
         for (int i = 0; i < NUM_CYCLES; i++) {
-            TestEntity entity = new TestEntity(owner:app)
+            TestEntity entity = new TestEntity(parent:app)
             app.getManagementContext().manage(entity);
             app.getManagementContext().unmanage(entity);
         }
@@ -305,7 +305,7 @@ public class DynamicGroupTest {
         final CountDownLatch rescanLatch = new CountDownLatch(1);
         final CountDownLatch entityAddedLatch = new CountDownLatch(1);
         
-        final TestEntity e3 = new TestEntity(owner:app)
+        final TestEntity e3 = new TestEntity(parent:app)
         Predicate filter = Predicates.equalTo(e3);
         
         DynamicGroup group2 = new DynamicGroup(entityFilter:filter, app) {

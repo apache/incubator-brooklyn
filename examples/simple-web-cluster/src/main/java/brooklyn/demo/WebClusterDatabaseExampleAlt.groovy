@@ -77,7 +77,7 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
                 //"jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n"
                 DependentConfiguration.valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, 
                     { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);
-        jb7.setOwner(cluster);
+        jb7.setParent(cluster);
         return jb7;
     }
 

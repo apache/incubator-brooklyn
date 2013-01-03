@@ -9,10 +9,12 @@ import static org.testng.Assert.assertTrue;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
+import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -29,7 +31,7 @@ public class AutoScalerPolicyMetricTest {
     public void before() {
         app = new TestApplication();
         tc = new TestCluster(app, 1);
-        new LocalManagementContext().manage(app);
+        Entities.startManagement(app);
     }
     
     @Test
@@ -161,6 +163,29 @@ public class AutoScalerPolicyMetricTest {
         policy.suspend();
         policy.resume();
         tc.setAttribute(MY_ATTRIBUTE, 101);
+        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+    }
+    
+    @Test
+    public void testSubscribesToMetricOnSpecifiedEntity() {
+        TestEntity entityWithMetric = new TestEntity(app);
+        Entities.manage(entityWithMetric);
+        
+        tc.size = 1;
+        AutoScalerPolicy policy = new AutoScalerPolicy.Builder()
+                .metric(TestEntity.SEQUENCE)
+                .entityWithMetric(entityWithMetric)
+                .metricLowerBound(50)
+                .metricUpperBound(100)
+                .build();
+        tc.addPolicy(policy);
+
+        // First confirm that tc is not being listened to for this entity
+        tc.setAttribute(TestEntity.SEQUENCE, 101);
+        assertSucceedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 1));
+
+        // Then confirm we listen to the correct "entityWithMetric"
+        entityWithMetric.setAttribute(TestEntity.SEQUENCE, 101);
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
     }
 }

@@ -79,8 +79,8 @@ public class UrlMapping extends AbstractGroup {
         
     public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;    
 
-    public UrlMapping(Map<?,?> props, Entity owner) {
-        super(props, owner);
+    public UrlMapping(Map<?,?> props, Entity parent) {
+        super(props, parent);
     }
 
     public String getUniqueLabel() {
@@ -206,7 +206,7 @@ public class UrlMapping extends AbstractGroup {
                         recomputeAddresses();
                     }
                 }});
-            setMembers(t.getOwnedChildren(), EntityPredicates.attributeEqualTo(Startable.SERVICE_UP, true));
+            setMembers(t.getChildren(), EntityPredicates.attributeEqualTo(Startable.SERVICE_UP, true));
         }
         
         recomputeAddresses();

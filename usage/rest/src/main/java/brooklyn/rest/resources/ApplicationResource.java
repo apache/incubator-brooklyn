@@ -66,14 +66,14 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
     aRoot.put("name", entity.getDisplayName());
     aRoot.put("id", entity.getId());
     aRoot.put("type", entity.getEntityType().getName());
-    if (entity.getOwnedChildren().size() != 0) {
+    if (entity.getChildren().size() != 0) {
       aRoot.put("children", childEntitiesAsArray(entity));
     }
     return aRoot;
   }
   private ArrayNode childEntitiesAsArray(Entity entity) {
     ArrayNode node = mapper.createArrayNode();
-    for (Entity e : entity.getOwnedChildren()) {
+    for (Entity e : entity.getChildren()) {
       node.add(recursiveTreeFromEntity(e));
     }
     return node;
@@ -92,7 +92,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   @Path("/{application}")
   @ApiOperation(
       value = "Fetch a specific application",
-      responseClass = "brooklyn.rest.domain.Application"
+      responseClass = "brooklyn.rest.domain.ApplicationSummary"
   )
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application not found")
@@ -108,7 +108,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   @POST
   @ApiOperation(
       value = "Create and start a new application",
-      responseClass = "brooklyn.rest.resources.TaskSummary"
+      responseClass = "brooklyn.rest.domain.TaskSummary"
   )
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Undefined entity or location"),
@@ -134,7 +134,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   @Path("/{application}")
   @ApiOperation(
       value = "Delete a specified application",
-      responseClass = "brooklyn.rest.resources.TaskSummary"
+      responseClass = "brooklyn.rest.domain.TaskSummary"
   )
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application not found")

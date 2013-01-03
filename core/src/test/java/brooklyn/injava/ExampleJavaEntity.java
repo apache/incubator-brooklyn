@@ -44,12 +44,12 @@ public class ExampleJavaEntity extends AbstractEntity {
         super();
     }
 
-    public ExampleJavaEntity(Map<String,?> flags, Entity owner) {
-        super(flags, owner);
+    public ExampleJavaEntity(Map<String,?> flags, Entity parent) {
+        super(flags, parent);
     }
 
-    public ExampleJavaEntity(Entity owner) {
-        super(owner);
+    public ExampleJavaEntity(Entity parent) {
+        super(parent);
     }
     
     public void effector1(String arg1) {

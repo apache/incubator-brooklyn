@@ -39,15 +39,15 @@ public class EntitySubscriptionTest {
     public void setUp() {
         loc = new SimulatedLocation();
         app = new TestApplication();
-        entity = new TestEntity(owner:app);
-        observedEntity = new TestEntity(owner:app);
-        observedChildEntity = new TestEntity(owner:observedEntity);
+        entity = new TestEntity(parent:app);
+        observedEntity = new TestEntity(parent:app);
+        observedChildEntity = new TestEntity(parent:observedEntity);
         
-        observedGroup = new BasicGroup(owner:app);
-        observedMemberEntity = new TestEntity(owner:app);
+        observedGroup = new BasicGroup(parent:app);
+        observedMemberEntity = new TestEntity(parent:app);
         observedGroup.addMember(observedMemberEntity);
         
-        otherEntity = new TestEntity(owner:app);
+        otherEntity = new TestEntity(parent:app);
         listener = new RecordingSensorEventListener();
         
         mgmt = new LocalManagementContext();
@@ -109,7 +109,7 @@ public class EntitySubscriptionTest {
     public void testSubscribeToChildrenReceivesEventsForDynamicallyAddedChildren() {
         entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
         
-        TestEntity observedChildEntity2 = new TestEntity(owner:observedEntity);
+        TestEntity observedChildEntity2 = new TestEntity(parent:observedEntity);
         observedChildEntity2.setAttribute(TestEntity.SEQUENCE, 123);
         mgmt.manage(observedChildEntity2);
         
@@ -138,7 +138,7 @@ public class EntitySubscriptionTest {
     public void testSubscribeToMembersReceivesEventsForDynamicallyAddedMembers() {
         entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
-        TestEntity observedMemberEntity2 = new TestEntity(owner:app);
+        TestEntity observedMemberEntity2 = new TestEntity(parent:app);
         mgmt.manage(observedMemberEntity2);
         observedGroup.addMember(observedMemberEntity2);
         observedMemberEntity2.setAttribute(TestEntity.SEQUENCE, 123);

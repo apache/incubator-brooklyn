@@ -34,8 +34,8 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     private static final Logger log = LoggerFactory.getLogger(AbstractGroup.class);
     private final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
 
-    public AbstractGroup(Map<?,?> props, Entity owner) {
-        super(props, owner);
+    public AbstractGroup(Map<?,?> props, Entity parent) {
+        super(props, parent);
         setAttribute(Changeable.GROUP_SIZE, 0);
     }
     
@@ -47,8 +47,8 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
         this(props, null);
     }
     
-    public AbstractGroup(Entity owner) {
-        this(new MutableMap(), owner);
+    public AbstractGroup(Entity parent) {
+        this(new MutableMap(), parent);
     }
 
     /**

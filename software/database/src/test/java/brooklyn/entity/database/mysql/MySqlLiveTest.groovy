@@ -1,19 +1,21 @@
 package brooklyn.entity.database.mysql;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.Entities;
-import brooklyn.location.basic.LocationRegistry;
-import brooklyn.location.basic.jclouds.JcloudsLocation;
-import brooklyn.test.entity.TestApplication;
-import org.testng.annotations.Test;
 
-import static java.util.Arrays.asList;
+import brooklyn.config.BrooklynProperties
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.database.VogellaExampleAccess
+import brooklyn.location.basic.LocationRegistry
+import brooklyn.location.basic.jclouds.JcloudsLocation
+import org.testng.annotations.Test
+
+import static java.util.Arrays.asList
+import brooklyn.location.basic.SshMachineLocation
 
 /**
  * The MySqlLiveTest installs MySQL on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
  * MySQL works like expected on these Operating Systems.
  */
-public class MySqlLiveTest extends MySqlIntegrationTest{
+public class MySqlLiveTest extends MySqlIntegrationTest {
     @Test(groups = ["Live"])
     public void test_Debian_6() {
         test("Debian 6");
@@ -54,9 +56,12 @@ public class MySqlLiveTest extends MySqlIntegrationTest{
         test("Red Hat Enterprise Linux 6");
     }
 
-    public void test(String osRegex) throws Exception {
-        TestApplication tapp = new TestApplication(name: "MySqlIntegrationTest");
+    @Test(groups = ["Live"])
+    public void test_localhost() throws Exception {
+        super.test_localhost();
+    }
 
+    public void test(String osRegex) throws Exception {
         MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
@@ -70,12 +75,13 @@ public class MySqlLiveTest extends MySqlIntegrationTest{
         Entities.startManagement(tapp);
         tapp.start(asList(jcloudsLocation));
 
-        JcloudsLocation.JcloudsSshMachineLocation l = mysql.getLocations().iterator().next();
+        SshMachineLocation l = (SshMachineLocation) mysql.getLocations().iterator().next();
         //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
         l.exec(asList("iptables -I INPUT -p tcp --dport 3306 -j ACCEPT"))
 
         String host = mysql.getAttribute(MySqlNode.HOSTNAME);
         int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
-        new VogellaExampleAccess().readDataBase(host, port);
+        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", host, port);
+       
     } 
 }

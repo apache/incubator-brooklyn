@@ -69,11 +69,11 @@ public class DerbyDatabase extends SoftwareProcessEntity implements Database, Us
     public DerbyDatabase(Map properties) {
         this(properties, null);
     }
-    public DerbyDatabase(Entity owner) {
-        this(MutableMap.of(), owner);
+    public DerbyDatabase(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public DerbyDatabase(Map properties, Entity owner) {
-        super(properties, owner);
+    public DerbyDatabase(Map properties, Entity parent) {
+        super(properties, parent);
 
         if (schemaNames == null) schemaNames = Lists.newArrayList();
         if (schemas == null) schemas = Maps.newLinkedHashMap();

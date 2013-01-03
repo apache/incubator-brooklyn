@@ -144,11 +144,11 @@ public class AbstractLoadBalancingPolicyTest {
      * Creates a new container that will take "delay" millis to complete its start-up.
      */
     protected MockContainerEntity newAsyncContainer(Application app, String name, double lowThreshold, double highThreshold, long delay) {
-        // Annoyingly, can't set owner until after the threshold config has been defined.
+        // Annoyingly, can't set parent until after the threshold config has been defined.
         MockContainerEntity container = new MockContainerEntity([displayName:name], delay)
         container.setConfig(LOW_THRESHOLD_CONFIG_KEY, lowThreshold)
         container.setConfig(HIGH_THRESHOLD_CONFIG_KEY, highThreshold)
-        container.setOwner(app)
+        container.setParent(app)
         LOG.debug("Managing new container {}", container)
         app.getManagementContext().manage(container)
         container.start([loc])
@@ -167,7 +167,7 @@ public class AbstractLoadBalancingPolicyTest {
     protected static MockItemEntity newLockedItem(Application app, MockContainerEntity container, String name, double workrate) {
         MockItemEntity item = new MockItemEntity([displayName:name])
         item.setConfig(Movable.IMMOVABLE, true)
-        item.setOwner(app)
+        item.setParent(app)
         LOG.debug("Managing new item {}", container)
         app.getManagementContext().manage(item)
         item.move(container)

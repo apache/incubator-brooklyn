@@ -10,7 +10,7 @@ import org.slf4j.Logger
 
 import brooklyn.util.internal.StreamGobbler
 
-class ShellUtils {
+public class ShellUtils {
 
     public static TIMEOUT = 60*1000;
 

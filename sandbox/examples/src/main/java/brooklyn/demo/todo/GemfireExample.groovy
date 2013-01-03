@@ -36,7 +36,7 @@ class GemfireExample extends AbstractApplication {
     GemfireExample(Map props=[:]) {
         super(props)
         
-        fabric = new GemfireFabric(owner:this)
+        fabric = new GemfireFabric(parent:this)
         fabric.setConfig(GemfireServer.INSTALL_DIR, GEMFIRE_INSTALL_DIR)
         fabric.setConfig(GemfireServer.CONFIG_FILE, GEMFIRE_CONF_FILE)
         fabric.setConfig(GemfireServer.JAR_FILE, GEMFIRE_JAR_FILE)

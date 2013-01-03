@@ -103,7 +103,7 @@ public class BrooklynRestResourceUtils {
      **/
     public EntityLocal searchForEntityNamed(Entity root, String entity) {
         if (root.getId().equals(entity) || entity.equals(root.getDisplayName())) return (EntityLocal) root;
-        for (Entity child: root.getOwnedChildren()) {
+        for (Entity child: root.getChildren()) {
             Entity result = searchForEntityNamed(child, entity);
             if (result!=null) return (EntityLocal) result;
         }
@@ -155,25 +155,25 @@ public class BrooklynRestResourceUtils {
                 MutableMap.of("locations", locations));
     }
 
-    private AbstractEntity newEntityInstance(String type, Entity owner, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    private AbstractEntity newEntityInstance(String type, Entity parent, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
         Class<? extends Entity> clazz = getCatalog().loadClassByType(type, Entity.class);
         Map<String, String> config = Maps.newHashMap(configO);
         Constructor<?>[] constructors = clazz.getConstructors();
         AbstractEntity result = null;
-        if (owner==null) {
+        if (parent==null) {
             result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
             if (result!=null) return result;
         }
-        result = tryInstantiateEntity(constructors, new Class[] { Map.class, Entity.class }, new Object[] { config, owner });
+        result = tryInstantiateEntity(constructors, new Class[] { Map.class, Entity.class }, new Object[] { config, parent });
         if (result!=null) return result;
 
         result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
         if (result!=null) {
-            if (owner!=null) ((AbstractEntity)result).setOwner(owner);
+            if (parent!=null) ((AbstractEntity)result).setParent(parent);
             return result;
         }
 
-        result = tryInstantiateEntity(constructors, new Class[] { Entity.class }, new Object[] { owner });
+        result = tryInstantiateEntity(constructors, new Class[] { Entity.class }, new Object[] { parent });
         if (result!=null) {
             ((AbstractEntity)result).configure(config);
             return result;
@@ -181,7 +181,7 @@ public class BrooklynRestResourceUtils {
 
         result = tryInstantiateEntity(constructors, new Class[] {}, new Object[] {});
         if (result!=null) {
-            if (owner!=null) ((AbstractEntity)result).setOwner(owner);
+            if (parent!=null) ((AbstractEntity)result).setParent(parent);
             ((AbstractEntity)result).configure(config);
             return result;
         }

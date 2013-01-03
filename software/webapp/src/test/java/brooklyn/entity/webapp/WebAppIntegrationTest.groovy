@@ -51,7 +51,7 @@ public class WebAppIntegrationTest {
     // Port increment for JBoss 6.
     public static final int PORT_INCREMENT = 400
 
-    // The owner application entity for these tests
+    // The parent application entity for these tests
     private List<AbstractApplication> applications = new ArrayList<AbstractApplication>()
     SoftwareProcessEntity entity
     
@@ -147,11 +147,11 @@ public class WebAppIntegrationTest {
     @DataProvider(name = "basicEntities")
     public JavaWebAppSoftwareProcess[][] basicEntities() {
 		//FIXME we should start the application, not the entity
-        TomcatServer tomcat = new TomcatServer(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        TomcatServer tomcat = new TomcatServer(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         Entities.manage(tomcat);
-        JBoss6Server jboss6 = new JBoss6Server( owner:newTestApplication(), portIncrement:PORT_INCREMENT);
+        JBoss6Server jboss6 = new JBoss6Server( parent:newTestApplication(), portIncrement:PORT_INCREMENT);
         Entities.manage(jboss6);
-        JBoss7Server jboss7 = new JBoss7Server(owner:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        JBoss7Server jboss7 = new JBoss7Server(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         Entities.manage(jboss7);
         return [ 
             [ tomcat ],
@@ -371,11 +371,11 @@ public class WebAppIntegrationTest {
 				"spring/intro",
             ],
             // FIXME seam-booking does not work
-//            [   new JBoss6Server(owner:application, portIncrement:PORT_INCREMENT),
+//            [   new JBoss6Server(parent:application, portIncrement:PORT_INCREMENT),
 //				"seam-booking-as6.war",
 //                "seam-booking-as6/",
 //            ],
-//            [   new JBoss7Server(owner:application, httpPort:DEFAULT_HTTP_PORT),
+//            [   new JBoss7Server(parent:application, httpPort:DEFAULT_HTTP_PORT),
 //                "seam-booking-as7.war",
 //                "seam-booking-as7/",
 //            ],

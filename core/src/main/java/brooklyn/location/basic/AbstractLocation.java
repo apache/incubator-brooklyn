@@ -152,7 +152,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     public void addChildLocation(Location child) {
     	// Previously, setParentLocation delegated to addChildLocation and we sometimes ended up with
     	// duplicate entries here. Instead this now uses a similar scheme to 
-    	// AbstractEntity.setOwner/addOwnedChild (with any weaknesses for distribution that such a 
+    	// AbstractEntity.setParent/addChild (with any weaknesses for distribution that such a 
     	// scheme might have...).
     	// 
     	// We continue to use a list to allow identical-looking locations, but they must be different 

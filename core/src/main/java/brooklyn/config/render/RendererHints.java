@@ -11,6 +11,8 @@ import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 
+import com.google.common.base.Objects;
+
 /** registry of hints for displaying items such as sensors, e.g. in the web console */
 public class RendererHints {
 
@@ -69,6 +71,18 @@ public class RendererHints {
                 return "" + v;
             }
             return null;
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(actionName, postProcessing);
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof NamedActionWithUrl)) return false;
+            NamedActionWithUrl o = (NamedActionWithUrl) obj;
+            return Objects.equal(actionName, o.actionName) && Objects.equal(postProcessing, o.postProcessing);
         }
     }
 

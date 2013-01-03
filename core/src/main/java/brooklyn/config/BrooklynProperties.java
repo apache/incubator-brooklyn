@@ -133,7 +133,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
             if (url==null) return this;
             return addFrom(new ResourceUtils(this).getResourceFromUrl(url));
         } catch (Exception e) {
-            throw new RuntimeException("Error reading properties from ${url}: "+e, e);
+            throw new RuntimeException("Error reading properties from "+url+": "+e, e);
         }
     }
 

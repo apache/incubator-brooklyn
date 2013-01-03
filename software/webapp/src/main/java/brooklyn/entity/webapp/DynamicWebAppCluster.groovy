@@ -45,8 +45,8 @@ class DynamicWebAppCluster extends DynamicCluster implements WebAppService {
     /**
      * Instantiate a new DynamicWebAppCluster.  Parameters as per {@link DynamicCluster#DynamicCluster()}
      */
-    public DynamicWebAppCluster(Map properties=[:], Entity owner=null) {
-        super(properties, owner)
+    public DynamicWebAppCluster(Map properties=[:], Entity parent=null) {
+        super(properties, parent)
     }
     
     @Override

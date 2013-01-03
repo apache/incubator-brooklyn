@@ -43,15 +43,15 @@ public class TomcatAutoScalerPolicyTest {
         TestApplication app = new TestApplication()
         try {
             DynamicWebAppCluster cluster = new DynamicWebAppCluster(
-                factory: { Map properties, Entity owner ->
+                factory: { Map properties, Entity parent ->
                     properties.httpPort = port++
-                    def tc = new TomcatServer(properties, owner)
+                    def tc = new TomcatServer(properties, parent)
                     tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP++)
                     tc.setConfig(TomcatServer.SHUTDOWN_PORT, new PortRanges.SinglePort(shutdownP++))
                     tc
                 },
                 initialSize: 1,
-                owner: app
+                parent: app
             )
             
             AutoScalerPolicy policy = AutoScalerPolicy.builder()

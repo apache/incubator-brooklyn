@@ -44,7 +44,7 @@ class EntityExecutionManagerTest {
 
     @Test
     public void testGetTasksOfEntity() throws Exception {
-        TestEntity e = new TestEntity([owner:app])
+        TestEntity e = new TestEntity([parent:app])
         Entities.startManagement(app);
         
         CountDownLatch latch = new CountDownLatch(1)
@@ -57,7 +57,7 @@ class EntityExecutionManagerTest {
     
     @Test
     public void testUnmanagedEntityCanBeGcedEvenIfPreviouslyTagged() throws Exception {
-        TestEntity e = new TestEntity([owner:app])
+        TestEntity e = new TestEntity([parent:app])
         String eId = e.getId();
         Entities.startManagement(app);
         
@@ -90,7 +90,7 @@ class EntityExecutionManagerTest {
         for (int i = 0; i < 1000; i++) {
             try {
                 LOG.debug("testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked: iteration="+i);
-                TestEntity entity = new TestEntity([owner:app])
+                TestEntity entity = new TestEntity([parent:app])
                 entity.setAttribute(byteArrayAttrib, new byte[10*1000*1000]);
                 Entities.manage(entity);
                 entity.invoke(TestEntity.MY_EFFECTOR).get();
@@ -112,7 +112,7 @@ class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         Entities.startManagement(app, brooklynProperties);
         
         for (int i = 0; i < 1000; i++) {
@@ -136,7 +136,7 @@ class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1000);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         Entities.startManagement(app, brooklynProperties);
         
         List<Task<?>> tasks = Lists.newArrayList();
@@ -168,7 +168,7 @@ class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASK_AGE, maxTaskAge);
         
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         Entities.startManagement(app, brooklynProperties);
         
         Stopwatch stopwatch = new Stopwatch().start();

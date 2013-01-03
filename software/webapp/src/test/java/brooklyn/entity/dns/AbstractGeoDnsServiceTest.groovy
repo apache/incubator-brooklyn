@@ -62,7 +62,7 @@ public class AbstractGeoDnsServiceTest {
     public void setup() {
         def template = { properties -> new TestEntity(properties) }
         app = new AbstractApplication() { };
-        fabric = new DynamicFabric(owner:app, factory:template);
+        fabric = new DynamicFabric(parent:app, factory:template);
     }
 
     @AfterMethod
@@ -123,8 +123,8 @@ public class AbstractGeoDnsServiceTest {
     private class TestService extends AbstractGeoDnsService {
         public Map<String, HostGeoInfo> targetHostsByName = new LinkedHashMap<String, HostGeoInfo>();
         
-        public TestService(properties=[:], Entity owner) {
-            super(properties, owner);
+        public TestService(properties=[:], Entity parent) {
+            super(properties, parent);
         }
         
         protected boolean addTargetHost(Entity e, boolean doUpdate) {

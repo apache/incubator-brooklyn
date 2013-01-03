@@ -28,12 +28,12 @@ public class RestMockSimpleEntity extends SoftwareProcessEntity {
         super();
     }
 
-    public RestMockSimpleEntity(Entity owner) {
-        super(owner);
+    public RestMockSimpleEntity(Entity parent) {
+        super(parent);
     }
 
-    public RestMockSimpleEntity(Map flags, Entity owner) {
-        super(flags, owner);
+    public RestMockSimpleEntity(Map flags, Entity parent) {
+        super(flags, parent);
     }
 
     public RestMockSimpleEntity(Map flags) {

@@ -81,7 +81,7 @@ public class UrlMappingTest {
     
     @Test(groups = "Integration")
     public void testTargetMappingsRemovesUnmanagedMember() {
-        Iterable<StubAppServer> members = Iterables.filter(cluster.getOwnedChildren(), StubAppServer.class);
+        Iterable<StubAppServer> members = Iterables.filter(cluster.getChildren(), StubAppServer.class);
         StubAppServer target1 = Iterables.get(members, 0);
         StubAppServer target2 = Iterables.get(members, 1);
         
@@ -96,7 +96,7 @@ public class UrlMappingTest {
     
     @Test(groups = "Integration")
     public void testTargetMappingsRemovesDownMember() {
-        Iterable<StubAppServer> members = Iterables.filter(cluster.getOwnedChildren(), StubAppServer.class);
+        Iterable<StubAppServer> members = Iterables.filter(cluster.getChildren(), StubAppServer.class);
         StubAppServer target1 = Iterables.get(members, 0);
         StubAppServer target2 = Iterables.get(members, 1);
         
@@ -111,12 +111,12 @@ public class UrlMappingTest {
     
     @Test(groups = "Integration")
     public void testTargetMappingUpdatesAfterRebind() throws Exception {
-        Iterable<StubAppServer> members = Iterables.filter(cluster.getOwnedChildren(), StubAppServer.class);
+        Iterable<StubAppServer> members = Iterables.filter(cluster.getChildren(), StubAppServer.class);
         assertExpectedTargetsEventually(members);
         
         rebind();
         
-        Iterable<StubAppServer> members2 = Iterables.filter(cluster.getOwnedChildren(), StubAppServer.class);
+        Iterable<StubAppServer> members2 = Iterables.filter(cluster.getChildren(), StubAppServer.class);
         StubAppServer target1 = Iterables.get(members2, 0);
         StubAppServer target2 = Iterables.get(members2, 1);
 
@@ -125,7 +125,7 @@ public class UrlMappingTest {
 
         // Add a new member; expect member to be added
         cluster.resize(3);
-        StubAppServer target3 = Iterables.get(Iterables.filter(cluster.getOwnedChildren(), StubAppServer.class), 2);
+        StubAppServer target3 = Iterables.get(Iterables.filter(cluster.getChildren(), StubAppServer.class), 2);
         assertExpectedTargetsEventually(ImmutableSet.of(target1, target2, target3));
         
         // Stop one member, and expect the URL Mapping to be updated accordingly
@@ -157,7 +157,7 @@ public class UrlMappingTest {
         managementContext.terminate();
         
         app = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
-        cluster = (DynamicCluster) Iterables.find(app.getOwnedChildren(), Predicates.instanceOf(DynamicCluster.class));
-        urlMapping = (UrlMapping) Iterables.find(app.getOwnedChildren(), Predicates.instanceOf(UrlMapping.class));
+        cluster = (DynamicCluster) Iterables.find(app.getChildren(), Predicates.instanceOf(DynamicCluster.class));
+        urlMapping = (UrlMapping) Iterables.find(app.getChildren(), Predicates.instanceOf(UrlMapping.class));
     }
 }

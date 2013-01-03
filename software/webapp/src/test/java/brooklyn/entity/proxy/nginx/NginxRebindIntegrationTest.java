@@ -111,7 +111,7 @@ public class NginxRebindIntegrationTest {
         DynamicCluster origServerPool = new DynamicCluster(MutableMap.of("factory", new JBoss7ServerFactory(), "initialSize", 0), origApp);
         
         NginxController origNginx = new NginxController(MutableMap.builder()
-                .put("owner", origApp)
+                .put("parent", origApp)
                 .put("serverPool", origServerPool)
                 .put("domain", "localhost")
                 .build());
@@ -128,7 +128,7 @@ public class NginxRebindIntegrationTest {
         final String origConfigFile = origNginx.getConfigFile();
         
         newApp = rebind();
-        final NginxController newNginx = (NginxController) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(NginxController.class));
+        final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
 
         assertEquals(newNginx.getConfigFile(), origConfigFile);
         
@@ -156,7 +156,7 @@ public class NginxRebindIntegrationTest {
                 origApp);
         
         NginxController origNginx = new NginxController(MutableMap.builder()
-                .put("owner", origApp)
+                .put("parent", origApp)
                 .put("domain", "localhost")
                 .put("serverPool", origServerPool)
                 .build());
@@ -174,7 +174,7 @@ public class NginxRebindIntegrationTest {
         // Rebind
         newApp = rebind();
         ManagementContext newManagementContext = newApp.getManagementContext();
-        final NginxController newNginx = (NginxController) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(NginxController.class));
+        final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
         DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntity(origServerPool.getId());
         JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
 
@@ -227,7 +227,7 @@ public class NginxRebindIntegrationTest {
                 origUrlMappingsGroup);
 
         NginxController origNginx = new NginxController(MutableMap.builder()
-                .put("owner", origApp)
+                .put("parent", origApp)
                 .put("domain", "localhost")
                 .put("urlMappings", origUrlMappingsGroup)
                 .build());
@@ -245,7 +245,7 @@ public class NginxRebindIntegrationTest {
         // Create a rebinding
         newApp = rebind();
         ManagementContext newManagementContext = newApp.getManagementContext();
-        final NginxController newNginx = (NginxController) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(NginxController.class));
+        final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
         DynamicCluster newMappingPool = (DynamicCluster) newManagementContext.getEntity(origMappingPool.getId());
         JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newMappingPool.getMembers());
         

@@ -1,6 +1,8 @@
 package brooklyn.entity.nosql.redis;
 
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
+import brooklyn.entity.basic.SoftwareProcessDriver;
 
-public interface RedisStoreDriver extends JavaSoftwareProcessDriver {
+public interface RedisStoreDriver extends SoftwareProcessDriver {
+    
+    String getRunDir();
 }

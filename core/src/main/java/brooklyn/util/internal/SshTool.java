@@ -86,7 +86,9 @@ public interface SshTool {
      * <li>lastAccessDate (again UTC/1000; defaults to lastModificationDate);
      * </ul>
      * If neither lastXxxDate set it does not send that line (unless property ptimestamp set true)
-     *
+     * 
+     * Closes the input stream before returning.
+     * 
      * @param props
      * @param pathAndFileOnRemoteServer
      * @param input

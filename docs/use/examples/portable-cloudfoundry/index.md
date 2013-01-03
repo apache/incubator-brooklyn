@@ -128,7 +128,7 @@ class MovableElasticWebAppCluster extends AbstractEntity implements Startable, M
     
     @Override
     public void start(Collection<? extends Location> locations) {
-        if (!getOwnedChildren().isEmpty()) {
+        if (!getChildren().isEmpty()) {
             log.debug("Starting $this; it already has children, so start on children is being invoked")
             StartableMethods.start(this, locations);
         } else {

@@ -49,8 +49,8 @@ public class RebindDynamicGroupTest {
         
         TestApplication newApp = rebind();
         ManagementContext newManagementContext = newApp.getManagementSupport().getManagementContext(false);
-        final DynamicGroup newG = (DynamicGroup) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(DynamicGroup.class));
-        final MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        final DynamicGroup newG = (DynamicGroup) Iterables.find(newApp.getChildren(), Predicates.instanceOf(DynamicGroup.class));
+        final MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
 
         // Rebound group should contain same members as last time
         assertGroupMemebers(newG, ImmutableSet.of(newE));

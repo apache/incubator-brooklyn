@@ -315,7 +315,7 @@ public class AutoScalerPolicyTest {
         long timeToResize = stopwatch.elapsedMillis();
         assertTrue(timeToResize >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResize <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 2: time=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay");
+                "Resizing to 2: time="+timeToResize+"; resizeUpStabilizationDelay="+resizeUpStabilizationDelay);
 
         // Will then grow to 4 $resizeUpStabilizationDelay milliseconds after that emission
         executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
@@ -326,7 +326,7 @@ public class AutoScalerPolicyTest {
         
         assertTrue(timeToResizeTo4 >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResizeTo4 <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 4: time=$timeToResize; resizeUpStabilizationDelay=$resizeUpStabilizationDelay");
+                "Resizing to 4: time="+timeToResize+"; resizeUpStabilizationDelay="+resizeUpStabilizationDelay);
     }
 
     @Test(groups="Integration")
@@ -359,7 +359,7 @@ public class AutoScalerPolicyTest {
             }});
         
         long resizeDelay = System.currentTimeMillis() - emitTime;
-        assertTrue(resizeDelay >= (resizeUpStabilizationDelay-EARLY_RETURN_MS), "resizeDelay=$resizeDelay");
+        assertTrue(resizeDelay >= (resizeUpStabilizationDelay-EARLY_RETURN_MS), "resizeDelay="+resizeDelay);
     }
 
     @Test(groups="Integration")
@@ -427,7 +427,7 @@ public class AutoScalerPolicyTest {
         long timeToResize = stopwatch.elapsedMillis();
         assertTrue(timeToResize >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResize <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 2: time=$timeToResize; resizeDownStabilizationDelay=$resizeDownStabilizationDelay");
+                "Resizing to 2: time="+timeToResize+"; resizeDownStabilizationDelay="+resizeDownStabilizationDelay);
 
         // Will then shrink to 1 $resizeUpStabilizationDelay milliseconds after that emission
         executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
@@ -438,7 +438,7 @@ public class AutoScalerPolicyTest {
         
         assertTrue(timeToResizeTo1 >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResizeTo1 <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 1: time=$timeToResize; resizeDownStabilizationDelay=$resizeDownStabilizationDelay");
+                "Resizing to 1: time="+timeToResize+"; resizeDownStabilizationDelay="+resizeDownStabilizationDelay);
 
     }
 
@@ -472,7 +472,7 @@ public class AutoScalerPolicyTest {
                 }});
 
         long resizeDelay = System.currentTimeMillis() - emitTime;
-        assertTrue(resizeDelay >= (resizeDownStabilizationDelay-EARLY_RETURN_MS), "resizeDelay=$resizeDelay");
+        assertTrue(resizeDelay >= (resizeDownStabilizationDelay-EARLY_RETURN_MS), "resizeDelay="+resizeDelay);
     }
 
     static Map<String, Object> message(int currentSize, double currentWorkrate, double lowThreshold, double highThreshold) {

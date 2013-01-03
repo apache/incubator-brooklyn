@@ -6,7 +6,6 @@ import java.util.List;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
-import brooklyn.entity.nosql.infinispan.Infinispan5Driver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -16,7 +15,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
  */
-public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implements Infinispan5Driver {
+public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implements RedisStoreDriver {
 
     public RedisStoreSshDriver(RedisStore entity, SshMachineLocation machine) {
         super(entity, machine);

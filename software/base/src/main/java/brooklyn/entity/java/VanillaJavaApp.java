@@ -1,21 +1,27 @@
 package brooklyn.entity.java;
 
-import groovy.time.TimeDuration
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
-import java.util.concurrent.TimeUnit
-
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.event.adapter.ConfigSensorAdapter
-import brooklyn.event.adapter.FunctionSensorAdapter
-import brooklyn.event.adapter.JmxSensorAdapter
-import brooklyn.event.basic.BasicConfigKey
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.event.adapter.ConfigSensorAdapter;
+import brooklyn.event.adapter.FunctionSensorAdapter;
+import brooklyn.event.adapter.JmxSensorAdapter;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.util.MutableList;
+import brooklyn.util.MutableMap;
+import brooklyn.util.flags.SetFromFlag;
 
-import brooklyn.util.flags.SetFromFlag
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, UsesJmx, UsesJavaMXBeans {
 
@@ -24,32 +30,41 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     // TODO Make jmxPollPeriod @SetFromFlag easier to use: currently a confusion over long and TimeDuration, and 
     // no ability to set default value (can't just set field because config vals read/set in super-constructor :-(
      
-    private static final Logger log = LoggerFactory.getLogger(VanillaJavaApp.class)
+    private static final Logger log = LoggerFactory.getLogger(VanillaJavaApp.class);
     
     @SetFromFlag("args")
-    public static final ConfigKey<List> ARGS = new BasicConfigKey<List>(List.class, "vanillaJavaApp.args", "Arguments for launching the java app", []);
+    public static final ConfigKey<List> ARGS = new BasicConfigKey<List>(List.class, "vanillaJavaApp.args", "Arguments for launching the java app", Lists.newArrayList());
     
     @SetFromFlag(value="main", nullable=false)
     public static final ConfigKey<String> MAIN_CLASS = new BasicConfigKey<String>(String.class, "vanillaJavaApp.mainClass", "class to launch");
 
     @SetFromFlag("classpath")
-    public static final ConfigKey<List> CLASSPATH = new BasicConfigKey<List>(List.class, "vanillaJavaApp.classpath", "classpath to use, as list of URL entries", []);
+    public static final ConfigKey<List> CLASSPATH = new BasicConfigKey<List>(List.class, "vanillaJavaApp.classpath", "classpath to use, as list of URL entries", Lists.newArrayList());
 
     @SetFromFlag
     protected long jmxPollPeriod;
     
     @SetFromFlag("jvmXArgs")
     public static final ConfigKey<List> JVM_XARGS = new BasicConfigKey<List>(List.class, "vanillaJavaApp.jvmXArgs", "JVM -X args for the java app (e.g. memory)", 
-        ["-Xms128m", "-Xmx512m", "-XX:MaxPermSize=512m"]);
+        MutableList.of("-Xms128m", "-Xmx512m", "-XX:MaxPermSize=512m"));
 
     @SetFromFlag("jvmDefines")
     public static final ConfigKey<Map> JVM_DEFINES = new BasicConfigKey<Map>(Map.class, "vanillaJavaApp.jvmDefines", "JVM system property definitions for the app",
-        [:]);
+        Maps.newLinkedHashMap());
 
     protected JmxSensorAdapter jmxAdapter;
-    
-    public VanillaJavaApp(Map props=[:], Entity owner=null) {
-        super(props, owner);
+
+    public VanillaJavaApp() {
+        super(MutableMap.of(), null);
+    }
+    public VanillaJavaApp(Entity parent) {
+        super(MutableMap.of(), parent);
+    }
+    public VanillaJavaApp(Map flags) {
+        super(flags, null);
+    }
+    public VanillaJavaApp(Map props, Entity parent) {
+        super(props, parent);
     }
     
     public String getMainClass() { return getConfig(MAIN_CLASS); }
@@ -80,29 +95,38 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
         sensorRegistry.register(new ConfigSensorAdapter());
         
         if ( ((VanillaJavaAppDriver)getDriver()).isJmxEnabled() ) {
-            TimeDuration jmxPollPeriod = (jmxPollPeriod > 0 ? jmxPollPeriod : 500)*TimeUnit.MILLISECONDS;
-            jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(period:jmxPollPeriod));
+            jmxPollPeriod = (jmxPollPeriod > 0) ? jmxPollPeriod : 500;
+            jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(MutableMap.of("period", jmxPollPeriod)));
             JavaAppUtils.connectMXBeanSensors(this, jmxAdapter);
         }
         
+        Callable<Boolean> isRunningCallable = new Callable<Boolean>(){
+            public Boolean call() {
+                return getDriver().isRunning();
+            }
+        };
+
         FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
-            period:10*TimeUnit.SECONDS, 
-            { driver.isRunning() } ));
+                     MutableMap.of("period", 10*1000),
+                     isRunningCallable));
+
         serviceUpAdapter.poll(SERVICE_UP);
     }
     
     @Override
     protected void preStop() {
-        jmxAdapter?.deactivateAdapter();
+        // FIXME Confirm don't need to call jmxAdapter.deactivateAdapter();
         super.preStop();
     }
 
-    Class getDriverInterface() {
+    @Override
+    public Class<? extends VanillaJavaAppDriver> getDriverInterface() {
         return VanillaJavaAppDriver.class;
     }
     
     public String getRunDir() {
-        // FIXME Make this an attribute
-        return getDriver()?.getRunDir();
+        // FIXME Make this an attribute; don't assume it hsa to be ssh? What uses this?
+        VanillaJavaAppSshDriver driver = (VanillaJavaAppSshDriver) getDriver();
+        return (driver != null) ? driver.getRunDir() : null;
     }
 }

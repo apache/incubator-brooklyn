@@ -81,14 +81,14 @@ public class NginxAmazonTest {
  
         def template = { Map properties -> new JBoss7Server(properties) }
         
-        cluster = new DynamicCluster(owner:app, factory:template, initialSize:2, httpPort:8080 )
+        cluster = new DynamicCluster(parent:app, factory:template, initialSize:2, httpPort:8080 )
         URL war = getClass().getClassLoader().getResource("swf-booking-mvc.war")
         assertNotNull war, "Unable to locate resource $war"
         cluster.setConfig(JavaWebAppService.ROOT_WAR, war.path)
         cluster.start([ loc ])
 
         nginx = new NginxController([
-                "owner" : app,
+                "parent" : app,
                 "cluster" : cluster,
                 "domain" : "localhost",
                 "port" : 8000,

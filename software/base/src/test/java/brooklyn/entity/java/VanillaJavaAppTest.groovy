@@ -71,7 +71,7 @@ class VanillaJavaAppTest {
 
     @Test
     public void testReadsConfigFromFlags() {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:"my.Main", classpath:["c1", "c2"], args:["a1", "a2"])
+        VanillaJavaApp javaProcess = new VanillaJavaApp(parent:app, main:"my.Main", classpath:["c1", "c2"], args:["a1", "a2"])
         assertEquals(javaProcess.getMainClass(), "my.Main")
         assertEquals(javaProcess.getClasspath(), ["c1","c2"])
         assertEquals(javaProcess.getConfig(VanillaJavaApp.ARGS), ["a1", "a2"])
@@ -79,7 +79,7 @@ class VanillaJavaAppTest {
 
     @Test(groups=["WIP", "Integration"])
     public void testJavaSystemProperties() {
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:"my.Main", classpath:["c1", "c2"], args:["a1", "a2"])
+        VanillaJavaApp javaProcess = new VanillaJavaApp(parent:app, main:"my.Main", classpath:["c1", "c2"], args:["a1", "a2"])
         javaProcess.setConfig(UsesJava.JAVA_SYSPROPS, ["fooKey":"fooValue", "barKey":"barValue"])
         // TODO: how to test: launch standalone app that outputs system properties to stdout? Probe via JMX?
     }
@@ -87,7 +87,7 @@ class VanillaJavaAppTest {
     @Test(groups=["Integration"])
     public void testStartsAndStops() {
         String main = MAIN_CLASS.getCanonicalName();
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
+        VanillaJavaApp javaProcess = new VanillaJavaApp(parent:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
         app.start([loc])
         assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.RUNNING)
 
@@ -98,7 +98,7 @@ class VanillaJavaAppTest {
     @Test(groups=["Integration"])
     public void testHasJvmMXBeanSensorVals() {
         String main = MAIN_CLASS.getCanonicalName();
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
+        VanillaJavaApp javaProcess = new VanillaJavaApp(parent:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
         app.start([loc])
         
         // Memory MXBean
@@ -154,7 +154,7 @@ class VanillaJavaAppTest {
     @Test(groups=["Integration"])
     public void testJvmMXBeanProcessCpuTimeGivesNonZeroPercentage() {
         String main = MAIN_CPU_HUNGRY_CLASS.getCanonicalName();
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
+        VanillaJavaApp javaProcess = new VanillaJavaApp(parent:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
         app.start([loc])
 
         JavaAppUtils.connectJavaAppServerPolicies(javaProcess);
@@ -186,7 +186,7 @@ class VanillaJavaAppTest {
     public void testStartsWithJmxPortSpecifiedInConfig() {
         int port = 53405;
         String main = MAIN_CLASS.getCanonicalName();
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
+        VanillaJavaApp javaProcess = new VanillaJavaApp(parent:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
         javaProcess.setConfig(UsesJmx.JMX_PORT, port)
         app.start([loc])
 
@@ -197,7 +197,7 @@ class VanillaJavaAppTest {
     public void testStartsWithSecureJmxPortSpecifiedInConfig() {
         int port = 53406;
         String main = MAIN_CLASS.getCanonicalName();
-        VanillaJavaApp javaProcess = new VanillaJavaApp(owner:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
+        VanillaJavaApp javaProcess = new VanillaJavaApp(parent:app, main:main, classpath:[BROOKLYN_THIS_CLASSPATH], args:[])
         javaProcess.setConfig(UsesJmx.JMX_PORT, port)
         javaProcess.setConfig(UsesJmx.JMX_SSL_ENABLED, true)
         

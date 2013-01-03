@@ -78,24 +78,24 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     String displayName
     
-    EntityReference<Entity> owner
+    EntityReference<Entity> parent
     protected volatile EntityReference<Application> application
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
     
-    final EntityCollectionReference ownedChildren = new EntityCollectionReference<Entity>(this);
+    final EntityCollectionReference children = new EntityCollectionReference<Entity>(this);
 
     Map<String,Object> presentationAttributes = [:]
     Collection<AbstractPolicy> policies = [] as CopyOnWriteArrayList
     Collection<AbstractEnricher> enrichers = [] as CopyOnWriteArrayList
     Collection<Location> locations = Collections.newSetFromMap(new ConcurrentHashMap<Location,Boolean>())
 
-    // FIXME we do not currently support changing owners, but to implement a cluster that can shrink we need to support at least
-    // removing ownership. This flag notes if the class has previously been owned, and if an attempt is made to set a new owner
-    // an exception will be thrown.
+    // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
+    // orphaning (i.e. removing ownership). This flag notes if the entity has previously had a parent, and if an attempt is made to
+    // set a new parent an exception will be thrown.
     boolean previouslyOwned = false
 
     /**
-     * Whether we are still being constructed, in which case never warn in "assertNotYetOwned" 
+     * Whether we are still being constructed, in which case never warn in "assertNotYetOwned"
      */
     private boolean preConfigured = true;
     
@@ -127,28 +127,41 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * FIXME Temporary workaround for use-case:
      *  - the load balancing policy test calls app.managementContext.unmanage(itemToStop)
      *  - concurrently, the policy calls an effector on that item: item.move()
-     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary. 
-     *    This detects that the item is not managed, and sets it as managed again. The item is automatically  
+     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary.
+     *    This detects that the item is not managed, and sets it as managed again. The item is automatically
      *    added back into the dynamic group, and the policy receives an erroneous MEMBER_ADDED event.
      */
     private volatile boolean hasEverBeenManaged
     
-    public AbstractEntity(Entity owner) {
-        this([:], owner)
+    public AbstractEntity(Entity parent) {
+        this([:], parent)
     }
 
     // FIXME don't leak this reference in constructor - even to utils
-    public AbstractEntity(Map flags=[:], Entity owner=null) {
+    public AbstractEntity(Map flags=[:], Entity parent=null) {
         this.@skipInvokeMethodEffectorInterception.set(true)
         try {
             if (flags==null) {
                 throw new IllegalArgumentException("Flags passed to entity $this must not be null (try no-arguments or empty map)")
             }
-            if (flags.owner != null && owner != null && flags.owner != owner) {
-                throw new IllegalArgumentException("Multiple owners supplied, ${flags.owner} and $owner")
+            if (flags.parent != null && parent != null && flags.parent != parent) {
+                throw new IllegalArgumentException("Multiple parents supplied, ${flags.parent} and $parent")
             }
-            if (owner!=null) flags.owner = owner;
-            
+            if (flags.owner != null && parent != null && flags.owner != parent) {
+                throw new IllegalArgumentException("Multiple parents supplied with flags.parent, ${flags.owner} and $parent")
+            }
+            if (flags.parent != null && flags.owner != null && flags.parent != flags.owner) {
+                throw new IllegalArgumentException("Multiple parents supplied with flags.parent and flags.owner, ${flags.parent} and ${flags.owner}")
+            }
+            if (parent != null) {
+                flags.parent = parent;
+            }
+            if (flags.owner != null) {
+                LOG.warn("Use of deprecated \"flags.owner\" instead of \"flags.parent\" for entity {}", this);
+                flags.parent = flags.owner;
+                flags.remove('owner');
+            }
+
             // TODO Don't let `this` reference escape during construction
             entityType = new EntityDynamicType(this);
             
@@ -175,19 +188,19 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
     
     /** sets fields from flags; can be overridden if needed, subclasses should
-     * set custom fields before _invoking_ this super 
+     * set custom fields before _invoking_ this super
      * (and they nearly always should invoke the super)
      * <p>
      * note that it is usually preferred to use the SetFromFlag annotation on relevant fields
      * so they get set automatically by this method and overriding it is unnecessary
-     * 
+     *
      * @return this entity, for fluent style initialization
      */
     public AbstractEntity configure(Map flags=[:]) {
         assertNotYetOwned()
-		
-        Entity suppliedOwner = flags.remove('owner') ?: null
-        if (suppliedOwner) suppliedOwner.addOwnedChild(this)
+        
+        Entity suppliedParent = flags.remove('parent') ?: null
+        if (suppliedParent) suppliedParent.addChild(this)
 
         Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
         if (suppliedOwnConfig != null) {
@@ -202,9 +215,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         flags = FlagUtils.setConfigKeysFromFlags(flags, this);
         flags = FlagUtils.setFieldsFromFlags(flags, this);
         
-		if (displayName==null)
-			displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)
-		
+        if (displayName==null)
+            displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)
+        
         // all config keys specified in map should be set as config
         for (Iterator fi = flags.iterator(); fi.hasNext(); ) {
             Map.Entry entry = fi.next();
@@ -244,32 +257,33 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     /**
-     * Adds this as a member of the given group, registers with application if necessary
+     * Adds this as a child of the given entity; registers with application if necessary.
      */
-    public AbstractEntity setOwner(Entity entity) {
-        if (owner != null) {
-            // If we are changing to the same owner...
-            if (owner.get() == entity) return
-            // If we have an owner but changing to unowned...
-            if (entity==null) { clearOwner(); return; }
+    @Override
+    public AbstractEntity setParent(Entity entity) {
+        if (parent != null) {
+            // If we are changing to the same parent...
+            if (parent.get() == entity) return
+            // If we have a parent but changing to orphaned...
+            if (entity==null) { clearParent(); return; }
             
-            // We have an owner and are changing to another owner...
-            throw new UnsupportedOperationException("Cannot change owner of $this from $owner to $entity (owner change not supported)")
+            // We have a parent and are changing to another parent...
+            throw new UnsupportedOperationException("Cannot change parent of $this from $parent to $entity (parent change not supported)")
         }
-        // If we have previously had an owner and are trying to change to another one...
-        if (previouslyOwned && entity != null) 
-            throw new UnsupportedOperationException("Cannot set an owner of $this because it has previously had an owner")
-        // We don't have an owner, never have and are changing to being owned...
+        // If we have previously had a parent and are trying to change to another one...
+        if (previouslyOwned && entity != null)
+            throw new UnsupportedOperationException("Cannot set a parent of $this because it has previously had a parent")
+        // We don't have a parent, never have and are changing to having a parent...
 
         //make sure there is no loop
         if (this.equals(entity)) throw new IllegalStateException("entity $this cannot own itself")
-		//this may be expensive, but preferable to throw before setting the owner!
+        //this may be expensive, but preferable to throw before setting the parent!
         if (Entities.isDescendant(this, entity))
-			throw new IllegalStateException("loop detected trying to set owner of $this as $entity, which is already a descendent")
+            throw new IllegalStateException("loop detected trying to set parent of $this as $entity, which is already a descendent")
         
-        owner = new EntityReference(this, entity)
+        parent = new EntityReference(this, entity)
         //used to test entity!=null but that should be guaranteed?
-        entity.addOwnedChild(this)
+        entity.addChild(this)
         configsInternal.setInheritedConfig(entity.getAllConfig());
         previouslyOwned = true
         
@@ -278,11 +292,24 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return this;
     }
 
+    @Override
+    @Deprecated // see setParent(Entity)
+    public AbstractEntity setOwner(Entity entity) {
+        return setParent(entity);
+    }
+    
+    @Override
+    public void clearParent() {
+        if (parent == null) return
+        Entity oldParent = parent.get()
+        parent = null
+        oldParent?.removeChild(this)
+    }
+    
+    @Override
+    @Deprecated // see clearParent
     public void clearOwner() {
-        if (owner == null) return
-        Entity oldOwner = owner.get()
-        owner = null
-        oldOwner?.removeOwnedChild(this)
+        clearParent();
     }
 
     /**
@@ -290,12 +317,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * returns argument passed in, for convenience.
      */
     @Override
-    public Entity addOwnedChild(Entity child) {
-        synchronized (ownedChildren) {
+    public Entity addChild(Entity child) {
+        synchronized (children) {
             if (child == null) throw new NullPointerException("child must not be null (for entity "+this+")")
-	        if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
-	        child.setOwner(this)
-	        ownedChildren.add(child)
+            if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
+            child.setParent(this)
+            children.add(child)
             
             getManagementSupport().getEntityChangeListener().onChildrenChanged();
         }
@@ -303,10 +330,16 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     @Override
-    public boolean removeOwnedChild(Entity child) {
-        synchronized (ownedChildren) {
-            boolean changed = ownedChildren.remove child
-	        child.clearOwner()
+    @Deprecated // see addChild(Entity)
+    public Entity addOwnedChild(Entity child) {
+        return addChild(child);
+    }
+
+    @Override
+    public boolean removeChild(Entity child) {
+        synchronized (children) {
+            boolean changed = children.remove(child)
+            child.clearParent()
             
             if (changed) {
                 getManagementSupport().getEntityChangeListener().onChildrenChanged();
@@ -315,6 +348,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
     }
 
+    @Override
+    @Deprecated // see removeChild(Entity)
+    public boolean removeOwnedChild(Entity child) {
+        return removeChild(child);
+    }
+    
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
@@ -325,13 +364,36 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     @Override
-    public Entity getOwner() { owner?.get() }
+    public Entity getParent() {
+        return parent?.get();
+    }
 
-    // TODO synchronization: need to synchronize on ownedChildren, or have ownedChildren be a synchronized collection
+    // TODO synchronization: need to synchronize on children, or have children be a synchronized collection
     @Override
-    public Collection<Entity> getOwnedChildren() { ownedChildren.get() }
+    public Collection<Entity> getChildren() {
+        return children.get();
+    }
     
-    public EntityCollectionReference getOwnedChildrenReference() { this.@ownedChildren }
+    public EntityCollectionReference getChildrenReference() {
+        return this.@children;
+    }
+    
+    @Override
+    @Deprecated
+    public Entity getOwner() {
+        return getParent();
+    }
+
+    @Override
+    @Deprecated
+    public Collection<Entity> getOwnedChildren() {
+        return getChildren();
+    }
+    
+    @Deprecated
+    public EntityCollectionReference getOwnedChildrenReference() {
+        return getChildrenReference();
+    }
     
     @Override
     public Collection<Group> getGroups() { groups.get() }
@@ -342,7 +404,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     @Override
     public Application getApplication() {
         if (this.@application!=null) return this.@application.get();
-        def app = getOwner()?.getApplication()
+        def app = getParent()?.getApplication()
         if (app) {
             setApplication(app)
         }
@@ -462,22 +524,22 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return null;
     }
 
-	@Override
-	public <T> T getConfig(ConfigKey<T> key) {
+    @Override
+    public <T> T getConfig(ConfigKey<T> key) {
         return configsInternal.getConfig(key);
     }
     
-	@Override
-	public <T> T getConfig(HasConfigKey<T> key) {
+    @Override
+    public <T> T getConfig(HasConfigKey<T> key) {
         return configsInternal.getConfig(key);
     }
-	
+    
     @Override
     public <T> T getConfig(HasConfigKey<T> key, T defaultValue) {
         return configsInternal.getConfig(key, defaultValue);
     }
     
-	//don't use groovy defaults for defaultValue as that doesn't implement the contract; we need the above
+    //don't use groovy defaults for defaultValue as that doesn't implement the contract; we need the above
     @Override
     public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
         return configsInternal.getConfig(key, defaultValue);
@@ -500,10 +562,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         configsInternal.setConfig(key, val);
     }
 
-	@Override
-	public <T> T setConfig(HasConfigKey<T> key, T val) {
-		setConfig(key.configKey, val)
-	}
+    @Override
+    public <T> T setConfig(HasConfigKey<T> key, T val) {
+        setConfig(key.configKey, val)
+    }
 
     public <T> T setConfig(HasConfigKey<T> key, Task<T> val) {
         setConfig(key.configKey, val)
@@ -526,8 +588,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     public void refreshInheritedConfig() {
-        if (getOwner() != null) {
-            configsInternal.setInheritedConfig(getOwner().getAllConfig())
+        if (getParent() != null) {
+            configsInternal.setInheritedConfig(getParent().getAllConfig())
         } else {
             configsInternal.clearInheritedConfig();
         }
@@ -536,7 +598,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     void refreshInheritedConfigOfChildren() {
-        ownedChildren.get().each {
+        children.get().each {
             ((AbstractEntity)it).refreshInheritedConfig()
         }
     }
@@ -626,24 +688,24 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
     }
 
-    /** 
+    /**
      * Override this to add to the toString(), e.g. <code>return super.toStringHelper().add("port", port);</code>
-     * 
+     *
      * Cannot be used in combination with overriding the deprecated toStringFieldsToInclude.
      */
     protected ToStringHelper toStringHelper() {
         return Objects.toStringHelper(this).omitNullValues().add("id", getId()).add("name", getDisplayName());
     }
     
-    /** 
+    /**
      * override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString
-     * 
+     *
      * @deprecated In 0.5.0, instead override toStringHelper instead
      */
     @Deprecated
-    public Collection<String> toStringFieldsToInclude() { 
-		return ['id', 'displayName'] as Set
-	}
+    public Collection<String> toStringFieldsToInclude() {
+        return ['id', 'displayName'] as Set
+    }
 
     
     // -------- POLICIES --------------------
@@ -714,7 +776,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     @Override
     public <T> void emit(Sensor<T> sensor, T val) {
         if (sensor instanceof AttributeSensor) {
-            LOG.warn("Strongly discouraged use of emit with attribute sensor $sensor $val; use setAttribute instead!", 
+            LOG.warn("Strongly discouraged use of emit with attribute sensor $sensor $val; use setAttribute instead!",
                 new Throwable("location of discouraged attribute $sensor emit"))
         }
         if (val instanceof SensorEvent) {
@@ -732,11 +794,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     // -------- EFFECTORS --------------
 
-    /** Flag needed internally to prevent invokeMethod from recursing on itself. */     
+    /** Flag needed internally to prevent invokeMethod from recursing on itself. */
     private ThreadLocal<Boolean> skipInvokeMethodEffectorInterception = new ThreadLocal() { protected Object initialValue() { Boolean.FALSE } }
 
-    /** 
-     * Called by groovy for all method invocations; pass-through for everything but effectors; 
+    /**
+     * Called by groovy for all method invocations; pass-through for everything but effectors;
      * effectors get wrapped in a new task (parented by current task if there is one).
      */
     public Object invokeMethod(String name, Object args) {
@@ -744,9 +806,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             this.@skipInvokeMethodEffectorInterception.set(true);
 
             //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
-            if (args==null) 
+            if (args==null)
                 LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
-            else if (!args.class.isArray()) 
+            else if (!args.class.isArray())
                 LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
 
             try {
@@ -770,7 +832,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
                     }
                 }
             } catch (CancellationException ce) {
-	            LOG.info "Execution of effector {} on entity {} was cancelled", name, id
+                LOG.info "Execution of effector {} on entity {} was cancelled", name, id
                 throw ce;
             } catch (ExecutionException ee) {
                 LOG.info "Execution of effector {} on entity {} failed with {}", name, id, ee
@@ -779,8 +841,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
                 else throw ee;
             } finally { this.@skipInvokeMethodEffectorInterception.set(false); }
         }
-        if (metaClass==null) 
-            throw new IllegalStateException("no meta class for "+this+", invoking "+name); 
+        if (metaClass==null)
+            throw new IllegalStateException("no meta class for "+this+", invoking "+name);
         metaClass.invokeMethod(this, name, args);
     }
 
@@ -809,8 +871,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
         ManagementContext mgmtCtx = getManagementContext();
-        if (mgmtCtx==null) 
-            throw new IllegalStateException("Cannot invoke "+eff+" on "+this+" when not managed"); 
+        if (mgmtCtx==null)
+            throw new IllegalStateException("Cannot invoke "+eff+" on "+this+" when not managed");
 
         // FIXME Want a listenable task (like Guava's ListenableFuture)
         //       This call is non-blocking, so we're not notifying of onEffectorCompleted at correct time
@@ -830,7 +892,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public void onManagementStarting() {}
     
     /**
-     * Invoked by {@link EntityManagementSupport} when this entity is fully managed and visible to other entities 
+     * Invoked by {@link EntityManagementSupport} when this entity is fully managed and visible to other entities
      * through the management context.
      */
     public void onManagementStarted() {}
@@ -856,9 +918,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public void invalidateReferences() {
         // TODO move this to EntityMangementSupport,
         // when hierarchy fields can also be moved there
-        this.@owner?.invalidate();
+        this.@parent?.invalidate();
         this.@application?.invalidate();
-        this.@ownedChildren.invalidate();
+        this.@children.invalidate();
         this.@groups.invalidate();
     }
     
@@ -880,6 +942,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     protected void finalize() throws Throwable {
         super.finalize();
         if (!getManagementSupport().wasDeployed())
-            LOG.warn("Entity "+this+" was never deployed -- explicit call to manage(Entity) required."); 
+            LOG.warn("Entity "+this+" was never deployed -- explicit call to manage(Entity) required.");
     }
 }

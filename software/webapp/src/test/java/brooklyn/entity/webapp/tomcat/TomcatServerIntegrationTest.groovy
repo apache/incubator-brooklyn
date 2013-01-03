@@ -117,7 +117,7 @@ public class TomcatServerIntegrationTest {
 ////    @Test(groups = [ "Integration" ])
 //    public void createsPropertiesFilesWithEnvironmentVariables() {
 //        app = new TestApplication();
-//        tc = new TomcatServer(owner:app, httpPort:DEFAULT_HTTP_PORT);
+//        tc = new TomcatServer(parent:app, httpPort:DEFAULT_HTTP_PORT);
 //        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR1"),[akey:"aval",bkey:"bval"])
 //        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR2"),[ckey:"cval",dkey:"dval"])
 //        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])

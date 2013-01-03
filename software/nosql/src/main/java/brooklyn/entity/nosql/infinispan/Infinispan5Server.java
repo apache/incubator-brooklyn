@@ -39,11 +39,11 @@ public class Infinispan5Server extends SoftwareProcessEntity implements UsesJmx 
     public Infinispan5Server(Map properties) {
         this(properties, null);
     }
-    public Infinispan5Server(Entity owner) {
-        this(MutableMap.of(), owner);
+    public Infinispan5Server(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public Infinispan5Server(Map properties, Entity owner) {
-        super(properties, owner);
+    public Infinispan5Server(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     @Override
