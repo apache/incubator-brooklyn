@@ -12,7 +12,7 @@ The Entity Lifecycle
 --------------------
 
 - Importance of serialization, ref to How mananagement works
-- Ownership (children) and Membership (groups)
+- Parents and Membership (groups)
 
 <a name="implementation-classes"></a>
 What to Extend -- Implementation Classes
@@ -25,7 +25,7 @@ What to Extend -- Implementation Classes
   - ``DynamicCluster`` (multiple instances of the same entity in a location) and 
     ``DynamicFabric`` (clusters in multiple location) for automatically creating many instances,
     supplied with an ``EntityFactory`` (e.g. ``BaseEntityFactory``) in the ``factory`` flag
-  - abstract ``Group`` for collecting entities which are owned elsewhere in the hierachy
+  - abstract ``Group`` for collecting entities which are parented elsewhere in the hierachy
   - ``AbstractEntity`` if nothing else fits
   
 - traits (mixins, otherwise known as interfaces with statics) to define available config keys, sensors, and effectors;

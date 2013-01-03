@@ -1,12 +1,12 @@
 class TomcatFabricApp extends AbstractApplication {
-	Closure webClusterFactory = { Map flags, Entity owner ->
+	Closure webClusterFactory = { Map flags, Entity parent ->
 		Map clusterFlags = flags + 
 			[factory: { properties -> new TomcatServer(properties) }]
-		return new DynamicWebAppCluster(clusterFlags, owner)
+		return new DynamicWebAppCluster(clusterFlags, parent)
 	}
 
 	DynamicFabric fabric = new DynamicFabric(
-			owner : this,
+			parent : this,
 			displayName : "WebFabric",
 			displayNamePrefix : "",
 			displayNameSuffix : " web cluster",

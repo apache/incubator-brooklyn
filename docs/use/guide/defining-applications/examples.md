@@ -74,7 +74,7 @@ The code below starts a tomcat cluster in Amazon EC2:
 {% readj example_files/tomcat_EC2.groovy %}
 {% endhighlight %}
 
-The ``newEntity`` flag in the cluster constructor indicates how new entities should be created. The WAR configuration set on the cluster is inherited by each of the TomcatServer contained (i.e. "owned") by the cluster.
+The ``newEntity`` flag in the cluster constructor indicates how new entities should be created. The WAR configuration set on the cluster is inherited by each of the TomcatServer contained by (i.e. "children of") the cluster.
 
 The ``DynamicWebAppCluster`` is dynamic in that it supports resizing the cluster, adding and removing servers, as managed either manually or by policies embedded in the entity.
 
