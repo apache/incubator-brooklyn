@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 
 import com.google.common.base.Preconditions;
 
-import brooklyn.event.adapter.JmxHelper
+import brooklyn.event.feed.jmx.JmxHelper
 
 /**
  * Set up a JMX service ready for clients to connect. This consists of an MBean server, a connector server and a naming

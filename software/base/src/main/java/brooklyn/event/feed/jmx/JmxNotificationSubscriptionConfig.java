@@ -6,7 +6,6 @@ import javax.management.NotificationFilter;
 import javax.management.ObjectName;
 
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.adapter.JmxNotificationFilters;
 import brooklyn.event.feed.FeedConfig;
 
 import com.google.common.base.Function;

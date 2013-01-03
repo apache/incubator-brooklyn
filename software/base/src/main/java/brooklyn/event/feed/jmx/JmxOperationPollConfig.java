@@ -7,7 +7,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.adapter.JmxHelper;
 import brooklyn.event.feed.PollConfig;
 
 import com.google.common.base.Function;
