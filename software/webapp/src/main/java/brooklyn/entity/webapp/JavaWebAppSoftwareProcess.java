@@ -38,16 +38,16 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
         this(new LinkedHashMap(),null);
     }
 
-    public JavaWebAppSoftwareProcess(Entity owner){
-        this(new LinkedHashMap(),owner);
+    public JavaWebAppSoftwareProcess(Entity parent){
+        this(new LinkedHashMap(),parent);
     }
 
     public JavaWebAppSoftwareProcess(Map flags){
         this(flags, null);
     }
 
-    public JavaWebAppSoftwareProcess(Map flags, Entity owner) {
-        super(flags, owner);
+    public JavaWebAppSoftwareProcess(Map flags, Entity parent) {
+        super(flags, parent);
     }
 
     @Override

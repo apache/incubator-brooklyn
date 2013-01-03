@@ -78,8 +78,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     }
 
     /** Constructor for when application is nested inside another application */
-    public AbstractApplication(Map properties, Entity owner) {
-        super(properties, owner);
+    public AbstractApplication(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     /**

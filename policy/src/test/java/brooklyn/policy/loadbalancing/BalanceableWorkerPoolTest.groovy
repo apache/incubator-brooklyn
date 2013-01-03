@@ -61,7 +61,7 @@ class BalanceableWorkerPoolTest {
     
     @Test
     public void testDefaultResizeCallsResizeOnContainerGroup() {
-        LocallyResizableGroup resizable = new LocallyResizableGroup(owner:app)
+        LocallyResizableGroup resizable = new LocallyResizableGroup(parent:app)
         app.managementContext.manage(resizable)
         
         BalanceableWorkerPool pool2 = new BalanceableWorkerPool([:], app)
@@ -74,7 +74,7 @@ class BalanceableWorkerPoolTest {
     
     @Test
     public void testCustomResizableCalledWhenResizing() {
-        LocallyResizableGroup resizable = new LocallyResizableGroup(owner:app)
+        LocallyResizableGroup resizable = new LocallyResizableGroup(parent:app)
         app.managementContext.manage(resizable)
         
         pool.setResizable(resizable)
@@ -85,8 +85,8 @@ class BalanceableWorkerPoolTest {
     
     public static class LocallyResizableGroup extends AbstractGroup implements Resizable {
         private int size = 0
-        public LocallyResizableGroup(Map props, Entity owner=null) {
-            super(props, owner)
+        public LocallyResizableGroup(Map props, Entity parent=null) {
+            super(props, parent)
         }
         Integer resize(Integer newSize) {
             size = newSize

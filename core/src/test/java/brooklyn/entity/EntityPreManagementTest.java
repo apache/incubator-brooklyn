@@ -59,7 +59,7 @@ public class EntityPreManagementTest {
         Assert.assertFalse(e.getManagementSupport().isManagementContextReal());
         
         TestApplication app = new TestApplication();
-        e.setOwner(app);
+        e.setParent(app);
         new LocalManagementContext().manage(app);
 //        app.start(Arrays.<Location>asList());
         

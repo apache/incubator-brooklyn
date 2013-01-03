@@ -38,7 +38,7 @@ public class EntityConfigMapUsageTest {
         conf.put(strKey,"aval")
         conf.put(intKey,2)
         
-        TestEntity entity = new TestEntity([owner:app, config:conf])
+        TestEntity entity = new TestEntity([parent:app, config:conf])
         
         assertEquals("aval", entity.getConfig(strKey))
         assertEquals(2, entity.getConfig(intKey))
@@ -46,37 +46,37 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigSetToGroovyTruthFalseIsAvailable() throws Exception {
-        TestEntity entity = new TestEntity([owner:app, config:[(intKeyWithDefault):0]])
+        TestEntity entity = new TestEntity([parent:app, config:[(intKeyWithDefault):0]])
         
         assertEquals(entity.getConfig(intKeyWithDefault), 0)
     }
     
     @Test
     public void testInheritedConfigSetToGroovyTruthFalseIsAvailable() throws Exception {
-        TestEntity parent = new TestEntity([owner:app, config:[(intKeyWithDefault):0]])
-        TestEntity entity = new TestEntity([owner:parent])
+        TestEntity parent = new TestEntity([parent:app, config:[(intKeyWithDefault):0]])
+        TestEntity entity = new TestEntity([parent:parent])
         
         assertEquals(entity.getConfig(intKeyWithDefault), 0)
     }
     
     @Test
     public void testConfigSetToNullIsAvailable() throws Exception {
-        TestEntity entity = new TestEntity([owner:app, config:[(strKeyWithDefault):null]])
+        TestEntity entity = new TestEntity([parent:app, config:[(strKeyWithDefault):null]])
         
         assertEquals(entity.getConfig(strKeyWithDefault), null)
     }
     
     @Test
     public void testInheritedConfigSetToNullIsAvailable() throws Exception {
-        TestEntity parent = new TestEntity([owner:app, config:[(strKeyWithDefault):null]])
-        TestEntity entity = new TestEntity([owner:parent])
+        TestEntity parent = new TestEntity([parent:app, config:[(strKeyWithDefault):null]])
+        TestEntity entity = new TestEntity([parent:parent])
         
         assertEquals(entity.getConfig(strKeyWithDefault), null)
     }
     
     @Test
     public void testConfigCanBeSetOnEntity() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         entity.setConfig(strKey, "aval")
         entity.setConfig(intKey, 2)
         
@@ -86,9 +86,9 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigInheritedFromParent() throws Exception {
-        TestEntity parent = new TestEntity([owner:app, config:[(strKey):"aval"]])
+        TestEntity parent = new TestEntity([parent:app, config:[(strKey):"aval"]])
         parent.setConfig(intKey, 2)
-        TestEntity entity = new TestEntity([owner:parent])
+        TestEntity entity = new TestEntity([parent:parent])
         
         assertEquals("aval", entity.getConfig(strKey))
         assertEquals(2, entity.getConfig(intKey))
@@ -96,8 +96,8 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigInConstructorOverridesParentValue() throws Exception {
-        TestEntity parent = new TestEntity([owner:app, config:[(strKey):"aval"]])
-        TestEntity entity = new TestEntity([owner:parent, config:[(strKey):"diffval"]])
+        TestEntity parent = new TestEntity([parent:app, config:[(strKey):"aval"]])
+        TestEntity entity = new TestEntity([parent:parent, config:[(strKey):"diffval"]])
         
         assertEquals("diffval", entity.getConfig(strKey))
     }
@@ -108,7 +108,7 @@ public class EntityConfigMapUsageTest {
         appConf.put(strKey,"aval")
         
         TestEntity parent = new TestEntity([config:[(strKey):"aval"]]);
-        TestEntity entity = new TestEntity([owner:parent])
+        TestEntity entity = new TestEntity([parent:parent])
         entity.setConfig(strKey, "diffval")
         
         assertEquals("diffval", entity.getConfig(strKey))
@@ -116,7 +116,7 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigSetterOverridesConstructorValue() throws Exception {
-        TestEntity entity = new TestEntity([owner:app, config:[(strKey):"aval"]])
+        TestEntity entity = new TestEntity([parent:app, config:[(strKey):"aval"]])
         entity.setConfig(strKey, "diffval")
         
         assertEquals("diffval", entity.getConfig(strKey))
@@ -124,7 +124,7 @@ public class EntityConfigMapUsageTest {
 
     @Test
     public void testConfigSetOnParentInheritedByExistingChildrenBeforeStarted() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         app.setConfig(strKey,"aval")
         
         assertEquals("aval", entity.getConfig(strKey))
@@ -132,8 +132,8 @@ public class EntityConfigMapUsageTest {
 
     @Test
     public void testConfigInheritedThroughManyGenerations() throws Exception {
-        TestEntity e = new TestEntity([owner:app])
-        TestEntity e2 = new TestEntity([owner:e])
+        TestEntity e = new TestEntity([parent:app])
+        TestEntity e2 = new TestEntity([parent:e])
         app.setConfig(strKey,"aval")
         
         assertEquals("aval", app.getConfig(strKey))
@@ -143,7 +143,7 @@ public class EntityConfigMapUsageTest {
 
     @Test(enabled=false)
     public void testConfigCannotBeSetAfterApplicationIsStarted() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         app.start([new SimulatedLocation()])
         
         try {
@@ -158,13 +158,13 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigReturnsDefaultValueIfNotSet() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "defaultval")
     }
     
     @Test
     public void testGetFutureConfigWhenReady() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone( {return "aval"} as Callable))
         app.start([new SimulatedLocation()])
         
@@ -173,7 +173,7 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testGetFutureConfigBlocksUntilReady() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
         final CountDownLatch latch = new CountDownLatch(1)
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone( {latch.await(); return "aval"} as Callable))
         app.start([new SimulatedLocation()])
@@ -194,8 +194,8 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testGetAttributeWhenReadyConfigReturnsWhenSet() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
-        TestEntity entity2 = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
+        TestEntity entity2 = new TestEntity([parent:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
         app.start([new SimulatedLocation()])
         
@@ -205,8 +205,8 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testGetAttributeWhenReadyWithPostProcessingConfigReturnsWhenSet() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
-        TestEntity entity2 = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
+        TestEntity entity2 = new TestEntity([parent:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributePostProcessedWhenReady(entity2, TestEntity.NAME, {it}, { it+"mysuffix"}))
         app.start([new SimulatedLocation()])
         
@@ -216,8 +216,8 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testGetAttributeWhenReadyConfigBlocksUntilSet() throws Exception {
-        TestEntity entity = new TestEntity([owner:app])
-        TestEntity entity2 = new TestEntity([owner:app])
+        TestEntity entity = new TestEntity([parent:app])
+        TestEntity entity2 = new TestEntity([parent:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
         app.start([new SimulatedLocation()])
         

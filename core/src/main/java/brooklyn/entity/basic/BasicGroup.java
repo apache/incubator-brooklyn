@@ -19,21 +19,21 @@ public class BasicGroup extends AbstractGroup {
         super(MutableMap.of(), null);
     }
 
-    public BasicGroup(Entity owner) {
-        super(MutableMap.of(), owner);
+    public BasicGroup(Entity parent) {
+        super(MutableMap.of(), parent);
     }
 
     public BasicGroup(Map flags) {
         this(flags, null);
     }
     
-    public BasicGroup(Map flags, Entity owner) {
-        super(flags, owner);
+    public BasicGroup(Map flags, Entity parent) {
+        super(flags, parent);
     }
     
     @Override
-    public Entity addOwnedChild(Entity child) {
-        Entity result = super.addOwnedChild(child);
+    public Entity addChild(Entity child) {
+        Entity result = super.addChild(child);
         if (getConfig(CHILDREN_AS_MEMBERS)) {
             addMember(child);
         }
@@ -41,8 +41,8 @@ public class BasicGroup extends AbstractGroup {
     }
     
     @Override
-    public boolean removeOwnedChild(Entity child) {
-        boolean result = super.removeOwnedChild(child);
+    public boolean removeChild(Entity child) {
+        boolean result = super.removeChild(child);
         if (getConfig(CHILDREN_AS_MEMBERS)) {
             removeMember(child);
         }

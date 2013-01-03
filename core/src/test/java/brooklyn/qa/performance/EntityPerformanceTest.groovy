@@ -31,7 +31,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         
         entities = []
         for (int i = 0; i < 10; i++) {
-            entities += new TestEntity(owner:app)
+            entities += new TestEntity(parent:app)
         }
         entity = entities[0]
         

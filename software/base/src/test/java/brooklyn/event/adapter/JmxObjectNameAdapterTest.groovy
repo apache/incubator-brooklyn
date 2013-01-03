@@ -32,7 +32,7 @@ class JmxObjectNameAdapterTest {
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
         app = new AbstractApplication() {}
-        entity = new TestEntity(owner: app) {
+        entity = new TestEntity(parent: app) {
             void start(Collection locs) {
                 super.start(locs);
                 entity.setAttribute(Attributes.HOSTNAME, "localhost");

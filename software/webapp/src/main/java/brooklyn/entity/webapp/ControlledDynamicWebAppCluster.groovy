@@ -54,9 +54,9 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
 
     public static final Sensor HOSTNAME = Attributes.HOSTNAME;
     
-    public ControlledDynamicWebAppCluster(Entity owner) { this([:], owner) }
-    public ControlledDynamicWebAppCluster(Map flags = [:], Entity owner = null) {
-        super(flags, owner)
+    public ControlledDynamicWebAppCluster(Entity parent) { this([:], parent) }
+    public ControlledDynamicWebAppCluster(Map flags = [:], Entity parent = null) {
+        super(flags, parent)
         setAttribute(SERVICE_UP, false)
     }
 
@@ -66,7 +66,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         if (cachedController!=null) return cachedController;
         cachedController = _controller;
         if (cachedController!=null) return cachedController;
-        cachedController = getOwnedChildren().find { it in AbstractController }
+        cachedController = getChildren().find { it in AbstractController }
         if (cachedController!=null) return cachedController;
         log.debug("creating default controller for {}", this);
         cachedController = new NginxController(this);
@@ -87,7 +87,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     transient private DynamicWebAppCluster cachedCluster;
     public synchronized DynamicWebAppCluster getCluster() {
         if (cachedCluster!=null) return cachedCluster;
-        cachedCluster = getOwnedChildren().find { it in DynamicWebAppCluster }
+        cachedCluster = getChildren().find { it in DynamicWebAppCluster }
         if (cachedCluster!=null) return cachedCluster;
         log.debug("creating cluster child for {}", this);
         cachedCluster = new DynamicWebAppCluster(this,
@@ -105,19 +105,19 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         controller.bind(serverPool:cluster);
 
         List<Entity> childrenToStart = [cluster];
-        // Set controller as child of cluster, if it is not already owned
-        if (controller.getOwner() == null) {
-            addOwnedChild(controller);
+        // Set controller as child of cluster, if it does not already have a parent
+        if (controller.getParent() == null) {
+            addChild(controller);
         }
-        // And only start controller if we are owner
-        if (this.equals(controller.getOwner())) childrenToStart << controller;
+        // And only start controller if we are parent
+        if (this.equals(controller.getParent())) childrenToStart << controller;
         Entities.invokeEffectorList(this, childrenToStart, Startable.START, [locations:locations]).get();
         
         connectSensors();
     }
     
     public void stop() {
-        if (this.equals(controller.getOwner())) {
+        if (this.equals(controller.getParent())) {
             controller.stop()
         }
         cluster.stop()

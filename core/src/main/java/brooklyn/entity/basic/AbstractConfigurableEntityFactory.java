@@ -41,17 +41,17 @@ public abstract class AbstractConfigurableEntityFactory<T extends Entity> implem
         return configure(key.getConfigKey(), value);
     }
 
-    public T newEntity(Entity owner){
-        return newEntity(new HashMap(),owner);
+    public T newEntity(Entity parent){
+        return newEntity(new HashMap(),parent);
     }
 
-    public T newEntity(Map flags, Entity owner) {
+    public T newEntity(Map flags, Entity parent) {
         Map flags2 = new HashMap();
         flags2.putAll(config);
         flags2.putAll(flags);
-        return newEntity2(flags2, owner);
+        return newEntity2(flags2, parent);
     }
 
-    public abstract T newEntity2(Map flags, Entity owner);
+    public abstract T newEntity2(Map flags, Entity parent);
 }
 

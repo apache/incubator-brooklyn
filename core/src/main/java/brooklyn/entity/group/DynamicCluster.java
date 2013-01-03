@@ -103,14 +103,14 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
      *
      * @param properties the properties of the cluster (these may be visible to created children by inheritance,
      *  but to set properties on children explicitly, use the factory)
-     * @param owner the entity that owns this cluster (optional)
+     * @param parent the entity that owns this cluster (optional)
      */
-    public DynamicCluster(Map<?,?> properties, Entity owner) {
-        super(properties, owner);
+    public DynamicCluster(Map<?,?> properties, Entity parent) {
+        super(properties, parent);
         setAttribute(SERVICE_UP, false);
     }
-    public DynamicCluster(Entity owner) {
-        this(Maps.newLinkedHashMap(), owner);
+    public DynamicCluster(Entity parent) {
+        this(Maps.newLinkedHashMap(), parent);
     }
     public DynamicCluster(Map<?,?> properties) {
         this(properties, null);
@@ -331,8 +331,8 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     }
     
     @Override
-    public boolean removeOwnedChild(Entity child) {
-        boolean changed = super.removeOwnedChild(child);
+    public boolean removeChild(Entity child) {
+        boolean changed = super.removeChild(child);
         if (changed) {
             removeMember(child);
         }

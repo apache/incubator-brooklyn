@@ -75,7 +75,7 @@ public class EffectorConcatenateTest {
     @Test
     public void testCanInvokeEffector() {
         AbstractApplication app = new AbstractApplication() {}
-        MyEntity e = new MyEntity([owner:app])
+        MyEntity e = new MyEntity([parent:app])
         new LocalManagementContext().manage(app);
         
         // invocation map syntax
@@ -89,7 +89,7 @@ public class EffectorConcatenateTest {
     @Test
     public void testTaskReporting() {
         AbstractApplication app = new AbstractApplication() {}
-        MyEntity e = new MyEntity([owner:app]);
+        MyEntity e = new MyEntity([parent:app]);
         new LocalManagementContext().manage(app);
         
         final AtomicReference<String> result = new AtomicReference<String>();

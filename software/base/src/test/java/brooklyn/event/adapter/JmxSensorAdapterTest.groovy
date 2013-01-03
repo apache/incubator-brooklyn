@@ -73,7 +73,7 @@ public class JmxSensorAdapterTest {
     public void setUp() {
         // Create an entity and configure it with the above JMX service
         app = new AbstractApplication() {}
-        entity = new TestEntity(owner:app) {
+        entity = new TestEntity(parent:app) {
             void start(Collection locs) {
                         super.start(locs);
                         entity.setAttribute(Attributes.HOSTNAME, "localhost");
@@ -382,7 +382,7 @@ public class JmxSensorAdapterTest {
     @Test
     public void testSubscribeToJmxNotificationAndEmitCorrespondingNotificationSensor() {
         TestApplication app = new TestApplication();
-        EntityWithEmitter entity = new EntityWithEmitter(owner:app);
+        EntityWithEmitter entity = new EntityWithEmitter(parent:app);
         app.start([new SimulatedLocation()])
         
         List<SensorEvent> received = []
@@ -406,8 +406,8 @@ public class JmxSensorAdapterTest {
     }
     
     static class EntityWithEmitter extends AbstractEntity {
-        public EntityWithEmitter(Map flags=[:], Entity owner=null) {
-            super(flags, owner)
+        public EntityWithEmitter(Map flags=[:], Entity parent=null) {
+            super(flags, parent)
         }
         public static final BasicNotificationSensor<String> MY_NOTIF = [ String, "test.myNotif", "My notif" ]
     }

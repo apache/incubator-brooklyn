@@ -26,7 +26,7 @@ class LocalEntitiesTest {
     @Test
     public void testEffectorUpdatesAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}
-        HelloEntity h = new HelloEntity(owner:a)
+        HelloEntity h = new HelloEntity(parent:a)
         a.start([new SimulatedLocation()])
         
         h.setAge(5)
@@ -38,7 +38,7 @@ class LocalEntitiesTest {
     @Test
     public void testEffectorEmitsAttributeSensor() {
         AbstractApplication a = new AbstractApplication() {}
-        HelloEntity h = new HelloEntity(owner:a)
+        HelloEntity h = new HelloEntity(parent:a)
         a.start([new SimulatedLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
@@ -72,7 +72,7 @@ class LocalEntitiesTest {
     @Test
     public void testEffectorEmitsTransientSensor() {
         AbstractApplication a = new AbstractApplication() {}
-        HelloEntity h = new HelloEntity(owner:a)
+        HelloEntity h = new HelloEntity(parent:a)
         a.start([new SimulatedLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
@@ -98,7 +98,7 @@ class LocalEntitiesTest {
     @Test
     public void testSendMultipleInOrderThenUnsubscribe() {
         AbstractApplication a = new AbstractApplication() {}
-        HelloEntity h = new HelloEntity(owner:a)
+        HelloEntity h = new HelloEntity(parent:a)
         a.start([new SimulatedLocation()])
 
         List data = []       
@@ -130,8 +130,8 @@ class LocalEntitiesTest {
         AbstractApplication a = new AbstractApplication() {}
         a.setConfig(HelloEntity.MY_NAME, "Bob")
         
-        HelloEntity dad = new HelloEntity(owner:a)
-        HelloEntity son = new HelloEntity(owner:dad)
+        HelloEntity dad = new HelloEntity(parent:a)
+        HelloEntity son = new HelloEntity(parent:dad)
         
         //config is inherited
         assertEquals("Bob", a.getConfig(HelloEntity.MY_NAME))
@@ -148,8 +148,8 @@ class LocalEntitiesTest {
 		AbstractApplication a = new AbstractApplication() {}
 		a.setConfig(HelloEntity.MY_NAME, "Bob")
 		
-        HelloEntity dad = new HelloEntity(owner:a)
-        HelloEntity son = new HelloEntity(owner:dad)
+        HelloEntity dad = new HelloEntity(parent:a)
+        HelloEntity son = new HelloEntity(parent:dad)
 		
         //config can be set from an attribute
         son.setConfig(HelloEntity.MY_NAME, attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME
@@ -197,8 +197,8 @@ class LocalEntitiesTest {
 		AbstractApplication a = new AbstractApplication() {}
 		a.setConfig(HelloEntity.MY_NAME, "Bob")
 		
-        HelloEntity dad = new HelloEntity(owner:a)
-        HelloEntity son = new HelloEntity(owner:dad)
+        HelloEntity dad = new HelloEntity(parent:a)
+        HelloEntity son = new HelloEntity(parent:dad)
 		
         //and config can have transformations
         son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME), { it+it[-1]+"y" }))
@@ -211,8 +211,8 @@ class LocalEntitiesTest {
         AbstractApplication a = new AbstractApplication() {}
         a.setConfig(HelloEntity.MY_NAME, "Bob")
         
-        HelloEntity dad = new HelloEntity(owner:a)
-        HelloEntity son = new HelloEntity(owner:dad)
+        HelloEntity dad = new HelloEntity(parent:a)
+        HelloEntity son = new HelloEntity(parent:dad)
         
         //and config can have transformations
         son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME, null), { it+it[-1]+"y" }))

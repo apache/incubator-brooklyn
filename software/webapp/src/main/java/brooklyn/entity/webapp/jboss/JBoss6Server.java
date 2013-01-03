@@ -46,16 +46,16 @@ public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final MapConfigKey<Map> PROPERTY_FILES =
             new MapConfigKey<Map>(Map.class, "java.properties.environment", "Property files to be generated, referenced by an environment variable");
 
-    public JBoss6Server(Entity owner) {
-        this(new LinkedHashMap(), owner);
+    public JBoss6Server(Entity parent) {
+        this(new LinkedHashMap(), parent);
     }
 
     public JBoss6Server(Map flags){
         this(flags, null);
     }
 
-    public JBoss6Server(Map flags, Entity owner) {
-        super(flags, owner);
+    public JBoss6Server(Map flags, Entity parent) {
+        super(flags, parent);
     }
 
     @Override

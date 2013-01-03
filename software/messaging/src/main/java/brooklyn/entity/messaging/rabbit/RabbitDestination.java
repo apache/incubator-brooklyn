@@ -33,14 +33,14 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
     public RabbitDestination() {
         this(MutableMap.of(), null);
     }
-    public RabbitDestination(Entity owner) {
-        this(MutableMap.of(), owner);
+    public RabbitDestination(Entity parent) {
+        this(MutableMap.of(), parent);
     }
     public RabbitDestination(Map flags) {
         this(flags, null);
     }
-    public RabbitDestination(Map properties, Entity owner) {
-        super(properties, owner);
+    public RabbitDestination(Map properties, Entity parent) {
+        super(properties, parent);
         exchange = JavaGroovyEquivalents.elvis((String)properties.get("exchange"), getDefaultExchangeName());
 
         init();
@@ -51,13 +51,13 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
         setAttribute(RabbitBroker.VIRTUAL_HOST_NAME, virtualHost);
         if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         
-        SshMachineLocation machine = (SshMachineLocation) Iterables.find(getOwner().getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-        Map<String,String> shellEnvironment = getOwner().getDriver().getShellEnvironment();
+        SshMachineLocation machine = (SshMachineLocation) Iterables.find(getParent().getLocations(), Predicates.instanceOf(SshMachineLocation.class));
+        Map<String,String> shellEnvironment = getParent().getDriver().getShellEnvironment();
         sshAdapter = sensorRegistry.register(new SshSensorAdapter(MutableMap.of("env", shellEnvironment), machine));
     }
 
-    public RabbitBroker getOwner() {
-        return (RabbitBroker) super.getOwner();
+    public RabbitBroker getParent() {
+        return (RabbitBroker) super.getParent();
     }
     
     public void create() {
@@ -80,6 +80,6 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
 
     @Override
     protected ToStringHelper toStringHelper() {
-        return super.toStringHelper().add("virtualHost", getOwner().getVirtualHost()).add("exchange", getExchangeName());
+        return super.toStringHelper().add("virtualHost", getParent().getVirtualHost()).add("exchange", getExchangeName());
     }
 }

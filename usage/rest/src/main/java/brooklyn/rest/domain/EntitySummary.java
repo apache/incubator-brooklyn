@@ -44,8 +44,8 @@ public class EntitySummary {
     String entityUri = applicationUri + "/entities/" + entity.getId();
     Builder<String, URI> lb = ImmutableMap.<String, URI>builder()
         .put("self", URI.create(entityUri));
-    if (entity.getOwner()!=null)
-        lb.put("parent", URI.create(applicationUri+"/entities/"+entity.getOwner().getId()));
+    if (entity.getParent()!=null)
+        lb.put("parent", URI.create(applicationUri+"/entities/"+entity.getParent().getId()));
     lb.put("application", URI.create(applicationUri))
         .put("children", URI.create(entityUri + "/entities"))
         .put("config", URI.create(entityUri + "/config"))

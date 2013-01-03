@@ -50,7 +50,7 @@ public class WebAppLiveIntegrationTest {
     // Port increment for JBoss 6.
     public static final int PORT_INCREMENT = 400
 
-    // The owner application entity for these tests
+    // The parent application entity for these tests
     Application application = new TestApplication()
 
     private JcloudsLocationFactory locFactory
@@ -65,9 +65,9 @@ public class WebAppLiveIntegrationTest {
      */
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
-        TomcatServer tomcat = [ owner:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
-        JBoss6Server jboss6 = [ owner:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT ]
-        JBoss7Server jboss7 = [ owner:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
+        TomcatServer tomcat = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
+        JBoss6Server jboss6 = [ parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT ]
+        JBoss7Server jboss7 = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
         return [ [ tomcat ], [ jboss6 ], [ jboss7 ] ]
     }
 

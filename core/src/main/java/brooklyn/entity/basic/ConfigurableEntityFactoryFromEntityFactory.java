@@ -21,7 +21,7 @@ public class ConfigurableEntityFactoryFromEntityFactory<T extends Entity> extend
     }
 
     @Override
-    public T newEntity2(Map flags, Entity owner) {
-        return factory.newEntity(flags, owner);
+    public T newEntity2(Map flags, Entity parent) {
+        return factory.newEntity(flags, parent);
     }
 }

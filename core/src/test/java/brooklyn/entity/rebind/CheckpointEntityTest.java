@@ -53,11 +53,11 @@ public class CheckpointEntityTest {
     @Test
     public void testAutoCheckpointsOnManageApp() throws Exception {
         MyApplication newApp = rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         // Assert has expected entities and config
         assertEquals(newApp.getId(), origApp.getId());
-        assertEquals(ImmutableList.copyOf(newApp.getOwnedChildren()), ImmutableList.of(newE));
+        assertEquals(ImmutableList.copyOf(newApp.getChildren()), ImmutableList.of(newE));
         assertEquals(newE.getId(), origE.getId());
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myval");
     }
@@ -68,13 +68,13 @@ public class CheckpointEntityTest {
         managementContext.manage(origE2);
         
         MyApplication newApp = rebind();
-        MyEntity newE2 = (MyEntity) Iterables.find(newApp.getOwnedChildren(), new Predicate<Entity>() {
+        MyEntity newE2 = (MyEntity) Iterables.find(newApp.getChildren(), new Predicate<Entity>() {
                 @Override public boolean apply(@Nullable Entity input) {
                     return origE2.getId().equals(input.getId());
                 }});
         
         // Assert has expected entities and config
-        assertEquals(newApp.getOwnedChildren().size(), 2); // expect equivalent of origE and origE2
+        assertEquals(newApp.getChildren().size(), 2); // expect equivalent of origE and origE2
         assertEquals(newE2.getId(), origE2.getId());
         assertEquals(newE2.getConfig(MyEntity.MY_CONFIG), "myval2");
     }
@@ -86,7 +86,7 @@ public class CheckpointEntityTest {
         MyApplication newApp = rebind();
         
         // Assert does not container unmanaged entity
-        assertEquals(ImmutableList.copyOf(newApp.getOwnedChildren()), Collections.emptyList());
+        assertEquals(ImmutableList.copyOf(newApp.getChildren()), Collections.emptyList());
         assertNull(newApp.getManagementSupport().getManagementContext(false).getEntity(origE.getId()));
     }
     
@@ -97,7 +97,7 @@ public class CheckpointEntityTest {
         
         // Assert persisted the modified config/attributes
         MyApplication newApp = rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "mynewval");
         assertEquals(newE.getAttribute(MyEntity.MY_SENSOR), "mysensorval");

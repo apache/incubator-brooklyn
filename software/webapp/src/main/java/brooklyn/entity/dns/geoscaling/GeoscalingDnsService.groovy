@@ -50,8 +50,8 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     private String primaryDomainName;
     private String smartSubdomainName;
     
-    public GeoscalingDnsService(Map properties = [:], Entity owner = null) {
-        super(properties, owner);
+    public GeoscalingDnsService(Map properties = [:], Entity parent = null) {
+        super(properties, parent);
         
         // defaulting to randomized subdomains makes deploying multiple applications easier
         if (getConfig(RANDOMIZE_SUBDOMAIN_NAME)==null) setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); 

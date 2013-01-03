@@ -97,12 +97,12 @@ public class RebindEntityTest {
         // Assert has expected config/fields
         assertEquals(newApp.getId(), origApp.getId());
         
-        assertEquals(newApp.getOwnedChildren().size(), 1);
-        MyEntity newE = (MyEntity) Iterables.get(newApp.getOwnedChildren(), 0);
+        assertEquals(newApp.getChildren().size(), 1);
+        MyEntity newE = (MyEntity) Iterables.get(newApp.getChildren(), 0);
         assertEquals(newE.getId(), origE.getId());
 
-        assertEquals(newE.getOwnedChildren().size(), 1);
-        MyEntity newE2 = (MyEntity) Iterables.get(newE.getOwnedChildren(), 0);
+        assertEquals(newE.getChildren().size(), 1);
+        MyEntity newE2 = (MyEntity) Iterables.get(newE.getChildren(), 0);
         assertEquals(newE2.getId(), origE2.getId());
         
         assertNotSame(origApp, newApp);
@@ -122,8 +122,8 @@ public class RebindEntityTest {
         
         MyApplication newApp = rebind();
         
-        BasicGroup newG = (BasicGroup) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(BasicGroup.class));
-        Iterable<Entity> newEs = Iterables.filter(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        BasicGroup newG = (BasicGroup) Iterables.find(newApp.getChildren(), Predicates.instanceOf(BasicGroup.class));
+        Iterable<Entity> newEs = Iterables.filter(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(ImmutableSet.copyOf(newG.getMembers()), ImmutableSet.copyOf(newEs));
     }
     
@@ -133,7 +133,7 @@ public class RebindEntityTest {
         managementContext.manage(origApp);
         
         MyApplication newApp = rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myval");
     }
     
@@ -146,7 +146,7 @@ public class RebindEntityTest {
         origE.setAttribute(myCustomAttribute, "myval");
         
         MyApplication newApp = rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getAttribute(myCustomAttribute), "myval");
     }
     
@@ -157,7 +157,7 @@ public class RebindEntityTest {
         managementContext.manage(origApp);
         
         MyApplication newApp = rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getId(), eId);
         assertEquals(newE.getDisplayName(), "mydisplayname");
     }
@@ -169,7 +169,7 @@ public class RebindEntityTest {
         
         MyApplication newApp = rebind();
         
-        MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity2.class));
+        MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity2.class));
         assertEquals(newE.myfield, "myval");
     }
     
@@ -179,7 +179,7 @@ public class RebindEntityTest {
         managementContext.manage(origApp);
         
         MyApplication newApp = rebind();
-        MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity2.class));
+        MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity2.class));
         
         newApp.setAttribute(MyApplication.MY_SENSOR, "mysensorval");
         TestUtils.assertEventually(Suppliers.ofInstance(newE.events), Predicates.equalTo(ImmutableList.of("mysensorval")));
@@ -197,8 +197,8 @@ public class RebindEntityTest {
         managementContext.manage(origApp);
         
         MyApplication newApp = rebind();
-        MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
-        MyEntity newOtherE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
+        MyEntity newOtherE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertAttributeEquals(newE, MyEntityReffingOthers.ENTITY_REF_SENSOR, newOtherE);
         assertConfigEquals(newE, MyEntityReffingOthers.ENTITY_REF_CONFIG, newOtherE);
@@ -217,7 +217,7 @@ public class RebindEntityTest {
         origApp.start(ImmutableList.of(origLoc));
         
         MyApplication newApp = rebind();
-        MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
+        MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
         MyLocation newLoc = (MyLocation) Iterables.getOnlyElement(newApp.getLocations());
         
         assertAttributeEquals(newE, MyEntityReffingOthers.LOCATION_REF_SENSOR, newLoc);
@@ -349,7 +349,7 @@ public class RebindEntityTest {
         managementContext.manage(origApp);
         
         MyApplication newApp = rebind();
-        final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
+        final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_LIST_PLAIN), ImmutableList.of("val1", "val2"));
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_PLAIN), ImmutableMap.of("akey", "aval"));
@@ -364,7 +364,7 @@ public class RebindEntityTest {
         managementContext.manage(origApp);
         
         MyApplication newApp = rebind();
-        final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
+        final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("val1", "val2"));
     }
@@ -377,7 +377,7 @@ public class RebindEntityTest {
         managementContext.manage(origApp);
         
         MyApplication newApp = rebind();
-        final TestEntity newE = (TestEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(TestEntity.class));
+        final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_THING), ImmutableMap.of("akey", "aval", "bkey", "bval"));
     }
@@ -390,7 +390,7 @@ public class RebindEntityTest {
 
         // rebind: inherited config is preserved
         MyApplication newApp = rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
         assertEquals(newApp.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
@@ -412,7 +412,7 @@ public class RebindEntityTest {
         assertEquals(origE.getConfig(MyEntity.MY_CONFIG, "mydefault"), "mydefault");
         
         MyApplication newApp = rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertNull(newE.getConfig(MyEntity.MY_CONFIG));
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG, "mydefault"), "mydefault");
@@ -427,7 +427,7 @@ public class RebindEntityTest {
         assertNull(origE.getAttribute(MyEntity.MY_SENSOR));
 
         MyApplication newApp = rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertNull(newE.getAttribute(MyEntity.MY_SENSOR));
     }
@@ -464,12 +464,12 @@ public class RebindEntityTest {
         
         private final Object dummy = new Object(); // so not serializable
 
-        public MyEntity(Entity owner) {
-            super(owner);
+        public MyEntity(Entity parent) {
+            super(parent);
         }
         
-        public MyEntity(Map flags, Entity owner) {
-            super(flags, owner);
+        public MyEntity(Map flags, Entity parent) {
+            super(flags, parent);
         }
 
         @Override
@@ -505,12 +505,12 @@ public class RebindEntityTest {
         
         private final Object dummy = new Object(); // so not serializable
 
-        public MyEntityReffingOthers(Entity owner) {
-            super(owner);
+        public MyEntityReffingOthers(Entity parent) {
+            super(parent);
         }
         
-        public MyEntityReffingOthers(Map flags, Entity owner) {
-            super(flags, owner);
+        public MyEntityReffingOthers(Map flags, Entity parent) {
+            super(flags, parent);
         }
     }
     
@@ -532,8 +532,8 @@ public class RebindEntityTest {
 
         private final Object dummy = new Object(); // so not serializable
 
-        public MyEntity2(Map flags, Entity owner) {
-            super(flags, owner);
+        public MyEntity2(Map flags, Entity parent) {
+            super(flags, parent);
         }
         
         @Override
@@ -597,12 +597,12 @@ public class RebindEntityTest {
             managedContinuesLatch = new CountDownLatch(1);
         }
 
-        public MyLatchingEntity(Entity owner) {
-            super(owner);
+        public MyLatchingEntity(Entity parent) {
+            super(parent);
         }
         
-        public MyLatchingEntity(Map flags, Entity owner) {
-            super(flags, owner);
+        public MyLatchingEntity(Map flags, Entity parent) {
+            super(flags, parent);
         }
 
         private void onReconstruct() {

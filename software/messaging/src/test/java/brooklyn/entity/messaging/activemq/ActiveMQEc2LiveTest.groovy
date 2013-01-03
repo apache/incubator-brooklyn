@@ -79,7 +79,7 @@ class ActiveMQEc2LiveTest {
      */
     @Test(groups = [ "Live" ])
     public void canStartupAndShutdown() {
-        activeMQ = new ActiveMQBroker(owner:app);
+        activeMQ = new ActiveMQBroker(parent:app);
         app.start([ loc ])
         executeUntilSucceedsWithShutdown(activeMQ) {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
@@ -97,7 +97,7 @@ class ActiveMQEc2LiveTest {
         String content = "01234567890123456789012345678901"
 
         // Start broker with a configured queue
-        activeMQ = new ActiveMQBroker(owner:app, queue:queueName);
+        activeMQ = new ActiveMQBroker(parent:app, queue:queueName);
         app.start([ loc ])
         executeUntilSucceeds {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
@@ -108,7 +108,7 @@ class ActiveMQEc2LiveTest {
             assertFalse activeMQ.queueNames.isEmpty()
             assertEquals activeMQ.queueNames.size(), 1
             assertTrue activeMQ.queueNames.contains(queueName)
-            assertEquals activeMQ.ownedChildren.size(), 1
+            assertEquals activeMQ.children.size(), 1
             assertFalse activeMQ.queues.isEmpty()
             assertEquals activeMQ.queues.size(), 1
 

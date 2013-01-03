@@ -109,7 +109,7 @@ class DynamicClusterTest {
     }
 
     @Test
-    public void resizeFromZeroToOneStartsANewEntityAndSetsItsOwner() {
+    public void resizeFromZeroToOneStartsANewEntityAndSetsItsParent() {
         TestEntity entity
         DynamicCluster cluster = new DynamicCluster(factory:{ properties -> entity = new TestEntity(properties) }, app)
         app.manage(cluster);
@@ -117,7 +117,7 @@ class DynamicClusterTest {
 
         cluster.resize(1)
         assertEquals entity.counter.get(), 1
-        assertEquals entity.owner, cluster
+        assertEquals entity.parent, cluster
         assertEquals entity.application, app
     }
 
@@ -167,7 +167,7 @@ class DynamicClusterTest {
         Collection<Location> locations = [ loc ]
         TestEntity entity
         def newEntity = { properties ->
-            entity = new TestEntity(owner:app) {
+            entity = new TestEntity(parent:app) {
 	            List<Location> stashedLocations = null
 	            @Override
 	            void start(Collection<? extends Location> loc) {
@@ -266,8 +266,8 @@ class DynamicClusterTest {
         cluster.start([loc])
         cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
-        assertEquals(cluster.ownedChildren.size(), 2)
-        cluster.ownedChildren.each {
+        assertEquals(cluster.children.size(), 2)
+        cluster.children.each {
             assertFalse(((FailingEntity)it).failOnStart)
         }
     }
@@ -288,7 +288,7 @@ class DynamicClusterTest {
         cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
         assertEquals(cluster.members.size, 2)
-        assertEquals(Iterables.size(Iterables.filter(cluster.ownedChildren, Predicates.instanceOf(FailingEntity.class))), 3)
+        assertEquals(Iterables.size(Iterables.filter(cluster.children, Predicates.instanceOf(FailingEntity.class))), 3)
         cluster.members.each {
             assertFalse(((FailingEntity)it).failOnStart)
         }
@@ -315,12 +315,12 @@ class DynamicClusterTest {
         cluster.resize(1)
         cluster.resize(2)
         assertEquals(cluster.currentSize, 2)
-        assertEquals(cluster.ownedChildren as List, creationOrder)
+        assertEquals(cluster.children as List, creationOrder)
         
         // Now stop one
         cluster.resize(1)
         assertEquals(cluster.currentSize, 1)
-        assertEquals(cluster.ownedChildren, creationOrder.subList(0, 1))
+        assertEquals(cluster.children, creationOrder.subList(0, 1))
     }
         
     @Test
@@ -345,12 +345,12 @@ class DynamicClusterTest {
         app.manage(cluster);
         cluster.start([loc])
         
-        TestEntity child = cluster.ownedChildren.get(0)
+        TestEntity child = cluster.children.get(0)
         child.stop()
         app.managementContext.unmanage(child)
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(cluster.ownedChildren.size(), 0)
+            assertEquals(cluster.children.size(), 0)
             assertEquals(cluster.currentSize, 0)
             assertEquals(cluster.members.size(), 0)
         }
@@ -465,10 +465,10 @@ class DynamicClusterTest {
         
         assertEquals(cluster.members.size(), 1)
         assertFalse(cluster.members.contains(member))
-        assertFalse(cluster.ownedChildren.contains(member))
+        assertFalse(cluster.children.contains(member))
         assertNotNull(replacement, "replacementId="+replacementId);
         assertTrue(cluster.members.contains(replacement), "replacement="+replacement+"; members="+cluster.members);
-        assertTrue(cluster.ownedChildren.contains(replacement), "replacement="+replacement+"; children="+cluster.ownedChildren);
+        assertTrue(cluster.children.contains(replacement), "replacement="+replacement+"; children="+cluster.children);
     }
     
     @Test

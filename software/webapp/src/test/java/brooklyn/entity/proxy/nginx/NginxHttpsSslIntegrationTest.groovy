@@ -53,7 +53,7 @@ public class NginxHttpsSslIntegrationTest {
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withCertificateAndKeyCopy() {
         def template = { Map properties -> new JBoss7Server(properties) }
-        cluster = new DynamicCluster(owner:app, factory:template, initialSize:1)
+        cluster = new DynamicCluster(parent:app, factory:template, initialSize:1)
         cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
         
         ProxySslConfig ssl = new ProxySslConfig(
@@ -103,7 +103,7 @@ public class NginxHttpsSslIntegrationTest {
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withPreinstalledCertificateAndKey() {
            def template = { Map properties -> new JBoss7Server(properties) }
-           cluster = new DynamicCluster(owner:app, factory:template, initialSize:1)
+           cluster = new DynamicCluster(parent:app, factory:template, initialSize:1)
            cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
 
            ProxySslConfig ssl = new ProxySslConfig(

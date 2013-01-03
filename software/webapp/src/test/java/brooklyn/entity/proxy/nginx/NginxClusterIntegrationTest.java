@@ -96,7 +96,7 @@ public class NginxClusterIntegrationTest {
     public void testNginxInstancesConfiguredWithServerPool() {
         DynamicCluster serverPool = new DynamicCluster(
                 MutableMap.builder()
-                        .put("owner", app)
+                        .put("parent", app)
                         .put("factory", new JBoss7ServerFactory())
                         .put("initialSize", 1)
                         .build(),
@@ -128,7 +128,7 @@ public class NginxClusterIntegrationTest {
         
         DynamicCluster c1 = new DynamicCluster(
                 MutableMap.builder()
-                        .put("owner", app)
+                        .put("parent", app)
                         .put("factory", new JBoss7ServerFactory())
                         .put("initialSize", 1)
                         .build(),

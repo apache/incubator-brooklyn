@@ -59,8 +59,8 @@ class CloudFoundryJavaWebAppCluster extends AbstractEntity implements ElasticJav
     public AppRecord appRecord;
     protected transient SensorRegistry sensorRegistry;
     
-    public CloudFoundryJavaWebAppCluster(Map flags=[:], Entity owner=null) {
-        super(flags, owner);
+    public CloudFoundryJavaWebAppCluster(Map flags=[:], Entity parent=null) {
+        super(flags, parent);
         setAttribute(SERVICE_UP, false)
         setAttribute(SERVICE_STATE, Lifecycle.CREATED);
         sensorRegistry = new SensorRegistry(this);

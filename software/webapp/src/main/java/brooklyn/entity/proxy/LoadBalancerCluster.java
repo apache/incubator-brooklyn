@@ -26,8 +26,8 @@ public class LoadBalancerCluster extends DynamicCluster implements LoadBalancer 
     // and the resize, so presumably there's a race where a newly added load-balancer 
     // could miss the most recent reload call?
     
-    public LoadBalancerCluster(Map<?, ?> flags, Entity owner) {
-        super(flags, owner);
+    public LoadBalancerCluster(Map<?, ?> flags, Entity parent) {
+        super(flags, parent);
     }
 
     public void start(Collection<? extends Location> locs) {

@@ -35,8 +35,8 @@ public class PolicySubscriptionTest {
     public void setUp() {
         loc = new SimulatedLocation();
         app = new TestApplication();
-        entity = new TestEntity(owner:app);
-        entity2 = new TestEntity(owner:app);
+        entity = new TestEntity(parent:app);
+        entity2 = new TestEntity(parent:app);
         listener = new RecordingSensorEventListener();
         policy = new AbstractPolicy() {};
         entity.addPolicy(policy);

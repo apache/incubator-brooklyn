@@ -137,9 +137,9 @@ public class AbstractFollowTheSunPolicyTest {
      * Creates a new container that will take "delay" millis to complete its start-up.
      */
     protected MockContainerEntity newAsyncContainer(Application app, Location loc, String name, long delay) {
-        // Annoyingly, can't set owner until after the threshold config has been defined.
+        // Annoyingly, can't set parent until after the threshold config has been defined.
         MockContainerEntity container = new MockContainerEntity([displayName:name], delay)
-        container.setOwner(app)
+        container.setParent(app)
         LOG.debug("Managing new container {}", container)
         app.getManagementContext().manage(container)
         container.start([loc])

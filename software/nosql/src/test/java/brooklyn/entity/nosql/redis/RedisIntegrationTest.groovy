@@ -46,7 +46,7 @@ public class RedisIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        redis = new RedisStore(owner:app);
+        redis = new RedisStore(parent:app);
         app.start([ testLocation ])
         executeUntilSucceeds() {
             assertTrue redis.getAttribute(Startable.SERVICE_UP)
@@ -62,7 +62,7 @@ public class RedisIntegrationTest {
     @Test(groups = "Integration")
     public void testRedisConnection() {
         // Start Redis
-        redis = new RedisStore(owner:app)
+        redis = new RedisStore(parent:app)
         app.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue redis.getAttribute(Startable.SERVICE_UP)

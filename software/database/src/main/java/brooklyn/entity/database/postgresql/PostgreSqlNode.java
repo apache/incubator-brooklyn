@@ -28,12 +28,12 @@ public class PostgreSqlNode extends SoftwareProcessEntity {
     public static final PortAttributeSensorAndConfigKey POSTGRESQL_PORT =
             new PortAttributeSensorAndConfigKey("postgresql.port", "PostgreSQL port", PortRanges.fromString("5432+"));
 
-    public PostgreSqlNode(Entity owner) {
-        this(MutableMap.of(), owner);
+    public PostgreSqlNode(Entity parent) {
+        this(MutableMap.of(), parent);
     }
 
-    public PostgreSqlNode(@SuppressWarnings("rawtypes") Map flags, Entity owner) {
-        super(flags, owner);
+    public PostgreSqlNode(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
+        super(flags, parent);
     }
 
     public Class getDriverInterface() {

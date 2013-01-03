@@ -56,7 +56,7 @@ public class NginxLightIntegrationTest {
                 
         nginx = new NginxController(
                 MutableMap.builder()
-                        .put("owner", app)
+                        .put("parent", app)
                         .put("serverPool", cluster)
                         .put("domain", "localhost")
                         .build(),

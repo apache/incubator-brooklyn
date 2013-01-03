@@ -39,17 +39,17 @@ public class DynamicGroup extends AbstractGroup {
     
     private volatile MyEntitySetChangeListener setChangeListener = null;
 
-    public DynamicGroup(Entity owner) {
-        this(Maps.newLinkedHashMap(), owner);
+    public DynamicGroup(Entity parent) {
+        this(Maps.newLinkedHashMap(), parent);
     }
     public DynamicGroup(Map<?,?> properties) {
         this(properties, (Entity)null);
     }
-    public DynamicGroup(Entity owner, Closure<Boolean> entityFilter) {
-        this(Maps.newLinkedHashMap(), owner, entityFilter);
+    public DynamicGroup(Entity parent, Closure<Boolean> entityFilter) {
+        this(Maps.newLinkedHashMap(), parent, entityFilter);
     }
-    public DynamicGroup(Map<?,?> properties, Entity owner, Closure<Boolean> entityFilter) {
-        this(MutableMap.builder().putAll(properties).put("entityFilter", entityFilter).build(), owner);
+    public DynamicGroup(Map<?,?> properties, Entity parent, Closure<Boolean> entityFilter) {
+        this(MutableMap.builder().putAll(properties).put("entityFilter", entityFilter).build(), parent);
         // (entityFilter != null ? GroovyJavaMethods.<Entity>predicateFromClosure(entityFilter) : null)
     }
     public DynamicGroup(Closure<Boolean> entityFilter) {
@@ -58,11 +58,11 @@ public class DynamicGroup extends AbstractGroup {
     public DynamicGroup(Map<?,?> properties, Closure<Boolean> entityFilter) {
         this(properties, null, entityFilter);
     }
-    public DynamicGroup(Map<?,?> properties, Entity owner, Predicate<? super Entity> entityFilter) {
-        this(MutableMap.builder().putAll(properties).put("entityFilter", entityFilter).build(), owner);
+    public DynamicGroup(Map<?,?> properties, Entity parent, Predicate<? super Entity> entityFilter) {
+        this(MutableMap.builder().putAll(properties).put("entityFilter", entityFilter).build(), parent);
     }
-    public DynamicGroup(Entity owner, Predicate<? super Entity> entityFilter) {
-        this(MutableMap.of("entityFilter", entityFilter), owner);
+    public DynamicGroup(Entity parent, Predicate<? super Entity> entityFilter) {
+        this(MutableMap.of("entityFilter", entityFilter), parent);
     }
     public DynamicGroup(Predicate<? super Entity> entityFilter) {
         this(MutableMap.of("entityFilter", entityFilter), (Entity)null);
@@ -70,8 +70,8 @@ public class DynamicGroup extends AbstractGroup {
     public DynamicGroup(Map<?,?> properties, Predicate<? super Entity> entityFilter) {
         this(MutableMap.builder().putAll(properties).put("entityFilter", entityFilter).build(), (Entity)null);
     }
-    public DynamicGroup(Map<?,?> properties, Entity owner) {
-        super(properties, owner);
+    public DynamicGroup(Map<?,?> properties, Entity parent) {
+        super(properties, parent);
         setAttribute(RUNNING, true);
     }
     

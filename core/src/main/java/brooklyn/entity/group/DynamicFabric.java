@@ -36,7 +36,7 @@ import com.google.common.collect.Maps;
 
 /**
  * When a dynamic fabric is started, it starts an entity in each of its locations. 
- * This entity will be the owner of each of the started entities. 
+ * This entity will be the parent of each of the started entities. 
  */
 public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabric.class);
@@ -64,10 +64,10 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
      * </ul>
      *
      * @param properties the properties of the fabric and any new entity.
-     * @param owner the entity that owns this fabric (optional)
+     * @param parent the entity that owns this fabric (optional)
      */
-    public DynamicFabric(Map properties, Entity owner) {
-        super(properties, owner);
+    public DynamicFabric(Map properties, Entity parent) {
+        super(properties, parent);
 
         fabricSizeEnricher = CustomAggregatingEnricher.newSummingEnricher(Changeable.GROUP_SIZE, FABRIC_SIZE);
         addEnricher(fabricSizeEnricher);
@@ -77,8 +77,8 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
     public DynamicFabric(Map properties) {
         this (properties, null);
     }
-    public DynamicFabric(Entity owner) {
-        this(Collections.emptyMap(), owner);
+    public DynamicFabric(Entity parent) {
+        this(Collections.emptyMap(), parent);
     }
     
     @Override
@@ -119,7 +119,7 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
     }
     
     public void stop() {
-        Iterable<Entity> stoppableChildren = Iterables.filter(getOwnedChildren(), Predicates.instanceOf(Startable.class));
+        Iterable<Entity> stoppableChildren = Iterables.filter(getChildren(), Predicates.instanceOf(Startable.class));
         Task invoke = Entities.invokeEffectorList(this, stoppableChildren, Startable.STOP);
         try {
 	        if (invoke != null) invoke.get();
@@ -161,7 +161,7 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
             else if (!entity.getDisplayName().contains(locationName)) 
                 ((AbstractEntity)entity).setDisplayName(entity.getDisplayName() +" ("+locationName+")");
         }
-        if (entity.getOwner()==null) entity.setOwner(this);
+        if (entity.getParent()==null) entity.setParent(this);
         Entities.manage(entity);
         
         fabricSizeEnricher.addProducer(entity);

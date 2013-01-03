@@ -51,8 +51,8 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
         this(flags, null);
     }
 
-    public JBoss7Server(Map flags, Entity owner) {
-        super(flags, owner);
+    public JBoss7Server(Map flags, Entity parent) {
+        super(flags, parent);
     }
 
     @Override

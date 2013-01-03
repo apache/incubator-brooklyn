@@ -74,7 +74,7 @@ public class VanillaJavaAppRebindTest {
         app.start(ImmutableList.of(loc));
 
         rebind();
-        VanillaJavaApp javaProcess2 = (VanillaJavaApp) Iterables.find(app.getOwnedChildren(), Predicates.instanceOf(VanillaJavaApp.class));
+        VanillaJavaApp javaProcess2 = (VanillaJavaApp) Iterables.find(app.getChildren(), Predicates.instanceOf(VanillaJavaApp.class));
         
         EntityTestUtils.assertAttributeEqualsEventually(javaProcess2, VanillaJavaApp.SERVICE_UP, true);
     }
@@ -90,7 +90,7 @@ public class VanillaJavaAppRebindTest {
         rebind();
         long rebindTime = System.currentTimeMillis() - starttime;
         
-        VanillaJavaApp javaProcess2 = (VanillaJavaApp) Iterables.find(app.getOwnedChildren(), Predicates.instanceOf(VanillaJavaApp.class));
+        VanillaJavaApp javaProcess2 = (VanillaJavaApp) Iterables.find(app.getChildren(), Predicates.instanceOf(VanillaJavaApp.class));
         EntityTestUtils.assertAttributeEqualsEventually(javaProcess2, VanillaJavaApp.SERVICE_UP, false);
         
         // check that it was quick (previously it hung for 

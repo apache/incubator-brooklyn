@@ -39,19 +39,19 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
     public QpidDestination() {
         this(MutableMap.of(), null);
     }
-    public QpidDestination(Entity owner) {
-        this(MutableMap.of(), owner);
+    public QpidDestination(Entity parent) {
+        this(MutableMap.of(), parent);
     }
     public QpidDestination(Map properties) {
         this(properties, null);
     }
-    public QpidDestination(Map properties, Entity owner) {
-        super(properties, owner);
+    public QpidDestination(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     @Override
-    public QpidBroker getOwner() {
-        return (QpidBroker) super.getOwner();
+    public QpidBroker getParent() {
+        return (QpidBroker) super.getParent();
     }
     
     public void init() {
@@ -62,7 +62,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
             setAttribute(QpidBroker.VIRTUAL_HOST_NAME, virtualHost);
             virtualHostManager = new ObjectName(format("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"%s\"", virtualHost));
             if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-            helper = new JmxHelper((EntityLocal)getOwner());
+            helper = new JmxHelper((EntityLocal)getParent());
             helper.connect();
             jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(helper));
         } catch (MalformedObjectNameException e) {
@@ -73,7 +73,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
     }
 
     public void create() {
-        helper.operation(virtualHostManager, "createNewQueue", getName(), getOwner().getAttribute(Attributes.JMX_USER), true);
+        helper.operation(virtualHostManager, "createNewQueue", getName(), getParent().getAttribute(Attributes.JMX_USER), true);
         helper.operation(exchange, "createNewBinding", getName(), getName());
         connectSensors();
         sensorRegistry.activateAdapters();
@@ -90,7 +90,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
      */
     public String getQueueName() {
 
-        if (AmqpServer.AMQP_0_10.equals(getOwner().getAmqpVersion())) {
+        if (AmqpServer.AMQP_0_10.equals(getParent().getAmqpVersion())) {
             return String.format("'%s'/'%s'; { assert: never }", getExchangeName(), getName());
         } else {
             return getName();

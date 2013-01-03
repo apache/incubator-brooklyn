@@ -25,8 +25,8 @@ public class LocallyResizableEntity extends AbstractEntity implements Resizable 
     public LocallyResizableEntity (TestCluster tc) {
         this(null, tc);
     }
-    public LocallyResizableEntity (Entity owner, TestCluster tc) {
-        super(owner);
+    public LocallyResizableEntity (Entity parent, TestCluster tc) {
+        super(parent);
         this.cluster = tc;
         setAttribute(Startable.SERVICE_UP, true);
     }

@@ -57,12 +57,12 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
         this(flags,null);
     }
 
-    public TomcatServer(Entity owner){
-        this(new LinkedHashMap(),owner);
+    public TomcatServer(Entity parent){
+        this(new LinkedHashMap(),parent);
     }
 
-    public TomcatServer(Map flags, Entity owner) {
-        super(flags, owner);
+    public TomcatServer(Map flags, Entity parent) {
+        super(flags, parent);
     }
 
     @Override

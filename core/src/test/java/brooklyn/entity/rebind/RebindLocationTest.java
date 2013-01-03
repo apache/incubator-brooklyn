@@ -55,7 +55,7 @@ public class RebindLocationTest {
         origApp.start(ImmutableList.of(origLoc));
 
         MyApplication newApp = (MyApplication) rebind();
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getOwnedChildren(), Predicates.instanceOf(MyEntity.class));
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
 
         assertEquals(newApp.getLocations().size(), 1, "locs="+newE.getLocations());
         assertTrue(Iterables.get(newApp.getLocations(), 0) instanceof MyLocation);

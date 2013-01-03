@@ -24,7 +24,7 @@ public class StartableMethods {
     /** Common implementation for start in parent nodes; just invokes start on all children of the entity */
 	public static void start(EntityLocal e, Collection<? extends Location> locations) {
         log.info("Starting entity "+e+" at "+locations);
-        Iterable<Entity> startables = filterStartableManagedEntities(e.getOwnedChildren());
+        Iterable<Entity> startables = filterStartableManagedEntities(e.getChildren());
 
         if (!Iterables.isEmpty(startables)) {
 	        Entities.invokeEffectorList(e, startables, Startable.START, MutableMap.of("locations", locations)).getUnchecked();
@@ -34,7 +34,7 @@ public class StartableMethods {
     /** Common implementation for stop in parent nodes; just invokes stop on all children of the entity */
 	public static void stop(EntityLocal e) {
         log.debug("Stopping entity "+e);
-        Iterable<Entity> startables = filterStartableManagedEntities(e.getOwnedChildren());
+        Iterable<Entity> startables = filterStartableManagedEntities(e.getChildren());
 		
 		if (!Iterables.isEmpty(startables)) {
 			Entities.invokeEffectorList(e, startables, Startable.STOP).getUnchecked();
@@ -45,7 +45,7 @@ public class StartableMethods {
     /** Common implementation for restart in parent nodes; just invokes stop on all children of the entity */
     public static void restart(EntityLocal e) {
         log.debug("Restarting entity "+e);
-        Iterable<Entity> startables = filterStartableManagedEntities(e.getOwnedChildren());
+        Iterable<Entity> startables = filterStartableManagedEntities(e.getChildren());
         
         if (!Iterables.isEmpty(startables)) {
             Entities.invokeEffectorList(e, startables, Startable.RESTART).getUnchecked();

@@ -57,7 +57,7 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        qpid = new QpidBroker(owner:app);
+        qpid = new QpidBroker(parent:app);
         Entities.startManagement(app);
         qpid.start([ testLocation ])
         executeUntilSucceedsWithShutdown(qpid) {
@@ -86,7 +86,7 @@ public class QpidIntegrationTest {
                    ('lib/plugins/sample-plugin.jar'):new File('software/messaging/'+pluginjar),
                    ('etc/config.xml'):new File('software/messaging/'+configfile) ]
         }
-        qpid = new QpidBroker(owner:app, runtimeFiles:qpidRuntimeFiles);
+        qpid = new QpidBroker(parent:app, runtimeFiles:qpidRuntimeFiles);
         qpid.setConfig(QpidBroker.SUGGESTED_VERSION, "0.14");
         Entities.startManagement(app);
         qpid.start([ testLocation ])
@@ -113,7 +113,7 @@ public class QpidIntegrationTest {
         String content = "01234567890123456789012345678901"
 
         // Start broker with a configured queue
-        qpid = new QpidBroker(owner:app, queue:queueName);
+        qpid = new QpidBroker(parent:app, queue:queueName);
         Entities.startManagement(app);
         qpid.start([ testLocation ])
         executeUntilSucceeds {
@@ -125,7 +125,7 @@ public class QpidIntegrationTest {
             assertFalse qpid.queueNames.isEmpty()
             assertEquals qpid.queueNames.size(), 1
             assertTrue qpid.queueNames.contains(queueName)
-            assertEquals qpid.ownedChildren.size(), 1
+            assertEquals qpid.children.size(), 1
             assertFalse qpid.queues.isEmpty()
             assertEquals qpid.queues.size(), 1
 

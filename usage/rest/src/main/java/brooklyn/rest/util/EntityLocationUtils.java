@@ -27,9 +27,9 @@ public class EntityLocationUtils {
     protected void countLeafEntitiesByLocatedLocations(Entity target, Entity locatedParent, Map<Location, Integer> result) {
         if (isLocatedLocation(target))
             locatedParent = target;
-        if (!target.getOwnedChildren().isEmpty()) {
+        if (!target.getChildren().isEmpty()) {
             // non-leaf - inspect children
-            for (Entity child: target.getOwnedChildren()) 
+            for (Entity child: target.getChildren()) 
                 countLeafEntitiesByLocatedLocations(child, locatedParent, result);
         } else {
             // leaf node - increment location count

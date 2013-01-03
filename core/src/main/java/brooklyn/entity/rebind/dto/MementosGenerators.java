@@ -70,7 +70,7 @@ public class MementosGenerators {
         builder.id = entity.getId();
         builder.displayName = entity.getDisplayName();
         builder.type = entity.getClass().getName();
-        builder.isTopLevelApp = (entity instanceof Application && entity.getOwner() == null);
+        builder.isTopLevelApp = (entity instanceof Application && entity.getParent() == null);
         
         Map<ConfigKey<?>, Object> localConfig = ((AbstractEntity)entity).getConfigMap().getLocalConfig();
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
@@ -108,7 +108,7 @@ public class MementosGenerators {
             builder.locations.add(location.getId()); 
         }
         
-        for (Entity child : entity.getOwnedChildren()) {
+        for (Entity child : entity.getChildren()) {
             builder.children.add(child.getId()); 
         }
         
@@ -120,7 +120,7 @@ public class MementosGenerators {
 //            builder.policies.add(policy.getId()); 
 //        }
         
-        Entity parentEntity = entity.getOwner();
+        Entity parentEntity = entity.getParent();
         builder.parent = (parentEntity != null) ? parentEntity.getId() : null;
 
         if (entity instanceof Group) {

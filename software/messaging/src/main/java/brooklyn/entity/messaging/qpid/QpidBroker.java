@@ -91,11 +91,11 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     public QpidBroker(Map properties) {
         this(properties, null);
     }
-    public QpidBroker(Entity owner) {
-        this(MutableMap.of(), owner);
+    public QpidBroker(Entity parent) {
+        this(MutableMap.of(), parent);
     }
-    public QpidBroker(Map properties, Entity owner) {
-        super(properties, owner);
+    public QpidBroker(Map properties, Entity parent) {
+        super(properties, parent);
     }
 
     public void setBrokerUrl() {

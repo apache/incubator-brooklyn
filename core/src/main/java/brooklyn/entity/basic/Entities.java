@@ -211,7 +211,7 @@ public class Entities {
             out.append("\n");
         }
         
-		for (Entity it : e.getOwnedChildren()) {
+		for (Entity it : e.getChildren()) {
 			dumpInfo(it, out, currentIndentation+tab, tab);
 		}
 		
@@ -305,10 +305,10 @@ public class Entities {
     }
     
     public static boolean isAncestor(Entity descendant, Entity potentialAncestor) {
-		Entity ancestor = descendant.getOwner();
+		Entity ancestor = descendant.getParent();
 		while (ancestor != null) {
 			if (ancestor.equals(potentialAncestor)) return true;
-			ancestor = ancestor.getOwner();
+			ancestor = ancestor.getParent();
 		}
 		return false;
 	}
@@ -321,11 +321,11 @@ public class Entities {
 		
 		while (!toinspect.isEmpty()) {
 			Entity e = toinspect.pop();
-			if (e.getOwnedChildren().contains(potentialDescendant)) {
+			if (e.getChildren().contains(potentialDescendant)) {
 				return true;
 			}
 			inspected.add(e);
-			toinspect.addAll(e.getOwnedChildren());
+			toinspect.addAll(e.getChildren());
 			toinspect.removeAll(inspected);
 		}
 		
@@ -406,15 +406,15 @@ public class Entities {
     
     /** brings this entity under management iff its ancestor is managed, returns true in that case;
      * otherwise returns false in the expectation that the ancestor will become managed,
-     * or throws exception if it has no owner or a non-application root 
+     * or throws exception if it has no parent or a non-application root 
      * (will throw if e is an Application; see also {@link #startManagement(Entity)} ) */
     public static boolean manage(Entity e) {
-        Entity o = e.getOwner();
+        Entity o = e.getParent();
         Entity eum = e; //highest unmanaged ancestor
         if (o==null) throw new IllegalStateException("Can't manage "+e+" because it is an orphan");
-        while (o.getOwner()!=null) {
+        while (o.getParent()!=null) {
             if (!isManaged(o)) eum = o;
-            o = o.getOwner();
+            o = o.getParent();
         }
         if (isManaged(o)) {
             ((AbstractEntity)o).getManagementSupport().getManagementContext(false).manage(eum);
@@ -439,9 +439,9 @@ public class Entities {
     public static ManagementContext startManagement(Entity e) {
         Entity o = e;
         Entity eum = e; //highest unmanaged ancestor
-        while (o.getOwner()!=null) {
+        while (o.getParent()!=null) {
             if (!isManaged(o)) eum = o;
-            o = o.getOwner();
+            o = o.getParent();
         }
         if (isManaged(o)) {
             ManagementContext mgmt = ((AbstractEntity)o).getManagementSupport().getManagementContext(false);

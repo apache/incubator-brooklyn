@@ -26,7 +26,7 @@ class AbstractApplicationTest {
     // App and its children will be implicitly managed on first effector call on app
     @Test
     public void testStartAndStopWhenUnmanagedCallsChildren() {
-        TestEntity child = new TestEntity(owner:app);
+        TestEntity child = new TestEntity(parent:app);
         
         app.start([new SimulatedLocation()])
         assertEquals(child.counter.get(), 1)
@@ -37,7 +37,7 @@ class AbstractApplicationTest {
     
     @Test
     public void testStartAndStopWhenManagedCallsChildren() {
-        TestEntity child = new TestEntity(owner:app);
+        TestEntity child = new TestEntity(parent:app);
         Entities.startManagement(app);
         
         app.start([new SimulatedLocation()])
@@ -51,7 +51,7 @@ class AbstractApplicationTest {
     public void testStartDoesNotStartPremanagedChildren() {
         Entities.startManagement(app);
         
-        TestEntity child = new TestEntity(owner:app);
+        TestEntity child = new TestEntity(parent:app);
         
         app.start([new SimulatedLocation()])
         assertEquals(child.counter.get(), 0)
@@ -59,7 +59,7 @@ class AbstractApplicationTest {
     
     @Test
     public void testStartDoesNotStartUnmanagedChildren() {
-        TestEntity child = new TestEntity(owner:app);
+        TestEntity child = new TestEntity(parent:app);
         Entities.startManagement(app);
         Entities.unmanage(child);
         
@@ -69,7 +69,7 @@ class AbstractApplicationTest {
     
     @Test
     public void testStopDoesNotStopUnmanagedChildren() {
-        TestEntity child = new TestEntity(owner:app);
+        TestEntity child = new TestEntity(parent:app);
         Entities.startManagement(app);
         
         app.start([new SimulatedLocation()]);
@@ -87,7 +87,7 @@ class AbstractApplicationTest {
 
         app.start([new SimulatedLocation()]);
         
-        TestEntity child = new TestEntity(owner:app);
+        TestEntity child = new TestEntity(parent:app);
         
         app.stop();
         assertEquals(child.counter.get(), 0);

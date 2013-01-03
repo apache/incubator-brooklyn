@@ -127,7 +127,7 @@ public class ItemsInContainersGroupTest {
     private MockContainerEntity newContainer(Application app, String name, String membership) {
         MockContainerEntity container = new MockContainerEntity([displayName:name])
         container.setConfig(MockContainerEntity.MOCK_MEMBERSHIP, membership)
-        container.setOwner(app)
+        container.setParent(app)
         app.getManagementContext().manage(container)
         container.start([loc])
         return container

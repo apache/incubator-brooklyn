@@ -59,8 +59,8 @@ public class WebClusterApp extends AbstractApplication {
                 MutableMap.of("port", 8000));
 
         JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(MutableMap.of("httpPort", "8080+", "war", WAR_PATH)) {
-            public JBoss7Server newEntity2(Map flags, Entity owner) {
-                JBoss7Server result = super.newEntity2(flags, owner);
+            public JBoss7Server newEntity2(Map flags, Entity parent) {
+                JBoss7Server result = super.newEntity2(flags, parent);
                 result.addEnricher(new SinusoidalLoadGenerator(sinusoidalLoad, 500L, loadCyclePeriodMs, 1d));
                 return result;
             }

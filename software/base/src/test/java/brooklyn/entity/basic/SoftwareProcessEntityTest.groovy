@@ -71,11 +71,11 @@ public class SoftwareProcessEntityTest {
     }
     
     public static class MyService extends SoftwareProcessEntity {
-        public MyService(Entity owner) {
-            super(owner);
+        public MyService(Entity parent) {
+            super(parent);
         }
-        public MyService(Map flags, Entity owner) {
-            super(flags, owner);
+        public MyService(Map flags, Entity parent) {
+            super(flags, parent);
         }
         @Override
         public <T> T getConfig(ConfigKey<T> key, T defaultValue=null) {

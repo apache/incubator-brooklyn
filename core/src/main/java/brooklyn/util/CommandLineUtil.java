@@ -8,7 +8,7 @@ public class CommandLineUtil {
         return getCommandLineOption(args, param, null);
     }
 
-    /** given a list of args, e.g. --name Foo --owner Bob
+    /** given a list of args, e.g. --name Foo --parent Bob
      * will return "Foo" as param name, and remove those entries from the args list
      */
     public static String getCommandLineOption(List<String> args, String param, String defaultValue) {

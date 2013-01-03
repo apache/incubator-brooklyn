@@ -66,7 +66,7 @@ public class EntityResource extends AbstractBrooklynRestResource {
 
   private List<EntitySummary> summaryForChildrenEntities(Entity rootEntity) {
     return Lists.newArrayList(transform(
-        rootEntity.getOwnedChildren(),
+        rootEntity.getChildren(),
         new Function<Entity, EntitySummary>() {
           @Override
           public EntitySummary apply(Entity entity) {

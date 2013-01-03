@@ -36,8 +36,8 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
 
     /*
      * TODO An alternative implementation approach would be to have:
-     *   setOwner(Entity o, Map<ConfigKey,Object> inheritedConfig=[:])
-     * The idea is that the owner could in theory decide explicitly what in its config
+     *   setParent(Entity o, Map<ConfigKey,Object> inheritedConfig=[:])
+     * The idea is that the parent could in theory decide explicitly what in its config
      * would be shared.
      * I (Aled) am undecided as to whether that would be better...
      * 
@@ -45,7 +45,7 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
      */
     /**
      * Map of configuration information that is defined at start-up time for the entity. These
-     * configuration parameters are shared and made accessible to the "owned children" of this
+     * configuration parameters are shared and made accessible to the "children" of this
      * entity.
      */
     private final Map<ConfigKey<?>,Object> ownConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
