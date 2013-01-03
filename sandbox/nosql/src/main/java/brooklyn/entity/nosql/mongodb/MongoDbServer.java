@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
 
 public class MongoDbServer extends SoftwareProcessEntity {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(MongoDbServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDbServer.class);
 
     @SetFromFlag("port")
     public static final PortAttributeSensorAndConfigKey PORT =
@@ -138,7 +138,7 @@ public class MongoDbServer extends SoftwareProcessEntity {
         @Override
         public BasicBSONObject call() throws Exception {
             if (!entity.getAttribute(SERVICE_UP)) {
-                LOG.debug("No serverStatus data: Service not up");
+                LOG.debug("No serverStatus data for {}: Service not up", entity);
                 return null;
             }
             String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME);
@@ -147,21 +147,27 @@ public class MongoDbServer extends SoftwareProcessEntity {
             try {
                 client = new MongoClient(hostname, port);
             } catch (UnknownHostException e) {
-                LOG.warn("No serverStatus data: " + e.getMessage());
+                LOG.warn("No serverStatus data for {}: {}", entity, e.getMessage());
                 return null;
             }
 
             // Choose an existing database to connect to, or test if none exist.
             String dbName = Iterables.getFirst(client.getDatabaseNames(), "test");
-            DB db = client.getDB(dbName);
-            CommandResult statusResult = db.command("serverStatus");
-            client.close();
-            if (!statusResult.ok()) {
-                LOG.warn("No serverStatus data: " + statusResult.getErrorMessage());
-                return null;
-            } else {
-                return statusResult;
+
+            try {
+                DB db = client.getDB(dbName);
+                CommandResult statusResult = db.command("serverStatus");
+                if (!statusResult.ok()) {
+                    LOG.warn("No serverStatus data for {}: {}", entity, statusResult.getErrorMessage());
+                    return null;
+                } else {
+                    return statusResult;
+                }
+            } finally {
+                client.close();
             }
+
+
         }
     }
 
