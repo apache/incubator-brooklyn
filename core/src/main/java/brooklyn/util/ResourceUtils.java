@@ -203,7 +203,7 @@ public class ResourceUtils {
     
     private InputStream getResourceViaClasspath(String url) throws IOException {
         assert url.startsWith("classpath:");
-        String subUrl = url.substring("classpath://".length());
+        String subUrl = url.substring("classpath:".length());
         while (subUrl.startsWith("/")) subUrl = subUrl.substring(1);
         URL u = getLoader().getResource(subUrl);
         if (u!=null) return u.openStream();
