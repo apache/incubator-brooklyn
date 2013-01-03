@@ -1,5 +1,9 @@
 package brooklyn.event.adapter
 
+/**
+ * @deprecated See brooklyn.event.feed.*
+ */
+@Deprecated
 public class SingleValueResponseContext extends AbstractSensorEvaluationContext {
 
 	Object value;

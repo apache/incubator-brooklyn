@@ -11,9 +11,9 @@ import brooklyn.test.entity.TestEntity
 
 public class HttpResponseContextTest {
 
-	final static HttpResponseContext SIMPLE_RESPONSE = [ null, 400, [foo:["1"], bar:["2"]], "A TEST", null ]
-	final static HttpResponseContext ERROR_RESPONSE = [ null, new IOException("mock") ]
-	final static HttpResponseContext JSON_RESPONSE = [ null, 400, [:], '{"aStr":"9", "bStr":"8", "anInt":10, "aMap":{"x":"a"}}', null ]
+	public final static HttpResponseContext SIMPLE_RESPONSE = [ null, 400, [foo:["1"], bar:["2"]], "A TEST", null ]
+	public final static HttpResponseContext ERROR_RESPONSE = [ null, new IOException("mock") ]
+	public final static HttpResponseContext JSON_RESPONSE = [ null, 400, [:], '{"aStr":"9", "bStr":"8", "anInt":10, "aMap":{"x":"a"}}', null ]
 
 	@Test
 	public void testContent() {

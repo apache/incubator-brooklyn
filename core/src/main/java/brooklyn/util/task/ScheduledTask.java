@@ -28,7 +28,7 @@ public class ScheduledTask extends BasicTask {
     //     Would be nice if the scheduledTask was more self-contained, rather than its fields being
     //     modified by a different class in a non-obvious way...
     
-	final Callable<Task> taskFactory;
+	final Callable<Task<?>> taskFactory;
 	/** initial delay before running, set as flag in constructor; defaults to 0 */
 	protected TimeDuration delay;
 	/** time to wait between executions, or null if not to repeat (default), set as flag to constructor;
@@ -44,10 +44,10 @@ public class ScheduledTask extends BasicTask {
 	public int getRunCount() { return runCount; }
 	public ScheduledFuture getNextScheduled() { return (ScheduledFuture)result; }
 
-    public ScheduledTask(Callable<Task> taskFactory) {
+    public ScheduledTask(Callable<Task<?>> taskFactory) {
         this(MutableMap.of(), taskFactory);
     }
-	public ScheduledTask(Map flags, Callable<Task> taskFactory) {
+	public ScheduledTask(Map flags, Callable<Task<?>> taskFactory) {
 		super(flags);
 		this.taskFactory = taskFactory;
 		
@@ -71,7 +71,7 @@ public class ScheduledTask extends BasicTask {
         return this;
     }
 
-    public Callable<Task> getTaskFactory() {
+    public Callable<Task<?>> getTaskFactory() {
         return taskFactory;
     }
 

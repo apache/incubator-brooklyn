@@ -65,7 +65,9 @@ public class GroovyJavaMethods {
     }
 
     public static <T> Closure castToClosure(Object o) {
-        if (o in Closure) {
+        if (o == null) {
+            return o;
+        } else if (o in Closure) {
             return o;
         } else if (o instanceof Runnable) {
             return closureFromRunnable((Runnable)o);

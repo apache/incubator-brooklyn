@@ -86,6 +86,13 @@
             <artifactId>vcloud</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+        
         <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>openstack-nova</artifactId>
@@ -116,7 +123,15 @@
             <artifactId>brooklyn-test-support</artifactId>
             <scope>test</scope>
         </dependency>
-	</dependencies>
+        
+	    <dependency>
+            <groupId>com.google.mockwebserver</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <version>${mockwebserver.version}</version>
+            <scope>test</scope>
+        </dependency>
+       
+    </dependencies>
 
   <!-- add maxmind geo-ip library; exact copy of source included as required by LGPL2 -->
   <build>

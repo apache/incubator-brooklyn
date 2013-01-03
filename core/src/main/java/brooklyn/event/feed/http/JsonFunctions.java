@@ -1,0 +1,88 @@
+package brooklyn.event.feed.http;
+
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
+import com.google.common.base.Function;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
+public class JsonFunctions {
+
+    private JsonFunctions() {} // instead use static utility methods
+    
+    public static Function<String, JsonElement> asJson() {
+        return new Function<String, JsonElement>() {
+            @Override public JsonElement apply(String input) {
+                return new JsonParser().parse(input);
+            }
+        };
+    }
+
+    public static Function<JsonElement, JsonElement> walk(final String... elements) {
+        return new Function<JsonElement, JsonElement>() {
+            @Override public JsonElement apply(JsonElement input) {
+                JsonElement curr = input;
+                for (String element : elements) {
+                    curr = curr.getAsJsonObject().get(element);
+                }
+                return curr;
+            }
+        };
+    }
+    
+    public static <T> Function<JsonElement, T> cast(final Class<T> expected) {
+        return new Function<JsonElement, T>() {
+            @Override public T apply(JsonElement input) {
+                if (input.isJsonNull()) {
+                    return (T) null;
+                } else if (expected == boolean.class || expected == Boolean.class) {
+                    return (T) (Boolean) input.getAsBoolean();
+                } else if (expected == char.class || expected == Character.class) {
+                    return (T) (Character) input.getAsCharacter();
+                } else if (expected == byte.class || expected == Byte.class) {
+                    return (T) (Byte) input.getAsByte();
+                } else if (expected == short.class || expected == Short.class) {
+                    return (T) (Short) input.getAsShort();
+                } else if (expected == int.class || expected == Integer.class) {
+                    return (T) (Integer) input.getAsInt();
+                } else if (expected == long.class || expected == Long.class) {
+                    return (T) (Long) input.getAsLong();
+                } else if (expected == float.class || expected == Float.class) {
+                    return (T) (Float) input.getAsFloat();
+                } else if (expected == double.class || expected == Double.class) {
+                    return (T) (Double) input.getAsDouble();
+                } else if (expected == BigDecimal.class) {
+                    return (T) input.getAsBigDecimal();
+                } else if (expected == BigInteger.class) {
+                    return (T) input.getAsBigInteger();
+                } else if (Number.class.isAssignableFrom(expected)) {
+                    // TODO Will result in a class-cast if it's an unexpected sub-type of Number not handled above
+                    return (T) input.getAsNumber();
+                } else if (expected == String.class) {
+                    return (T) input.getAsString();
+                } else if (expected.isArray()) {
+                    JsonArray array = input.getAsJsonArray();
+                    Class<?> componentType = expected.getComponentType();
+                    if (JsonElement.class.isAssignableFrom(componentType)) {
+                        JsonElement[] result = new JsonElement[array.size()];
+                        for (int i = 0; i < array.size(); i++) {
+                            result[i] = array.get(i);
+                        }
+                        return (T) result;
+                    } else {
+                        Object[] result = (Object[]) Array.newInstance(componentType, array.size());
+                        for (int i = 0; i < array.size(); i++) {
+                            result[i] = cast(componentType).apply(array.get(i));
+                        }
+                        return (T) result;
+                    }
+                } else {
+                    throw new IllegalArgumentException("Cannot cast json element to type "+expected);
+                }
+            }
+        };
+    }
+}

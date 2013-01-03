@@ -9,7 +9,10 @@ import com.google.common.base.Charsets
  * Captures output and exit code for {@link SshSensorAdapter}.
  *
  * @see SshSensorAdapter
+ * 
+ * @deprecated See brooklyn.event.feed.ssh.SshFeed
  */
+@Deprecated
 protected class SshPollHelper extends AbstractPollHelper {
 
     public static final Logger log = LoggerFactory.getLogger(SshPollHelper.class);

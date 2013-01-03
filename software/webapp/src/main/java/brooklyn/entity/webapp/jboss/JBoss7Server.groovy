@@ -6,6 +6,9 @@ import groovy.time.TimeDuration
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableMap;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -15,6 +18,9 @@ import brooklyn.event.basic.BasicAttributeSensor ;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.feed.http.HttpFeed;
+import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.util.flags.SetFromFlag;
 
 public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAppService {
@@ -47,6 +53,8 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             new BasicAttributeSensor<Integer>(Integer.class, "webapp.jboss.managementStatus", "HTTP response code for the management server");
 
+    private HttpFeed httpFeed;
+    
     public JBoss7Server(Map flags){
         this(flags, null);
     }
@@ -66,19 +74,36 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
 
         String host = getAttribute(HOSTNAME);
         int port = getAttribute(MANAGEMENT_PORT) + getAttribute(PORT_INCREMENT);
-        HttpSensorAdapter http = new HttpSensorAdapter(
-                MutableMap.of("period",new TimeDuration(0,0,0,200)),
-                "http://$host:$port/management/subsystem/web/connector/http/read-resource",
-        );
-        http = http.vars(MutableMap.of("include-runtime",true)) ;
-        http = sensorRegistry.register(http) ;
-        http.poll(MANAGEMENT_STATUS, { responseCode }) ;
-        http.poll(SERVICE_UP, { responseCode==200 }) ;
-        http.poll(REQUEST_COUNT) { json.requestCount } ;
-        http.poll(ERROR_COUNT) { json.errorCount };
-        http.poll(TOTAL_PROCESSING_TIME) { json.processingTime } ;
-        http.poll(MAX_PROCESSING_TIME) { json.maxTime } ;
-        http.poll(BYTES_RECEIVED) { json.bytesReceived };
-        http.poll(BYTES_SENT, { json.bytesSent }) ;
+        
+        httpFeed = HttpFeed.builder()
+                .entity(this)
+                .period(200)
+                .baseUri(String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource", host, port))
+                .baseUriVars(ImmutableMap.of("include-runtime","true"))
+                .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
+                        .onSuccess(HttpValueFunctions.responseCode()))
+                .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
+                        .onSuccess(HttpValueFunctions.responseCodeEquals(200))
+                        .onError(Functions.constant(false)))
+                .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
+                        .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))
+                .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
+                        .onSuccess(HttpValueFunctions.jsonContents("errorCount", Integer.class)))
+                .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
+                        .onSuccess(HttpValueFunctions.jsonContents("processingTime", Integer.class)))
+                .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
+                        .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class)))
+                .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
+                        .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class)))
+                .poll(new HttpPollConfig<Long>(BYTES_SENT)
+                        .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class)))
+                .build();
+    }
+    
+    @Override
+    protected void disconnectSensors() {
+        super.disconnectSensors();
+        
+        if (httpFeed != null) httpFeed.stop();
     }
 }

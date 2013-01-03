@@ -1,4 +1,4 @@
-package brooklyn.event.adapter;
+package brooklyn.event.feed.jmx;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;

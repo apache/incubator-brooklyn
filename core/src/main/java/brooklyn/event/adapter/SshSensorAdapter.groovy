@@ -14,8 +14,9 @@ import brooklyn.util.flags.SetFromFlag
 
 
 /**
- * TODO javadoc
+ * @deprecated See brooklyn.event.feed.ssh.SshFeed
  */
+@Deprecated
 public class SshSensorAdapter extends AbstractSensorAdapter {
 
 	public static final Logger log = LoggerFactory.getLogger(SshSensorAdapter.class)

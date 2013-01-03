@@ -8,7 +8,10 @@ import javax.management.ObjectName
  * Allows one to access jmx-attributes, jmx-operations and jmx-notifications.
  * 
  * @see {@link JmxSensorAdapter} for recommended way of using this
+ * 
+ * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
+@Deprecated
 public class JmxObjectNameAdapter {
     
 	final JmxSensorAdapter adapter;

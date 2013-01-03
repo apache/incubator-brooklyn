@@ -1,16 +1,31 @@
 package brooklyn.event.adapter;
 
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurper;
 
-import java.util.Map
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import javax.annotation.Nullable
+import javax.annotation.Nullable;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.Maps;
+import com.google.common.io.CharStreams;
 
 
-/** context object for evaluating sensor closures with http data handy */
+/** 
+ * context object for evaluating sensor closures with http data handy
+ * 
+ * @deprecated See brooklyn.event.feed.http.HttpFeed
+ */
+@Deprecated
 public class HttpResponseContext extends AbstractSensorEvaluationContext {
 	
 	public static final Logger log = LoggerFactory.getLogger(HttpResponseContext.class);
@@ -28,13 +43,14 @@ public class HttpResponseContext extends AbstractSensorEvaluationContext {
 	@Nullable
 	final String content;
 
-	/** usual constructor */	
-	public HttpResponseContext(HttpURLConnection conn) {
-		this(conn, conn.getResponseCode(), conn.getHeaderFields(), getContentOrNull(conn), null)
+	/** usual constructor 
+	 * @throws IOException */	
+	public HttpResponseContext(HttpURLConnection conn) throws IOException {
+        this(conn, conn.getResponseCode(), conn.getHeaderFields(), getContentOrNull(conn), null);
 	}
 	/** constructor for when there is an error; note that many of the methods on connection will throw errors */
 	public HttpResponseContext(HttpURLConnection conn, Exception error) {
-		this(conn, -1, [:], null, error)
+		this(conn, -1, Collections.emptyMap(), null, error);
 	}
 	/** constructor for testing of non-connection usage */
 	public HttpResponseContext(HttpURLConnection conn, int responseCode, Map headers, String content, Exception error) {
@@ -42,12 +58,12 @@ public class HttpResponseContext extends AbstractSensorEvaluationContext {
 		this.responseCode = responseCode;
 		this.headerLists = headers;
 		this.content = content;
-		this.error = error;
+		this.setError(error);
 	}
 
     private static String getContentOrNull(HttpURLConnection conn) {
         try {
-            return conn.getContent().readLines().join("\n");
+            return Joiner.on("\n").join(CharStreams.readLines(new InputStreamReader(conn.getInputStream())));
         } catch (FileNotFoundException e) {
             // Happens a lot with things like 404, so just log at trace and let the rest of the response indicate what's wrong
             log.trace("Content not available for HTTP connection "+conn, e);
@@ -58,24 +74,28 @@ public class HttpResponseContext extends AbstractSensorEvaluationContext {
         }
     } 
     
-	protected Object getDefaultValue() { return content }
+	protected Object getDefaultValue() { return content; }
 	
-	private transient Map<String,Object> headers = null
+	private transient Map<String,Object> headers = null;
 	/** http return headers; values are strings in most cases, lists of strings if the original was a list with zero or 2+ values */
-	public synchronized Map<String,String> getHeaders() {
+	public synchronized Map<String,Object> getHeaders() {
 		if (headers==null) {
-			headers = [:]
-			headerLists.each { k,v -> headers.put(k, v.size()==1 ? v.get(0) : v) }
+			headers = Maps.<String,Object>newLinkedHashMap();
+			for (Map.Entry<String,List<String>> entry : headerLists.entrySet()) {
+			    String k = entry.getKey();
+			    List<String> v = entry.getValue();
+			    headers.put(k, v.size()==1 ? v.get(0) : v);
+		    }
 		}
-		return headers
+		return headers;
 	}
 	private transient Object json;
 	public synchronized Object getJson() {
 		if (json==null) {
             if (content!=null && !content.isEmpty()) json = new JsonSlurper().parseText(content);
-            else json = new JsonSlurper()
+            else json = new JsonSlurper();
 		}
-		return json
+		return json;
 	}
 	
 }

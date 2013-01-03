@@ -11,7 +11,10 @@ import brooklyn.event.Sensor
  * Adapter that periodically calls a JMX operation.
  * 
  * @see {@link JmxSensorAdapter} for recommended way of using this
+ * 
+ * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
+@Deprecated
 @InheritConstructors
 public class JmxOperationAdapter extends AbstractSensorAdapter {
 	final JmxSensorAdapter adapter;
