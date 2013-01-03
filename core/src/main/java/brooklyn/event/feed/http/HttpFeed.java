@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +20,9 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
@@ -29,6 +34,7 @@ import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
@@ -195,6 +201,18 @@ public class HttpFeed extends AbstractFeed {
             }
             
             final DefaultHttpClient httpClient = new DefaultHttpClient();
+            if ("https".equalsIgnoreCase(pollInfo.uri.getScheme())) {
+                try {
+                    int port = (pollInfo.uri.getPort() >= 0) ? pollInfo.uri.getPort() : 443;
+                    SSLSocketFactory socketFactory = new SSLSocketFactory(new TrustAllStrategy(), SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+                    Scheme sch = new Scheme("https", port, socketFactory);
+                    httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+                } catch (Exception e) {
+                    log.warn("Error in HTTP Feed of {}, setting trust for uri {}", entity, pollInfo.uri);
+                    throw Exceptions.propagate(e);
+                }
+            }
+
             Callable<HttpPollValue> pollJob;
             
             if (pollInfo.method.equals("get")) {
@@ -252,6 +270,13 @@ public class HttpFeed extends AbstractFeed {
             return new HttpPollValue(httpResponse);
         } finally {
             EntityUtils.consume(httpResponse.getEntity());
+        }
+    }
+    
+    private static class TrustAllStrategy implements TrustStrategy {
+        @Override
+        public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            return true;
         }
     }
 }
