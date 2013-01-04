@@ -54,7 +54,6 @@ rather than a shapshot.
 
 This is the documentation for the latest stable version of Brooklyn,
 generated {{ site.time | date_to_string }}.
-Other versions with documentation available are listed below.
 
   {% else %}
 
