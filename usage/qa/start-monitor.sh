@@ -8,7 +8,7 @@
 
 CLASS=brooklyn.qa.longevity.Monitor
 # BROOKLYN_VERSION_BELOW
-VERSION=0.4.0-SNAPSHOT
+VERSION=0.4.0-rc.2
 
 ROOT=$(cd $(dirname $0) && pwd)
 cd $ROOT

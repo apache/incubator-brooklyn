@@ -19,7 +19,7 @@ updating a snapshot version, in /v/VERSION/ on the server:
 
 
 export TARGET=`pwd -P`/../../brooklyncentral.github.com
-export BV=0.4.0-SNAPSHOT   # BROOKLYN_VERSION
+export BV=0.4.0-rc.2   # BROOKLYN_VERSION
 
 
 # build, copy
