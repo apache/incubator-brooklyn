@@ -15,25 +15,26 @@ toc: ../toc.json
 <a name="distro"></a>
 ## The Distro
 
-You can grab the distribution artifact, containing Brooklyn, its dependencies and launch scripts, here:
+{% capture maven_this_version_base_url %}{% if site.brooklyn-version contains 'SNAPSHOT' %}http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/{% else %}http://developers.cloudsoftcorp.com/download/maven2/{% endif %}{% endcapture %}
 
-<!-- BROOKLYN_VERSION_BELOW -->
-* [0.4.0-M2.tar.gz](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.tar.gz)
-* [0.4.0-M2.zip](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M2/brooklyn-dist-0.4.0-M2-dist.zip)
-* [0.4.0-M1.tar.gz](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M1/brooklyn-dist-0.4.0-M1-dist.tar.gz)
-* [0.4.0-M1.zip](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/0.4.0-M1/brooklyn-dist-0.4.0-M1-dist.zip)
+You can grab the distribution artifact, containing Brooklyn, its dependencies and launch scripts, 
+here{% if site.brooklyn-version contains 'SNAPSHOT' %} (but please **check the date** on snapshot artifacts){% endif %}:
+
+* [{{ site.brooklyn-version }}]({{ maven_this_version_base_url }}io/brooklyn/brooklyn-dist/{{ site.brooklyn-version }}/)
+* [all stable versions](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/)
+* [all snapshot versions](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/brooklyn-dist/)
 
 Just download your preferred flavour and unpack.
 
 <a name="alljar"></a>
 ## The All Jar
 
-You can grab a single JAR containing all of Brooklyn and its dependencies here:
+You can grab a single JAR containing all of Brooklyn and its dependencies 
+here{% if site.brooklyn-version contains 'SNAPSHOT' %} (again please check the date on snapshot artifacts){% endif %}:
 
-<!-- BROOKLYN_VERSION_BELOW -->
-* [0.4.0-M2](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/0.4.0-M2/)
-* [0.4.0-M1](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/0.4.0-M1/)
-* [SNAPSHOT](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/brooklyn-all/0.4.0-SNAPSHOT/)
+* [{{ site.brooklyn-version }} (jar)]({{ maven_this_version_base_url }}io/brooklyn/brooklyn-all/{{ site.brooklyn-version }}/)
+* [all stable versions](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/)
+* [all snapshot versions](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/brooklyn-all/)
 
 Just download your preferred flavour and add it to your classpath.
 
@@ -54,10 +55,11 @@ If you prefer to do this from the command-line, use:
 % curl -L https://github.com/brooklyncentral/brooklyn-examples/tarball/master -o brooklyn-latest.tgz
 {% endhighlight %}
 
-If you are looking for a specific version (versions of the examples are aligned with Brooklyn non-snapshot releases) try the following command:
+If you are looking for a specific version (e.g. to run examples compiled for a specific Brooklyn version) try the following command:
 
 {% highlight bash %}
-% curl -L https://github.com/brooklyncentral/brooklyn-examples/tarball/0.4.0-M2 -o brooklyn-0.4.0-M2.tgz
+% export BV=0.4.0-M2
+% curl -L https://github.com/brooklyncentral/brooklyn-examples/tarball/${BV} -o brooklyn-${BV}.tgz
 {% endhighlight %}
 
 Once you have the examples you can build them with [maven (v3)]({{site.url}}/dev/build/).
