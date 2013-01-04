@@ -1,12 +1,16 @@
 
 OVERVIEW
+========
 
-_scripts/jekyll-debug.sh will launch the docs for viewing at http://localhost:4000/
+_scripts/jekyll-debug.sh
+    will launch the docs for viewing at http://localhost:4000/
 
-_scripts/build.sh will build the site in _site including javadoc
+_scripts/build.sh 
+    will build the site in _site including javadoc for offline browsing
 
 
-GO LIVE
+GO LIVE (SNAPSHOT)
+------------------
 
 to make the docs live you build.sh then push _site to github brooklyncentral/brooklyncentral.github.com
 the following instructions cover this, assuming brooklyncentral.github.com is a sibling dir to the brooklyn project
@@ -16,6 +20,7 @@ updating a snapshot version, in /v/VERSION/ on the server:
 
 export TARGET=`pwd -P`/../../brooklyncentral.github.com
 export BV=0.4.0-SNAPSHOT   # BROOKLYN_VERSION
+
 
 # build, copy
 if [ ! -f $TARGET/index.html ] ; then echo "could not find docs in $TARGET" ; exit 1 ; fi
@@ -32,10 +37,16 @@ git push
 popd
 
 
-when we do a RELEASE we'll run the above for e.g. BV=0.4.0
-AND update the files in the root dir as well, with the process below 
-(kinda like the process above but with / in place of /v/$BV
-and overriding url in _config.yml with the --url arg below):
+RELEASE
+-------
+
+when we do a RELEASE we must run the above for e.g. BV=0.4.0
+AND must update the files in the root dir of brooklyncentral.github.com
+
+the commands below do this (basically like the process above but 
+with / in place of /v/$BV and overriding url in _config.yml 
+with the --url arg below):
+
 
 # remove old root files
 pushd $TARGET
@@ -58,3 +69,5 @@ git commit -m "updated root docs for version $BV"
 git push
 popd
 
+
+// END
