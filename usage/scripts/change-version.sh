@@ -36,16 +36,19 @@ done
 
 echo "One-line pattern changed these files: $FILES1"
 
-# or two-lines (where we only have entire-line comments, used on the line before the version) matching
+# or two-lines for situations where comments must be entire-line (e.g. scripts)
+# put the comment on the line before the version
+# using sed as per http://blog.ergatides.com/2012/01/24/using-sed-to-search-and-replace-contents-of-next-line-in-a-file/
+# to match:
 # ... BROOKLYN_VERSION_BELOW ...
 # ... ${CURRENT_VERSION} ...
 
 FILES2=`pcregrep $GREP_ARGS -M "${LABEL2}.*\n.*${CURRENT_VERSION}" .`
 for x in $FILES2 ; do
-  sed -n -i .bak '1h; 1!H; ${ g; s/'"${LABEL2}"'\([^\n]*\n[^\n]*\)'"${CURRENT_VERSION}"'/'"${LABEL2}"'\1'"${NEW_VERSION}"'/g p }' $x
+  sed -i .bak -e '/'"${LABEL2}"'/{n;s/'"${CURRENT_VERSION}"'/'"${NEW_VERSION}"'/g;}' $x
 done
 
 echo "Two-line pattern changed these files: $FILES2"
 
 echo "Changed ${CURRENT_VERSION} to ${NEW_VERSION} for "`echo $FILES1 $FILES2 | wc | awk '{print $2}'`" files"
-
+echo "(Do a \`find . -name \"*.bak\" -delete\`  to delete the backup files.)"
