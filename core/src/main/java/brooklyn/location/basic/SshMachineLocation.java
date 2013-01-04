@@ -103,18 +103,22 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      *  can be prefixed with this and . and will be passed through (with the prefix removed),
      *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
     public static final String SSHCONFIG_PREFIX = "sshconfig";
+    
     /** properties which are passed to ssh */
     public static final Collection<String> SSH_PROPS = ImmutableSet.of(
-            "noStdoutLogging", "noStderrLogging", "logPrefix", "out", "err", "password", 
-            "permissions", "sshTries", "env", "allocatePTY",
+            "noStdoutLogging", "noStderrLogging", "logPrefix", "out", "err", "scriptDir",  
+            "password", "permissions", "sshTries", "env", "allocatePTY",
             "privateKeyPassphrase", "privateKeyFile", "privateKeyData", 
             // deprecated in 0.4.0 -- prefer privateKeyData/privateKeyFile 
             // (confusion about whether other holds a file or data; and public not useful here)
             // they generate a warning where used 
             "keyFiles", "publicKey", "privateKey");
+    
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", 
             "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport", "localTempDir");
+
+    public static final Set<String> REUSABLE_SSH_PROPS = ImmutableSet.of("out", "err", "scriptDir");
 
     private transient  Pool<SshTool> vanillaSshToolPool;
     
@@ -246,9 +250,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }});
     }
 
-    
     protected <T> T execSsh(Map props, Function<SshTool,T> task) {
-        if (props.isEmpty()) {
+        if (props.isEmpty() || Sets.difference(props.keySet(), REUSABLE_SSH_PROPS).isEmpty()) {
             return vanillaSshToolPool.exec(task);
         } else {
             SshTool ssh = connectSsh(props);

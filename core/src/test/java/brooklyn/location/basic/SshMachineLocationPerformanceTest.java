@@ -1,5 +1,6 @@
 package brooklyn.location.basic;
 
+import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -21,6 +22,7 @@ import brooklyn.util.text.Identifiers;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.Futures;
@@ -55,6 +57,19 @@ public class SshMachineLocationPerformanceTest {
     @Test(groups = {"Integration"})
     public void testConsecutiveSmallCommands() throws Exception {
         runExecManyCommands(ImmutableList.of("true"), "small-cmd", 10);
+    }
+
+    // Mimics SshSensorAdapter's polling
+    @Test(groups = {"Integration"})
+    public void testConsecutiveSmallCommandsWithCustomStdoutAndErr() throws Exception {
+        final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        final ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        
+        Runnable task = new Runnable() {
+            @Override public void run() {
+                machine.run(ImmutableMap.of("out", stdout, "err", stderr), ImmutableList.of("true"));
+            }};
+        runMany(task, "small-cmd-custom-stdout", 1, 10);
     }
 
     @Test(groups = {"Integration"})
