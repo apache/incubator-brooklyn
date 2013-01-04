@@ -51,13 +51,21 @@ and automatically detecting which page is active.
 ## Publishing
 
 Because GitHub don't run plugins (they run with the `--safe` option),
-the site has to be built and the result of this copied to the `gh_pages` branch
-of the Brooklyn project (as per the GitHub pages documentation).
+the site is built off-line and uploaded to github, where the documentation is hosted.
 
 This makes the process a little more tedious, but it does have the advantage 
 that the documentation lives right in the Brooklyn project,
 easy to open alongside the code inside your IDE.
 
-(We could also put multiple versions of the documentation in the `gh_pages` branch,
-so that user guides for specific versions are always available on-line.)
+The off-line build can be done using `/docs/_scripts/build.sh`,
+including both jekyll markdown documentation and Brooklyn javadoc,
+with the result of this copied to the `brooklyncentral/brooklyncentral.github.com` 
+github project (as per the GitHub pages documentation).
+[brooklyn.io](http://brooklyn.io) is CNAMEd to [brooklyncentral.github.com](brooklyncentral.github.com)
+for convenience.
+
+The latest stable version typically lives in the root of the `brooklyncentral.github.com` project.
+Archived versions are kept under `/v/*` with logic in the markdown for 
+[meta/versions]({{ site.url }}/meta/versions.html) to link to related versions.  
+Additional instructions and scripts for automating the installs can be found in `/docs/_scripts/`.
 
