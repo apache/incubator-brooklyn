@@ -64,8 +64,8 @@ public abstract class AbstractFeed {
     public void stop() {
         if (log.isDebugEnabled()) log.debug("stopping feed {} for {}", this, entity);
         if (!running) { 
-            throw new IllegalStateException(String.format("Attempt to stop feed %s of entity %s when not running", 
-                    this, entity));
+            log.warn("Ignoring attempt to stop feed {} of entity {} when not running", this, entity);
+            return;
         }
         
         running = false;
