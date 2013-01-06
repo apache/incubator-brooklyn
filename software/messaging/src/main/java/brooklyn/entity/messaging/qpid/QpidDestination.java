@@ -2,7 +2,6 @@ package brooklyn.entity.messaging.qpid;
 
 import static java.lang.String.format;
 
-import java.io.IOException;
 import java.util.Map;
 
 import javax.management.MalformedObjectNameException;
@@ -17,9 +16,8 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.jms.JMSDestination;
-import brooklyn.event.adapter.JmxHelper;
-import brooklyn.event.adapter.JmxSensorAdapter;
-import brooklyn.event.adapter.SensorRegistry;
+import brooklyn.event.feed.jmx.JmxFeed;
+import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
@@ -32,9 +30,8 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
 
     protected ObjectName virtualHostManager;
     protected ObjectName exchange;
-    protected transient SensorRegistry sensorRegistry;
-    protected transient JmxHelper helper;
-    protected transient JmxSensorAdapter jmxAdapter;
+    protected transient JmxHelper jmxHelper;
+    protected transient JmxFeed jmxFeed;
 
     public QpidDestination() {
         this(MutableMap.of(), null);
@@ -61,28 +58,27 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
             if (virtualHost == null) virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME);
             setAttribute(QpidBroker.VIRTUAL_HOST_NAME, virtualHost);
             virtualHostManager = new ObjectName(format("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"%s\"", virtualHost));
-            if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-            helper = new JmxHelper((EntityLocal)getParent());
-            helper.connect();
-            jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(helper));
+            jmxHelper = new JmxHelper(getParent());
         } catch (MalformedObjectNameException e) {
-            throw Exceptions.propagate(e);
-        } catch (IOException e) {
             throw Exceptions.propagate(e);
         }
     }
 
+    @Override
+    protected void disconnectSensors() {
+        if (jmxFeed != null) jmxFeed.stop();
+    }
+
     public void create() {
-        helper.operation(virtualHostManager, "createNewQueue", getName(), getParent().getAttribute(Attributes.JMX_USER), true);
-        helper.operation(exchange, "createNewBinding", getName(), getName());
+        jmxHelper.operation(virtualHostManager, "createNewQueue", getName(), getParent().getAttribute(Attributes.JMX_USER), true);
+        jmxHelper.operation(exchange, "createNewBinding", getName(), getName());
         connectSensors();
-        sensorRegistry.activateAdapters();
     }
     
     public void delete() {
-        helper.operation(exchange, "removeBinding", getName(), getName());
-        helper.operation(virtualHostManager, "deleteQueue", getName());
-        sensorRegistry.deactivateAdapters();
+        jmxHelper.operation(exchange, "removeBinding", getName(), getName());
+        jmxHelper.operation(virtualHostManager, "deleteQueue", getName());
+        disconnectSensors();
     }
 
     /**

@@ -9,4 +9,6 @@ public interface RabbitDriver extends SoftwareProcessDriver {
     public void configure();
     
     public Map<String, String> getShellEnvironment();
+
+    public String getRunDir();
 }

@@ -26,14 +26,15 @@ import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.feed.jmx.JmxAttributePollConfig;
+import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Sets;
 
@@ -74,17 +75,15 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     @SetFromFlag("jmxPassword")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
             Attributes.JMX_PASSWORD, "admin");
-    
+
+    private transient JmxFeed jmxFeed;
+
     //TODO if this is included, AbstractEntity complains about multiple sensors;
 //    //should be smart enough to exclude;
 //    //also, we'd prefer to hide this from being configurable full stop
 //    /** not configurable; must be 100 more than JMX port */
 //    public static final PortAttributeSensorAndConfigKey RMI_PORT = [ UsesJmx.RMI_PORT, 9101 ] 
     
-    public String getVirtualHost() { return getAttribute(VIRTUAL_HOST_NAME); }
-    public String getAmqpVersion() { return getAttribute(AMQP_VERSION); }
-    public Integer getAmqpPort() { return getAttribute(AMQP_PORT); }
-
     public QpidBroker() {
         this(MutableMap.of(), null);
     }
@@ -97,6 +96,10 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     public QpidBroker(Map properties, Entity parent) {
         super(properties, parent);
     }
+
+    public String getVirtualHost() { return getAttribute(VIRTUAL_HOST_NAME); }
+    public String getAmqpVersion() { return getAttribute(AMQP_VERSION); }
+    public Integer getAmqpPort() { return getAttribute(AMQP_PORT); }
 
     public void setBrokerUrl() {
         String urlFormat = "amqp://guest:guest@/%s?brokerlist='tcp://%s:%d'";
@@ -161,20 +164,34 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
         setAttribute(RMI_SERVER_PORT, getAttribute(JMX_PORT) + 100);
     }
 
-    transient JmxSensorAdapter jmxAdapter;
-
     @Override
     protected void connectSensors() {
-        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter());
-        jmxAdapter.objectName("org.apache.qpid:type=ServerInformation,name=ServerInformation")
-            .attribute("ProductVersion")
-            .subscribe(SERVICE_UP, GroovyJavaMethods.closureFromFunction(new Function<String, Boolean>() {
-                public Boolean apply(String input) {
-                    if (input == null) return false;
-                    if (getConfig(SUGGESTED_VERSION).equals(input)) return true;
-                    log.warn("ProductVersion is {}, requested version is {}", input, getConfig(SUGGESTED_VERSION));
-                    return false;
-                }}));
+        String serverInfoMBeanName = "org.apache.qpid:type=ServerInformation,name=ServerInformation";
+        
+        jmxFeed = JmxFeed.builder()
+                .entity(this)
+                .period(500, TimeUnit.MILLISECONDS)
+                .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+                        .objectName(serverInfoMBeanName)
+                        .attributeName("ProductVersion")
+                        .onSuccess(new Function<Object,Boolean>() {
+                                private boolean hasWarnedOfVersionMismatch;
+                                @Override public Boolean apply(Object input) {
+                                    if (input == null) return false;
+                                    if (!hasWarnedOfVersionMismatch && !getConfig(SUGGESTED_VERSION).equals(input)) {
+                                        log.warn("Qpid version mismatch: ProductVersion is {}, requested version is {}", input, getConfig(SUGGESTED_VERSION));
+                                        hasWarnedOfVersionMismatch = true;
+                                    }
+                                    return true;
+                                }})
+                        .onError(Functions.constant(false)))
+                .build();
+    }
+
+    @Override
+    public void disconnectSensors() {
+        super.disconnectSensors();
+        if (jmxFeed != null) jmxFeed.stop();
     }
 
     @Override

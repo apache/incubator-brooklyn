@@ -48,9 +48,7 @@ public class ActiveMQIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        if (activeMQ != null && activeMQ.getAttribute(Startable.SERVICE_UP)) {
-            activeMQ.stop();
-        }
+        if (app != null) Entities.destroy(app);
     }
 
     /**

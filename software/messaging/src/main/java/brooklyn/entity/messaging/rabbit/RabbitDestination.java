@@ -26,9 +26,8 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
     String virtualHost;
 
     protected String exchange;
-
-    protected transient SensorRegistry sensorRegistry;
-    protected transient SshSensorAdapter sshAdapter;
+    protected SshMachineLocation machine;
+    protected Map<String,String> shellEnvironment;
 
     public RabbitDestination() {
         this(MutableMap.of(), null);
@@ -49,11 +48,9 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
     public void init() {
         if (virtualHost == null) virtualHost = getConfig(RabbitBroker.VIRTUAL_HOST_NAME);
         setAttribute(RabbitBroker.VIRTUAL_HOST_NAME, virtualHost);
-        if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         
-        SshMachineLocation machine = (SshMachineLocation) Iterables.find(getParent().getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-        Map<String,String> shellEnvironment = getParent().getDriver().getShellEnvironment();
-        sshAdapter = sensorRegistry.register(new SshSensorAdapter(MutableMap.of("env", shellEnvironment), machine));
+        machine = (SshMachineLocation) Iterables.find(getParent().getLocations(), Predicates.instanceOf(SshMachineLocation.class));
+        shellEnvironment = getParent().getDriver().getShellEnvironment();
     }
 
     public RabbitBroker getParent() {
@@ -65,10 +62,12 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
     }
     
     public void delete() {
-        sensorRegistry.deactivateAdapters();
+        disconnectSensors();
     }
 
-    public void connectSensors() { }
+    protected void connectSensors() { }
+
+    protected void disconnectSensors() { }
 
     public String getExchangeName() { 
         return exchange;
