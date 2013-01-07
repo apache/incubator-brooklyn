@@ -79,6 +79,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
     @Test
     public void testRebindPreservesInUseMachines() throws Exception {
     	SshMachineLocation inuseMachine = origLoc.obtain();
+    	origApp.setAttribute(TestApplication.SERVICE_UP, true); // to force persist, and thus avoid race
     	
     	TestApplication newApp = rebind();
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
