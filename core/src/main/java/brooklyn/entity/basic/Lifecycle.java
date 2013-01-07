@@ -8,16 +8,16 @@ import com.google.common.base.CaseFormat;
  * @startuml img/entity-lifecycle.png
  * title Entity Lifecycle
  *
- * (*) ->  [ @Create ]     "CREATED"
+ * (*) ->  "CREATED"
  *     if "Exception" then
- *     ->  [ @Error ]      "ON_FIRE"
+ *     ->  "ON_FIRE"
  *     else
- *     --> [ @PreStart ]   "STARTING"
- *     -->                 "RUNNING"
- *     ->  [ @PreStop ]    "STOPPING"
- *     --> [ @PostStop ]   "STOPPED"
- *     -->                 "RUNNING"
- *     --> [ @Destroy ]    "DESTROYED"
+ *     --> "STARTING"
+ *     --> "RUNNING"
+ *     ->  "STOPPING"
+ *     --> "STOPPED"
+ *     --> "RUNNING"
+ *     --> "DESTROYED"
  *     -left-> (*)
  * @enduml
  */
@@ -25,7 +25,7 @@ public enum Lifecycle {
     /**
      * The entity has just been created.
      *
-     * This stage encompasses the contructors and any methods annotated as {@link brooklyn.entity.basic.Create}. Once this stage is
+     * This stage encompasses the contruction. Once this stage is
      * complete, the basic set of {@link brooklyn.event.Sensor}s will be available, apart from any that require the entity to be active or
      * deployed to a {@link brooklyn.location.Location}.
      */
@@ -34,8 +34,8 @@ public enum Lifecycle {
     /**
      * The entity is starting.
      *
-     * This stage is entered when the {@link brooklyn.entity.trait.Startable#START} {@link brooklyn.entity.Effector} is called. Any methods annotated
-     * as {@link brooklyn.entity.basic.PreStart} are run, and the entity will have its location set and and setup helper object created.
+     * This stage is entered when the {@link brooklyn.entity.trait.Startable#START} {@link brooklyn.entity.Effector} is called. 
+     * The entity will have its location set and and setup helper object created.
      */
     STARTING,
 
@@ -50,9 +50,8 @@ public enum Lifecycle {
     /**
      * The entity is stopping.
      *
-     * This stage is activated when the {@link brooklyn.entity.trait.Startable#STOP} effector is called. The entity service is stopped, and any
-     * methods annotated as {@link brooklyn.entity.basic.PreStop} or {@link brooklyn.entity.basic.PostStop} are called as appropriate. Sensors that provide data
-     * from the running entity should be cleared and subscriptions cancelled.
+     * This stage is activated when the {@link brooklyn.entity.trait.Startable#STOP} effector is called. The entity service is stopped. 
+     * Sensors that provide data from the running entity may be cleared and subscriptions cancelled.
      */
     STOPPING,
 
@@ -67,8 +66,7 @@ public enum Lifecycle {
     /**
      * The entity is destroyed.
      *
-     * Any methods annotated as {@link brooklyn.entity.basic.Destroy} will be run to clear up entity state and resources. The entity will then be
-     * unmanaged and removed from any groups and its parent.
+     * The entity will be unmanaged and removed from any groups and from its parent.
      */
     DESTROYED,
 
@@ -76,7 +74,7 @@ public enum Lifecycle {
      * Entity error state.
      *
      * This stage is reachable from any other stage if an error occurs or an exception is thrown. It is not generally possible
-     * to recover from this state, but any {@link brooklyn.entity.basic.Error} annotated methods will be run to provide feedback or housekeeping.
+     * to recover from this state.
      */
     ON_FIRE;
 
