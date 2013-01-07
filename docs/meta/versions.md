@@ -69,9 +69,9 @@ This is the archived documentation for Brooklyn v{{ site.brooklyn-version }}
 {% endif %}
 
 
-<!--- 
 ### Version History
 
-version history can go here 
+* **[MASTER](/v/0.5.0-SNAPSHOT)**: includes new JS GUI and REST API, rebind/persistence support, cleaner naming conventions, more entities
 
--->
+* **[v0.4.0-rc.2](/v/0.4.0-rc.2/)**: current RC of first GA release, supporting wide range of entities and examples
+
