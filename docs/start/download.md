@@ -15,14 +15,14 @@ toc: ../toc.json
 <a name="distro"></a>
 ## The Distro
 
-{% capture maven_this_version_base_url %}{% if site.brooklyn-version contains 'SNAPSHOT' %}http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/{% else %}http://developers.cloudsoftcorp.com/download/maven2/{% endif %}{% endcapture %}
+{% capture maven_this_version_base_url %}http://developers.cloudsoftcorp.com/maven/{% if site.brooklyn-version contains 'SNAPSHOT' %}snapshots/{% else %}releases/{% endif %}{% endcapture %}
 
 You can grab the distribution artifact, containing Brooklyn, its dependencies and launch scripts, 
 here{% if site.brooklyn-version contains 'SNAPSHOT' %} (but please **check the date** on snapshot artifacts){% endif %}:
 
 * [{{ site.brooklyn-version }}]({{ maven_this_version_base_url }}io/brooklyn/brooklyn-dist/{{ site.brooklyn-version }}/)
-* [all stable versions](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-dist/)
-* [all snapshot versions](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/brooklyn-dist/)
+* [all stable versions](http://developers.cloudsoftcorp.com/maven/releases/io/brooklyn/brooklyn-dist/)
+* [all snapshot versions](http://developers.cloudsoftcorp.com/maven/snapshots/io/brooklyn/brooklyn-dist/)
 
 Just download your preferred flavour and unpack.
 
@@ -32,9 +32,9 @@ Just download your preferred flavour and unpack.
 You can grab a single JAR containing all of Brooklyn and its dependencies 
 here{% if site.brooklyn-version contains 'SNAPSHOT' %} (again please check the date on snapshot artifacts){% endif %}:
 
-* [{{ site.brooklyn-version }} (jar)]({{ maven_this_version_base_url }}io/brooklyn/brooklyn-all/{{ site.brooklyn-version }}/)
-* [all stable versions](http://developers.cloudsoftcorp.com/download/maven2/io/brooklyn/brooklyn-all/)
-* [all snapshot versions](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/brooklyn-all/)
+* [{{ site.brooklyn-version }}]({{ maven_this_version_base_url }}io/brooklyn/brooklyn-all/{{ site.brooklyn-version }}/)
+* [all stable versions](http://developers.cloudsoftcorp.com/maven/releases/io/brooklyn/brooklyn-all/)
+* [all snapshot versions](http://developers.cloudsoftcorp.com/maven/snapshots/io/brooklyn/brooklyn-all/)
 
 Just download your preferred flavour and add it to your classpath.
 
@@ -76,25 +76,26 @@ If you use maven, you can add Brooklyn with the following entries in your pom:
 {% highlight xml %}
     <repositories>
         <repository>
-            <id>cloudsoft-releases</id>
-            <url>http://developers.cloudsoftcorp.com/download/maven2/</url>
+            <id>cloudsoft-cloudfront-releases-repo</id>
+            <url>http://developers.cloudsoftcorp.com/maven/releases/</url>
         </repository>
+        <!-- optional for snapshot versions -->
         <repository>
-            <id>libs-snapshot-local</id>
-            <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+            <id>cloudsoft-cloudfront-snapshots-repo</id>
+            <url>http://developers.cloudsoftcorp.com/maven/snapshots/</url>
             <snapshots>
                 <enabled>true</enabled>
                 <updatePolicy>never</updatePolicy>
                 <checksumPolicy>fail</checksumPolicy>
-            </snapshots>
-        </repository>
+           </snapshots>
+         </repository>
     </repositories>
-    
+        
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
-            <version>${project.version}</version>
+            <version>{{ site.brooklyn-version }}</version>
         </dependency>
     </dependencies>
 {% endhighlight %}
