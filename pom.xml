@@ -15,6 +15,19 @@
         declaring versions, profiles, and the modules to build
     </description>
 
+    <!-- useful custom properties:
+
+      brooklyn.explicitModules :: only builds explicit modules (instead of default modules)
+
+      brooklyn.cloudsoftArtifactory :: deploys to cloudsoft artifactory repo (when using deploy) 
+                                       instead of default cloudsoft filesystem
+
+      simply activate with -Dbrooklyn.theCustomProperty on the mvn build line
+      (these are used to trigger profile selection, since maven activeByDefault
+      only works if _no_ profiles are triggered, see suggestion/background at:
+      http://stackoverflow.com/questions/5309379/how-to-keep-maven-profiles-which-are-activebydefault-active-even-if-another-prof )
+    -->
+
     <url>http://brooklyn.io/</url>
 
     <licenses>
@@ -39,17 +52,12 @@
 
     <repositories>
         <repository>
-            <id>cloudsoft-releases</id>
-            <url>http://developers.cloudsoftcorp.com/download/maven2/</url>
+            <id>cloudsoft-cloudfront-releases-repo</id>
+            <url>http://developers.cloudsoftcorp.com/maven/releases/</url>
         </repository>
         <repository>
-            <id>ccweb.cloudsoftcorp.com</id>
-            <name>ccweb.cloudsoftcorp.com-releases</name>
-            <url>http://ccweb.cloudsoftcorp.com/maven/cloudsoft-release</url>
-        </repository>
-        <repository>
-            <id>libs-snapshot-local</id>
-            <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+            <id>cloudsoft-cloudfront-snapshots-repo</id>
+            <url>http://developers.cloudsoftcorp.com/maven/snapshots/</url>
             <snapshots>
                 <enabled>true</enabled>
                 <updatePolicy>never</updatePolicy>
@@ -59,23 +67,18 @@
     </repositories>
 
     <distributionManagement>
+        <!-- defined below in profiles so we can easily target multiple repos -->
         <repository>
-            <id>local-release</id>
-            <name>libs-release-local</name>
-            <url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local/</url>
+            <id>${repo_id}</id>
+            <name>${repo_name}</name>
+            <url>${repo_url}</url>
         </repository>
         <snapshotRepository>
-            <id>local-snapshot</id>
-            <name>libs-snapshot-local</name>
-            <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+            <id>${snapshot_repo_id}</id>
+            <name>${snapshot_repo_name}</name>
+            <url>${snapshot_repo_url}</url>
             <uniqueVersion>true</uniqueVersion>
         </snapshotRepository>
-        <site>
-            <id>local-documentation</id>
-            <url>
-                scpexe://jenkins@releng3.cloudsoftcorp.com/home/jenkins/documentation/${project.groupId}-${project.version}/
-            </url>
-        </site>
     </distributionManagement>
 
     <properties>
@@ -576,9 +579,7 @@
 
         <profile>
             <id>Essentials</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
                 <module>api</module>
                 <module>usage/test-support</module>
@@ -588,9 +589,7 @@
         </profile>
         <profile>
             <id>Entities</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
                 <module>util/jmx/jmxmp-ssl-agent</module>
                 <module>software/base</module>
@@ -607,9 +606,7 @@
         </profile>
         <profile>
             <id>Usage</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
                 <module>usage/logback-xml</module>
                 <module>usage/rest</module>
@@ -622,18 +619,14 @@
         </profile>
         <profile>
             <id>Examples</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
                 <module>examples</module>
             </modules>
         </profile>
         <profile>
             <id>QA</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
+            <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
                 <module>usage/qa</module>
             </modules>
@@ -1197,6 +1190,35 @@
                 </plugins>
             </build>
         </profile>
+
+        <!-- different properties used to deploy to different locations depending on profiles;
+             default is cloudsoft filesystem repo, but some sources still use cloudsoft artifactory as source
+             (and soon we will support artifactory) -->
+        <profile>
+            <id>cloudsoft-filesystem-repo</id>
+            <activation> <property><name>!brooklyn.cloudsoftArtifactory</name></property> </activation>
+            <properties>
+                <repo_id>cloudsoft-deploy-cloudfront-origin-releases</repo_id>
+                <repo_name>Cloudsoft Release Filesystem repo (used as origin for cloudfront)</repo_name>
+                <repo_url>scpexe://root@developers-origin.cloudsoftcorp.com/var/www/developers/maven/releases/</repo_url>
+                <snapshot_repo_id>cloudsoft-deploy-cloudfront-origin-snapshots</snapshot_repo_id>
+                <snapshot_repo_name>Cloudsoft Snapshot Filesystem repo (used as origin for cloudfront)</snapshot_repo_name>
+                <snapshot_repo_url>scpexe://root@developers-origin.cloudsoftcorp.com/var/www/developers/maven/snapshots/</snapshot_repo_url>
+            </properties>
+        </profile>
+        <profile>
+            <id>cloudsoft-artifactory-repo</id>
+            <activation> <property><name>brooklyn.cloudsoftArtifactory</name></property> </activation>
+            <properties>
+                <repo_id>cloudsoft-deploy-artifactory-release</repo_id>
+                <repo_name>Cloudsoft Artifactory libs-release-local repo</repo_name>
+                <repo_url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local/</repo_url>
+                <snapshot_repo_id>cloudsoft-deploy-artifactory-snapshot</snapshot_repo_id>
+                <snapshot_repo_name>Cloudsoft Artifactory libs-snapshot-local repo</snapshot_repo_name>
+                <snapshot_repo_url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</snapshot_repo_url>
+            </properties>
+        </profile>
+
     </profiles>
 
 </project>
