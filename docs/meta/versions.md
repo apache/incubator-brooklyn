@@ -14,6 +14,8 @@ toc: /toc.json
 
 > *Links to other versions will likely not work when running in server/debug mode.
 Files must be copied to the brooklyncentral.github.com repo for many of the links below to resolve correctly.*
+
+> *Debug page generated {{ site.time }}*
 {% endif %}
 
 
@@ -61,7 +63,7 @@ Other versions with documentation available are listed below.
 <!--- archive version -->
 
 This is the archived documentation for Brooklyn v{{ site.brooklyn-version }}
-(generated {{ site.time }}).
+(generated {{ site.time }}, archived under {{ site.url }}).
 
 [View current documentation here.](/meta/versions.html)
 
