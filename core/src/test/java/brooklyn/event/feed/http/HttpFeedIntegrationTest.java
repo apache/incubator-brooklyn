@@ -61,6 +61,7 @@ public class HttpFeedIntegrationTest {
         if (feed != null) feed.stop();
         if (server != null) server.shutdown();
         if (app != null) Entities.destroy(app);
+        feed = null;
     }
     
     @Test
@@ -101,7 +102,7 @@ public class HttpFeedIntegrationTest {
     
     @Test
     public void testPollsAndParsesHttpErrorResponse() throws Exception {
-        HttpFeed feed = HttpFeed.builder()
+        feed = HttpFeed.builder()
                 .entity(entity)
                 .baseUri("http://thisdoesnotexistdefinitely")
                 .poll(new HttpPollConfig<String>(SENSOR_STRING)
