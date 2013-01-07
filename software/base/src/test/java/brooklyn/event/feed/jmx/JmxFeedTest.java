@@ -39,7 +39,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.adapter.JmxHelper;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.location.Location;
