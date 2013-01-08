@@ -30,6 +30,7 @@ import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.util.MutableMap;

@@ -23,7 +23,6 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EffectorUtils;
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.drivers.BasicEntityDriverFactory;
 import brooklyn.entity.drivers.EntityDriverFactory;

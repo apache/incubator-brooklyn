@@ -11,6 +11,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.management.internal.EffectorUtils;
 
 import com.google.common.collect.Lists;
 
