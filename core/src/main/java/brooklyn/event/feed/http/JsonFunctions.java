@@ -36,7 +36,9 @@ public class JsonFunctions {
     public static <T> Function<JsonElement, T> cast(final Class<T> expected) {
         return new Function<JsonElement, T>() {
             @Override public T apply(JsonElement input) {
-                if (input.isJsonNull()) {
+                if (input == null) {
+                    return (T) null;
+                } else if (input.isJsonNull()) {
                     return (T) null;
                 } else if (expected == boolean.class || expected == Boolean.class) {
                     return (T) (Boolean) input.getAsBoolean();

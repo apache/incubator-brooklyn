@@ -10,7 +10,8 @@ import javax.management.ObjectName;
 import brooklyn.entity.Entity;
 import brooklyn.entity.messaging.Queue;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.event.adapter.JmxObjectNameAdapter;
+import brooklyn.event.feed.jmx.JmxAttributePollConfig;
+import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -39,13 +40,25 @@ public class QpidQueue extends QpidDestination implements Queue {
         }
     }
 
-    public void connectSensors() {
+    @Override
+    protected void connectSensors() {
         String queue = format("org.apache.qpid:type=VirtualHost.Queue,VirtualHost=\"%s\",name=\"%s\"", virtualHost, getName());
-        JmxObjectNameAdapter queueAdapter = jmxAdapter.objectName(queue);
-        queueAdapter.attribute("QueueDepth").poll(QUEUE_DEPTH_BYTES);
-        queueAdapter.attribute("MessageCount").poll(QUEUE_DEPTH_MESSAGES);
+        
+        jmxFeed = JmxFeed.builder()
+                .entity(this)
+                .helper(jmxHelper)
+                .pollAttribute(new JmxAttributePollConfig<Integer>(QUEUE_DEPTH_BYTES)
+                        .objectName(queue)
+                        .attributeName("QueueDepth"))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(QUEUE_DEPTH_MESSAGES)
+                        .objectName(queue)
+                        .attributeName("MessageCount"))
+                .build();
     }
 
     /** {@inheritDoc} */
-    public String getExchangeName() { return AmqpExchange.DIRECT; }
+    @Override
+    public String getExchangeName() {
+        return AmqpExchange.DIRECT;
+    }
 }
