@@ -5,6 +5,7 @@ import static org.testng.Assert.*
 
 import java.util.concurrent.CopyOnWriteArrayList
 
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -13,7 +14,6 @@ import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.SubscriptionHandle
-import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
@@ -24,7 +24,6 @@ public class EntitySubscriptionTest {
     private static final long TIMEOUT_MS = 5000;
     private static final long SHORT_WAIT_MS = 100;
     
-    protected LocalManagementContext mgmt;
     private SimulatedLocation loc;
     private TestApplication app;
     private TestEntity entity;
@@ -50,10 +49,14 @@ public class EntitySubscriptionTest {
         otherEntity = new TestEntity(parent:app);
         listener = new RecordingSensorEventListener();
         
-        mgmt = new LocalManagementContext();
-        mgmt.manage(app);
+        Entities.startManagement(app);
         
         app.start([loc])
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        if (app != null) Entities.destroy(app);
     }
     
     @Test
@@ -111,7 +114,7 @@ public class EntitySubscriptionTest {
         
         TestEntity observedChildEntity2 = new TestEntity(parent:observedEntity);
         observedChildEntity2.setAttribute(TestEntity.SEQUENCE, 123);
-        mgmt.manage(observedChildEntity2);
+        Entities.manage(observedChildEntity2);
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(listener.events, [
@@ -139,7 +142,7 @@ public class EntitySubscriptionTest {
         entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
         TestEntity observedMemberEntity2 = new TestEntity(parent:app);
-        mgmt.manage(observedMemberEntity2);
+        Entities.manage(observedMemberEntity2);
         observedGroup.addMember(observedMemberEntity2);
         observedMemberEntity2.setAttribute(TestEntity.SEQUENCE, 123);
         

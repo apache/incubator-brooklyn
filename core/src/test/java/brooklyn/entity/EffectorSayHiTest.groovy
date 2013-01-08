@@ -1,29 +1,26 @@
 package brooklyn.entity
 
 import static org.testng.Assert.*
-
-import org.testng.annotations.Test
-
-import groovy.transform.InheritConstructors;
-
-import java.beans.ReflectionUtils;
+import groovy.transform.InheritConstructors
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
-import brooklyn.entity.basic.AbstractEffector
-import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.DefaultValue
 import brooklyn.entity.basic.Description
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.ExplicitEffector
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.NamedParameter
-import brooklyn.entity.trait.Startable;
-import brooklyn.management.ManagementContext
-import brooklyn.management.internal.LocalManagementContext
-import brooklyn.management.Task
+import brooklyn.entity.trait.Startable
 import brooklyn.management.ExecutionContext
+import brooklyn.management.ManagementContext
+import brooklyn.management.Task
+import brooklyn.test.entity.TestApplication
 
 /**
  * Test the operation of the {@link Effector} implementations.
@@ -33,11 +30,23 @@ import brooklyn.management.ExecutionContext
 public class EffectorSayHiTest {
     private static final Logger log = LoggerFactory.getLogger(EffectorSayHiTest.class);
 
+    private Application app;
+    private MyEntity e;
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() {
+        app = new TestApplication();
+        e = new MyEntity(app);
+        Entities.startManagement(app);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        if (app != null) Entities.destroy(app);
+    }
+    
     @Test
     public void testFindEffectors() {
-        MyEntity e = new MyEntity();
-        new LocalManagementContext().manage(e);
-
         assertEquals("sayHi1", e.SAY_HI_1.getName());
         assertEquals(["name", "greeting"], e.SAY_HI_1.getParameters()[0..1]*.getName());
         assertEquals("says hello", e.SAY_HI_1.getDescription());
@@ -63,9 +72,6 @@ public class EffectorSayHiTest {
 
     @Test
     public void testInvokeEffectorMethod1BypassInterception() {
-        MyEntity e = new MyEntity();
-        new LocalManagementContext().manage(e);
-
         String name = "sayHi1"
         def args = ["Bob", "hello"] as Object[]
 
@@ -78,9 +84,6 @@ public class EffectorSayHiTest {
 
     @Test
     public void testInvokeEffectorMethod2BypassInterception() {
-        MyEntity e = new MyEntity();
-        new LocalManagementContext().manage(e);
-
         String name = "sayHi2"
         def args = ["Bob", "hello"] as Object[]
         assertEquals("hello Bob", e.metaClass.invokeMethod(e, name, args))
@@ -88,9 +91,6 @@ public class EffectorSayHiTest {
 
     @Test
     public void testInvokeEffectors1() {
-        MyEntity e = new MyEntity();
-        new LocalManagementContext().manage(e);
-
         assertEquals("hi Bob", e.sayHi1("Bob", "hi"))
         assertEquals("hello Bob", e.sayHi1("Bob"))
 
@@ -105,9 +105,6 @@ public class EffectorSayHiTest {
 
     @Test
     public void testInvokeEffectors2() {
-        MyEntity e = new MyEntity();
-        new LocalManagementContext().manage(e);
-        
         assertEquals("hi Bob", e.sayHi2("Bob", "hi"))
         assertEquals("hello Bob", e.sayHi2("Bob"))
 
@@ -120,9 +117,6 @@ public class EffectorSayHiTest {
 
     @Test
     public void testCanRetrieveTaskForEffector() {
-        MyEntity e = new MyEntity();
-        new LocalManagementContext().manage(e);
-        
         e.sayHi2("Bob", "hi")
 
         ManagementContext managementContext = e.getManagementContext()
@@ -134,8 +128,6 @@ public class EffectorSayHiTest {
 
     @Test
     public void testCanExcludeNonEffectorTasks() {
-        MyEntity e = new MyEntity()
-        new LocalManagementContext().manage(e);
         ManagementContext managementContext = e.getManagementContext()
         ExecutionContext executionContext = managementContext.getExecutionContext()
         executionContext.submit( {} as Runnable)

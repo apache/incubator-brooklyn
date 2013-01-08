@@ -26,6 +26,11 @@ public interface ManagementContext {
     Collection<Application> getApplications();
 
     /**
+     * Returns the {@link EntityManager} instance for managing/querying entities.
+     */
+    EntityManager getEntityManager();
+    
+    /**
      * Returns the {@link ExecutionManager} instance for entities and users in this management realm 
      * to submit tasks and to observe what tasks are occurring
      */

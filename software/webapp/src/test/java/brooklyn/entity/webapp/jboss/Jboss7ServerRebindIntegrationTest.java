@@ -97,7 +97,7 @@ public class Jboss7ServerRebindIntegrationTest {
     public void testRebindsToRunningServer() throws Exception {
     	// Start an app-server, and wait for it to be fully up
         JBoss7Server origServer = new JBoss7Server(MutableMap.of("war", warUrl.toString()), origApp);
-        origManagementContext.manage(origApp);
+        Entities.startManagement(origApp, origManagementContext);
         
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         

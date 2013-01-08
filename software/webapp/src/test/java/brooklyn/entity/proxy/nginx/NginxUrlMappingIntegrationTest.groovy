@@ -213,7 +213,7 @@ public class NginxUrlMappingIntegrationTest {
         assertUrlStatusCodeEventually("http://localhost2:${port}/", 200);
         
         // Now remove mapping; will no longer route requests
-        app.getManagementContext().unmanage(u0);
+        Entities.unmanage(u0);
         assertUrlStatusCodeEventually("http://localhost2:${port}/", 404);
     }
     

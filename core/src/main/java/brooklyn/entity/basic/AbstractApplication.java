@@ -145,7 +145,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             //but that could be handled by the impl at management
             //(keeping recently unmanaged things)  
             //  however unmanaging must be done last, _after_ we stop children and set attributes 
-            getManagementContext().unmanage(this);
+            getManagementContext().getEntityManager().unmanage(this);
         }
 
         log.info("Stopped application " + this);
@@ -155,7 +155,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         throw new UnsupportedOperationException();
     }
 
-    /** @deprecated use getManagementSupport().isDeployed() */
+    /** @deprecated since 0.4.0; use getManagementSupport().isDeployed() */
     public boolean hasManagementContext() {
         return mgmt!=null;
     }
@@ -181,7 +181,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         
         this.mgmt = mgmt;
         if (isDeployed()) {
-            mgmt.manage(this);            
+            mgmt.getEntityManager().manage(this);            
         }
     }
     

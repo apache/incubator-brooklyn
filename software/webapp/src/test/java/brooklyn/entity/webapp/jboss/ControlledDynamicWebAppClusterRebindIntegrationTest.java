@@ -108,7 +108,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     					.put("controller", origNginx)
     					.build(),
     			origApp);
-    	origManagementContext.manage(origApp);
+    	Entities.startManagement(origApp, origManagementContext);
     	
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         String rootUrl = origNginx.getAttribute(JBoss7Server.ROOT_URL);

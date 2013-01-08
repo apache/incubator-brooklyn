@@ -6,25 +6,33 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Application
 import brooklyn.entity.SimpleEntity
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.management.internal.LocalManagementContext
+import brooklyn.test.entity.TestApplication
 
 public class AttributeMapTest {
 
+    Application app;
     AttributeMap map
     private final BasicAttributeSensor<Integer> exampleSensor = [ Integer, "attributeMapTest.exampleSensor", "" ]
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        SimpleEntity e = []
+        app = new TestApplication()
+        SimpleEntity e = new SimpleEntity(app)
         map = new AttributeMap(e)
-        
-        new LocalManagementContext().manage(e);
+        Entities.startManagement(app);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        if (app != null) Entities.destroy(app);
     }
     
     // See ENGR-2111

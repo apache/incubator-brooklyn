@@ -40,7 +40,7 @@ public class SoftwareProcessEntityRebindTest {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
         origApp = new MyApplication();
-        managementContext.manage(origApp);
+        Entities.startManagement(origApp, managementContext);
     }
 
     @AfterMethod
@@ -51,7 +51,7 @@ public class SoftwareProcessEntityRebindTest {
     @Test
     public void testReleasesLocationOnStopAfterRebinding() throws Exception {
         origE = new MyService(MutableMap.of(), origApp);
-        managementContext.manage(origE);
+        Entities.manage(origE);
         
         MyProvisioningLocation origLoc = new MyProvisioningLocation(MutableMap.of("name", "mylocname"));
         origApp.start(ImmutableList.of(origLoc));

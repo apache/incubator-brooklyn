@@ -9,16 +9,19 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Application
 import brooklyn.entity.SimpleEntity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.Entities
 import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplication
 
 /**
  * Test the operation of the {@link SensorRegistry} class.
@@ -26,12 +29,19 @@ import brooklyn.test.TestUtils
 public class SensorRegistryTest {
     private static final Logger log = LoggerFactory.getLogger(SensorRegistryTest.class)
 
+    Application app;
     AbstractEntity entity;
     
     @BeforeMethod(alwaysRun=true)
-    public void setup() {
-        entity = new SimpleEntity()
-        new LocalManagementContext().manage(entity);
+    public void setUp() {
+        app = new TestApplication();
+        entity = new SimpleEntity(app)
+        Entities.startManagement(app);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        if (app != null) Entities.destroy(app)
     }
     
     @Test

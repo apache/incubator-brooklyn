@@ -10,14 +10,13 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-import org.jclouds.util.Throwables2;
+import org.jclouds.util.Throwables2
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Resizable
 import brooklyn.location.Location
@@ -355,7 +354,7 @@ class DynamicClusterTest {
         
         TestEntity child = cluster.children.get(0)
         child.stop()
-        app.managementContext.unmanage(child)
+        Entities.unmanage(child)
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(cluster.children.size(), 0)
@@ -469,7 +468,7 @@ class DynamicClusterTest {
         Entity member = Iterables.get(cluster.members, 0);
         
         String replacementId = cluster.replaceMember(member.getId());
-        Entity replacement = cluster.getManagementContext().getEntity(replacementId);
+        Entity replacement = cluster.getManagementContext().getEntityManager().getEntity(replacementId);
         
         assertEquals(cluster.members.size(), 1)
         assertFalse(cluster.members.contains(member))

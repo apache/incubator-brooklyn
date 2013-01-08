@@ -132,7 +132,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     }
     
     public boolean isManaged(Entity e) {
-        return (running && getEntity(e.getId())!=null);
+        return (running && getEntityManager().getEntity(e.getId())!=null);
     }
     
     /**
@@ -170,7 +170,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         EntityCollectionReference<?> ref = ((AbstractEntity)e).getChildrenReference();
         for (String ei: ref.getIds()) {
             Entity entity = ref.peek(ei);
-            if (entity==null) entity = getEntity(ei);
+            if (entity==null) entity = getEntityManager().getEntity(ei);
             if (entity==null) {
                 log.warn("Unable to resolve entity "+ei+" when recursing for management");
             } else {

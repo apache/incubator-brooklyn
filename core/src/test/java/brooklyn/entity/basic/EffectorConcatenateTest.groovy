@@ -8,12 +8,16 @@ import java.util.concurrent.atomic.AtomicReference
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Application
 import brooklyn.entity.Effector
-import brooklyn.management.ExecutionManager;
+import brooklyn.entity.Entity
+import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
-import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.task.BasicExecutionContext
 import brooklyn.util.task.Tasks
 
@@ -23,13 +27,18 @@ public class EffectorConcatenateTest {
     private static final Logger log = LoggerFactory.getLogger(EffectorConcatenateTest.class);
     private static final long TIMEOUT = 10*1000
     
-    @InheritConstructors
     public class MyEntity extends AbstractEntity {
 
         public static Effector<String> CONCATENATE = new MethodEffector<Void>(MyEntity.class, "concatenate");
     
         public MyEntity(Map flags) {
             super(flags)
+        }
+        public MyEntity(Entity parent) {
+            super(parent)
+        }
+        public MyEntity(Map flags, Entity parent) {
+            super(flags, parent)
         }
 
         AtomicReference concatTask = new AtomicReference();
@@ -72,12 +81,23 @@ public class EffectorConcatenateTest {
         }
     }
             
+    private Application app;
+    private MyEntity e;
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() {
+        app = new TestApplication();
+        e = new MyEntity(app);
+        Entities.startManagement(app);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        if (app != null) Entities.destroy(app);
+    }
+    
     @Test
     public void testCanInvokeEffector() {
-        AbstractApplication app = new AbstractApplication() {}
-        MyEntity e = new MyEntity([parent:app])
-        new LocalManagementContext().manage(app);
-        
         // invocation map syntax
         Task<String> task = e.invoke(MyEntity.CONCATENATE, [first:"a",second:"b"])
         assertEquals(task.get(TIMEOUT, TimeUnit.MILLISECONDS), "ab")
@@ -88,10 +108,6 @@ public class EffectorConcatenateTest {
     
     @Test
     public void testTaskReporting() {
-        AbstractApplication app = new AbstractApplication() {}
-        MyEntity e = new MyEntity([parent:app]);
-        new LocalManagementContext().manage(app);
-        
         final AtomicReference<String> result = new AtomicReference<String>();
 
         Thread bg = new Thread({
@@ -159,5 +175,4 @@ public class EffectorConcatenateTest {
         String problem = result.get();
         if (problem!=null) fail(problem);
     }
-    
 }

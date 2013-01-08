@@ -16,6 +16,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.basic.Entities
 
 public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPolicyTest {
     
@@ -99,7 +100,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
             scheduledExecutor.submit( {
                     try {
                         containerToStop.offloadAndStop(containers.last());
-                        app.managementContext.unmanage(containerToStop)
+                        Entities.unmanage(containerToStop)
                     } catch (Throwable t) {
                         LOG.error("Error stopping container $containerToStop", t);
                     }
@@ -129,7 +130,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
             scheduledExecutor.submit( {
                     try {
                         itemToStop.stop()
-                        app.managementContext.unmanage(itemToStop)
+                        Entities.unmanage(itemToStop)
                     } catch (Throwable t) {
                         LOG.error("Error stopping item $itemToStop", t);
                     }

@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionHandle;
@@ -35,12 +36,12 @@ public class LocalSubscriptionManagerTest {
     public void setup() {
         app = new TestApplication();
         entity = new TestEntity(app);
-        new LocalManagementContext().manage(app);
+        Entities.startManagement(app);
     }
 
     private void manage(Entity ...entities) {
         for (Entity e: entities)
-            app.getManagementSupport().getManagementContext(true).manage(e);
+            Entities.manage(e);
     }
 
     @Test

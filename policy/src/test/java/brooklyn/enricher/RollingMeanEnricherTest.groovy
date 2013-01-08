@@ -8,11 +8,11 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.SubscriptionContext
-import brooklyn.management.internal.LocalManagementContext
 
 class RollingMeanEnricherTest {
     
@@ -30,7 +30,7 @@ class RollingMeanEnricherTest {
     public void before() {
         app = new AbstractApplication() {}
         producer = new AbstractEntity(app) {}
-        new LocalManagementContext().manage(app);
+        Entities.startManagement(app);
 
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
         deltaSensor = new BasicAttributeSensor<Integer>(Integer.class, "delta sensor")

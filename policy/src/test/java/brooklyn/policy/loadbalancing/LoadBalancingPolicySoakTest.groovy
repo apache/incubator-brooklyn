@@ -4,15 +4,12 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.Entity
+import brooklyn.entity.basic.Entities
 import brooklyn.test.entity.TestApplication
 
 public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest {
@@ -127,7 +124,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
                 MockItemEntity itemToStop = items.get(itemIndex)
                 itemToStop.stop()
                 LOG.debug("Unmanaging item {}", itemToStop)
-                app.managementContext.unmanage(itemToStop)
+                Entities.unmanage(itemToStop)
                 items.set(itemIndex, newItem(app, containers.get(0), "item-"+(itemIndex+1)+".$i.$j", 5))
             }
             

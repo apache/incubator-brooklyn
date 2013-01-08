@@ -131,7 +131,7 @@ class MovableElasticWebAppCluster extends AbstractEntity implements Startable, M
         currentSecondaryIds.remove(idOfSecondaryToDestroy);
         setAttribute(SECONDARY_SVC_ENTITY_IDS, currentSecondaryIds);
         
-        Entity secondary = getManagementContext().getEntity(idOfSecondaryToDestroy);
+        Entity secondary = getManagementContext().getEntityManager().getEntity(idOfSecondaryToDestroy);
         Entities.destroy(managementContext, secondary);
     }
 

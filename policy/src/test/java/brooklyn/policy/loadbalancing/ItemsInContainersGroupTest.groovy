@@ -10,6 +10,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 
@@ -50,10 +51,10 @@ public class ItemsInContainersGroupTest {
     @Test
     public void testFilterIsAppliedToItems() throws Exception {
         itemGroup.stop()
-        app.managementContext.unmanage(itemGroup)
+        Entities.unmanage(itemGroup)
         
         itemGroup = new ItemsInContainersGroup([itemFilter:{it.displayName == "2"}], app)
-        app.managementContext.manage(itemGroup)
+        Entities.manage(itemGroup)
         itemGroup.setContainers(containerGroup)
         
         MockContainerEntity containerIn = newContainer(app, "A", "ingroup")
@@ -98,7 +99,7 @@ public class ItemsInContainersGroupTest {
         MockItemEntity item1 = newItem(app, containerIn, "1")
         assertItemsEventually(item1)
         
-        app.getManagementContext().unmanage(item1)
+        Entities.unmanage(item1);
         assertItemsEventually()
     }
 
@@ -114,7 +115,7 @@ public class ItemsInContainersGroupTest {
         MockItemEntity item1 = newItem(app, containerA, "1")
         assertItemsEventually(item1)
         
-        app.getManagementContext().unmanage(containerA)
+        Entities.unmanage(containerA)
         assertItemsEventually()
     }
 
@@ -128,14 +129,14 @@ public class ItemsInContainersGroupTest {
         MockContainerEntity container = new MockContainerEntity([displayName:name])
         container.setConfig(MockContainerEntity.MOCK_MEMBERSHIP, membership)
         container.setParent(app)
-        app.getManagementContext().manage(container)
+        Entities.manage(container);
         container.start([loc])
         return container
     }
     
     private static MockItemEntity newItem(Application app, MockContainerEntity container, String name) {
         MockItemEntity item = new MockItemEntity([displayName:name], app)
-        app.getManagementContext().manage(item)
+        Entities.manage(item);
         item.move(container)
         return item
     }

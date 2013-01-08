@@ -367,18 +367,18 @@ public class Entities {
         }
     }
 
-    /** @deprecated use start(Entity) */
+    /** @deprecated since 0.4; use start(Entity) */
     public static Entity start(ManagementContext context, Entity e, Collection<? extends Location> locations) {
         if (context != null) context.manage(e);
         if (e instanceof Startable) ((Startable)e).start(locations);
         return e;
     }
 
-    /** @deprecated use destroy(Entity) */
+    /** @deprecated since 0.4; use destroy(Entity) */
     public static void destroy(ManagementContext context, Entity e) {
         if (e instanceof Startable) ((Startable)e).stop();
         if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
-        if (context != null) context.unmanage(e);
+        if (context != null) context.getEntityManager().unmanage(e);
     }
 
     /** convenience for starting an entity, esp a new Startable instance which has been created dynamically
@@ -418,7 +418,7 @@ public class Entities {
             o = o.getParent();
         }
         if (isManaged(o)) {
-            ((AbstractEntity)o).getManagementSupport().getManagementContext(false).manage(eum);
+            ((AbstractEntity)o).getManagementSupport().getManagementContext(false).getEntityManager().manage(eum);
             return true;
         }
         if (!(o instanceof Application))
@@ -446,16 +446,29 @@ public class Entities {
         }
         if (isManaged(o)) {
             ManagementContext mgmt = ((AbstractEntity)o).getManagementSupport().getManagementContext(false);
-            mgmt.manage(eum);
+            mgmt.getEntityManager().manage(eum);
             return mgmt;
         }
         if (!(o instanceof Application))
             throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
         ManagementContext mgmt = new LocalManagementContext();
-        mgmt.manage(o);
+        mgmt.getEntityManager().manage(o);
         return mgmt;
     }
 
+    /**
+     * Starts managing the given (unmanaged) app, using the given management context.
+     * 
+     * @see startManagement(Entity)
+     */
+    public static ManagementContext startManagement(Application app, ManagementContext mgmt) {
+        if (isManaged(app)) {
+            throw new IllegalStateException("Application "+app+" is already managed, so can't set brooklyn properties");
+        }
+        mgmt.getEntityManager().manage(app);
+        return mgmt;
+    }
+    
     /**
      * Starts managing the given (unmanaged) app, setting the given brooklyn properties on the new
      * management context.
@@ -467,13 +480,13 @@ public class Entities {
             throw new IllegalStateException("Application "+app+" is already managed, so can't set brooklyn properties");
         }
         ManagementContext mgmt = new LocalManagementContext(props);
-        mgmt.manage(app);
+        mgmt.getEntityManager().manage(app);
         return mgmt;
     }
     
     public static void unmanage(Entity entity) {
         if (((AbstractEntity)entity).getManagementSupport().isDeployed()) {
-            ((AbstractEntity)entity).getManagementSupport().getManagementContext(true).unmanage(entity);
+            ((AbstractEntity)entity).getManagementSupport().getManagementContext(true).getEntityManager().unmanage(entity);
         }
     }
 

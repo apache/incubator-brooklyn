@@ -15,6 +15,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.management.ManagementContext;
@@ -42,7 +43,7 @@ public class CheckpointEntityTest {
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = new MyApplication();
         origE = new MyEntity(MutableMap.of("myconfig", "myval"), origApp);
-        managementContext.manage(origApp);
+        Entities.startManagement(origApp, managementContext);
     }
 
     @AfterMethod
@@ -65,7 +66,7 @@ public class CheckpointEntityTest {
     @Test
     public void testAutoCheckpointsOnManageDynamicEntity() throws Exception {
         final MyEntity origE2 = new MyEntity(MutableMap.of("myconfig", "myval2"), origApp);
-        managementContext.manage(origE2);
+        Entities.manage(origE2);
         
         MyApplication newApp = rebind();
         MyEntity newE2 = (MyEntity) Iterables.find(newApp.getChildren(), new Predicate<Entity>() {
@@ -81,13 +82,13 @@ public class CheckpointEntityTest {
     
     @Test
     public void testAutoCheckpointsOnUnmanageEntity() throws Exception {
-        managementContext.unmanage(origE);
+        Entities.unmanage(origE);
         
         MyApplication newApp = rebind();
         
         // Assert does not container unmanaged entity
         assertEquals(ImmutableList.copyOf(newApp.getChildren()), Collections.emptyList());
-        assertNull(newApp.getManagementSupport().getManagementContext(false).getEntity(origE.getId()));
+        assertNull(newApp.getManagementSupport().getManagementContext(false).getEntityManager().getEntity(origE.getId()));
     }
     
     @Test

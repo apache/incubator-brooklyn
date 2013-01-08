@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.TestUtils;
@@ -45,7 +46,7 @@ public class RebindDynamicGroupTest {
     public void testRestoresDynamicGroup() throws Exception {
         MyEntity origE = new MyEntity(origApp);
         DynamicGroup origG = new DynamicGroup(origApp, Predicates.instanceOf(MyEntity.class));
-        managementContext.manage(origApp);
+        Entities.startManagement(origApp, managementContext);
         
         TestApplication newApp = rebind();
         ManagementContext newManagementContext = newApp.getManagementSupport().getManagementContext(false);
@@ -57,7 +58,7 @@ public class RebindDynamicGroupTest {
 
         // And should detect new members that match the filter
         final MyEntity newE2 = new MyEntity(newApp);
-        newManagementContext.manage(newE2);
+        Entities.manage(newE2);
         
         TestUtils.assertEventually(new Runnable() {
             public void run() {

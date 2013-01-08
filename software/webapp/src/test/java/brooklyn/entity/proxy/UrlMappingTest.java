@@ -62,7 +62,7 @@ public class UrlMappingTest {
                         .build(),
                 app);
 
-        managementContext.manage(app);
+        Entities.startManagement(app, managementContext);
         
         app.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
     }

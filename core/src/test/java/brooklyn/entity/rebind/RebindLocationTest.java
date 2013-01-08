@@ -13,6 +13,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.location.Location;
@@ -41,7 +42,7 @@ public class RebindLocationTest {
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = new MyApplication();
         origE = new MyEntity(origApp);
-        managementContext.manage(origApp);
+        Entities.startManagement(origApp, managementContext);
     }
 
     @AfterMethod

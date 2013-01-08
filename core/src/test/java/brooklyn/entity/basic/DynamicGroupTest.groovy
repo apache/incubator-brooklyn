@@ -148,7 +148,7 @@ public class DynamicGroupTest {
         group.setEntityFilter( { it.getId().equals(e1.getId()) } )
         assertEquals(group.getMembers(), [e1])
         
-        app.getManagementContext().unmanage(e1)
+        Entities.unmanage(e1)
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(group.getMembers(), [])
@@ -163,12 +163,12 @@ public class DynamicGroupTest {
         group.stop()
         
         e3.setParent(app)
-        app.getManagementContext().manage(e3)
+        Entities.manage(e3)
         assertSucceedsContinually(timeout:VERY_SHORT_WAIT_MS) {
             assertEquals(group.getMembers(), [e1, e2])
         }
                 
-        app.getManagementContext().unmanage(e1)
+        Entities.unmanage(e1)
         assertSucceedsContinually(timeout:VERY_SHORT_WAIT_MS) {
             assertEquals(group.getMembers(), [e1, e2])
         }
@@ -218,11 +218,11 @@ public class DynamicGroupTest {
 
         for (i in 1..NUM_CYCLES) {
             TestEntity entity = new TestEntity(parent:app)
-            app.getManagementContext().manage(entity);
+            Entities.manage(entity);
             executeUntilSucceeds {
                 entitiesNotified.contains(entity);
             }
-            app.getManagementContext().unmanage(entity);
+            Entities.unmanage(entity);
         }
 
         LanguageUtils.repeatUntilSuccess(timeout:new groovy.time.TimeDuration(0, 0, 10, 0)) {
@@ -282,8 +282,8 @@ public class DynamicGroupTest {
         
         for (int i = 0; i < NUM_CYCLES; i++) {
             TestEntity entity = new TestEntity(parent:app)
-            app.getManagementContext().manage(entity);
-            app.getManagementContext().unmanage(entity);
+            Entities.manage(entity);
+            Entities.unmanage(entity);
         }
 
         LanguageUtils.repeatUntilSuccess(timeout:new groovy.time.TimeDuration(0, 0, 10, 0)) {

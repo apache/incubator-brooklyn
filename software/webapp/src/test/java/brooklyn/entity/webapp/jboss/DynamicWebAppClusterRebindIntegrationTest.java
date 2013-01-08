@@ -62,7 +62,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         origApp = new TestApplication();
-        origManagementContext.manage(origApp);
+        Entities.startManagement(origApp, origManagementContext);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
