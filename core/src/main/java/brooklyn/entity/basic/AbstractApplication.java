@@ -76,11 +76,30 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.CREATED);
     }
 
-    /** Constructor for when application is nested inside another application */
+    /** 
+     * Constructor for when application is nested inside another application
+     * 
+     * @deprecated Nesting applications is not currently supported
+     */
+    @Deprecated
     public AbstractApplication(Map properties, Entity parent) {
         super(properties, parent);
     }
 
+    // Note that setProxy will be called by the framework immediately after constructing the
+    // entity, and before any reference to the entity is leaked. Therefore nothing should call
+    // getProxy before this is set.
+    // 
+    // Also note that for legacy-usage (i.e. where the constructor is called directly), then setProxy
+    // will never get called.
+    @Override
+    public void setProxy(Entity proxy) {
+        super.setProxy(proxy);
+        if (getApplication() == this) {
+            setApplication((Application)getProxy());
+        }
+    }
+    
     /**
      * Default start will start all Startable children (child.start(Collection<? extends Location>)),
      * calling preStart(locations) first and postStart(locations) afterwards.

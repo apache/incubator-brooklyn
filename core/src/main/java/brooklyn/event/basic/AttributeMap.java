@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 
 import com.google.common.collect.Maps;
@@ -28,7 +27,7 @@ public final class AttributeMap implements Serializable {
 
     private final static Object NULL = new Object();
 
-    final EntityLocal entity;
+    final AbstractEntity entity;
 
     /**
      * The values are stored as nested maps, with the key being the constituent parts of the sensor.
@@ -42,7 +41,7 @@ public final class AttributeMap implements Serializable {
      * @param entity the EntityLocal this AttributeMap belongs to.
      * @throws IllegalArgumentException if entity is null
      */
-    public AttributeMap(EntityLocal entity) {
+    public AttributeMap(AbstractEntity entity) {
         this.entity = Preconditions.checkNotNull(entity, "entity must be specified");
     }
 
@@ -87,7 +86,7 @@ public final class AttributeMap implements Serializable {
 
     public <T> T update(AttributeSensor<T> attribute, T newValue) {
         T oldValue = updateWithoutPublishing(attribute, newValue);
-        ((AbstractEntity)entity).emitInternal(attribute, newValue);
+        entity.emitInternal(attribute, newValue);
         return oldValue;
     }
     

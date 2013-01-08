@@ -8,6 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.Entities
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.policy.loadbalancing.MockContainerEntity
@@ -143,7 +144,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                 MockItemEntity itemToStop = movableItems.get(itemIndex)
                 itemToStop.stop()
                 LOG.debug("Unmanaging item {}", itemToStop)
-                app.managementContext.unmanage(itemToStop)
+                Entities.unmanage(itemToStop)
                 movableItems.set(itemIndex, newItem(app, Iterables.get(containers.values(), 0), "item-movable$itemIndex"))
             }
 

@@ -3,7 +3,6 @@ package brooklyn.management.internal;
 import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.util.ObservableList;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -14,10 +13,17 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.BasicEntityTypeRegistry;
+import brooklyn.entity.proxying.EntityProxy;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.EntityTypeRegistry;
+import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -29,24 +35,60 @@ public class LocalEntityManager implements EntityManager {
     private static final Logger log = LoggerFactory.getLogger(LocalEntityManager.class);
 
     private final LocalManagementContext managementContext;
+    private final BasicEntityTypeRegistry entityTypeRegistry;
+    private final InternalEntityFactory entityFactory;
     
+    /** Entities that have been created, but have not yet begun to be managed */
+    protected final Map<String,Entity> preRegisteredEntitiesById = new WeakHashMap<String, Entity>();
+
+    /** Entities that are in the process of being managed, but where management is not yet complete */
     protected final Map<String,Entity> preManagedEntitiesById = new WeakHashMap<String, Entity>();
+    
+    /** Proxies of the managed entities */
+    protected final Map<String,Entity> entityProxiesById = Maps.newLinkedHashMap();
+    
+    /** Real managed entities */
     protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
+    
+    /** Proxies of the managed entities */
     protected final ObservableList entities = new ObservableList();
+    
+    /** Proxies of the managed entities that are applications */
     protected final Set<Application> applications = Sets.newLinkedHashSet();
 
     public LocalEntityManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
+        this.entityTypeRegistry = new BasicEntityTypeRegistry();
+        this.entityFactory = new InternalEntityFactory(managementContext, entityTypeRegistry);
+    }
+
+    @Override
+    public EntityTypeRegistry getEntityTypeRegistry() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return entityTypeRegistry;
+    }
+    
+    @Override
+    public <T extends Entity> T createEntity(EntitySpec<T> spec) {
+        try {
+            T entity = entityFactory.createEntity(spec);
+            Entity proxy = ((AbstractEntity)entity).getProxy();
+            managementContext.prePreManage(entity);
+            return (T) proxy;
+        } catch (Throwable e) {
+            log.warn("Failed to create entity using spec "+spec+" (rethrowing)", e);
+            throw Exceptions.propagate(e);
+        }
     }
 
     @Override
     public synchronized Collection<Entity> getEntities() {
-        return new ArrayList<Entity>(entitiesById.values());
+        return ImmutableList.copyOf(entityProxiesById.values());
     }
     
     @Override
-    public Entity getEntity(String id) {
-        return entitiesById.get(id);
+    public synchronized Entity getEntity(String id) {
+        return entityProxiesById.get(id);
     }
     
     synchronized Collection<Application> getApplications() {
@@ -58,12 +100,33 @@ public class LocalEntityManager implements EntityManager {
         return (isRunning() && getEntity(e.getId()) != null);
     }
     
+    synchronized boolean isPreRegistered(Entity e) {
+        return preRegisteredEntitiesById.containsKey(e.getId());
+    }
+    
+    synchronized void prePreManage(Entity entity) {
+        if (isPreRegistered(entity)) {
+            log.warn(""+this+" redundant call to pre-pre-manage entity"+entity+"; skipping", 
+                    new Exception("source of duplicate pre-pre-manage of "+entity));
+            return;
+        }
+        preRegisteredEntitiesById.put(entity.getId(), entity);
+    }
+
+    // TODO synchronization issues here. We guard with isManaged(), but if another thread executing 
+    // concurrently then the managed'ness could be set after our check but before we do 
+    // onManagementStarting etc. However, we can't just synchronize because we're calling alien code 
+    // (the user might override entity.onManagementStarting etc).
+    //
+    // TODO We need to do some check about isPreManaged - i.e. is there another thread (or is this a
+    // re-entrant call) where the entity is not yet full managed (i.e. isManaged==false) but we're in
+    // the middle of managing it.
     @Override
     public void manage(Entity e) {
         if (isManaged(e)) {
 //            if (log.isDebugEnabled()) {
                 log.warn(""+this+" redundant call to start management of entity (and descendants of) "+e+"; skipping", 
-                    new Throwable("source of duplicate management of "+e));
+                    new Exception("source of duplicate management of "+e));
 //            }
             return;
         }
@@ -166,9 +229,13 @@ public class LocalEntityManager implements EntityManager {
      * a reference).
      */
     private synchronized boolean preManageNonRecursive(Entity e) {
-        Object old = preManagedEntitiesById.put(e.getId(), e);
+        Entity realE = toRealEntity(e);
+        
+        Object old = preManagedEntitiesById.put(e.getId(), realE);
+        preRegisteredEntitiesById.remove(e.getId());
+        
         if (old!=null) {
-            if (old == e) {
+            if (old.equals(e)) {
                 log.warn("{} redundant call to pre-start management of entity {}", this, e);
             } else {
                 throw new IllegalStateException("call to pre-manage entity "+e+" but different entity "+old+" already known under that id at "+this);
@@ -185,9 +252,16 @@ public class LocalEntityManager implements EntityManager {
      * Returns true if the entity has now become managed; false if it was already managed (anything else throws exception)
      */
     private synchronized boolean manageNonRecursive(Entity e) {
-        Object old = entitiesById.put(e.getId(), e);
+        Entity realE = toRealEntity(e);
+        Entity proxyE = toProxyEntityIfAvailable(e);
+        
+        // If we don't already know about the proxy, then use the real thing; presumably it's 
+        // the legacy way of creating the entity so didn't get a preManage() call
+        entityProxiesById.put(e.getId(), proxyE);
+        
+        Object old = entitiesById.put(e.getId(), realE);
         if (old!=null) {
-            if (old == e) {
+            if (old.equals(e)) {
                 log.warn("{} redundant call to start management of entity {}", this, e);
             } else {
                 throw new IllegalStateException("call to manage entity "+e+" but different entity "+old+" already known under that id at "+this);
@@ -197,9 +271,9 @@ public class LocalEntityManager implements EntityManager {
             if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
             preManagedEntitiesById.remove(e.getId());
             if (e instanceof Application) {
-                applications.add((Application)e);
+                applications.add((Application)proxyE);
             }
-            entities.add(e);
+            entities.add(proxyE);
             return true;
         }
     }
@@ -209,10 +283,14 @@ public class LocalEntityManager implements EntityManager {
      * Returns true if the entity has been removed from management; if it was not previously managed (anything else throws exception) 
      */
     private synchronized boolean unmanageNonRecursive(Entity e) {
+        Entity proxyE = toProxyEntityIfAvailable(e);
+        
         e.clearParent();
-        if (e instanceof Application) applications.remove(e);
-        entities.remove(e);
+        if (e instanceof Application) applications.remove(proxyE);
+        entities.remove(proxyE);
+        entityProxiesById.remove(e.getId());
         Object old = entitiesById.remove(e.getId());
+        
         if (old==null) {
             log.warn("{} call to stop management of unknown entity (already unmanaged?) {}", this, e);
             return false;
@@ -250,6 +328,39 @@ public class LocalEntityManager implements EntityManager {
         return false;
     }
     
+    private Entity toProxyEntityIfAvailable(Entity e) {
+        checkNotNull(e, "entity");
+        
+        if (e instanceof EntityProxy) {
+            return e;
+        } else if (e instanceof AbstractEntity) {
+            Entity result = ((AbstractEntity)e).getProxy();
+            return (result == null) ? e : result;
+        } else {
+            return e;
+        }
+    }
+    
+    private Entity toRealEntity(Entity e) {
+        checkNotNull(e, "entity");
+        
+        if (e instanceof AbstractEntity) {
+            return e;
+        } else {
+            Entity result = entitiesById.get(e.getId());
+            if (result == null) {
+                result = preManagedEntitiesById.get(e.getId());
+            }
+            if (result == null) {
+                result = preRegisteredEntitiesById.get(e.getId());
+            }
+            if (result == null) {
+                throw new IllegalStateException("No concrete entity known for "+e+" ("+e.getId()+", "+e.getEntityType().getName()+")");
+            }
+            return result;
+        }
+    }
+
     private boolean isRunning() {
         return managementContext.isRunning();
     }

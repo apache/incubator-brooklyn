@@ -16,6 +16,8 @@ import brooklyn.policy.Policy;
 /**
  * The basic interface for a Brooklyn entity.
  * 
+ * Implementors of entities are strongly encouraged to extend {@link AbstractEntity}.
+ * 
  * @see AbstractEntity
  */
 public interface Entity extends Serializable, Rebindable<EntityMemento> {

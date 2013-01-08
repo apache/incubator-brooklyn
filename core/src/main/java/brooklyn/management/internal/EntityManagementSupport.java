@@ -1,5 +1,7 @@
 package brooklyn.management.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -46,6 +48,7 @@ public class EntityManagementSupport {
     protected transient AbstractEntity entity;
     NonDeploymentManagementContext nonDeploymentManagementContext;
     
+    protected transient ManagementContext initialManagementContext;
     protected transient ManagementContext managementContext;
     protected transient SubscriptionContext subscriptionContext;
     protected transient ExecutionContext executionContext;
@@ -69,6 +72,7 @@ public class EntityManagementSupport {
     }
     public boolean wasDeployed() { return everDeployed.get(); }
 
+<<<<<<< HEAD
     /**
      * Whether the entity's management lifecycle is complete (i.e. both "onManagementStarting" and "onManagementStarted" have
      * been called, and it is has not been unmanaged). 
@@ -78,6 +82,22 @@ public class EntityManagementSupport {
         return (nonDeploymentManagementContext == null) && currentlyDeployed.get();
     }
 
+=======
+    public synchronized void setManagementContext(ManagementContext val) {
+        if (initialManagementContext != null) {
+            throw new IllegalStateException("Initial management context is already set for "+entity+"; cannot change");
+        }
+        if (managementContext != null && !managementContext.equals(val)) {
+            throw new IllegalStateException("Management context is already set for "+entity+"; cannot change");
+        }
+        
+        this.initialManagementContext = checkNotNull(val, "managementContext");
+        if (nonDeploymentManagementContext != null) {
+            nonDeploymentManagementContext.setManagementContext(val);
+        }
+    }
+    
+>>>>>>> Use entity proxy, rather than direct entity ref
     public void onRebind(ManagementTransitionInfo info) {
         nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_REBINDING);
     }
@@ -95,10 +115,16 @@ public class EntityManagementSupport {
                 if (managementContext != null && !managementContext.equals(info.getManagementContext())) {
                     throw new IllegalStateException("Already has management context: "+managementContext+"; can't set "+info.getManagementContext());
                 }
+<<<<<<< HEAD
                 if (alreadyManaging) {
                     return;
                 }
                 
+=======
+                if (initialManagementContext != null && !initialManagementContext.equals(info.getManagementContext())) {
+                    throw new IllegalStateException("Already has different initial management context: "+initialManagementContext+"; can't set "+info.getManagementContext());
+                }
+>>>>>>> Use entity proxy, rather than direct entity ref
                 this.managementContext = info.getManagementContext();
                 nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTING);
                 
@@ -201,7 +227,7 @@ public class EntityManagementSupport {
         // TODO custom stopping activities
         // TODO framework stopping events - no more sensors, executions, etc
         
-        if (entity.getParent()!=null) entity.getParent().removeChild(entity);
+        if (entity.getParent()!=null) entity.getParent().removeChild(entity.getProxyIfAvailable());
         // new subscriptions will be queued / not allowed
         nonDeploymentManagementContext.getSubscriptionManager().stopDelegatingForSubscribing();
         // new publications will be queued / not allowed
@@ -269,7 +295,11 @@ public class EntityManagementSupport {
         }
         if (entity instanceof Application) {
             log.warn("Autodeployment with new management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
-            Entities.startManagement(entity);
+            if (initialManagementContext != null) {
+                initialManagementContext.getEntityManager().manage(entity);
+            } else {
+                Entities.startManagement(entity);
+            }
             return;
         }
         if ("start".equals(effectorName)) {

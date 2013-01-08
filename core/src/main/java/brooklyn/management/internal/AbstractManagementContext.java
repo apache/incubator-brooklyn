@@ -2,7 +2,6 @@ package brooklyn.management.internal;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -21,17 +20,14 @@ import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.BasicEntityDriverFactory;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
-import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
@@ -39,7 +35,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
@@ -49,7 +45,6 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 
 public abstract class AbstractManagementContext implements ManagementContext  {
@@ -84,8 +79,8 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         ResourceUtils.addClassLoaderProvider(new Function<Object, ClassLoader>() {
             @Override 
             public ClassLoader apply(@Nullable Object input) {
-                if (input instanceof AbstractEntity) 
-                    return apply(((AbstractEntity)input).getManagementSupport());
+                if (input instanceof EntityLocal) 
+                    return apply(((EntityLocal)input).getManagementSupport());
                 if (input instanceof EntityManagementSupport) 
                     return apply(((EntityManagementSupport)input).getManagementContext(true));
                 if (input instanceof AbstractManagementContext) 

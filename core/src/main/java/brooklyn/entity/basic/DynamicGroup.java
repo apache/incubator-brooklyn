@@ -195,8 +195,8 @@ public class DynamicGroup extends AbstractGroup {
             }
             boolean changed = false;
             Collection<Entity> currentMembers = super.getMembers();
-            Collection<Entity> toRemove = new LinkedHashSet<Entity>();
-            toRemove.addAll(currentMembers);
+        Collection<Entity> toRemove = new LinkedHashSet<Entity>(currentMembers);
+        
             for (Entity it : ((AbstractManagementContext) getManagementContext()).getEntities()) {
                 if (acceptsEntity(it)) {
                     toRemove.remove(it);

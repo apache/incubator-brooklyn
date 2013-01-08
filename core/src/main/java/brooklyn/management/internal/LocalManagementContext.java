@@ -1,6 +1,6 @@
 package brooklyn.management.internal;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.JavaGroovyEquivalents.elvis;
 
 import java.util.Collection;
 import java.util.Map;
@@ -42,6 +42,10 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
        super(brooklynProperties);
+    }
+
+    public void prePreManage(Entity entity) {
+        getEntityManager().prePreManage(entity);
     }
 
     @Override
