@@ -43,9 +43,9 @@ public interface ExecutionManager {
     
     public Set<Task<?>> getTasksWithTag(Object tag);
 
-    public Set<Task<?>> getTasksWithAnyTag(Iterable<String> tags);
+    public Set<Task<?>> getTasksWithAnyTag(Iterable<?> tags);
 
-    public Set<Task<?>> getTasksWithAllTags(Iterable<String> tags);
+    public Set<Task<?>> getTasksWithAllTags(Iterable<?> tags);
 
     /** returns all tags known to this manager (immutable) */
     public Set<Object> getTaskTags();
