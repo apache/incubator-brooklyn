@@ -55,49 +55,57 @@ class DynamicClusterTest {
         new DynamicCluster(app)
     }
 
-    @Test(expectedExceptions = [ExecutionException, IllegalStateException, IllegalArgumentException, NullPointerException, ClassCastException.class])
+    @Test
     public void startRequiresThatNewEntityArgumentIsGiven() {
-        new DynamicCluster(app).start([loc])
-        fail "Did not throw expected exception"
+        try {
+            new DynamicCluster(app).start([loc])
+            fail();
+        } catch (Exception e) {
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+        }
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
+    @Test
     public void constructorRequiresThatNewEntityArgumentIsAnEntityFactory() {
-        new DynamicCluster(factory:"error", app)
-        fail "Did not throw expected exception"
+        try {
+            new DynamicCluster(factory:"error", app)
+            fail();
+        } catch (Exception e) {
+            if (Throwables2.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
+        }
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class,NullPointerException.class])
+    @Test
     public void startMethodFailsIfLocationsParameterIsMissing() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {
             cluster.start(null)
+            fail();
         } catch (Exception e) {
-            throw unwrapException(e)
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
-        fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class])
+    @Test
     public void startMethodFailsIfLocationsParameterIsEmpty() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {
             cluster.start([])
+            fail();
         } catch (Exception e) {
-            throw unwrapException(e)
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
-        fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class])
+    @Test
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {
             cluster.start([ loc, loc2 ])
+            fail();
         } catch (Exception e) {
-            throw unwrapException(e)
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
-        fail "Did not throw expected exception"
     }
 
     @Test

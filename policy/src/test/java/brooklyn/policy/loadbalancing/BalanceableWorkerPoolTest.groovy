@@ -3,6 +3,7 @@ package brooklyn.policy.loadbalancing
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import org.jclouds.util.Throwables2;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -50,12 +51,13 @@ class BalanceableWorkerPoolTest {
         if (app != null) Entities.destroy(app);
     }
     
-    @Test(expectedExceptions=UnsupportedOperationException.class)
+    @Test
     public void testDefaultResizeFailsIfContainerGroupNotResizable() {
         try {
             pool.resize(1)
+            fail();
         } catch (Exception e) {
-            throw unwrapThrowable(e)
+            if (Throwables2.getFirstThrowableOfType(e, UnsupportedOperationException.class) == null) throw e;
         }
     }
     

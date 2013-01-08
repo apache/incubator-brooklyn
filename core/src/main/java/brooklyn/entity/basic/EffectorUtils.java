@@ -9,5 +9,5 @@ import brooklyn.entity.EntityType;
  * @deprecated Use brooklyn.management.internal.EffectorUtils; deprecated since 0.5
  */
 @Deprecated
-public class EffectorUtils<T> extends brooklyn.management.internal.EffectorUtils<T> {
+public class EffectorUtils<T> extends brooklyn.management.internal.EffectorUtils {
 }

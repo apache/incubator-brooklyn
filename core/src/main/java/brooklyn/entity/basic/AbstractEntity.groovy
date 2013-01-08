@@ -804,42 +804,21 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public Object invokeMethod(String name, Object args) {
         if (!this.@skipInvokeMethodEffectorInterception.get()) {
             this.@skipInvokeMethodEffectorInterception.set(true);
-
-            //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
-            if (args==null)
-                LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
-            else if (!args.class.isArray())
-                LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
-
+            
             try {
+                //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
+                if (args==null)
+                    LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
+                else if (!args.class.isArray())
+                    LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
+
                 Effector eff = entityType.getEffector(name);
                 if (eff) {
-                    if (LOG.isDebugEnabled()) LOG.debug("Invoking effector {} on {} with args {}", name, this, args)
-                    EntityManagementSupport mgmt = getManagementSupport();
-                    if (!mgmt.isDeployed()) {
-                        mgmt.attemptLegacyAutodeployment(name);
-                    }
-                    AbstractManagementContext mgctx = mgmt.getManagementContext(false);
-                    if (mgctx==null) {
-                        throw new ExecutionException("Execution of effector "+name+" on entity "+id+" not permitted: not in managed state");
-                    }
-                    
-                    getManagementSupport().getEntityChangeListener().onEffectorStarting(eff);
-                    try {
-                        return mgctx.invokeEffectorMethodSync(this, eff, args);
-                    } finally {
-                        getManagementSupport().getEntityChangeListener().onEffectorCompleted(eff);
-                    }
+                    return EffectorUtils.invokeEffector(this, eff, args)
                 }
-            } catch (CancellationException ce) {
-                LOG.info "Execution of effector {} on entity {} was cancelled", name, id
-                throw ce;
-            } catch (ExecutionException ee) {
-                LOG.info "Execution of effector {} on entity {} failed with {}", name, id, ee
-                // Exceptions thrown in Futures are wrapped
-                if (ee.getCause()) throw ee.getCause();
-                else throw ee;
-            } finally { this.@skipInvokeMethodEffectorInterception.set(false); }
+            } finally {
+                this.@skipInvokeMethodEffectorInterception.set(false);
+            }
         }
         if (metaClass==null)
             throw new IllegalStateException("no meta class for "+this+", invoking "+name);
@@ -870,19 +849,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * @see #invoke(Effector)
      */
     public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
-        ManagementContext mgmtCtx = getManagementContext();
-        if (mgmtCtx==null)
-            throw new IllegalStateException("Cannot invoke "+eff+" on "+this+" when not managed");
-
-        // FIXME Want a listenable task (like Guava's ListenableFuture)
-        //       This call is non-blocking, so we're not notifying of onEffectorCompleted at correct time
-        getManagementSupport().getEntityChangeListener().onEffectorStarting(eff);
-        try {
-            Task<T> result = mgmtCtx.invokeEffector(this, eff, parameters);
-            return result;
-        } finally {
-            getManagementSupport().getEntityChangeListener().onEffectorCompleted(eff);
-        }
+        return EffectorUtils.invokeEffectorAsync(this, eff, parameters);
     }
 
     /**

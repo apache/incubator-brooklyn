@@ -2,32 +2,35 @@ package brooklyn.management.internal;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
-import brooklyn.entity.EntityType;
+import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicParameterType;
+import brooklyn.management.Task;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * The abstract {@link Effector} implementation.
- * 
- * The concrete subclass (often anonymous) will supply the {@link #call(EntityType, Map)} implementation,
- * and the fields in the constructor.
+ * Utility methods for invoking effectors.
  */
-public class EffectorUtils<T> {
+public class EffectorUtils {
 
     private static final Logger log = LoggerFactory.getLogger(EffectorUtils.class);
 
@@ -191,6 +194,97 @@ public class EffectorUtils<T> {
         if (truth(m) && !mapUsed)
             throw new IllegalArgumentException("Invalid arguments ("+m.size()+" extra named) for effector "+eff+": "+args);
         return newArgs.toArray(new Object[newArgs.size()]);
+    }
+
+    /**
+     * Invokes the effector so that its progress is tracked.
+     */
+    public static Object invokeEffector(AbstractEntity entity, Effector<?> eff, Object[] args) {
+        String id = entity.getId();
+        String name = eff.getName();
+        
+        try {
+            if (log.isDebugEnabled()) log.debug("Invoking effector {} on {} with args {}", new Object[] {name, entity, args});
+            EntityManagementSupport mgmtSupport = entity.getManagementSupport();
+            if (!mgmtSupport.isDeployed()) {
+                mgmtSupport.attemptLegacyAutodeployment(name);
+            }
+            AbstractManagementContext mgmtContext = (AbstractManagementContext) mgmtSupport.getManagementContext(false);
+            if (mgmtContext==null) {
+                throw new IllegalStateException("Execution of effector "+name+" on entity "+id+" not permitted: not in managed state");
+            }
+            
+            mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
+            try {
+                return mgmtContext.invokeEffectorMethodSync(entity, eff, args);
+            } finally {
+                mgmtSupport.getEntityChangeListener().onEffectorCompleted(eff);
+            }
+        } catch (CancellationException ce) {
+            log.info("Execution of effector {} on entity {} was cancelled", name, id);
+            throw ce;
+        } catch (ExecutionException ee) {
+            log.info("Execution of effector {} on entity {} failed with {}", new Object[] {name, id, ee});
+            // Exceptions thrown in Futures are wrapped
+            // FIXME Shouldn't pretend exception came from this thread?! Should we remove this unwrapping?
+            if (ee.getCause() != null) throw Exceptions.propagate(ee.getCause());
+            else throw Exceptions.propagate(ee);
+        }
+    }
+
+    /**
+     * Invokes the effector so that its progress is tracked.
+     * 
+     * If the given method is not defined as an effector, then a warning will be logged and the
+     * method will be invoked directly.
+     */
+    public static Object invokeEffector(AbstractEntity entity, Method method, Object[] args) {
+        Effector<?> effector = findEffectorMatching(entity, method);
+        if (effector == null) {
+            log.warn("No matching effector found for method {} on entity {}; invoking directly", method, entity);
+            try {
+                return method.invoke(entity, args);
+            } catch (Exception e) {
+                log.info("Execution of method {} on entity {} failed with {} (rethrowing)", new Object[] {method, entity.getId(), e});
+                throw Exceptions.propagate(e);
+            }
+        } else {
+            return invokeEffector(entity, effector, args);
+        }
+    }
+ 
+    public static <T> Task<T> invokeEffectorAsync(AbstractEntity entity, Effector<T> eff, Map<String,?> parameters) {
+        String id = entity.getId();
+        String name = eff.getName();
+        
+        if (log.isDebugEnabled()) log.debug("Invoking effector {} on {} with args {}", new Object[] {name, entity, parameters});
+        EntityManagementSupport mgmtSupport = entity.getManagementSupport();
+        if (!mgmtSupport.isDeployed()) {
+            mgmtSupport.attemptLegacyAutodeployment(name);
+        }
+        AbstractManagementContext mgmtContext = (AbstractManagementContext) mgmtSupport.getManagementContext(false);
+        if (mgmtContext==null) {
+            throw new IllegalStateException("Execution of effector "+name+" on entity "+id+" not permitted: not in managed state");
+        }
+        
+        mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
+        try {
+            return mgmtContext.invokeEffector(entity, eff, parameters);
+        } finally {
+            mgmtSupport.getEntityChangeListener().onEffectorCompleted(eff);
+        }
+    }
+
+    public static Effector<?> findEffectorMatching(Entity entity, Method method) {
+        effector: for (Effector<?> effector : entity.getEntityType().getEffectors()) {
+            if (!effector.getName().equals(entity)) continue;
+            if (effector.getParameters().size() != method.getParameterTypes().length) continue;
+            for (int i = 0; i < effector.getParameters().size(); i++) {
+                if (effector.getParameters().get(i).getParameterClass() != method.getParameterTypes()[i]) continue effector; 
+            }
+            return effector;
+        }
+        return null;
     }
 
     public static Effector<?> findEffectorMatching(Set<Effector<?>> effectors, String effectorName, Map<String, ?> parameters) {
