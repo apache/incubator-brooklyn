@@ -3,6 +3,8 @@
 
 # there is also readj which reads a file and applies jekyll processing to it
 # handy if we want to include a toc.json file which itself calls {% readj child/toc.json %}
+# (note however variables do not seem to be exported when use readj (TODO),
+# although they are exported if you have _includes/file.md and use the standard include file)
 
 # the argument can be a variable or a filename literal (not quoted)
 # TODO: figure out how to accept a quoted string as an argument

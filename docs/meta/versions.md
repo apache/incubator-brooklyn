@@ -12,8 +12,8 @@ toc: /toc.json
 {% if site.server %} 
 > **Server (debug) mode detected.**
 
-> *Links to other versions will likely not work when running in server/debug mode.
-Files must be copied to the brooklyncentral.github.com repo for many of the links below to resolve correctly.*
+> *Links to other versions on this page and others will likely not work when running in server/debug mode.
+Files must be copied to the brooklyncentral.github.com repo for these links to resolve correctly.*
 
 > *Debug page generated {{ site.time }}*
 {% endif %}

@@ -36,11 +36,11 @@ public class SingleWebServerExample extends AbstractApplication {
 }
 {% endhighlight %}
 
-You can run this (on *nix or Mac) as follows:
+You can run this as follows (on *nix or Mac, assuming `ssh localhost` requires no password or passphrase):
 
 {% highlight bash %}
 % ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample \
---location localhost
+  --location localhost
 {% endhighlight %}
 
 
@@ -53,7 +53,8 @@ With appropriate setup (as described [here]({{ site.url }}/use/guide/management/
 this can also be deployed to your favourite cloud, let's pretend it's Amazon Ireland, as follows: 
 
 {% highlight bash %}
-% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample --location aws-ec2:eu-west-1
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.SingleWebServerExample \
+  --location aws-ec2:eu-west-1
 {% endhighlight %}
 
 
@@ -62,7 +63,8 @@ this can also be deployed to your favourite cloud, let's pretend it's Amazon Ire
 Ready for something more interesting?  Try this:
 
 {% highlight bash %}
-% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
+% ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample \
+  --location localhost
 {% endhighlight %}
 
 This launches the class ``WebClusterDatabaseExample`` (also described in the [walkthrough]({{ site.url }}/start/walkthrough/index.html))

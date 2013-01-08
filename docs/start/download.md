@@ -15,12 +15,12 @@ toc: ../toc.json
 <a name="distro"></a>
 ## The Distro
 
-{% capture maven_this_version_base_url %}http://developers.cloudsoftcorp.com/maven/{% if site.brooklyn-version contains 'SNAPSHOT' %}snapshots/{% else %}releases/{% endif %}{% endcapture %}
+{% include fields.md %}
 
 You can grab the distribution artifact, containing Brooklyn, its dependencies and launch scripts, 
 here{% if site.brooklyn-version contains 'SNAPSHOT' %} (but please **check the date** on snapshot artifacts){% endif %}:
 
-* [{{ site.brooklyn-version }}]({{ maven_this_version_base_url }}io/brooklyn/brooklyn-dist/{{ site.brooklyn-version }}/)
+* [{{ site.brooklyn-version }}]({{ dist_url_dir }}/)
 * [all stable versions](http://developers.cloudsoftcorp.com/maven/releases/io/brooklyn/brooklyn-dist/)
 * [all snapshot versions](http://developers.cloudsoftcorp.com/maven/snapshots/io/brooklyn/brooklyn-dist/)
 
