@@ -28,7 +28,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     private final EntityLocal entity;
     private final AttributeSensor sensor;
     private final AbstractFeed feed;
-    private volatile boolean lastWasSuccessful = false;
+    private volatile boolean lastWasFailure = false;
     
     public AttributePollHandler(FeedConfig config, EntityLocal entity, AbstractFeed feed) {
         this.config = checkNotNull(config, "config");
@@ -39,7 +39,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     
     @Override
     public void onSuccess(V val) {
-        lastWasSuccessful = true;
+        lastWasFailure = false;
         
         if (log.isTraceEnabled()) log.trace("poll for {}->{} got: {}", new Object[] {entity, sensor, val});
         
@@ -59,23 +59,27 @@ public class AttributePollHandler<V> implements PollHandler<V> {
 
     @Override
     public void onError(Exception error) {
-        if (!feed.isConnected() || !lastWasSuccessful) {
+        if (!feed.isConnected()) {
             if (log.isDebugEnabled()) log.debug("error reading {} from {} (while not connected or not yet connected): {}", new Object[] {this, entity, error});
+        } else if (lastWasFailure) {
+            if (log.isDebugEnabled()) log.debug("recurring error reading "+this+" from "+entity, error);
         } else {
             log.warn("error reading "+entity+"->"+sensor, error);
         }
-        lastWasSuccessful = false;
+        lastWasFailure = true;
         
-        try {
-            Object v = transformError(error);
-            if (v != PollConfig.UNSET) {
-                entity.setAttribute(sensor, v);
-            }
-        } catch (Exception e) {
-            if (feed.isConnected()) {
-                log.warn("unable to compute "+entity+"->"+sensor+"; on error="+error, e);
-            } else {
-                if (log.isDebugEnabled()) log.debug("unable to compute "+entity+" ->"+sensor+"; error="+error+" (when deactive)", e);
+        if (hasErrorHandler()) {
+            try {
+                Object v = transformError(error);
+                if (v != PollConfig.UNSET) {
+                    entity.setAttribute(sensor, v);
+                }
+            } catch (Exception e) {
+                if (feed.isConnected()) {
+                    log.warn("unable to compute "+entity+"->"+sensor+"; on error="+error, e);
+                } else {
+                    if (log.isDebugEnabled()) log.debug("unable to compute "+entity+" ->"+sensor+"; error="+error+" (when deactive)", e);
+                }
             }
         }
     }
@@ -100,13 +104,17 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         }
     }
     
+    protected boolean hasErrorHandler() {
+        return (config.getOnError() != null);
+    }
+    
     /**
      * Does post-processing on a poll error, to convert it to the attribute's new value.
      * Or returns PollConfig.UNSET if the post-processing indicates that the attribute should not be changed.
      */
     protected Object transformError(Exception error) throws Exception {
         Function<? super Exception,?> f = config.getOnError();
-        if (f == null) throw error;
+        if (f == null) throw new IllegalStateException("Attribute poll handler has no error handler, but attempted to transform error", error);
         
         Object v = f.apply(error);
         

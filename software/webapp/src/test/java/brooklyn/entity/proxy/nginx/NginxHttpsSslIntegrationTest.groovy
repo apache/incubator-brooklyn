@@ -37,12 +37,12 @@ public class NginxHttpsSslIntegrationTest {
     private static final String CERTIFICATE_URL = "classpath://ssl/certs/localhost/server.crt";
     private static final String KEY_URL = "classpath://ssl/certs/localhost/server.key";
     
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
         app = new TestApplication();
     }
 
-    @AfterMethod(groups = "Integration", alwaysRun=true)
+    @AfterMethod(alwaysRun=true)
     public void shutdown() {
         if (app != null) Entities.destroy(app);
     }

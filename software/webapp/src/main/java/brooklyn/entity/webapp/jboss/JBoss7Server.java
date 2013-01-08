@@ -1,20 +1,15 @@
-package brooklyn.entity.webapp.jboss
+package brooklyn.entity.webapp.jboss;
 
-import brooklyn.util.MutableMap
-import groovy.time.TimeDuration
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableMap;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
-import brooklyn.event.adapter.HttpSensorAdapter;
-import brooklyn.event.basic.BasicAttributeSensor ;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -22,6 +17,9 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableMap;
 
 public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAppService {
 
@@ -47,8 +45,8 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
             new PortAttributeSensorAndConfigKey("webapp.jboss.managementNativePort", "Management native port", "10999+");
 
     @SetFromFlag("portIncrement")
-    public static final BasicAttributeSensorAndConfigKey PORT_INCREMENT =
-            new BasicAttributeSensorAndConfigKey(Integer.class, "webapp.jboss.portIncrement", "Port increment, for all ports in config file", 0);
+    public static final BasicAttributeSensorAndConfigKey<Integer> PORT_INCREMENT =
+            new BasicAttributeSensorAndConfigKey<Integer>(Integer.class, "webapp.jboss.portIncrement", "Port increment, for all ports in config file", 0);
 
     public static final BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             new BasicAttributeSensor<Integer>(Integer.class, "webapp.jboss.managementStatus", "HTTP response code for the management server");

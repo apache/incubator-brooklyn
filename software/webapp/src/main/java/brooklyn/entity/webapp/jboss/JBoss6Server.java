@@ -1,8 +1,5 @@
 package brooklyn.entity.webapp.jboss;
 
-import groovy.time.TimeDuration;
-
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -15,9 +12,6 @@ import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
-import brooklyn.event.adapter.ConfigSensorAdapter;
-import brooklyn.event.adapter.JmxObjectNameAdapter;
-import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
@@ -25,7 +19,6 @@ import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.flags.SetFromFlag;
 
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 
 public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAppService, UsesJmx {
