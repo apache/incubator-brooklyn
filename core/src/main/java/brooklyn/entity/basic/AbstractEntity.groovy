@@ -78,8 +78,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     String displayName
     
-    EntityReference<Entity> parent
-    protected volatile EntityReference<Application> application
+    private volatile Entity parent
+    private volatile Application application
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
     
     final EntityCollectionReference children = new EntityCollectionReference<Entity>(this);
@@ -263,7 +263,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public AbstractEntity setParent(Entity entity) {
         if (parent != null) {
             // If we are changing to the same parent...
-            if (parent.get() == entity) return
+            if (parent == entity) return
             // If we have a parent but changing to orphaned...
             if (entity==null) { clearParent(); return; }
             
@@ -281,8 +281,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         if (Entities.isDescendant(this, entity))
             throw new IllegalStateException("loop detected trying to set parent of $this as $entity, which is already a descendent")
         
-        parent = new EntityReference(this, entity)
-        //used to test entity!=null but that should be guaranteed?
+        parent = entity
+        //previously tested entity!=null but that should be guaranteed?
         entity.addChild(this)
         configsInternal.setInheritedConfig(entity.getAllConfig());
         previouslyOwned = true
@@ -301,7 +301,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     @Override
     public void clearParent() {
         if (parent == null) return
-        Entity oldParent = parent.get()
+        Entity oldParent = parent
         parent = null
         oldParent?.removeChild(this)
     }
@@ -365,7 +365,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     @Override
     public Entity getParent() {
-        return parent?.get();
+        return this.@parent;
     }
 
     // TODO synchronization: need to synchronize on children, or have children be a synchronized collection
@@ -403,7 +403,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     @Override
     public Application getApplication() {
-        if (this.@application!=null) return this.@application.get();
+        if (this.@application!=null) return this.@application;
         def app = getParent()?.getApplication()
         if (app) {
             setApplication(app)
@@ -414,12 +414,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     /** @deprecated since 0.4.0 should not be needed / leaked outwith brooklyn internals / mgmt support? */
     protected synchronized void setApplication(Application app) {
         if (application) {
-            if (this.@application.id!=app.id) {
+            if (this.@application.id != app.id) {
                 throw new IllegalStateException("Cannot change application of entity (attempted for $this from ${this.application} to ${app})")
             }
             return;
         }
-        this.application = new EntityReference(this, app);
+        this.application = app;
     }
 
     @Override
@@ -885,8 +885,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public void invalidateReferences() {
         // TODO move this to EntityMangementSupport,
         // when hierarchy fields can also be moved there
-        this.@parent?.invalidate();
-        this.@application?.invalidate();
+        this.@parent = null;
+        this.@application = null;
         this.@children.invalidate();
         this.@groups.invalidate();
     }

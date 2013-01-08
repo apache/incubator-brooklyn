@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityReferences.SelfEntityReference;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
@@ -41,7 +40,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      * also (experimental) permits defining a brooklynProperties source */
     public AbstractApplication(Map properties) {
         super(properties);
-        this.application = new SelfEntityReference(this);
+        setApplication(this);
 
         if (properties.containsKey("mgmt")) {
             mgmt = (AbstractManagementContext) properties.remove("mgmt");
