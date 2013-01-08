@@ -26,19 +26,6 @@ public interface ManagementContext {
     Collection<Application> getApplications();
 
     /**
-     * All entities under control of this management plane
-     */
-    Collection<Entity> getEntities();
-
-    /**
-     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
-     */
-    Entity getEntity(String id);
-    
-    /** whether the entity is under management by this management context */
-    boolean isManaged(Entity entity);
-
-    /**
      * Returns the {@link ExecutionManager} instance for entities and users in this management realm 
      * to submit tasks and to observe what tasks are occurring
      */
@@ -80,16 +67,6 @@ public interface ManagementContext {
     RebindManager getRebindManager();
     
     /**
-     * Manage an entity.
-     */
-    void manage(Entity e);
-    
-    /**
-     * Unmanage an entity.
-     */
-    void unmanage(Entity e);
-    
-    /**
      * Returns the ConfigMap (e.g. BrooklynProperties) applicable to this management context.
      * Defaults to reading ~/.brooklyn/brooklyn.properties but configurable in the management context.
      */
@@ -106,4 +83,43 @@ public interface ManagementContext {
     /** Record of configured Brooklyn entities (and templates and policies) which can be loaded */
     BrooklynCatalog getCatalog();
 
+    /**
+     * All entities under control of this management plane
+     * 
+     * @deprecated Use getEntityManager().getEntities() instead; deprecated in 0.5
+     */
+    @Deprecated
+    Collection<Entity> getEntities();
+
+    /**
+     * Returns the entity with the given identifier (may be a full instance, or a proxy to one which is remote)
+     * 
+     * @deprecated Use getEntityManager().getEntities() instead; deprecated in 0.5
+     */
+    @Deprecated
+    Entity getEntity(String id);
+    
+    /**
+     * Whether the entity is under management by this management context
+     * 
+     * @deprecated Use getEntityManager().getEntities() instead; deprecated in 0.5
+     */
+    @Deprecated
+    boolean isManaged(Entity entity);
+
+    /**
+     * Manage an entity.
+     * 
+     * @deprecated Use getEntityManager().getEntities() instead; deprecated in 0.5
+     */
+    @Deprecated
+    void manage(Entity e);
+    
+    /**
+     * Unmanage an entity.
+     * 
+     * @deprecated Use getEntityManager().getEntities() instead; deprecated in 0.5
+     */
+    @Deprecated
+    void unmanage(Entity e);
 }

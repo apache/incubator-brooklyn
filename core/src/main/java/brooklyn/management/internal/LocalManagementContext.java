@@ -17,6 +17,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.management.EntityManager;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
@@ -37,7 +38,8 @@ public class LocalManagementContext extends AbstractManagementContext {
 
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
-
+    private EntityManager entityManager;
+    
     protected final Map<String,Entity> preManagedEntitiesById = new WeakHashMap<String, Entity>();
     protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
     protected final ObservableList entities = new ObservableList();
@@ -140,6 +142,15 @@ public class LocalManagementContext extends AbstractManagementContext {
         return entitiesById.get(id);
 	}
     
+    public synchronized EntityManager getEntityManager() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        
+        if (entityManager == null) {
+            entityManager = new LocalEntityManager(this);
+        }
+        return entityManager;
+    }
+
     @Override
     public synchronized  SubscriptionManager getSubscriptionManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
