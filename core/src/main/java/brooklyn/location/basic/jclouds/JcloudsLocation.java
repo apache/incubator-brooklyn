@@ -754,8 +754,13 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         // In jclouds 1.5, there are strict rules for group id: it must be DNS compliant, and no more than 15 characters
         // TODO surely this can be overridden!  it's so silly being so short in common places ... or at least set better metadata?
         String user = System.getProperty("user.name");
-        String rand = Identifiers.makeRandomId(("vcloud".equals(provider)) ? 2 : 6);
-        String result = "br-"+Strings.maxlen(user, 4)+"-"+rand;
+        String rand = Identifiers.makeRandomId(6);
+        String result = "brooklyn-" + user + "-" + rand;
+        if ("vcloud".equals(provider)) {
+            rand = Identifiers.makeRandomId(2);
+            result = "br-" + Strings.maxlen(user, 4) + "-" + rand;
+        }
+
         return result.toLowerCase();
     }
 
