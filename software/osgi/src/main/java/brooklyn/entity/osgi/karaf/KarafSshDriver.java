@@ -20,13 +20,13 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
     // (karaf reads from props files)
     // but do set "java.rmi.server.hostname"
 
-    public KarafSshDriver(KarafContainer entity, SshMachineLocation machine) {
+    public KarafSshDriver(KarafContainerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
     @Override
-    public KarafContainer getEntity() {
-        return (KarafContainer) super.getEntity();
+    public KarafContainerImpl getEntity() {
+        return (KarafContainerImpl) super.getEntity();
     }
 
     @Override
