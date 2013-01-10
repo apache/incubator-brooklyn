@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 
-public class HttpFeedIntegrationTest {
+public class HttpFeedTest {
 
     final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
     final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
@@ -64,7 +64,7 @@ public class HttpFeedIntegrationTest {
         feed = null;
     }
     
-    @Test(groups = { "Integration" })
+    @Test
     public void testPollsAndParsesHttpGetResponse() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
@@ -81,7 +81,7 @@ public class HttpFeedIntegrationTest {
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
     }
     
-    @Test(groups = { "Integration" })
+    @Test
     public void testPollsAndParsesHttpPostResponse() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
@@ -100,7 +100,7 @@ public class HttpFeedIntegrationTest {
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
     }
     
-    @Test(groups = { "Integration" })
+    @Test
     public void testPollsAndParsesHttpErrorResponse() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
