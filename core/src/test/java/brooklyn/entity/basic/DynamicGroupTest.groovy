@@ -24,6 +24,7 @@ import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Predicate
 import com.google.common.base.Predicates
+import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
 
 public class DynamicGroupTest {
@@ -79,8 +80,8 @@ public class DynamicGroupTest {
     @Test
     public void testGroupWithMatchingFilterReturnsEverythingThatMatches() {
         group.setEntityFilter( { true } )
+        assertEquals(ImmutableSet.copyOf(group.getMembers()), [e1, e2, app, group] as Set)
         assertEquals(group.getMembers().size(), 4)
-        assertTrue(group.getMembers().containsAll([e1, e2, app, group]))
     }
     
     @Test
@@ -165,18 +166,18 @@ public class DynamicGroupTest {
     public void testStoppedGroupIgnoresComingAndGoingsOfEntities() {
         Entity e3 = new AbstractEntity() {}
         group.setEntityFilter( { it instanceof TestEntity } )
-        assertEquals(group.getMembers(), [e1, e2])
+        assertEquals(ImmutableSet.copyOf(group.getMembers()), [e1, e2] as Set)
         group.stop()
         
         e3.setParent(app)
         Entities.manage(e3)
         assertSucceedsContinually(timeout:VERY_SHORT_WAIT_MS) {
-            assertEquals(group.getMembers(), [e1, e2])
+            assertEquals(ImmutableSet.copyOf(group.getMembers()), [e1, e2] as Set)
         }
                 
         Entities.unmanage(e1)
         assertSucceedsContinually(timeout:VERY_SHORT_WAIT_MS) {
-            assertEquals(group.getMembers(), [e1, e2])
+            assertEquals(ImmutableSet.copyOf(group.getMembers()), [e1, e2] as Set)
         }
     }
     
