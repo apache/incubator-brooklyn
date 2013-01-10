@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.mysql.MySqlNode
+import brooklyn.entity.database.mysql.MySqlNodeImpl
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.launcher.BrooklynLauncher
@@ -40,7 +41,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     
     
     ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
-    MySqlNode mysql = new MySqlNode(this, creationScriptUrl: DB_SETUP_SQL_URL);
+    MySqlNode mysql = new MySqlNodeImpl(this, creationScriptUrl: DB_SETUP_SQL_URL);
 
     {
         web.configure(HTTP_PORT, "8080+").

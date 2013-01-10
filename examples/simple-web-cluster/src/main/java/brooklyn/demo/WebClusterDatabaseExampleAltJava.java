@@ -17,6 +17,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.mysql.MySqlNode;
+import brooklyn.entity.database.mysql.MySqlNodeImpl;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.WebAppService;
@@ -66,7 +67,7 @@ public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
     }
     
     ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this);
-    MySqlNode mysql = new MySqlNode(this);
+    MySqlNodeImpl mysql = new MySqlNodeImpl(this);
 
     { 
         web.setConfig(ControlledDynamicWebAppCluster.ROOT_WAR, WAR_PATH); 

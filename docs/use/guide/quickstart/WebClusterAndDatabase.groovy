@@ -2,7 +2,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this,
         war: "classpath://hello-world-webapp.war");
 
-    MySqlNode mysql = new MySqlNode(this,
+    MySqlNode mysql = new MySqlNodeImpl(this,
         creationScriptUrl: "classpath://visitors-database-setup.sql");
     
     {

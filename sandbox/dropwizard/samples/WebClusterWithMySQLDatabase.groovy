@@ -6,6 +6,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.entity.database.mysql.MySqlNode
+import brooklyn.entity.database.mysql.MySqlNodeImpl
 import brooklyn.entity.basic.UsesJava
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.event.basic.BasicConfigKey
@@ -47,7 +48,7 @@ class WebClusterWithMySQLDatabase extends AbstractApplication {
     }
 
     ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: getConfig(WAR_PATH));
-    MySqlNode mysql = new MySqlNode(this, creationScriptUrl: getConfig(DB_SETUP_SQL_URL));
+    MySqlNode mysql = new MySqlNodeImpl(this, creationScriptUrl: getConfig(DB_SETUP_SQL_URL));
 
     {
         web.factory.configure(

@@ -1,18 +1,19 @@
 package brooklyn.entity.database.mysql
 
-import brooklyn.entity.basic.Entities
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.entity.TestApplication
-import brooklyn.util.text.Strings;
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
+
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
+import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.test.entity.TestApplication2
+import brooklyn.util.text.Strings;
 
 /**
  * Runs a slightly modified version of the popular Vogella MySQL tutorial,
@@ -22,12 +23,11 @@ import brooklyn.entity.database.VogellaExampleAccess
 public class MySqlIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(MySqlIntegrationTest.class);
-    TestApplication tapp
+    TestApplication2 tapp
 
     @BeforeMethod(alwaysRun = true)
     public void before() {
-        tapp = new TestApplication(name: "MySqlIntegrationTest");
-
+        tapp = ApplicationBuilder.builder(TestApplication2.class).manage();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -64,18 +64,19 @@ CREATE TABLE COMMENTS (
 INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );
 """;
 
-
-
     @Test(groups = ["Integration"])
     public void test_localhost() throws Exception {
         String dataDir = "/tmp/mysql-data-" + Strings.makeRandomId(8);
-        MySqlNode mysql = new MySqlNode(tapp, dataDir: dataDir, creationScriptContents: CREATION_SCRIPT);
+        MySqlNode mysql = tapp.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+                .configure("creationScriptContents", CREATION_SCRIPT)
+                .configure("dataDir", dataDir));
         LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
         
         tapp.start([location]);
         log.info("MySQL started");
 
-        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", "localhost", mysql.getPort());
+        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", "localhost", mysql.getAttribute(MySqlNode.MYSQL_PORT));
+
         log.info("Ran vogella MySQL example -- SUCCESS");
 
         // Ensure the data directory was successfully overridden.

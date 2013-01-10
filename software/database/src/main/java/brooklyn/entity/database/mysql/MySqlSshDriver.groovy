@@ -24,7 +24,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
     
-    public MySqlSshDriver(MySqlNode entity, SshMachineLocation machine) {
+    public MySqlSshDriver(MySqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
     
@@ -90,7 +90,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     final String socketUid = Identifiers.makeRandomId(6);
     String secretPassword = Identifiers.makeRandomId(6);
     public String getPassword() { secretPassword }
-    public MySqlNode getEntity() { return super.getEntity() }
+    public MySqlNodeImpl getEntity() { return super.getEntity() }
     public int getPort() { return entity.port }
     
     @Override

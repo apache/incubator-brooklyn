@@ -1,15 +1,16 @@
 package brooklyn.entity.database.mysql;
 
 
-import brooklyn.config.BrooklynProperties
-import brooklyn.entity.basic.Entities
-import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.location.basic.LocationRegistry
-import brooklyn.location.basic.jclouds.JcloudsLocation
+import static java.util.Arrays.asList
+
 import org.testng.annotations.Test
 
-import static java.util.Arrays.asList
+import brooklyn.config.BrooklynProperties
+import brooklyn.entity.database.VogellaExampleAccess
+import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
+import brooklyn.location.basic.jclouds.JcloudsLocation
 
 /**
  * The MySqlLiveTest installs MySQL on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
@@ -62,7 +63,8 @@ public class MySqlLiveTest extends MySqlIntegrationTest {
     }
 
     public void test(String osRegex) throws Exception {
-        MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
+        MySqlNode mysql = tapp.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+                .configure("creationScriptContents", CREATION_SCRIPT));
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
@@ -72,7 +74,6 @@ public class MySqlLiveTest extends MySqlIntegrationTest {
 
         JcloudsLocation jcloudsLocation = (JcloudsLocation) locationRegistry.resolve("cloudservers-uk");
 
-        Entities.startManagement(tapp);
         tapp.start(asList(jcloudsLocation));
 
         SshMachineLocation l = (SshMachineLocation) mysql.getLocations().iterator().next();

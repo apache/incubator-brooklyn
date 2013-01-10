@@ -1,8 +1,5 @@
 package brooklyn.demo
 
-import java.util.List
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -11,6 +8,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.mysql.MySqlNode
+import brooklyn.entity.database.mysql.MySqlNodeImpl
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
@@ -69,7 +67,7 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
         setConfig(JavaWebAppService.ROOT_WAR, WAR_PATH)
     }
     
-    MySqlNode mysql = new MySqlNode(this, creationScriptContents: DB_SETUP_SQL);
+    MySqlNode mysql = new MySqlNodeImpl(this, creationScriptContents: DB_SETUP_SQL);
 
     protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
         JBoss7Server jb7 = new JBoss7Server(flags).configure(httpPort: "8000+");
