@@ -65,7 +65,7 @@ public class RabbitIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        rabbit = new RabbitBroker(parent:app);
+        rabbit = new RabbitBrokerImpl(parent:app);
         Entities.startManagement(app);
         rabbit.start([ testLocation ])
         executeUntilSucceedsWithShutdown(rabbit) {
@@ -79,7 +79,7 @@ public class RabbitIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testClientConnection() {
-        rabbit = new RabbitBroker(parent:app);
+        rabbit = new RabbitBrokerImpl(parent:app);
         Entities.startManagement(app);
         rabbit.start([ testLocation ])
         executeUntilSucceeds {
