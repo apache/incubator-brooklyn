@@ -64,7 +64,7 @@ public class HttpFeedIntegrationTest {
         feed = null;
     }
     
-    @Test
+    @Test(groups = { "Integration" })
     public void testPollsAndParsesHttpGetResponse() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
@@ -81,7 +81,7 @@ public class HttpFeedIntegrationTest {
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
     }
     
-    @Test
+    @Test(groups = { "Integration" })
     public void testPollsAndParsesHttpPostResponse() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
@@ -100,7 +100,7 @@ public class HttpFeedIntegrationTest {
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
     }
     
-    @Test
+    @Test(groups = { "Integration" })
     public void testPollsAndParsesHttpErrorResponse() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
