@@ -63,7 +63,8 @@ public class PostgreSqlLiveTest extends PostgreSqlIntegrationTest {
     }
     
     public void test(String osRegex) throws Exception {
-        PostgreSqlNode psql = new PostgreSqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
+        PostgreSqlNode psql = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+                .configure("creationScriptContents", CREATION_SCRIPT));
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
@@ -73,7 +74,6 @@ public class PostgreSqlLiveTest extends PostgreSqlIntegrationTest {
 
         JcloudsLocation jcloudsLocation = (JcloudsLocation) locationRegistry.resolve("cloudservers-uk");
 
-        Entities.startManagement(tapp);
         tapp.start(asList(jcloudsLocation));
 
         SshMachineLocation l = (SshMachineLocation) psql.getLocations().iterator().next();

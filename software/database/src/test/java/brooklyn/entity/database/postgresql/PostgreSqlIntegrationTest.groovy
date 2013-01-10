@@ -1,15 +1,18 @@
 package brooklyn.entity.database.postgresql;
 
 
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.entity.TestApplication
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
-import brooklyn.entity.database.VogellaExampleAccess
+
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.database.VogellaExampleAccess
+import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.test.entity.TestApplication2
 
 /**
  * Runs the popular Vogella MySQL tutorial against PostgreSQL
@@ -19,12 +22,11 @@ import brooklyn.entity.basic.Entities
 public class PostgreSqlIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(PostgreSqlIntegrationTest.class);
-    TestApplication tapp
+    TestApplication2 tapp
 
     @BeforeMethod(alwaysRun = true)
     public void before() {
-        tapp = new TestApplication(name: "PostgreSqlIntegrationTest");
-
+        tapp = ApplicationBuilder.builder(TestApplication2.class).manage();
     }
 
     @AfterMethod(alwaysRun = true)
@@ -60,10 +62,12 @@ INSERT INTO COMMENTS values (1, 'lars', 'myemail@gmail.com','http://www.vogella.
 
     @Test(groups = ["Integration"])
     public void test_localhost() throws Exception {
-        PostgreSqlNode pgsql = new PostgreSqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
+        PostgreSqlNode pgsql = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+                .configure("creationScriptContents", CREATION_SCRIPT));
+            
         tapp.start([new LocalhostMachineProvisioningLocation()]);
         log.info("PostgreSql started");
-        new VogellaExampleAccess().readDataBase("org.postgresql.Driver", "postgresql", "localhost", pgsql.getPort());
+        new VogellaExampleAccess().readDataBase("org.postgresql.Driver", "postgresql", "localhost", pgsql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT));
         log.info("Ran vogella PostgreSql example -- SUCCESS");
     }
 }
