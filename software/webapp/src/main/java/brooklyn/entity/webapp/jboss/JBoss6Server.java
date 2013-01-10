@@ -11,7 +11,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.webapp.JavaWebAppService;
-import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
@@ -21,7 +21,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Functions;
 
-public class JBoss6Server extends JavaWebAppSoftwareProcess implements JavaWebAppService, UsesJmx {
+public class JBoss6Server extends JavaWebAppSoftwareProcessImpl implements JavaWebAppService, UsesJmx {
 
     public static final Logger log = LoggerFactory.getLogger(JBoss6Server.class);
 

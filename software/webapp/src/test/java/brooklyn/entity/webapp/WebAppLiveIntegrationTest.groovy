@@ -20,7 +20,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
@@ -57,7 +57,7 @@ public class WebAppLiveIntegrationTest {
     private JcloudsLocation loc
 
     /**
-     * Provides instances of {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
+     * Provides instances of {@link TomcatServerImpl}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
      *
      * TODO combine the data provider here with the integration tests
      *
@@ -65,7 +65,7 @@ public class WebAppLiveIntegrationTest {
      */
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
-        TomcatServer tomcat = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
+        TomcatServerImpl tomcat = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
         JBoss6Server jboss6 = [ parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT ]
         JBoss7Server jboss7 = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
         return [ [ tomcat ], [ jboss6 ], [ jboss7 ] ]
@@ -91,7 +91,7 @@ public class WebAppLiveIntegrationTest {
         loc.setTagMapping( [
                 (JBoss6Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
                 (JBoss7Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
-                (TomcatServer.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]]
+                (TomcatServerImpl.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]]
                 ])
     }
 

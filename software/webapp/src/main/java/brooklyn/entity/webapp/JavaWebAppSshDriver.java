@@ -11,12 +11,12 @@ import brooklyn.location.basic.SshMachineLocation;
 
 public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver implements JavaWebAppDriver {
 
-    public JavaWebAppSshDriver(JavaWebAppSoftwareProcess entity, SshMachineLocation machine) {
+    public JavaWebAppSshDriver(JavaWebAppSoftwareProcessImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
-    public JavaWebAppSoftwareProcess getEntity() {
-        return (JavaWebAppSoftwareProcess) super.getEntity();
+    public JavaWebAppSoftwareProcessImpl getEntity() {
+        return (JavaWebAppSoftwareProcessImpl) super.getEntity();
     }
 
     protected boolean isProtocolEnabled(String protocol) {
@@ -31,7 +31,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
 
     @Override
     public List<String> getEnabledProtocols() {
-        return entity.getAttribute(JavaWebAppSoftwareProcess.ENABLED_PROTOCOLS);
+        return entity.getAttribute(JavaWebAppSoftwareProcessImpl.ENABLED_PROTOCOLS);
     }
     
     @Override

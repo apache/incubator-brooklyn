@@ -10,7 +10,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.entity.webapp.JavaWebAppService;
-import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
@@ -23,7 +23,7 @@ import brooklyn.util.flags.SetFromFlag;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 
-public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAppService {
+public class JBoss7Server extends JavaWebAppSoftwareProcessImpl implements JavaWebAppService {
 
 	public static final Logger log = LoggerFactory.getLogger(JBoss7Server.class);
 

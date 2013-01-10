@@ -18,7 +18,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableSet
  * Tests that implementations of JavaWebApp can start up and shutdown, 
  * post request and error count metrics and deploy wars, etc.
  * 
- * Currently tests {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server}.
+ * Currently tests {@link TomcatServerImpl}, {@link JBoss6Server} and {@link JBoss7Server}.
  */
 public class WebAppIntegrationTest {
     
@@ -95,7 +95,7 @@ public class WebAppIntegrationTest {
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
-        Integer shutdownPort = entity?.getAttribute(TomcatServer.SHUTDOWN_PORT)
+        Integer shutdownPort = entity?.getAttribute(TomcatServerImpl.SHUTDOWN_PORT)
         
         if (shutdownPort != null) {
             boolean socketClosed = new Repeater("Checking Tomcat has shut down")
@@ -138,16 +138,16 @@ public class WebAppIntegrationTest {
     }
 
     /**
-     * Provides instances of {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
+     * Provides instances of {@link TomcatServerImpl}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
      *
      * TODO combine the data provider here with live integration test
      *
      * @see WebAppLiveIntegrationTest#basicEntities()
      */
     @DataProvider(name = "basicEntities")
-    public JavaWebAppSoftwareProcess[][] basicEntities() {
+    public JavaWebAppSoftwareProcessImpl[][] basicEntities() {
 		//FIXME we should start the application, not the entity
-        TomcatServer tomcat = new TomcatServer(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        TomcatServerImpl tomcat = new TomcatServerImpl(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         Entities.manage(tomcat);
         JBoss6Server jboss6 = new JBoss6Server( parent:newTestApplication(), portIncrement:PORT_INCREMENT);
         Entities.manage(jboss6);
@@ -365,7 +365,7 @@ public class WebAppIntegrationTest {
 				"" // no sub-page path
             ]
         } + [
-            [   new TomcatServer(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),newTestApplication()),
+            [   new TomcatServerImpl(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),newTestApplication()),
                 "swf-booking-mvc.war",
                 "swf-booking-mvc/",
 				"spring/intro",
@@ -402,7 +402,7 @@ public class WebAppIntegrationTest {
             // TODO get this URL from a WAR file entity
             assertTrue urlRespondsWithStatusCode200(entity.getAttribute(WebAppService.ROOT_URL)+urlSubPathToPageToQuery)
             
-            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/"))
+            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcessImpl.DEPLOYED_WARS), ImmutableSet.of("/"))
             true
         }
     }
@@ -426,7 +426,7 @@ public class WebAppIntegrationTest {
     }
 	
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
-    public void testWarDeployAndUndeploy(JavaWebAppSoftwareProcess entity, String war, 
+    public void testWarDeployAndUndeploy(JavaWebAppSoftwareProcessImpl entity, String war, 
             String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity;
         log.info("test=testWarDeployAndUndeploy; entity="+entity+"; app="+entity.getApplication())
@@ -441,7 +441,7 @@ public class WebAppIntegrationTest {
         executeUntilSucceeds(abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity
             assertTrue urlRespondsWithStatusCode200(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname/"+urlSubPathToPageToQuery)
-            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/myartifactname"))
+            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcessImpl.DEPLOYED_WARS), ImmutableSet.of("/myartifactname"))
             true
         }
         
@@ -450,7 +450,7 @@ public class WebAppIntegrationTest {
         executeUntilSucceeds(abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity
             assertEquals(urlRespondsStatusCode(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname"+urlSubPathToPageToQuery), 404);
-            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of())
+            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcessImpl.DEPLOYED_WARS), ImmutableSet.of())
             true
         }
     }

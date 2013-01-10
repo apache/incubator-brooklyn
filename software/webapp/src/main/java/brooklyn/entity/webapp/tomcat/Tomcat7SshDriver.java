@@ -1,22 +1,22 @@
 package brooklyn.entity.webapp.tomcat;
 
-import brooklyn.entity.basic.lifecycle.CommonCommands;
-import brooklyn.entity.webapp.JavaWebAppSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
-import brooklyn.util.NetworkUtils;
+import static java.lang.String.format;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static java.lang.String.format;
+import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.webapp.JavaWebAppSshDriver;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.MutableMap;
+import brooklyn.util.NetworkUtils;
 
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
 
-    public Tomcat7SshDriver(TomcatServer entity, SshMachineLocation machine) {
+    public Tomcat7SshDriver(TomcatServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -29,12 +29,12 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
     }
 
     protected Integer getShutdownPort() {
-        return entity.getAttribute(TomcatServer.SHUTDOWN_PORT);
+        return entity.getAttribute(TomcatServerImpl.SHUTDOWN_PORT);
     }
 
     //@Override
     //public void postLaunch() {
-    //    entity.setAttribute(TomcatServer.SHUTDOWN_PORT, getShutdownPort());
+    //    entity.setAttribute(TomcatServerImpl.SHUTDOWN_PORT, getShutdownPort());
     //    super.postLaunch();
     //}
 
@@ -66,7 +66,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
                 "sed -i.bk /8009/D conf/server.xml"
         ).execute();
 
-        ((TomcatServer)entity).deployInitialWars();
+        ((TomcatServerImpl)entity).deployInitialWars();
     }
 
     @Override

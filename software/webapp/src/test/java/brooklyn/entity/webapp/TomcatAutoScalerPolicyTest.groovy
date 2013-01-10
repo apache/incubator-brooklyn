@@ -43,7 +43,7 @@ public class TomcatAutoScalerPolicyTest {
         try {
             DynamicWebAppCluster cluster = new DynamicWebAppCluster(
                 factory: { Map properties, Entity parent ->
-                    def tc = new TomcatServer(properties, parent)
+                    def tc = new TomcatServerImpl(properties, parent)
                     tc.setConfig(TomcatServer.HTTP_PORT.configKey, httpPort)
                     tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP)
                     tc.setConfig(TomcatServer.SHUTDOWN_PORT, shutdownP)
@@ -64,8 +64,8 @@ public class TomcatAutoScalerPolicyTest {
             
             assertEquals 1, cluster.currentSize
             
-            TomcatServer tc = Iterables.getOnlyElement(cluster.getMembers())
-            2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
+            TomcatServerImpl tc = Iterables.getOnlyElement(cluster.getMembers())
+            2.times { connectToURL(tc.getAttribute(TomcatServerImpl.ROOT_URL)) }
             
             executeUntilSucceeds(timeout: 3*SECONDS) {
                 assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
