@@ -68,7 +68,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
             if (isSubKey(k))
                 result.add( ((SubElementConfigKey<V>) k).extractValue(vals, exec) );
         }
-        return result;
+        return Collections.unmodifiableList(result);
     }
 
     @Override
