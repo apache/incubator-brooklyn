@@ -1,11 +1,9 @@
 package brooklyn.demo
 
-import java.util.List
-
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.messaging.amqp.AmqpServer
 import brooklyn.entity.messaging.qpid.QpidBroker
-import brooklyn.location.Location
+import brooklyn.entity.messaging.qpid.QpidBrokerImpl
 
 /** Qpid Broker Application */
 public class StandaloneBrokerExample extends AbstractApplication {
@@ -16,7 +14,7 @@ public class StandaloneBrokerExample extends AbstractApplication {
     public static final String BDBSTORE_JAR_PATH = "classpath://je-5.0.34.jar"
 
     // Configure the Qpid broker entity
-	QpidBroker broker = new QpidBroker(this,
+	QpidBroker broker = new QpidBrokerImpl(this,
 	        amqpPort:5672,
 	        amqpVersion:AmqpServer.AMQP_0_10,
 	        runtimeFiles:[ (QpidBroker.CONFIG_XML):CUSTOM_CONFIG_PATH,

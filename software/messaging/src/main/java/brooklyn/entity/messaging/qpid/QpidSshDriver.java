@@ -26,7 +26,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
 
     private static final Logger log = LoggerFactory.getLogger(QpidSshDriver.class);
 
-    public QpidSshDriver(QpidBroker entity, SshMachineLocation machine) {
+    public QpidSshDriver(QpidBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
