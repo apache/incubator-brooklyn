@@ -1,5 +1,6 @@
 package brooklyn.event.basic;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -75,7 +76,7 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
                 result.put(extractSubKeyName(subk), (V) subk.extractValue(vals, exec));
             }
         }
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     @Override
