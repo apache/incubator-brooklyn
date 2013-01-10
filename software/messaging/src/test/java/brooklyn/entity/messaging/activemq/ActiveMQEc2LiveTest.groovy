@@ -17,12 +17,14 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplication2
 import brooklyn.util.internal.TimeExtras
 
 class ActiveMQEc2LiveTest {
@@ -35,7 +37,7 @@ class ActiveMQEc2LiveTest {
     protected JcloudsLocationFactory locFactory;
     private File sshPrivateKey
     private File sshPublicKey
-    TestApplication app
+    TestApplication2 app
     ActiveMQBroker activeMQ
 
     @BeforeMethod(alwaysRun=true)
@@ -66,7 +68,7 @@ class ActiveMQEc2LiveTest {
             securityGroups:["brooklyn-all"]
         ]])
 
-        app = new TestApplication()
+        app = ApplicationBuilder.builder(TestApplication2.class).manage();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -79,7 +81,8 @@ class ActiveMQEc2LiveTest {
      */
     @Test(groups = [ "Live" ])
     public void canStartupAndShutdown() {
-        activeMQ = new ActiveMQBroker(parent:app);
+        activeMQ = app.createAndManageChild(BasicEntitySpec.newInstance(ActiveMQBroker.class));
+        
         app.start([ loc ])
         executeUntilSucceedsWithShutdown(activeMQ) {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
@@ -97,7 +100,9 @@ class ActiveMQEc2LiveTest {
         String content = "01234567890123456789012345678901"
 
         // Start broker with a configured queue
-        activeMQ = new ActiveMQBroker(parent:app, queue:queueName);
+        activeMQ = app.createAndManageChild(BasicEntitySpec.newInstance(ActiveMQBroker.class)
+                .configure("queue", queueName));
+        
         app.start([ loc ])
         executeUntilSucceeds {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)

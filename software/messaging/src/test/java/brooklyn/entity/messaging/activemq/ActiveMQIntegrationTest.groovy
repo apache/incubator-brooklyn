@@ -20,12 +20,13 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplication2
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -36,13 +37,13 @@ public class ActiveMQIntegrationTest {
 
     static { TimeExtras.init() }
 
-    private Application app
+    private TestApplication2 app
     private Location testLocation
     private ActiveMQBroker activeMQ
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
-        app = new TestApplication();
+        app = ApplicationBuilder.builder(TestApplication2.class).manage();
         testLocation = new LocalhostMachineProvisioningLocation()
     }
 
@@ -56,8 +57,8 @@ public class ActiveMQIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        activeMQ = new ActiveMQBroker(parent:app);
-        Entities.startManagement(app);
+        activeMQ = app.createAndManageChild(BasicEntitySpec.newInstance(ActiveMQBroker.class));
+
         activeMQ.start([ testLocation ])
         executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
@@ -66,19 +67,20 @@ public class ActiveMQIntegrationTest {
     }
 
     /**
-    * Test that the broker starts up and sets SERVICE_UP correctly,
-    * when a jmx port is supplied
-    */
-   @Test(groups = "Integration")
-   public void canStartupAndShutdownWithCustomJmx() {
-       activeMQ = new ActiveMQBroker(parent:app, jmxPort: "11099+");
-       Entities.startManagement(app);
-       app.start([ testLocation ])
-       executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
-           assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
-       }
-       assertFalse activeMQ.getAttribute(Startable.SERVICE_UP)
-   }
+     * Test that the broker starts up and sets SERVICE_UP correctly,
+     * when a jmx port is supplied
+     */
+    @Test(groups = "Integration")
+    public void canStartupAndShutdownWithCustomJmx() {
+        activeMQ = app.createAndManageChild(BasicEntitySpec.newInstance(ActiveMQBroker.class)
+                .configure("jmxPort", "11099+"));
+       
+        app.start([ testLocation ])
+        executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
+            assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
+        }
+        assertFalse activeMQ.getAttribute(Startable.SERVICE_UP)
+    }
 
     /**
      * Test that setting the 'queue' property causes a named queue to be created.
@@ -90,8 +92,11 @@ public class ActiveMQIntegrationTest {
         String content = "01234567890123456789012345678901"
 
         // Start broker with a configured queue
-        activeMQ = new ActiveMQBroker(parent:app, queue:queueName);
-        Entities.startManagement(app);
+        // FIXME Not yet using app.createAndManageChild because later in test do activeMQ.queueNames,
+        // which is not on interface
+        activeMQ = new ActiveMQBrokerImpl(queue:queueName, app);
+        Entities.manage(activeMQ);
+        
         activeMQ.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue activeMQ.getAttribute(Startable.SERVICE_UP)
