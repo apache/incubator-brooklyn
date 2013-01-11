@@ -123,16 +123,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     protected transient SubscriptionTracker _subscriptionTracker;
 
-    /**
-     * FIXME Temporary workaround for use-case:
-     *  - the load balancing policy test calls app.managementContext.unmanage(itemToStop)
-     *  - concurrently, the policy calls an effector on that item: item.move()
-     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary.
-     *    This detects that the item is not managed, and sets it as managed again. The item is automatically
-     *    added back into the dynamic group, and the policy receives an erroneous MEMBER_ADDED event.
-     */
-    private volatile boolean hasEverBeenManaged
-    
     public AbstractEntity(Entity parent) {
         this([:], parent)
     }
@@ -179,12 +169,21 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     /** @deprecated since 0.4.0 now handled by EntityMangementSupport */
     public void setBeingManaged() {
-        hasEverBeenManaged = true;
+        // no-op
     }
     
-    /** @deprecated since 0.4.0 now handled by EntityMangementSupport */
+    /**
+     * FIXME Temporary workaround for use-case:
+     *  - the load balancing policy test calls app.managementContext.unmanage(itemToStop)
+     *  - concurrently, the policy calls an effector on that item: item.move()
+     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary.
+     *    This detects that the item is not managed, and sets it as managed again. The item is automatically
+     *    added back into the dynamic group, and the policy receives an erroneous MEMBER_ADDED event.
+     * 
+     * @deprecated since 0.4.0 now handled by EntityMangementSupport
+     */
     public boolean hasEverBeenManaged() {
-        return hasEverBeenManaged;
+        return getManagementSupport().wasDeployed();
     }
     
     /** sets fields from flags; can be overridden if needed, subclasses should
@@ -546,7 +545,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     protected void assertNotYetOwned() {
-        if (!preConfigured && getApplication()?.isDeployed())
+        if (!preConfigured && getManagementSupport().isDeployed())
             LOG.warn("configuration being made to $this after deployment; may not be supported in future versions");
         //throw new IllegalStateException("Cannot set configuration $key on active entity $this")
     }
@@ -877,9 +876,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStopping if customization needed
      */
     public void onManagementNoLongerMaster() {}
-
-    /** Field for use only by management plane, to record remote destination when proxied. */
-    public Object managementData = null;
 
     /** For use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */
     public void invalidateReferences() {

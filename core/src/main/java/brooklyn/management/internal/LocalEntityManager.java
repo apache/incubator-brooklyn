@@ -14,8 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
@@ -28,8 +27,6 @@ import com.google.common.collect.Sets;
 public class LocalEntityManager implements EntityManager {
 
     private static final Logger log = LoggerFactory.getLogger(LocalEntityManager.class);
-
-    private static final Object MANAGED_LOCALLY = new Object();
 
     private final LocalManagementContext managementContext;
     
@@ -72,15 +69,14 @@ public class LocalEntityManager implements EntityManager {
         }
         
         final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
-        recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
+        recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
             preManageNonRecursive(it);
             it.getManagementSupport().onManagementStarting(info); 
             return manageNonRecursive(it);
         } });
         
-        recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
+        recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
             it.getManagementSupport().onManagementStarted(info);
-            it.setBeingManaged();
             managementContext.getRebindManager().getChangeListener().onManaged(it);
             return true; 
         } });
@@ -91,13 +87,13 @@ public class LocalEntityManager implements EntityManager {
         if (shouldSkipUnmanagement(e)) return;
         
         final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
-        recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
+        recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
             if (shouldSkipUnmanagement(it)) return false;
             it.getManagementSupport().onManagementStopping(info); 
             return true;
         } });
         
-        recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
+        recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
             if (shouldSkipUnmanagement(it)) return false;
             boolean result = unmanageNonRecursive(it);            
             it.getManagementSupport().onManagementStopped(info);
@@ -114,7 +110,7 @@ public class LocalEntityManager implements EntityManager {
     void manageIfNecessary(Entity entity, Object context) {
         if (!isRunning()) {
             return; // TODO Still a race for terminate being called, and then isManaged below returning false
-        } else if (((AbstractEntity)entity).hasEverBeenManaged()) {
+        } else if (((EntityLocal)entity).getManagementSupport().wasDeployed()) {
             return;
         } else if (isManaged(entity)) {
             return;
@@ -136,17 +132,10 @@ public class LocalEntityManager implements EntityManager {
         }
     }
 
-    private void recursively(Entity e, Predicate<AbstractEntity> action) {
-        action.apply( (AbstractEntity)e );
-        EntityCollectionReference<?> ref = ((AbstractEntity)e).getChildrenReference();
-        for (String ei: ref.getIds()) {
-            Entity entity = ref.peek(ei);
-            if (entity==null) entity = getEntity(ei);
-            if (entity==null) {
-                log.warn("Unable to resolve entity "+ei+" when recursing for management");
-            } else {
-                recursively( entity, action );
-            }
+    private void recursively(Entity e, Predicate<EntityLocal> action) {
+        action.apply( (EntityLocal)e );
+        for (Entity child : e.getChildren()) {
+            recursively(child, action);
         }
     }
 
@@ -185,7 +174,6 @@ public class LocalEntityManager implements EntityManager {
      * Returns true if the entity has now become managed; false if it was already managed (anything else throws exception)
      */
     private synchronized boolean manageNonRecursive(Entity e) {
-        ((AbstractEntity)e).managementData = MANAGED_LOCALLY;
         Object old = entitiesById.put(e.getId(), e);
         if (old!=null) {
             if (old == e) {
@@ -210,7 +198,6 @@ public class LocalEntityManager implements EntityManager {
      * Returns true if the entity has been removed from management; if it was not previously managed (anything else throws exception) 
      */
     private synchronized boolean unmanageNonRecursive(Entity e) {
-        ((AbstractEntity)e).managementData = null;
         e.clearParent();
         if (e instanceof Application) applications.remove(e);
         entities.remove(e);

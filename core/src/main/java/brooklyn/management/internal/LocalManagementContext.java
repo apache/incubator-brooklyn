@@ -23,9 +23,8 @@ import brooklyn.util.text.Identifiers;
  * A local implementation of the {@link ManagementContext} API.
  */
 public class LocalManagementContext extends AbstractManagementContext {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
-
-    private static final Object MANAGED_LOCALLY = new Object();
 
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
@@ -36,11 +35,11 @@ public class LocalManagementContext extends AbstractManagementContext {
     /**
      * Creates a LocalManagement with default BrooklynProperties.
      */
-    public LocalManagementContext(){
+    public LocalManagementContext() {
         this(BrooklynProperties.Factory.newDefault());
     }
 
-    public LocalManagementContext(BrooklynProperties brooklynProperties){
+    public LocalManagementContext(BrooklynProperties brooklynProperties) {
        super(brooklynProperties);
     }
 
