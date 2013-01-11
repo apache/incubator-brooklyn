@@ -17,6 +17,8 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.MyEntity
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Resizable
 import brooklyn.location.Location
@@ -113,6 +115,19 @@ class DynamicClusterTest {
         cluster.start([loc])
         assertEquals(cluster.getLocations().size(), 1)
         assertEquals(cluster.getLocations() as List, [loc])
+    }
+
+    @Test
+    public void usingEntitySpecResizeFromZeroToOneStartsANewEntityAndSetsItsParent() {
+        DynamicCluster cluster = new DynamicCluster(memberSpec:BasicEntitySpec.newInstance(MyEntity.class), app)
+        app.manage(cluster);
+        cluster.start([loc])
+
+        cluster.resize(1)
+        Entity entity = Iterables.getOnlyElement(cluster.getChildren());
+        assertEquals entity.count, 1
+        assertEquals entity.parent, cluster
+        assertEquals entity.application, app
     }
 
     @Test

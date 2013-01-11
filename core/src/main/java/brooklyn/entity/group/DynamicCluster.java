@@ -27,6 +27,8 @@ import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.WrappingEntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -70,6 +72,10 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
     
+    @SetFromFlag("memberSpec")
+    public static final ConfigKey<EntitySpec<?>> MEMBER_SPEC = new BasicConfigKey(
+            EntitySpec.class, "dynamiccluster.memberspec", "entity spec for creating new cluster members", null);
+
     @SetFromFlag("factory")
     public static final ConfigKey<EntityFactory> FACTORY = new BasicConfigKey<EntityFactory>(
             EntityFactory.class, "dynamiccluster.factory", "factory for creating new cluster members", null);
@@ -89,11 +95,18 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         }
     };
     
+    public DynamicCluster() {
+        super();
+        setAttribute(SERVICE_UP, false);
+    }
+    
     /**
      * Instantiate a new DynamicCluster.
      * 
      * Valid properties are:
      * <ul>
+     * <li>memberSpec - an {@EntitySpec) that defines entities to be created,
+     * where the entities typically implementing {@link Startable}
      * <li>factory - an {@EntityFactory) (or {@link Closure}) that creates an {@link Entity},
      * typically implementing {@link Startable}, taking the {@link Map}
      * of properties from this cluster as an argument. This property is mandatory.
@@ -101,8 +114,9 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
      * called. This property is optional, with a default of 1.
      * </ul>
      *
-     * @param properties the properties of the cluster (these may be visible to created children by inheritance,
-     *  but to set properties on children explicitly, use the factory)
+     * @param properties The properties of the cluster (those corresponding to config keys will be 
+     *                   visible to created children by inheritance, but to set properties on children 
+     *                   explicitly, use the memberSpec or factory)
      * @param parent the entity that owns this cluster (optional)
      */
     public DynamicCluster(Map<?,?> properties, Entity parent) {
@@ -129,8 +143,16 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
         return (result != null) ? result : defaultRemovalStrategy;
     }
     
+    public EntitySpec<?> getMemberSpec() {
+        return getConfig(MEMBER_SPEC);
+    }
+    
     public EntityFactory<?> getFactory() {
         return getConfig(FACTORY);
+    }
+    
+    public void setMemberSpec(EntitySpec<?> memberSpec) {
+        setConfigEvenIfOwned(MEMBER_SPEC, memberSpec);
     }
     
     public void setFactory(EntityFactory<?> factory) {
@@ -342,23 +364,34 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     protected Map getCustomChildFlags() { return Maps.newLinkedHashMap(); }
     
     protected Entity addNode() {
-        Map creation = Maps.newLinkedHashMap();
-        creation.putAll(getCustomChildFlags());
-        if (logger.isDebugEnabled()) logger.debug("Adding a node to {}({}) with properties {}", new Object[] {getDisplayName(), getId(), creation});
+        Map creation = Maps.newLinkedHashMap(getCustomChildFlags());
+        if (logger.isDebugEnabled()) logger.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {getDisplayName(), getId(), creation});
 
-        EntityFactory<?> factory = getFactory();
-        if (factory == null) 
-            throw new IllegalStateException("EntityFactory factory not supplied for "+this);
-        Entity entity = (factory instanceof EntityFactoryForLocation ? ((EntityFactoryForLocation)factory).newFactoryForLocation(getLocation()) : factory).
-            newEntity(creation, this);
-        if (entity==null) 
-            throw new IllegalStateException("EntityFactory factory routine did not return an entity, in "+this+" ("+entity+")");
-        
+        Entity entity = createNode(creation);
         Entities.manage(entity);
         addMember(entity);
         return entity;
     }
 
+    protected Entity createNode(Map flags) {
+        EntitySpec<?> memberSpec = getMemberSpec();
+        if (memberSpec != null) {
+            EntitySpec<?> wrappingEntitySpec = WrappingEntitySpec.newInstance(memberSpec).configure(flags).parent(this);
+            return getManagementSupport().getManagementContext(false).getEntityManager().createEntity(wrappingEntitySpec);
+        }
+        
+        EntityFactory<?> factory = getFactory();
+        if (factory == null) { 
+            throw new IllegalStateException("No member spec nor entity factory supplied for dynamic cluster "+this);
+        }
+        Entity entity = (factory instanceof EntityFactoryForLocation ? ((EntityFactoryForLocation)factory).newFactoryForLocation(getLocation()) : factory).
+            newEntity(flags, this);
+        if (entity==null) 
+            throw new IllegalStateException("EntityFactory factory routine return null entity, in "+this);
+        
+        return entity;
+    }
+    
     protected Entity pickAndRemoveMember() {
         
         // TODO use pluggable strategy; default is to remove newest

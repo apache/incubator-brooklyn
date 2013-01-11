@@ -80,6 +80,10 @@ public class TestEntity extends AbstractEntity implements Startable {
         return counter;
     }
     
+    public int getCount() {
+        return counter.get();
+    }
+    
     public Map getConstructorProperties() {
         return constructorProperties;
     }
