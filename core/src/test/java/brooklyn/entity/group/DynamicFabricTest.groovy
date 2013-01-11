@@ -25,6 +25,7 @@ import brooklyn.test.TestUtils
 import brooklyn.test.entity.BlockingEntity
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -62,7 +63,7 @@ class DynamicFabricTest {
     }
     
     private void runWithLocations(Collection<Location> locs) {
-        DynamicFabric fabric = new DynamicFabric(factory:{ properties -> return new TestEntity(properties) }, app)
+        DynamicFabric fabric = new DynamicFabric(factory:{ properties -> return new TestEntityImpl(properties) }, app)
         app.manage(fabric);
         app.start(locs)
         
@@ -82,7 +83,7 @@ class DynamicFabricTest {
         
         DynamicFabric fabric = new DynamicFabric(
                 factory:{ properties, parent -> 
-                        def result = new TestEntity(properties, parent)
+                        def result = new TestEntityImpl(properties, parent)
                         entitiesAdded.add(result)
                         result },
                 app)
@@ -99,7 +100,7 @@ class DynamicFabricTest {
         Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
         DynamicFabric fabric = new DynamicFabric(factory:{ fabricProperties, parent ->
             return new DynamicCluster(parent:parent, initialSize:0,
-                factory:{ clusterProperties -> return new TestEntity(clusterProperties) })
+                factory:{ clusterProperties -> return new TestEntityImpl(clusterProperties) })
             }, app)
         app.manage(fabric);
         app.start(locs)
@@ -240,7 +241,7 @@ class DynamicFabricTest {
     @Test
     public void testDynamicFabricIgnoresExtraUnstoppableChildrenOnStop() {
         DynamicFabric fabric = new DynamicFabric(
-                factory:{ properties -> return new TestEntity(properties) }, 
+                factory:{ properties -> return new TestEntityImpl(properties) }, 
                 app)
         app.manage(fabric);
         fabric.start([loc1])
@@ -254,7 +255,7 @@ class DynamicFabricTest {
     public void testDynamicFabricPropagatesProperties() {
 		Closure entityFactory = { properties -> 
             def entityProperties = properties + [b: "avail"]
-            return new TestEntity(entityProperties) 
+            return new TestEntityImpl(entityProperties) 
         }
         Closure clusterFactory = { properties -> 
             def clusterProperties = properties + [factory:entityFactory, a: "ignored"]

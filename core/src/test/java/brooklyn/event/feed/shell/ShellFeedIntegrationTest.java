@@ -9,8 +9,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.feed.function.FunctionFeedTest;
 import brooklyn.event.feed.ssh.SshPollValue;
@@ -18,7 +20,7 @@ import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplication2;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 
@@ -34,16 +36,15 @@ public class ShellFeedIntegrationTest {
     final static BasicAttributeSensor<Long> SENSOR_LONG = new BasicAttributeSensor<Long>(Long.class, "aLong", "");
 
     private LocalhostMachineProvisioningLocation loc;
-    private TestApplication app;
+    private TestApplication2 app;
     private EntityLocal entity;
     private ShellFeed feed;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
-        app = new TestApplication();        
-        entity = new TestEntity(app);
-        Entities.startManagement(app);
+        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 

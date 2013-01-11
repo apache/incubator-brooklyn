@@ -18,6 +18,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.SubscriptionManager
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 
 public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
 
@@ -36,7 +37,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
         
         entities = []
         for (int i = 0; i < 10; i++) {
-            entities += new TestEntity(parent:app)
+            entities += new TestEntityImpl(parent:app)
         }
         entity = entities[0]
         app.start([loc])

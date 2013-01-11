@@ -6,16 +6,22 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.management.EntityManager;
+import brooklyn.management.ManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplication2;
 import brooklyn.test.entity.TestEntity;
 
 
@@ -24,10 +30,26 @@ public class EntityPreManagementTest {
 
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(EntityPreManagementTest.class);
+
+    private ManagementContext managementContext;
+    private EntityManager entityManager;
+    private TestApplication2 app;
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        managementContext = Entities.newManagementContext();
+        entityManager = managementContext.getEntityManager();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroy(app);
+    }
     
     @Test
     public void testSetSensorBeforeManaged() {
-        TestEntity e = new TestEntity();
+        TestEntity e = entityManager.createEntity(BasicEntitySpec.newInstance(TestEntity.class));
+
         e.setAttribute(Attributes.HOSTNAME, "martian.martian");
         Assert.assertEquals(e.getAttribute(Attributes.HOSTNAME), "martian.martian");
         
@@ -36,7 +58,7 @@ public class EntityPreManagementTest {
     
     @Test
     public void testAddPolicyToEntityBeforeManaged() {
-        TestEntity e = new TestEntity();
+        TestEntity e = entityManager.createEntity(BasicEntitySpec.newInstance(TestEntity.class));
         final List events = new ArrayList();
         
         e.addPolicy(new AbstractPolicy() {
@@ -58,10 +80,9 @@ public class EntityPreManagementTest {
         if (!events.isEmpty()) Assert.fail("Shouldn't have events yet: "+events);
         Assert.assertFalse(e.getManagementSupport().isManagementContextReal());
         
-        TestApplication app = new TestApplication();
+        TestApplication2 app = ApplicationBuilder.builder(TestApplication2.class).manage(managementContext);
         e.setParent(app);
-        Entities.startManagement(app);
-//        app.start(Arrays.<Location>asList());
+        Entities.manage(e);
         
         TestUtils.assertEventually(new Runnable() {
             @Override
@@ -73,7 +94,7 @@ public class EntityPreManagementTest {
 
     @Test
     public void testAddPolicyToApplicationBeforeManaged() {
-        TestApplication app = new TestApplication();
+        app = entityManager.createEntity(BasicEntitySpec.newInstance(TestApplication2.class));
         final List events = new ArrayList();
         
         app.addPolicy(new AbstractPolicy() {
@@ -93,10 +114,8 @@ public class EntityPreManagementTest {
         Assert.assertEquals(app.getAttribute(Attributes.HOSTNAME), "martian.martian");
         
         if (!events.isEmpty()) Assert.fail("Shouldn't have events yet: "+events);
-//        Assert.assertEquals(app.getManagementContext(), null);
         
-        Entities.startManagement(app);
-//        app.start(Arrays.<Location>asList());
+        Entities.startManagement(app, managementContext);
         
         TestUtils.assertEventually(new Runnable() {
             @Override

@@ -14,8 +14,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -24,6 +26,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplication2;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 
@@ -37,16 +40,15 @@ public class FunctionFeedTest {
     final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
 
     private Location loc;
-    private TestApplication app;
+    private TestApplication2 app;
     private EntityLocal entity;
     private FunctionFeed feed;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
-        app = new TestApplication();        
-        entity = new TestEntity(app);
-        Entities.startManagement(app);
+        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 

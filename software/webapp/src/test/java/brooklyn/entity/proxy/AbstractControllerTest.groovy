@@ -26,6 +26,7 @@ import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.flags.SetFromFlag
 
 class AbstractControllerTest {
@@ -161,7 +162,7 @@ class AbstractControllerTest {
     }
 }
 
-class ClusteredEntity extends TestEntity {
+class ClusteredEntity extends TestEntityImpl {
     public ClusteredEntity(Map flags=[:], Entity parent=null) { super(flags,parent) }
     public ClusteredEntity(Entity parent) { this([:],parent) }
     

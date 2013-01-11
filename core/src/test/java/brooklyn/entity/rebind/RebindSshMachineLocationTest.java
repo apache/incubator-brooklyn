@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
+import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.MutableMap;
@@ -31,7 +32,7 @@ public class RebindSshMachineLocationTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = new MyApplication();
+        origApp = new MyApplicationImpl();
         origLoc = new SshMachineLocation(MutableMap.of("address", "localhost"));
         Entities.startManagement(origApp, managementContext);
     }

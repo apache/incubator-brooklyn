@@ -27,6 +27,7 @@ import brooklyn.management.Task
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.TimeExtras
 
 import com.google.common.base.Predicates
@@ -78,7 +79,7 @@ class DynamicClusterTest {
 
     @Test
     public void startMethodFailsIfLocationsParameterIsMissing() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
+        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntityImpl() }, app)
         try {
             cluster.start(null)
             fail();
@@ -89,7 +90,7 @@ class DynamicClusterTest {
 
     @Test
     public void startMethodFailsIfLocationsParameterIsEmpty() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
+        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntityImpl() }, app)
         try {
             cluster.start([])
             fail();
@@ -100,7 +101,7 @@ class DynamicClusterTest {
 
     @Test
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
+        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntityImpl() }, app)
         try {
             cluster.start([ loc, loc2 ])
             fail();
@@ -111,7 +112,7 @@ class DynamicClusterTest {
 
     @Test
     public void testClusterHasOneLocationAfterStarting() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
+        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntityImpl() }, app)
         cluster.start([loc])
         assertEquals(cluster.getLocations().size(), 1)
         assertEquals(cluster.getLocations() as List, [loc])
@@ -133,7 +134,7 @@ class DynamicClusterTest {
     @Test
     public void resizeFromZeroToOneStartsANewEntityAndSetsItsParent() {
         TestEntity entity
-        DynamicCluster cluster = new DynamicCluster(factory:{ properties -> entity = new TestEntity(properties) }, app)
+        DynamicCluster cluster = new DynamicCluster(factory:{ properties -> entity = new TestEntityImpl(properties) }, app)
         app.manage(cluster);
         cluster.start([loc])
 
@@ -145,7 +146,7 @@ class DynamicClusterTest {
 
     @Test
     public void currentSizePropertyReflectsActualClusterSize() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ properties -> new TestEntity(properties) }, app)
+        DynamicCluster cluster = new DynamicCluster(factory:{ properties -> new TestEntityImpl(properties) }, app)
         app.manage(cluster);
         
         assertEquals cluster.currentSize, 0
@@ -175,7 +176,7 @@ class DynamicClusterTest {
 
     @Test
     public void clusterSizeAfterStartIsInitialSize() {
-        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> new TestEntity(properties) }, initialSize:2 ], app)
+        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> new TestEntityImpl(properties) }, initialSize:2 ], app)
         app.manage(cluster);
         
         cluster.start([loc])
@@ -189,7 +190,7 @@ class DynamicClusterTest {
         Collection<Location> locations = [ loc ]
         TestEntity entity
         def newEntity = { properties ->
-            entity = new TestEntity(parent:app) {
+            entity = new TestEntityImpl(parent:app) {
 	            List<Location> stashedLocations = null
 	            @Override
 	            void start(Collection<? extends Location> loc) {
@@ -210,7 +211,7 @@ class DynamicClusterTest {
     @Test
     public void resizeFromOneToZeroChangesClusterSize() {
         TestEntity entity
-        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> entity = new TestEntity(properties) }, initialSize:1 ], app)
+        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> entity = new TestEntityImpl(properties) }, initialSize:1 ], app)
         app.manage(cluster);
         cluster.start([loc])
         assertEquals cluster.currentSize, 1
@@ -227,7 +228,7 @@ class DynamicClusterTest {
         final AtomicInteger numStarted = new AtomicInteger(0)
         DynamicCluster cluster = new DynamicCluster(factory:
                 { Map flags, Entity cluster -> 
-                    Thread.sleep(STARTUP_TIME_MS); numStarted.incrementAndGet(); new TestEntity(flags, cluster)
+                    Thread.sleep(STARTUP_TIME_MS); numStarted.incrementAndGet(); new TestEntityImpl(flags, cluster)
                 }, 
                 app)
         app.manage(cluster);
@@ -262,7 +263,7 @@ class DynamicClusterTest {
     @Test(enabled = false)
     public void stoppingTheClusterStopsTheEntity() {
         TestEntity entity
-        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> entity = new TestEntity(properties) }, initialSize:1 ], app)
+        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> entity = new TestEntityImpl(properties) }, initialSize:1 ], app)
         app.manage(cluster);
         cluster.start([loc])
         assertEquals entity.counter.get(), 1
@@ -327,7 +328,7 @@ class DynamicClusterTest {
         final int failNum = 2
         final List<Entity> creationOrder = []
         DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> 
-                    Entity result = new TestEntity(properties)
+                    Entity result = new TestEntityImpl(properties)
                     creationOrder << result
                     return result
                 }, initialSize:0 ], app)
@@ -347,7 +348,7 @@ class DynamicClusterTest {
         
     @Test
     public void resizeLoggedAsEffectorCall() {
-        Resizable cluster = new DynamicCluster(factory:{ properties -> return new TestEntity(properties) }, app)
+        Resizable cluster = new DynamicCluster(factory:{ properties -> return new TestEntityImpl(properties) }, app)
         app.manage(cluster);
         app.start([loc])
         cluster.resize(1)
@@ -361,7 +362,7 @@ class DynamicClusterTest {
     @Test
     public void testStoppedChildIsRemoveFromGroup() {
         DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntity(properties) },
+                factory:{ properties -> return new TestEntityImpl(properties) },
                 initialSize:1 
             ], app)
         app.manage(cluster);
@@ -388,7 +389,7 @@ class DynamicClusterTest {
             return choice
         }
         DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntity(properties) },
+                factory:{ properties -> return new TestEntityImpl(properties) },
                 initialSize:10,
                 removalStrategy:removalStrategy
             ], app)
@@ -415,7 +416,7 @@ class DynamicClusterTest {
             return choice
         }
         DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntity(properties) },
+                factory:{ properties -> return new TestEntityImpl(properties) },
                 initialSize:10,
             ], app)
         app.manage(cluster);
@@ -443,7 +444,7 @@ class DynamicClusterTest {
                 factory: { properties -> 
                         executingLatch.countDown()
                         continuationLatch.await()
-                        return new TestEntity(properties)
+                        return new TestEntityImpl(properties)
                     },
                 initialSize:0 
             ], app)
@@ -475,7 +476,7 @@ class DynamicClusterTest {
     @Test
     public void testReplacesMember() {
         DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntity(properties) },
+                factory:{ properties -> return new TestEntityImpl(properties) },
                 initialSize:1,
             ], app)
         
@@ -496,7 +497,7 @@ class DynamicClusterTest {
     @Test
     public void testReplaceMemberThrowsIfMemberIdDoesNotResolve() {
         DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntity(properties) },
+                factory:{ properties -> return new TestEntityImpl(properties) },
                 initialSize:1,
             ], app)
         
@@ -517,7 +518,7 @@ class DynamicClusterTest {
     @Test
     public void testReplaceMemberThrowsIfNotMember() {
         DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntity(properties) },
+                factory:{ properties -> return new TestEntityImpl(properties) },
                 initialSize:1,
             ], app)
         
@@ -595,7 +596,7 @@ class DynamicClusterTest {
     }
 }
 
-class FailingEntity extends TestEntity {
+class FailingEntity extends TestEntityImpl {
     final boolean failOnStart;
     final boolean failOnStop;
     final Class<? extends Exception> exceptionClazz;

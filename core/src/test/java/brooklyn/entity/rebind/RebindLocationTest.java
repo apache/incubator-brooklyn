@@ -15,7 +15,9 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
+import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
+import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.ManagementContext;
@@ -40,8 +42,8 @@ public class RebindLocationTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = new MyApplication();
-        origE = new MyEntity(origApp);
+        origApp = new MyApplicationImpl();
+        origE = new MyEntityImpl(origApp);
         Entities.startManagement(origApp, managementContext);
     }
 

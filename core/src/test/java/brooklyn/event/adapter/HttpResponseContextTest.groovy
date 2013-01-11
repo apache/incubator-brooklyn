@@ -7,8 +7,9 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 
+@Deprecated // Class under test is deprecated
 public class HttpResponseContextTest {
 
 	public final static HttpResponseContext SIMPLE_RESPONSE = [ null, 400, [foo:["1"], bar:["2"]], "A TEST", null ]
@@ -38,7 +39,7 @@ public class HttpResponseContextTest {
 	@Test
 	public void testSensorAndEntityAvailable() {
 		BasicAttributeSensor s = [String.class, "aString", ""];
-		Entity e = new TestEntity();
+		Entity e = new TestEntityImpl();
 		assertEquals(SIMPLE_RESPONSE.evaluate(entity: e, sensor: s, { sensor==s && entity==e }), true);
 		assertEquals(SIMPLE_RESPONSE.evaluate(e, s, { sensor==s && entity==e }), true);
 		assertEquals(SIMPLE_RESPONSE.evaluate(e, null, { sensor!=s && entity==e }), true);

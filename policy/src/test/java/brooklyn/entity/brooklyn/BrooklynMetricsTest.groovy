@@ -7,25 +7,29 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplication2
 import brooklyn.test.entity.TestEntity
 
 class BrooklynMetricsTest {
 
     private static final long TIMEOUT_MS = 2*1000;
     
-    TestApplication app
+    TestApplication2 app
     SimulatedLocation loc
     BrooklynMetrics brooklynMetrics
     
     @BeforeMethod
     public void setUp() {
-        app = new TestApplication()
+        app = ApplicationBuilder.builder(TestApplication2.class).manage();
         loc = new SimulatedLocation()
         brooklynMetrics = new BrooklynMetrics(updatePeriod:10L, parent:app)
+        Entities.manage(brooklynMetrics);
     }
     
     @Test
@@ -45,7 +49,7 @@ class BrooklynMetricsTest {
     
     @Test
     public void testBrooklynMetricsIncremented() {
-        TestEntity e = new TestEntity(parent:app)
+        TestEntity e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start([loc])
 
         executeUntilSucceeds(timeout:TIMEOUT_MS) {

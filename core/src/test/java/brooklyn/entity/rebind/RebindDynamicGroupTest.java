@@ -11,9 +11,10 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.DynamicGroupImpl;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
+import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -45,7 +46,7 @@ public class RebindDynamicGroupTest {
     
     @Test
     public void testRestoresDynamicGroup() throws Exception {
-        MyEntity origE = new MyEntity(origApp);
+        MyEntity origE = new MyEntityImpl(origApp);
         DynamicGroup origG = new DynamicGroupImpl(origApp, Predicates.instanceOf(MyEntity.class));
         Entities.startManagement(origApp, managementContext);
         
@@ -58,7 +59,7 @@ public class RebindDynamicGroupTest {
         assertGroupMemebers(newG, ImmutableSet.of(newE));
 
         // And should detect new members that match the filter
-        final MyEntity newE2 = new MyEntity(newApp);
+        final MyEntity newE2 = new MyEntityImpl(newApp);
         Entities.manage(newE2);
         
         TestUtils.assertEventually(new Runnable() {

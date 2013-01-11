@@ -15,8 +15,9 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 
+@Deprecated // Class under test is deprecated
 public class SshSensorAdapterTest {
 
     final static LocalhostMachineProvisioningLocation location = [ count:1 ]
@@ -27,7 +28,7 @@ public class SshSensorAdapterTest {
 	final static BasicAttributeSensor SENSOR_BOOLEAN = [ Boolean.class, "name.bool", "Boolean" ]
 
     final Application app = new TestApplication();
-	final EntityLocal entity = new TestEntity(app);
+	final EntityLocal entity = new TestEntityImpl(app);
 	final SshSensorAdapter adapter = [ machine ]
 	final SensorRegistry registry = new SensorRegistry(entity)
 

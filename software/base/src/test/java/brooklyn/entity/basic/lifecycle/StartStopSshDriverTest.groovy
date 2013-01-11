@@ -17,6 +17,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.StreamGobbler
 import brooklyn.util.internal.ssh.SshTool
 import brooklyn.util.internal.ssh.cli.SshCliTool
@@ -42,7 +43,7 @@ class StartStopSshDriverTest {
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
         app = new TestApplication()
-        entity = new TestEntity(app)
+        entity = new TestEntityImpl(app)
         app.startManagement();
         sshMachineLocation = new SshMachineLocationWithSshTool(address:"localhost");
         driver = new BasicStartStopSshDriver(entity, sshMachineLocation)

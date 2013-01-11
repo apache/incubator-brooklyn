@@ -15,10 +15,12 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplication2
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.LanguageUtils
 
@@ -34,18 +36,22 @@ public class DynamicGroupTest {
     private static final int TIMEOUT_MS = 50*1000;
     private static final int VERY_SHORT_WAIT_MS = 100;
     
-    private TestApplication app
+    private TestApplication2 app
     private DynamicGroup group
     private TestEntity e1
     private TestEntity e2
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplication()
-        group = new DynamicGroupImpl(parent:app)
-        e1 = new TestEntity(parent:app)
-        e2 = new TestEntity(parent:app)
-        app.startManagement();
+        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        group = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicGroup.class));
+        e1 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        e2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        if (app != null) Entities.destroy(app);
     }
     
     @AfterMethod(alwaysRun=true)
@@ -92,7 +98,7 @@ public class DynamicGroupTest {
         
         assertEquals(group.getMembers(), [])
         
-        app.manage(e3);
+        Entities.manage(e3);
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(group.getMembers(), [e3])
@@ -102,7 +108,7 @@ public class DynamicGroupTest {
     @Test
     public void testGroupUsesNewFilter() {
         Entity e3 = new AbstractEntity(app) {}
-        app.manage(e3);
+        Entities.manage(e3);
         group.setEntityFilter( { it.getId().equals(e3.getId()) } )
         
         assertEquals(group.getMembers(), [e3])
@@ -224,8 +230,7 @@ public class DynamicGroupTest {
             } as SensorEventListener);
 
         for (i in 1..NUM_CYCLES) {
-            TestEntity entity = new TestEntity(parent:app)
-            Entities.manage(entity);
+            TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
             executeUntilSucceeds {
                 entitiesNotified.contains(entity);
             }
@@ -288,7 +293,7 @@ public class DynamicGroupTest {
         Entities.manage(group2);
         
         for (int i = 0; i < NUM_CYCLES; i++) {
-            TestEntity entity = new TestEntity(parent:app)
+            TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
             Entities.manage(entity);
             Entities.unmanage(entity);
         }
@@ -312,16 +317,16 @@ public class DynamicGroupTest {
         final CountDownLatch rescanLatch = new CountDownLatch(1);
         final CountDownLatch entityAddedLatch = new CountDownLatch(1);
         
-        final TestEntity e3 = new TestEntity(parent:app)
+        final TestEntity e3 = app.createChild(BasicEntitySpec.newInstance(TestEntity.class));
         Predicate filter = Predicates.equalTo(e3);
         
         DynamicGroup group2 = new DynamicGroupImpl(entityFilter:filter, app) {
-            public void rescanEntities() {
+            @Override public void rescanEntities() {
                 rescanReachedLatch.countDown();
                 rescanLatch.await();
                 super.rescanEntities();
             }
-            protected void onEntityAdded(Entity item) {
+            @Override protected void onEntityAdded(Entity item) {
                 entityAddedReachedLatch.countDown();
                 entityAddedLatch.await();
                 super.onEntityAdded(item);

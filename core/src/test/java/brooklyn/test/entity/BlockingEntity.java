@@ -12,7 +12,7 @@ import com.google.common.base.Throwables;
 /**
  * Mock entity that blocks on startup via the {@link CountDownLatch} argument.
  */
-public class BlockingEntity extends TestEntity {
+public class BlockingEntity extends TestEntityImpl {
     
     public static class Builder {
         private final Map props;

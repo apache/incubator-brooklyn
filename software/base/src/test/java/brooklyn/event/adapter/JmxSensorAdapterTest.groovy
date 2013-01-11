@@ -39,12 +39,14 @@ import brooklyn.test.JmxService
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 
 /**
  * Test the operation of the {@link OldJmxSensorAdapter} class.
  * 
  * TODO clarify test purpose
  */
+@Deprecated // Class under test is deprecated
 public class JmxSensorAdapterTest {
     private static final Logger log = LoggerFactory.getLogger(JmxSensorAdapterTest.class)
 
@@ -73,7 +75,7 @@ public class JmxSensorAdapterTest {
     public void setUp() {
         // Create an entity and configure it with the above JMX service
         app = new AbstractApplication() {}
-        entity = new TestEntity(parent:app) {
+        entity = new TestEntityImpl(parent:app) {
             void start(Collection locs) {
                         super.start(locs);
                         entity.setAttribute(Attributes.HOSTNAME, "localhost");

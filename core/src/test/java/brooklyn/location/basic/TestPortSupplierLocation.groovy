@@ -1,25 +1,28 @@
 package brooklyn.location.basic;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.Assert
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey
+import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestEntity
 
 public class TestPortSupplierLocation {
 
     SimulatedLocation l;
     PortAttributeSensorAndConfigKey ps;
+    TestApplication2 app;
     TestEntity e;
     
     @BeforeMethod
     public void setup() {
         l = new SimulatedLocation();
-        TestApplication a = new TestApplication();
-        e = new TestEntity(a);
-        a.start([l]);
+        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        app.start([l]);
         
         ps = new PortAttributeSensorAndConfigKey("some.port", "for testing", "1234+");
     }

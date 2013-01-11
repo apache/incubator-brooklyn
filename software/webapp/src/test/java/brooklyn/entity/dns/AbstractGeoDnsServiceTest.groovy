@@ -22,6 +22,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -59,9 +60,9 @@ public class AbstractGeoDnsServiceTest {
 
     @BeforeMethod
     public void setup() {
-        def template = { properties -> new TestEntity(properties) }
+        def factory = { properties -> new TestEntityImpl(properties) }
         app = new AbstractApplication() { };
-        fabric = new DynamicFabric(parent:app, factory:template);
+        fabric = new DynamicFabric(parent:app, factory:factory);
     }
 
     @AfterMethod
@@ -74,7 +75,7 @@ public class AbstractGeoDnsServiceTest {
     
     @Test
     public void testGeoInfoOnLocation() {
-        DynamicFabric fabric = new DynamicFabric(factory:{ Map properties -> return new TestEntity(properties) }, app)
+        DynamicFabric fabric = new DynamicFabric(factory:{ Map properties -> return new TestEntityImpl(properties) }, app)
         DynamicGroup testEntities = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) });
         geoDns = new TestService(app);
         geoDns.setTargetEntityProvider(testEntities);
@@ -88,7 +89,7 @@ public class AbstractGeoDnsServiceTest {
     
     @Test
     public void testGeoInfoOnParentLocation() {
-        DynamicFabric fabric = new DynamicFabric(factory:{ Map properties -> return new TestEntity(properties) }, app)
+        DynamicFabric fabric = new DynamicFabric(factory:{ Map properties -> return new TestEntityImpl(properties) }, app)
         DynamicGroup testEntities = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) });
         geoDns = new TestService(app);
         geoDns.setTargetEntityProvider(testEntities);
