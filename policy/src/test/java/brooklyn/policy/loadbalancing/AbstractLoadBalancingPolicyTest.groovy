@@ -150,7 +150,7 @@ public class AbstractLoadBalancingPolicyTest {
         container.setConfig(HIGH_THRESHOLD_CONFIG_KEY, highThreshold)
         container.setParent(app)
         LOG.debug("Managing new container {}", container)
-        app.getManagementContext().manage(container)
+        Entities.manage(container);
         container.start([loc])
         return container
     }
@@ -158,7 +158,7 @@ public class AbstractLoadBalancingPolicyTest {
     protected static MockItemEntity newItem(Application app, MockContainerEntity container, String name, double workrate) {
         MockItemEntity item = new MockItemEntity([displayName:name], app)
         LOG.debug("Managing new item {}", container)
-        app.getManagementContext().manage(item)
+        Entities.manage(item);
         item.move(container)
         item.setAttribute(TEST_METRIC, workrate)
         return item
@@ -169,7 +169,7 @@ public class AbstractLoadBalancingPolicyTest {
         item.setConfig(Movable.IMMOVABLE, true)
         item.setParent(app)
         LOG.debug("Managing new item {}", container)
-        app.getManagementContext().manage(item)
+        Entities.manage(item);
         item.move(container)
         item.setAttribute(TEST_METRIC, workrate)
         return item

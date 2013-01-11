@@ -70,7 +70,7 @@ public class BrooklynRestResourceUtils {
     public EntityLocal getEntity(String application, String entity) {
         if (entity==null) return null;
         Application app = application!=null ? getApplication(application) : null;
-        EntityLocal e = (EntityLocal) mgmt.getEntity(entity);
+        EntityLocal e = (EntityLocal) mgmt.getEntityManager().getEntity(entity);
         if (e!=null) {
             if (app==null || app.equals(e.getApplication())) return e;
             throw WebResourceUtils.preconditionFailed("Application '%s' specified does not match application '%s' to which entity '%s' (%s) is associated", 
@@ -89,7 +89,7 @@ public class BrooklynRestResourceUtils {
      * @throws 404 if not found
      */
     public Application getApplication(String application) {
-        Entity e = mgmt.getEntity(application);
+        Entity e = mgmt.getEntityManager().getEntity(application);
         if (e!=null && e instanceof Application) return (Application)e;
         for (Application app: mgmt.getApplications()) {
             if (app.getId().equals(application)) return app;
@@ -135,7 +135,7 @@ public class BrooklynRestResourceUtils {
         }
 
         log.info("REST placing '{}' under management as {}", spec.getName(), instance);
-        mgmt.manage(instance);
+        Entities.startManagement(instance, mgmt);
         
         return instance;
     }
@@ -203,7 +203,7 @@ public class BrooklynRestResourceUtils {
             @Override
             public void run() {
                 ((AbstractApplication)application).destroy();
-                mgmt.unmanage(application);
+                mgmt.getEntityManager().unmanage(application);
             }
         });
     }

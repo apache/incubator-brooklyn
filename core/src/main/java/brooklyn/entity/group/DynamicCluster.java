@@ -210,7 +210,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     @Description("Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. "+
             "Returns id of the new entity; or throws exception if couldn't be replaced.")
     public String replaceMember(@NamedParameter("memberId") @Description("The entity id of a member to be replaced") String memberId) {
-        Entity member = getManagementContext().getEntity(memberId);
+        Entity member = getManagementContext().getEntityManager().getEntity(memberId);
         logger.info("In {}, replacing member {} ({})", new Object[] {this, memberId, member});
 
         if (member == null) {

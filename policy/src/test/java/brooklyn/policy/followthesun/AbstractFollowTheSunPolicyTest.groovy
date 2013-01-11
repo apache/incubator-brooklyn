@@ -4,9 +4,6 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.List
-import java.util.Random
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -16,7 +13,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.DynamicGroup
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Entities
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
@@ -141,7 +138,7 @@ public class AbstractFollowTheSunPolicyTest {
         MockContainerEntity container = new MockContainerEntity([displayName:name], delay)
         container.setParent(app)
         LOG.debug("Managing new container {}", container)
-        app.getManagementContext().manage(container)
+        Entities.manage(container);
         container.start([loc])
         return container
     }
@@ -149,7 +146,7 @@ public class AbstractFollowTheSunPolicyTest {
     protected static MockItemEntity newLockedItem(Application app, MockContainerEntity container, String name) {
         MockItemEntity item = new MockItemEntity([displayName:name, immovable:true], app)
         LOG.debug("Managing new locked item {}", container)
-        app.getManagementContext().manage(item)
+        Entities.manage(item);
         if (container != null) {
             item.move(container)
         }
@@ -159,7 +156,7 @@ public class AbstractFollowTheSunPolicyTest {
     protected static MockItemEntity newItem(Application app, MockContainerEntity container, String name) {
         MockItemEntity item = new MockItemEntity([displayName:name], app)
         LOG.debug("Managing new item {}", container)
-        app.getManagementContext().manage(item)
+        Entities.manage(item);
         if (container != null) {
             item.move(container)
         }

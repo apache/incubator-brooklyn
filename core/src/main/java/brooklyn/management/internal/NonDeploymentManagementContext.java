@@ -13,6 +13,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
+import brooklyn.management.EntityManager;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
@@ -84,6 +85,11 @@ public class NonDeploymentManagementContext implements ManagementContext {
         return true;
     }
 
+    @Override
+    public EntityManager getEntityManager() {
+        return new NonDeploymentEntityManager(this);
+    }
+    
     @Override
     public ExecutionManager getExecutionManager() {
         throw new IllegalStateException("Executions cannot be performed prior to management. (Non-deployment context "+this+" is not valid for this operation.)");

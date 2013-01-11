@@ -20,9 +20,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
-import brooklyn.entity.basic.EffectorUtils;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
+import brooklyn.management.internal.EffectorUtils;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.TaskSummary;

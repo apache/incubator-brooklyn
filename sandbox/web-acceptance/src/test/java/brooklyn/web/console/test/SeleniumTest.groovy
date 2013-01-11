@@ -1,10 +1,8 @@
 package brooklyn.web.console.test
 
-import brooklyn.launcher.BrooklynWebServer
-import brooklyn.management.ManagementContext
-import brooklyn.management.internal.LocalManagementContext
-import com.thoughtworks.selenium.DefaultSelenium
-import com.thoughtworks.selenium.Selenium
+import static org.testng.Assert.assertNotNull
+import static org.testng.Assert.fail
+
 import org.openqa.selenium.server.SeleniumServer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,8 +10,14 @@ import org.testng.annotations.AfterGroups
 import org.testng.annotations.AfterSuite
 import org.testng.annotations.BeforeGroups
 import org.testng.annotations.BeforeSuite
-import static org.testng.Assert.assertNotNull
-import static org.testng.Assert.fail
+
+import brooklyn.entity.basic.Entities
+import brooklyn.launcher.BrooklynWebServer
+import brooklyn.management.ManagementContext
+import brooklyn.management.internal.LocalManagementContext
+
+import com.thoughtworks.selenium.DefaultSelenium
+import com.thoughtworks.selenium.Selenium
 
 public class SeleniumTest {
     private static final Logger LOG = LoggerFactory.getLogger(SeleniumTest.class)
@@ -39,7 +43,7 @@ public class SeleniumTest {
     private static void startJetty() {
         LOG.info("Starting Jetty")
         ManagementContext context = new LocalManagementContext();
-        context.manage(new TestApplication(mgmt: context));
+        Entities.startManagement(new TestApplication(mgmt: context), context);
         launcher = new BrooklynWebServer(context, 9090)
         launcher.start()
 

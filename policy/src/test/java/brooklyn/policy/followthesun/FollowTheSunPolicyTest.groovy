@@ -11,6 +11,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.Entities
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -151,7 +152,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         assertItemDistributionEventually([(containerA):[item2], (containerB):[item1,item3]])
         
         item3.stop()
-        app.getManagementContext().unmanage(item3)
+        Entities.unmanage(item3)
         
         assertItemDistributionEventually([(containerA):[item1, item2], (containerB):[]])
     }

@@ -49,7 +49,7 @@ public class VanillaJavaAppRebindTest {
         }
         app = new TestApplication();
         loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
-        managementContext.manage(app);
+        Entities.startManagement(app, managementContext);
     }
 
     @AfterMethod(alwaysRun = true)

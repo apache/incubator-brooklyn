@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
-import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.ManagementContext;
 import brooklyn.rest.domain.ScriptExecutionSummary;
 import brooklyn.rest.testing.mocks.RestMockApp;
 
@@ -16,9 +16,10 @@ public class ScriptResourceTest {
 
     @Test
     public void testGroovy() {
-        LocalManagementContext mgmt = new LocalManagementContext();
         RestMockApp app = new RestMockApp();
-        mgmt.manage(app);
+        Entities.startManagement(app);
+        ManagementContext mgmt = app.getManagementContext();
+        
         Entities.start(app, Collections.<Location>emptyList());
         
         ScriptResource s = new ScriptResource();

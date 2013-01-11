@@ -126,15 +126,15 @@ public interface EntityLocal extends Entity {
     boolean removeAllEnrichers();
     
     /** 
+     * @return Routings for accessing and inspecting the management context of the entity
+     */
+    EntityManagementSupport getManagementSupport();
+
+    /** 
      * @return The management context for the entity, or null if it is not yet managed.
      * @deprecated since 0.4.0 access via getManagementSupport
      */
     ManagementContext getManagementContext();
-
-    /** 
-     * @return Routings for accessing and inspecting the management context of the entity
-     */
-    EntityManagementSupport getManagementSupport();    
 
     /** 
      * @return The task execution context for the entity, or null if it is not yet managed.

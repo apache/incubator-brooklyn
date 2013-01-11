@@ -9,6 +9,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
@@ -239,14 +240,14 @@ public class EntityManagementSupport {
         }
         if (entity instanceof Application) {
             log.warn("Autodeployment with new management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
-            new LocalManagementContext().manage(entity);
+            Entities.startManagement(entity);
             return;
         }
         if ("start".equals(effectorName)) {
             Entity e=entity;
             if (e.getParent()!=null && ((AbstractEntity)e.getParent()).getManagementSupport().isDeployed()) { 
                 log.warn("Autodeployment in parent's management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
-                ((AbstractEntity)e.getParent()).getManagementSupport().getManagementContext(false).manage(entity);
+                ((AbstractEntity)e.getParent()).getManagementSupport().getManagementContext(false).getEntityManager().manage(entity);
                 return;
             }
         }

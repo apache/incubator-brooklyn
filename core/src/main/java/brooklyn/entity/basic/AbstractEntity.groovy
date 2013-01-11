@@ -78,8 +78,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     String displayName
     
-    EntityReference<Entity> parent
-    protected volatile EntityReference<Application> application
+    private volatile Entity parent
+    private volatile Application application
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
     
     final EntityCollectionReference children = new EntityCollectionReference<Entity>(this);
@@ -123,16 +123,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     protected transient SubscriptionTracker _subscriptionTracker;
 
-    /**
-     * FIXME Temporary workaround for use-case:
-     *  - the load balancing policy test calls app.managementContext.unmanage(itemToStop)
-     *  - concurrently, the policy calls an effector on that item: item.move()
-     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary.
-     *    This detects that the item is not managed, and sets it as managed again. The item is automatically
-     *    added back into the dynamic group, and the policy receives an erroneous MEMBER_ADDED event.
-     */
-    private volatile boolean hasEverBeenManaged
-    
     public AbstractEntity(Entity parent) {
         this([:], parent)
     }
@@ -179,12 +169,21 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     /** @deprecated since 0.4.0 now handled by EntityMangementSupport */
     public void setBeingManaged() {
-        hasEverBeenManaged = true;
+        // no-op
     }
     
-    /** @deprecated since 0.4.0 now handled by EntityMangementSupport */
+    /**
+     * FIXME Temporary workaround for use-case:
+     *  - the load balancing policy test calls app.managementContext.unmanage(itemToStop)
+     *  - concurrently, the policy calls an effector on that item: item.move()
+     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary.
+     *    This detects that the item is not managed, and sets it as managed again. The item is automatically
+     *    added back into the dynamic group, and the policy receives an erroneous MEMBER_ADDED event.
+     * 
+     * @deprecated since 0.4.0 now handled by EntityMangementSupport
+     */
     public boolean hasEverBeenManaged() {
-        return hasEverBeenManaged;
+        return getManagementSupport().wasDeployed();
     }
     
     /** sets fields from flags; can be overridden if needed, subclasses should
@@ -263,7 +262,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public AbstractEntity setParent(Entity entity) {
         if (parent != null) {
             // If we are changing to the same parent...
-            if (parent.get() == entity) return
+            if (parent == entity) return
             // If we have a parent but changing to orphaned...
             if (entity==null) { clearParent(); return; }
             
@@ -281,8 +280,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         if (Entities.isDescendant(this, entity))
             throw new IllegalStateException("loop detected trying to set parent of $this as $entity, which is already a descendent")
         
-        parent = new EntityReference(this, entity)
-        //used to test entity!=null but that should be guaranteed?
+        parent = entity
+        //previously tested entity!=null but that should be guaranteed?
         entity.addChild(this)
         configsInternal.setInheritedConfig(entity.getAllConfig());
         previouslyOwned = true
@@ -301,7 +300,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     @Override
     public void clearParent() {
         if (parent == null) return
-        Entity oldParent = parent.get()
+        Entity oldParent = parent
         parent = null
         oldParent?.removeChild(this)
     }
@@ -365,7 +364,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     @Override
     public Entity getParent() {
-        return parent?.get();
+        return this.@parent;
     }
 
     // TODO synchronization: need to synchronize on children, or have children be a synchronized collection
@@ -403,7 +402,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     @Override
     public Application getApplication() {
-        if (this.@application!=null) return this.@application.get();
+        if (this.@application!=null) return this.@application;
         def app = getParent()?.getApplication()
         if (app) {
             setApplication(app)
@@ -414,12 +413,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     /** @deprecated since 0.4.0 should not be needed / leaked outwith brooklyn internals / mgmt support? */
     protected synchronized void setApplication(Application app) {
         if (application) {
-            if (this.@application.id!=app.id) {
+            if (this.@application.id != app.id) {
                 throw new IllegalStateException("Cannot change application of entity (attempted for $this from ${this.application} to ${app})")
             }
             return;
         }
-        this.application = new EntityReference(this, app);
+        this.application = app;
     }
 
     @Override
@@ -546,7 +545,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     protected void assertNotYetOwned() {
-        if (!preConfigured && getApplication()?.isDeployed())
+        if (!preConfigured && getManagementSupport().isDeployed())
             LOG.warn("configuration being made to $this after deployment; may not be supported in future versions");
         //throw new IllegalStateException("Cannot set configuration $key on active entity $this")
     }
@@ -804,42 +803,21 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public Object invokeMethod(String name, Object args) {
         if (!this.@skipInvokeMethodEffectorInterception.get()) {
             this.@skipInvokeMethodEffectorInterception.set(true);
-
-            //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
-            if (args==null)
-                LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
-            else if (!args.class.isArray())
-                LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
-
+            
             try {
+                //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
+                if (args==null)
+                    LOG.warn("$this.$name invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of $this.$name"))
+                else if (!args.class.isArray())
+                    LOG.warn("$this.$name invoked with incorrect args signature (non-array ${args.class}): "+args, new Throwable("source of incorrect invocation of $this.$name"))
+
                 Effector eff = entityType.getEffector(name);
                 if (eff) {
-                    if (LOG.isDebugEnabled()) LOG.debug("Invoking effector {} on {} with args {}", name, this, args)
-                    EntityManagementSupport mgmt = getManagementSupport();
-                    if (!mgmt.isDeployed()) {
-                        mgmt.attemptLegacyAutodeployment(name);
-                    }
-                    AbstractManagementContext mgctx = mgmt.getManagementContext(false);
-                    if (mgctx==null) {
-                        throw new ExecutionException("Execution of effector "+name+" on entity "+id+" not permitted: not in managed state");
-                    }
-                    
-                    getManagementSupport().getEntityChangeListener().onEffectorStarting(eff);
-                    try {
-                        return mgctx.invokeEffectorMethodSync(this, eff, args);
-                    } finally {
-                        getManagementSupport().getEntityChangeListener().onEffectorCompleted(eff);
-                    }
+                    return EffectorUtils.invokeEffector(this, eff, args)
                 }
-            } catch (CancellationException ce) {
-                LOG.info "Execution of effector {} on entity {} was cancelled", name, id
-                throw ce;
-            } catch (ExecutionException ee) {
-                LOG.info "Execution of effector {} on entity {} failed with {}", name, id, ee
-                // Exceptions thrown in Futures are wrapped
-                if (ee.getCause()) throw ee.getCause();
-                else throw ee;
-            } finally { this.@skipInvokeMethodEffectorInterception.set(false); }
+            } finally {
+                this.@skipInvokeMethodEffectorInterception.set(false);
+            }
         }
         if (metaClass==null)
             throw new IllegalStateException("no meta class for "+this+", invoking "+name);
@@ -870,19 +848,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * @see #invoke(Effector)
      */
     public <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters) {
-        ManagementContext mgmtCtx = getManagementContext();
-        if (mgmtCtx==null)
-            throw new IllegalStateException("Cannot invoke "+eff+" on "+this+" when not managed");
-
-        // FIXME Want a listenable task (like Guava's ListenableFuture)
-        //       This call is non-blocking, so we're not notifying of onEffectorCompleted at correct time
-        getManagementSupport().getEntityChangeListener().onEffectorStarting(eff);
-        try {
-            Task<T> result = mgmtCtx.invokeEffector(this, eff, parameters);
-            return result;
-        } finally {
-            getManagementSupport().getEntityChangeListener().onEffectorCompleted(eff);
-        }
+        return EffectorUtils.invokeEffectorAsync(this, eff, parameters);
     }
 
     /**
@@ -911,15 +877,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     public void onManagementNoLongerMaster() {}
 
-    /** Field for use only by management plane, to record remote destination when proxied. */
-    public Object managementData = null;
-
     /** For use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */
     public void invalidateReferences() {
         // TODO move this to EntityMangementSupport,
         // when hierarchy fields can also be moved there
-        this.@parent?.invalidate();
-        this.@application?.invalidate();
+        this.@parent = null;
+        this.@application = null;
         this.@children.invalidate();
         this.@groups.invalidate();
     }

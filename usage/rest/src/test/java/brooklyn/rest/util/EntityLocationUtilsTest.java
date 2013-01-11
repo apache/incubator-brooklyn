@@ -25,12 +25,13 @@ public class EntityLocationUtilsTest {
     
     @Test
     public void testCount() {
-        ManagementContext mgmt = new LocalManagementContext();
         RestMockApp app = new RestMockApp();
         @SuppressWarnings("unused")
         RestMockSimpleEntity r1 = new RestMockSimpleEntity(app);
         RestMockSimpleEntity r2 = new RestMockSimpleEntity(app);
-        mgmt.manage(app);
+        Entities.startManagement(app);
+        ManagementContext mgmt = app.getManagementContext();
+        
         AbstractLocation l0 = new LocalhostMachineProvisioningLocation();
         l0.setHostGeoInfo(new HostGeoInfo("localhost", "localhost", 50, 0));
         

@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
@@ -177,7 +178,7 @@ public class RebindManagerImpl implements RebindManager {
         // Manage the top-level apps (causing everything under them to become managed)
         LOG.info("RebindManager managing entities");
         for (String appId : memento.getApplicationIds()) {
-            managementContext.manage((Application)rebindContext.getEntity(appId));
+            Entities.startManagement((Application)rebindContext.getEntity(appId), managementContext);
         }
         
         // Return the top-level applications

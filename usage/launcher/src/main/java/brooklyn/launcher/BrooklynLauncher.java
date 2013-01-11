@@ -1,14 +1,10 @@
 package brooklyn.launcher;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.DispatcherType;
-
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +44,8 @@ public class BrooklynLauncher {
      * For readability and flexibility, clients may prefer the {@link #newLauncher()} builder-style syntax. */
     public static ManagementContext manage(final AbstractApplication app, int port, boolean shutdownApp, boolean startWebConsole) {
         // Locate the management context
-        LocalManagementContext context = new LocalManagementContext();
-        context.manage(app);
+        Entities.startManagement(app);
+        LocalManagementContext context = (LocalManagementContext) app.getManagementContext();
 
         if (startWebConsole) {
             try {
@@ -173,7 +169,7 @@ public class BrooklynLauncher {
             context = new LocalManagementContext(brooklynProperties);
         }
         for (Application app: appsToManage) {
-            context.manage(app);
+            Entities.startManagement(app, context);
         }
         
         BrooklynWebServer webServer = null;

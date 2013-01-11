@@ -9,10 +9,10 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -60,7 +60,7 @@ public class EntityPreManagementTest {
         
         TestApplication app = new TestApplication();
         e.setParent(app);
-        new LocalManagementContext().manage(app);
+        Entities.startManagement(app);
 //        app.start(Arrays.<Location>asList());
         
         TestUtils.assertEventually(new Runnable() {
@@ -95,7 +95,7 @@ public class EntityPreManagementTest {
         if (!events.isEmpty()) Assert.fail("Shouldn't have events yet: "+events);
 //        Assert.assertEquals(app.getManagementContext(), null);
         
-        new LocalManagementContext().manage(app);
+        Entities.startManagement(app);
 //        app.start(Arrays.<Location>asList());
         
         TestUtils.assertEventually(new Runnable() {

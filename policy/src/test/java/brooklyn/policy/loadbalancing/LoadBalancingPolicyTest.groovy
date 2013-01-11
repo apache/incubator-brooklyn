@@ -8,6 +8,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.Entities
 import brooklyn.event.AttributeSensor
 import brooklyn.test.entity.TestApplication
 
@@ -203,7 +204,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item5 = newItem(app, containerC, "5", 10)
         MockItemEntity item6 = newItem(app, containerC, "6", 10)
 
-        app.getManagementContext().unmanage(containerC)
+        Entities.unmanage(containerC)
         item5.move(containerA)
         item6.move(containerA)
         
@@ -220,7 +221,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item3 = newItem(app, containerB, "3", 20)
         
         item1.stop()
-        app.getManagementContext().unmanage(item1)
+        Entities.unmanage(item1)
         
         assertWorkratesEventually([containerA, containerB], [20d, 20d])
     }

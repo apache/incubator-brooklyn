@@ -190,6 +190,7 @@ public class BasicExecutionManager implements ExecutionManager {
         return tasksByTag.get(tag);
     }
 
+    @Override
     public Set<Task<?>> getTasksWithTag(Object tag) {
         Set<Task> result = getMutableTasksWithTag(tag);
         synchronized (result) {
@@ -197,7 +198,8 @@ public class BasicExecutionManager implements ExecutionManager {
         }
     }
     
-    public Set<Task<?>> getTasksWithAnyTag(Iterable tags) {
+    @Override
+    public Set<Task<?>> getTasksWithAnyTag(Iterable<?> tags) {
         Set result = new LinkedHashSet<Task>();
         Iterator ti = tags.iterator();
         while (ti.hasNext()) {
@@ -206,7 +208,8 @@ public class BasicExecutionManager implements ExecutionManager {
         return result;
     }
 
-    public Set<Task<?>> getTasksWithAllTags(Iterable tags) {
+    @Override
+    public Set<Task<?>> getTasksWithAllTags(Iterable<?> tags) {
         //NB: for this method retrieval for multiple tags could be made (much) more efficient (if/when it is used with multiple tags!)
         //by first looking for the least-used tag, getting those tasks, and then for each of those tasks
         //checking whether it contains the other tags (looking for second-least used, then third-least used, etc)

@@ -10,14 +10,13 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-import org.jclouds.util.Throwables2;
+import org.jclouds.util.Throwables2
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Changeable
 import brooklyn.entity.trait.Resizable
 import brooklyn.location.Location
@@ -55,49 +54,57 @@ class DynamicClusterTest {
         new DynamicCluster(app)
     }
 
-    @Test(expectedExceptions = [ExecutionException, IllegalStateException, IllegalArgumentException, NullPointerException, ClassCastException.class])
+    @Test
     public void startRequiresThatNewEntityArgumentIsGiven() {
-        new DynamicCluster(app).start([loc])
-        fail "Did not throw expected exception"
+        try {
+            new DynamicCluster(app).start([loc])
+            fail();
+        } catch (Exception e) {
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+        }
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException.class, ClassCastException.class])
+    @Test
     public void constructorRequiresThatNewEntityArgumentIsAnEntityFactory() {
-        new DynamicCluster(factory:"error", app)
-        fail "Did not throw expected exception"
+        try {
+            new DynamicCluster(factory:"error", app)
+            fail();
+        } catch (Exception e) {
+            if (Throwables2.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
+        }
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class,NullPointerException.class])
+    @Test
     public void startMethodFailsIfLocationsParameterIsMissing() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {
             cluster.start(null)
+            fail();
         } catch (Exception e) {
-            throw unwrapException(e)
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
-        fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class])
+    @Test
     public void startMethodFailsIfLocationsParameterIsEmpty() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {
             cluster.start([])
+            fail();
         } catch (Exception e) {
-            throw unwrapException(e)
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
-        fail "Did not throw expected exception"
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException.class,IllegalStateException.class])
+    @Test
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
         DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntity() }, app)
         try {
             cluster.start([ loc, loc2 ])
+            fail();
         } catch (Exception e) {
-            throw unwrapException(e)
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
-        fail "Did not throw expected exception"
     }
 
     @Test
@@ -347,7 +354,7 @@ class DynamicClusterTest {
         
         TestEntity child = cluster.children.get(0)
         child.stop()
-        app.managementContext.unmanage(child)
+        Entities.unmanage(child)
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(cluster.children.size(), 0)
@@ -461,7 +468,7 @@ class DynamicClusterTest {
         Entity member = Iterables.get(cluster.members, 0);
         
         String replacementId = cluster.replaceMember(member.getId());
-        Entity replacement = cluster.getManagementContext().getEntity(replacementId);
+        Entity replacement = cluster.getManagementContext().getEntityManager().getEntity(replacementId);
         
         assertEquals(cluster.members.size(), 1)
         assertFalse(cluster.members.contains(member))
