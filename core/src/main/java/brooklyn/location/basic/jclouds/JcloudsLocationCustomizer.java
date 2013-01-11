@@ -6,10 +6,13 @@ import org.jclouds.compute.options.TemplateOptions;
 
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Customization hooks to allow apps to perform specific customisation at each stage of jclouds machine provisioning.
  * For example, an app could attach an EBS volume to an EC2 node, or configure a desired availability zone.
  */
+@Beta
 public interface JcloudsLocationCustomizer { 
     
     void customize(ComputeService computeService, TemplateBuilder templateBuilder);
