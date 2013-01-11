@@ -125,7 +125,7 @@ datadir         = ${datadir}
 
 """+"END_MYSQL_CONF_${entity.id}\n",
                 "${basedir}/scripts/mysql_install_db "+
-                    "--basedir=${basedir} --datadir=. "+
+                    "--basedir=${basedir} --datadir=${datadir} "+
                     "--defaults-file=mymysql.cnf",
                 "${basedir}/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` &", //--user=root needed if we are root
                 "export MYSQL_PID=\$!",
