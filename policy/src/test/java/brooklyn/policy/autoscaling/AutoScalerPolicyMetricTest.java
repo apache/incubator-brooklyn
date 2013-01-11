@@ -14,6 +14,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
+import brooklyn.test.entity.TestClusterImpl;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +31,7 @@ public class AutoScalerPolicyMetricTest {
     @BeforeMethod()
     public void before() {
         app = new TestApplication();
-        tc = new TestCluster(app, 1);
+        tc = new TestClusterImpl(app, 1);
         Entities.startManagement(app);
     }
     

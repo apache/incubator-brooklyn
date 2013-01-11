@@ -35,7 +35,7 @@ public class LocallyResizableEntity extends AbstractEntity implements Resizable 
         try {
             Thread.sleep(resizeSleepTime);
             sizes.add(newSize); 
-            return (cluster.size = newSize);
+            return cluster.resize(newSize);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw Throwables.propagate(e);
@@ -43,7 +43,7 @@ public class LocallyResizableEntity extends AbstractEntity implements Resizable 
     }
     
     public Integer getCurrentSize() {
-        return cluster.size;
+        return cluster.getCurrentSize();
     }
     
     public String toString() {
