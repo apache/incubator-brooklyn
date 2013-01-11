@@ -9,7 +9,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
-import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
@@ -32,7 +32,7 @@ public class ItemsInContainersGroupTest {
                 e instanceof MockContainerEntity && 
                 e.getConfig(MockContainerEntity.MOCK_MEMBERSHIP) == "ingroup"
             }
-        containerGroup = new DynamicGroup([name:"containerGroup"], app, containerGroupFilter)
+        containerGroup = new DynamicGroupImpl([name:"containerGroup"], app, containerGroupFilter)
         itemGroup = new ItemsInContainersGroup([:], app)
         itemGroup.setContainers(containerGroup)
         app.startManagement();

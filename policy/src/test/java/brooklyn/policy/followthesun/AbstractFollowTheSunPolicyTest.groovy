@@ -12,7 +12,7 @@ import org.testng.annotations.BeforeMethod
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
-import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
@@ -56,8 +56,8 @@ public class AbstractFollowTheSunPolicyTest {
         
         
         app = new TestApplication()
-        containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
-        itemGroup = new DynamicGroup([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
+        containerGroup = new DynamicGroupImpl([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
+        itemGroup = new DynamicGroupImpl([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
         model = new DefaultFollowTheSunModel<Entity, Entity>("pool-model");
         pool = new FollowTheSunPool([:], app)
         pool.setContents(containerGroup, itemGroup)

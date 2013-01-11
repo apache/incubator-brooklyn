@@ -3,7 +3,6 @@ package brooklyn.extras.whirr
 import groovy.transform.InheritConstructors
 
 import java.io.File
-import java.net.InetAddress
 import java.util.List
 
 import org.slf4j.Logger
@@ -13,9 +12,10 @@ import brooklyn.config.BrooklynProperties
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.event.SensorEvent
@@ -25,15 +25,11 @@ import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
-import brooklyn.management.Task
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.CommandLineUtil
-import brooklyn.util.ResourceUtils;
 
-import com.google.common.base.Charsets
 import com.google.common.collect.Iterables
-import com.google.common.io.Files
 
 /**
  * Starts hadoop and a webapp using hadoop in the location supplied (just one location),
@@ -75,7 +71,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication {
                 .build())
     }
         
-    DynamicGroup webVms = new DynamicGroup(this, name: "Web VMs", { it in JBoss7Server });
+    DynamicGroup webVms = new DynamicGroupImpl(this, name: "Web VMs", { it in JBoss7Server });
     
     void start(Collection locations) {
         Iterables.getOnlyElement(locations);

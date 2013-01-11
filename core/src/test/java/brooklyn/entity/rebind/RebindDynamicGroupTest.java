@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.TestUtils;
@@ -45,7 +46,7 @@ public class RebindDynamicGroupTest {
     @Test
     public void testRestoresDynamicGroup() throws Exception {
         MyEntity origE = new MyEntity(origApp);
-        DynamicGroup origG = new DynamicGroup(origApp, Predicates.instanceOf(MyEntity.class));
+        DynamicGroup origG = new DynamicGroupImpl(origApp, Predicates.instanceOf(MyEntity.class));
         Entities.startManagement(origApp, managementContext);
         
         TestApplication newApp = rebind();

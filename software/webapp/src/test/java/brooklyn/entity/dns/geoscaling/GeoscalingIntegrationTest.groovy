@@ -7,14 +7,15 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
-import brooklyn.entity.basic.Attributes
 
 /**
  * {@link GeoscalingScriptGenerator} unit tests.
@@ -37,7 +38,7 @@ class GeoscalingIntegrationTest {
         AbstractApplication app = new TestApplication()
         TestEntity target = new TestEntity(parent:app)
         target.setAttribute(Attributes.HOSTNAME,addr.getHostName())
-        DynamicGroup group = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) })
+        DynamicGroup group = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) })
         
         GeoscalingDnsService geoDns = new GeoscalingDnsService(displayName: 'Geo-DNS',
                 username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: primaryDomain, smartSubdomainName: subDomain,

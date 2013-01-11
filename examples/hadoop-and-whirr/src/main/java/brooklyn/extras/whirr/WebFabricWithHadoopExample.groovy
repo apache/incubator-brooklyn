@@ -11,9 +11,11 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.DynamicFabric
+import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -88,7 +90,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
         geoDns.setTargetEntityProvider(webFabric);
     }
 
-    DynamicGroup webVms = new DynamicGroup(this, name: "Web VMs", { it in JBoss7Server });
+    DynamicGroup webVms = new DynamicGroupImpl(this, name: "Web VMs", { it in JBoss7Server });
     
     void start(Collection locations) {
         Location hadoopLocation = Iterables.getFirst(locations, null);

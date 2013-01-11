@@ -42,7 +42,7 @@ public class DynamicGroupTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = new TestApplication()
-        group = new DynamicGroup(parent:app)
+        group = new DynamicGroupImpl(parent:app)
         e1 = new TestEntity(parent:app)
         e2 = new TestEntity(parent:app)
         app.startManagement();
@@ -255,7 +255,7 @@ public class DynamicGroupTest {
         final AtomicInteger concurrentCallsCount = new AtomicInteger(0);
         final List<Exception> exceptions = new CopyOnWriteArrayList<Exception>();
         
-        DynamicGroup group2 = new DynamicGroup(entityFilter:{ it instanceof TestEntity }, app) {
+        DynamicGroup group2 = new DynamicGroupImpl(entityFilter:{ it instanceof TestEntity }, app) {
             @Override protected void onEntityAdded(Entity item) {
                 try {
                     onCall("Member added: member="+item);
@@ -315,7 +315,7 @@ public class DynamicGroupTest {
         final TestEntity e3 = new TestEntity(parent:app)
         Predicate filter = Predicates.equalTo(e3);
         
-        DynamicGroup group2 = new DynamicGroup(entityFilter:filter, app) {
+        DynamicGroup group2 = new DynamicGroupImpl(entityFilter:filter, app) {
             public void rescanEntities() {
                 rescanReachedLatch.countDown();
                 rescanLatch.await();

@@ -2,9 +2,7 @@ package brooklyn.entity.dns;
 
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-import groovy.lang.MetaClass
 
-import java.util.Map
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -13,11 +11,10 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import com.google.common.collect.Iterables;
-
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
@@ -27,6 +24,8 @@ import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
+
+import com.google.common.collect.Iterables
 
 public class AbstractGeoDnsServiceTest {
     public static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsServiceTest.class);
@@ -76,7 +75,7 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void testGeoInfoOnLocation() {
         DynamicFabric fabric = new DynamicFabric(factory:{ Map properties -> return new TestEntity(properties) }, app)
-        DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
+        DynamicGroup testEntities = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) });
         geoDns = new TestService(app);
         geoDns.setTargetEntityProvider(testEntities);
         
@@ -90,7 +89,7 @@ public class AbstractGeoDnsServiceTest {
     @Test
     public void testGeoInfoOnParentLocation() {
         DynamicFabric fabric = new DynamicFabric(factory:{ Map properties -> return new TestEntity(properties) }, app)
-        DynamicGroup testEntities = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) });
+        DynamicGroup testEntities = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) });
         geoDns = new TestService(app);
         geoDns.setTargetEntityProvider(testEntities);
         

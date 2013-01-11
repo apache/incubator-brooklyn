@@ -83,6 +83,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
         assertWorkratesEventually(containers, Collections.nCopies(NUM_CONTAINERS, 20d), WORKRATE_JITTER)
     }
     
+    // TODO Got IndexOutOfBoundsException from containers.last()
     @Test(groups="WIP", invocationCount=100)
     public void testConcurrentlyRemoveContainers() {
         List<MockItemEntity> items = []

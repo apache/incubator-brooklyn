@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroup;
-import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -29,7 +29,7 @@ import com.google.common.base.Predicates;
  * 
  * For example: in Monterey, this could be used to track the actors that are within a given cluster of venues.
  */
-public class ItemsInContainersGroup extends DynamicGroup {
+public class ItemsInContainersGroup extends DynamicGroupImpl {
 
     // TODO Inefficient: will not scale to many 1000s of items
 

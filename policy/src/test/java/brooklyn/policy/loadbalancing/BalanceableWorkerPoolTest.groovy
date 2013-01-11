@@ -13,7 +13,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Resizable
 import brooklyn.location.basic.SimulatedLocation
@@ -39,10 +39,12 @@ class BalanceableWorkerPoolTest {
         loc = new SimulatedLocation(name:"loc")
         
         app = new TestApplication()
-        containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
-        itemGroup = new DynamicGroup([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
+        containerGroup = new DynamicGroupImpl([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
+        itemGroup = new DynamicGroupImpl([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
         pool = new BalanceableWorkerPool([:], app)
         pool.setContents(containerGroup, itemGroup)
+        Entities.startManagement(app)
+        
         app.start([loc])
     }
     
