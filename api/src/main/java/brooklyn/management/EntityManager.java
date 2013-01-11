@@ -29,12 +29,16 @@ public interface EntityManager {
     boolean isManaged(Entity entity);
 
     /**
-     * Manage an entity.
+     * Begins management for the given entity and its children, recursively.
+     *
+     * depending on the implementation of the management context,
+     * this might push it out to one or more remote management nodes.
      */
     void manage(Entity e);
     
     /**
-     * Unmanage an entity.
+     * Causes the given entity and its children, recursively, to be removed from the management plane
+     * (for instance because the entity is no longer relevant)
      */
     void unmanage(Entity e);
 }

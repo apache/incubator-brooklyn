@@ -2,6 +2,8 @@ package brooklyn.management.internal;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -19,6 +21,7 @@ import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
+import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
@@ -130,119 +133,38 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public EntityDriverFactory getEntityDriverFactory() {
         return entityDriverFactory;
     }
-    
+
+    @Deprecated
+    @Override
     public boolean isManaged(Entity e) {
-        return (running && getEntityManager().getEntity(e.getId())!=null);
+        return getEntityManager().isManaged(e);
     }
     
-    /**
-     * Begins management for the given entity and its children, recursively.
-     *
-     * depending on the implementation of the management context,
-     * this might push it out to one or more remote management nodes.
-     */
+    @Deprecated
+    @Override
     public void manage(Entity e) {
-        if (isManaged(e)) {
-//            if (log.isDebugEnabled()) {
-                log.warn(""+this+" redundant call to start management of entity (and descendants of) "+e+"; skipping", 
-                    new Throwable("source of duplicate management of "+e));
-//            }
-            return;
-        }
-        
-        final ManagementTransitionInfo info = new ManagementTransitionInfo(this, ManagementTransitionMode.NORMAL);
-        recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
-            preManageNonRecursive(it);
-            it.getManagementSupport().onManagementStarting(info); 
-            return manageNonRecursive(it);
-        } });
-        
-        recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
-            it.getManagementSupport().onManagementStarted(info);
-            it.setBeingManaged();
-            rebindManager.getChangeListener().onManaged(it);
-            return true; 
-        } });
+        getEntityManager().manage(e);
     }
     
-    protected void recursively(Entity e, Predicate<AbstractEntity> action) {
-        action.apply( (AbstractEntity)e );
-        EntityCollectionReference<?> ref = ((AbstractEntity)e).getChildrenReference();
-        for (String ei: ref.getIds()) {
-            Entity entity = ref.peek(ei);
-            if (entity==null) entity = getEntityManager().getEntity(ei);
-            if (entity==null) {
-                log.warn("Unable to resolve entity "+ei+" when recursing for management");
-            } else {
-                recursively( entity, action );
-            }
-        }
-    }
-
-    /**
-     * Whether the entity is in the process of being managed.
-     */
-    protected abstract boolean isPreManaged(Entity e);
-    
-    /**
-     * Implementor-supplied internal method.
-     * <p>
-     * Should ensure that the entity is now known about, but should not be accessible from other entities yet.
-     */
-    protected abstract boolean preManageNonRecursive(Entity e);
-
-    /**
-     * Implementor-supplied internal method.
-     * <p>
-     * Should ensure that the entity is now managed somewhere, and known about in all the lists.
-     * Returns true if the entity has now become managed; false if it was already managed (anything else throws exception)
-     */
-    protected abstract boolean manageNonRecursive(Entity e);
-
-    /**
-     * Causes the given entity and its children, recursively, to be removed from the management plane
-     * (for instance because the entity is no longer relevant)
-     */
+    @Deprecated
+    @Override
     public void unmanage(Entity e) {
-        if (shouldSkipUnmanagement(e)) return;
-        
-        final ManagementTransitionInfo info = new ManagementTransitionInfo(this, ManagementTransitionMode.NORMAL);
-        recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
-            if (shouldSkipUnmanagement(it)) return false;
-            it.getManagementSupport().onManagementStopping(info); 
-            return true;
-        } });
-        
-        recursively(e, new Predicate<AbstractEntity>() { public boolean apply(AbstractEntity it) {
-            if (shouldSkipUnmanagement(it)) return false;
-            boolean result = unmanageNonRecursive(it);            
-            it.getManagementSupport().onManagementStopped(info);
-            rebindManager.getChangeListener().onUnmanaged(it);
-            if (gc != null) gc.onUnmanaged(it);
-            return result; 
-        } });
-    }
-    
-    protected boolean shouldSkipUnmanagement(Entity e) {
-        if (e==null) {
-            log.warn(""+this+" call to unmanage null entity; skipping",  
-                new IllegalStateException("source of null unmanagement call to "+this));
-            return true;
-        }
-        if (!isManaged(e)) {
-            log.warn("{} call to stop management of unknown entity (already unmanaged?) {}; skipping, and all descendants", this, e);
-            return true;
-        }
-        return false;
+        getEntityManager().unmanage(e);
     }
 
-    /**
-     * Implementor-supplied internal method.
-     * <p>
-     * Should ensure that the entity is no longer managed anywhere, remove from all lists.
-     * Returns true if the entity has been removed from management; if it was not previously managed (anything else throws exception) 
-     */
-    protected abstract boolean unmanageNonRecursive(Entity e);
+    @Deprecated
+    @Override
+    public synchronized Collection<Entity> getEntities() {
+        return getEntityManager().getEntities();
+    }
+    
+    @Deprecated
+    @Override
+    public Entity getEntity(String id) {
+        return getEntityManager().getEntity(id);
+    }
+
+    protected abstract void manageIfNecessary(Entity entity, Object context);
 
     public <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
         return runAtEntity(
@@ -263,35 +185,6 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         totalEffectorInvocationCount.incrementAndGet();
         Object[] transformedArgs = EffectorUtils.prepareArgsForEffector(eff, args);
         return GroovyJavaMethods.invokeMethodOnMetaClass(entity, eff.getName(), transformedArgs);
-    }
-
-    /**
-     * activates management when effector invoked, warning unless context is acceptable
-     * (currently only acceptable context is "start")
-     */
-    protected void manageIfNecessary(Entity entity, Object context) {
-        if (!running) {
-            return; // TODO Still a race for terminate being called, and then isManaged below returning false
-        } else if (((AbstractEntity)entity).hasEverBeenManaged()) {
-            return;
-        } else if (isManaged(entity)) {
-            return;
-        } else if (isPreManaged(entity)) {
-            return;
-        } else {
-            Entity rootUnmanaged = entity;
-            while (true) {
-                Entity candidateUnmanagedParent = rootUnmanaged.getParent();
-                if (candidateUnmanagedParent == null || isManaged(candidateUnmanagedParent) || isPreManaged(candidateUnmanagedParent))
-                    break;
-                rootUnmanaged = candidateUnmanagedParent;
-            }
-            if (context == Startable.START.getName())
-                log.info("Activating local management for {} on start", rootUnmanaged);
-            else
-                log.warn("Activating local management for {} due to effector invocation on {}: {}", new Object[]{rootUnmanaged, entity, context});
-            manage(rootUnmanaged);
-        }
     }
 
     /**
