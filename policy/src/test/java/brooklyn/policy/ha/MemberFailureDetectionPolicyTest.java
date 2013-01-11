@@ -12,7 +12,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -39,7 +41,7 @@ public class MemberFailureDetectionPolicyTest {
     public void setUp() throws Exception {
         events = new CopyOnWriteArrayList<SensorEvent<FailureDescriptor>>();
         app = new TestApplication();
-        group = new BasicGroup(MutableMap.of("childrenAsMembers", true), app);
+        group = new BasicGroupImpl(MutableMap.of("childrenAsMembers", true), app);
         Entities.startManagement(app);
         
         app.getManagementSupport().getManagementContext(false).getSubscriptionManager().subscribe(

@@ -42,7 +42,7 @@ public class EntitySubscriptionTest {
         observedEntity = new TestEntity(parent:app);
         observedChildEntity = new TestEntity(parent:observedEntity);
         
-        observedGroup = new BasicGroup(parent:app);
+        observedGroup = new BasicGroupImpl(parent:app);
         observedMemberEntity = new TestEntity(parent:app);
         observedGroup.addMember(observedMemberEntity);
         

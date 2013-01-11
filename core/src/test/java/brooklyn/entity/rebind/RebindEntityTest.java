@@ -27,6 +27,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindLocationTest.MyLocation;
 import brooklyn.entity.trait.Startable;
@@ -116,7 +117,7 @@ public class RebindEntityTest {
     public void testRestoresGroupMembers() throws Exception {
         MyEntity origE = new MyEntity(origApp);
         MyEntity origE2 = new MyEntity(origApp);
-        BasicGroup origG = new BasicGroup(origApp);
+        BasicGroup origG = new BasicGroupImpl(origApp);
         origG.addMember(origE);
         origG.addMember(origE2);
         Entities.startManagement(origApp, managementContext);

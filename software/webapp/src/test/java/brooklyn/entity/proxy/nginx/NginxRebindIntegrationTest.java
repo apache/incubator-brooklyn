@@ -19,7 +19,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntity;
@@ -213,7 +213,7 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithoutLosingUrlMappings() throws Exception {
         
         // Set up nginx with a url-mapping
-        Group origUrlMappingsGroup = new BasicGroup(MutableMap.of("childrenAsMembers", true), origApp);
+        Group origUrlMappingsGroup = new BasicGroupImpl(MutableMap.of("childrenAsMembers", true), origApp);
 
         DynamicCluster origMappingPool = new DynamicCluster(
                 MutableMap.of("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())), "initialSize", 1), 

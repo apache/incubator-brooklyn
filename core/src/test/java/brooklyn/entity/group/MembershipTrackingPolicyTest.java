@@ -10,9 +10,9 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -34,7 +34,7 @@ public class MembershipTrackingPolicyTest {
     public void setUp() {
         loc = new SimulatedLocation();
         app = new TestApplication();
-        group = new BasicGroup(MutableMap.of("childrenAsMembers", true), app);
+        group = new BasicGroupImpl(MutableMap.of("childrenAsMembers", true), app);
         policy = new RecordingMembershipTrackingPolicy(MutableMap.of("group", group));
         group.addPolicy(policy);
         policy.setGroup(group);

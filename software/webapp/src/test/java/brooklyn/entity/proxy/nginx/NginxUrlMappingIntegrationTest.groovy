@@ -13,7 +13,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.BasicGroup
+import brooklyn.entity.basic.BasicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
@@ -57,7 +57,7 @@ public class NginxUrlMappingIntegrationTest {
         assertNotNull(war, "Unable to locate hello-world.war resource");
         
         app = new TestApplication();
-        urlMappingsGroup = new BasicGroup(app, childrenAsMembers:true);
+        urlMappingsGroup = new BasicGroupImpl(app, childrenAsMembers:true);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)

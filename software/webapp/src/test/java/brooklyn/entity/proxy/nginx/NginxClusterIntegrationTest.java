@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
-import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcessEntity;
@@ -60,7 +60,7 @@ public class NginxClusterIntegrationTest {
         localhostProvisioningLoc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
         app = new TestApplication();
         nginxFactory = new BasicConfigurableEntityFactory<NginxController>(NginxController.class);
-        urlMappings = new BasicGroup(MutableMap.of("childrenAsMembers", true), app);
+        urlMappings = new BasicGroupImpl(MutableMap.of("childrenAsMembers", true), app);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)

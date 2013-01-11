@@ -19,7 +19,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
@@ -173,7 +173,7 @@ public class DynamicCluster extends AbstractGroup implements Cluster {
     
     public void start(Collection<? extends Location> locs) {
         if (isQuarantineEnabled()) {
-            Group quarantineGroup = new BasicGroup(MutableMap.of("displayName", "quarantine"), this);
+            Group quarantineGroup = new BasicGroupImpl(MutableMap.of("displayName", "quarantine"), this);
             Entities.manage(quarantineGroup);
             setAttribute(QUARANTINE_GROUP, quarantineGroup);
         }

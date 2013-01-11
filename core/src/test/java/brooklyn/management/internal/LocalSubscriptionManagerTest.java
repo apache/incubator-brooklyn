@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -98,7 +99,7 @@ public class LocalSubscriptionManagerTest {
     
     @Test
     public void testSubscribeToMemberAttributeChange() throws Exception {
-        BasicGroup group = new BasicGroup(app);
+        BasicGroup group = new BasicGroupImpl(app);
         TestEntity member = new TestEntity(app);
         manage(group, member);
         
