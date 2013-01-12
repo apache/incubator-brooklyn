@@ -16,16 +16,16 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.proxying.MyEntity
 import brooklyn.entity.trait.Changeable
-import brooklyn.entity.trait.Resizable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplication2
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.TimeExtras
@@ -40,37 +40,29 @@ class DynamicClusterTest {
         
     static { TimeExtras.init() }
     
-    TestApplication app
+    TestApplication2 app
     SimulatedLocation loc
     SimulatedLocation loc2
     Random random = new Random()
     
     @BeforeMethod
     public void setUp() {
-        app = new TestApplication()
+        app = ApplicationBuilder.builder(TestApplication2.class).manage();
         loc = new SimulatedLocation()
         loc2 = new SimulatedLocation()
-        app.startManagement();
     }
-    
+
+    @Deprecated // tests deprecated way of doing things
+    @Test    
     public void constructorOkayWithoutNewEntityFactoryArgument() {
-        new DynamicCluster(app)
+        new DynamicClusterImpl(app);
     }
 
-    @Test
-    public void startRequiresThatNewEntityArgumentIsGiven() {
-        try {
-            new DynamicCluster(app).start([loc])
-            fail();
-        } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
-        }
-    }
-
+    @Deprecated // tests deprecated way of doing things
     @Test
     public void constructorRequiresThatNewEntityArgumentIsAnEntityFactory() {
         try {
-            new DynamicCluster(factory:"error", app)
+            new DynamicClusterImpl(factory:"error", app)
             fail();
         } catch (Exception e) {
             if (Throwables2.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
@@ -78,8 +70,36 @@ class DynamicClusterTest {
     }
 
     @Test
+    public void creationOkayWithoutNewEntityFactoryArgument() {
+        app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class));
+    }
+
+    @Test
+    public void constructionRequiresThatNewEntityArgumentIsAnEntityFactory() {
+        try {
+            app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                    .configure("factory", "error"));
+            fail();
+        } catch (Exception e) {
+            if (Throwables2.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
+        }
+    }
+
+    @Test
+    public void startRequiresThatNewEntityArgumentIsGiven() {
+        DynamicCluster c = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class));
+        try {
+            c.start([loc]);
+            fail();
+        } catch (Exception e) {
+            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+        }
+    }
+
+    @Test
     public void startMethodFailsIfLocationsParameterIsMissing() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntityImpl() }, app)
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { new TestEntityImpl() }));
         try {
             cluster.start(null)
             fail();
@@ -90,7 +110,8 @@ class DynamicClusterTest {
 
     @Test
     public void startMethodFailsIfLocationsParameterIsEmpty() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntityImpl() }, app)
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { new TestEntityImpl() }));
         try {
             cluster.start([])
             fail();
@@ -101,7 +122,8 @@ class DynamicClusterTest {
 
     @Test
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntityImpl() }, app)
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { new TestEntityImpl() }));
         try {
             cluster.start([ loc, loc2 ])
             fail();
@@ -112,7 +134,8 @@ class DynamicClusterTest {
 
     @Test
     public void testClusterHasOneLocationAfterStarting() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ new TestEntityImpl() }, app)
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { new TestEntityImpl() }));
         cluster.start([loc])
         assertEquals(cluster.getLocations().size(), 1)
         assertEquals(cluster.getLocations() as List, [loc])
@@ -120,8 +143,9 @@ class DynamicClusterTest {
 
     @Test
     public void usingEntitySpecResizeFromZeroToOneStartsANewEntityAndSetsItsParent() {
-        DynamicCluster cluster = new DynamicCluster(memberSpec:BasicEntitySpec.newInstance(MyEntity.class), app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("memberSpec", BasicEntitySpec.newInstance(MyEntity.class)));
+        
         cluster.start([loc])
 
         cluster.resize(1)
@@ -134,8 +158,9 @@ class DynamicClusterTest {
     @Test
     public void resizeFromZeroToOneStartsANewEntityAndSetsItsParent() {
         TestEntity entity
-        DynamicCluster cluster = new DynamicCluster(factory:{ properties -> entity = new TestEntityImpl(properties) }, app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> entity = new TestEntityImpl(properties) }));
+
         cluster.start([loc])
 
         cluster.resize(1)
@@ -146,8 +171,8 @@ class DynamicClusterTest {
 
     @Test
     public void currentSizePropertyReflectsActualClusterSize() {
-        DynamicCluster cluster = new DynamicCluster(factory:{ properties -> new TestEntityImpl(properties) }, app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) }));
         
         assertEquals cluster.currentSize, 0
 
@@ -176,8 +201,9 @@ class DynamicClusterTest {
 
     @Test
     public void clusterSizeAfterStartIsInitialSize() {
-        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> new TestEntityImpl(properties) }, initialSize:2 ], app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) })
+                .configure("initialSize", 2));
         
         cluster.start([loc])
         assertEquals cluster.currentSize, 2
@@ -199,8 +225,10 @@ class DynamicClusterTest {
 	            }
 	        }
         }
-        DynamicCluster cluster = new DynamicCluster([ factory:newEntity, initialSize:1 ], app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", newEntity)
+                .configure("initialSize", 1));
+        
         cluster.start(locations)
 
         assertNotNull entity.stashedLocations
@@ -211,8 +239,10 @@ class DynamicClusterTest {
     @Test
     public void resizeFromOneToZeroChangesClusterSize() {
         TestEntity entity
-        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> entity = new TestEntityImpl(properties) }, initialSize:1 ], app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> entity = new TestEntityImpl(properties) })
+                .configure("initialSize", 1));
+        
         cluster.start([loc])
         assertEquals cluster.currentSize, 1
         assertEquals entity.counter.get(), 1
@@ -226,12 +256,12 @@ class DynamicClusterTest {
         final int OVERHEAD_MS = 500
         final int STARTUP_TIME_MS = 50
         final AtomicInteger numStarted = new AtomicInteger(0)
-        DynamicCluster cluster = new DynamicCluster(factory:
-                { Map flags, Entity cluster -> 
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { 
+                    Map flags, Entity cluster -> 
                     Thread.sleep(STARTUP_TIME_MS); numStarted.incrementAndGet(); new TestEntityImpl(flags, cluster)
-                }, 
-                app)
-        app.manage(cluster);
+                }));
+        
         assertEquals cluster.currentSize, 0
         cluster.start([loc])
 
@@ -263,8 +293,10 @@ class DynamicClusterTest {
     @Test(enabled = false)
     public void stoppingTheClusterStopsTheEntity() {
         TestEntity entity
-        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> entity = new TestEntityImpl(properties) }, initialSize:1 ], app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> entity = new TestEntityImpl(properties) })
+                .configure("initialSize", 1));
+        
         cluster.start([loc])
         assertEquals entity.counter.get(), 1
         cluster.stop()
@@ -278,13 +310,12 @@ class DynamicClusterTest {
     public void failingEntitiesDontBreakClusterActions() {
         final int failNum = 2
         final AtomicInteger counter = new AtomicInteger(0)
-        DynamicCluster cluster = new DynamicCluster(app,  
-                initialSize:0,
-                factory:{ properties -> 
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", 0)
+                .configure("factory", { properties -> 
                     int num = counter.incrementAndGet();
                     return new FailingEntity(properties, (num==failNum)) 
-                })
-        app.manage(cluster);
+                }));
         
         cluster.start([loc])
         cluster.resize(3)
@@ -299,13 +330,13 @@ class DynamicClusterTest {
     public void testCanQuarantineFailedEntities() {
         final int failNum = 2
         final AtomicInteger counter = new AtomicInteger(0)
-        DynamicCluster cluster = new DynamicCluster(app,  
-                quarantineFailedEntities:true,
-                initialSize:0,
-                factory:{ properties -> 
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("quarantineFailedEntities", true)
+                .configure("initialSize", 0)
+                .configure("factory", { properties -> 
                     int num = counter.incrementAndGet();
                     return new FailingEntity(properties, (num==failNum)) 
-                })
+                }));
         
         cluster.start([loc])
         cluster.resize(3)
@@ -327,12 +358,13 @@ class DynamicClusterTest {
         TestEntity entity
         final int failNum = 2
         final List<Entity> creationOrder = []
-        DynamicCluster cluster = new DynamicCluster([ factory:{ properties -> 
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", 0)
+                .configure("factory", { properties -> 
                     Entity result = new TestEntityImpl(properties)
                     creationOrder << result
                     return result
-                }, initialSize:0 ], app)
-        app.manage(cluster);
+                }));
         
         cluster.start([loc])
         cluster.resize(1)
@@ -348,8 +380,9 @@ class DynamicClusterTest {
         
     @Test
     public void resizeLoggedAsEffectorCall() {
-        Resizable cluster = new DynamicCluster(factory:{ properties -> return new TestEntityImpl(properties) }, app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) }));
+        
         app.start([loc])
         cluster.resize(1)
         
@@ -361,11 +394,10 @@ class DynamicClusterTest {
     
     @Test
     public void testStoppedChildIsRemoveFromGroup() {
-        DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntityImpl(properties) },
-                initialSize:1 
-            ], app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", 1)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) }));
+        
         cluster.start([loc])
         
         TestEntity child = cluster.children.get(0)
@@ -388,12 +420,10 @@ class DynamicClusterTest {
             removedEntities.add(choice)
             return choice
         }
-        DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntityImpl(properties) },
-                initialSize:10,
-                removalStrategy:removalStrategy
-            ], app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) })
+                .configure("initialSize", 10)
+                .configure("removalStrategy", removalStrategy));
         
         cluster.start([loc])
         Set origMembers = cluster.members as Set
@@ -415,11 +445,9 @@ class DynamicClusterTest {
             removedEntities.add(choice)
             return choice
         }
-        DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntityImpl(properties) },
-                initialSize:10,
-            ], app)
-        app.manage(cluster);
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) })
+                .configure("initialSize", 10));
         
         cluster.start([loc])
         Set origMembers = cluster.members as Set
@@ -439,16 +467,14 @@ class DynamicClusterTest {
         CountDownLatch executingLatch = new CountDownLatch(1)
         CountDownLatch continuationLatch = new CountDownLatch(1)
         
-        DynamicCluster cluster = new DynamicCluster(
-            [
-                factory: { properties -> 
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", 0)
+                .configure("factory", { properties -> 
                         executingLatch.countDown()
                         continuationLatch.await()
                         return new TestEntityImpl(properties)
-                    },
-                initialSize:0 
-            ], app)
-        app.manage(cluster);
+                    }));
+        
         cluster.start([loc])
 
         Thread thread = new Thread( { cluster.resize(1) })
@@ -475,10 +501,9 @@ class DynamicClusterTest {
     
     @Test
     public void testReplacesMember() {
-        DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntityImpl(properties) },
-                initialSize:1,
-            ], app)
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", 1)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) }));
         
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
@@ -496,10 +521,9 @@ class DynamicClusterTest {
     
     @Test
     public void testReplaceMemberThrowsIfMemberIdDoesNotResolve() {
-        DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntityImpl(properties) },
-                initialSize:1,
-            ], app)
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", 1)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) }));
         
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
@@ -517,10 +541,9 @@ class DynamicClusterTest {
     
     @Test
     public void testReplaceMemberThrowsIfNotMember() {
-        DynamicCluster cluster = new DynamicCluster([
-                factory:{ properties -> return new TestEntityImpl(properties) },
-                initialSize:1,
-            ], app)
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", 1)
+                .configure("factory", { properties -> return new TestEntityImpl(properties) }));
         
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
@@ -540,12 +563,11 @@ class DynamicClusterTest {
     public void testReplaceMemberFailsIfCantProvisionReplacement() {
         final int failNum = 2
         final AtomicInteger counter = new AtomicInteger(0)
-        DynamicCluster cluster = new DynamicCluster(app,  
-                initialSize:1,
-                factory:{ properties -> 
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("factory", { properties -> 
                     int num = counter.incrementAndGet();
                     return new FailingEntity(properties, (num==failNum)) 
-                })
+                }));
         
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);
@@ -564,12 +586,12 @@ class DynamicClusterTest {
     public void testReplaceMemberRemovesAndThowsIfFailToStopOld() {
         final int failNum = 1
         final AtomicInteger counter = new AtomicInteger(0)
-        DynamicCluster cluster = new DynamicCluster(app,  
-                initialSize:1,
-                factory:{ properties -> 
+        DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", 1)
+                .configure("factory", { properties -> 
                     int num = counter.incrementAndGet();
                     return new FailingEntity(properties, false, (num==failNum), IllegalStateException.class) 
-                })
+                }));
         
         cluster.start([loc])
         Entity member = Iterables.get(cluster.members, 0);

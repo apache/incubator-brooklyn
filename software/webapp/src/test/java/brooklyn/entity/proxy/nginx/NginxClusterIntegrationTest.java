@@ -22,6 +22,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxy.LoadBalancerCluster;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -94,14 +95,14 @@ public class NginxClusterIntegrationTest {
     
     @Test(groups = "Integration")
     public void testNginxInstancesConfiguredWithServerPool() {
-        DynamicCluster serverPool = new DynamicCluster(
+        DynamicCluster serverPool = new DynamicClusterImpl(
                 MutableMap.builder()
                         .put("parent", app)
                         .put("factory", new JBoss7ServerFactory())
                         .put("initialSize", 1)
+                        .put("war", war.getPath())
                         .build(),
                 app);
-        serverPool.setConfig(JBoss7Server.ROOT_WAR, war.getPath());
         
         loadBalancerCluster = new LoadBalancerCluster(
                 MutableMap.builder()
@@ -126,14 +127,14 @@ public class NginxClusterIntegrationTest {
     @Test(groups = "Integration")
     public void testNginxInstancesConfiguredWithUrlMappings() {
         
-        DynamicCluster c1 = new DynamicCluster(
+        DynamicCluster c1 = new DynamicClusterImpl(
                 MutableMap.builder()
                         .put("parent", app)
                         .put("factory", new JBoss7ServerFactory())
                         .put("initialSize", 1)
+                        .put("wars", ImmutableList.of(war.getPath()))
                         .build(),
                 app);
-        c1.setConfig(JBoss7Server.NAMED_WARS, ImmutableList.of(war.getPath()));
 
         new UrlMapping(
                 MutableMap.builder()

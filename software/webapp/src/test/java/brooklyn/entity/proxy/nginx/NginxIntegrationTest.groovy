@@ -14,6 +14,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.group.DynamicClusterImpl
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -52,7 +53,7 @@ public class NginxIntegrationTest {
     @Test(groups = "Integration")
     public void testWhenNoServersReturns404() {
         def serverFactory = { throw new UnsupportedOperationException(); }
-        serverPool = new DynamicCluster(parent:app, factory:serverFactory, initialSize:0)
+        serverPool = new DynamicClusterImpl(parent:app, factory:serverFactory, initialSize:0)
         
         nginx = new NginxController([
                 "parent" : app,
@@ -75,8 +76,7 @@ public class NginxIntegrationTest {
     public void testCanStartupAndShutdown() {
         def template = { Map properties -> new JBoss7Server(properties) }
         
-        serverPool = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
+        serverPool = new DynamicClusterImpl(parent:app, factory:template, initialSize:1, war:HELLO_WAR_URL)
         
         nginx = new NginxController([
 	            "parent" : app,
@@ -120,8 +120,7 @@ public class NginxIntegrationTest {
     public void testDomainless() {
         def template = { Map properties -> new JBoss7Server(properties) }
         
-        serverPool = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
+        serverPool = new DynamicClusterImpl(parent:app, factory:template, initialSize:1, war:HELLO_WAR_URL)
         
         nginx = new NginxController([
                 "parent" : app,
@@ -159,7 +158,7 @@ public class NginxIntegrationTest {
     @Test(groups = "Integration")
     public void testTwoNginxesGetDifferentPorts() {
         def serverFactory = { throw new UnsupportedOperationException(); }
-        serverPool = new DynamicCluster(parent:app, factory:serverFactory, initialSize:0)
+        serverPool = new DynamicClusterImpl(parent:app, factory:serverFactory, initialSize:0)
         
         def nginx1 = new NginxController([
                 "parent" : app,
@@ -200,8 +199,7 @@ public class NginxIntegrationTest {
     public void testServiceContinuity() {
         def template = { Map properties -> new JBoss7Server(properties) }
         
-        serverPool = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
+        serverPool = new DynamicClusterImpl(parent:app, factory:template, initialSize:1, war:HELLO_WAR_URL)
         
         nginx = new NginxController(app, serverPool: serverPool);
         
@@ -260,8 +258,7 @@ public class NginxIntegrationTest {
     public void testContinuityNginxAndJboss() {
         def template = { Map properties -> new JBoss7Server(properties) }
         
-        serverPool = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
+        serverPool = new DynamicClusterImpl(parent:app, factory:template, initialSize:1, war:HELLO_WAR_URL)
         
         nginx = new NginxController(app, serverPool: serverPool);
         

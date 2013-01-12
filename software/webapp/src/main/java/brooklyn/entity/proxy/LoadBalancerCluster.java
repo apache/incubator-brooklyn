@@ -5,7 +5,7 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.location.Location;
 
 /**
@@ -19,7 +19,7 @@ import brooklyn.location.Location;
  *  
  * @author aled
  */
-public class LoadBalancerCluster extends DynamicCluster implements LoadBalancer {
+public class LoadBalancerCluster extends DynamicClusterImpl implements LoadBalancer {
 
     // TODO I suspect there are races with reconfiguring the load-balancers while
     // the cluster is growing: there is no synchronization around the calls to reload

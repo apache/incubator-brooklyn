@@ -2,7 +2,7 @@ package brooklyn.entity.webapp
 
 import brooklyn.enricher.CustomAggregatingEnricher
 import brooklyn.entity.Entity
-import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.group.DynamicClusterImpl
 import brooklyn.event.basic.BasicAttributeSensor
 
 /**
@@ -14,7 +14,7 @@ import brooklyn.event.basic.BasicAttributeSensor
  *   <li>Entity processing time</li>
  * </ul>
  */
-class DynamicWebAppCluster extends DynamicCluster implements WebAppService {
+class DynamicWebAppCluster extends DynamicClusterImpl implements WebAppService {
 
     //FIXME align with WebAppService data points
     //e.g. TOTAL_REQUEST_COUNT isn't needed; just use REQUEST_COUNT (and update that description)

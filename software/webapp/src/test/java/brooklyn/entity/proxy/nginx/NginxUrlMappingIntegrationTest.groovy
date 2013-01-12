@@ -17,7 +17,7 @@ import brooklyn.entity.basic.BasicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
-import brooklyn.entity.webapp.JavaWebAppService
+import brooklyn.entity.group.DynamicClusterImpl
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
@@ -93,17 +93,15 @@ public class NginxUrlMappingIntegrationTest {
         nginx = new NginxController(app, urlMappings:urlMappingsGroup);
         
         //cluster 0 mounted at localhost1 /
-        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
-            configure(JavaWebAppService.ROOT_WAR, WAR_URL)
+        DynamicCluster c0 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"), war:WAR_URL).
         UrlMapping u0 = new UrlMapping(urlMappingsGroup, domain: "localhost1", target: c0);
         
         //cluster 1 at localhost2 /hello-world/
-        DynamicCluster c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
-            configure(JavaWebAppService.NAMED_WARS, [WAR_URL]);
+        DynamicCluster c1 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"), wars:[WAR_URL]).
         UrlMapping u1 = new UrlMapping(urlMappingsGroup, domain: "localhost2", path: '/hello-world($|/.*)', target: c1);
 
         // cluster 2 at localhost3 /c2/  and mapping /hello/xxx to /hello/new xxx
-        DynamicCluster c2 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
+        DynamicCluster c2 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
         UrlMapping u2 = new UrlMapping(urlMappingsGroup, domain: "localhost3", path: '/c2($|/.*)', target: c2).
 //            addRewrite('^(.*/|)(hello/)(.*)$', '$1$2new$3');
             // break needed (syntax below) to prevent infinite recursion
@@ -153,8 +151,8 @@ public class NginxUrlMappingIntegrationTest {
 
     @Test(groups = "Integration")
     public void testUrlMappingRoutesRequestByPathToCorrectGroup() {
-        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
-        DynamicCluster c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
+        DynamicCluster c0 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
+        DynamicCluster c1 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
         
         nginx = new NginxController([
                 "parent" : app,
@@ -193,8 +191,7 @@ public class NginxUrlMappingIntegrationTest {
     
     @Test(groups = "Integration")
     public void testUrlMappingRemovedWhenMappingEntityRemoved() {
-        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
-        c0.setConfig(JBoss7Server.ROOT_WAR, war.toString())
+        DynamicCluster c0 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"), war:war.toString());
         
         UrlMapping u0 = new UrlMapping(urlMappingsGroup, domain: "localhost2", target: c0);
         
@@ -224,8 +221,7 @@ public class NginxUrlMappingIntegrationTest {
         
         checkExtraLocalhosts();
         
-        def coreCluster = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
-        coreCluster.setConfig(JavaWebAppService.ROOT_WAR, war.path);
+        def coreCluster = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"), war:war.path);
                 
         nginx = new NginxController([
 	            "parent" : app,
@@ -236,8 +232,7 @@ public class NginxUrlMappingIntegrationTest {
                 "urlMappings" : urlMappingsGroup
             ])
         
-        def c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
-        c1.setConfig(JavaWebAppService.NAMED_WARS, [war.path]);
+        def c1 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"), wars:[war.path]);
         def u1 = new UrlMapping(urlMappingsGroup, domain: "localhost1", target: c1);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
@@ -258,8 +253,7 @@ public class NginxUrlMappingIntegrationTest {
         nginx = new NginxController(app, urlMappings:urlMappingsGroup);
     
         //cluster 0 mounted at localhost1 /
-        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
-            configure(JavaWebAppService.ROOT_WAR, WAR_URL)
+        DynamicCluster c0 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"), war:WAR_URL);
         UrlMapping u0 = new UrlMapping(urlMappingsGroup, domain: "localhost1", target: c0);
         u0.addRewrite("/goodbye/al(.*)", '/hello/al$1');
         u0.addRewrite(new UrlRewriteRule('/goodbye(|/.*)$', '/hello$1').setBreak());
@@ -306,8 +300,7 @@ public class NginxUrlMappingIntegrationTest {
                 "urlMappings" : urlMappingsGroup
             ])
         
-        def c1 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
-        c1.setConfig(JavaWebAppService.ROOT_WAR, war.path);
+        def c1 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"), war:war.path);
         def u1 = new UrlMapping(urlMappingsGroup, domain: "localhost1", target: c1);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
@@ -357,9 +350,9 @@ public class NginxUrlMappingIntegrationTest {
     @Test(groups = "Integration")
     public void testUrlMappingWithEmptyCoreCluster() {
         def serverFactory = { throw new UnsupportedOperationException(); }
-        DynamicCluster nullCluster = new DynamicCluster(parent:app, factory:serverFactory, initialSize:0)
+        DynamicCluster nullCluster = new DynamicClusterImpl(parent:app, factory:serverFactory, initialSize:0)
 
-        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
+        DynamicCluster c0 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"));
         
         nginx = new NginxController([
                 "parent" : app,
@@ -397,8 +390,7 @@ public class NginxUrlMappingIntegrationTest {
         nginx = new NginxController(app, urlMappings:urlMappingsGroup);
         
         //cluster 0 mounted at localhost1 /
-        DynamicCluster c0 = new DynamicCluster(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+")).
-            configure(JavaWebAppService.ROOT_WAR, WAR_URL)
+        DynamicCluster c0 = new DynamicClusterImpl(app, initialSize:1, factory: new JBoss7ServerFactory(httpPort:"8100+"), war:WAR_URL);
         UrlMapping u0 = new UrlMapping(urlMappingsGroup, domain: "localhost1", target: c0);
         
         app.start([ new LocalhostMachineProvisioningLocation() ])

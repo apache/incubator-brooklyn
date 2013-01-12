@@ -16,6 +16,7 @@ import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxy.nginx.UrlMapping;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -51,7 +52,7 @@ public class UrlMappingTest {
         app = new TestApplication();
         
         EntityFactory<StubAppServer> serverFactory = new BasicConfigurableEntityFactory<StubAppServer>(StubAppServer.class);
-        cluster = new DynamicCluster(
+        cluster = new DynamicClusterImpl(
                 MutableMap.of("initialSize", initialClusterSize, "factory", serverFactory), 
                 app);
 

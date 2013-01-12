@@ -24,6 +24,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
@@ -108,7 +109,7 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithEmptyServerPool() throws Exception {
     	
         // Set up nginx with a server pool
-        DynamicCluster origServerPool = new DynamicCluster(MutableMap.of("factory", new JBoss7ServerFactory(), "initialSize", 0), origApp);
+        DynamicCluster origServerPool = new DynamicClusterImpl(MutableMap.of("factory", new JBoss7ServerFactory(), "initialSize", 0), origApp);
         
         NginxController origNginx = new NginxController(MutableMap.builder()
                 .put("parent", origApp)
@@ -151,7 +152,7 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithoutLosingServerPool() throws Exception {
         
         // Set up nginx with a server pool
-        DynamicCluster origServerPool = new DynamicCluster(
+        DynamicCluster origServerPool = new DynamicClusterImpl(
                 MutableMap.of("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())), "initialSize", 1), 
                 origApp);
         
@@ -215,7 +216,7 @@ public class NginxRebindIntegrationTest {
         // Set up nginx with a url-mapping
         Group origUrlMappingsGroup = new BasicGroupImpl(MutableMap.of("childrenAsMembers", true), origApp);
 
-        DynamicCluster origMappingPool = new DynamicCluster(
+        DynamicCluster origMappingPool = new DynamicClusterImpl(
                 MutableMap.of("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())), "initialSize", 1), 
                 origApp);
         UrlMapping origMapping = new UrlMapping(

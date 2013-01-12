@@ -16,6 +16,7 @@ import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxy.StubAppServer;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.TestUtils;
@@ -52,7 +53,7 @@ public class NginxLightIntegrationTest {
     @Test(groups = {"Integration", "WIP"})
     public void testNginxTargetsMatchesClusterMembers() {
         EntityFactory<StubAppServer> serverFactory = new BasicConfigurableEntityFactory<StubAppServer>(StubAppServer.class);
-        final DynamicCluster cluster = new DynamicCluster(MutableMap.of("initialSize", 2, "factory", serverFactory), app);
+        final DynamicCluster cluster = new DynamicClusterImpl(MutableMap.of("initialSize", 2, "factory", serverFactory), app);
                 
         nginx = new NginxController(
                 MutableMap.builder()

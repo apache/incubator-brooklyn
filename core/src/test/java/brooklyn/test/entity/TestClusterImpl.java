@@ -1,14 +1,14 @@
 package brooklyn.test.entity;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
 * Mock cluster entity for testing.
 */
-public class TestClusterImpl extends DynamicCluster implements TestCluster {
+public class TestClusterImpl extends DynamicClusterImpl implements TestCluster {
     @SetFromFlag("initialSize")
     public int size;
 

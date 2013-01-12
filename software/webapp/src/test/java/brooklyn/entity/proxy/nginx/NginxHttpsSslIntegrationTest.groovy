@@ -10,11 +10,11 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.group.DynamicClusterImpl
 import brooklyn.entity.proxy.ProxySslConfig
-import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -53,8 +53,7 @@ public class NginxHttpsSslIntegrationTest {
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withCertificateAndKeyCopy() {
         def template = { Map properties -> new JBoss7Server(properties) }
-        cluster = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
+        cluster = new DynamicClusterImpl(parent:app, factory:template, initialSize:1, war:WAR_URL)
         
         ProxySslConfig ssl = new ProxySslConfig(
                 certificateSourceUrl:CERTIFICATE_URL,
@@ -103,8 +102,7 @@ public class NginxHttpsSslIntegrationTest {
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withPreinstalledCertificateAndKey() {
            def template = { Map properties -> new JBoss7Server(properties) }
-           cluster = new DynamicCluster(parent:app, factory:template, initialSize:1)
-           cluster.setConfig(JavaWebAppService.ROOT_WAR, WAR_URL)
+           cluster = new DynamicClusterImpl(parent:app, factory:template, initialSize:1, war:WAR_URL)
 
            ProxySslConfig ssl = new ProxySslConfig(
                    certificateDestination: getFile("ssl/certs/localhost/server.crt"),

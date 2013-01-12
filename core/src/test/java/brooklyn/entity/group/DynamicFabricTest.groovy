@@ -99,7 +99,7 @@ class DynamicFabricTest {
     public void testSizeEnricher() {
         Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
         DynamicFabric fabric = new DynamicFabric(factory:{ fabricProperties, parent ->
-            return new DynamicCluster(parent:parent, initialSize:0,
+            return new DynamicClusterImpl(parent:parent, initialSize:0,
                 factory:{ clusterProperties -> return new TestEntityImpl(clusterProperties) })
             }, app)
         app.manage(fabric);
@@ -259,7 +259,7 @@ class DynamicFabricTest {
         }
         Closure clusterFactory = { properties -> 
             def clusterProperties = properties + [factory:entityFactory, a: "ignored"]
-            new DynamicCluster(clusterProperties) {
+            new DynamicClusterImpl(clusterProperties) {
                 protected Map getCustomChildFlags() { [fromCluster: "passed to base entity"] }
             }
         }

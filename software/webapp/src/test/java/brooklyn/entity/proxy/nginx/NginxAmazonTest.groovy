@@ -12,6 +12,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.group.DynamicClusterImpl
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -81,7 +82,7 @@ public class NginxAmazonTest {
  
         def template = { Map properties -> new JBoss7Server(properties) }
         
-        cluster = new DynamicCluster(parent:app, factory:template, initialSize:2, httpPort:8080 )
+        cluster = new DynamicClusterImpl(parent:app, factory:template, initialSize:2, httpPort:8080 )
         URL war = getClass().getClassLoader().getResource("swf-booking-mvc.war")
         assertNotNull war, "Unable to locate resource $war"
         cluster.setConfig(JavaWebAppService.ROOT_WAR, war.path)
