@@ -24,6 +24,7 @@ import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.HttpTestUtils
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
 
 import com.google.common.collect.Iterables
@@ -56,7 +57,7 @@ public class NginxUrlMappingIntegrationTest {
         war = getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull(war, "Unable to locate hello-world.war resource");
         
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         urlMappingsGroup = new BasicGroupImpl(app, childrenAsMembers:true);
     }
 

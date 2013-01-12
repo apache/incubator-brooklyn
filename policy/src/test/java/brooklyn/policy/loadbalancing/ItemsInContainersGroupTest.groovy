@@ -13,6 +13,7 @@ import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 public class ItemsInContainersGroupTest {
 
@@ -27,7 +28,7 @@ public class ItemsInContainersGroupTest {
     public void setUp() throws Exception {
         loc = new SimulatedLocation(name:"loc")
         
-        app = new TestApplication()
+        app = new TestApplicationImpl()
         Closure containerGroupFilter = { Entity e -> 
                 e instanceof MockContainerEntity && 
                 e.getConfig(MockContainerEntity.MOCK_MEMBERSHIP) == "ingroup"

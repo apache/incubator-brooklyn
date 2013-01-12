@@ -14,6 +14,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestEntityImpl
 
 import com.google.mockwebserver.MockResponse
@@ -45,7 +46,7 @@ public class HttpSensorAdapterIntegrationTest {
         baseUrl = server.getUrl("/");
 
         loc = new LocalhostMachineProvisioningLocation();
-        app = new TestApplication();        
+        app = new TestApplicationImpl();        
         entity = new TestEntityImpl(app);
         app.start([loc]);
         

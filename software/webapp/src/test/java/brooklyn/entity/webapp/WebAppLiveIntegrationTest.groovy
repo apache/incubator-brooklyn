@@ -6,7 +6,6 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -17,6 +16,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -26,9 +26,8 @@ import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 import brooklyn.test.TestUtils
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
-import brooklyn.entity.basic.SoftwareProcessEntity
 
 /**
  * This tests that we can run jboss entity on AWS.
@@ -51,7 +50,7 @@ public class WebAppLiveIntegrationTest {
     public static final int PORT_INCREMENT = 400
 
     // The parent application entity for these tests
-    Application application = new TestApplication()
+    Application application = new TestApplicationImpl()
 
     private JcloudsLocationFactory locFactory
     private JcloudsLocation loc

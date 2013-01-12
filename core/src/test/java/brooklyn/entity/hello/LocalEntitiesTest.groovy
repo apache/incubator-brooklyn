@@ -12,22 +12,27 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.Entities
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task
+import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.task.ParallelTask
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
-class LocalEntitiesTest {
+public class LocalEntitiesTest {
 	
 	public static final Logger log = LoggerFactory.getLogger(LocalEntitiesTest.class);
 			
     @Test
     public void testEffectorUpdatesAttributeSensor() {
-        AbstractApplication a = new AbstractApplication() {}
-        HelloEntity h = new HelloEntity(parent:a)
-        a.start([new SimulatedLocation()])
+        TestApplication app = new TestApplicationImpl();
+        HelloEntity h = new HelloEntity(app)
+        Entities.startManagement(app);
+        
+        app.start([new SimulatedLocation()])
         
         h.setAge(5)
         assertEquals(5, h.getAttribute(HelloEntity.AGE))
@@ -37,12 +42,14 @@ class LocalEntitiesTest {
     //subscriptions get notified in separate thread
     @Test
     public void testEffectorEmitsAttributeSensor() {
-        AbstractApplication a = new AbstractApplication() {}
-        HelloEntity h = new HelloEntity(parent:a)
-        a.start([new SimulatedLocation()])
+        TestApplication app = new TestApplicationImpl();
+        HelloEntity h = new HelloEntity(app)
+        Entities.startManagement(app);
+        
+        app.start([new SimulatedLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
-        a.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { 
+        app.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { 
             SensorEvent e -> 
             synchronized (evt) {
                 evt.set(e)
@@ -71,12 +78,14 @@ class LocalEntitiesTest {
     //REVIEW 1459 - new test
     @Test
     public void testEffectorEmitsTransientSensor() {
-        AbstractApplication a = new AbstractApplication() {}
-        HelloEntity h = new HelloEntity(parent:a)
-        a.start([new SimulatedLocation()])
+        TestApplication app = new TestApplicationImpl();
+        HelloEntity h = new HelloEntity(app)
+        Entities.startManagement(app);
+        
+        app.start([new SimulatedLocation()])
         
         AtomicReference<SensorEvent> evt = new AtomicReference()
-        a.getSubscriptionContext().subscribe(h, HelloEntity.ITS_MY_BIRTHDAY, {
+        app.getSubscriptionContext().subscribe(h, HelloEntity.ITS_MY_BIRTHDAY, {
             SensorEvent e ->
             evt.set(e)
             synchronized (evt) {
@@ -97,12 +106,14 @@ class LocalEntitiesTest {
 
     @Test
     public void testSendMultipleInOrderThenUnsubscribe() {
-        AbstractApplication a = new AbstractApplication() {}
-        HelloEntity h = new HelloEntity(parent:a)
-        a.start([new SimulatedLocation()])
+        TestApplication app = new TestApplicationImpl();
+        HelloEntity h = new HelloEntity(app)
+        Entities.startManagement(app);
+        
+        app.start([new SimulatedLocation()])
 
         List data = []       
-        a.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { SensorEvent e -> 
+        app.getSubscriptionContext().subscribe(h, HelloEntity.AGE, { SensorEvent e -> 
             data << e.value
             Thread.sleep((int)(20*Math.random()))
             synchronized (data) { 
@@ -118,7 +129,7 @@ class LocalEntitiesTest {
             (1..5).each { h.setAge(it) }
             (1..5).each { log.info "Thread "+Thread.currentThread()+" waiting on $it"; data.wait(2000); data.notifyAll(); }
         }
-        a.getSubscriptionContext().unsubscribeAll();
+        app.getSubscriptionContext().unsubscribeAll();
         h.setAge(6)
         Thread.sleep(50);
         assertEquals((1..5), data)
@@ -127,36 +138,39 @@ class LocalEntitiesTest {
 
     @Test
     public void testConfigSetFromAttribute() {
-        AbstractApplication a = new AbstractApplication() {}
-        a.setConfig(HelloEntity.MY_NAME, "Bob")
+        TestApplication app = new TestApplicationImpl();
+        app.setConfig(HelloEntity.MY_NAME, "Bob")
         
-        HelloEntity dad = new HelloEntity(parent:a)
-        HelloEntity son = new HelloEntity(parent:dad)
+        HelloEntity dad = new HelloEntity(app)
+        HelloEntity son = new HelloEntity(dad)
         
         //config is inherited
-        assertEquals("Bob", a.getConfig(HelloEntity.MY_NAME))
+        assertEquals("Bob", app.getConfig(HelloEntity.MY_NAME))
         assertEquals("Bob", dad.getConfig(HelloEntity.MY_NAME))
         assertEquals("Bob", son.getConfig(HelloEntity.MY_NAME))
         
         //attributes are not
-        a.setAttribute(HelloEntity.FAVOURITE_NAME, "Carl")
-        assertEquals("Carl", a.getAttribute(HelloEntity.FAVOURITE_NAME))
+        app.setAttribute(HelloEntity.FAVOURITE_NAME, "Carl")
+        assertEquals("Carl", app.getAttribute(HelloEntity.FAVOURITE_NAME))
         assertEquals(null, dad.getAttribute(HelloEntity.FAVOURITE_NAME))
     }
 	@Test
 	public void testConfigSetFromAttributeWhenReady() {
-		AbstractApplication a = new AbstractApplication() {}
-		a.setConfig(HelloEntity.MY_NAME, "Bob")
+        TestApplication app = new TestApplicationImpl();
+		app.setConfig(HelloEntity.MY_NAME, "Bob")
 		
-        HelloEntity dad = new HelloEntity(parent:a)
-        HelloEntity son = new HelloEntity(parent:dad)
+        HelloEntity dad = new HelloEntity(app)
+        HelloEntity son = new HelloEntity(dad)
 		
         //config can be set from an attribute
         son.setConfig(HelloEntity.MY_NAME, attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME
             /* third param is closure; defaults to groovy truth (see google), but could be e.g.
                , { it!=null && it.length()>0 && it!="Jebediah" }
              */ ));
-		a.start([new SimulatedLocation()])
+         
+        Entities.startManagement(app);
+         
+		app.start([new SimulatedLocation()])
 		 
         final Semaphore s1 = new Semaphore(0)
         Object[] sonsConfig = new Object[1]
@@ -194,30 +208,34 @@ class LocalEntitiesTest {
 	}
 	@Test
 	public void testConfigSetFromAttributeWhenReadyTransformations() {
-		AbstractApplication a = new AbstractApplication() {}
-		a.setConfig(HelloEntity.MY_NAME, "Bob")
+        TestApplication app = new TestApplicationImpl();
+		app.setConfig(HelloEntity.MY_NAME, "Bob")
 		
-        HelloEntity dad = new HelloEntity(parent:a)
-        HelloEntity son = new HelloEntity(parent:dad)
-		
+        HelloEntity dad = new HelloEntity(app)
+        HelloEntity son = new HelloEntity(dad)
+
+        Entities.startManagement(app);
+
         //and config can have transformations
         son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME), { it+it[-1]+"y" }))
 		dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
-		a.start([new SimulatedLocation()])
+		app.start([new SimulatedLocation()])
         assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny")
     }
     @Test
     public void testConfigSetFromAttributeWhenReadyNullTransformations() {
-        AbstractApplication a = new AbstractApplication() {}
-        a.setConfig(HelloEntity.MY_NAME, "Bob")
+        TestApplication app = new TestApplicationImpl();
+        app.setConfig(HelloEntity.MY_NAME, "Bob")
         
-        HelloEntity dad = new HelloEntity(parent:a)
-        HelloEntity son = new HelloEntity(parent:dad)
-        
+        HelloEntity dad = new HelloEntity(app)
+        HelloEntity son = new HelloEntity(dad)
+
+        Entities.startManagement(app);
+
         //and config can have transformations
         son.setConfig(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME, null), { it+it[-1]+"y" }))
         dad.setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
-        a.start([new SimulatedLocation()])
+        app.start([new SimulatedLocation()])
         assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny")
     }
 

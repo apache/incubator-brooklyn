@@ -77,7 +77,7 @@ public class TomcatServerIntegrationTest {
 	//TODO should define a generic mechanism for doing this    
 ////    @Test(groups = [ "Integration" ])
 //    public void createsPropertiesFilesWithEnvironmentVariables() {
-//        app = new TestApplication();
+//        app = new TestApplicationImpl();
 //        tc = new TomcatServer(parent:app, httpPort:DEFAULT_HTTP_PORT);
 //        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR1"),[akey:"aval",bkey:"bval"])
 //        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR2"),[ckey:"cval",dkey:"dval"])

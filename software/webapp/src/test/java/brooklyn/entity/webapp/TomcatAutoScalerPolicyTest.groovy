@@ -13,6 +13,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.PortRanges
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 import com.google.common.collect.Iterables
 
@@ -39,7 +40,7 @@ public class TomcatAutoScalerPolicyTest {
         PortRange httpPort = PortRanges.fromString("7880+");
         PortRange jmxP = PortRanges.fromString("32199+");
         PortRange shutdownP = PortRanges.fromString("31880+");
-        TestApplication app = new TestApplication()
+        TestApplication app = new TestApplicationImpl()
         try {
             DynamicWebAppCluster cluster = new DynamicWebAppCluster(
                 factory: { Map properties, Entity parent ->

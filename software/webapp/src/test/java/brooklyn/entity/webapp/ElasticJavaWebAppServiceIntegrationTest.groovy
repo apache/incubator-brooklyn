@@ -7,9 +7,9 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestUtils
+import brooklyn.test.HttpTestUtils
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 public class ElasticJavaWebAppServiceIntegrationTest {
 
@@ -17,7 +17,7 @@ public class ElasticJavaWebAppServiceIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         
     }
 

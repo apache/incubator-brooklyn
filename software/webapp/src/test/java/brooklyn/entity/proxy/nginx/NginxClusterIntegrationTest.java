@@ -25,12 +25,12 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxy.LoadBalancerCluster;
 import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Predicates;
@@ -59,7 +59,7 @@ public class NginxClusterIntegrationTest {
     public void setup() throws Exception {
         war = checkNotNull(getClass().getClassLoader().getResource("hello-world.war"), "hello-world.war not on classpath");
         localhostProvisioningLoc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         nginxFactory = new BasicConfigurableEntityFactory<NginxController>(NginxController.class);
         urlMappings = new BasicGroupImpl(MutableMap.of("childrenAsMembers", true), app);
     }

@@ -21,7 +21,7 @@ import brooklyn.event.adapter.SensorRegistry
 import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.TestUtils
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 /**
  * Test the operation of the {@link SensorRegistry} class.
@@ -34,7 +34,7 @@ public class SensorRegistryTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         entity = new SimpleEntity(app)
         Entities.startManagement(app);
     }

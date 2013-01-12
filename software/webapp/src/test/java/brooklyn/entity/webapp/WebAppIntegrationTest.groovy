@@ -13,7 +13,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
@@ -26,6 +26,7 @@ import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.test.TestUtils.BooleanWithMessage
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.MutableMap
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -131,7 +132,7 @@ public class WebAppIntegrationTest {
      * @return
      */
     private TestApplication newTestApplication() {
-        TestApplication ta = new TestApplication()
+        TestApplication ta = new TestApplicationImpl()
         Entities.startManagement(ta);
         applications.add(ta)
         return ta

@@ -22,6 +22,7 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.task.BasicTask
 import brooklyn.util.task.DeferredSupplier
 
@@ -40,7 +41,7 @@ public class ConfigMapTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplication()
+        app = new TestApplicationImpl()
         entity = new MySubEntity(parent:app)
         Entities.startManagement(app);
         executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());

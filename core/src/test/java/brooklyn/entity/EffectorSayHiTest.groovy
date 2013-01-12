@@ -20,7 +20,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
 import brooklyn.management.Task
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 /**
  * Test the operation of the {@link Effector} implementations.
@@ -35,7 +35,7 @@ public class EffectorSayHiTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         e = new MyEntity(app);
         Entities.startManagement(app);
     }

@@ -26,6 +26,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
@@ -68,7 +69,7 @@ public class JavaOptsTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         execScriptCmds = new CopyOnWriteArrayList<ExecCmd>();
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         loc = Mockito.mock(SshMachineLocation.class);
         Mockito.when(loc.getAddress()).thenReturn(InetAddress.getByName("localhost"));
         Mockito.when(loc.obtainPort(Mockito.<PortRange>anyObject())).thenReturn(1);

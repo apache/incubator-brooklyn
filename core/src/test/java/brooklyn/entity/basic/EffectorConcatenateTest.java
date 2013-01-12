@@ -15,12 +15,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
@@ -35,16 +35,16 @@ public class EffectorConcatenateTest {
     private static final Logger log = LoggerFactory.getLogger(EffectorConcatenateTest.class);
     private static final long TIMEOUT = 10*1000;
     
-    public static class MyEntity extends AbstractEntity {
+    public static class MyEntityImpl extends AbstractEntity {
 
-        public static Effector<String> CONCATENATE = new MethodEffector<String>(MyEntity.class, "concatenate");
-        public static Effector<Void> WAIT_A_BIT = new MethodEffector<Void>(MyEntity.class, "waitabit");
-        public static Effector<Void> SPAWN_CHILD = new MethodEffector<Void>(MyEntity.class, "spawnchild");
-    
-        public MyEntity() {
+        public static Effector<String> CONCATENATE = new MethodEffector<String>(MyEntityImpl.class, "concatenate");
+        public static Effector<Void> WAIT_A_BIT = new MethodEffector<Void>(MyEntityImpl.class, "waitabit");
+        public static Effector<Void> SPAWN_CHILD = new MethodEffector<Void>(MyEntityImpl.class, "spawnchild");
+
+        public MyEntityImpl() {
             super();
         }
-        public MyEntity(Entity parent) {
+        public MyEntityImpl(Entity parent) {
             super(parent);
         }
 
@@ -97,13 +97,13 @@ public class EffectorConcatenateTest {
         }
     }
             
-    private Application app;
-    private MyEntity e;
+    private TestApplication app;
+    private MyEntityImpl e;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplication();
-        e = new MyEntity(app);
+        app = new TestApplicationImpl();
+        e = new MyEntityImpl(app);
         Entities.startManagement(app);
     }
     
@@ -115,7 +115,7 @@ public class EffectorConcatenateTest {
     @Test
     public void testCanInvokeEffector() throws Exception {
         // invocation map syntax
-        Task<String> task = e.invoke(MyEntity.CONCATENATE, ImmutableMap.of("first", "a", "second", "b"));
+        Task<String> task = e.invoke(MyEntityImpl.CONCATENATE, ImmutableMap.of("first", "a", "second", "b"));
         assertEquals(task.get(TIMEOUT, TimeUnit.MILLISECONDS), "ab");
 
         // method syntax
@@ -158,7 +158,7 @@ public class EffectorConcatenateTest {
             }});
         bg.start();
     
-        e.invoke(MyEntity.WAIT_A_BIT, ImmutableMap.<String,Object>of())
+        e.invoke(MyEntityImpl.WAIT_A_BIT, ImmutableMap.<String,Object>of())
                 .get(TIMEOUT, TimeUnit.MILLISECONDS);
         
         bg.join(TIMEOUT*2);
@@ -207,7 +207,7 @@ public class EffectorConcatenateTest {
             }});
         bg.start();
     
-        e.invoke(MyEntity.SPAWN_CHILD, ImmutableMap.<String,Object>of())
+        e.invoke(MyEntityImpl.SPAWN_CHILD, ImmutableMap.<String,Object>of())
                 .get(TIMEOUT, TimeUnit.MILLISECONDS);
         
         bg.join(TIMEOUT*2);

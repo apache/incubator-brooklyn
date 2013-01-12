@@ -12,8 +12,10 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Application
+import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -65,15 +67,17 @@ class Infinispan5ServerIntegrationTest {
 
     @Test(groups = [ "Integration", "WIP" ])
     public void testInfinispanStartsAndStops() {
-        final Infinispan5Server infini = new Infinispan5Server(parent:new TestApplication())
-        infini.setConfig(Infinispan5Server.PORT.getConfigKey(), DEFAULT_PORT)
-        infini.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+        Application app = new TestApplicationImpl();
         try {
+            final Infinispan5Server infini = new Infinispan5Server(parent:app)
+            infini.setConfig(Infinispan5Server.PORT.getConfigKey(), DEFAULT_PORT)
+            infini.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
+            
             executeUntilSucceeds {
                 assertTrue infini.getAttribute(Infinispan5Server.SERVICE_UP)
             }
         } finally {
-            infini.stop()
+            Entities.destroy(app);
         }
     }
 }

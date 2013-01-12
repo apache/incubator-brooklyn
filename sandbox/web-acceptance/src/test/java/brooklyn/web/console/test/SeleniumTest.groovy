@@ -15,6 +15,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.launcher.BrooklynWebServer
 import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalManagementContext
+import brooklyn.test.entity.TestApplicationImpl
 
 import com.thoughtworks.selenium.DefaultSelenium
 import com.thoughtworks.selenium.Selenium
@@ -43,7 +44,7 @@ public class SeleniumTest {
     private static void startJetty() {
         LOG.info("Starting Jetty")
         ManagementContext context = new LocalManagementContext();
-        Entities.startManagement(new TestApplication(mgmt: context), context);
+        Entities.startManagement(new TestApplicationImpl(mgmt: context), context);
         launcher = new BrooklynWebServer(context, 9090)
         launcher.start()
 

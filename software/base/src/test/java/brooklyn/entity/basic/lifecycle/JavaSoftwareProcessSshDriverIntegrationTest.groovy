@@ -18,7 +18,7 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.text.Identifiers
@@ -32,7 +32,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
     }
 
     @AfterMethod(alwaysRun=true)

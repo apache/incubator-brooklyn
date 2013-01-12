@@ -18,6 +18,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Resizable
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 class BalanceableWorkerPoolTest {
 
@@ -38,7 +39,7 @@ class BalanceableWorkerPoolTest {
     public void before() {
         loc = new SimulatedLocation(name:"loc")
         
-        app = new TestApplication()
+        app = new TestApplicationImpl()
         containerGroup = new DynamicGroupImpl([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
         itemGroup = new DynamicGroupImpl([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
         pool = new BalanceableWorkerPool([:], app)

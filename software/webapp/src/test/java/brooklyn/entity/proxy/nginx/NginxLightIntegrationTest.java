@@ -21,6 +21,7 @@ import brooklyn.entity.proxy.StubAppServer;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
@@ -39,7 +40,7 @@ public class NginxLightIntegrationTest {
     
     @BeforeMethod
     public void setup() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
     }
 
     @AfterMethod(alwaysRun=true)

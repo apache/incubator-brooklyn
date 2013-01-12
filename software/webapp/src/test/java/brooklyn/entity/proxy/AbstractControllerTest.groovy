@@ -25,6 +25,7 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.flags.SetFromFlag
 
@@ -48,7 +49,7 @@ class AbstractControllerTest {
         loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines:machines)
         updates = new CopyOnWriteArrayList();
         
-        app = new TestApplication()
+        app = new TestApplicationImpl()
         cluster = new DynamicClusterImpl(parent:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
         
         final AtomicInteger invokeCountForStart = new AtomicInteger(0);

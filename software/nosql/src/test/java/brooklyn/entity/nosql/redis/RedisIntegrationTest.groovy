@@ -10,11 +10,12 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import redis.clients.jedis.Connection
+import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
-import brooklyn.entity.trait.Startable
 
 /**
  * Test the operation of the {@link RedisStore} class.
@@ -32,7 +33,7 @@ public class RedisIntegrationTest {
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         testLocation = new LocalhostMachineProvisioningLocation(name:'london')
     }
 

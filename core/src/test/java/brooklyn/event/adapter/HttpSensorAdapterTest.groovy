@@ -13,6 +13,7 @@ import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestEntityImpl
 
 @Deprecated // Class under test is deprecated
@@ -29,7 +30,7 @@ public class HttpSensorAdapterTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         entity = new TestEntityImpl(app);
         Entities.startManagement(app);
         

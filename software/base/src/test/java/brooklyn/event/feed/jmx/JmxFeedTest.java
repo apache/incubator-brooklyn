@@ -47,6 +47,7 @@ import brooklyn.test.GeneralisedDynamicMBean;
 import brooklyn.test.JmxService;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 
@@ -315,7 +316,7 @@ public class JmxFeedTest {
     // Test reproduces functionality used in Monterey, for Venue entity being told of requestActor
     @Test
     public void testSubscribeToJmxNotificationAndEmitCorrespondingNotificationSensor() throws Exception {
-        TestApplication app = new TestApplication();
+        TestApplication app = new TestApplicationImpl();
         final EntityWithEmitter entity = new EntityWithEmitter(app);
         Entities.startManagement(app);
         try {

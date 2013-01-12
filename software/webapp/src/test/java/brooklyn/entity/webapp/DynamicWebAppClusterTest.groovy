@@ -4,17 +4,14 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.AssertJUnit.*
 
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestJavaWebAppEntity
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -27,7 +24,7 @@ public class DynamicWebAppClusterTest {
     
     @Test
     public void testRequestCountAggregation() {
-        TestApplication app = new TestApplication()
+        TestApplication app = new TestApplicationImpl()
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
             initialSize: 2,
             factory: { properties -> new TestJavaWebAppEntity(properties) },
@@ -52,7 +49,7 @@ public class DynamicWebAppClusterTest {
     // updated a different instance from that retrieved subsequently!
     @Test(groups="WIP")
     public void testPropertiesToChildren() {
-        TestApplication app = new TestApplication()
+        TestApplication app = new TestApplicationImpl()
         DynamicWebAppCluster cluster = new DynamicWebAppCluster(
             factory: { properties -> new TestJavaWebAppEntity(properties + ["a": 1]) },
             parent:app) {

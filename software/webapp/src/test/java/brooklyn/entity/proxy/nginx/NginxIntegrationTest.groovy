@@ -22,6 +22,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.HttpTestUtils
 import brooklyn.test.WebAppMonitor
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -39,7 +40,7 @@ public class NginxIntegrationTest {
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)

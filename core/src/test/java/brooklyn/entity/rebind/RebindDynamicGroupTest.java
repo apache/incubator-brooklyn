@@ -18,6 +18,7 @@ import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +37,7 @@ public class RebindDynamicGroupTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = new TestApplication();
+        origApp = new TestApplicationImpl();
     }
 
     @AfterMethod

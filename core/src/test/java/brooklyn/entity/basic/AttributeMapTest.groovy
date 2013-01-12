@@ -14,7 +14,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.SimpleEntity
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 public class AttributeMapTest {
 
@@ -24,7 +24,7 @@ public class AttributeMapTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplication()
+        app = new TestApplicationImpl()
         SimpleEntity e = new SimpleEntity(app)
         map = new AttributeMap(e)
         Entities.startManagement(app);

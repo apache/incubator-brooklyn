@@ -1,8 +1,9 @@
 package brooklyn.entity.hello;
 
 import static org.testng.Assert.*
-import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey
 import brooklyn.entity.Effector
+import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroup
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
 import brooklyn.entity.basic.NamedParameter
@@ -13,7 +14,10 @@ import brooklyn.event.basic.BasicSensor
 
 
 public class HelloEntity extends AbstractGroup {
-    public HelloEntity(Map flags=[:]) { super(flags) }
+    public HelloEntity() { super() }
+    public HelloEntity(Entity owner) { super(owner) }
+    public HelloEntity(Map flags) { super(flags) }
+    public HelloEntity(Map flags, Entity owner) { super(flags, owner) }
 
     /** records name of the person represented by this entity */
     public static ConfigKey<String> MY_NAME = new BasicConfigKey<String>(String.class, "my.name");

@@ -21,6 +21,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.policy.loadbalancing.MockContainerEntity
 import brooklyn.policy.loadbalancing.MockItemEntity
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.Repeater
 
 public class AbstractFollowTheSunPolicyTest {
@@ -55,7 +56,7 @@ public class AbstractFollowTheSunPolicyTest {
         loc2 = new SimulatedLocation(name:"loc2")
         
         
-        app = new TestApplication()
+        app = new TestApplicationImpl()
         containerGroup = new DynamicGroupImpl([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
         itemGroup = new DynamicGroupImpl([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
         model = new DefaultFollowTheSunModel<Entity, Entity>("pool-model");

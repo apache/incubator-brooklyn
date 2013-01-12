@@ -31,7 +31,7 @@ public class MongoDbTest {
 
     @BeforeMethod(alwaysRun = true)
     public void newTestApplication() {
-        testApplication = new TestApplication()
+        testApplication = new TestApplicationImpl()
         Entities.startManagement(testApplication);
     }
 

@@ -13,6 +13,7 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
 
@@ -31,7 +32,7 @@ public class EntityConfigMapUsageLegacyTest {
     
     @BeforeMethod
     public void setUp() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
     }
     
     @Test

@@ -24,6 +24,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.test.entity.TestClusterImpl;
 import brooklyn.util.MutableMap;
@@ -49,7 +50,7 @@ public class AutoScalerPolicyTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        TestApplication app = new TestApplication();
+        TestApplication app = new TestApplicationImpl();
         cluster = new TestClusterImpl(app, 1);
         resizable = new LocallyResizableEntity(cluster, cluster);
         policy = new AutoScalerPolicy();

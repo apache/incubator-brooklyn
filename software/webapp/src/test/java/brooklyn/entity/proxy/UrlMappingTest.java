@@ -23,6 +23,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
@@ -49,7 +50,7 @@ public class UrlMappingTest {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         
         EntityFactory<StubAppServer> serverFactory = new BasicConfigurableEntityFactory<StubAppServer>(StubAppServer.class);
         cluster = new DynamicClusterImpl(

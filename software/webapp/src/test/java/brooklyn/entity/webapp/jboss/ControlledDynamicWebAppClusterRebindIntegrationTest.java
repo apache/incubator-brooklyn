@@ -29,6 +29,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 
@@ -64,7 +65,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        origApp = new TestApplication();
+        origApp = new TestApplicationImpl();
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)

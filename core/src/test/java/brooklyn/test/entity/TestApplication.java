@@ -1,54 +1,36 @@
 package brooklyn.test.entity;
 
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.Entities;
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEventListener;
-import brooklyn.management.SubscriptionHandle;
-import brooklyn.util.MutableMap;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.trait.Startable;
 
 /**
  * Mock application for testing.
  */
-public class TestApplication extends AbstractApplication {
-	protected static final Logger LOG = LoggerFactory.getLogger(TestApplication.class);
+//TODO Don't want to extend EntityLocal, but tests want to call app.setAttribute
+@ImplementedBy(TestApplicationImpl.class)
+public interface TestApplication extends Application, Startable, EntityLocal {
 
-    public TestApplication() {
-        this(MutableMap.of());
-    }
-    public TestApplication(Map properties) {
-        super(properties);
-    }
+    public <T extends Entity> T createChild(EntitySpec<T> spec);
 
-    public <T> SubscriptionHandle subscribeToMembers(Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        return getSubscriptionContext().subscribeToMembers(parent, sensor, listener);
-    }
+    public <T extends Entity> T createAndManageChild(EntitySpec<T> spec);
 
-    @Override
-    public String toString() {
-        String id = getId();
-        return "Application["+id.substring(Math.max(0, id.length()-8))+"]";
-    }
-
-    /** convenience for wiring in management during testing */
-    public void startManagement() {
-        Entities.startManagement(this);
-    }
+    /**
+     * convenience for wiring in management during testing
+     * 
+     * @deprecated Use Entities.startManagement(app)
+     */
+    @Deprecated
+    public void startManagement();
     
-    /** convenience for wiring in management during testing */
-    public <T extends Entity> T manage(T entity) {
-        if (!Entities.manage(entity)) {
-            Assert.assertEquals(entity.getApplication(), this);
-        }
-        return entity;
-    }
-
+    /**
+     * convenience for wiring in management during testing
+     * 
+     * @deprecated Use Entities.manage(entity)
+     */
+    @Deprecated
+    public <T extends Entity> T manage(T entity);
 }

@@ -19,6 +19,7 @@ import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -39,7 +40,7 @@ public class NginxHttpsSslIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
     }
 
     @AfterMethod(alwaysRun=true)

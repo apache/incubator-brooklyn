@@ -11,7 +11,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Application
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
 
@@ -25,7 +25,7 @@ public class ShellSensorAdapterTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         entity = new TestEntityImpl(app);
         Entities.startManagement(app);
         entityRegistry = new SensorRegistry(entity);

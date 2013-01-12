@@ -20,6 +20,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Preconditions
@@ -58,7 +59,7 @@ public class AbstractLoadBalancingPolicyTest {
         
         model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model");
         
-        app = new TestApplication()
+        app = new TestApplicationImpl()
         containerGroup = new DynamicGroupImpl([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
         itemGroup = new DynamicGroupImpl([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
         pool = new BalanceableWorkerPool([:], app)

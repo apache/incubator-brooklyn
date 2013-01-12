@@ -20,7 +20,7 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 /**
  * Test Nginx proxying a cluster of JBoss7Server entities on AWS for ENGR-1689.
@@ -44,7 +44,7 @@ public class NginxAmazonTest {
 
     @BeforeMethod(groups = "Live")
     public void setup() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
     }
 
     @AfterMethod(groups = "Live")
