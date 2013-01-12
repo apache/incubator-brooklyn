@@ -17,6 +17,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
@@ -50,6 +51,31 @@ class DynamicFabricTest {
         loc2 = new SimulatedLocation()
         loc3 = new SimulatedLocation()
         app.startManagement();
+    }
+    
+    @Test
+    public void testDynamicFabricUsesMemberSpecToCreateAndStartEntityWhenGivenSingleLocation() {
+        runWithEntitySpecWithLocations([loc1])
+    }
+
+    @Test
+    public void testDynamicFabricUsesMemberSpecToCreateAndStartsEntityWhenGivenManyLocations() {
+        runWithEntitySpecWithLocations([loc1,loc2,loc3])
+    }
+    
+    private void runWithEntitySpecWithLocations(Collection<Location> locs) {
+        DynamicFabric fabric = new DynamicFabric(memberSpec: BasicEntitySpec.newInstance(TestEntity.class), app)
+        app.manage(fabric);
+        app.start(locs)
+        
+        assertEquals(fabric.children.size(), locs.size(), Joiner.on(",").join(fabric.children))
+        fabric.children.each {
+            TestEntity child = it
+            assertEquals(child.counter.get(), 1)
+            assertEquals(child.locations.size(), 1, Joiner.on(",").join(child.locations))
+            assertTrue(locs.removeAll(child.locations))
+        }
+        assertTrue(locs.isEmpty(), Joiner.on(",").join(locs))
     }
     
     @Test

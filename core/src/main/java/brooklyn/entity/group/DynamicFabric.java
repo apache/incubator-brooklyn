@@ -12,18 +12,23 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.WrappingEntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
+import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Preconditions;
@@ -43,15 +48,35 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
 
     public static final BasicAttributeSensor<Integer> FABRIC_SIZE = new BasicAttributeSensor<Integer>(Integer.class, "fabric.size", "Fabric size");
     
-    @SetFromFlag
-    ConfigurableEntityFactory factory;
+    @SetFromFlag("memberSpec")
+    public static final ConfigKey<EntitySpec<?>> MEMBER_SPEC = new BasicConfigKey(
+            EntitySpec.class, "dynamiccfabric.memberspec", "entity spec for creating new cluster members", null);
 
-    @SetFromFlag
-    String displayNamePrefix;
-    @SetFromFlag
-    String displayNameSuffix;
+    @SetFromFlag("factory")
+    public static final ConfigKey<EntityFactory> FACTORY = new BasicConfigKey<EntityFactory>(
+            EntityFactory.class, "dynamicfabric.factory", "factory for creating new cluster members", null);
+
+    @SetFromFlag("displayNamePrefix")
+    public static final ConfigKey<String> DISPLAY_NAME_PREFIX = new BasicConfigKey<String>(
+            String.class, "dynamicfabric.displayNamePrefix", "Display name prefix, for created children", null);
+
+    @SetFromFlag("displayNameSuffix")
+    public static final ConfigKey<String> DISPLAY_NAME_SUFFIX = new BasicConfigKey<String>(
+            String.class, "dynamicfabric.displayNameSuffix", "Display name suffix, for created children", null);
 
     private CustomAggregatingEnricher fabricSizeEnricher;
+
+    public DynamicFabric() {
+        this(MutableMap.of(), null);
+    }
+
+    public DynamicFabric(Map properties) {
+        this (properties, null);
+    }
+    
+    public DynamicFabric(Entity parent) {
+        this(MutableMap.of(), parent);
+    }
 
     /**
      * Instantiate a new DynamicFabric.
@@ -74,11 +99,29 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
         
         setAttribute(SERVICE_UP, false);
     }
-    public DynamicFabric(Map properties) {
-        this (properties, null);
+    
+    protected EntitySpec<?> getMemberSpec() {
+        return getConfig(MEMBER_SPEC);
     }
-    public DynamicFabric(Entity parent) {
-        this(Collections.emptyMap(), parent);
+    
+    protected EntityFactory<?> getFactory() {
+        return getConfig(FACTORY);
+    }
+    
+    protected String getDisplayNamePrefix() {
+        return getConfig(DISPLAY_NAME_PREFIX);
+    }
+    
+    protected String getDisplayNameSuffix() {
+        return getConfig(DISPLAY_NAME_SUFFIX);
+    }
+    
+    public void setMemberSpec(EntitySpec<?> memberSpec) {
+        setConfigEvenIfOwned(MEMBER_SPEC, memberSpec);
+    }
+    
+    public void setFactory(EntityFactory<?> factory) {
+        setConfigEvenIfOwned(FACTORY, factory);
     }
     
     @Override
@@ -143,23 +186,19 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
         String locationName = elvis(location.getLocationProperty("displayName"), location.getName(), null);
         Map creation = Maps.newLinkedHashMap();
         creation.putAll(getCustomChildFlags());
-        if (truth(displayNamePrefix) || truth(displayNameSuffix)) {
-            String displayName = "" + elvis(displayNamePrefix, "") + elvis(locationName, "unnamed") + elvis(displayNameSuffix,"");
+        if (truth(getDisplayNamePrefix()) || truth(getDisplayNameSuffix())) {
+            String displayName = "" + elvis(getDisplayNamePrefix(), "") + elvis(locationName, "unnamed") + elvis(getDisplayNameSuffix(),"");
             creation.put("displayName", displayName);
         }
-        logger.info("Adding a cluster to {} in {} with properties {}", new Object[] {this, location, creation});
+        logger.info("Creating and adding an entity to fabric {} in {} with properties {}", new Object[] {this, location, creation});
 
-        if (factory==null)
-            throw new IllegalStateException("EntityFactory factory not supplied for "+this);
-        EntityFactory factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation)factory).newFactoryForLocation(location) : factory;
-        Entity entity = factoryToUse.newEntity(creation, this);
+        Entity entity = createCluster(location, creation);
                 
-        Preconditions.checkNotNull(entity, this+" factory.newEntity call returned null");
         if (locationName != null) {
             if (entity.getDisplayName()==null)
-                ((AbstractEntity)entity).setDisplayName(entity.getClass().getSimpleName() +" ("+locationName+")");
+                ((EntityLocal)entity).setDisplayName(entity.getClass().getSimpleName() +" ("+locationName+")");
             else if (!entity.getDisplayName().contains(locationName)) 
-                ((AbstractEntity)entity).setDisplayName(entity.getDisplayName() +" ("+locationName+")");
+                ((EntityLocal)entity).setDisplayName(entity.getDisplayName() +" ("+locationName+")");
         }
         if (entity.getParent()==null) entity.setParent(this);
         Entities.manage(entity);
@@ -168,4 +207,24 @@ public class DynamicFabric extends AbstractEntity implements Startable, Fabric {
 
         return entity;
     }
+    
+    protected Entity createCluster(Location location, Map flags) {
+        EntitySpec<?> memberSpec = getMemberSpec();
+        if (memberSpec != null) {
+            EntitySpec<?> wrappingEntitySpec = WrappingEntitySpec.newInstance(memberSpec).configure(flags).parent(this);
+            return getManagementSupport().getManagementContext(false).getEntityManager().createEntity(wrappingEntitySpec);
+        }
+        
+        EntityFactory<?> factory = getFactory();
+        if (factory == null) { 
+            throw new IllegalStateException("No member spec nor entity factory supplied for dynamic fabric "+this);
+        }
+        EntityFactory<?> factoryToUse = (factory instanceof EntityFactoryForLocation) ? ((EntityFactoryForLocation)factory).newFactoryForLocation(location) : factory;
+        Entity entity = factoryToUse.newEntity(flags, this);
+        if (entity==null) 
+            throw new IllegalStateException("EntityFactory factory routine returned null entity, in "+this);
+        
+        return entity;
+    }
+    
 }
