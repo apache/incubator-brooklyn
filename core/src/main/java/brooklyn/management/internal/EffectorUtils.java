@@ -204,7 +204,8 @@ public class EffectorUtils {
         String name = eff.getName();
         
         try {
-            if (log.isDebugEnabled()) log.debug("Invoking effector {} on {} with args {}", new Object[] {name, entity, args});
+            if (log.isDebugEnabled()) log.debug("Invoking effector {} on {}", new Object[] {name, entity});
+            if (log.isTraceEnabled()) log.trace("Invoking effector {} on {} with args {}", new Object[] {name, entity, args});
             EntityManagementSupport mgmtSupport = entity.getManagementSupport();
             if (!mgmtSupport.isDeployed()) {
                 mgmtSupport.attemptLegacyAutodeployment(name);
@@ -257,7 +258,8 @@ public class EffectorUtils {
         String id = entity.getId();
         String name = eff.getName();
         
-        if (log.isDebugEnabled()) log.debug("Invoking effector {} on {} with args {}", new Object[] {name, entity, parameters});
+        if (log.isDebugEnabled()) log.debug("Invoking effector {} on {}", new Object[] {name, entity});
+        if (log.isTraceEnabled()) log.trace("Invoking effector {} on {} with args {}", new Object[] {name, entity, parameters});
         EntityManagementSupport mgmtSupport = entity.getManagementSupport();
         if (!mgmtSupport.isDeployed()) {
             mgmtSupport.attemptLegacyAutodeployment(name);

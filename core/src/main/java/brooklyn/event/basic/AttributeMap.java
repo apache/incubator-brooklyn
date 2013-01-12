@@ -91,12 +91,12 @@ public final class AttributeMap implements Serializable {
     }
     
     public <T> T updateWithoutPublishing(AttributeSensor<T> attribute, T newValue) {
-        if (log.isDebugEnabled()) {
+        if (log.isTraceEnabled()) {
             Object oldValue = getValue(attribute);
             if (!Objects.equal(oldValue, newValue != null)) {
-                log.debug("setting attribute {} to {} (was {}) on {}", new Object[] {attribute.getName(), newValue, oldValue, entity});
+                log.trace("setting attribute {} to {} (was {}) on {}", new Object[] {attribute.getName(), newValue, oldValue, entity});
             } else {
-                if (log.isTraceEnabled()) log.trace("setting attribute {} to {} (unchanged) on {}", new Object[] {attribute.getName(), newValue, this});
+                log.trace("setting attribute {} to {} (unchanged) on {}", new Object[] {attribute.getName(), newValue, this});
             }
         }
 
