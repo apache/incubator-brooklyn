@@ -11,7 +11,8 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.DynamicFabric
-import brooklyn.entity.proxy.AbstractController;
+import brooklyn.entity.group.DynamicFabricImpl
+import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster
@@ -37,7 +38,7 @@ class GlobalWebFabricExample extends AbstractApplication {
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
     
     
-    DynamicFabric webFabric = new DynamicFabric(this, name: "Web Fabric", factory: new ElasticJavaWebAppService.Factory());
+    DynamicFabric webFabric = new DynamicFabricImpl(this, name: "Web Fabric", factory: new ElasticJavaWebAppService.Factory());
     
     GeoscalingDnsService geoDns = new GeoscalingDnsService(this, name: "GeoScaling DNS",
             username: config.getFirst("brooklyn.geoscaling.username", failIfNone:true),

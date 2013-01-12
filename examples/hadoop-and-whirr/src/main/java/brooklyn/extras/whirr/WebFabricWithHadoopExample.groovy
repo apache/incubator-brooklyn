@@ -15,6 +15,7 @@ import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
 import brooklyn.entity.group.DynamicFabric
+import brooklyn.entity.group.DynamicFabricImpl
 import brooklyn.entity.proxy.AbstractController
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.ElasticJavaWebAppService
@@ -69,7 +70,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
     WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
     { hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2"); }
     
-    DynamicFabric webFabric = new DynamicFabric(this, name: "Web Fabric", factory: new ElasticJavaWebAppService.Factory());
+    DynamicFabric webFabric = new DynamicFabricImpl(this, name: "Web Fabric", factory: new ElasticJavaWebAppService.Factory());
     
     GeoscalingDnsService geoDns = new GeoscalingDnsService(this, name: "GeoScaling DNS",
             username: config.getFirst("brooklyn.geoscaling.username", failIfNone:true),
