@@ -15,9 +15,9 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.basic.DynamicGroupImpl
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.group.DynamicFabricImpl
-import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -55,51 +55,45 @@ public class AbstractGeoDnsServiceTest {
         latitude: EAST_LATITUDE, longitude: EAST_LONGITUDE); 
     
     private AbstractApplication app;
-    private DynamicFabric fabric
-    private TestService geoDns;
+    private DynamicFabric fabric;
+    private DynamicGroup testEntities;
+    private GeoDnsTestService geoDns;
     
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
         def factory = { properties -> new TestEntityImpl(properties) }
         app = new AbstractApplication() { };
         fabric = new DynamicFabricImpl(parent:app, factory:factory);
+        
+        testEntities = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) });
+        geoDns = new GeoDnsTestService(app, pollPeriod:10);
+        geoDns.setTargetEntityProvider(testEntities);
+        Entities.startManagement(app);
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (fabric != null && fabric.getAttribute(Startable.SERVICE_UP)) {
-            fabric.stop();
-        }
+        if (app != null) Entities.destroy(app);
     }
 
     
     @Test
     public void testGeoInfoOnLocation() {
-        DynamicFabric fabric = new DynamicFabricImpl(factory:{ Map properties -> return new TestEntityImpl(properties) }, app)
-        DynamicGroup testEntities = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) });
-        geoDns = new TestService(app);
-        geoDns.setTargetEntityProvider(testEntities);
-        
         app.start( [ WEST_CHILD_WITH_LOCATION, EAST_CHILD_WITH_LOCATION ] );
         
         waitForTargetHosts(geoDns);
-        assertTrue(geoDns.targetHostsByName.containsKey("West child with location"));
-        assertTrue(geoDns.targetHostsByName.containsKey("East child with location"));
+        assertTrue(geoDns.targetHostsByName.containsKey("West child with location"), "targets="+geoDns.targetHostsByName);
+        assertTrue(geoDns.targetHostsByName.containsKey("East child with location"), "targets="+geoDns.targetHostsByName);
     }
     
     @Test
     public void testGeoInfoOnParentLocation() {
-        DynamicFabric fabric = new DynamicFabricImpl(factory:{ Map properties -> return new TestEntityImpl(properties) }, app)
-        DynamicGroup testEntities = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) });
-        geoDns = new TestService(app);
-        geoDns.setTargetEntityProvider(testEntities);
-        
         app.start( [ WEST_CHILD, EAST_CHILD ] );
         
         waitForTargetHosts(geoDns);
-        assertTrue(geoDns.targetHostsByName.containsKey("West child"));
-        assertTrue(geoDns.targetHostsByName.containsKey("East child"));
+        assertTrue(geoDns.targetHostsByName.containsKey("West child"), "targets="+geoDns.targetHostsByName);
+        assertTrue(geoDns.targetHostsByName.containsKey("East child"), "targets="+geoDns.targetHostsByName);
     }
     
     //TODO
@@ -111,7 +105,7 @@ public class AbstractGeoDnsServiceTest {
 //    public void testEmptyGroup() {
 //    }
     
-    private static void waitForTargetHosts(TestService service) {
+    private static void waitForTargetHosts(GeoDnsTestService service) {
         new Repeater("Wait for target hosts")
             .repeat()
             .every(500 * MILLISECONDS)
@@ -121,10 +115,10 @@ public class AbstractGeoDnsServiceTest {
     }
     
     
-    private class TestService extends AbstractGeoDnsService {
+    private class GeoDnsTestService extends AbstractGeoDnsService {
         public Map<String, HostGeoInfo> targetHostsByName = new LinkedHashMap<String, HostGeoInfo>();
         
-        public TestService(properties=[:], Entity parent) {
+        public GeoDnsTestService(properties=[:], Entity parent) {
             super(properties, parent);
         }
         

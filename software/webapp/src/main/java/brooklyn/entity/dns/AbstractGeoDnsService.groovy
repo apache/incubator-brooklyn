@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import brooklyn.config.ConfigKey
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
 import brooklyn.entity.basic.AbstractEntity
@@ -20,6 +21,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.util.flags.SetFromFlag
 
@@ -36,6 +38,8 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
 
     protected Map<Entity, HostGeoInfo> targetHosts = Collections.synchronizedMap(new LinkedHashMap<Entity, HostGeoInfo>());
     
+    @SetFromFlag("pollPeriod")
+    public static final ConfigKey<Long> POLL_PERIOD = new BasicConfigKey<Long>(Long.class, "geodns.pollperiod", "Poll period (in milliseconds) for refreshing target hosts", 5000L)
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
     public static final Sensor SERVICE_UP = Startable.SERVICE_UP;
     public static final BasicAttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
@@ -108,7 +112,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
                         Throwables.propagate(t)
                     }
                 }
-            }, 0, 5, TimeUnit.SECONDS
+            }, 0, getConfig(POLL_PERIOD), TimeUnit.MILLISECONDS
         );
     }
     
