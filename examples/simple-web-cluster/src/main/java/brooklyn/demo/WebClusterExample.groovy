@@ -1,8 +1,5 @@
 package brooklyn.demo
 
-import java.util.List
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -10,12 +7,12 @@ import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.proxy.nginx.NginxControllerImpl
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
-import brooklyn.location.basic.CommandLineLocations
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
@@ -43,7 +40,7 @@ public class WebClusterExample extends AbstractApplication {
     }
     
 
-    NginxController nginxController = new NginxController(this,
+    NginxController nginxController = new NginxControllerImpl(this,
 //        domain: 'webclusterexample.brooklyn.local',
         port:"8000+")
     

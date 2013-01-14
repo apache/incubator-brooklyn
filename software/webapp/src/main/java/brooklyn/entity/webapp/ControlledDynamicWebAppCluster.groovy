@@ -11,7 +11,7 @@ import brooklyn.entity.basic.ConfigurableEntityFactory
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.Cluster
 import brooklyn.entity.proxy.AbstractController
-import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.proxy.nginx.NginxControllerImpl
 import brooklyn.entity.trait.Resizable
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
@@ -69,7 +69,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         cachedController = getChildren().find { it in AbstractController }
         if (cachedController!=null) return cachedController;
         log.debug("creating default controller for {}", this);
-        cachedController = new NginxController(this);
+        cachedController = new NginxControllerImpl(this);
         Entities.manage(cachedController);
         return cachedController;
     }

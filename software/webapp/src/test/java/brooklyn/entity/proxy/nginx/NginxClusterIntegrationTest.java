@@ -16,21 +16,21 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.BasicConfigurableEntityFactory;
-import brooklyn.entity.basic.BasicGroupImpl;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxy.LoadBalancerCluster;
+import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Predicates;
@@ -51,17 +51,21 @@ public class NginxClusterIntegrationTest {
     private LocalhostMachineProvisioningLocation localhostProvisioningLoc;
     private TestApplication app;
     private LoadBalancerCluster loadBalancerCluster;
-    private EntityFactory<NginxController> nginxFactory;
+    private EntitySpec<NginxController> nginxSpec;
     private Group urlMappings;
+
 
     
     @BeforeMethod(groups = "Integration")
     public void setup() throws Exception {
         war = checkNotNull(getClass().getClassLoader().getResource("hello-world.war"), "hello-world.war not on classpath");
         localhostProvisioningLoc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
-        app = new TestApplicationImpl();
-        nginxFactory = new BasicConfigurableEntityFactory<NginxController>(NginxController.class);
-        urlMappings = new BasicGroupImpl(MutableMap.of("childrenAsMembers", true), app);
+        
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        urlMappings = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class)
+                .configure("childrenAsMembers", true));
+        
+        nginxSpec = BasicEntitySpec.newInstance(NginxController.class);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
@@ -71,15 +75,10 @@ public class NginxClusterIntegrationTest {
 
     @Test(groups = "Integration")
     public void testCreatesNginxInstancesAndResizes() {
-        loadBalancerCluster = new LoadBalancerCluster(
-                MutableMap.builder()
-                        .put("factory", nginxFactory)
-                        .put("initialSize", 1)
-                        .build(),
-                app);
-        loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
-        
-        Entities.startManagement(app);
+        loadBalancerCluster = app.createAndManageChild(BasicEntitySpec.newInstance(LoadBalancerCluster.class)
+                .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
+                .configure("initialSize", 1)
+                .configure(NginxController.DOMAIN_NAME, "localhost"));
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
@@ -95,25 +94,17 @@ public class NginxClusterIntegrationTest {
     
     @Test(groups = "Integration")
     public void testNginxInstancesConfiguredWithServerPool() {
-        DynamicCluster serverPool = new DynamicClusterImpl(
-                MutableMap.builder()
-                        .put("parent", app)
-                        .put("factory", new JBoss7ServerFactory())
-                        .put("initialSize", 1)
-                        .put("war", war.getPath())
-                        .build(),
-                app);
+        DynamicCluster serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                //.configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+                .configure(DynamicCluster.FACTORY, new JBoss7ServerFactory())
+                .configure("initialSize", 1)
+                .configure(JavaWebAppService.ROOT_WAR, war.getPath()));
         
-        loadBalancerCluster = new LoadBalancerCluster(
-                MutableMap.builder()
-                        .put("serverPool", serverPool)
-                        .put("factory", nginxFactory)
-                        .put("initialSize", 1)
-                        .build(),
-                app);
-        loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
-        
-        Entities.startManagement(app);
+        loadBalancerCluster = app.createAndManageChild(BasicEntitySpec.newInstance(LoadBalancerCluster.class)
+                .configure("serverPool", serverPool)
+                .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
+                .configure("initialSize", 1)
+                .configure(NginxController.DOMAIN_NAME, "localhost"));
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
@@ -126,34 +117,23 @@ public class NginxClusterIntegrationTest {
 
     @Test(groups = "Integration")
     public void testNginxInstancesConfiguredWithUrlMappings() {
+        DynamicCluster c1 = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.FACTORY, new JBoss7ServerFactory())
+                .configure("initialSize", 1)
+                .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(war.getPath())));
+
+        UrlMapping urlMapping = app.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(UrlMapping.class)
+                .configure("domain", "localhost")
+                .configure("path", "/hello-world($|/.*)")
+                .configure("target", c1)
+                .parent(urlMappings));
+        Entities.manage(urlMapping);
         
-        DynamicCluster c1 = new DynamicClusterImpl(
-                MutableMap.builder()
-                        .put("parent", app)
-                        .put("factory", new JBoss7ServerFactory())
-                        .put("initialSize", 1)
-                        .put("wars", ImmutableList.of(war.getPath()))
-                        .build(),
-                app);
+        loadBalancerCluster = app.createAndManageChild(BasicEntitySpec.newInstance(LoadBalancerCluster.class)
+                .configure("urlMappings", urlMappings)
+                .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
+                .configure("initialSize", 1));
 
-        new UrlMapping(
-                MutableMap.builder()
-                        .put("domain", "localhost")
-                        .put("path", "/hello-world($|/.*)")
-                        .put("target", c1)
-                        .build(),
-                urlMappings);
-
-        loadBalancerCluster = new LoadBalancerCluster(
-                MutableMap.builder()
-                        .put("urlMappings", urlMappings)
-                        .put("factory", nginxFactory)
-                        .put("initialSize", 1)
-                        .build(),
-                app);
-
-        Entities.startManagement(app);
-        
         app.start(ImmutableList.of(localhostProvisioningLoc));
         
         assertEquals(findNginxs().size(), 1);
@@ -165,15 +145,10 @@ public class NginxClusterIntegrationTest {
 
     @Test(groups = "Integration")
     public void testClusterIsUpIffHasChildLoadBalancer() {
-        loadBalancerCluster = new LoadBalancerCluster(
-                MutableMap.builder()
-                        .put("factory", nginxFactory)
-                        .put("initialSize", 0)
-                        .build(),
-                app);
-        loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
-        
-        Entities.startManagement(app);
+        loadBalancerCluster = app.createAndManageChild(BasicEntitySpec.newInstance(LoadBalancerCluster.class)
+                .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
+                .configure("initialSize", 0)
+                .configure(NginxController.DOMAIN_NAME, "localhost"));
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         TestUtils.assertAttributeContinually(loadBalancerCluster, Startable.SERVICE_UP, false);
@@ -188,16 +163,11 @@ public class NginxClusterIntegrationTest {
     // Warning: test is a little brittle for if a previous run leaves something on these required ports
     @Test(groups = "Integration")
     public void testConfiguresNginxInstancesWithInheritedPortConfig() {
-        loadBalancerCluster = new LoadBalancerCluster(
-                MutableMap.builder()
-                        .put("factory", nginxFactory)
-                        .put("initialSize", 1)
-                        .build(),
-                app);
-        loadBalancerCluster.setConfig(NginxController.DOMAIN_NAME.getConfigKey(), "localhost");
-        loadBalancerCluster.setConfig(NginxController.PROXY_HTTP_PORT.getConfigKey(), PortRanges.fromString("8765+"));
-        
-        Entities.startManagement(app);
+        loadBalancerCluster = app.createAndManageChild(BasicEntitySpec.newInstance(LoadBalancerCluster.class)
+                .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
+                .configure("initialSize", 1)
+                .configure(NginxController.DOMAIN_NAME, "localhost")
+                .configure(NginxController.PROXY_HTTP_PORT, PortRanges.fromString("8765+")));
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
         

@@ -53,7 +53,7 @@ class AbstractControllerTest {
         cluster = new DynamicClusterImpl(parent:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
         
         final AtomicInteger invokeCountForStart = new AtomicInteger(0);
-        controller = new AbstractController(
+        controller = new AbstractControllerImpl(
                 parent:app, 
                 serverPool:cluster, 
                 portNumberSensor:ClusteredEntity.HTTP_PORT,

@@ -31,8 +31,13 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     protected boolean customizationCompleted = false;
 
-    public NginxSshDriver(NginxController entity, SshMachineLocation machine) {
+    public NginxSshDriver(NginxControllerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+    }
+    
+    @Override
+    public NginxControllerImpl getEntity() {
+        return (NginxControllerImpl) super.getEntity();
     }
 
     protected String getLogFileLocation() {
@@ -142,7 +147,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         ).execute();
         
         customizationCompleted = true;
-        ((NginxController) entity).doExtraConfigurationDuringStart();
+        getEntity().doExtraConfigurationDuringStart();
     }
 
     public boolean isCustomizationCompleted() {

@@ -23,6 +23,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.proxy.nginx.NginxController;
+import brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -100,7 +101,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     // FIXME Fails before rebind (getting 404 from nginx)! Need to investigate this more.
     @Test(groups = {"Integration"})
     public void testRebindsToRunningCluster() throws Exception {
-        NginxController origNginx = new NginxController(MutableMap.of("domain", "localhost"), origApp);
+        NginxController origNginx = new NginxControllerImpl(MutableMap.of("domain", "localhost"), origApp);
 
         new ControlledDynamicWebAppCluster(
     			MutableMap.builder()

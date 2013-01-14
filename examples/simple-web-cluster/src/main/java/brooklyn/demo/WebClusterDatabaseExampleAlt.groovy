@@ -9,7 +9,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.database.mysql.MySqlNodeImpl
-import brooklyn.entity.proxy.nginx.NginxController
+import brooklyn.entity.proxy.nginx.NginxControllerImpl
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebAppService
@@ -80,7 +80,7 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
     }
 
     ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this,
-        controller: new NginxController(port: 8080),
+        controller: new NginxControllerImpl(port: 8080),
         factory: this.&newWebServer )
     
     AutoScalerPolicy policy = AutoScalerPolicy.builder()

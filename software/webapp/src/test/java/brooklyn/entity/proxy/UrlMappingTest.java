@@ -11,20 +11,19 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxy.nginx.UrlMapping;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
-import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -50,22 +49,17 @@ public class UrlMappingTest {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
-        app = new TestApplicationImpl();
+        app = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
         
         EntityFactory<StubAppServer> serverFactory = new BasicConfigurableEntityFactory<StubAppServer>(StubAppServer.class);
-        cluster = new DynamicClusterImpl(
-                MutableMap.of("initialSize", initialClusterSize, "factory", serverFactory), 
-                app);
+        cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure("initialSize", initialClusterSize)
+                .configure("factory", serverFactory));
 
-        urlMapping = new UrlMapping(
-                MutableMap.builder()
-                        .put("domain", "localhost")
-                        .put("target", cluster)
-                        .build(),
-                app);
+        urlMapping = app.createAndManageChild(BasicEntitySpec.newInstance(UrlMapping.class)
+                .configure("domain", "localhost")
+                .configure("target", cluster));
 
-        Entities.startManagement(app, managementContext);
-        
         app.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
     }
 

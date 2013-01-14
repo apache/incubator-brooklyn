@@ -10,16 +10,18 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.group.DynamicCluster
-import brooklyn.entity.group.DynamicClusterImpl
 import brooklyn.entity.proxy.ProxySslConfig
+import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.test.HttpTestUtils
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -40,7 +42,7 @@ public class NginxHttpsSslIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplicationImpl();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -53,19 +55,21 @@ public class NginxHttpsSslIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withCertificateAndKeyCopy() {
-        def template = { Map properties -> new JBoss7Server(properties) }
-        cluster = new DynamicClusterImpl(parent:app, factory:template, initialSize:1, war:WAR_URL)
+        cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+            .configure(DynamicCluster.FACTORY, { Map properties -> new JBoss7Server(properties) })
+            .configure("initialSize", 1)
+            .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
         
         ProxySslConfig ssl = new ProxySslConfig(
                 certificateSourceUrl:CERTIFICATE_URL,
                 keySourceUrl:KEY_URL);
-        nginx = new NginxController(app,
-                sticky: false,
-                cluster: cluster,
-                domain : "localhost",
-                port: "8443+",
-                ssl: ssl
-            );
+        
+        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("sticky", false)
+                .configure("cluster", cluster)
+                .configure("domain", "localhost")
+                .configure("port", "8443+")
+                .configure("ssl", ssl));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
 
@@ -80,11 +84,11 @@ public class NginxHttpsSslIntegrationTest {
             assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
 
             // Nginx URL is available
-            assertTrue urlRespondsWithStatusCode200(url)
+            HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
 
             // Web-server URL is available
             cluster.members.each {
-                assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
+                HttpTestUtils.assertHttpStatusCodeEquals(it.getAttribute(WebAppService.ROOT_URL), 200);
             }
         }
         
@@ -102,47 +106,48 @@ public class NginxHttpsSslIntegrationTest {
 
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withPreinstalledCertificateAndKey() {
-           def template = { Map properties -> new JBoss7Server(properties) }
-           cluster = new DynamicClusterImpl(parent:app, factory:template, initialSize:1, war:WAR_URL)
+        cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+            .configure(DynamicCluster.FACTORY, { Map properties -> new JBoss7Server(properties) })
+            .configure("initialSize", 1)
+            .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
+        
+        ProxySslConfig ssl = new ProxySslConfig(
+                certificateDestination: getFile("ssl/certs/localhost/server.crt"),
+                keyDestination: getFile("ssl/certs/localhost/server.key"));
+        
+        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("sticky", false)
+                .configure("cluster", cluster)
+                .configure("domain", "localhost")
+                .configure("port", "8443+")
+                .configure("ssl", ssl));
 
-           ProxySslConfig ssl = new ProxySslConfig(
-                   certificateDestination: getFile("ssl/certs/localhost/server.crt"),
-                   keyDestination: getFile("ssl/certs/localhost/server.key"));
+        app.start([ new LocalhostMachineProvisioningLocation() ])
 
-           nginx = new NginxController(app,
-                   sticky: false,
-                   cluster: cluster,
-                   domain : "localhost",
-                   port: "8443+",
-                   ssl: ssl
-               );
+        String url = nginx.getAttribute(WebAppService.ROOT_URL);
+        if (!url.startsWith("https://")) Assert.fail("URL should be https: "+url);
 
-           app.start([ new LocalhostMachineProvisioningLocation() ])
+        executeUntilSucceeds() {
+            // Services are running
+            assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
 
-           String url = nginx.getAttribute(WebAppService.ROOT_URL);
-           if (!url.startsWith("https://")) Assert.fail("URL should be https: "+url);
+            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
 
-           executeUntilSucceeds() {
-               // Services are running
-               assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-               cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+            // Nginx URL is available
+            HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
 
-               assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            // Web-server URL is available
+            cluster.members.each {
+                HttpTestUtils.assertHttpStatusCodeEquals(it.getAttribute(WebAppService.ROOT_URL), 200)
+            }
+        }
 
-               // Nginx URL is available
-               assertTrue urlRespondsWithStatusCode200(url)
+        app.stop()
 
-               // Web-server URL is available
-               cluster.members.each {
-                   assertTrue urlRespondsWithStatusCode200(it.getAttribute(WebAppService.ROOT_URL))
-               }
-           }
-
-           app.stop()
-
-           // Services have stopped
-           assertFalse nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-           assertFalse cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-           cluster.members.each { assertFalse it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
-       }
+        // Services have stopped
+        assertFalse nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+        assertFalse cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+        cluster.members.each { assertFalse it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+    }
 }

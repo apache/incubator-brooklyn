@@ -1,11 +1,19 @@
 package brooklyn.qa.longevity.webcluster;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.nginx.NginxController;
+import brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
@@ -16,13 +24,6 @@ import brooklyn.location.basic.LocationRegistry;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.MutableMap;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 public class WebClusterApp extends AbstractApplication {
 
@@ -54,7 +55,7 @@ public class WebClusterApp extends AbstractApplication {
 
         WebClusterApp app = new WebClusterApp(MutableMap.of("name", "Brooklyn WebApp Cluster example"));
 
-        NginxController nginxController = new NginxController(
+        NginxController nginxController = new NginxControllerImpl(
                 // domain: 'webclusterexample.brooklyn.local',
                 MutableMap.of("port", 8000));
 
