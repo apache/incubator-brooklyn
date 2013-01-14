@@ -12,8 +12,10 @@ toc: /toc.json
 {% if site.server %} 
 > **Server (debug) mode detected.**
 
-> *Links to other versions will likely not work when running in server/debug mode.
-Files must be copied to the brooklyncentral.github.com repo for many of the links below to resolve correctly.*
+> *Links to other versions on this page and others will likely not work when running in server/debug mode.
+Files must be copied to the brooklyncentral.github.com repo for these links to resolve correctly.*
+
+> *Debug page generated {{ site.time }}*
 {% endif %}
 
 
@@ -61,7 +63,7 @@ Other versions with documentation available are listed below.
 <!--- archive version -->
 
 This is the archived documentation for Brooklyn v{{ site.brooklyn-version }}
-(generated {{ site.time }}).
+(generated {{ site.time }}, archived under {{ site.url }}).
 
 [View current documentation here.](/meta/versions.html)
 
@@ -69,9 +71,9 @@ This is the archived documentation for Brooklyn v{{ site.brooklyn-version }}
 {% endif %}
 
 
-<!--- 
 ### Version History
 
-version history can go here 
+* **[MASTER](/v/0.5.0-SNAPSHOT)**: includes new JS GUI and REST API, rebind/persistence support, cleaner naming conventions, more entities
 
--->
+* **[v0.4.0-rc.2](/v/0.4.0-rc.2/)**: current RC of first GA release, supporting wide range of entities and examples
+

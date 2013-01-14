@@ -9,7 +9,7 @@ fi
 
 rm -rf _site/
 
-jekyll --pygments $* || { echo failed jekyll site build ; exit 1 ; }
+jekyll --pygments $* "$@" || { echo failed jekyll site build ; exit 1 ; }
 echo
 
 pushd _javadoc > /dev/null
