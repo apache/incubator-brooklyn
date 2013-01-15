@@ -30,6 +30,8 @@ import com.google.common.collect.Maps;
 public class DynamicGroup extends AbstractGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroup.class);
     
+    private final Object _mutex = new Object();
+    
     @SetFromFlag("entityFilter")
     public static final ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = new BasicConfigKey(
             Predicate.class, "dynamicgroup.entityfilter", "Filter for which entities will automatically be in group", null);
@@ -119,27 +121,35 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     protected void onEntityAdded(Entity item) {
-        if (acceptsEntity(item)) {
-            if (log.isDebugEnabled()) log.debug("{} detected item add {}", this, item);
+        synchronized (_mutex) {
+            if (acceptsEntity(item)) {
+                if (log.isDebugEnabled()) log.debug("{} detected item add {}", this, item);
             addMember(item);
+            }
         }
     }
     
     protected void onEntityRemoved(Entity item) {
+        synchronized (_mutex) { 
         if (removeMember(item))
             if (log.isDebugEnabled()) log.debug("{} detected item removal {}", this, item);
+        }
     }
     
     protected void onEntityChanged(Entity item) {
-        boolean accepts = acceptsEntity(item);
-        boolean has = hasMember(item);
-        if (has && !accepts) {
-            removeMember(item);
-            if (log.isDebugEnabled()) log.debug("{} detected item removal on change of {}", this, item);
-        } else if (!has && accepts) {
-            if (log.isDebugEnabled()) log.debug("{} detected item add on change of {}", this, item);
-            addMember(item);
-        }
+       synchronized (_mutex) {
+          boolean accepts = acceptsEntity(item);
+          boolean has = hasMember(item);
+          if (has && !accepts) {
+             removeMember(item);
+             if (log.isDebugEnabled())
+                log.debug("{} detected item removal on change of {}", this, item);
+          } else if (!has && accepts) {
+             if (log.isDebugEnabled())
+                log.debug("{} detected item add on change of {}", this, item);
+             addMember(item);
+          }
+      }
     }
     
     class MyEntitySetChangeListener implements CollectionChangeListener<Entity> {
@@ -148,7 +158,7 @@ public class DynamicGroup extends AbstractGroup {
     }
 
     @Override
-    public synchronized void onManagementBecomingMaster() {
+    public void onManagementBecomingMaster() {
         if (setChangeListener != null) {
             log.warn("{} becoming master twice", this);
             return;
@@ -159,7 +169,7 @@ public class DynamicGroup extends AbstractGroup {
     }
 
     @Override
-    public synchronized void onManagementNoLongerMaster() {
+    public void onManagementNoLongerMaster() {
         if (setChangeListener == null) {
             log.warn("{} no longer master twice", this);
             return;
@@ -168,39 +178,45 @@ public class DynamicGroup extends AbstractGroup {
         setChangeListener = null;
     }
     
-    public synchronized void rescanEntities() {
-        if (!isRunning() || !getManagementSupport().isDeployed()) {
-            if (log.isDebugEnabled()) log.debug("{} not scanning for children: stopped", this);
-            return;
-        }
-        if (getConfig(ENTITY_FILTER) == null) {
-            log.warn("{} not (yet) scanning for children: no filter defined", this, this);
-            return;
-        }
-        if (getApplication() == null) {
-            log.warn("{} not (yet) scanning for children: no application defined", this);
-            return;
-        }
-        boolean changed = false;
-        Collection<Entity> currentMembers = super.getMembers();
-        Collection<Entity> toRemove = new LinkedHashSet<Entity>();
-        toRemove.addAll(currentMembers);
-        for (Entity it : ((AbstractManagementContext) getManagementContext()).getEntities()) {
-            if (acceptsEntity(it)) {
-                toRemove.remove(it);
-                if (!currentMembers.contains(it)) {
-                    if (log.isDebugEnabled()) log.debug("{} rescan detected new item {}", this, it);
-                    addMember(it);
-                    changed = true;
+    public void rescanEntities() {
+        synchronized (_mutex) {
+            if (!isRunning() || !getManagementSupport().isDeployed()) {
+                if (log.isDebugEnabled())
+                    log.debug("{} not scanning for children: stopped", this);
+                return;
+            }
+            if (getConfig(ENTITY_FILTER) == null) {
+                log.warn("{} not (yet) scanning for children: no filter defined", this, this);
+                return;
+            }
+            if (getApplication() == null) {
+                log.warn("{} not (yet) scanning for children: no application defined", this);
+                return;
+            }
+            boolean changed = false;
+            Collection<Entity> currentMembers = super.getMembers();
+            Collection<Entity> toRemove = new LinkedHashSet<Entity>();
+            toRemove.addAll(currentMembers);
+            for (Entity it : ((AbstractManagementContext) getManagementContext()).getEntities()) {
+                if (acceptsEntity(it)) {
+                    toRemove.remove(it);
+                    if (!currentMembers.contains(it)) {
+                        if (log.isDebugEnabled())
+                            log.debug("{} rescan detected new item {}", this, it);
+                        addMember(it);
+                        changed = true;
+                    }
                 }
             }
+            for (Entity it : toRemove) {
+                if (log.isDebugEnabled())
+                    log.debug("{} rescan detected vanished item {}", this, it);
+                removeMember(it);
+                changed = true;
+            }
+            if (changed)
+                if (log.isDebugEnabled())
+                    log.debug("{} rescan complete, members now {}", this, getMembers());
         }
-        for (Entity it: toRemove) { 
-            if (log.isDebugEnabled()) log.debug("{} rescan detected vanished item {}", this, it);
-            removeMember(it);
-            changed = true;
-        }
-        if (changed)
-            if (log.isDebugEnabled()) log.debug("{} rescan complete, members now {}", this, getMembers());
     }
 }
