@@ -10,7 +10,6 @@ import static org.testng.Assert.assertTrue
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.SimpleEntity
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
@@ -32,7 +31,7 @@ public class EntityTypeTest {
     @BeforeMethod
     public void setUpTestEntity() throws Exception{
         app = new TestApplicationImpl();
-        entity = new SimpleEntity(app);
+        entity = new AbstractEntity(app) {};
         
         listener = new EntitySubscriptionTest.RecordingSensorEventListener();
         app.getSubscriptionContext().subscribe(entity, SENSOR_ADDED, listener);

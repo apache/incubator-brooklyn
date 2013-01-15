@@ -9,6 +9,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.DefaultValue
 import brooklyn.entity.basic.Description
@@ -177,7 +178,7 @@ interface CanSayHi {
 }
 
 @InheritConstructors
-public class MyEntity extends SimpleEntity implements CanSayHi {
+public class MyEntity extends AbstractEntity implements CanSayHi {
 	public String sayHi1(String name, String greeting) { "$greeting $name" }
 	public String sayHi2(String name, String greeting) { "$greeting $name" }
 }

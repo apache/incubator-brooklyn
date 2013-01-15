@@ -14,7 +14,6 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.SimpleEntity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Entities
 import brooklyn.event.adapter.SensorRegistry
@@ -22,6 +21,7 @@ import brooklyn.event.adapter.legacy.ValueProvider
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplicationImpl
+import brooklyn.test.entity.TestEntityImpl
 
 /**
  * Test the operation of the {@link SensorRegistry} class.
@@ -35,7 +35,7 @@ public class SensorRegistryTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = new TestApplicationImpl();
-        entity = new SimpleEntity(app)
+        entity = new TestEntityImpl(app)
         Entities.startManagement(app);
     }
     
