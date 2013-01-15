@@ -3,9 +3,7 @@ package brooklyn.entity.basic;
 import groovy.lang.Closure;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.trait.Changeable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -16,7 +14,7 @@ import brooklyn.util.flags.SetFromFlag;
 import com.google.common.base.Predicate;
 
 @ImplementedBy(DynamicGroupImpl.class)
-public interface DynamicGroup extends Group, Changeable {
+public interface DynamicGroup extends AbstractGroup {
     
     @SetFromFlag("entityFilter")
     public static final ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = new BasicConfigKey(

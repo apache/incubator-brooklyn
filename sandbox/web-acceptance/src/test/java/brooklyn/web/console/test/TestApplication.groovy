@@ -80,7 +80,7 @@ class TestApplication extends AbstractApplication {
         new Thread(r).start();
     }
 
-    public static class TestGroupEntity extends AbstractGroup {
+    public static class TestGroupEntity extends AbstractGroupImpl {
         public static final BasicAttributeSensor<Integer> CHILDREN = new BasicAttributeSensor<Integer>(Integer.class, "Children",
                 "Direct children of this group");
         public static final BasicAttributeSensor<String> DATA_RATE = new BasicAttributeSensor<String>(String.class, "DataRate");

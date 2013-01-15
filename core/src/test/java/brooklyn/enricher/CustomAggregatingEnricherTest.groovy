@@ -11,6 +11,8 @@ import org.testng.annotations.Test
 import brooklyn.entity.SimpleApp
 import brooklyn.entity.SimpleEntity
 import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.BasicGroup
+import brooklyn.entity.basic.BasicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.AttributeSensor
@@ -170,7 +172,7 @@ class CustomAggregatingEnricherTest {
     @Test
     public void testAggregatesNewMembersOfGroup() {
         try {
-            AbstractGroup group = new AbstractGroup(parent:app) {}
+            BasicGroup group = new BasicGroupImpl(parent:app)
             Entities.manage(group);
             SimpleEntity p1 = app.newSimpleChild(); 
             SimpleEntity p2 = app.newSimpleChild();
@@ -213,7 +215,7 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAggregatesExistingMembersOfGroup() {
-        AbstractGroup group = new AbstractGroup(app) {}
+        BasicGroup group = new BasicGroupImpl(app);
         SimpleEntity p1 = new SimpleEntity(group); 
         SimpleEntity p2 = new SimpleEntity(group);
         group.addMember(p1)
@@ -239,7 +241,7 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAppliesFilterWhenAggregatingMembersOfGroup() {
-        AbstractGroup group = new AbstractGroup(parent:app) {}
+        BasicGroup group = new BasicGroupImpl(app)
         SimpleEntity p1 = app.newSimpleChild();
         SimpleEntity p2 = app.newSimpleChild();
         SimpleEntity p3 = app.newSimpleChild();

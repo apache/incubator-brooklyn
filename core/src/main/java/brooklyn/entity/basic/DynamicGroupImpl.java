@@ -22,7 +22,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
 
-public class DynamicGroupImpl extends AbstractGroup implements DynamicGroup {
+public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroupImpl.class);
     
     private final Object memberChangeMutex = new Object();

@@ -4,13 +4,12 @@ import java.util.Collection;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
@@ -22,9 +21,8 @@ import brooklyn.util.flags.SetFromFlag;
  * The easiest way to find members is using a <b>target</b> whose children will be tracked,
  * but alternative membership policies can also be used.
  */
-// FIXME Once AbstractGroup is converted, then change to extend that
 @ImplementedBy(UrlMappingImpl.class)
-public interface UrlMapping extends Entity, Group, Changeable {
+public interface UrlMapping extends AbstractGroup {
 
     public static final Effector<Void> DISCARD = new MethodEffector<Void>(UrlMapping.class, "discard");
 

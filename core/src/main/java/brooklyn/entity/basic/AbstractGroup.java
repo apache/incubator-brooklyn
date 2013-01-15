@@ -1,20 +1,10 @@
 package brooklyn.entity.basic;
 
-import groovy.transform.InheritConstructors;
-
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
-import brooklyn.util.MutableMap;
 
 import com.google.common.base.Predicate;
 
@@ -29,108 +19,17 @@ import com.google.common.base.Predicate;
  * expensive operations - e.g. if resizing a cluster, don't block everyone else from asking for the
  * current number of members.
  */
-@InheritConstructors
-public abstract class AbstractGroup extends AbstractEntity implements Group, Changeable {
-    private static final Logger log = LoggerFactory.getLogger(AbstractGroup.class);
-    private final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
+public interface AbstractGroup extends Entity, Group, Changeable {
 
-    public AbstractGroup(Map<?,?> props, Entity parent) {
-        super(props, parent);
-        setAttribute(Changeable.GROUP_SIZE, 0);
-    }
+    public void setMembers(Collection<Entity> m);
     
-    public AbstractGroup() {
-        this(new MutableMap(), null);
-    }
-    
-    public AbstractGroup(Map<?,?> props) {
-        this(props, null);
-    }
-    
-    public AbstractGroup(Entity parent) {
-        this(new MutableMap(), parent);
-    }
-
     /**
-     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child
+     * Removes any existing members that do not match the given filter, and adds those entities in
+     * the given collection that match the predicate.
+     * 
+     * @param mm     Entities to test against the filter, and to add 
+     * @param filter Filter for entities that are to be members (or null for "all")
      */
-    @Override
-    public boolean addMember(Entity member) {
-        synchronized (_members) {
-	        member.addGroup(this);
-	        boolean changed = _members.add(member);
-	        if (changed) {
-                log.debug("Group {} got new member {}", this, member);
-	            emit(MEMBER_ADDED, member);
-	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
-	            
-	            getManagementSupport().getEntityChangeListener().onMembersChanged();
-	        }
-	        return changed;
-	    }
-    }
- 
-    /**
-     * Returns {@code true} if the group was changed as a result of the call.
-     */
-    @Override
-    public boolean removeMember(Entity member) {
-        synchronized (_members) {
-            boolean changed = (member != null && _members.remove(member));
-            if (changed) {
-                log.debug("Group {} lost member {}", this, member);
-	            emit(MEMBER_REMOVED, member);
-	            setAttribute(Changeable.GROUP_SIZE, getCurrentSize());
-	            
-	            getManagementSupport().getEntityChangeListener().onMembersChanged();
-	        }
-            
-	        return changed;
-        }
-    }
-    
-    public void setMembers(Collection<Entity> m) {
-        setMembers(m, null);
-    }
-    public void setMembers(Collection<Entity> mm, Predicate<Entity> filter) {
-        synchronized (_members) {
-            log.debug("Group {} members set explicitly to {} (of which some possibly filtered)", this, _members);
-            List<Entity> mmo = new ArrayList<Entity>(getMembers());
-            for (Entity m: mmo) {
-                if (!(mm.contains(m) && (filter==null || filter.apply(m))))
-                    // remove, unless already present, being set, and not filtered out
-                    removeMember(m); 
-            }
-            for (Entity m: mm) {
-                if ((!mmo.contains(m)) && (filter==null || filter.apply(m))) {
-                    // add if not alrady contained, and not filtered out
-                    addMember(m);
-                }
-            }
-            
-            getManagementSupport().getEntityChangeListener().onMembersChanged();
-        }
-    }
- 
-    // Declared so can be overridden (the default auto-generated getter is final!)
-    @Override
-    public Collection<Entity> getMembers() {
-        synchronized (_members) {
-            return _members.get();
-        }
-    }
-
-    @Override
-    public boolean hasMember(Entity e) {
-        synchronized (_members) {
-            return _members.contains(e);
-        }
-    }
-
-    @Override
-    public Integer getCurrentSize() {
-        synchronized (_members) {
-            return _members.size();
-        }
-    }
+    // FIXME Do we really want this method? "setMembers" is a misleading name
+    public void setMembers(Collection<Entity> mm, Predicate<Entity> filter);
 }

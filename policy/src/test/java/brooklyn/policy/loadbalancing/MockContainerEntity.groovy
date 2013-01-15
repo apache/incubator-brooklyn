@@ -1,24 +1,18 @@
 package brooklyn.policy.loadbalancing;
 
-import groovy.lang.MetaClass
-
-import java.util.Collection
-import java.util.Map
-import java.util.Set
 import java.util.concurrent.locks.ReentrantLock
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.AbstractGroupImpl
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
-import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.util.flags.SetFromFlag
@@ -26,7 +20,7 @@ import brooklyn.util.flags.SetFromFlag
 import com.google.common.collect.Iterables
 
 
-public class MockContainerEntity extends AbstractGroup implements BalanceableContainer<Entity>, Startable {
+public class MockContainerEntity extends AbstractGroupImpl implements BalanceableContainer<Entity>, Startable {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockContainerEntity)
 

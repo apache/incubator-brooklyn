@@ -3,14 +3,14 @@ package brooklyn.extras.whirr.core
 import org.apache.whirr.Cluster
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.AbstractGroupImpl
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.trait.Changeable
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.util.flags.SetFromFlag
 
-class WhirrInstance extends AbstractGroup {
+class WhirrInstance extends AbstractGroupImpl {
 
     @SetFromFlag("role")
     public static final BasicConfigKey<String> ROLE =

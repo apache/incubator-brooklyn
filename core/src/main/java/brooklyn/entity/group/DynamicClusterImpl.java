@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
@@ -43,7 +43,7 @@ import com.google.common.collect.Maps;
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
  */
-public class DynamicClusterImpl extends AbstractGroup implements DynamicCluster {
+public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicCluster {
     private static final Logger logger = LoggerFactory.getLogger(DynamicClusterImpl.class);
 
     // Mutex for synchronizing during re-size operations

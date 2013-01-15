@@ -4,7 +4,7 @@ import static org.testng.Assert.*
 import brooklyn.config.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.AbstractGroupImpl
 import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
 import brooklyn.entity.basic.NamedParameter
 import brooklyn.event.Sensor
@@ -13,7 +13,7 @@ import brooklyn.event.basic.BasicConfigKey
 import brooklyn.event.basic.BasicSensor
 
 
-public class HelloEntity extends AbstractGroup {
+public class HelloEntity extends AbstractGroupImpl {
     public HelloEntity() { super() }
     public HelloEntity(Entity owner) { super(owner) }
     public HelloEntity(Map flags) { super(flags) }

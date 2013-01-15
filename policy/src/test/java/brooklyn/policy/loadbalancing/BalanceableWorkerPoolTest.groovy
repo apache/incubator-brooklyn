@@ -3,6 +3,8 @@ package brooklyn.policy.loadbalancing
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import java.util.Map
+
 import org.jclouds.util.Throwables2
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,7 +14,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
-import brooklyn.entity.basic.AbstractGroup
+import brooklyn.entity.basic.AbstractGroupImpl
 import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Resizable
@@ -22,7 +24,7 @@ import brooklyn.test.entity.TestApplicationImpl
 
 class BalanceableWorkerPoolTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(AbstractLoadBalancingPolicyTest.class)
+    protected static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPoolTest.class)
     
     protected static final long TIMEOUT_MS = 10*1000;
     protected static final long SHORT_WAIT_MS = 250;
@@ -88,7 +90,7 @@ class BalanceableWorkerPoolTest {
         assertEquals(resizable.currentSize, 123)
     }
     
-    public static class LocallyResizableGroup extends AbstractGroup implements Resizable {
+    public static class LocallyResizableGroup extends AbstractGroupImpl implements Resizable {
         private int size = 0
         public LocallyResizableGroup(Map props, Entity parent=null) {
             super(props, parent)

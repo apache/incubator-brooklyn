@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
@@ -35,7 +35,7 @@ import com.google.common.collect.Sets;
  * The easiest way to find members is using a <b>target</b> whose children will be tracked,
  * but alternative membership policies can also be used.
  */
-public class UrlMappingImpl extends AbstractGroup implements UrlMapping {
+public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
 
     private static final Logger log = LoggerFactory.getLogger(UrlMapping.class);
 

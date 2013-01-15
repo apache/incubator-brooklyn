@@ -5,7 +5,7 @@ import java.util.Map;
 import brooklyn.entity.Entity;
 import brooklyn.util.MutableMap;
 
-public class BasicGroupImpl extends AbstractGroup implements BasicGroup {
+public class BasicGroupImpl extends AbstractGroupImpl implements BasicGroup {
     
     public BasicGroupImpl() {
         super();
