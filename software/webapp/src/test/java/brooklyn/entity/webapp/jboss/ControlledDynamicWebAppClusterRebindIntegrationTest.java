@@ -55,7 +55,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     private LocalManagementContext origManagementContext;
     private File mementoDir;
     
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
     	String warPath = "hello-world.war";
         warUrl = checkNotNull(getClass().getClassLoader().getResource(warPath), "warUrl");
@@ -69,7 +69,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         origApp = new TestApplicationImpl();
     }
 
-    @AfterMethod(groups = "Integration", alwaysRun=true)
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         for (WebAppMonitor monitor : webAppMonitors) {
         	monitor.terminate();
