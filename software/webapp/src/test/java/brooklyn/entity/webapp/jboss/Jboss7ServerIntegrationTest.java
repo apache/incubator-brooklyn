@@ -15,7 +15,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.HttpTestUtils;
@@ -48,7 +50,7 @@ public class Jboss7ServerIntegrationTest {
         warUrl = getClass().getClassLoader().getResource(warPath);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = new TestApplication();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         keystoreFile = createTemporaryKeyStore("myname", "mypass");
     }
 
@@ -80,12 +82,8 @@ public class Jboss7ServerIntegrationTest {
     
     @Test(groups = "Integration")
     public void testHttp() throws Exception {
-        final JBoss7Server server = new JBoss7Server(
-            MutableMap.builder()
-                .put("war", warUrl.toString())
-                .build(),
-            app);
-        Entities.startManagement(app);
+        final JBoss7Server server = app.createAndManageChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+                .configure("war", warUrl.toString()));
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
         
@@ -112,14 +110,10 @@ public class Jboss7ServerIntegrationTest {
 
     @Test(groups = {"Integration"})
     public void testHttps() throws Exception {
-        final JBoss7Server server = new JBoss7Server(
-            MutableMap.builder()
-                .put("war", warUrl.toString())
-                .put(JBoss7Server.ENABLED_PROTOCOLS, ImmutableList.of("https"))
-                .put(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath()))
-                .build(),
-            app);
-        Entities.startManagement(app);
+        final JBoss7Server server = app.createAndManageChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+                .configure("war", warUrl.toString())
+                .configure(JBoss7Server.ENABLED_PROTOCOLS, ImmutableList.of("https"))
+                .configure(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath())));
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
         
@@ -153,14 +147,10 @@ public class Jboss7ServerIntegrationTest {
     
     @Test(groups = {"Integration"})
     public void testHttpAndHttps() throws Exception {
-        final JBoss7Server server = new JBoss7Server(
-            MutableMap.builder()
-                .put("war", warUrl.toString())
-                .put(JBoss7Server.ENABLED_PROTOCOLS, ImmutableList.of("http", "https"))
-                .put(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath()))
-                .build(),
-            app);
-        Entities.startManagement(app);
+        final JBoss7Server server = app.createAndManageChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+                .configure("war", warUrl.toString())
+                .configure(JBoss7Server.ENABLED_PROTOCOLS, ImmutableList.of("http", "https"))
+                .configure(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath())));
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
         

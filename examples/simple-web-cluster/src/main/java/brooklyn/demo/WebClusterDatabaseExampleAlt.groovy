@@ -14,6 +14,7 @@ import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
@@ -70,7 +71,7 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
     MySqlNode mysql = new MySqlNodeImpl(this, creationScriptContents: DB_SETUP_SQL);
 
     protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
-        JBoss7Server jb7 = new JBoss7Server(flags).configure(httpPort: "8000+");
+        JBoss7Server jb7 = new JBoss7ServerImpl(flags).configure(httpPort: "8000+");
         jb7.setConfig(JBoss7Server.JAVA_SYSPROPS, ["brooklyn.example.db.url": 
                 //"jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n"
                 DependentConfiguration.valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL, 

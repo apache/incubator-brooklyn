@@ -112,7 +112,7 @@ public class NginxRebindIntegrationTest {
     	
         // Set up nginx with a server pool
         DynamicCluster origServerPool = origApp.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure("factory", new JBoss7ServerFactory())
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 0));
         
         NginxController origNginx = origApp.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
@@ -154,7 +154,7 @@ public class NginxRebindIntegrationTest {
         
         // Set up nginx with a server pool
         DynamicCluster origServerPool = origApp.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class).configure("war", warUrl.toString()))
                 .configure("initialSize", 1));
         
         NginxController origNginx = origApp.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
@@ -216,7 +216,7 @@ public class NginxRebindIntegrationTest {
                 .configure("childrenAsMembers", true));
         
         DynamicCluster origServerPool = origApp.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class).configure("war", warUrl.toString()))
                 .configure("initialSize", 1)); 
 
         UrlMapping origMapping = origApp.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(UrlMapping.class)

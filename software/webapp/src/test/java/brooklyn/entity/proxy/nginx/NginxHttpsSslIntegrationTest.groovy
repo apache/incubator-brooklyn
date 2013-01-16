@@ -56,7 +56,7 @@ public class NginxHttpsSslIntegrationTest {
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withCertificateAndKeyCopy() {
         cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-            .configure(DynamicCluster.FACTORY, { Map properties -> new JBoss7Server(properties) })
+            .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
             .configure("initialSize", 1)
             .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
         
@@ -107,7 +107,7 @@ public class NginxHttpsSslIntegrationTest {
     @Test(groups = "Integration")
     public void testStartsWithGlobalSsl_withPreinstalledCertificateAndKey() {
         cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-            .configure(DynamicCluster.FACTORY, { Map properties -> new JBoss7Server(properties) })
+            .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
             .configure("initialSize", 1)
             .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
         

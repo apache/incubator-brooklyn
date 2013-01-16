@@ -20,7 +20,7 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
-import brooklyn.test.HttpTestUtils;
+import brooklyn.test.HttpTestUtils
 import brooklyn.test.entity.TestApplication
 
 /**
@@ -81,10 +81,8 @@ public class NginxAmazonTest {
             "brooklyn.entity.proxy.nginx.NginxController":imageData,
         ])
  
-        def template = { Map properties -> new JBoss7Server(properties) }
-        
         cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure("factory", template)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 2)
                 .configure("httpPort", 8080)
                 .configure(JavaWebAppService.ROOT_WAR, war.path));

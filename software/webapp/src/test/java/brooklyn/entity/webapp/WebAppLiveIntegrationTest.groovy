@@ -20,6 +20,8 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
+import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
@@ -64,9 +66,9 @@ public class WebAppLiveIntegrationTest {
      */
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
-        TomcatServerImpl tomcat = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
-        JBoss6Server jboss6 = [ parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT ]
-        JBoss7Server jboss7 = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
+        TomcatServer tomcat = new TomcatServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
+        JBoss6Server jboss6 = new JBoss6Server(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
+        JBoss7Server jboss7 = new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
         return [ [ tomcat ], [ jboss6 ], [ jboss7 ] ]
     }
 

@@ -1,12 +1,11 @@
 package brooklyn.demo;
 
-import java.util.List
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import brooklyn.location.basic.CommandLineLocations
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 
@@ -18,7 +17,7 @@ public class SingleWebServerExample extends AbstractApplication {
     public static final List<LocalhostMachineProvisioningLocation> DEFAULT_LOCATIONS = [ CommandLineLocations.newLocalhostLocation() ]
     private static final String WAR_PATH = "classpath://hello-world-webapp.war"
 
-    JBoss7Server web = new JBoss7Server(this, war: WAR_PATH, httpPort: 8080)
+    JBoss7Server web = new JBoss7ServerImpl(this, war: WAR_PATH, httpPort: 8080)
 
     public static void main(String[] args) {
         SingleWebServerExample app = new SingleWebServerExample();

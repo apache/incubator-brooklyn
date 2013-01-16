@@ -27,7 +27,6 @@ import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
-
 public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
 
     /*
@@ -41,8 +40,13 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     private static final String CONFIG_FILE = "standalone-brooklyn.xml";
     private static final String KEYSTORE_FILE = ".keystore";
     
-    public JBoss7SshDriver(JBoss7Server entity, SshMachineLocation machine) {
+    public JBoss7SshDriver(JBoss7ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+    }
+
+    @Override
+    public JBoss7ServerImpl getEntity() {
+        return (JBoss7ServerImpl) super.getEntity();
     }
 
     @Override
@@ -158,7 +162,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
         
         // Copy the initial wars to the deploys directory
-        ((JBoss7Server) entity).deployInitialWars();
+        getEntity().deployInitialWars();
     }
 
     @Override

@@ -73,7 +73,7 @@ public class NginxIntegrationTest {
     @Test(groups = "Integration")
     public void testCanStartupAndShutdown() {
         serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.FACTORY, { Map properties -> new JBoss7Server(properties) })
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
@@ -114,7 +114,7 @@ public class NginxIntegrationTest {
     @Test(groups = "Integration")
     public void testDomainless() {
         serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.FACTORY, { Map properties -> new JBoss7Server(properties) })
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
@@ -187,7 +187,7 @@ public class NginxIntegrationTest {
     @Test(enabled = false, groups = "Integration")
     public void testServiceContinuity() {
         serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.FACTORY, { Map properties -> new JBoss7Server(properties) })
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
@@ -246,7 +246,7 @@ public class NginxIntegrationTest {
     @Test(enabled=false, groups = "Integration")
     public void testContinuityNginxAndJboss() {
         serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.FACTORY, { Map properties -> new JBoss7Server(properties) })
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         

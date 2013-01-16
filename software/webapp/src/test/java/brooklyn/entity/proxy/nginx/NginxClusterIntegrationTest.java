@@ -26,7 +26,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.JavaWebAppService;
-import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
+import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.TestUtils;
@@ -95,8 +95,7 @@ public class NginxClusterIntegrationTest {
     @Test(groups = "Integration")
     public void testNginxInstancesConfiguredWithServerPool() {
         DynamicCluster serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                //.configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
-                .configure(DynamicCluster.FACTORY, new JBoss7ServerFactory())
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, war.getPath()));
         
@@ -118,7 +117,7 @@ public class NginxClusterIntegrationTest {
     @Test(groups = "Integration")
     public void testNginxInstancesConfiguredWithUrlMappings() {
         DynamicCluster c1 = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.FACTORY, new JBoss7ServerFactory())
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(war.getPath())));
 

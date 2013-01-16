@@ -18,6 +18,7 @@ import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
@@ -152,7 +153,7 @@ public class WebAppIntegrationTest {
         Entities.manage(tomcat);
         JBoss6Server jboss6 = new JBoss6Server( parent:newTestApplication(), portIncrement:PORT_INCREMENT);
         Entities.manage(jboss6);
-        JBoss7Server jboss7 = new JBoss7Server(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        JBoss7Server jboss7 = new JBoss7ServerImpl(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         Entities.manage(jboss7);
         return [ 
             [ tomcat ],
@@ -376,7 +377,7 @@ public class WebAppIntegrationTest {
 //				"seam-booking-as6.war",
 //                "seam-booking-as6/",
 //            ],
-//            [   new JBoss7Server(parent:application, httpPort:DEFAULT_HTTP_PORT),
+//            [   new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT),
 //                "seam-booking-as7.war",
 //                "seam-booking-as7/",
 //            ],
