@@ -29,7 +29,7 @@ public class DynamicGroupTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DynamicGroupTest.class);
     
-    private static final int TIMEOUT_MS = 5*10000;
+    private static final int TIMEOUT_MS = 50*1000;
     private static final int VERY_SHORT_WAIT_MS = 100;
     
     private TestApplication app
