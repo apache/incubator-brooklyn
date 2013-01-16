@@ -2,9 +2,13 @@ package brooklyn.entity.database.mysql
 
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication
+import brooklyn.util.text.Strings;
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -60,16 +64,26 @@ CREATE TABLE COMMENTS (
 INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );
 """;
 
+
+
     @Test(groups = ["Integration"])
     public void test_localhost() throws Exception {
-        MySqlNode mysql = new MySqlNode(tapp, creationScriptContents: CREATION_SCRIPT);
-
-        tapp.start([new LocalhostMachineProvisioningLocation()]);
-
+        String dataDir = "/tmp/mysql-data-" + Strings.makeRandomId(8);
+        MySqlNode mysql = new MySqlNode(tapp, dataDir: dataDir, creationScriptContents: CREATION_SCRIPT);
+        LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
+        
+        tapp.start([location]);
         log.info("MySQL started");
 
         new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", "localhost", mysql.getPort());
-
         log.info("Ran vogella MySQL example -- SUCCESS");
+
+        // Ensure the data directory was successfully overridden.
+        File dataDirFile = new File(dataDir);
+        File mysqlSubdirFile = new File(dataDirFile, "mysql");
+        Assert.assertTrue(mysqlSubdirFile.exists());
+
+        // Clean up.
+        dataDirFile.deleteDir();
     }
 }

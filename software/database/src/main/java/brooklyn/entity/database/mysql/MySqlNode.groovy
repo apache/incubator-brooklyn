@@ -25,6 +25,10 @@ public class MySqlNode extends SoftwareProcessEntity {
     @SetFromFlag("creationScriptUrl")
     public static final BasicConfigKey<String> CREATION_SCRIPT_URL = [ String, "mysql.creation.script.url", "URL where MySQL creation script can be found", "" ]
 
+    @SetFromFlag("dataDir")
+    public static final ConfigKey<String> DATA_DIR = new BasicConfigKey<String>(
+            String.class, "mysql.datadir", "Directory for writing data files", null);
+    
     public static final MapConfigKey<String> MYSQL_SERVER_CONF = [ Object, "mysql.server.conf", "Configuration options for mysqld" ]
     public static final ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
     

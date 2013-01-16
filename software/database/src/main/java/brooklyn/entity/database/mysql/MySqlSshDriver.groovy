@@ -64,6 +64,11 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     public String getBasedir() { installDir+"/"+basename }
 	
+    public String getDatadir() {
+        String result = entity.getConfig(MySqlNode.DATA_DIR);
+        return (result == null) ? "." : result;
+    }
+    
     @Override
     public void install() {
         String saveAs  = "${basename}.tar.gz"
@@ -115,12 +120,12 @@ password        = ${password}
 port            = ${port}
 socket          = /tmp/mysql.sock.${socketUid}.${port}
 basedir         = ${basedir}
-datadir         = .
+datadir         = ${datadir}
 """+getMySqlServerOptionsString()+"""
 
 """+"END_MYSQL_CONF_${entity.id}\n",
                 "${basedir}/scripts/mysql_install_db "+
-                    "--basedir=${basedir} --datadir=. "+
+                    "--basedir=${basedir} --datadir=${datadir} "+
                     "--defaults-file=mymysql.cnf",
                 "${basedir}/bin/mysqld --defaults-file=mymysql.cnf --user=`whoami` &", //--user=root needed if we are root
                 "export MYSQL_PID=\$!",
