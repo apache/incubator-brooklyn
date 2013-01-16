@@ -30,7 +30,7 @@ import com.google.common.collect.Maps;
 public class DynamicGroup extends AbstractGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroup.class);
     
-    private final Object _mutex = new Object();
+    private final Object mutex = new Object();
     
     @SetFromFlag("entityFilter")
     public static final ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = new BasicConfigKey(
@@ -121,7 +121,7 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     protected void onEntityAdded(Entity item) {
-        synchronized (_mutex) {
+        synchronized (mutex) {
             if (acceptsEntity(item)) {
                 if (log.isDebugEnabled()) log.debug("{} detected item add {}", this, item);
             addMember(item);
@@ -130,14 +130,14 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     protected void onEntityRemoved(Entity item) {
-        synchronized (_mutex) { 
+        synchronized (mutex) { 
         if (removeMember(item))
             if (log.isDebugEnabled()) log.debug("{} detected item removal {}", this, item);
         }
     }
     
     protected void onEntityChanged(Entity item) {
-       synchronized (_mutex) {
+       synchronized (mutex) {
           boolean accepts = acceptsEntity(item);
           boolean has = hasMember(item);
           if (has && !accepts) {
@@ -179,7 +179,7 @@ public class DynamicGroup extends AbstractGroup {
     }
     
     public void rescanEntities() {
-        synchronized (_mutex) {
+        synchronized (mutex) {
             if (!isRunning() || !getManagementSupport().isDeployed()) {
                 if (log.isDebugEnabled())
                     log.debug("{} not scanning for children: stopped", this);
