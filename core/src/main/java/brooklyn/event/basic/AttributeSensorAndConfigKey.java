@@ -52,7 +52,7 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
      * <b>(for this reason this method should generally not be invoked by callers except in tests and by the framework,
      * and similarly should not be overridden; implement convertConfigToSensor instead for single-execution calls.
      * the framework calls this from {@link AbstractEntity#setAttribute(AttributeSensorAndConfigKey)} 
-     * typically via {@link ConfigToAttributes#apply(EntityLocal)} e.g. from SoftwareProcessEntity.preStart.)
+     * typically via {@link ConfigToAttributes#apply(EntityLocal)} e.g. from SoftwareProcess.preStart.)
      * </b> 
      */
     public SensorType getAsSensorValue(Entity e) {

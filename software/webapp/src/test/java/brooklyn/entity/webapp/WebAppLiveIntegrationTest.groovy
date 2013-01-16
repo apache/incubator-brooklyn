@@ -16,7 +16,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
@@ -115,7 +115,7 @@ public class WebAppLiveIntegrationTest {
     }
 
     @Test(groups = [ "Live" ], dataProvider="basicEntities")
-    public void testStartsWebAppInAws(final SoftwareProcessEntity entity) {
+    public void testStartsWebAppInAws(final SoftwareProcess entity) {
         entity.start([ loc ])
         executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:75*SECONDS, useGroovyTruth:true) {
             assertTrue(entity.getAttribute(Startable.SERVICE_UP))

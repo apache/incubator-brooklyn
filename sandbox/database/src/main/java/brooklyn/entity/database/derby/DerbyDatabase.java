@@ -12,7 +12,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.SoftwareProcess;
+import brooklyn.entity.SoftwareProcessImpl;
 import brooklyn.entity.database.Database;
 import brooklyn.entity.database.Schema;
 import brooklyn.entity.java.UsesJava;
@@ -36,12 +37,12 @@ import com.google.common.collect.Maps;
  *
  * TODO work in progress
  */
-public class DerbyDatabase extends SoftwareProcessEntity implements Database, UsesJava, UsesJmx {
+public class DerbyDatabase extends SoftwareProcessImpl implements Database, UsesJava, UsesJmx {
     private static final Logger log = LoggerFactory.getLogger(DerbyDatabase.class);
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "10.8.1.2");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "10.8.1.2");
 
     public static final PortAttributeSensorAndConfigKey JDBC_PORT = new PortAttributeSensorAndConfigKey(
             "derby.jdbcPort", "Suggested JDBC port");

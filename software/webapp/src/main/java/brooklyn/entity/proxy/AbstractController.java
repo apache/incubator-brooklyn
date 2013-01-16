@@ -5,8 +5,8 @@ import java.util.Set;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
-import brooklyn.entity.basic.ISoftwareProcessEntity;
 import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
  * Represents a controller mechanism for a {@link Cluster}.
  */
 @ImplementedBy(AbstractControllerImpl.class)
-public interface AbstractController extends ISoftwareProcessEntity, LoadBalancer {
+public interface AbstractController extends SoftwareProcess, LoadBalancer {
     
     /** sensor for port to forward to on target entities */
     @SetFromFlag("portNumberSensor")

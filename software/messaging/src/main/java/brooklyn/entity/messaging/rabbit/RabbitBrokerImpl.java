@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.util.MutableMap;
 
@@ -17,7 +17,7 @@ import com.google.common.base.Objects.ToStringHelper;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
  */
-public class RabbitBrokerImpl extends SoftwareProcessEntity implements RabbitBroker {
+public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroker {
     private static final Logger log = LoggerFactory.getLogger(RabbitBrokerImpl.class);
 
     public String getVirtualHost() { return getAttribute(VIRTUAL_HOST_NAME); }

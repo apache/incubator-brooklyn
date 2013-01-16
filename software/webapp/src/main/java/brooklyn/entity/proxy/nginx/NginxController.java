@@ -2,7 +2,7 @@ package brooklyn.entity.proxy.nginx;
 
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -35,7 +35,7 @@ public interface NginxController extends AbstractController {
     
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-        new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "1.3.7");
+        new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "1.3.7");
 
     @SetFromFlag("sticky")
     public static final BasicConfigKey<Boolean> STICKY =

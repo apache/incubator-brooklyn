@@ -16,11 +16,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.adapter.SensorRegistry;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
@@ -34,7 +30,6 @@ import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
 import brooklyn.util.Time;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.task.Tasks;
 
@@ -50,22 +45,22 @@ import com.google.common.collect.Maps;
  * <p>
  * It exposes sensors for service state (Lifecycle) and status (String), and for host info, log file location.
  */
-public abstract class SoftwareProcessEntity extends AbstractEntity implements ISoftwareProcessEntity, DriverDependentEntity {
-	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class);
+public abstract class SoftwareProcessImpl extends AbstractEntity implements SoftwareProcess, DriverDependentEntity {
+	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessImpl.class);
     
 	private transient SoftwareProcessDriver driver;
 	protected transient SensorRegistry sensorRegistry;
 
-	public SoftwareProcessEntity() {
+	public SoftwareProcessImpl() {
         super(MutableMap.of(), null);
     }
-    public SoftwareProcessEntity(Entity parent) {
+    public SoftwareProcessImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public SoftwareProcessEntity(Map properties) {
+    public SoftwareProcessImpl(Map properties) {
         this(properties, null);
     }
-	public SoftwareProcessEntity(Map properties, Entity parent) {
+	public SoftwareProcessImpl(Map properties, Entity parent) {
 		super(properties, parent);
 	}
 

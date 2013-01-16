@@ -12,7 +12,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
-public interface ISoftwareProcessEntity extends Entity, Startable {
+public interface SoftwareProcess extends Entity, Startable {
 
     @SetFromFlag("startLatch")
     public static final ConfigKey<Boolean> START_LATCH = ConfigKeys.START_LATCH;

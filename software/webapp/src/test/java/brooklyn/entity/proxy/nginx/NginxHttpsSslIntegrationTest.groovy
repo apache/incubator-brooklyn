@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.proxy.ProxySslConfig
 import brooklyn.entity.proxying.BasicEntitySpec
@@ -78,10 +78,10 @@ public class NginxHttpsSslIntegrationTest {
         
         executeUntilSucceeds() {
             // Services are running
-            assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-            cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+            assertTrue cluster.getAttribute(SoftwareProcess.SERVICE_UP)
+            cluster.members.each { assertTrue it.getAttribute(SoftwareProcess.SERVICE_UP) }
             
-            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            assertTrue nginx.getAttribute(SoftwareProcess.SERVICE_UP)
 
             // Nginx URL is available
             HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
@@ -95,9 +95,9 @@ public class NginxHttpsSslIntegrationTest {
         app.stop()
 
         // Services have stopped
-        assertFalse nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-        assertFalse cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-        cluster.members.each { assertFalse it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+        assertFalse nginx.getAttribute(SoftwareProcess.SERVICE_UP)
+        assertFalse cluster.getAttribute(SoftwareProcess.SERVICE_UP)
+        cluster.members.each { assertFalse it.getAttribute(SoftwareProcess.SERVICE_UP) }
     }
 
     private String getFile(String file) {
@@ -129,10 +129,10 @@ public class NginxHttpsSslIntegrationTest {
 
         executeUntilSucceeds() {
             // Services are running
-            assertTrue cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-            cluster.members.each { assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+            assertTrue cluster.getAttribute(SoftwareProcess.SERVICE_UP)
+            cluster.members.each { assertTrue it.getAttribute(SoftwareProcess.SERVICE_UP) }
 
-            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            assertTrue nginx.getAttribute(SoftwareProcess.SERVICE_UP)
 
             // Nginx URL is available
             HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
@@ -146,8 +146,8 @@ public class NginxHttpsSslIntegrationTest {
         app.stop()
 
         // Services have stopped
-        assertFalse nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-        assertFalse cluster.getAttribute(SoftwareProcessEntity.SERVICE_UP)
-        cluster.members.each { assertFalse it.getAttribute(SoftwareProcessEntity.SERVICE_UP) }
+        assertFalse nginx.getAttribute(SoftwareProcess.SERVICE_UP)
+        assertFalse cluster.getAttribute(SoftwareProcess.SERVICE_UP)
+        cluster.members.each { assertFalse it.getAttribute(SoftwareProcess.SERVICE_UP) }
     }
 }

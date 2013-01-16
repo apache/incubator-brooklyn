@@ -4,13 +4,13 @@ import java.util.Set;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.Description;
-import brooklyn.entity.basic.ISoftwareProcessEntity;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 
-public interface JavaWebAppSoftwareProcess extends ISoftwareProcessEntity, JavaWebAppService {
+public interface JavaWebAppSoftwareProcess extends SoftwareProcess, JavaWebAppService {
 
     public static final AttributeSensor<Set<String>> DEPLOYED_WARS = new BasicAttributeSensor(
             Set.class, "webapp.deployedWars", "Names of archives/contexts that are currently deployed");

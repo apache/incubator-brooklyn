@@ -2,8 +2,7 @@ package brooklyn.entity.messaging.rabbit;
 
 import java.util.Map;
 
-import brooklyn.entity.basic.ISoftwareProcessEntity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -16,13 +15,13 @@ import com.google.common.annotations.Beta;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
  */
-public interface RabbitBroker extends ISoftwareProcessEntity, MessageBroker, AmqpServer {
+public interface RabbitBroker extends SoftwareProcess, MessageBroker, AmqpServer {
 
     // FIXME Will not work in proxy-mode because RabbitDestination and RabbitQueue call into RabbitBroker directly
     // (for setting up RabbitQueue's SshFeed). What is the best pattern to use here? 
     
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "2.8.7");
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.8.7");
 
     @SetFromFlag("erlangVersion")
     public static final BasicConfigKey<String> ERLANG_VERSION = new BasicConfigKey<String>(String.class, "erlang.version", "Erlang runtime version", "R15B");

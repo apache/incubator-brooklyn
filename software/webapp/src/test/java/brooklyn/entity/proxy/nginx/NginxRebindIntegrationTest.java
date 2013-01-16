@@ -23,18 +23,16 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;
@@ -140,7 +138,7 @@ public class NginxRebindIntegrationTest {
         assertEquals(newNginx.getAttribute(NginxController.PROXY_HTTP_PORT), origNginx.getAttribute(NginxController.PROXY_HTTP_PORT));
         assertEquals(newNginx.getConfig(NginxController.STICKY), origNginx.getConfig(NginxController.STICKY));
         
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEventuallyEquals(rootUrl, 404);
         
         assertEquals(monitor.getFailures(), 0);
@@ -177,7 +175,7 @@ public class NginxRebindIntegrationTest {
         DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
         JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
 
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEventuallyEquals(rootUrl, 200);
 
         assertEquals(newNginx.getConfigFile(), origConfigFile);
@@ -246,7 +244,7 @@ public class NginxRebindIntegrationTest {
         DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
         JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
         
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEventuallyEquals(mappingGroupUrl, 200);
         
         assertEquals(newNginx.getConfigFile(), origConfigFile);

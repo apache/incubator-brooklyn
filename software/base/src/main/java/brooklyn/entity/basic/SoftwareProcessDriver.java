@@ -6,7 +6,7 @@ import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.trait.Startable;
 
 /**
- * The {@link EntityDriver} for a {@link SoftwareProcessEntity}.
+ * The {@link EntityDriver} for a {@link SoftwareProcess}.
  *
  * <p/>
  * In many cases it is cleaner to store entity lifecycle effectors (and sometimes other implementations) in a class to

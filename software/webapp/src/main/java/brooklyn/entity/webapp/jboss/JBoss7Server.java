@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.jboss;
 
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
@@ -15,7 +15,7 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "7.1.1.Final");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.1.1.Final");
     // note: 7.1.2.Final fixes many bugs but is not available for download,
     // see https://community.jboss.org/thread/197780
     // 7.2.0.Final should be out during Q3 2012

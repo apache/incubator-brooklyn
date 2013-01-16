@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
@@ -124,7 +124,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
         ControlledDynamicWebAppCluster newCluster = (ControlledDynamicWebAppCluster) Iterables.find(newApp.getChildren(), Predicates.instanceOf(ControlledDynamicWebAppCluster.class));
 
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEquals(rootUrl, 200);
 
         // Confirm the cluster is usable: we can scale-up

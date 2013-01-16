@@ -2,7 +2,7 @@ package brooklyn.entity.webapp.jboss;
 
 import java.util.Map;
 
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -17,7 +17,7 @@ public interface JBoss6Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "6.0.0.Final");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "6.0.0.Final");
     @SetFromFlag("portIncrement")
     public static final BasicAttributeSensorAndConfigKey<Integer> PORT_INCREMENT =
             new BasicAttributeSensorAndConfigKey<Integer>(Integer.class, "jboss.portincrement", "Increment to be used for all jboss ports", 0);

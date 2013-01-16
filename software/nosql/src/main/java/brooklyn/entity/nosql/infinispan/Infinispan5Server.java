@@ -7,7 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -19,7 +20,7 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents an Infinispan service
  */
-public class Infinispan5Server extends SoftwareProcessEntity implements UsesJmx {
+public class Infinispan5Server extends SoftwareProcessImpl implements UsesJmx {
     private static final Logger log = LoggerFactory.getLogger(Infinispan5Server.class);
     
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
@@ -31,7 +32,7 @@ public class Infinispan5Server extends SoftwareProcessEntity implements UsesJmx 
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "5.0.0.CR8");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "5.0.0.CR8");
 
     public Infinispan5Server() {
         this(MutableMap.of(), null);

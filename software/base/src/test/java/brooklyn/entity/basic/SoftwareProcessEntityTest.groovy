@@ -71,7 +71,10 @@ public class SoftwareProcessEntityTest {
         }
     }
     
-    public static class MyService extends SoftwareProcessEntity {
+    public static class MyService extends SoftwareProcessImpl {
+        public MyService() {
+            super();
+        }
         public MyService(Entity parent) {
             super(parent);
         }

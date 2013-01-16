@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicConfigKey;
@@ -23,7 +23,7 @@ import brooklyn.util.flags.SetFromFlag;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, UsesJmx, UsesJavaMXBeans {
+public class VanillaJavaApp extends SoftwareProcessImpl implements UsesJava, UsesJmx, UsesJavaMXBeans {
 
     // FIXME classpath values: need these to be downloaded and installed?
     

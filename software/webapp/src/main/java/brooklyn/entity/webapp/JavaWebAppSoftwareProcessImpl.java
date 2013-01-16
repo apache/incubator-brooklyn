@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.NamedParameter;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaAppUtils;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
-public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessEntity implements JavaWebAppService, JavaWebAppSoftwareProcess {
+public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl implements JavaWebAppService, JavaWebAppSoftwareProcess {
 
     private static final Logger log = LoggerFactory.getLogger(JavaWebAppSoftwareProcessImpl.class);
 

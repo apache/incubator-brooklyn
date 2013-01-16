@@ -13,7 +13,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.group.DynamicClusterImpl
 import brooklyn.entity.proxying.BasicEntitySpec
@@ -63,7 +63,7 @@ public class NginxIntegrationTest {
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
-        assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(nginx, SoftwareProcess.SERVICE_UP, true);
         assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 404);
     }
 
@@ -87,9 +87,9 @@ public class NginxIntegrationTest {
         // App-servers and nginx has started
         assertEventually {        
             serverPool.members.each { 
-                assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP);
+                assertTrue it.getAttribute(SoftwareProcess.SERVICE_UP);
             }
-            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP);
+            assertTrue nginx.getAttribute(SoftwareProcess.SERVICE_UP);
         }
 
         // URLs reachable        
@@ -101,10 +101,10 @@ public class NginxIntegrationTest {
         app.stop();
 
         // Services have stopped
-        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
-        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(nginx.getAttribute(SoftwareProcess.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcess.SERVICE_UP));
         serverPool.members.each {
-            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+            assertFalse(it.getAttribute(SoftwareProcess.SERVICE_UP));
         }
     }
     
@@ -126,11 +126,11 @@ public class NginxIntegrationTest {
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
         // App-servers and nginx has started
-        assertAttributeEventually(serverPool, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(serverPool, SoftwareProcess.SERVICE_UP, true);
         serverPool.members.each {
-            assertAttributeEventually(it, SoftwareProcessEntity.SERVICE_UP, true);
+            assertAttributeEventually(it, SoftwareProcess.SERVICE_UP, true);
         }
-        assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(nginx, SoftwareProcess.SERVICE_UP, true);
 
         // URLs reachable
         assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 200);
@@ -141,10 +141,10 @@ public class NginxIntegrationTest {
         app.stop();
 
         // Services have stopped
-        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
-        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(nginx.getAttribute(SoftwareProcess.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcess.SERVICE_UP));
         serverPool.members.each {
-            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+            assertFalse(it.getAttribute(SoftwareProcess.SERVICE_UP));
         }
     }
     
@@ -174,8 +174,8 @@ public class NginxIntegrationTest {
         assertNotEquals(url1, url2, "Two nginxs should listen on different ports, not both on "+url1);
         
         // Nginx has started
-        assertAttributeEventually(nginx1, SoftwareProcessEntity.SERVICE_UP, true);
-        assertAttributeEventually(nginx2, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(nginx1, SoftwareProcess.SERVICE_UP, true);
+        assertAttributeEventually(nginx2, SoftwareProcess.SERVICE_UP, true);
 
         // Nginx reachable (returning default 404)
         assertUrlStatusCodeEventually(url1, 404);
@@ -228,10 +228,10 @@ public class NginxIntegrationTest {
         app.stop();
 
         // Services have stopped
-        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
-        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(nginx.getAttribute(SoftwareProcess.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcess.SERVICE_UP));
         serverPool.members.each {
-            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+            assertFalse(it.getAttribute(SoftwareProcess.SERVICE_UP));
         }
     }
 

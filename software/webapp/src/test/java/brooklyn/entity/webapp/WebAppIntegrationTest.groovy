@@ -14,7 +14,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
@@ -56,7 +56,7 @@ public class WebAppIntegrationTest {
 
     // The parent application entity for these tests
     private List<AbstractApplication> applications = new ArrayList<AbstractApplication>()
-    SoftwareProcessEntity entity
+    SoftwareProcess entity
     
 	static { TimeExtras.init() }
     
@@ -163,7 +163,7 @@ public class WebAppIntegrationTest {
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void canStartAndStop(SoftwareProcessEntity entity) {
+    public void canStartAndStop(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=canStartAndStop; entity="+entity+"; app="+entity.getApplication())
         
@@ -180,7 +180,7 @@ public class WebAppIntegrationTest {
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void testReportsServiceDownWhenKilled(SoftwareProcessEntity entity) {
+    public void testReportsServiceDownWhenKilled(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication())
         
@@ -201,14 +201,14 @@ public class WebAppIntegrationTest {
      * connecting to a non-existent URL several times.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void publishesRequestAndErrorCountMetrics(SoftwareProcessEntity entity) {
+    public void publishesRequestAndErrorCountMetrics(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=publishesRequestAndErrorCountMetrics; entity="+entity+"; app="+entity.getApplication())
         
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         executeUntilSucceeds(timeout:10*SECONDS) {
-            assertTrue entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            assertTrue entity.getAttribute(SoftwareProcess.SERVICE_UP)
         }
         
         String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist"
@@ -242,7 +242,7 @@ public class WebAppIntegrationTest {
      * fall to zero after a period of no activity.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void publishesRequestsPerSecondMetric(SoftwareProcessEntity entity) {
+    public void publishesRequestsPerSecondMetric(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=publishesRequestsPerSecondMetric; entity="+entity+"; app="+entity.getApplication())
         
@@ -308,7 +308,7 @@ public class WebAppIntegrationTest {
      * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void publishesZeroRequestsPerSecondMetricRepeatedly(SoftwareProcessEntity entity) {
+    public void publishesZeroRequestsPerSecondMetricRepeatedly(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=publishesZeroRequestsPerSecondMetricRepeatedly; entity="+entity+"; app="+entity.getApplication())
         
@@ -385,7 +385,7 @@ public class WebAppIntegrationTest {
      * Tests given entity can deploy the given war.  Checks given httpURL to confirm success.
      */
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
-    public void initialRootWarDeployments(SoftwareProcessEntity entity, String war, 
+    public void initialRootWarDeployments(SoftwareProcess entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity
         log.info("test=initialRootWarDeployments; entity="+entity+"; app="+entity.getApplication())
@@ -407,7 +407,7 @@ public class WebAppIntegrationTest {
     }
 	
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
-    public void initialNamedWarDeployments(SoftwareProcessEntity entity, String war, 
+    public void initialNamedWarDeployments(SoftwareProcess entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity
         log.info("test=initialNamedWarDeployments; entity="+entity+"; app="+entity.getApplication())

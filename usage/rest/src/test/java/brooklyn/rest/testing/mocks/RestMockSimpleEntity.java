@@ -13,14 +13,14 @@ import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 
-public class RestMockSimpleEntity extends SoftwareProcessEntity {
+public class RestMockSimpleEntity extends SoftwareProcessImpl {
 
     private static final Logger log = LoggerFactory.getLogger(RestMockSimpleEntity.class);
     

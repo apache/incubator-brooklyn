@@ -1,8 +1,7 @@
 package brooklyn.entity.messaging.activemq;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ISoftwareProcessEntity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -14,10 +13,10 @@ import brooklyn.util.flags.SetFromFlag;
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
  */
 @ImplementedBy(ActiveMQBrokerImpl.class)
-public interface ActiveMQBroker extends ISoftwareProcessEntity, MessageBroker, UsesJmx {
+public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx {
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "5.7.0");
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "5.7.0");
 
     /** download mirror, if desired */
     @SetFromFlag("mirrorUrl")

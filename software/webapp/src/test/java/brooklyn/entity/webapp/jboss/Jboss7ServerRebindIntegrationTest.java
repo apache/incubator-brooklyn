@@ -19,7 +19,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -113,7 +113,7 @@ public class Jboss7ServerRebindIntegrationTest {
         assertEquals(newServer.getAttribute(JBoss7Server.MANAGEMENT_PORT), origServer.getAttribute(JBoss7Server.MANAGEMENT_PORT));
         assertEquals(newServer.getAttribute(JBoss7Server.DEPLOYED_WARS), origServer.getAttribute(JBoss7Server.DEPLOYED_WARS));
         
-        assertAttributeEventually(newServer, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(newServer, SoftwareProcess.SERVICE_UP, true);
         assertUrlStatusCodeEventually(newServer.getAttribute(JBoss7Server.ROOT_URL), 200);
 
         // confirm that deploy() effector affects the correct jboss server 

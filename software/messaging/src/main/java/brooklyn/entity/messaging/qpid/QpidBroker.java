@@ -3,8 +3,7 @@ package brooklyn.entity.messaging.qpid;
 import java.util.Map;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ISoftwareProcessEntity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpServer;
@@ -18,7 +17,7 @@ import brooklyn.util.flags.SetFromFlag;
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
  */
 @ImplementedBy(QpidBrokerImpl.class)
-public interface QpidBroker extends ISoftwareProcessEntity, MessageBroker, UsesJmx, AmqpServer {
+public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, AmqpServer {
 
     // FIXME Will not work in proxy-mode because Destination and Queue call into the entity directly
     // (for setting up jmxFeed). What is the best pattern to use here? 
@@ -30,7 +29,7 @@ public interface QpidBroker extends ISoftwareProcessEntity, MessageBroker, UsesJ
     public static final String PASSWD = "etc/passwd";
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "0.20");
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "0.20");
     
     @SetFromFlag("amqpPort")
     public static final PortAttributeSensorAndConfigKey AMQP_PORT = AmqpServer.AMQP_PORT;

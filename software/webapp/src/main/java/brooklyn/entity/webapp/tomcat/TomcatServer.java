@@ -1,7 +1,7 @@
 package brooklyn.entity.webapp.tomcat;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -29,7 +29,7 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx {
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.34");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.34");
 
     /**
      * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down.

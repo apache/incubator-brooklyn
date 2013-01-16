@@ -1,6 +1,6 @@
 package brooklyn.entity.database.postgresql;
 
-import brooklyn.entity.basic.ISoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -10,7 +10,7 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 @ImplementedBy(PostgreSqlNodeImpl.class)
-public interface PostgreSqlNode extends ISoftwareProcessEntity {
+public interface PostgreSqlNode extends SoftwareProcess {
     public static final AttributeSensor<String> DB_URL = new BasicAttributeSensor<String>(String.class, "database.url",
             "URL where database is listening");
 

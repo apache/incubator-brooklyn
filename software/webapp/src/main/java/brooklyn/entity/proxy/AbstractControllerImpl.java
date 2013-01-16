@@ -16,7 +16,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.rebind.BasicEntityRebindSupport;
@@ -35,7 +35,7 @@ import com.google.common.collect.Sets;
 /**
  * Represents a controller mechanism for a {@link Cluster}.
  */
-public abstract class AbstractControllerImpl extends SoftwareProcessEntity implements AbstractController {
+public abstract class AbstractControllerImpl extends SoftwareProcessImpl implements AbstractController {
     
     // TODO Should review synchronization model. Currently, all changes to the serverPoolTargets
     // (and checking for potential changes) is done while synchronized on this. That means it 

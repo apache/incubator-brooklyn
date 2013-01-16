@@ -1,10 +1,9 @@
 package brooklyn.entity.database.mysql
 
-import brooklyn.config.ConfigKey
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.SoftwareProcessImpl
 
-public class MySqlNodeImpl extends SoftwareProcessEntity implements MySqlNode {
+public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
 
     public MySqlNodeImpl() {
         super();

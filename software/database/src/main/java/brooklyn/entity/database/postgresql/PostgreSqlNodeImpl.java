@@ -3,16 +3,10 @@ package brooklyn.entity.database.postgresql;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.basic.PortRanges;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.util.MutableMap;
-import brooklyn.util.flags.SetFromFlag;
 
-public class PostgreSqlNodeImpl extends SoftwareProcessEntity implements PostgreSqlNode {
+public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSqlNode {
 
     public PostgreSqlNodeImpl() {
         super();

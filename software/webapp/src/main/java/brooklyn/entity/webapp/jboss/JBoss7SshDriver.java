@@ -11,7 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
@@ -137,7 +137,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         NetworkUtils.checkPortsValid(ports);
 
         // Check hostname is defined
-        String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME);
+        String hostname = entity.getAttribute(SoftwareProcess.HOSTNAME);
         Preconditions.checkNotNull(hostname, "AS 7 entity must set hostname otherwise server will only be visible on localhost");
         
         // Copy the install files to the run-dir

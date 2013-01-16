@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -35,7 +35,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "7.0.34");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.34");
 
     /**
      * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down.

@@ -6,10 +6,9 @@ import java.util.Map;
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
-import brooklyn.entity.basic.ISoftwareProcessEntity;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -24,9 +23,9 @@ import brooklyn.util.flags.SetFromFlag;
  * This sets up a Karaf OSGi container
  */
 @ImplementedBy(KarafContainerImpl.class)
-public interface KarafContainer extends ISoftwareProcessEntity, UsesJava, UsesJmx {
+public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
     
-    // TODO Better way of setting/overriding defaults for config keys that are defined in super class SoftwareProcessEntity
+    // TODO Better way of setting/overriding defaults for config keys that are defined in super class SoftwareProcess
 
     public static final String WRAP_SCHEME = "wrap";
     public static final String FILE_SCHEME = "file";
@@ -71,7 +70,7 @@ public interface KarafContainer extends ISoftwareProcessEntity, UsesJava, UsesJm
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(
-            SoftwareProcessEntity.SUGGESTED_VERSION, "2.3.0");
+            SoftwareProcess.SUGGESTED_VERSION, "2.3.0");
     
     public static final BasicAttributeSensor<Map> KARAF_INSTANCES = new BasicAttributeSensor<Map>(
             Map.class, "karaf.admin.instances", "Karaf admin instances");

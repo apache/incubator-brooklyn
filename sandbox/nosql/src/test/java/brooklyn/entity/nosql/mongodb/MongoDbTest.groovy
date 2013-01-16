@@ -4,7 +4,7 @@ import static org.testng.Assert.assertFalse
 import static org.testng.Assert.assertEquals
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.entity.TestApplication
@@ -79,7 +79,7 @@ public class MongoDbTest {
 
     /** Inserts new object with { key: value } at given server, returns new document's id */
     private String insert(MongoDbServer entity, String key, Object value) {
-        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcessEntity.HOSTNAME));
+        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcess.HOSTNAME));
         try {
             DB db = mongoClient.getDB(TEST_DB);
             DBCollection testCollection = db.getCollection(TEST_COLLECTION);
@@ -93,7 +93,7 @@ public class MongoDbTest {
 
     /** Returns DBObject representing object with given id */
     private DBObject getById(MongoDbServer entity, String id) {
-        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcessEntity.HOSTNAME));
+        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcess.HOSTNAME));
         try {
             DB db = mongoClient.getDB(TEST_DB);
             DBCollection testCollection = db.getCollection(TEST_COLLECTION);

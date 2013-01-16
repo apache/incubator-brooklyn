@@ -19,7 +19,6 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.LoadBalancerCluster;
 import brooklyn.entity.proxying.BasicEntitySpec;
@@ -206,7 +205,7 @@ public class NginxClusterIntegrationTest {
         TestUtils.executeUntilSucceeds(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 for (NginxController nginx : nginxs) {
-                    assertTrue(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+                    assertTrue(nginx.getAttribute(NginxController.SERVICE_UP));
                     
                     String normalRootUrl = nginx.getAttribute(NginxController.ROOT_URL);
                     int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT);

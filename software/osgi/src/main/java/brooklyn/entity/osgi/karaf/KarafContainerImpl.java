@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.NamedParameter;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.adapter.JmxHelper;
@@ -39,9 +39,9 @@ import com.google.common.collect.Maps;
 /**
  * This sets up a Karaf OSGi container
  */
-public class KarafContainerImpl extends SoftwareProcessEntity implements KarafContainer {
+public class KarafContainerImpl extends SoftwareProcessImpl implements KarafContainer {
     
-    // TODO Better way of setting/overriding defaults for config keys that are defined in super class SoftwareProcessEntity
+    // TODO Better way of setting/overriding defaults for config keys that are defined in super class SoftwareProcess
 
     protected static final Logger LOG = LoggerFactory.getLogger(KarafContainerImpl.class);
 
