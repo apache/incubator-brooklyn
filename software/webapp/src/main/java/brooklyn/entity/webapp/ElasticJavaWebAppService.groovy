@@ -1,7 +1,5 @@
 package brooklyn.entity.webapp
 
-import java.util.Map
-
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractConfigurableEntityFactory
 import brooklyn.entity.basic.ConfigurableEntityFactory
@@ -20,7 +18,7 @@ public interface ElasticJavaWebAppService extends JavaWebAppService, Startable {
     implements EntityFactoryForLocation<ElasticJavaWebAppService> {
 
         public ElasticJavaWebAppService newEntity2(Map flags, Entity parent) {
-            new ControlledDynamicWebAppCluster(flags, parent);
+            new ControlledDynamicWebAppClusterImpl(flags, parent);
         }
 
         public ConfigurableEntityFactory<ElasticJavaWebAppService> newFactoryForLocation(Location l) {

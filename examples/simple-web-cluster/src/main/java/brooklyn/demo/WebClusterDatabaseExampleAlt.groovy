@@ -11,6 +11,7 @@ import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.database.mysql.MySqlNodeImpl
 import brooklyn.entity.proxy.nginx.NginxControllerImpl
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -80,7 +81,7 @@ INSERT INTO MESSAGES values (default, 'Isaac Asimov', 'I grew up in Brooklyn' );
         return jb7;
     }
 
-    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this,
+    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppClusterImpl(this,
         controller: new NginxControllerImpl(port: 8080),
         factory: this.&newWebServer )
     

@@ -14,6 +14,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.database.mysql.MySqlNodeImpl
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.launcher.BrooklynServerDetails
@@ -40,7 +41,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     public static final String DB_PASSWORD = "br00k11n"
     
     
-    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
+    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppClusterImpl(this, war: WAR_PATH);
     MySqlNode mysql = new MySqlNodeImpl(this, creationScriptUrl: DB_SETUP_SQL_URL);
 
     {

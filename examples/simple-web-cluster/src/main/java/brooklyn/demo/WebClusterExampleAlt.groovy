@@ -2,19 +2,16 @@ package brooklyn.demo
 
 import groovy.transform.InheritConstructors
 
-import java.util.List
-import java.util.Map
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
-import brooklyn.location.basic.CommandLineLocations
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
@@ -35,7 +32,7 @@ public class WebClusterExampleAlt extends AbstractApplication {
     public static final String WAR_PATH = "classpath://hello-world-webapp.war"
     
 
-    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
+    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppClusterImpl(this, war: WAR_PATH);
     {
         web.addPolicy(AutoScalerPolicy.builder()
                 .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)

@@ -16,6 +16,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -69,7 +70,7 @@ public class WebClusterApp extends AbstractApplication {
             }
         };
 
-        ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(
+        ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppClusterImpl(
                 MutableMap.of(
                         "name", "WebApp cluster",
                         "controller", nginxController,
@@ -77,8 +78,8 @@ public class WebClusterApp extends AbstractApplication {
                         "factory", jbossFactory), app);
 
 
-        web.getCluster().addEnricher(CustomAggregatingEnricher.getAveragingEnricher(new LinkedList(), sinusoidalLoad, averageLoad));
-        web.getCluster().addPolicy(AutoScalerPolicy.builder()
+        ((EntityLocal)web.getCluster()).addEnricher(CustomAggregatingEnricher.getAveragingEnricher(new LinkedList(), sinusoidalLoad, averageLoad));
+        ((EntityLocal)web.getCluster()).addPolicy(AutoScalerPolicy.builder()
                 .metric(averageLoad)
                 .sizeRange(1, 3)
                 .metricRange(0.3, 0.7)

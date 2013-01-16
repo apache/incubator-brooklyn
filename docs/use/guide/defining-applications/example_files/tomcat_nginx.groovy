@@ -4,7 +4,7 @@ class TomcatClusterWithNginxApp extends AbstractApplication {
 		port : 8000,
 		portNumberSensor : Attributes.HTTP_PORT)
 
-	ControlledDynamicWebAppCluster cluster = new ControlledDynamicWebAppCluster(
+	ControlledDynamicWebAppCluster cluster = new ControlledDynamicWebAppClusterImpl(
 		parent : this,
 		controller : nginxController,
 		webServerFactory : { properties -> new TomcatServer(properties) },

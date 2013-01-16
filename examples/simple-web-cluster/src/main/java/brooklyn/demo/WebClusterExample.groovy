@@ -9,6 +9,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxy.nginx.NginxController
 import brooklyn.entity.proxy.nginx.NginxControllerImpl
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.launcher.BrooklynLauncher
@@ -46,7 +47,7 @@ public class WebClusterExample extends AbstractApplication {
     
     JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(httpPort: "8080+", war: WAR_PATH); 
 
-    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this,
+    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppClusterImpl(this,
         name: "WebApp cluster",
         controller: nginxController,
         initialSize: 1,

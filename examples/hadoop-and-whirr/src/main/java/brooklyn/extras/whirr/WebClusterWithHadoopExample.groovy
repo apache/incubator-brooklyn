@@ -16,6 +16,7 @@ import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.event.SensorEvent
@@ -62,7 +63,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication {
         hadoopCluster.addRecipeLine("whirr.firewall-rules=8020,8021,50010");
     }
     
-    ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
+    ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppClusterImpl(this, war: WAR_PATH);
     {
         webCluster.addPolicy(AutoScalerPolicy.builder()
                 .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
