@@ -1,5 +1,58 @@
 package brooklyn.location.basic.jclouds;
 
+import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials;
+import static org.jclouds.scriptbuilder.domain.Statements.exec;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import javax.annotation.Nullable;
+
+import org.jclouds.Constants;
+import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.ComputeServiceContext;
+import org.jclouds.compute.RunNodesException;
+import org.jclouds.compute.callables.RunScriptOnNode;
+import org.jclouds.compute.domain.ComputeMetadata;
+import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.compute.domain.Image;
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.NodeMetadataBuilder;
+import org.jclouds.compute.domain.OperatingSystem;
+import org.jclouds.compute.domain.OsFamily;
+import org.jclouds.compute.domain.Template;
+import org.jclouds.compute.domain.TemplateBuilder;
+import org.jclouds.compute.domain.TemplateBuilderSpec;
+import org.jclouds.compute.options.RunScriptOptions;
+import org.jclouds.compute.options.TemplateOptions;
+import org.jclouds.domain.Credentials;
+import org.jclouds.domain.LoginCredentials;
+import org.jclouds.ec2.compute.options.EC2TemplateOptions;
+import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
+import org.jclouds.scriptbuilder.domain.InterpretableStatement;
+import org.jclouds.scriptbuilder.domain.Statement;
+import org.jclouds.scriptbuilder.domain.Statements;
+import org.jclouds.scriptbuilder.statements.login.AdminAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
@@ -16,6 +69,7 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -27,48 +81,6 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
-import org.jclouds.Constants;
-import org.jclouds.compute.ComputeService;
-import org.jclouds.compute.ComputeServiceContext;
-import org.jclouds.compute.RunNodesException;
-import org.jclouds.compute.callables.RunScriptOnNode;
-import org.jclouds.compute.domain.*;
-import org.jclouds.compute.options.RunScriptOptions;
-import org.jclouds.compute.options.TemplateOptions;
-import org.jclouds.domain.Credentials;
-import org.jclouds.domain.LoginCredentials;
-import org.jclouds.ec2.compute.options.EC2TemplateOptions;
-import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
-import org.jclouds.scriptbuilder.domain.InterpretableStatement;
-import org.jclouds.scriptbuilder.domain.Statement;
-import org.jclouds.scriptbuilder.domain.Statements;
-import org.jclouds.scriptbuilder.statements.login.AdminAccess;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static brooklyn.util.GroovyJavaMethods.elvis;
-import static brooklyn.util.GroovyJavaMethods.truth;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials;
-import static org.jclouds.scriptbuilder.domain.Statements.exec;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
