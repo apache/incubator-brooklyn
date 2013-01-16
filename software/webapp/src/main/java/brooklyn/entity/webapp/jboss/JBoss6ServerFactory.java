@@ -1,9 +1,9 @@
 package brooklyn.entity.webapp.jboss;
 
-import brooklyn.entity.basic.BasicConfigurableEntityFactory;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 
 public class JBoss6ServerFactory extends BasicConfigurableEntityFactory<JBoss6Server> {
     public JBoss6ServerFactory(){
@@ -11,6 +11,6 @@ public class JBoss6ServerFactory extends BasicConfigurableEntityFactory<JBoss6Se
     }
 
     public JBoss6ServerFactory(Map flags) {
-        super(flags, JBoss6Server.class);
+        super(flags, JBoss6ServerImpl.class);
     }
 }

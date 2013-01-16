@@ -17,6 +17,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
+import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl
@@ -85,11 +86,7 @@ public class WebAppIntegrationTest {
     public void shutdownApp() {
         if (entity != null) {
             AbstractApplication app = entity.getApplication();
-            try {
-                entity.stop();
-            } finally {
-                if (app != null) Entities.destroyAll(app);
-            }
+            if (app != null) Entities.destroyAll(app);
         }
     }
 
@@ -151,7 +148,7 @@ public class WebAppIntegrationTest {
 		//FIXME we should start the application, not the entity
         TomcatServerImpl tomcat = new TomcatServerImpl(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         Entities.manage(tomcat);
-        JBoss6Server jboss6 = new JBoss6Server( parent:newTestApplication(), portIncrement:PORT_INCREMENT);
+        JBoss6Server jboss6 = new JBoss6ServerImpl( parent:newTestApplication(), portIncrement:PORT_INCREMENT);
         Entities.manage(jboss6);
         JBoss7Server jboss7 = new JBoss7ServerImpl(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         Entities.manage(jboss7);
@@ -373,7 +370,7 @@ public class WebAppIntegrationTest {
 				"spring/intro",
             ],
             // FIXME seam-booking does not work
-//            [   new JBoss6Server(parent:application, portIncrement:PORT_INCREMENT),
+//            [   new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT),
 //				"seam-booking-as6.war",
 //                "seam-booking-as6/",
 //            ],
