@@ -42,7 +42,7 @@ public class TomcatAutoScalerPolicyTest {
         PortRange shutdownP = PortRanges.fromString("31880+");
         TestApplication app = new TestApplicationImpl()
         try {
-            DynamicWebAppCluster cluster = new DynamicWebAppCluster(
+            DynamicWebAppCluster cluster = new DynamicWebAppClusterImpl(
                 factory: { Map properties, Entity parent ->
                     def tc = new TomcatServerImpl(properties, parent)
                     tc.setConfig(TomcatServer.HTTP_PORT.configKey, httpPort)

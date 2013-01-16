@@ -6,11 +6,15 @@ import static org.testng.AssertJUnit.*
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestJavaWebAppEntity
 import brooklyn.util.internal.TimeExtras
 
@@ -21,16 +25,26 @@ public class DynamicWebAppClusterTest {
     private static final Logger log = LoggerFactory.getLogger(this)
     
     static { TimeExtras.init() }
+
+    private TestApplication app;
     
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroy(app);
+    }
+
     @Test
     public void testRequestCountAggregation() {
-        TestApplication app = new TestApplicationImpl()
-        DynamicWebAppCluster cluster = new DynamicWebAppCluster(
-            initialSize: 2,
-            factory: { properties -> new TestJavaWebAppEntity(properties) },
-            parent:app)
-        app.startManagement();
-        cluster.start([new SimulatedLocation()])
+        DynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicWebAppCluster.class)
+                .configure("initialSize", 2)
+                .configure("factory", { properties -> new TestJavaWebAppEntity(properties) }));
+        
+        app.start([new SimulatedLocation()])
         
         cluster.members.each { it.spoofRequest() }
         executeUntilSucceeds(timeout: 3*SECONDS) {
@@ -49,16 +63,15 @@ public class DynamicWebAppClusterTest {
     // updated a different instance from that retrieved subsequently!
     @Test(groups="WIP")
     public void testPropertiesToChildren() {
-        TestApplication app = new TestApplicationImpl()
-        DynamicWebAppCluster cluster = new DynamicWebAppCluster(
+        DynamicWebAppCluster cluster = new DynamicWebAppClusterImpl(
             factory: { properties -> new TestJavaWebAppEntity(properties + ["a": 1]) },
             parent:app) {
                 protected Map getCustomChildFlags() { ["c":3] }
         }
         cluster.factory.configure(b: 2);
-        app.startManagement();
+        Entities.manage(cluster);
         
-        cluster.start([new SimulatedLocation()])
+        app.start([new SimulatedLocation()])
         assertEquals 1, cluster.members.size()
         def we = cluster.members[0]
         assertEquals we.a, 1
