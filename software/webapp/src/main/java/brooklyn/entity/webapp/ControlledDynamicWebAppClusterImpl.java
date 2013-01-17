@@ -13,9 +13,9 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.nginx.NginxControllerImpl;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.Location;
@@ -35,7 +35,8 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
             
     // TODO convert to use attributes, to support rebind
     private AbstractController cachedController;
-    private EntityFactory<? extends WebAppService> cachedWebServerFactory;
+    private ConfigurableEntityFactory<? extends WebAppService> cachedWebServerFactory;
+    private EntitySpec<? extends WebAppService> cachedWebServerSpec;
     private DynamicWebAppCluster cachedCluster;
 
     public ControlledDynamicWebAppClusterImpl() {
@@ -67,15 +68,26 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         Entities.manage(cachedController);
         return cachedController;
     }
-    
+
     public synchronized ConfigurableEntityFactory<WebAppService> getFactory() {
-        if (cachedWebServerFactory!=null) return (ConfigurableEntityFactory<WebAppService>) cachedWebServerFactory;
-        cachedWebServerFactory = getConfig(FACTORY);
-        if (cachedWebServerFactory!=null) return (ConfigurableEntityFactory<WebAppService>) cachedWebServerFactory;
+        ConfigurableEntityFactory<? extends WebAppService> result = getFactoryOrNull();
+        if (result != null) return (ConfigurableEntityFactory<WebAppService>) result;
         
         log.debug("creating default web server factory for {}", this);
         cachedWebServerFactory = new JBoss7ServerFactory();
         return (ConfigurableEntityFactory<WebAppService>) cachedWebServerFactory;
+    }
+    
+    private EntitySpec<? extends WebAppService> getMemberSpecOrNull() {
+        if (cachedWebServerSpec !=null) return cachedWebServerSpec;
+        cachedWebServerSpec = getConfig(MEMBER_SPEC);
+        return cachedWebServerSpec;
+    }
+    
+    private ConfigurableEntityFactory<? extends WebAppService> getFactoryOrNull() {
+        if (cachedWebServerFactory!=null) return cachedWebServerFactory;
+        cachedWebServerFactory = getConfig(FACTORY);
+        return cachedWebServerFactory;
     }
     
     // TODO convert to an entity reference which is serializable
@@ -86,11 +98,13 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         
         log.debug("creating cluster child for {}", this);
         // Note relies on initial_size being inherited by DynamicWebAppCluster, because key id is identical
-        cachedCluster = new DynamicWebAppClusterImpl(
-                MutableMap.builder()
-                        .put("factory", getFactory())
-                        .build(),
-                this);
+        Map<String,Object> flags;
+        if (getMemberSpecOrNull() != null) {
+            flags = MutableMap.<String,Object>of("memberSpec", getMemberSpecOrNull());
+        } else {
+            flags = MutableMap.<String,Object>of("factory", getFactory());
+        }
+        cachedCluster = new DynamicWebAppClusterImpl(flags, this);
         if (Entities.isManaged(this)) Entities.manage(cachedCluster);
         return cachedCluster;
     }

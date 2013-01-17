@@ -6,6 +6,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.proxy.AbstractController;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
@@ -41,8 +42,13 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
 
     /** factory (or closure) to create the web server, given flags */
     @SetFromFlag("factory")
-    public static ConfigKey<ConfigurableEntityFactory<WebAppService>> FACTORY = new BasicConfigKey(
+    public static ConfigKey<ConfigurableEntityFactory<? extends WebAppService>> FACTORY = new BasicConfigKey(
             ConfigurableEntityFactory.class, "controlleddynamicweballcluster.factory", "factory (or closure) to create the web server");
+
+    /** Spec for web server entiites to be created */
+    @SetFromFlag("memberSpec")
+    public static ConfigKey<EntitySpec<? extends WebAppService>> MEMBER_SPEC = new BasicConfigKey(
+            EntitySpec.class, "controlleddynamicweballcluster.memberSpec", "Spec for web server entiites to be created");
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
 
