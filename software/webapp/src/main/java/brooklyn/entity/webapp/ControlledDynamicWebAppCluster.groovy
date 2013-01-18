@@ -43,7 +43,7 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
     public static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppCluster.class);
             
     @SetFromFlag('initialSize')
-    public static BasicConfigKey<Integer> INITIAL_SIZE = [ Cluster.INITIAL_SIZE, 1 ]
+    public static BasicConfigKey<Integer> INITIAL_SIZE = new BasicConfigKey<Integer>(Cluster.INITIAL_SIZE, 1);
 
     @SetFromFlag("controller")
     AbstractController _controller;
@@ -90,9 +90,9 @@ public class ControlledDynamicWebAppCluster extends AbstractEntity implements St
         cachedCluster = getChildren().find { it in DynamicWebAppCluster }
         if (cachedCluster!=null) return cachedCluster;
         log.debug("creating cluster child for {}", this);
+        // Note relies on initial_size being inherited by DynamicWebAppCluster, because key id is identical
         cachedCluster = new DynamicWebAppCluster(this,
-            factory: factory,
-            initialSize: new DeferredSupplier<Integer>() { public Integer get() { return getConfig(INITIAL_SIZE); } } );
+            factory: factory);
         if (Entities.isManaged(this)) Entities.manage(cachedCluster);
         return cachedCluster;
     }

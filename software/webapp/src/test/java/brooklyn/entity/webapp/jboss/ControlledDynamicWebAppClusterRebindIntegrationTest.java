@@ -104,7 +104,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         new ControlledDynamicWebAppCluster(
     			MutableMap.builder()
     					.put("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
-    					.put("initialSize", "1")
+    					.put("initialSize", 1)
     					.put("controller", origNginx)
     					.build(),
     			origApp);
