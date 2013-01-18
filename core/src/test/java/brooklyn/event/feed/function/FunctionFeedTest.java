@@ -26,7 +26,6 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplication2;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 
@@ -40,14 +39,14 @@ public class FunctionFeedTest {
     final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
 
     private Location loc;
-    private TestApplication2 app;
+    private TestApplication app;
     private EntityLocal entity;
     private FunctionFeed feed;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }

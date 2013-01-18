@@ -22,7 +22,6 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpService;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplication2;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
@@ -38,7 +37,7 @@ public class HttpFeedSslIntegrationTest {
     private URI baseUrl;
     
     private Location loc;
-    private TestApplication2 app;
+    private TestApplication app;
     private EntityLocal entity;
     private HttpFeed feed;
     
@@ -48,7 +47,7 @@ public class HttpFeedSslIntegrationTest {
         baseUrl = new URI(httpService.getUrl());
 
         loc = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }

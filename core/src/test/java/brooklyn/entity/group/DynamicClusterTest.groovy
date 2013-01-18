@@ -25,7 +25,7 @@ import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.TimeExtras
@@ -40,14 +40,14 @@ class DynamicClusterTest {
         
     static { TimeExtras.init() }
     
-    TestApplication2 app
+    TestApplication app
     SimulatedLocation loc
     SimulatedLocation loc2
     Random random = new Random()
     
     @BeforeMethod
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         loc = new SimulatedLocation()
         loc2 = new SimulatedLocation()
     }

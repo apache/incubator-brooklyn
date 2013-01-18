@@ -14,7 +14,7 @@ import brooklyn.event.basic.DependentConfiguration
 import brooklyn.event.basic.ListConfigKey.ListModifications
 import brooklyn.event.basic.MapConfigKey.MapModifications
 import brooklyn.location.basic.SimulatedLocation
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 import com.google.common.collect.ImmutableList
@@ -22,13 +22,13 @@ import com.google.common.collect.ImmutableList
 public class MapListAndOtherStructuredConfigKeyTest {
 
     private List<SimulatedLocation> locs;
-    private TestApplication2 app;
+    private TestApplication app;
     private TestEntity entity;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         locs = ImmutableList.of(new SimulatedLocation());
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
     }
 

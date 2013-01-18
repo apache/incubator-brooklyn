@@ -16,7 +16,7 @@ import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.TimeExtras
 
@@ -24,12 +24,12 @@ public class KarafContainerTest {
     static { TimeExtras.init() }
 
     MachineProvisioningLocation localhost = new LocalhostMachineProvisioningLocation(name:'localhost', address:"localhost")
-    TestApplication2 app
+    TestApplication app
     KarafContainer karaf
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
     }
 
     @AfterMethod(alwaysRun=true)

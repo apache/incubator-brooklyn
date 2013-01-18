@@ -16,7 +16,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -36,12 +36,12 @@ public class EntityConfigMapUsageTest {
     private ConfigKey<Integer> intKeyWithDefault = new BasicConfigKey<Integer>(Integer.class, "ckey", "c key", 1);
     private ConfigKey<String> strKeyWithDefault = new BasicConfigKey<String>(String.class, "strKey", "str key", "str key default");
     
-    private TestApplication2 app;
+    private TestApplication app;
     private List<SimulatedLocation> locs;
     
     @BeforeMethod
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         locs = ImmutableList.of(new SimulatedLocation());
     }
     

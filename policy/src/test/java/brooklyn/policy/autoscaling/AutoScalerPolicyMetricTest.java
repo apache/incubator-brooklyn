@@ -12,7 +12,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.test.entity.TestEntity;
 
@@ -24,12 +24,12 @@ public class AutoScalerPolicyMetricTest {
     private static long SHORT_WAIT_MS = 250;
     
     private static final BasicAttributeSensor<Integer> MY_ATTRIBUTE = new BasicAttributeSensor<Integer>(Integer.class, "autoscaler.test.intAttrib");
-    TestApplication2 app;
+    TestApplication app;
     TestCluster tc;
     
     @BeforeMethod()
     public void before() {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         tc = app.createAndManageChild(BasicEntitySpec.newInstance(TestCluster.class)
                 .configure("initialSize", 1));
     }

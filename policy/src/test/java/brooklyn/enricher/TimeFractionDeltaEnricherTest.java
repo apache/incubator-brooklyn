@@ -8,7 +8,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
@@ -18,14 +17,14 @@ import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.management.SubscriptionContext;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 public class TimeFractionDeltaEnricherTest {
 
     private static final double PRECISION = 0.000001;
     
-    private TestApplication2 app;
+    private TestApplication app;
     private EntityLocal producer;
 
     Sensor<Integer> intSensor;
@@ -34,7 +33,7 @@ public class TimeFractionDeltaEnricherTest {
     
     @BeforeMethod(alwaysRun=true)
     public void before() {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         producer = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor");

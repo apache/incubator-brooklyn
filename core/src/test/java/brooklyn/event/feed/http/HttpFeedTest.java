@@ -18,7 +18,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.base.Functions;
@@ -38,7 +38,7 @@ public class HttpFeedTest {
     private URL baseUrl;
     
     private Location loc;
-    private TestApplication2 app;
+    private TestApplication app;
     private EntityLocal entity;
     private HttpFeed feed;
     
@@ -52,7 +52,7 @@ public class HttpFeedTest {
         baseUrl = server.getUrl("/");
 
         loc = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }

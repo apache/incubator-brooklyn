@@ -15,7 +15,7 @@ import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.SubscriptionHandle
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 public class EntitySubscriptionTest {
@@ -26,7 +26,7 @@ public class EntitySubscriptionTest {
     private static final long SHORT_WAIT_MS = 100;
     
     private SimulatedLocation loc;
-    private TestApplication2 app;
+    private TestApplication app;
     private TestEntity entity;
     private TestEntity observedEntity;
     private BasicGroup observedGroup;
@@ -38,7 +38,7 @@ public class EntitySubscriptionTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         observedEntity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         observedChildEntity = observedEntity.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));

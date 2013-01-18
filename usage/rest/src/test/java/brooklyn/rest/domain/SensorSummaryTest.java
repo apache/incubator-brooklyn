@@ -19,7 +19,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableMap;
@@ -30,12 +30,12 @@ public class SensorSummaryTest {
       "Description", ImmutableMap.of(
       "self", URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
 
-  private TestApplication2 app;
+  private TestApplication app;
   private TestEntity entity;
   
   @BeforeMethod(alwaysRun=true)
   public void setUp() throws Exception {
-      app = ApplicationBuilder.builder(TestApplication2.class).manage();
+      app = ApplicationBuilder.builder(TestApplication.class).manage();
       entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
   }
   

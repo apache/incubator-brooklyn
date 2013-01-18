@@ -22,7 +22,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 
@@ -34,14 +34,14 @@ public class MemberFailureDetectionPolicyTest {
     private static final int TIMEOUT_MS = 10*1000;
 
     private MemberFailureDetectionPolicy policy;
-    private TestApplication2 app;
+    private TestApplication app;
     private BasicGroup group;
     private List<SensorEvent<FailureDescriptor>> events;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         events = new CopyOnWriteArrayList<SensorEvent<FailureDescriptor>>();
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         group = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         

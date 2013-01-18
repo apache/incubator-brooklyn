@@ -21,7 +21,7 @@ import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 
@@ -33,7 +33,7 @@ public class EntityPreManagementTest {
 
     private ManagementContext managementContext;
     private EntityManager entityManager;
-    private TestApplication2 app;
+    private TestApplication app;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -80,7 +80,7 @@ public class EntityPreManagementTest {
         if (!events.isEmpty()) Assert.fail("Shouldn't have events yet: "+events);
         Assert.assertFalse(e.getManagementSupport().isManagementContextReal());
         
-        TestApplication2 app = ApplicationBuilder.builder(TestApplication2.class).manage(managementContext);
+        TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
         e.setParent(app);
         Entities.manage(e);
         
@@ -94,7 +94,7 @@ public class EntityPreManagementTest {
 
     @Test
     public void testAddPolicyToApplicationBeforeManaged() {
-        app = entityManager.createEntity(BasicEntitySpec.newInstance(TestApplication2.class));
+        app = entityManager.createEntity(BasicEntitySpec.newInstance(TestApplication.class));
         final List events = new ArrayList();
         
         app.addPolicy(new AbstractPolicy() {

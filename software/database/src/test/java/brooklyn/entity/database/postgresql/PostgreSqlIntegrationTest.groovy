@@ -12,7 +12,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 
 /**
  * Runs the popular Vogella MySQL tutorial against PostgreSQL
@@ -22,11 +22,11 @@ import brooklyn.test.entity.TestApplication2
 public class PostgreSqlIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(PostgreSqlIntegrationTest.class);
-    TestApplication2 tapp
+    TestApplication tapp
 
     @BeforeMethod(alwaysRun = true)
     public void before() {
-        tapp = ApplicationBuilder.builder(TestApplication2.class).manage();
+        tapp = ApplicationBuilder.builder(TestApplication.class).manage();
     }
 
     @AfterMethod(alwaysRun = true)

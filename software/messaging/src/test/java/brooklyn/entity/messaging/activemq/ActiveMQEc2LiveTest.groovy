@@ -24,7 +24,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
 class ActiveMQEc2LiveTest {
@@ -37,7 +37,7 @@ class ActiveMQEc2LiveTest {
     protected JcloudsLocationFactory locFactory;
     private File sshPrivateKey
     private File sshPublicKey
-    TestApplication2 app
+    TestApplication app
     ActiveMQBroker activeMQ
 
     @BeforeMethod(alwaysRun=true)
@@ -68,7 +68,7 @@ class ActiveMQEc2LiveTest {
             securityGroups:["brooklyn-all"]
         ]])
 
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
     }
 
     @AfterMethod(alwaysRun=true)

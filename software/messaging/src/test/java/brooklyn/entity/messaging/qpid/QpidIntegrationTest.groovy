@@ -26,7 +26,7 @@ import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -37,7 +37,7 @@ public class QpidIntegrationTest {
 
     static { TimeExtras.init() }
 
-    private TestApplication2 app
+    private TestApplication app
     private Location testLocation
     private QpidBroker qpid
 
@@ -45,7 +45,7 @@ public class QpidIntegrationTest {
     public void setup() {
         String workingDir = System.getProperty("user.dir");
         println workingDir
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         testLocation = new LocalhostMachineProvisioningLocation()
     }
 

@@ -18,7 +18,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.EntityManager;
 import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 
@@ -32,14 +32,14 @@ public class MembershipTrackingPolicyTest {
     
     SimulatedLocation loc;
     EntityManager entityManager;
-    TestApplication2 app;
+    TestApplication app;
     private BasicGroup group;
     private RecordingMembershipTrackingPolicy policy;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entityManager = app.getManagementContext().getEntityManager();
         
         group = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class)

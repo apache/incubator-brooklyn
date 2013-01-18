@@ -13,20 +13,20 @@ import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 class BrooklynMetricsTest {
 
     private static final long TIMEOUT_MS = 2*1000;
     
-    TestApplication2 app
+    TestApplication app
     SimulatedLocation loc
     BrooklynMetrics brooklynMetrics
     
     @BeforeMethod
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         loc = new SimulatedLocation()
         brooklynMetrics = new BrooklynMetrics(updatePeriod:10L, parent:app)
         Entities.manage(brooklynMetrics);

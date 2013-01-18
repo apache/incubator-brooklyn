@@ -23,7 +23,6 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplication2;
 import brooklyn.test.entity.TestEntity;
 
 /**
@@ -33,12 +32,12 @@ public class LocalSubscriptionManagerTest {
     
     private static final int TIMEOUT_MS = 5000;
     
-    private TestApplication2 app;
+    private TestApplication app;
     private TestEntity entity;
     
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
     }
 

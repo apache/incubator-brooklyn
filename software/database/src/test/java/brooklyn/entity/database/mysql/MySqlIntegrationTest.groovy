@@ -12,7 +12,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.util.text.Strings;
 
 /**
@@ -23,11 +23,11 @@ import brooklyn.util.text.Strings;
 public class MySqlIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(MySqlIntegrationTest.class);
-    TestApplication2 tapp
+    TestApplication tapp
 
     @BeforeMethod(alwaysRun = true)
     public void before() {
-        tapp = ApplicationBuilder.builder(TestApplication2.class).manage();
+        tapp = ApplicationBuilder.builder(TestApplication.class).manage();
     }
 
     @AfterMethod(alwaysRun=true)

@@ -13,7 +13,7 @@ import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.geo.HostGeoInfo
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -36,7 +36,7 @@ class GeoscalingIntegrationTest {
     
     @Test(groups=["Integration"])
     public void testRoutesToExpectedLocation() {
-        TestApplication2 app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage();
         TestEntity target = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         target.setAttribute(Attributes.HOSTNAME,addr.getHostName())
         DynamicGroup group = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) })

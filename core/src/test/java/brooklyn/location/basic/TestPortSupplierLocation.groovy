@@ -7,20 +7,20 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 public class TestPortSupplierLocation {
 
     SimulatedLocation l;
     PortAttributeSensorAndConfigKey ps;
-    TestApplication2 app;
+    TestApplication app;
     TestEntity e;
     
     @BeforeMethod
     public void setup() {
         l = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start([l]);
         

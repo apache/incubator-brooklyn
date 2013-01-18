@@ -25,7 +25,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.BlockingEntity
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.Repeater
@@ -40,7 +40,7 @@ class DynamicFabricTest {
     
     static { TimeExtras.init() }
     
-    TestApplication2 app
+    TestApplication app
     Location loc1
     Location loc2
     Location loc3
@@ -50,7 +50,7 @@ class DynamicFabricTest {
         loc1 = new SimulatedLocation()
         loc2 = new SimulatedLocation()
         loc3 = new SimulatedLocation()
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
     }
     
     @Test

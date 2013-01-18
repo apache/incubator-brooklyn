@@ -9,14 +9,14 @@ import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.test.TestUtils
-import brooklyn.test.entity.TestApplication2
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 class SensorPropagatingEnricherTest {
 
     @Test
     public void testPropagation() {
-        TestApplication2 app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage();
         TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
         app.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(entity, TestEntity.SEQUENCE)) 

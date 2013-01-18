@@ -10,7 +10,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 
@@ -21,12 +21,12 @@ public class EffectorBasicTest {
     // NB: more test of effector in EffectorSayHiTest and EffectorConcatenateTest
     // as well as EntityConfigMapUsageTest and others
 
-    private TestApplication2 app;
+    private TestApplication app;
     private List<SimulatedLocation> locs;
     
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         locs = ImmutableList.of(new SimulatedLocation());
     }
     

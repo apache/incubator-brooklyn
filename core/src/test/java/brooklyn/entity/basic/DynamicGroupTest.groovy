@@ -20,7 +20,6 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestApplication2
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.LanguageUtils
 
@@ -36,22 +35,17 @@ public class DynamicGroupTest {
     private static final int TIMEOUT_MS = 50*1000;
     private static final int VERY_SHORT_WAIT_MS = 100;
     
-    private TestApplication2 app
+    private TestApplication app
     private DynamicGroup group
     private TestEntity e1
     private TestEntity e2
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         group = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicGroup.class));
         e1 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         e2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app != null) Entities.destroy(app);
     }
     
     @AfterMethod(alwaysRun=true)

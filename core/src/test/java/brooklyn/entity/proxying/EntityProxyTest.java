@@ -20,7 +20,7 @@ import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.AbstractManagementContext;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -29,12 +29,12 @@ import com.google.common.collect.Iterables;
 public class EntityProxyTest {
 
     private ManagementContext managementContext;
-    private TestApplication2 app;
+    private TestApplication app;
     private MyEntity entity;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = (TestApplication2) ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(MyEntity.Spec.newInstance());
         managementContext = app.getManagementContext();
     }

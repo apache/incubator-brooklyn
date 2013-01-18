@@ -16,7 +16,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
 
@@ -30,7 +30,7 @@ public class SshFeedIntegrationTest {
 
     private LocalhostMachineProvisioningLocation loc;
     private SshMachineLocation machine;
-    private TestApplication2 app;
+    private TestApplication app;
     private EntityLocal entity;
     private SshFeed feed;
     
@@ -38,7 +38,7 @@ public class SshFeedIntegrationTest {
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
         machine = loc.obtain();
-        app = ApplicationBuilder.builder(TestApplication2.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }

@@ -17,7 +17,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.entity.TestApplication2;
+import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 
@@ -35,7 +35,7 @@ public class TomcatServerIntegrationTest {
     static boolean httpPortLeftOpen = false;
     private int oldHttpPort = -1;
     
-    private TestApplication2 app;
+    private TestApplication app;
     private TomcatServer tc;
     
     @BeforeMethod(alwaysRun=true)
@@ -55,7 +55,7 @@ public class TomcatServerIntegrationTest {
     public void detectFailureIfTomcatCantBindToPort() throws Exception {
         ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
         try {
-            app = (TestApplication2) ApplicationBuilder.builder(TestApplication2.class).manage();
+            app = (TestApplication) ApplicationBuilder.builder(TestApplication.class).manage();
             tc = app.createAndManageChild(BasicEntitySpec.newInstance(TomcatServer.class).configure("httpPort",DEFAULT_HTTP_PORT));
             
             try {
