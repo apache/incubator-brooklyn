@@ -1,15 +1,12 @@
 package brooklyn.entity.webapp.tomcat
 
-import brooklyn.util.MutableMap
-
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-import org.codehaus.groovy.runtime.InvokerInvocationException
+import org.jclouds.util.Throwables2
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -17,12 +14,14 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.basic.Entities;
-import brooklyn.event.EntityStartException
+import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.util.MutableMap
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
+
+import com.google.common.collect.ImmutableList
 
 /**
  * This tests the operation of the {@link TomcatServer} entity.
@@ -85,34 +84,30 @@ public class TomcatServerIntegrationTest {
         }
     }
 
-    @Test(groups = [ "Integration" ])
-    public void detectFailureIfTomcatCantBindToPort() {
+    @Test(groups="Integration")
+    public void detectFailureIfTomcatCantBindToPort() throws Exception {
         ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
         try {
             app = new TestApplication()
             tc = new TomcatServer(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),app);
             Entities.startManagement(app);
+            
             try {
-                try {
-                    tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-                    fail("Should have thrown start-exception")
-                } catch (ExecutionException e) {
-                    throw unwrapThrowable(e)
-                }
-            } catch (IllegalArgumentException e) {
+                tc.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
+                fail("Should have thrown start-exception");
+            } catch (Exception e) {
                 // LocalhostMachineProvisioningLocation does NetworkUtils.isPortAvailable, so get -1
-                assertEquals e.message, "port for httpPort is null"
-            } catch (EntityStartException e) {
-                assertEquals e.message, "HTTP service on port ${DEFAULT_HTTP_PORT} failed"
+                IllegalArgumentException iae = Throwables2.getFirstThrowableOfType(e, IllegalArgumentException.class);
+                if (iae == null || iae.getMessage() == null || !iae.getMessage().equals("port for httpPort is null")) throw e;
             } finally {
-                tc.stop()
+                tc.stop();
             }
-            assertFalse tc.getAttribute(TomcatServer.SERVICE_UP)
+            assertFalse(tc.getAttribute(TomcatServer.SERVICE_UP));
         } finally {
             listener.close();
         }
     }
-
+    
 	//TODO should define a generic mechanism for doing this    
 ////    @Test(groups = [ "Integration" ])
 //    public void createsPropertiesFilesWithEnvironmentVariables() {
