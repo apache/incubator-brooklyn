@@ -22,7 +22,7 @@ import com.google.common.base.Predicates;
 public class ActiveMQBrokerImpl extends JMSBroker<ActiveMQQueue, ActiveMQTopic> implements ActiveMQBroker {
 	private static final Logger log = LoggerFactory.getLogger(ActiveMQBrokerImpl.class);
 
-    private JmxFeed jmxFeed;
+    private volatile JmxFeed jmxFeed;
 
     public ActiveMQBrokerImpl() {
         super();

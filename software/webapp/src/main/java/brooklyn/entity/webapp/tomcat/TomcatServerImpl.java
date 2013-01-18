@@ -51,7 +51,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
 
     public static final BasicAttributeSensor<String> JMX_SERVICE_URL = Attributes.JMX_SERVICE_URL;
     
-    private JmxFeed jmxFeed;
+    private volatile JmxFeed jmxFeed;
 
     public TomcatServerImpl() {
         super();

@@ -62,7 +62,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     private static final Logger LOG = LoggerFactory.getLogger(NginxControllerImpl.class);
     static { TimeExtras.init(); }
     
-    private HttpFeed httpFeed;
+    private volatile HttpFeed httpFeed;
     
     public NginxControllerImpl() {
         super();

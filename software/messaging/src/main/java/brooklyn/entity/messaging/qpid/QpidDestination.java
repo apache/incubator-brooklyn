@@ -31,7 +31,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
     protected ObjectName virtualHostManager;
     protected ObjectName exchange;
     protected transient JmxHelper jmxHelper;
-    protected transient JmxFeed jmxFeed;
+    protected volatile JmxFeed jmxFeed;
 
     public QpidDestination() {
         this(MutableMap.of(), null);

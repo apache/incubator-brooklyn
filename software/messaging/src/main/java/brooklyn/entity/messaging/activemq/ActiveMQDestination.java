@@ -16,7 +16,7 @@ import brooklyn.util.exceptions.Exceptions;
 public abstract class ActiveMQDestination extends JMSDestination {
     protected ObjectName brokerMBeanName;
     protected transient JmxHelper jmxHelper;
-    protected JmxFeed jmxFeed;
+    protected volatile JmxFeed jmxFeed;
 
     public ActiveMQDestination() {
         this(MutableMap.of(), null);

@@ -24,7 +24,7 @@ public class JBoss6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 
     public static final Logger log = LoggerFactory.getLogger(JBoss6ServerImpl.class);
 
-    private JmxFeed jmxFeed;
+    private volatile JmxFeed jmxFeed;
     
     public JBoss6ServerImpl(Entity parent) {
         this(new LinkedHashMap(), parent);

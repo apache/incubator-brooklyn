@@ -21,7 +21,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 
 	public static final Logger log = LoggerFactory.getLogger(JBoss7ServerImpl.class);
 
-    private HttpFeed httpFeed;
+    private volatile HttpFeed httpFeed;
     
     public JBoss7ServerImpl(){
         super();

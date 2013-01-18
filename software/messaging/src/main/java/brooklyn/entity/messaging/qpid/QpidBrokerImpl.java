@@ -34,7 +34,7 @@ import com.google.common.collect.Sets;
 public class QpidBrokerImpl extends JMSBroker<QpidQueue, QpidTopic> implements QpidBroker {
     private static final Logger log = LoggerFactory.getLogger(QpidBrokerImpl.class);
 
-    private transient JmxFeed jmxFeed;
+    private volatile JmxFeed jmxFeed;
 
     public QpidBrokerImpl() {
         super();
