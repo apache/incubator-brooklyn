@@ -21,6 +21,7 @@ import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
 
+import com.google.common.base.Functions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -28,6 +29,32 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 
+/**
+ * Provides a feed of attribute values, by polling or subscribing over jmx.
+ * 
+ * Example usage is:
+ * <pre>
+ * {@code
+ * jmxFeed = JmxFeed.builder()
+ *     .entity(this)
+ *     .period(500, TimeUnit.MILLISECONDS)
+ *     .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
+ *         .objectName(requestProcessorMbeanName)
+ *         .attributeName("errorCount"))
+ *     .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+ *         .objectName(serverMbeanName)
+ *         .attributeName("Started")
+ *         .onError(Functions.constant(false)))
+ *     .build();
+ *    
+ * // ...
+ *   
+ * if (jmxFeed != null) jmxFeed.stop();
+ * }
+ * </pre>
+ * 
+ * @author aled
+ */
 public class JmxFeed extends AbstractFeed {
 
 	public static final Logger log = LoggerFactory.getLogger(JmxFeed.class);
