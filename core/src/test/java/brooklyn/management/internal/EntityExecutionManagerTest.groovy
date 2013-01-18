@@ -2,6 +2,7 @@ package brooklyn.management.internal
 
 import static org.testng.Assert.*
 
+import java.io.Serializable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -91,7 +92,7 @@ class EntityExecutionManagerTest {
             try {
                 LOG.debug("testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked: iteration="+i);
                 TestEntity entity = new TestEntity([parent:app])
-                entity.setAttribute(byteArrayAttrib, new byte[10*1000*1000]);
+                entity.setAttribute(byteArrayAttrib, new BigObject(10*1000*1000));
                 Entities.manage(entity);
                 entity.invoke(TestEntity.MY_EFFECTOR).get();
                 Entities.destroy(entity);
@@ -118,7 +119,7 @@ class EntityExecutionManagerTest {
         for (int i = 0; i < 1000; i++) {
             try {
                 LOG.debug("testEffectorTasksGced: iteration="+i);
-                entity.invoke(TestEntity.IDENTITY_EFFECTOR, [arg: new byte[10*1000*1000]]).get();
+                entity.invoke(TestEntity.IDENTITY_EFFECTOR, [arg: new BigObject(10*1000*1000)]).get();
                 
                 Thread.sleep(1); // Give GC thread a chance to run
                 
@@ -184,5 +185,19 @@ class EntityExecutionManagerTest {
         
         assertTrue(timeToGc > (maxTaskAge-earlyReturnGrace), "timeToGc="+timeToGc+"; maxTaskAge="+maxTaskAge);
         assertTrue(timeToGc < (maxTaskAge+maxOverhead), "timeToGc="+timeToGc+"; maxTaskAge="+maxTaskAge);
+    }
+    
+    private static class BigObject implements Serializable {
+        private final int sizeBytes;
+        private final byte[] data;
+        
+        BigObject(int sizeBytes) {
+            this.sizeBytes = sizeBytes;
+            this.data = new byte[sizeBytes];
+        }
+        
+        public String toString() {
+            return "BigObject["+sizeBytes+"]";
+        }
     }
 }
