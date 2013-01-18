@@ -14,10 +14,12 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.injava.ExampleJavaPolicy;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class ApplicationBuilderBuildingTest {
@@ -63,6 +65,17 @@ public class ApplicationBuilderBuildingTest {
         assertIsProxy(child);
         assertEquals(child.getParent(), app);
         assertTrue(child instanceof MyEntity, "child="+child);
+    }
+
+    @Test
+    public void testCreatesEntityWithPolicy() {
+        ExampleJavaPolicy policy = new ExampleJavaPolicy();
+        app = ApplicationBuilder.builder()
+                .child(MyEntity.Spec.newInstance().policy(policy))
+                .manage();
+        Entity child = Iterables.getOnlyElement(app.getChildren());
+        
+        assertEquals(ImmutableList.copyOf(child.getPolicies()), ImmutableList.of(policy));
     }
 
     @Test

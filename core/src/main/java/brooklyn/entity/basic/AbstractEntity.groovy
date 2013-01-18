@@ -20,6 +20,7 @@ import brooklyn.entity.EntityType
 import brooklyn.entity.Group
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
 import brooklyn.entity.proxying.EntityProxy
+import brooklyn.entity.proxying.InternalEntityFactory
 import brooklyn.entity.rebind.BasicEntityRebindSupport
 import brooklyn.entity.rebind.RebindSupport
 import brooklyn.event.AttributeSensor
@@ -114,7 +115,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     /**
      * Whether we are still being constructed, in which case never warn in "assertNotYetOwned"
      */
-    private boolean preConfigured = true;
+    private boolean inConstruction = true;
     
     private final EntityDynamicType entityType;
     
@@ -140,6 +141,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     protected transient SubscriptionTracker _subscriptionTracker;
 
+    private final boolean _legacyConstruction;
+    
     public AbstractEntity() {
         this([:], null)
     }
@@ -195,10 +198,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             // TODO Don't let `this` reference escape during construction
             entityType = new EntityDynamicType(this);
             
-            def checkWeGetThis = configure(flags);
-            assert this == checkWeGetThis : "$this configure method does not return itself; returns $checkWeGetThis instead"
-
-            preConfigured = false;
+            _legacyConstruction = !InternalEntityFactory.FactoryConstructionTracker.isConstructing();
+            
+            if (_legacyConstruction) {
+                def checkWeGetThis = configure(flags);
+                assert this == checkWeGetThis : "$this configure method does not return itself; returns $checkWeGetThis instead"
+            }
+            
+            inConstruction = false;
             
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
@@ -209,6 +216,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     public boolean equals(Object o) {
         return o != null && (o.is(this) || o.is(selfProxy));
+    }
+    
+    protected boolean isLegacyConstruction() {
+        return _legacyConstruction;
     }
     
     public String getId() {
@@ -329,6 +340,24 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         getManagementSupport().setManagementContext(managementContext);
     }
 
+    /**
+     * Called by framework (in new-style entities) after configuring, setting parent, etc,
+     * but before a reference to this entity is shared with other entities.
+     * 
+     * To preserve backwards compatibility for if the entity is constructed directly, one
+     * can add to the start method the code below, but that means it will be called after
+     * references to this entity have been shared with other entities.
+     * <pre>
+     * {@code
+     * if (isLegacyConstruction()) {
+     *     postConstruct();
+     * }
+     * }
+     * </pre>
+     */
+    public void postConstruct() {
+    }
+    
     /**
      * Adds this as a child of the given entity; registers with application if necessary.
      */
@@ -620,7 +649,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     // TODO assertNotYetManaged would be a better name?
     protected void assertNotYetOwned() {
-        if (!preConfigured && getManagementSupport().isDeployed()) {
+        if (!inConstruction && getManagementSupport().isDeployed()) {
             LOG.warn("configuration being made to $this after deployment; may not be supported in future versions");
         }
         //throw new IllegalStateException("Cannot set configuration $key on active entity $this")

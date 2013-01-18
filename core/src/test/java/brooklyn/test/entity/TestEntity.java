@@ -14,6 +14,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
@@ -31,6 +32,23 @@ import brooklyn.util.MutableMap;
 @ImplementedBy(TestEntityImpl.class)
 public interface TestEntity extends Entity, Startable, EntityLocal {
 
+    public static class Spec<T extends TestEntity, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
+
+        private static class ConcreteSpec extends Spec<TestEntity, ConcreteSpec> {
+            ConcreteSpec() {
+                super(TestEntity.class);
+            }
+        }
+        
+        public static Spec<TestEntity, ?> newInstance() {
+            return new ConcreteSpec();
+        }
+        
+        protected Spec(Class<T> type) {
+            super(type);
+        }
+    }
+    
     public static final BasicConfigKey<String> CONF_NAME = new BasicConfigKey<String>(String.class, "test.confName", "Configuration key, my name", "defaultval");
     public static final BasicConfigKey<Map> CONF_MAP_PLAIN = new BasicConfigKey<Map>(Map.class, "test.confMapPlain", "Configuration key that's a plain map", MutableMap.of());
     public static final BasicConfigKey<List> CONF_LIST_PLAIN = new BasicConfigKey<List>(List.class, "test.confListPlain", "Configuration key that's a plain list", Lists.newArrayList());
@@ -45,6 +63,8 @@ public interface TestEntity extends Entity, Startable, EntityLocal {
     
     public static final Effector<Void> MY_EFFECTOR = new MethodEffector<Void>(TestEntity.class, "myEffector");
     public static final Effector<Object> IDENTITY_EFFECTOR = new MethodEffector<Object>(TestEntity.class, "identityEffector");
+    
+    public boolean isLegacyConstruction();
     
     @Description("an example of a no-arg effector")
     public void myEffector();

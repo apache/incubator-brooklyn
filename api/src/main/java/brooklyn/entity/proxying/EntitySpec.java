@@ -1,5 +1,6 @@
 package brooklyn.entity.proxying;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -7,6 +8,7 @@ import javax.annotation.Nullable;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.policy.Policy;
 
 import com.google.common.annotations.Beta;
 
@@ -28,6 +30,11 @@ public interface EntitySpec<T extends Entity> {
      */
     public Class<T> getType();
 
+    /**
+     * @return The display name of the entity
+     */
+    public String getDisplayName();
+    
     /**
      * @return The implementation of the entity; if not null. this overrides any defaults or other configuration
      * 
@@ -59,4 +66,6 @@ public interface EntitySpec<T extends Entity> {
      */
     @Beta
     public Map<HasConfigKey<?>, Object> getConfig2();
+    
+    public List<Policy> getPolicies();
 }

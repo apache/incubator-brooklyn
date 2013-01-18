@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.WrappingEntitySpec;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 
@@ -69,7 +72,7 @@ public abstract class ApplicationBuilder {
 
     public static class Builder<T extends Application> {
         protected volatile boolean managed = false;
-        private EntitySpec<? extends T> appSpec;
+        private BasicEntitySpec<? extends T, ?> appSpec;
         private List<EntitySpec<?>> childSpecs = Lists.newArrayList();
         
         // Use static builder methods
@@ -78,7 +81,7 @@ public abstract class ApplicationBuilder {
         // Use static builder methods
         protected Builder<T> app(EntitySpec<? extends T> val) {
             checkNotManaged();
-            this.appSpec = val; 
+            this.appSpec = WrappingEntitySpec.newInstance(val); 
             return this;
         }
         
@@ -86,6 +89,12 @@ public abstract class ApplicationBuilder {
         protected Builder<T> app(Class<? extends T> type) {
             checkNotManaged();
             this.appSpec = BasicEntitySpec.newInstance(type); 
+            return this;
+        }
+        
+        public Builder<T> displayName(String val) {
+            checkNotManaged();
+            appSpec.displayName(val);
             return this;
         }
         
@@ -117,7 +126,7 @@ public abstract class ApplicationBuilder {
     }
     
     protected volatile boolean managed = false;
-    private EntitySpec<? extends Application> appSpec;
+    private BasicEntitySpec<? extends Application, ?> appSpec;
     private ManagementContext managementContext;
     private Application app;
     
@@ -126,9 +135,14 @@ public abstract class ApplicationBuilder {
     }
 
     public ApplicationBuilder(EntitySpec<? extends Application> appSpec) {
-        this.appSpec = appSpec;
+        this.appSpec = WrappingEntitySpec.newInstance(appSpec);
     }
 
+    public final ApplicationBuilder appDisplayName(String val) {
+        appSpec.displayName(val);
+        return this;
+    }
+    
     protected final <T extends Entity> T createEntity(EntitySpec<T> spec) {
         checkNotManaged();
         EntityManager entityManager = managementContext.getEntityManager();
@@ -147,11 +161,15 @@ public abstract class ApplicationBuilder {
     }
     
     protected final ManagementContext getManagementContext() {
-        return managementContext;
+        return checkNotNull(managementContext, "must only be called after manage()");
+    }
+
+    protected final Application getApp() {
+        return checkNotNull(app, "must only be called after manage()");
     }
 
     /**
-     * For overrriding, to create and wire together entities.
+     * For overriding, to create and wire together entities.
      */
     protected abstract void doBuild();
 

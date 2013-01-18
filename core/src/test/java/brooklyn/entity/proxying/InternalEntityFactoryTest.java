@@ -16,6 +16,8 @@ import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 
 public class InternalEntityFactoryTest {
 
@@ -53,5 +55,14 @@ public class InternalEntityFactoryTest {
         
         assertFalse(proxy instanceof BasicApplication, "proxy="+app);
         assertTrue(proxy instanceof EntityProxy, "proxy="+app);
+    }
+    
+    @Test
+    public void testSetsEntityIsLegacyConstruction() throws Exception {
+        TestEntity legacy = new TestEntityImpl();
+        assertTrue(legacy.isLegacyConstruction());
+        
+        TestEntity entity = factory.createEntity(BasicEntitySpec.newInstance(TestEntity.class));
+        assertFalse(entity.isLegacyConstruction());
     }
 }

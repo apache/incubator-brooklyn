@@ -8,7 +8,7 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.util.MutableMap;
 
-public class WrappingEntitySpec<T extends Entity> extends BasicEntitySpec<T> {
+public class WrappingEntitySpec<T extends Entity> extends BasicEntitySpec<T, WrappingEntitySpec<T>> {
 
     private final EntitySpec<T> delegate;
 

@@ -18,10 +18,18 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(TomcatServerImpl.class)
 public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx {
     
-    public static class Spec<T extends TomcatServer> extends BasicEntitySpec<T> {
-        public static Spec<TomcatServer> newInstance() {
-            return new Spec<TomcatServer>(TomcatServer.class);
+    public static class Spec<T extends TomcatServer, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
+
+        private static class ConcreteSpec extends Spec<TomcatServer, ConcreteSpec> {
+            ConcreteSpec() {
+                super(TomcatServer.class);
+            }
         }
+        
+        public static Spec<TomcatServer, ?> newInstance() {
+            return new ConcreteSpec();
+        }
+        
         protected Spec(Class<T> type) {
             super(type);
         }

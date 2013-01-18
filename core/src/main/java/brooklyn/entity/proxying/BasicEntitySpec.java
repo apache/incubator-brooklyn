@@ -4,79 +4,110 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Modifier;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
+import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class BasicEntitySpec<T extends Entity> implements EntitySpec<T> {
+public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> implements EntitySpec<T> {
+
+    private static class ConcreteEntitySpec<T extends Entity> extends BasicEntitySpec<T, ConcreteEntitySpec<T>> {
+        ConcreteEntitySpec(Class<T> type) {
+            super(type);
+        }
+    }
+
+    public static <T extends Entity> BasicEntitySpec<T, ?> newInstance(Class<T> type) {
+        return new ConcreteEntitySpec<T>(type);
+    }
 
     private final Class<T> type;
+    private String displayName;
     private Class<? extends T> impl;
     private Entity parent;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final Map<HasConfigKey<?>, Object> config2 = Maps.newLinkedHashMap();
-
-    public static <T extends Entity> BasicEntitySpec<T> newInstance(Class<T> type) {
-        return new BasicEntitySpec<T>(type);
-    }
-
+    private final List<Policy> policies = Lists.newArrayList();
+    
     public BasicEntitySpec(Class<T> type) {
         this.type = type;
     }
     
-    public BasicEntitySpec<T> impl(Class<? extends T> val) {
+    @SuppressWarnings("unchecked")
+    protected S self() {
+       return (S) this;
+    }
+
+    public S displayName(String val) {
+        displayName = val;
+        return self();
+    }
+
+    public S impl(Class<? extends T> val) {
         checkIsImplementation(checkNotNull(val, "impl"));
         checkIsNewStyleImplementation(val);
         impl = val;
-        return this;
+        return self();
     }
 
-    public BasicEntitySpec<T> parent(Entity val) {
+    public S parent(Entity val) {
         parent = checkNotNull(val, "parent");
-        return this;
+        return self();
     }
     
-    public BasicEntitySpec<T> configure(Map<String,?> val) {
+    public S configure(Map<String,?> val) {
         flags.putAll(checkNotNull(val, "key"));
-        return this;
+        return self();
     }
     
-    public BasicEntitySpec<T> configure(String key, Object val) {
+    public S configure(String key, Object val) {
         flags.put(checkNotNull(key, "key"), val);
-        return this;
+        return self();
     }
     
-    public <V> BasicEntitySpec<T> configure(ConfigKey<V> key, V val) {
+    public <V> S configure(ConfigKey<V> key, V val) {
         config.put(checkNotNull(key, "key"), val);
-        return this;
+        return self();
     }
 
-    public <V> BasicEntitySpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
+    public <V> S configure(ConfigKey<V> key, Task<? extends V> val) {
         config.put(checkNotNull(key, "key"), val);
-        return this;
+        return self();
     }
 
-    public <V> BasicEntitySpec<T> configure(HasConfigKey<V> key, V val) {
+    public <V> S configure(HasConfigKey<V> key, V val) {
         config2.put(checkNotNull(key, "key"), val);
-        return this;
+        return self();
     }
 
-    public <V> BasicEntitySpec<T> configure(HasConfigKey<V> key, Task<? extends V> val) {
+    public <V> S configure(HasConfigKey<V> key, Task<? extends V> val) {
         config2.put(checkNotNull(key, "key"), val);
-        return this;
+        return self();
+    }
+
+    public <V> S policy(Policy val) {
+        policies.add(val);
+        return self();
     }
 
     @Override
     public Class<T> getType() {
         return type;
+    }
+    
+    @Override
+    public String getDisplayName() {
+        return displayName;
     }
     
     @Override
@@ -94,12 +125,19 @@ public class BasicEntitySpec<T extends Entity> implements EntitySpec<T> {
         return Collections.unmodifiableMap(flags);
     }
     
+    @Override
     public Map<ConfigKey<?>, Object> getConfig() {
         return Collections.unmodifiableMap(config);
     }
     
+    @Override
     public Map<HasConfigKey<?>, Object> getConfig2() {
         return Collections.unmodifiableMap(config2);
+    }
+    
+    @Override
+    public List<Policy> getPolicies() {
+        return policies;
     }
     
     @Override

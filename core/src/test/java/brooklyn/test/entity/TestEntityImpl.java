@@ -1,29 +1,18 @@
 package brooklyn.test.entity;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.collections.Lists;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.event.basic.ListConfigKey;
-import brooklyn.event.basic.MapConfigKey;
 import brooklyn.location.Location;
 import brooklyn.util.MutableMap;
 
@@ -49,6 +38,11 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public TestEntityImpl(Map properties, Entity parent) {
         super(properties, parent);
         this.constructorProperties = properties;
+    }
+    
+    @Override
+    public boolean isLegacyConstruction() {
+        return super.isLegacyConstruction();
     }
     
     @Description("an example of a no-arg effector")

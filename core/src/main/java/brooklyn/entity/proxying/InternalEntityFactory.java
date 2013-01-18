@@ -12,6 +12,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
+import brooklyn.policy.Policy;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
@@ -30,6 +32,31 @@ public class InternalEntityFactory {
 
     private final ManagementContext managementContext;
     private final EntityTypeRegistry entityTypeRegistry;
+
+    /**
+     * For tracking if AbstractEntity constructor has been called by framework, or in legacy way (i.e. directly).
+     * 
+     * To be deleted once we delete support for constructing entities directly (and expecting configure() to be
+     * called inside the constructor, etc).
+     * 
+     * @author aled
+     */
+    public static class FactoryConstructionTracker {
+        private static ThreadLocal<Boolean> constructing = new ThreadLocal<Boolean>();
+        
+        public static boolean isConstructing() {
+            return (constructing.get() == Boolean.TRUE);
+        }
+        
+        static void reset() {
+            constructing.set(Boolean.FALSE);
+        }
+        
+        static void setConstructing() {
+            constructing.set(Boolean.TRUE);
+        }
+    }
+    
     
     public InternalEntityFactory(ManagementContext managementContext, EntityTypeRegistry entityTypeRegistry) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
@@ -53,7 +80,14 @@ public class InternalEntityFactory {
         
         try {
             Class<? extends T> clazz = getImplementedBy(spec);
-            T entity = construct(clazz, spec);
+            
+            FactoryConstructionTracker.setConstructing();
+            T entity;
+            try {
+                entity = construct(clazz, spec);
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
             
             if (isNewStyleEntity(clazz)) {
                 ((AbstractEntity)entity).setManagementContext(managementContext);
@@ -67,6 +101,12 @@ public class InternalEntityFactory {
             for (Map.Entry<HasConfigKey<?>, Object> entry : spec.getConfig2().entrySet()) {
                 ((EntityLocal)entity).setConfig((HasConfigKey)entry.getKey(), entry.getValue());
             }
+            ((AbstractEntity)entity).postConstruct();
+            
+            for (Policy policy : spec.getPolicies()) {
+                ((EntityLocal)entity).addPolicy((AbstractPolicy)policy);
+            }
+            
             Entity parent = spec.getParent();
             if (parent != null) {
                 parent = (parent instanceof AbstractEntity) ? ((AbstractEntity)parent).getProxyIfAvailable() : parent;
