@@ -22,6 +22,9 @@ import brooklyn.management.SubscriptionHandle;
  * {@code
  * }
  * </pre>
+ * 
+ * @deprecated in 0.5; unused code that relies on reflection; not recommended; 
+ *             use {@link AbstractEnricher} (at least until compelling use-case)
  */
 public abstract class AbstractCombiningEnricher<T> extends AbstractEnricher {
     
