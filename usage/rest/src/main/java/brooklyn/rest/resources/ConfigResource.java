@@ -11,7 +11,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.rest.apidoc.Apidoc;
@@ -67,7 +66,7 @@ public class ConfigResource extends AbstractBrooklynRestResource {
       @PathParam("entity") String entityToken) {
     // TODO: add test
     EntityLocal entity = brooklyn().getEntity(application, entityToken);
-    Map<ConfigKey<?>, Object> source = ((AbstractEntity)entity).getConfigMap().getAllConfig();
+    Map<ConfigKey<?>, Object> source = entity.getAllConfig();
     Map<String, Object> result = Maps.newLinkedHashMap();
     for (Map.Entry<ConfigKey<?>, Object> ek: source.entrySet()) {
         Object value = ek.getValue();

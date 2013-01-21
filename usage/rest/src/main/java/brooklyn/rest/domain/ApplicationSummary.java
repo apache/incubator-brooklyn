@@ -10,7 +10,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import brooklyn.entity.Application;
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
@@ -72,7 +71,7 @@ public class ApplicationSummary {
   private final Status status;
 
   @JsonIgnore
-  private transient AbstractApplication instance;
+  private transient Application instance;
 
   public ApplicationSummary(
       @JsonProperty("spec") ApplicationSpec spec,
@@ -82,7 +81,7 @@ public class ApplicationSummary {
     this.status = checkNotNull(status, "status");
   }
 
-  public ApplicationSummary(ApplicationSpec spec, Status status, AbstractApplication instance) {
+  public ApplicationSummary(ApplicationSpec spec, Status status, Application instance) {
     this.spec = checkNotNull(spec, "spec");
     this.status = checkNotNull(status, "status");
     this.instance = instance;
@@ -91,7 +90,7 @@ public class ApplicationSummary {
   public static ApplicationSummary fromApplication(Application application) {
       return new ApplicationSummary(ApplicationSpec.fromApplication(application), 
               Status.fromApplication(application), 
-              (AbstractApplication) application);
+              application);
   }
   
   public ApplicationSpec getSpec() {
@@ -104,7 +103,7 @@ public class ApplicationSummary {
   }
 
   @JsonIgnore
-  public AbstractApplication getInstance() {
+  public Application getInstance() {
     return instance;
   }
 
