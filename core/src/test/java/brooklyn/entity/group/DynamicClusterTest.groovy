@@ -19,7 +19,6 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.BasicEntitySpec
-import brooklyn.entity.proxying.MyEntity
 import brooklyn.entity.trait.Changeable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
@@ -144,7 +143,7 @@ class DynamicClusterTest {
     @Test
     public void usingEntitySpecResizeFromZeroToOneStartsANewEntityAndSetsItsParent() {
         DynamicCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure("memberSpec", BasicEntitySpec.newInstance(MyEntity.class)));
+                .configure("memberSpec", BasicEntitySpec.newInstance(TestEntity.class)));
         
         cluster.start([loc])
 

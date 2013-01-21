@@ -19,6 +19,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -64,10 +65,10 @@ public class ApplicationBuilderOverridingTest {
 
     @Test
     public void testCreatesChildEntity() {
-        final AtomicReference<MyEntity> expectedChild = new AtomicReference<MyEntity>();
+        final AtomicReference<TestEntity> expectedChild = new AtomicReference<TestEntity>();
         app = new ApplicationBuilder() {
             @Override public void doBuild() {
-                expectedChild.set(createChild(MyEntity.Spec.newInstance()));
+                expectedChild.set(createChild(TestEntity.Spec.newInstance()));
             }
         }.manage();
         
@@ -78,10 +79,10 @@ public class ApplicationBuilderOverridingTest {
 
     @Test
     public void testAppHierarchyIsManaged() {
-        final AtomicReference<MyEntity> expectedChild = new AtomicReference<MyEntity>();
+        final AtomicReference<TestEntity> expectedChild = new AtomicReference<TestEntity>();
         app = new ApplicationBuilder() {
             @Override public void doBuild() {
-                Entity entity = createChild(MyEntity.Spec.newInstance());
+                Entity entity = createChild(TestEntity.Spec.newInstance());
                 assertFalse(getManagementContext().getEntityManager().isManaged(entity));
             }
         }.manage();

@@ -21,6 +21,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -30,12 +31,12 @@ public class EntityProxyTest {
 
     private ManagementContext managementContext;
     private TestApplication app;
-    private MyEntity entity;
+    private TestEntity entity;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        entity = app.createAndManageChild(MyEntity.Spec.newInstance());
+        entity = app.createAndManageChild(TestEntity.Spec.newInstance());
         managementContext = app.getManagementContext();
     }
     
@@ -53,7 +54,7 @@ public class EntityProxyTest {
 
     @Test
     public void testGetChildrenAndParentsReturnsProxies() {
-        MyEntity child = (MyEntity) Iterables.get(app.getChildren(), 0);
+        TestEntity child = (TestEntity) Iterables.get(app.getChildren(), 0);
         Application parent = (Application) child.getParent();
         
         assertIsProxy(child);
@@ -62,14 +63,14 @@ public class EntityProxyTest {
     
     @Test
     public void testEffectorOnProxyIsRecorded() {
-        String result = entity.myeffector("in");
-        assertEquals(result, "in-out");
+        Object result = entity.identityEffector("abc");
+        assertEquals(result, "abc");
         
         Set<Task<?>> tasks = managementContext.getExecutionManager().getTasksWithAllTags(
                 ImmutableList.of(AbstractManagementContext.EFFECTOR_TAG, entity));
         Task<?> task = Iterables.get(tasks, 0);
         assertEquals(tasks.size(), 1, "tasks="+tasks);
-        assertTrue(task.getDescription().contains("myeffector"));
+        assertTrue(task.getDescription().contains("identityEffector"));
     }
     
     @Test
@@ -77,7 +78,7 @@ public class EntityProxyTest {
         EntityManager entityManager = managementContext.getEntityManager();
         
         Application retrievedApp = (Application) entityManager.getEntity(app.getId());
-        MyEntity retrievedEntity = (MyEntity) entityManager.getEntity(entity.getId());
+        TestEntity retrievedEntity = (TestEntity) entityManager.getEntity(entity.getId());
 
         assertIsProxy(retrievedApp);
         assertIsProxy(retrievedEntity);
@@ -91,7 +92,7 @@ public class EntityProxyTest {
     
     @Test
     public void testCreateAndManageChild() {
-        MyEntity result = (MyEntity) entity.createChild();
+        TestEntity result = entity.createAndManageChild(TestEntity.Spec.newInstance());
         assertIsProxy(result);
         assertIsProxy(Iterables.get(entity.getChildren(), 0));
         assertIsProxy(result.getParent());
@@ -99,7 +100,7 @@ public class EntityProxyTest {
     }
     
     private void assertIsProxy(Entity e) {
-        assertFalse(e instanceof AbstractEntity, "e="+e+";e.class="+e.getClass());
-        assertTrue(e instanceof EntityProxy, "e="+e+";e.class="+e.getClass());
+        assertFalse(e instanceof AbstractEntity, "e="+e+";e.class="+(e != null ? e.getClass() : null));
+        assertTrue(e instanceof EntityProxy, "e="+e+";e.class="+(e != null ? e.getClass() : null));
     }
 }

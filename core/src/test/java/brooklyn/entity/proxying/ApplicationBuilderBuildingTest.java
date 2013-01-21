@@ -18,6 +18,7 @@ import brooklyn.injava.ExampleJavaPolicy;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -58,20 +59,20 @@ public class ApplicationBuilderBuildingTest {
     @Test
     public void testCreatesChildEntity() {
         app = ApplicationBuilder.builder()
-                .child(MyEntity.Spec.newInstance())
+                .child(TestEntity.Spec.newInstance())
                 .manage();
         Entity child = Iterables.getOnlyElement(app.getChildren());
         
         assertIsProxy(child);
         assertEquals(child.getParent(), app);
-        assertTrue(child instanceof MyEntity, "child="+child);
+        assertTrue(child instanceof TestEntity, "child="+child);
     }
 
     @Test
     public void testCreatesEntityWithPolicy() {
         ExampleJavaPolicy policy = new ExampleJavaPolicy();
         app = ApplicationBuilder.builder()
-                .child(MyEntity.Spec.newInstance().policy(policy))
+                .child(TestEntity.Spec.newInstance().policy(policy))
                 .manage();
         Entity child = Iterables.getOnlyElement(app.getChildren());
         
@@ -81,7 +82,7 @@ public class ApplicationBuilderBuildingTest {
     @Test
     public void testAppHierarchyIsManaged() {
         app = ApplicationBuilder.builder()
-                .child(MyEntity.Spec.newInstance())
+                .child(TestEntity.Spec.newInstance())
                 .manage();
         
         assertIsManaged(app);
