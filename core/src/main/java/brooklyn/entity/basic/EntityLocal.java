@@ -16,6 +16,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
+import brooklyn.management.Task;
 
 import com.google.common.annotations.Beta;
 
@@ -54,13 +55,29 @@ public interface EntityLocal extends Entity {
 
     /** sets the value of the given attribute sensor from the config key value herein,
      * if the config key resolves to a non-null value as a sensor
-     * <p>
-     * returns old value */
-    @Beta // remove from interface?
+     * 
+     * @deprecated since 0.5; use {@link #setAttribute(AttributeSensor, Object)}, such as 
+     * <pre>
+     * T val = getConfig(KEY.getConfigKey());
+     * if (val != null) {
+     *     setAttribute(KEY, val)
+     * }
+     * </pre>
+     * 
+     * @return old value
+     */
     <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor);
 
+    /**
+     * @deprecated in 0.5; use {@link #getConfig(ConfigKey)}
+     */
     <T> T getConfig(ConfigKey<T> key, T defaultValue);
+    
     <T> T getConfig(HasConfigKey<T> key);
+    
+    /**
+     * @deprecated in 0.5; use {@link #getConfig(HasConfigKey)}
+     */
     <T> T getConfig(HasConfigKey<T> key, T defaultValue);
 
     /**
