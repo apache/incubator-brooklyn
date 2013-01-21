@@ -378,7 +378,7 @@ public class SshjToolLiveTest {
         String nonExistantCmd = "acmdthatdoesnotexist"
         tool.execCommands([out:out, err:err], [nonExistantCmd])
         String errMsg = new String(err.toByteArray());
-        assertTrue(errMsg.contains("bash: $nonExistantCmd: command not found\n"), "errMsg="+errMsg+"; out="+out+"; err="+err);
+        assertTrue(errMsg.contains("$nonExistantCmd: command not found\n"), "errMsg="+errMsg+"; out="+out+"; err="+err);
         
     }
 
