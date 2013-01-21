@@ -170,7 +170,7 @@ public class ShellFeedIntegrationTest {
         TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
             public void run() {
                 Long val = entity.getAttribute(SENSOR_LONG);
-                assertTrue(val != null && val > 0);
+                assertTrue(val != null && val >= 0, "val="+val);
             }});
     }
 }
