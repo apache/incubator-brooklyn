@@ -14,17 +14,17 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.AbstractController;
-import brooklyn.entity.proxy.nginx.NginxControllerImpl;
+import brooklyn.entity.proxy.nginx.NginxController;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
+import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.Location;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -34,10 +34,10 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     public static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterImpl.class);
             
     // TODO convert to use attributes, to support rebind
-    private AbstractController cachedController;
-    private ConfigurableEntityFactory<? extends WebAppService> cachedWebServerFactory;
-    private EntitySpec<? extends WebAppService> cachedWebServerSpec;
-    private DynamicWebAppCluster cachedCluster;
+    private AbstractController controller;
+    private ConfigurableEntityFactory<? extends WebAppService> webServerFactory;
+    private EntitySpec<? extends WebAppService> webServerSpec;
+    private DynamicWebAppCluster cluster;
 
     public ControlledDynamicWebAppClusterImpl() {
         this(MutableMap.of(), null);
@@ -56,60 +56,55 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         setAttribute(SERVICE_UP, false);
     }
 
-    public synchronized AbstractController getController() {
-        if (cachedController!=null) return cachedController;
-        cachedController = getConfig(CONTROLLER);
-        if (cachedController!=null) return cachedController;
-        cachedController = (AbstractController) findChildOrNull(Predicates.instanceOf(AbstractController.class));
-        if (cachedController!=null) return cachedController;
-        
-        log.debug("creating default controller for {}", this);
-        cachedController = new NginxControllerImpl(this);
-        Entities.manage(cachedController);
-        return cachedController;
-    }
-
-    public synchronized ConfigurableEntityFactory<WebAppService> getFactory() {
-        ConfigurableEntityFactory<? extends WebAppService> result = getFactoryOrNull();
-        if (result != null) return (ConfigurableEntityFactory<WebAppService>) result;
-        
-        log.debug("creating default web server factory for {}", this);
-        cachedWebServerFactory = new JBoss7ServerFactory();
-        return (ConfigurableEntityFactory<WebAppService>) cachedWebServerFactory;
-    }
-    
-    private EntitySpec<? extends WebAppService> getMemberSpecOrNull() {
-        if (cachedWebServerSpec !=null) return cachedWebServerSpec;
-        cachedWebServerSpec = getConfig(MEMBER_SPEC);
-        return cachedWebServerSpec;
-    }
-    
-    private ConfigurableEntityFactory<? extends WebAppService> getFactoryOrNull() {
-        if (cachedWebServerFactory!=null) return cachedWebServerFactory;
-        cachedWebServerFactory = getConfig(FACTORY);
-        return cachedWebServerFactory;
-    }
-    
-    // TODO convert to an entity reference which is serializable
-    public synchronized DynamicWebAppCluster getCluster() {
-        if (cachedCluster!=null) return cachedCluster;
-        cachedCluster = (DynamicWebAppCluster) findChildOrNull(Predicates.instanceOf(DynamicWebAppCluster.class));
-        if (cachedCluster!=null) return cachedCluster;
+    @Override
+    public void postConstruct() {
+        webServerFactory = getConfig(FACTORY);
+        webServerSpec = getConfig(MEMBER_SPEC);
+        if (webServerFactory == null && webServerSpec == null) {
+            log.debug("creating default web server spec for {}", this);
+            webServerSpec = BasicEntitySpec.newInstance(JBoss7Server.class);
+        }
         
         log.debug("creating cluster child for {}", this);
         // Note relies on initial_size being inherited by DynamicWebAppCluster, because key id is identical
         Map<String,Object> flags;
-        if (getMemberSpecOrNull() != null) {
-            flags = MutableMap.<String,Object>of("memberSpec", getMemberSpecOrNull());
+        if (webServerSpec != null) {
+            flags = MutableMap.<String,Object>of("memberSpec", webServerSpec);
         } else {
-            flags = MutableMap.<String,Object>of("factory", getFactory());
+            flags = MutableMap.<String,Object>of("factory", webServerFactory);
         }
-        cachedCluster = new DynamicWebAppClusterImpl(flags, this);
-        if (Entities.isManaged(this)) Entities.manage(cachedCluster);
-        return cachedCluster;
+        cluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(DynamicWebAppCluster.class)
+                .parent(this)
+                .configure(flags));
+        if (Entities.isManaged(this)) Entities.manage(cluster);
+        
+        controller = getConfig(CONTROLLER);
+        if (controller == null) {
+            log.debug("creating default controller for {}", this);
+            controller = getManagementSupport().getManagementContext(true).getEntityManager().createEntity(BasicEntitySpec.newInstance(NginxController.class)
+                    .parent(this));
+            if (Entities.isManaged(this)) Entities.manage(controller);
+        }
+    }
+    
+    public AbstractController getController() {
+        return controller;
+    }
+
+    public synchronized ConfigurableEntityFactory<WebAppService> getFactory() {
+        return (ConfigurableEntityFactory<WebAppService>) webServerFactory;
+    }
+    
+    // TODO convert to an entity reference which is serializable
+    public synchronized DynamicWebAppCluster getCluster() {
+        return cluster;
     }
     
     public void start(Collection<? extends Location> locations) {
+        if (isLegacyConstruction()) {
+            postConstruct();
+        }
+        
         if (locations.isEmpty()) locations = this.getLocations();
         Iterables.getOnlyElement(locations); //assert just one
         addLocations(locations);
