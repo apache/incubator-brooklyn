@@ -2,9 +2,6 @@ package brooklyn.extras.whirr
 
 import groovy.transform.InheritConstructors
 
-import java.io.File
-import java.util.List
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -23,6 +20,7 @@ import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.adapter.HttpResponseContext
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster
+import brooklyn.extras.whirr.hadoop.WhirrHadoopClusterImpl
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
@@ -54,7 +52,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication {
             
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
     
-    WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
+    WhirrHadoopCluster hadoopCluster = new WhirrHadoopClusterImpl(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
     {
         // specify hadoop version (1.0.2 has a nice, smaller hadoop client jar)
         hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2"); 

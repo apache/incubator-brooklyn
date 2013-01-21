@@ -6,48 +6,25 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
-import brooklyn.extras.whirr.core.WhirrCluster
+import brooklyn.extras.whirr.core.WhirrClusterImpl
 import brooklyn.location.Location
-import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Joiner
 import com.google.common.base.Preconditions
 import com.google.common.collect.Lists
 
-public class WhirrHadoopCluster extends WhirrCluster {
+public class WhirrHadoopClusterImpl extends WhirrClusterImpl implements WhirrHadoopCluster {
 
-    public static final Logger log = LoggerFactory.getLogger(WhirrHadoopCluster.class);
-
-    @SetFromFlag("name")
-    public static final BasicConfigKey<String> NAME =
-        [String, "whirr.hadoop.name", "The name of the Hadoop cluster"]
-
-    @SetFromFlag("size")
-    public static final BasicConfigKey<Integer> SIZE =
-        [Integer, "whirr.hadoop.size", "The size of the Hadoop cluster (including a dedicated machine for the namenode)", 2]
-
-    @SetFromFlag("memory")
-    public static final BasicConfigKey<Integer> MEMORY =
-        [Integer, "whirr.hadoop.memory", "The minimum amount of memory to use for each node (in megabytes)", 1024]
-
-    public static final BasicAttributeSensor<String> NAME_NODE_URL =
-        [String, "whirr.hadoop.namenodeUrl", "URL for the Hadoop name node in this cluster (hdfs://...)"]
-
-    public static final BasicAttributeSensor<String> JOB_TRACKER_HOST_PORT =
-        [String, "whirr.hadoop.jobtrackerHostPort", "Hadoop Jobtracker host and port"]
-
-    public static final BasicAttributeSensor<String> SOCKS_SERVER =
-        [String, "whirr.hadoop.socks.server", "Local SOCKS server connection details"]
+    public static final Logger log = LoggerFactory.getLogger(WhirrHadoopClusterImpl.class);
 
     protected HadoopProxy proxy = null;
 
-    public WhirrHadoopCluster(Map flags = [:], Entity parent = null) {
+    public WhirrHadoopClusterImpl(Map flags = [:], Entity parent = null) {
         super(flags, parent)
         generateWhirrClusterRecipe();
     }
 
+    @Override
     public void generateWhirrClusterRecipe() {
         Preconditions.checkArgument(getConfig(SIZE) > 1, "Min cluster size is 2")
         Preconditions.checkArgument(getConfig(MEMORY) >= 1000, "We need at least 1GB of memory per machine")
@@ -65,6 +42,8 @@ public class WhirrHadoopCluster extends WhirrCluster {
     }
     
     List userRecipeLines = [];
+
+    @Override
     public void addRecipeLine(String line) {
         userRecipeLines << line;
         String r = getConfig(RECIPE) ?: "";

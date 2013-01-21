@@ -2,44 +2,30 @@ package brooklyn.extras.whirr.core
 
 import static com.google.common.collect.Iterables.getOnlyElement
 
-import org.apache.commons.configuration.ConfigurationUtils;
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.whirr.Cluster
 import org.apache.whirr.ClusterController
 import org.apache.whirr.ClusterControllerFactory
 import org.apache.whirr.ClusterSpec
-import org.apache.whirr.ClusterSpec.Property;
-import org.jclouds.compute.domain.TemplateBuilderSpec;
+import org.apache.whirr.ClusterSpec.Property
 import org.jclouds.scriptbuilder.domain.OsFamily
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.AbstractGroup
-import brooklyn.entity.trait.Startable
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation
-import brooklyn.util.flags.SetFromFlag
 
 /**
  * Generic entity that can be used to deploy clusters that are
  * managed by Apache Whirr.
  *
  */
-public class WhirrCluster extends AbstractEntity implements Startable {
+public class WhirrClusterImpl extends AbstractEntity implements WhirrCluster {
 
-    public static final Logger log = LoggerFactory.getLogger(WhirrCluster.class);
-
-    @SetFromFlag("recipe")
-    public static final BasicConfigKey<String> RECIPE =
-            [String, "whirr.recipe", "Apache Whirr cluster recipe"]
-
-    public static final BasicAttributeSensor<String> CLUSTER_NAME =
-            [String, "whirr.cluster.name", "Name of the Whirr cluster"]
+    public static final Logger log = LoggerFactory.getLogger(WhirrClusterImpl.class);
 
     protected ClusterController _controller = null
     protected ClusterSpec clusterSpec = null
@@ -50,10 +36,20 @@ public class WhirrCluster extends AbstractEntity implements Startable {
     /**
      * General entity initialisation
      */
-    public WhirrCluster(Map flags = [:], Entity parent = null) {
+    public WhirrClusterImpl(Map flags = [:], Entity parent = null) {
         super(flags, parent)
     }
 
+    @Override
+    public ClusterSpec getClusterSpec() {
+        return clusterSpec;
+    }
+    
+    @Override
+    public Cluster getCluster() {
+        return cluster;
+    }
+    
     /**
      * Apache Whirr can only start and manage a cluster in a single location
      *
@@ -138,7 +134,7 @@ public class WhirrCluster extends AbstractEntity implements Startable {
             config.setProperty(ClusterSpec.Property.LOCATION_ID.getConfigName(), location.getConf().providerLocationId);
     }
     
-    synchronized ClusterController getController() {
+    public synchronized ClusterController getController() {
         if (_controller==null) {
             _controller = new ClusterControllerFactory().create(clusterSpec?.getServiceName());
         }
@@ -154,10 +150,10 @@ public class WhirrCluster extends AbstractEntity implements Startable {
 
         for (Cluster.Instance instance : cluster.getInstances()) {
             log.info("Creating group for instance " + instance.id)
-            def rolesGroup = new WhirrInstance(displayName: "Instance:" + instance.id, instance: instance, this);
+            def rolesGroup = new WhirrInstanceImpl(displayName: "Instance:" + instance.id, instance: instance, this);
             for (String role: instance.roles) {
                 log.info("Creating entity for '" + role + "' on instance " + instance.id)
-                rolesGroup.addChild(new WhirrRole(displayName: "Role:" + role, role: role, rolesGroup))
+                rolesGroup.addChild(new WhirrRoleImpl(displayName: "Role:" + role, role: role, rolesGroup))
             }
             addGroup(rolesGroup)
         }

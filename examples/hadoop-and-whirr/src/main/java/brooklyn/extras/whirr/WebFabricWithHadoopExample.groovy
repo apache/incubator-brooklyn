@@ -26,6 +26,7 @@ import brooklyn.event.adapter.HttpResponseContext
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster
+import brooklyn.extras.whirr.hadoop.WhirrHadoopClusterImpl
 import brooklyn.launcher.BrooklynLauncher
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
@@ -67,7 +68,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication {
             
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
     
-    WhirrHadoopCluster hadoopCluster = new WhirrHadoopCluster(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
+    WhirrHadoopCluster hadoopCluster = new WhirrHadoopClusterImpl(this, size: 2, memory: 2048, name: "Whirr Hadoop Cluster");
     { hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2"); }
     
     DynamicFabric webFabric = new DynamicFabricImpl(this, name: "Web Fabric", factory: new ElasticJavaWebAppService.Factory());
