@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -37,13 +38,18 @@ public class DynamicGroupTest {
     private TestEntity e1
     private TestEntity e2
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = new TestApplication()
         group = new DynamicGroup(parent:app)
         e1 = new TestEntity(parent:app)
         e2 = new TestEntity(parent:app)
         app.startManagement();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroy(app);
     }
     
     @Test
