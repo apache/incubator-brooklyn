@@ -341,7 +341,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         ConfigToAttributes.apply(this);
         
-		setAttribute(HOSTNAME, machine.getAddress().getHostName());
+		setAttribute(HOSTNAME, machine.getAddress().getCanonicalHostName());
 		setAttribute(ADDRESS, machine.getAddress().getHostAddress());
 
         // Opportunity to block startup until other dependent components are available

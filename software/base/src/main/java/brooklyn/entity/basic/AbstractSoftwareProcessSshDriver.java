@@ -115,6 +115,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     public SshMachineLocation getMachine() { return getLocation(); }
     public String getHostname() { return entity.getAttribute(Attributes.HOSTNAME); }
+    public String getAddress() { return entity.getAttribute(Attributes.ADDRESS); }
 
     /** extracts the values for the main brooklyn.ssh.config.* config keys (i.e. those declared in ConfigKeys) 
      * as declared on the entity, and inserts them in a map using the unprefixed state, for ssh. */

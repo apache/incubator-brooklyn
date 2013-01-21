@@ -13,6 +13,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
@@ -20,11 +21,8 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
-import com.google.common.base.Predicates
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Iterables
-import com.google.common.io.Closeables
 import com.netflix.astyanax.AstyanaxContext
 import com.netflix.astyanax.Keyspace
 import com.netflix.astyanax.MutationBatch
@@ -41,6 +39,8 @@ import com.netflix.astyanax.serializers.StringSerializer
 import com.netflix.astyanax.thrift.ThriftFamilyFactory
 
 /**
+ * Cassandra integration tests.
+ *
  * Test the operation of the {@link CassandraServer} class.
  */
 public class CassandraIntegrationTest {
@@ -50,23 +50,23 @@ public class CassandraIntegrationTest {
         TimeExtras.init()
     }
 
-    private Application app
-    private Location testLocation
-    private CassandraServer cassandra
+    protected Application app
+    protected Location testLocation
+    protected CassandraServer cassandra
 
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun = true)
     public void setup() {
         app = new TestApplication()
         testLocation = new LocalhostMachineProvisioningLocation()
     }
 
-    @AfterMethod(groups = "Integration")
+    @AfterMethod(alwaysRun = true)
     public void shutdown() {
         if (cassandra != null && cassandra.getAttribute(Startable.SERVICE_UP)) {
             cassandra.stop()
         }
         Entities.destroy(app)
-        Closeables.closeQuietly(testLocation)
+        // Closeables.closeQuietly(testLocation)
     }
 
     /**
@@ -89,7 +89,7 @@ public class CassandraIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithCustomJmx() {
-        cassandra = new CassandraServer(parent:app, jmxPort:"11099+")
+        cassandra = new CassandraServer(parent:app)
         Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceedsWithShutdown(cassandra, timeout:10*TimeUnit.MINUTES) {
@@ -103,22 +103,21 @@ public class CassandraIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testConnection() {
-        cassandra = new CassandraServer(parent:app, clusterName:'TestCluster')
+        cassandra = new CassandraServer(parent:app, thriftPort:'9876', jmxPort:'11099', rmiServerPort:'9001', clusterName:'TestCluster')
         Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceeds {
             assertTrue cassandra.getAttribute(Startable.SERVICE_UP)
         }
 
+        // Create context
+        AstyanaxContext<Keyspace> context = getAstyanaxContext(cassandra)
         try {
-            // Thread.sleep(HOURS.toMillis(1L))
-
-            // Create context
-            AstyanaxContext<Keyspace> context = getAstyanaxContext()
-            Keyspace keyspace = context.getEntity()
-
             // (Re) Create keyspace
-            keyspace.dropKeyspace()
+            Keyspace keyspace = context.getEntity()
+            try {
+                keyspace.dropKeyspace()
+            } catch (Exception e) { /* Ignore */ }
             keyspace.createKeyspace(ImmutableMap.<String, Object>builder()
                 .put("strategy_options", ImmutableMap.<String, Object>of("replication_factor", "1"))
                 .put("strategy_class", "SimpleStrategy")
@@ -131,7 +130,6 @@ public class CassandraIntegrationTest {
                     "People", // Column Family Name
                     StringSerializer.get(), // Key Serializer
                     StringSerializer.get()) // Column Serializer
-            keyspace.dropColumnFamily("People")
             keyspace.createColumnFamily(cf, null);
 
             // Insert rows
@@ -142,16 +140,17 @@ public class CassandraIntegrationTest {
             m.withRow(cf, "two")
                     .putColumn("name", "Bob", null)
                     .putColumn("company", "Cloudsoft Corp", null)
+                    .putColumn("pet", "Cat", null)
 
             OperationResult<Void> insert = m.execute()
-            assertEquals(insert.host.ipAddress, "127.0.0.1")
+            assertEquals(insert.host.hostName, cassandra.getAttribute(Attributes.HOSTNAME))
             assertTrue(insert.latency > 0L)
 
             // Query data
             OperationResult<ColumnList<String>> query = keyspace.prepareQuery(cf)
                     .getKey("one")
                     .execute()
-            assertEquals(query.host.ipAddress, "127.0.0.1") // TODO check - may not always work?
+            assertEquals(insert.host.hostName, cassandra.getAttribute(Attributes.HOSTNAME))
             assertTrue(query.latency > 0L)
 
             ColumnList<String> columns = query.getResult()
@@ -169,20 +168,22 @@ public class CassandraIntegrationTest {
             ce.printStackTrace()
             fail("Error connecting to Cassandra")
         } finally {
+            context.shutdown()
             cassandra.stop() // Stop
         }
     }
 
-    private AstyanaxContext<Keyspace> getAstyanaxContext() {
+    protected AstyanaxContext<Keyspace> getAstyanaxContext(CassandraServer server) {
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
                 .forCluster("TestCluster")
                 .forKeyspace("BrooklynIntegrationTest")
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                         .setDiscoveryType(NodeDiscoveryType.NONE))
                 .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl("BrooklynPool")
-                        .setPort(9160)
+                        .setPort(server.getThriftPort())
                         .setMaxConnsPerHost(1)
-                        .setSeeds("127.0.0.1:9160"))
+                        .setConnectTimeout(5000) // 10s
+                        .setSeeds(String.format("%s:%d", server.getAttribute(Attributes.HOSTNAME), server.getThriftPort())))
                 .withConnectionPoolMonitor(new CountingConnectionPoolMonitor())
                 .buildKeyspace(ThriftFamilyFactory.getInstance())
 

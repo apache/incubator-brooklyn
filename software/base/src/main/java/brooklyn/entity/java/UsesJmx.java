@@ -9,6 +9,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 

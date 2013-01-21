@@ -116,8 +116,8 @@ public class CassandraServer extends SoftwareProcessEntity implements UsesJmx {
                             @Override
                             public Long apply(@Nullable Map input) { // FIXME
                                 if (input == null || input.isEmpty()) return 0L;
-                                Set tokens = Maps.filterValues(input, Predicates.equalTo(getLocalHostname())).keySet();
-                                return Iterables.getFirst(tokens, 0L);
+                                Set tokens = Maps.filterValues(input, Predicates.equalTo(getAttribute(HOSTNAME))).keySet();
+                                return Long.parseLong(Iterables.getFirst(tokens, "0"));
                             }
                         })
                         .onError(Functions.constant(0L)))

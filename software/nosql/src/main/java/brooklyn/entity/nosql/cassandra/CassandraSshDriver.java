@@ -3,6 +3,8 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
@@ -11,16 +13,15 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 /**
  * Start a {@link CassandraServer} in a {@link Location} accessible over ssh.
@@ -68,12 +69,10 @@ public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements 
                 .execute();
     }
 
-    public String getHostname() { return getMachine().getAddress().getCanonicalHostName(); }
-
     @Override
     public void customize() {
         log.info("Customizing {} (Cluster {})", entity, getClusterName());
-        Map ports = ImmutableMap.<String, Integer>builder()
+        Map<String, Integer> ports = ImmutableMap.<String, Integer>builder()
                 .put("jmxPort", getJmxPort())
                 .put("rmiPort", getRmiServerPort())
                 .put("gossipPort", getGossipPort())
@@ -85,24 +84,31 @@ public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
         String dataDirEscaped = (getRunDir() + "/data").replace("/", "\\/"); // escape slashes
 
-        List<String> commands = ImmutableList.<String>builder()
+        ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
                 .add(String.format("cp -R %s/apache-cassandra-%s/{bin,conf,lib,interface,pylib,tools} .", getInstallDir(), getVersion()))
                 .add("mkdir data")
                 .add(String.format("sed -i.bk 's/log4j.appender.R.File=.*/log4j.appender.R.File=%s/g' %s/conf/log4j-server.properties", logFileEscaped, getRunDir()))
                 .add(String.format("sed -i.bk 's/\\/var\\/lib\\/cassandra/%s/g' %s/conf/cassandra.yaml", dataDirEscaped, getRunDir()))
                 .add(String.format("sed -i.bk \"s/^cluster_name: .*/cluster_name: '%s'/g\" %s/conf/cassandra.yaml", getClusterName(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^JMX_PORT=.*/JMX_PORT=\"%d\"/g' %s/conf/cassandra-env.sh", getJmxPort(), getRunDir()))
+                .add(String.format("sed -i.bk 's/-Xss180k/-Xss280k/g' %s/conf/cassandra-env.sh", getRunDir())) // Stack size
                 .add(String.format("sed -i.bk 's/^rpc_port: .*/rpc_port: %d/g' %s/conf/cassandra.yaml", getThriftPort(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^rpc_address: .*/rpc_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^storage_port: .*/storage_port: %d/g' %s/conf/cassandra.yaml", getGossipPort(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^ssl_storage_port: .*/ssl_storage_port: %d/g' %s/conf/cassandra.yaml", getSslGossipPort(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^listen_address: .*/listen_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
-                .add(String.format("sed -i.bk 's/^seeds: .*/seeds: \"%s\"/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
-                .add(String.format("which iptables && iptables -A INPUT -p tcp --dports %s -j ACCEPT", Joiner.on(",").join(Iterables.transform(ports.values(), Functions.toStringFunction()))))
-                .build();
+                .add(String.format("sed -i.bk 's/- seeds:.*/- seeds: \"%s\"/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()));
+
+        // Open inbound ports (including ephemeral range)
+        for (Integer port : ports.values()) {
+            commands.add(String.format("which iptables && iptables -I INPUT 1 -p tcp --dport %d -j ACCEPT", port));
+        }
+        commands.add("which iptables && iptables -I INPUT 1 -p tcp --dport 32768:61000 -j ACCEPT");
+        commands.add("which iptables && service iptables save");
+        commands.add("which iptables && service iptables restart");
 
         newScript(CUSTOMIZING)
-                .body.append(commands)
+                .body.append(commands.build())
                 .execute();
     }
 
@@ -110,7 +116,7 @@ public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements 
     public void launch() {
         log.info("Launching  {}", entity);
         newScript(MutableMap.of("usePidFile", getPidFile()), LAUNCHING)
-                .body.append(String.format("nohup ./bin/cassandra -p %s -Djava.rmi.server.hostname=%s > ./cassandra-console.log 2>&1 &", getPidFile(), getHostname()))
+                .body.append(String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile()))
                 .execute();
     }
 
@@ -131,6 +137,7 @@ public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements 
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
 	            .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
+	            .put("JVM_OPTS", String.format("-Djava.rmi.server.hostname=%s", getHostname()))
 	            .build();
     }
 }

@@ -28,6 +28,7 @@
             <scope>test</scope>
         </dependency>
 
+        <!--  for cassandra -->
         <dependency>
             <groupId>com.netflix.astyanax</groupId>
             <artifactId>astyanax</artifactId>
@@ -40,7 +41,20 @@
             	</exclusion>
             </exclusions>
         </dependency>
-        
+        <dependency>
+            <groupId>org.jclouds.provider</groupId>
+            <artifactId>rackspace-cloudservers-uk</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jclouds.provider</groupId>
+            <artifactId>aws-ec2</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-test-support</artifactId>
