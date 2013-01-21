@@ -215,16 +215,18 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     
     /**
      * Facilitates fluent/programmatic style for constructing a fixed pool of machines.
-     * <code>
-     * new FixedListMachineProvisioningLocation.Builder().
-                user("alex").
-                keyFile("/Users/alex/.ssh/id_rsa").
-                addAddress("10.0.0.1").
-                addAddress("10.0.0.2").
-                addAddress("10.0.0.3").
-                addAddressMultipleTimes("me@127.0.0.1", 5).
-                build();
-     * </code>
+     * <pre>
+     * {@code
+     *   new FixedListMachineProvisioningLocation.Builder()
+     *           .user("alex")
+     *           .keyFile("/Users/alex/.ssh/id_rsa")
+     *           .addAddress("10.0.0.1")
+     *           .addAddress("10.0.0.2")
+     *           .addAddress("10.0.0.3")
+     *           .addAddressMultipleTimes("me@127.0.0.1", 5)
+     *           .build();
+     * }
+     * </pre>
      */
     public static class Builder {
         String user;

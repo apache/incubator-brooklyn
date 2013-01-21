@@ -76,7 +76,7 @@ public class BasicExecutionManager implements ExecutionManager {
     }
     /** convenience for setting "blocking details" on any task where the current thread is running,
      * while the passed code is executed; often used from groovy as
-     * <code> withBlockingDetails("sleeping 5s") { Thread.sleep(5000); } </code> 
+     * <pre>{@code withBlockingDetails("sleeping 5s") { Thread.sleep(5000); } }</pre> 
      * 
      * @deprecated in 0.4.0, use Tasks.withBlockingDetails */
     public static Object withBlockingDetails(String description, Callable code) throws Exception {

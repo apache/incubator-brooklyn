@@ -38,8 +38,8 @@ import com.google.common.base.Throwables;
 
 
 /**
- * Policy that is attached to a <code>Resizable</code> entity and dynamically adjusts its size in response to
- * emitted <code>POOL_COLD</code> and <code>POOL_HOT</code> events. (This policy does not itself determine whether
+ * Policy that is attached to a {@link Resizable} entity and dynamically adjusts its size in response to
+ * emitted {@code POOL_COLD} and {@code POOL_HOT} events. (This policy does not itself determine whether
  * the pool is hot or cold, but instead relies on these events being emitted by the monitored entity itself, or
  * by another policy that is attached to it; see, for example, {@link LoadBalancingPolicy}.)
  */

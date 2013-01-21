@@ -149,7 +149,7 @@ public class Item {
      * the parent type.
      * 
      * @param parent
-     *            The parent type, can be <code>null</code>
+     *            The parent type, can be {@code null}
      * @param name
      *            The name of the type
      * @param description

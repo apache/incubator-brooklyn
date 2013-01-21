@@ -71,7 +71,7 @@ public abstract class AbstractGroup extends AbstractEntity implements Group, Cha
     }
  
     /**
-     * Returns <code>true</code> if the group was changed as a result of the call.
+     * Returns {@code true} if the group was changed as a result of the call.
      */
     @Override
     public boolean removeMember(Entity member) {

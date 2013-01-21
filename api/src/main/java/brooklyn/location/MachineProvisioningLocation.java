@@ -29,7 +29,7 @@ public interface MachineProvisioningLocation<T extends MachineLocation> extends 
     void release(T machine);
     
     /**
-     * Gets flags, suitable as an argument to <code>obtain()</code>. The tags provided give
+     * Gets flags, suitable as an argument to {@link #obtain(Map)}. The tags provided give
      * hints about the machine required. The provisioning-location could be configured to 
      * understand those tags. 
      * 

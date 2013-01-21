@@ -688,7 +688,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     /**
-     * Override this to add to the toString(), e.g. <code>return super.toStringHelper().add("port", port);</code>
+     * Override this to add to the toString(), e.g. {@code return super.toStringHelper().add("port", port);}
      *
      * Cannot be used in combination with overriding the deprecated toStringFieldsToInclude.
      */

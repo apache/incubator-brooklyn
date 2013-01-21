@@ -15,7 +15,8 @@ import com.google.common.base.Function
  * for sensors.
  * <p>
  * Example usage:
- * <code>
+ * <pre>
+ * {@code
  *   def fnSensorAdaptor = sensorRegistry.register(new FunctionSensorAdapter(&myFunction));
  *   fnSensorAdaptor.poll(MY_BROOKLYN_RAW_DATA_ATTRIBUTE)
  *   fnSensorAdaptor.then({ MyStruct.parse(it) }).with {
@@ -24,7 +25,8 @@ import com.google.common.base.Function
  *   }
  *   //or, field1 access can also be written:
  *   fnSensorAdaptor.poll(MY_BROOKLYN_ATTRIBUTE_1, { MyStruct.parse(it).field1 } )
- * </code>
+ * }
+ * </pre>
  * 
  * @deprecated See brooklyn.event.feed.function.FunctionFeed
  */

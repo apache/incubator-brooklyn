@@ -16,22 +16,22 @@ public class ReaderInputStream extends InputStream {
     private int begin;
 
     /**
-     * Construct a <CODE>ReaderInputStream</CODE>
-     * for the specified <CODE>Reader</CODE>.
+     * Construct a <{@link ReaderInputStream}
+     * for the specified {@link Reader}.
      *
-     * @param reader   <CODE>Reader</CODE>.  Must not be <code>null</code>.
+     * @param reader   {@link Reader}; must not be {@code null}.
      */
     public ReaderInputStream(Reader reader) {
         in = reader;
     }
 
     /**
-     * Construct a <CODE>ReaderInputStream</CODE>
-     * for the specified <CODE>Reader</CODE>,
+     * Construct a {@link ReaderInputStream}
+     * for the specified {@link Reader},
      * with the specified encoding.
      *
-     * @param reader     non-null <CODE>Reader</CODE>.
-     * @param encoding   non-null <CODE>String</CODE> encoding.
+     * @param reader     non-null {@link Reader}.
+     * @param encoding   non-null {@link String} encoding.
      */
     public ReaderInputStream(Reader reader, String encoding) {
         this(reader);
@@ -43,11 +43,11 @@ public class ReaderInputStream extends InputStream {
     }
 
     /**
-     * Reads from the <CODE>Reader</CODE>, returning the same value.
+     * Reads from the {@link Reader}, returning the same value.
      *
-     * @return the value of the next character in the <CODE>Reader</CODE>.
+     * @return the value of the next character in the {@link Reader}.
      *
-     * @exception IOException if the original <code>Reader</code> fails to be read
+     * @exception IOException if the original {@link Reader} fails to be read
      */
     public synchronized int read() throws IOException {
         if (in == null) {
@@ -76,7 +76,7 @@ public class ReaderInputStream extends InputStream {
     }
 
     /**
-     * Reads from the <code>Reader</code> into a byte array
+     * Reads from the {@link Reader} into a byte array
      *
      * @param b  the byte array to read into
      * @param off the offset in the byte array

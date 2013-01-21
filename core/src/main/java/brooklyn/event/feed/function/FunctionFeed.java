@@ -25,7 +25,21 @@ import com.google.common.collect.Sets;
 /**
  * Provides a feed of attribute values, by periodically invoking functions.
  * 
- * TODO Add examples to javadoc once finalized.
+ * Example usage is:
+ * <pre>
+ * {@code
+ * feed = FunctionFeed.builder()
+ *     .poll(new FunctionPollConfig<Object, String>(SOME_STRING_ATTRIBUTE)
+ *         .period(500, TimeUnit.MILLISECONDS)
+ *         .callable(myCallable)
+ *         .onError(Functions.constant("failed"))
+ *     .build();
+ * 
+ * // ...
+ * 
+ * if (feed != null) feed.stop();
+ * }
+ * </pre>
  * 
  * @author aled
  */

@@ -15,13 +15,15 @@ import brooklyn.util.ShellUtils
  * Useful e.g. for paas tools such as Cloud Foundry vmc which operate against a remote target.
  * <p>
  * Example usage:
- * <code>
+ * <pre>
+ * {@code
  *   def diskUsage = sensorRegistry.register(new ShellSensorAdapter("df -p"))
  *   diskUsage.then(&parse).with {
  *      poll(DISK0_USAGE_BYTES) { it[0].usage }
  *      poll(DISK0_FREE_BYTES) { it[0].free }
  *   }
- * </code>
+ * }
+ * </pre>
  * <p>
  * See also FunctionSensorAdapter (for arbitrary functions) and SshSensorAdapter (to run on remote machines).
  * 

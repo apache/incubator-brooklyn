@@ -9,7 +9,7 @@ public interface PortSupplier {
      * another application has already claimed this port number.
      *
      * @param portNumber the required port number.
-     * @return <code>true</code> if the port was successfully reserved; <code>false</code> if it has been previously reserved.
+     * @return {@code true} if the port was successfully reserved; {@code false} if it has been previously reserved.
      */
     boolean obtainSpecificPort(int portNumber);
 

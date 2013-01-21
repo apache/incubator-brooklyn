@@ -20,7 +20,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 /**
- * Standard implementation of <code>BalanceablePoolModel</code>, providing essential arithmetic for item and container
+ * Standard implementation of {@link BalanceablePoolModel}, providing essential arithmetic for item and container
  * workrates and thresholds. See subclasses for specific requirements for migrating items.
  */
 public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements BalanceablePoolModel<ContainerType, ItemType> {

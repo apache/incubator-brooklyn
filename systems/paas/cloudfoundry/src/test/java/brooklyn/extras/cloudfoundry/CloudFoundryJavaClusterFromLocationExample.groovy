@@ -16,15 +16,19 @@ import com.google.common.collect.Iterables
  * example app showing how to start an cloudfoundry java war
  *  
  * if this doesn't start, we may have too many apps, delete some using:
- * <code>
+ * <pre>
+ * {@code
  * vmc apps 
  * vmc delete brooklyn-1234
- * </code>
+ * }
+ * </pre>
  * (or online at the cloudfoundry portal)
  * or
- * <code>
+ * <pre>
+ * {@code
  * for x in `vmc apps | grep brooklyn | awk '{ print $2 }'` ; do vmc delete $x ; done
- * </code>
+ * }
+ * </pre>
  * @author alex
  *
  */
