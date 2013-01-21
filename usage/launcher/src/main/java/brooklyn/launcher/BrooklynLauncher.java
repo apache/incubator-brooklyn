@@ -12,6 +12,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
@@ -67,6 +68,7 @@ public class BrooklynLauncher {
     
     private ManagementContext context = null;
     private List<Application> appsToManage = new ArrayList<Application>();
+    private List<ApplicationBuilder> appBuildersToManage = new ArrayList<ApplicationBuilder>();
     private BrooklynProperties brooklynProperties;
     private boolean startWebApps = true;
     private PortRange port = PortRanges.fromString("8081+");
@@ -87,6 +89,14 @@ public class BrooklynLauncher {
      * The application must not yet be managed. */
     public BrooklynLauncher managing(Application app) {
         appsToManage.add(app);
+        return this;
+    }
+
+    /** Specifies that the launcher should build and manage the given Brooklyn application.
+     * The application will not be started as part of this call (callers should start it when appropriate, often after the launcher is launched).
+     * The application must not yet be managed. */
+    public BrooklynLauncher managing(ApplicationBuilder app) {
+        appBuildersToManage.add(app);
         return this;
     }
 
@@ -167,6 +177,9 @@ public class BrooklynLauncher {
         }
         if (context==null) {
             context = new LocalManagementContext(brooklynProperties);
+        }
+        for (ApplicationBuilder builder : appBuildersToManage) {
+            Application app = builder.manage(context);
         }
         for (Application app: appsToManage) {
             Entities.startManagement(app, context);
