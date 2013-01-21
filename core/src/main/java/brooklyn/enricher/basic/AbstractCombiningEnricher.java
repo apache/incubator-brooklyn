@@ -18,9 +18,10 @@ import brooklyn.management.SubscriptionHandle;
 /**
  * Convenience base for transforming multiple sensors into a single new sensor.
  * Usage:
- * <code>
- * 
- * </code>
+ * <pre>
+ * {@code
+ * }
+ * </pre>
  */
 public abstract class AbstractCombiningEnricher<T> extends AbstractEnricher {
     

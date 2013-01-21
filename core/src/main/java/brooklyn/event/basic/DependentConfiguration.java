@@ -41,9 +41,11 @@ import com.google.common.collect.Lists;
  * these {@link Task} instances are typically passed in {@link AbstractEntity#setConfig(ConfigKey, Object)}.
  * <p>
  * If using a lot it may be useful to:
- * <code>
- * import static brooklyn.event.basic.DependentConfiguration.*;
- * </code>
+ * <pre>
+ * {@code
+ *   import static brooklyn.event.basic.DependentConfiguration.*;
+ * }
+ * </pre>
  */
 public class DependentConfiguration {
 
@@ -200,11 +202,13 @@ public class DependentConfiguration {
      * to String.format.
      * <p>
      * Example:
-     * <code>
-        setConfig(URL, DependentConfiguration.formatString("%s:%s", 
-                        DependentConfiguration.attributeWhenReady(target, Target.HOSTNAME),
-                        DependentConfiguration.attributeWhenReady(target, Target.PORT) ) );
-     * </code>
+     * <pre>
+     * {@code
+     *   setConfig(URL, DependentConfiguration.formatString("%s:%s", 
+     *           DependentConfiguration.attributeWhenReady(target, Target.HOSTNAME),
+     *           DependentConfiguration.attributeWhenReady(target, Target.PORT) ) );
+     * }
+     * </pre>
      */
     public static Task<String> formatString(final String spec, final Object ...args) {
         List<Object> taskArgs = Lists.newArrayList();

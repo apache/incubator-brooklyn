@@ -18,12 +18,14 @@ import brooklyn.util.ShellUtils
  * Useful for entities that only allow interaction via command line tools, such as Rabbit MQ or Redis.
  * <p>
  * Example usage:
- * <code>
+ * <pre>
+ * {@code
  *   def status = sensorRegistry.register(new SshShellSensorAdapter(driver, "rabbitmqctl -q status"))
  *   status.poll(SERVICE_UP) {
  *     it =~ /running_applications.*RabbitMQ/
  *   }
- * </code>
+ * }
+ * </pre>
  * <p>
  * Note that the {@link ScriptRunner} pssed to the adapter need not execute the shell
  * commands over ssh, for example when  running entities locally.

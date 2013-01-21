@@ -2,7 +2,7 @@ package brooklyn.location;
 
 /**
  * A range of ports (indicator for Location and other APIs).
- * Using methods <code>PortRanges.fromXxx</code> this is adaptable from a number, a string, or a collection of numbers or a strings.
+ * Using methods {@code PortRanges.fromXxx} this is adaptable from a number, a string, or a collection of numbers or a strings.
  * String may be of the form:
  *   <li> "80": just 80
  *   <li> "8080-8090": limited range sequentially; ie try 8080, then 8081, ..., then 8090, then give up

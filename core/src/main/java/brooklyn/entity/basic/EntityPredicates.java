@@ -22,7 +22,7 @@ public class EntityPredicates {
     
     /**
      * Create a predicate that matches any entity who has an exact match for the given location
-     * (i.e. <code>entity.getLocations().contains(location)</code>).
+     * (i.e. {@code entity.getLocations().contains(location)}).
      */
     public static <T> Predicate<Entity> withLocation(final Location location) {
         return new Predicate<Entity>() {

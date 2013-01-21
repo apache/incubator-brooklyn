@@ -51,7 +51,7 @@ public class HttpTestUtils {
     
     /**
      * Connects to the given url and returns the connection.
-     * Caller should <code>connection.getInputStream().close();</code> the result of this
+     * Caller should {@code connection.getInputStream().close()} the result of this
      * (especially if they are making heavy use of this method).
      */
     public static URLConnection connectToUrl(String u) throws Exception {
@@ -214,11 +214,13 @@ public class HttpTestUtils {
      * 
      * Expected usage is to query the future, such as:
      * 
-     * <code>
-     *     Future<?> future = assertAsyncHttpStatusCodeContinuallyEquals(executor, url, 200);
-     *     // do other stuff...
-     *     if (future.isDone()) future.get(); // get exception if it's failed
-     * </code>
+     * <pre>
+     * {@code
+     * Future<?> future = assertAsyncHttpStatusCodeContinuallyEquals(executor, url, 200);
+     * // do other stuff...
+     * if (future.isDone()) future.get(); // get exception if it's failed
+     * }
+     * </pre>
      * 
      * For stopping it, you can either do future.cancel(true), or you can just do executor.shutdownNow().
      * 

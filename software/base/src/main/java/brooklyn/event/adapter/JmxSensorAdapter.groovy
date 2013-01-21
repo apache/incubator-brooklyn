@@ -18,13 +18,15 @@ import brooklyn.entity.basic.EntityLocal
  * but provides support for specific object-name/attribute combos etc.
  * <p>
  * Example usage:
- * <code>
+ * <pre>
+ * {@code
  *   jmx.objectName('Brooklyn:type=MyExample,name=myName').with {
  *       attribute("myJmxAttribute").subscribe(MY_BROOKLYN_ATTRIBUTE)
  *       operation("myJmxOperation", "arg1").poll(MY_BROOKLYN_ATTRIBUTE_2)
  *       notification("myJmxNotification").subscribe(MY_BROOKLYN_ATTRIBUTE_3)
  *   }
- * </code>
+ * }
+ * </pre>
  * 
  * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */

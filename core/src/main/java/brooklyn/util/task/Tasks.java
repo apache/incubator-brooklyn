@@ -33,8 +33,8 @@ public class Tasks {
     
     /** convenience for setting "blocking details" on any task where the current thread is running,
      * while the passed code is executed; often used from groovy as
-     * <code> withBlockingDetails("sleeping 5s") { Thread.sleep(5000); } </code>.
-     * if code block is null, the description is set until further notice (not cleareed). */
+     * <pre>{@code withBlockingDetails("sleeping 5s") { Thread.sleep(5000); } }</pre>
+     * If code block is null, the description is set until further notice (not cleareed). */
     @SuppressWarnings("rawtypes")
     public static <T> T withBlockingDetails(String description, Callable<T> code) throws Exception {
         Task current = current();

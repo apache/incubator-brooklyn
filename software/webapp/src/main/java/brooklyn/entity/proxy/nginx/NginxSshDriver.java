@@ -270,7 +270,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     /**
      * Executes the given task, but only if another thread hasn't executed it for us (where the other thread
-     * began executing it after the current caller of <code>run</code> began attempting to do so itself).
+     * began executing it after the current caller of {@link #run()} began attempting to do so itself).
      * 
      * @author aled
      */

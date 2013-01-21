@@ -44,7 +44,7 @@ public interface EntityLocal extends Entity {
      * This can be used to "enrich" the entity, such as adding aggregated information, 
      * rolling averages, etc.
      * 
-     * @return the old value for the attribute (possibly <code>null</code>)
+     * @return the old value for the attribute (possibly {@code null})
      */
     <T> T setAttribute(AttributeSensor<T> sensor, T val);
 

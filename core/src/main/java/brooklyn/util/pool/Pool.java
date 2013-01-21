@@ -10,7 +10,8 @@ import com.google.common.base.Function;
  * 
  * Passive:
  * 
- * <code>
+ * <pre>
+ * {@code
  *   Pool<Expensive> pool = ...
  *   Lease<Expensive> lease = pool.leaseObject();
  *   try {
@@ -19,11 +20,13 @@ import com.google.common.base.Function;
  *   } finally {
  *     lease.close();
  *   }
- * </code>
+ * }
+ * </pre>
  *
  * Or active:
  * 
- * <code>
+ * <pre>
+ * {@code
  *   Pool<Expensive> pool = ...
  *   pool.exec(
  *       new Function<Expensive,Void>() {
@@ -32,7 +35,8 @@ import com.google.common.base.Function;
  *           return null;
  *         }
  *       });
- * </code>
+ * }
+ * </pre>
  * 
  * @see BasicPool
  * 

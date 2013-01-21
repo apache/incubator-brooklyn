@@ -36,8 +36,8 @@ public class BalanceableWorkerPool extends AbstractEntity implements Resizable {
     
     private static final Logger LOG = LoggerFactory.getLogger(BalanceableWorkerPool.class);
     
-    /** Encapsulates an item and a container; emitted for <code>ITEM_ADDED</code>, <code>ITEM_REMOVED</code> and
-     * <code>ITEM_MOVED</code> sensors.
+    /** Encapsulates an item and a container; emitted for {@code ITEM_ADDED}, {@code ITEM_REMOVED} and
+     * {@code ITEM_MOVED} sensors.
      */
     public static class ContainerItemPair implements Serializable {
         private static final long serialVersionUID = 1L;

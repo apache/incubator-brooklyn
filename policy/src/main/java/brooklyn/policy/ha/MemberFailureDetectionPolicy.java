@@ -29,9 +29,11 @@ import com.google.common.collect.Maps;
  * ENTITY_RECOVERED accordingly.
  * 
  * This policy should be associated with a group to monitor its members:
- *   <code>
+ * <pre>
+ * {@code
  *     group.addPolicy(new MemberFailureDetectionPolicy(...));
- *   </code>
+ * }
+ * </pre>
  * 
  * Basic "failure" is defined as the service being "running" but isUp having flipped from 
  * true to false. 

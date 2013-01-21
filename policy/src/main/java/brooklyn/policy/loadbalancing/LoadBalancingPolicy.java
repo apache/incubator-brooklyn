@@ -38,11 +38,11 @@ import com.google.common.collect.ImmutableMap;
  * 
  * <p>The particular sensor that defines the items' workrates is specified when the policy is constructed. High- and
  * low-thresholds are defined as <strong>configuration keys</strong> on each of the container entities in the pool:
- * for an item sensor named <code>foo.bar.sensorName</code>, the corresponding container config keys would be named
- * <code>foo.bar.sensorName.threshold.low</code> and <code>foo.bar.sensorName.threshold.high</code>.
+ * for an item sensor named {@code foo.bar.sensorName}, the corresponding container config keys would be named
+ * {@code foo.bar.sensorName.threshold.low} and {@code foo.bar.sensorName.threshold.high}.
  * 
  * <p>In addition to balancing items among the available containers, this policy causes the pool Entity to emit
- * <code>POOL_COLD</code> and <code>POOL_HOT</code> events when it is determined that there is a surplus or shortfall
+ * {@code POOL_COLD} and {@code POOL_HOT} events when it is determined that there is a surplus or shortfall
  * of container resource in the pool respectively. These events may be consumed by a separate policy that is capable
  * of resizing the container pool.
  */
