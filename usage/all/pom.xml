@@ -22,9 +22,8 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-policy</artifactId>
@@ -58,6 +57,11 @@
 
         <dependency>
             <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-systems-whirr</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-systems-hadoop</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -77,36 +81,18 @@
             <artifactId>brooklyn-launcher</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-cli</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
+        <!-- bring in all jclouds-supported cloud providers -->
         <dependency>
             <groupId>org.jclouds</groupId>
             <artifactId>jclouds-allcompute</artifactId>
-            <!-- bring in all jclouds-supported clouds -->
         </dependency>
-        <dependency>
-            <groupId>org.apache.whirr</groupId>
-            <artifactId>whirr-cli</artifactId>
-            <version>${whirr.version}</version>
-            <!-- bring in all whirr services -->
-            <exclusions>
-              <exclusion>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-              </exclusion>
-              <exclusion>
-                <!-- solr pulls v1.6 of this in. might be okay now... -->
-                <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-              </exclusion>
-            </exclusions>
-        </dependency>
-        
     </dependencies>
 
     <profiles>
