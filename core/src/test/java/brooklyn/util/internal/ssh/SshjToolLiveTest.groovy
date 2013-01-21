@@ -484,9 +484,15 @@ public class SshjToolLiveTest {
         int day = Integer.parseInt(lsparts[6])
         int hour = Integer.parseInt(lsparts[7].split(":")[0])
         int minute = Integer.parseInt(lsparts[7].split(":")[1])
-        assertEquals(day, Calendar.getInstance().get(Calendar.DAY_OF_MONTH), "ls="+lsout+"; lsparts="+Arrays.toString(lsparts))
-        assertTrue(Math.abs(hour - Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) <= 1, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts))
-        assertTrue(Math.abs(minute - Calendar.getInstance().get(Calendar.MINUTE)) <= 1, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts))
+        
+        Calendar expected = Calendar.getInstance();
+        int expectedDay = expected.get(Calendar.DAY_OF_MONTH);
+        int expectedHour = expected.get(Calendar.HOUR_OF_DAY);
+        int expectedMinute = expected.get(Calendar.MINUTE);
+        
+        assertEquals(day, expectedDay, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts)+"; expected="+expected+"; expectedDay="+expectedDay+"; day="+day+"; zone="+expected.getTimeZone())
+        assertTrue(Math.abs(hour - expectedHour) <= 1, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts)+"; expected="+expected+"; expectedHour="+expectedHour+"; hour="+hour+"; zone="+expected.getTimeZone())
+        assertTrue(Math.abs(minute - expectedMinute) <= 1, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts)+"; expected="+expected+"; expectedMinute="+expectedMinute+"; minute="+minute+"; zone="+expected.getTimeZone())
     }
     
     private String execCommands(List<String> cmds, Map<String,?> env=[:]) {
