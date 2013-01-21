@@ -39,6 +39,7 @@
             <groupId>org.apache.whirr</groupId>
             <artifactId>whirr-cli</artifactId>
             <version>${whirr.version}</version>
+            <scope>test</scope>
             <!-- you need the whirr services you actually use! cli pulls in all of them, which we want for tests -->
             <optional>true</optional>
             <exclusions>
@@ -50,6 +51,15 @@
                 <!-- solr pulls v1.6 of this in. used to break things. might be okay now (now using logback). -->
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
+              </exclusion>
+              <!-- Issue 469: these conflict with the servlet-api jar from brooklyn-rest -->
+              <exclusion>
+              	<artifactId>servlet-api</artifactId>
+              	<groupId>org.mortbay.jetty</groupId>
+              </exclusion>
+              <exclusion>
+              	<artifactId>servlet-api</artifactId>
+              	<groupId>javax.servlet</groupId>
               </exclusion>
             </exclusions>
         </dependency>
