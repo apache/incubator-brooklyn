@@ -1,4 +1,4 @@
-package brooklyn.demo;
+package brooklyn.demo.legacy;
 
 import static brooklyn.event.basic.DependentConfiguration.valueWhenAttributeReady;
 
@@ -85,7 +85,7 @@ public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
                 }));
         web.getFactory().setConfig(JBoss7Server.JAVA_SYSPROPS, jvmSysProps);
 
-        ((EntityLocal)web.getCluster()).addPolicy(AutoScalerPolicy.builder()
+        web.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
                 .sizeRange(1, 5)
                 .metricRange(10, 100)

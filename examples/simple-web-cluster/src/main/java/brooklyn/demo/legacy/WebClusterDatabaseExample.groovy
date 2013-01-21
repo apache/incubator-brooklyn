@@ -1,4 +1,4 @@
-package brooklyn.demo
+package brooklyn.demo.legacy
 
 import static brooklyn.entity.java.JavaEntityMethods.javaSysProp
 import static brooklyn.entity.webapp.WebAppServiceConstants.HTTP_PORT

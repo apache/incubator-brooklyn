@@ -1,4 +1,4 @@
-package brooklyn.demo
+package brooklyn.demo.legacy
 
 import groovy.transform.InheritConstructors
 
