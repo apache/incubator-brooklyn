@@ -23,6 +23,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -175,14 +176,14 @@ public class BrooklynRestResourceUtils {
 
         result = tryInstantiateEntity(constructors, new Class[] { Entity.class }, new Object[] { parent });
         if (result!=null) {
-            result.configure(config);
+            ((EntityInternal)result).configure(config);
             return result;
         }
 
         result = tryInstantiateEntity(constructors, new Class[] {}, new Object[] {});
         if (result!=null) {
             if (parent!=null) result.setParent(parent);
-            result.configure(config);
+            ((EntityInternal)result).configure(config);
             return result;
         }
 
@@ -202,7 +203,7 @@ public class BrooklynRestResourceUtils {
         return mgmt.getExecutionManager().submit(new Runnable() {
             @Override
             public void run() {
-                ((EntityLocal)application).destroy();
+                ((EntityInternal)application).destroy();
                 mgmt.getEntityManager().unmanage(application);
             }
         });

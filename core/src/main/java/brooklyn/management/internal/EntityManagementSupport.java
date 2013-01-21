@@ -12,6 +12,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
@@ -72,7 +73,6 @@ public class EntityManagementSupport {
     }
     public boolean wasDeployed() { return everDeployed.get(); }
 
-<<<<<<< HEAD
     /**
      * Whether the entity's management lifecycle is complete (i.e. both "onManagementStarting" and "onManagementStarted" have
      * been called, and it is has not been unmanaged). 
@@ -82,7 +82,6 @@ public class EntityManagementSupport {
         return (nonDeploymentManagementContext == null) && currentlyDeployed.get();
     }
 
-=======
     public synchronized void setManagementContext(ManagementContext val) {
         if (initialManagementContext != null) {
             throw new IllegalStateException("Initial management context is already set for "+entity+"; cannot change");
@@ -97,7 +96,6 @@ public class EntityManagementSupport {
         }
     }
     
->>>>>>> Use entity proxy, rather than direct entity ref
     public void onRebind(ManagementTransitionInfo info) {
         nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_REBINDING);
     }
@@ -115,16 +113,13 @@ public class EntityManagementSupport {
                 if (managementContext != null && !managementContext.equals(info.getManagementContext())) {
                     throw new IllegalStateException("Already has management context: "+managementContext+"; can't set "+info.getManagementContext());
                 }
-<<<<<<< HEAD
+                if (initialManagementContext != null && !initialManagementContext.equals(info.getManagementContext())) {
+                    throw new IllegalStateException("Already has different initial management context: "+initialManagementContext+"; can't set "+info.getManagementContext());
+                }
                 if (alreadyManaging) {
                     return;
                 }
                 
-=======
-                if (initialManagementContext != null && !initialManagementContext.equals(info.getManagementContext())) {
-                    throw new IllegalStateException("Already has different initial management context: "+initialManagementContext+"; can't set "+info.getManagementContext());
-                }
->>>>>>> Use entity proxy, rather than direct entity ref
                 this.managementContext = info.getManagementContext();
                 nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTING);
                 
@@ -304,7 +299,7 @@ public class EntityManagementSupport {
         }
         if ("start".equals(effectorName)) {
             Entity e=entity;
-            if (e.getParent()!=null && ((AbstractEntity)e.getParent()).getManagementSupport().isDeployed()) { 
+            if (e.getParent()!=null && ((EntityInternal)e.getParent()).getManagementSupport().isDeployed()) { 
                 log.warn("Autodeployment in parent's management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
                 ((AbstractEntity)e.getParent()).getManagementSupport().getManagementContext(false).getEntityManager().manage(entity);
                 return;

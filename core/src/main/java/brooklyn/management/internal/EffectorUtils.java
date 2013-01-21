@@ -20,6 +20,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicParameterType;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
@@ -206,7 +207,7 @@ public class EffectorUtils {
         try {
             if (log.isDebugEnabled()) log.debug("Invoking effector {} on {}", new Object[] {name, entity});
             if (log.isTraceEnabled()) log.trace("Invoking effector {} on {} with args {}", new Object[] {name, entity, args});
-            EntityManagementSupport mgmtSupport = entity.getManagementSupport();
+            EntityManagementSupport mgmtSupport = ((EntityInternal)entity).getManagementSupport();
             if (!mgmtSupport.isDeployed()) {
                 mgmtSupport.attemptLegacyAutodeployment(name);
             }
@@ -260,7 +261,7 @@ public class EffectorUtils {
         
         if (log.isDebugEnabled()) log.debug("Invoking effector {} on {}", new Object[] {name, entity});
         if (log.isTraceEnabled()) log.trace("Invoking effector {} on {} with args {}", new Object[] {name, entity, parameters});
-        EntityManagementSupport mgmtSupport = entity.getManagementSupport();
+        EntityManagementSupport mgmtSupport = ((EntityInternal)entity).getManagementSupport();
         if (!mgmtSupport.isDeployed()) {
             mgmtSupport.attemptLegacyAutodeployment(name);
         }

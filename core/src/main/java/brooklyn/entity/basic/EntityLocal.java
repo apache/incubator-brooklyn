@@ -1,11 +1,9 @@
 package brooklyn.entity.basic;
 
-import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
@@ -13,14 +11,11 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
-import brooklyn.management.Task;
-import brooklyn.management.internal.EntityManagementSupport;
-import brooklyn.policy.basic.AbstractPolicy;
 
 import com.google.common.annotations.Beta;
 
@@ -35,12 +30,17 @@ public interface EntityLocal extends Entity {
 
     /**
      * Sets the entity's display name.
+     * Must be called before the entity is managed.
      */
     void setDisplayName(String displayName);
 
-    void addLocations(Collection<? extends Location> locations);
-
-    void removeLocations(Collection<? extends Location> locations);
+    /**
+     * Must be called before the entity is managed.
+     */
+    <T> T setConfig(ConfigKey<T> key, T val);
+    <T> T setConfig(ConfigKey<T> key, Task<T> val);
+    <T> T setConfig(HasConfigKey<T> key, T val);
+    <T> T setConfig(HasConfigKey<T> key, Task<T> val);
 
     /**
      * Sets the {@link Sensor} data for the given attribute to the specified value.
@@ -59,42 +59,9 @@ public interface EntityLocal extends Entity {
     @Beta // remove from interface?
     <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor);
 
-    /**
-     * 
-     * Like {@link setAttribute(AttributeSensor, T)}, except does not publish an attribute-change event.
-     */
-    <T> T setAttributeWithoutPublishing(AttributeSensor<T> sensor, T val);
-
-    // ??? = policy which detects a group is too hot and want the entity to fire a TOO_HOT event
-    
     <T> T getConfig(ConfigKey<T> key, T defaultValue);
     <T> T getConfig(HasConfigKey<T> key);
     <T> T getConfig(HasConfigKey<T> key, T defaultValue);
-
-    /**
-     * @return a read-only copy of all the config key/value pairs on this entity.
-     */
-    @Beta
-    Map<ConfigKey<?>,Object> getAllConfig();
-
-    @Beta
-    public void refreshInheritedConfig();
-
-    /**
-     * Must be called before the entity is started.
-     */
-    <T> T setConfig(ConfigKey<T> key, T val);
-    <T> T setConfig(ConfigKey<T> key, Task<T> val);
-    <T> T setConfig(HasConfigKey<T> key, T val);
-    <T> T setConfig(HasConfigKey<T> key, Task<T> val);
-
-    /**
-     * Must be called before the entity is started.
-     * 
-     * @return this entity (i.e. itself)
-     */
-    @Beta // for internal use only
-    EntityLocal configure(Map flags);
 
     /**
      * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).
@@ -142,32 +109,10 @@ public interface EntityLocal extends Entity {
     boolean unsubscribe(Entity producer, SubscriptionHandle handle);
 
     /**
-     * Adds the given policy to this entity. Also calls policy.setEntity if available.
-     */
-    void addPolicy(AbstractPolicy policy);
-    
-    /**
-     * Removes the given policy from this entity. 
-     * @return True if the policy existed at this entity; false otherwise
-     */
-    boolean removePolicy(AbstractPolicy policy);
-    
-    /**
      * Removes all policy from this entity. 
      * @return True if any policies existed at this entity; false otherwise
      */
     boolean removeAllPolicies();
-    
-    /**
-     * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
-     */
-    void addEnricher(AbstractEnricher enricher);
-    
-    /**
-     * Removes the given enricher from this entity. 
-     * @return True if the policy enricher at this entity; false otherwise
-     */
-    boolean removeEnricher(AbstractEnricher enricher);
     
     /**
      * Removes all enricher from this entity.
@@ -177,25 +122,16 @@ public interface EntityLocal extends Entity {
     boolean removeAllEnrichers();
     
     /** 
-     * @return Routings for accessing and inspecting the management context of the entity
-     */
-    EntityManagementSupport getManagementSupport();
-
-    /**
-     * Should be invoked at end-of-life to clean up the item.
-     */
-    @Beta
-    void destroy();
-    
-    /** 
      * @return The management context for the entity, or null if it is not yet managed.
      * @deprecated since 0.4.0 access via getManagementSupport
+     * @see EntityInternal.getManagementContext()
      */
     ManagementContext getManagementContext();
 
     /** 
      * @return The task execution context for the entity, or null if it is not yet managed.
      * @deprecated since 0.4.0 access via getManagementSupport
+     * @see EntityInternal.getExecutionContext()
      */    
     ExecutionContext getExecutionContext();
 }

@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.BasicEntityTypeRegistry;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.proxying.EntitySpec;
@@ -132,7 +132,7 @@ public class LocalEntityManager implements EntityManager {
         }
         
         final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
-        recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
+        recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             if (it.getManagementSupport().isDeployed()) {
                 return false;
             } else {
@@ -142,7 +142,7 @@ public class LocalEntityManager implements EntityManager {
             }
         } });
         
-        recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
+        recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             if (it.getManagementSupport().isFullyManaged()) {
                 return false;
             } else {
@@ -158,13 +158,13 @@ public class LocalEntityManager implements EntityManager {
         if (shouldSkipUnmanagement(e)) return;
         
         final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
-        recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
+        recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             if (shouldSkipUnmanagement(it)) return false;
             it.getManagementSupport().onManagementStopping(info); 
             return true;
         } });
         
-        recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
+        recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             if (shouldSkipUnmanagement(it)) return false;
             boolean result = unmanageNonRecursive(it);            
             it.getManagementSupport().onManagementStopped(info);
@@ -181,7 +181,7 @@ public class LocalEntityManager implements EntityManager {
     void manageIfNecessary(Entity entity, Object context) {
         if (!isRunning()) {
             return; // TODO Still a race for terminate being called, and then isManaged below returning false
-        } else if (((EntityLocal)entity).getManagementSupport().wasDeployed()) {
+        } else if (((EntityInternal)entity).getManagementSupport().wasDeployed()) {
             return;
         } else if (isManaged(entity)) {
             return;
@@ -203,8 +203,8 @@ public class LocalEntityManager implements EntityManager {
         }
     }
 
-    private void recursively(Entity e, Predicate<EntityLocal> action) {
-        boolean success = action.apply( (EntityLocal)e );
+    private void recursively(Entity e, Predicate<EntityInternal> action) {
+        boolean success = action.apply( (EntityInternal)e );
         if (!success) {
             return; // Don't manage children if action false/unnecessary for parent
         }

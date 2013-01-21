@@ -448,7 +448,7 @@ public class RebindEntityTest {
 
     // TODO Don't want to extend EntityLocal, but tests want to call app.setAttribute
     @ImplementedBy(MyApplicationImpl.class)
-    public interface MyApplication extends Application, EntityLocal, Startable {
+    public interface MyApplication extends Application, Startable, EntityLocal {
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
                         String.class, "test.app.mysensor", "My test sensor");
     }

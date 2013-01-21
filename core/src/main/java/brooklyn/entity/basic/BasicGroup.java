@@ -5,9 +5,8 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
-// FIXME Don't want to extend EntityLocal, but tests call group.addPolicy(); how to deal with that elegantly?
 @ImplementedBy(BasicGroupImpl.class)
-public interface BasicGroup extends AbstractGroup, EntityLocal {
+public interface BasicGroup extends AbstractGroup {
     
     @SetFromFlag("childrenAsMembers")
     public static final ConfigKey<Boolean> CHILDREN_AS_MEMBERS = new BasicConfigKey<Boolean>(

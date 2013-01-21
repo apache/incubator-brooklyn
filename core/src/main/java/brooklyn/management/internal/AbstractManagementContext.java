@@ -23,7 +23,7 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
-import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverFactory;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
@@ -35,7 +35,6 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
-import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
@@ -79,8 +78,8 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         ResourceUtils.addClassLoaderProvider(new Function<Object, ClassLoader>() {
             @Override 
             public ClassLoader apply(@Nullable Object input) {
-                if (input instanceof EntityLocal) 
-                    return apply(((EntityLocal)input).getManagementSupport());
+                if (input instanceof EntityInternal) 
+                    return apply(((EntityInternal)input).getManagementSupport());
                 if (input instanceof EntityManagementSupport) 
                     return apply(((EntityManagementSupport)input).getManagementContext(true));
                 if (input instanceof AbstractManagementContext) 

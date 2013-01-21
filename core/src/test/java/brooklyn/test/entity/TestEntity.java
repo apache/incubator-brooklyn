@@ -10,6 +10,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
@@ -28,9 +29,9 @@ import brooklyn.util.MutableMap;
 /**
  * Mock entity for testing.
  */
-//FIXME Don't want to extend EntityLocal, but tests call entity.subscribe(); how to deal with that elegantly?
+//FIXME Don't want to extend EntityLocal, but tests call things like entity.subscribe(); how to deal with that elegantly?
 @ImplementedBy(TestEntityImpl.class)
-public interface TestEntity extends Entity, Startable, EntityLocal {
+public interface TestEntity extends Entity, Startable, EntityLocal, EntityInternal {
 
     public static class Spec<T extends TestEntity, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
 

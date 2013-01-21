@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.event.AttributeSensor;
@@ -87,7 +88,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
                 } else if (memento.getLocationReferenceAttributes().contains(entry.getKey())) {
                     value = MementoTransformer.transformIdsToLocations(rebindContext, value, type, true);
                 }
-                entity.setAttributeWithoutPublishing(key, value);
+                ((EntityInternal)entity).setAttributeWithoutPublishing(key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);
             }
@@ -153,7 +154,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         for (String id : memento.getLocations()) {
             Location loc = rebindContext.getLocation(id);
             if (loc != null) {
-                entity.addLocations(ImmutableList.of(loc));
+                ((EntityInternal)entity).addLocations(ImmutableList.of(loc));
             } else {
                 LOG.warn("Location not found; discarding location {} of entity {}({})",
                         new Object[] {id, memento.getType(), memento.getId()});

@@ -16,6 +16,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
@@ -90,7 +91,7 @@ public class CheckpointEntityTest {
         
         // Assert does not container unmanaged entity
         assertEquals(ImmutableList.copyOf(newApp.getChildren()), Collections.emptyList());
-        assertNull(newApp.getManagementSupport().getManagementContext(false).getEntityManager().getEntity(origE.getId()));
+        assertNull(((EntityInternal)newApp).getManagementSupport().getManagementContext(false).getEntityManager().getEntity(origE.getId()));
     }
     
     @Test

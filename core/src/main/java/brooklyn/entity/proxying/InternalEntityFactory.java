@@ -10,6 +10,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
 import brooklyn.policy.Policy;
@@ -69,7 +70,7 @@ public class InternalEntityFactory {
         // AbstractEntity.parent is used (e.g. parent.getAllConfig)
         return (T) java.lang.reflect.Proxy.newProxyInstance(
                 type.getClassLoader(),
-                new Class[] { type, EntityProxy.class, EntityLocal.class },
+                new Class[] { type, EntityProxy.class, EntityLocal.class, EntityInternal.class },
                 new EntityProxyImpl(entity));
     }
 
@@ -104,7 +105,7 @@ public class InternalEntityFactory {
             ((AbstractEntity)entity).postConstruct();
             
             for (Policy policy : spec.getPolicies()) {
-                ((EntityLocal)entity).addPolicy((AbstractPolicy)policy);
+                entity.addPolicy((AbstractPolicy)policy);
             }
             
             Entity parent = spec.getParent();

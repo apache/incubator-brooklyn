@@ -90,7 +90,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         // Cache it; evaluate lazily (and late) to ensure managementContext.config is accessible and completed its setup
         // Caching has the benefit that the driver is usable, even if the entity is unmanaged (useful in some tests!)
         if (installDir == null) {
-            String installBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
+            String installBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
             if (installBasedir == null) installBasedir = DEFAULT_INSTALL_BASEDIR;
             if (installBasedir.endsWith(File.separator)) installBasedir.substring(0, installBasedir.length()-1);
             
@@ -102,7 +102,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     
     public String getRunDir() {
         if (runDir == null) {
-            String runBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
+            String runBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
             if (runBasedir == null) runBasedir = DEFAULT_RUN_BASEDIR;
             if (runBasedir.endsWith(File.separator)) runBasedir.substring(0, runBasedir.length()-1);
             
@@ -123,15 +123,15 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
     protected Map<String, Object> getSshFlags() {
         Map<String, Object> result = Maps.newLinkedHashMap();
-        StringConfigMap globalConfig = getEntity().getManagementSupport().getManagementContext(true).getConfig();
+        StringConfigMap globalConfig = ((EntityInternal)getEntity()).getManagementSupport().getManagementContext(true).getConfig();
         Map<ConfigKey<?>, Object> mgmtConfig = globalConfig.getAllConfig();
-        Map<ConfigKey, Object> entityConfig = ((AbstractEntity)getEntity()).getAllConfig();
+        Map<ConfigKey<?>, Object> entityConfig = ((EntityInternal)getEntity()).getAllConfig();
         Map<ConfigKey<?>, Object> allConfig = MutableMap.<ConfigKey<?>, Object>builder().putAll(mgmtConfig).putAll((Map)entityConfig).build();
         
         for (ConfigKey<?> key : allConfig.keySet()) {
             if (key.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                 // have to use raw config to test whether the config is set
-                Object val = ((AbstractEntity)getEntity()).getConfigMap().getRawConfig(key);
+                Object val = ((EntityInternal)getEntity()).getConfigMap().getRawConfig(key);
                 if (val!=null) {
                     val = getEntity().getConfig(key);
                 } else {

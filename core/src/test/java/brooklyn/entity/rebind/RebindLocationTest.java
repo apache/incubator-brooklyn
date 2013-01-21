@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
@@ -111,7 +112,7 @@ public class RebindLocationTest {
 
         origLoc.myAtomicLong.incrementAndGet();
         assertEquals(origLoc.myAtomicLong.get(), 124L);
-        origApp.getManagementSupport().getManagementContext(false).getRebindManager().getChangeListener().onChanged(origLoc);
+        ((EntityInternal)origApp).getManagementSupport().getManagementContext(false).getRebindManager().getChangeListener().onChanged(origLoc);
         
         MyApplication newApp = (MyApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);

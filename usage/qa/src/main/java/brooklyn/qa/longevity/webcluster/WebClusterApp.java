@@ -12,7 +12,6 @@ import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
@@ -64,8 +63,7 @@ public class WebClusterApp extends AbstractApplication {
         JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(MutableMap.of("httpPort", "8080+", "war", WAR_PATH)) {
             public JBoss7Server newEntity2(Map flags, Entity parent) {
                 JBoss7Server result = super.newEntity2(flags, parent);
-                // TODO Don't want to cast to EntityLocal
-                ((EntityLocal)result).addEnricher(new SinusoidalLoadGenerator(sinusoidalLoad, 500L, loadCyclePeriodMs, 1d));
+                result.addEnricher(new SinusoidalLoadGenerator(sinusoidalLoad, 500L, loadCyclePeriodMs, 1d));
                 return result;
             }
         };
@@ -78,8 +76,8 @@ public class WebClusterApp extends AbstractApplication {
                         "factory", jbossFactory), app);
 
 
-        ((EntityLocal)web.getCluster()).addEnricher(CustomAggregatingEnricher.getAveragingEnricher(new LinkedList(), sinusoidalLoad, averageLoad));
-        ((EntityLocal)web.getCluster()).addPolicy(AutoScalerPolicy.builder()
+        web.getCluster().addEnricher(CustomAggregatingEnricher.getAveragingEnricher(new LinkedList(), sinusoidalLoad, averageLoad));
+        web.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(averageLoad)
                 .sizeRange(1, 3)
                 .metricRange(0.3, 0.7)

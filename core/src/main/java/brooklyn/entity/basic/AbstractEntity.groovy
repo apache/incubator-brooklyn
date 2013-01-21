@@ -80,7 +80,7 @@ import com.google.common.collect.Maps
  * 
  * Note that config is typically inherited by children, whereas the fields and attributes are not.
  */
-public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, GroovyInterceptable {
+public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, EntityInternal, GroovyInterceptable {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
     static { BrooklynLanguageExtensions.init(); }
@@ -386,7 +386,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         parent = entity
         //previously tested entity!=null but that should be guaranteed?
         entity.addChild(getProxyIfAvailable())
-        configsInternal.setInheritedConfig(((EntityLocal)entity).getAllConfig());
+        configsInternal.setInheritedConfig(((EntityInternal)entity).getAllConfig());
         previouslyOwned = true
         
         getApplication()
@@ -693,7 +693,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     public void refreshInheritedConfig() {
         if (getParent() != null) {
-            configsInternal.setInheritedConfig(((EntityLocal)getParent()).getAllConfig())
+            configsInternal.setInheritedConfig(((EntityInternal)getParent()).getAllConfig())
         } else {
             configsInternal.clearInheritedConfig();
         }
@@ -703,7 +703,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     void refreshInheritedConfigOfChildren() {
         children.get().each {
-            ((EntityLocal)it).refreshInheritedConfig()
+            ((EntityInternal)it).refreshInheritedConfig()
         }
     }
 
@@ -822,16 +822,16 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     @Override
-    public void addPolicy(AbstractPolicy policy) {
+    public void addPolicy(Policy policy) {
         policies.add(policy)
-        policy.setEntity(this)
+        ((AbstractPolicy)policy).setEntity(this)
         
         getManagementSupport().getEntityChangeListener().onPoliciesChanged();
     }
 
     @Override
-    boolean removePolicy(AbstractPolicy policy) {
-        policy.destroy()
+    boolean removePolicy(Policy policy) {
+        ((AbstractPolicy)policy).destroy()
         boolean changed = policies.remove(policy)
         
         if (changed) {
@@ -859,14 +859,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     @Override
-    public void addEnricher(AbstractEnricher enricher) {
+    public void addEnricher(Enricher enricher) {
         enrichers.add(enricher)
-        enricher.setEntity(this)
+        ((AbstractEnricher)enricher).setEntity(this)
     }
 
     @Override
-    boolean removeEnricher(AbstractEnricher enricher) {
-        enricher.destroy()
+    boolean removeEnricher(Enricher enricher) {
+        ((AbstractEnricher)enricher).destroy()
         return enrichers.remove(enricher)
     }
 

@@ -15,7 +15,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
@@ -97,6 +97,6 @@ public class ApplicationBuilderOverridingTest {
     }
     
     private void assertIsManaged(Entity e) {
-        assertTrue(((EntityLocal)e).getManagementSupport().isDeployed(), "e="+e);
+        assertTrue(((EntityInternal)e).getManagementSupport().isDeployed(), "e="+e);
     }
 }

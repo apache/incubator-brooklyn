@@ -13,7 +13,6 @@ import brooklyn.enricher.basic.SensorTransformingEnricher
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
