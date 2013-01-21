@@ -6,8 +6,6 @@ import java.io.File
 import java.net.InetAddress
 import java.util.List
 
-import org.apache.log4j.lf5.util.StreamUtils;
-import org.apache.whirr.service.hadoop.HadoopCluster
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
