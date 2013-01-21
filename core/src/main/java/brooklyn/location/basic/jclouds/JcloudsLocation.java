@@ -490,7 +490,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public JcloudsSshMachineLocation obtain(Map flags) throws NoMachinesAvailableException {
         BrooklynJcloudsSetupHolder setup = new BrooklynJcloudsSetupHolder(this).useConfig(flags).apply();
         
-        String groupId = elvis(setup.remove("groupId"), generateGroupId());
+        String groupId = elvis(setup.remove("groupId"), generateGroupId(setup.provider));
         final ComputeService computeService = JcloudsUtil.buildOrFindComputeService(setup.allconf, setup.unusedConf);
         
         NodeMetadata node = null;
@@ -779,12 +779,17 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         return sshConfig;
     }
     
-    public static String generateGroupId() {
+    public static String generateGroupId(String provider) {
         // In jclouds 1.5, there are strict rules for group id: it must be DNS compliant, and no more than 15 characters
         // TODO surely this can be overridden!  it's so silly being so short in common places ... or at least set better metadata?
         String user = System.getProperty("user.name");
         String rand = Identifiers.makeRandomId(6);
-        String result = "br-"+Strings.maxlen(user, 4)+"-"+rand;
+        String result = "brooklyn-" + user + "-" + rand;
+        if ("vcloud".equals(provider)) {
+            rand = Identifiers.makeRandomId(2);
+            result = "br-" + Strings.maxlen(user, 4) + "-" + rand;
+        }
+
         return result.toLowerCase();
     }
 
