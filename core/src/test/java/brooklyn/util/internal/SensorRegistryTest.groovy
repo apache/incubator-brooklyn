@@ -96,7 +96,7 @@ public class SensorRegistryTest {
         for (int i=0; i<100; i++) {
             log.info("running testRemoveSensorStopsItBeingUpdated iteration $i");
             try {
-                setup();
+                setUp();
                 testRemoveSensorStopsItBeingUpdated();
             } catch (Throwable t) {
                 log.info("failed testRemoveSensorStopsItBeingUpdated, iteration $i: $t");
