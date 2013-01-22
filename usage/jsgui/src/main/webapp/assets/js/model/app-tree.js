@@ -13,7 +13,7 @@ define([
             }
         },
         getDisplayName:function () {
-            return this.get("name") + ":" + this.get("id")
+            return this.get("name") //+ ":" + this.get("id")
         },
         hasChildren:function () {
             return this.get("children").length > 0
