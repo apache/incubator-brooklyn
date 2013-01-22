@@ -22,7 +22,7 @@ define([
 
         it("has working getDisplayName", function () {
             var app1 = apps.at(0)
-            expect(app1.getDisplayName()).toBe("test:riBZUjMq")
+            expect(app1.getDisplayName()).toBe("test")
         })
 
         it("has working hasChildren method", function () {
@@ -33,7 +33,7 @@ define([
             var app1 = apps.at(0),
                 children = new AppTree.Collection(app1.get("children"))
             expect(children.length).toBe(1)
-            expect(children.at(0).getDisplayName()).toBe("tomcat1:fXyyQ7Ap")
+            expect(children.at(0).getDisplayName()).toBe("tomcat1")
         })
     })
 })
