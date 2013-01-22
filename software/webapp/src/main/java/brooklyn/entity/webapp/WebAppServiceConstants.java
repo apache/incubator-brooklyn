@@ -23,6 +23,10 @@ public interface WebAppServiceConstants {
     public static final BasicAttributeSensorAndConfigKey<List<String>> ENABLED_PROTOCOLS = new BasicAttributeSensorAndConfigKey(
             List.class, "webapp.enabledProtocols", "List of enabled protocols (e.g. http, https)", ImmutableList.of("http"));
 
+    @SetFromFlag("httpsSsl")
+    public static final BasicAttributeSensorAndConfigKey<HttpsSslConfig> HTTPS_SSL_CONFIG = new BasicAttributeSensorAndConfigKey<HttpsSslConfig>(
+            HttpsSslConfig.class, "webapp.https.ssl", "SSL Configuration for HTTPS", null);
+    
     public static final brooklyn.event.basic.BasicAttributeSensor<Integer> ERROR_COUNT =
             new brooklyn.event.basic.BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.errors", "Request errors");
     public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME =

@@ -44,6 +44,26 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         return entity.getAttribute(Attributes.HTTPS_PORT);
     }
 
+    @Override
+    public HttpsSslConfig getHttpsSslConfig() {
+        return entity.getAttribute(WebAppServiceConstants.HTTPS_SSL_CONFIG);
+    }
+
+    protected String getSslKeystoreUrl() {
+        HttpsSslConfig ssl = getHttpsSslConfig();
+        return (ssl == null) ? null : ssl.getKeystoreUrl();
+    }
+    
+    protected String getSslKeystorePassword() {
+        HttpsSslConfig ssl = getHttpsSslConfig();
+        return (ssl == null) ? null : ssl.getKeystorePassword();
+    }
+    
+    protected String getSslKeyAlias() {
+        HttpsSslConfig ssl = getHttpsSslConfig();
+        return (ssl == null) ? null : ssl.getKeyAlias();
+    }
+
     protected String inferRootUrl() {
         if (isProtocolEnabled("https")) {
             int port = getHttpsPort();

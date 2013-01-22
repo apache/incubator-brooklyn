@@ -1,18 +1,32 @@
 package brooklyn.entity.webapp.jboss;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.exceptions.Exceptions;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import static java.lang.String.format;
+import freemarker.cache.StringTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 
 
 public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
@@ -31,6 +45,10 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         super(entity, machine);
     }
 
+    protected String getTemplateConfigurationUrl() {
+        return entity.getAttribute(JBoss7Server.TEMPLATE_CONFIGURATION_URL);
+    }
+
     protected String getLogFileLocation() {
         return String.format("%s/%s/log/server.log", getRunDir(), SERVER_TYPE);
     }
@@ -39,8 +57,19 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         return String.format("%s/deployments", SERVER_TYPE);
     }
 
+    /**
+     * @deprecated since 0.5; use getManagementHttpPort() instead
+     */
     protected Integer getManagementPort() {
-        return entity.getAttribute(JBoss7Server.MANAGEMENT_PORT);
+        return getManagementHttpPort();
+    }
+
+    protected Integer getManagementHttpPort() {
+        return entity.getAttribute(JBoss7Server.MANAGEMENT_HTTP_PORT);
+    }
+
+    protected Integer getManagementHttpsPort() {
+        return entity.getAttribute(JBoss7Server.MANAGEMENT_HTTPS_PORT);
     }
 
     protected Integer getManagementNativePort() {
@@ -48,7 +77,11 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
 
     protected Integer getPortIncrement() {
-        return (Integer) entity.getAttribute(JBoss7Server.PORT_INCREMENT);
+        return entity.getAttribute(JBoss7Server.PORT_INCREMENT);
+    }
+
+    private Integer getDeploymentTimeoutSecs() {
+        return entity.getAttribute(JBoss7Server.DEPLOYMENT_TIMEOUT);
     }
 
     public void install() {
@@ -71,6 +104,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
      * We're not using any JMX.
      * - AS 7 simply doesn't boot with Sun JMX enabled (https://issues.jboss.org/browse/JBAS-7427)
      * - 7.1 onwards uses Remoting 3, which we haven't configured
+     * - We have generic support for jmxmp, which one could configure
      * We're completely disabling security on the management interface.
      * - In the future we probably want to use the as7/bin/add-user.sh script using config keys for user and password
      * - Or we could create our own security realm and use that.
@@ -79,32 +113,46 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
      */
     @Override
     public void customize() {
-        Map ports = MutableMap.of("httpPort", getHttpPort(), "managementPort", getManagementPort(), "managementNativePort",
-                getManagementNativePort());
-
+        // Check that ports are all configured
+        Map<String,Integer> ports = MutableMap.<String,Integer>builder()
+                .put("managementHttpPort", getManagementHttpPort()) 
+                .put("managementHttpsPort", getManagementHttpsPort())
+                .put("managementNativePort", getManagementNativePort())
+                .build();
+        if (isProtocolEnabled("HTTP")) {
+            ports.put("httpPort", getHttpPort());
+        }
+        if (isProtocolEnabled("HTTPS")) {
+            ports.put("httpsPort", getHttpsPort());
+        }
         NetworkUtils.checkPortsValid(ports);
+
+        // Check hostname is defined
         String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME);
         Preconditions.checkNotNull(hostname, "AS 7 entity must set hostname otherwise server will only be visible on localhost");
-        newScript(CUSTOMIZING).
-                body.append(
-                format("cp -r %s/jboss-as-%s/%s . || exit $!", getInstallDir(), getVersion(), SERVER_TYPE),
-                format("cd %s/%s/configuration/", getRunDir(), SERVER_TYPE),
-                format("cp standalone.xml %s", CONFIG_FILE),
-                format("sed -i.bk 's/8080/%s/' %s", getHttpPort(), CONFIG_FILE),
-                format("sed -i.bk 's/9990/%s/' %s", getManagementPort(), CONFIG_FILE),
-                format("sed -i.bk 's/9999/%s/' %s", getManagementNativePort(), CONFIG_FILE),
-                format("sed -i.bk 's/port-offset:0/port-offset:%s/' %s", getPortIncrement(), CONFIG_FILE),
-                format("sed -i.bk 's/enable-welcome-root=\"true\"/enable-welcome-root=\"false\"/' %s", CONFIG_FILE),
+        
+        // Copy the install files to the run-dir
+        newScript(CUSTOMIZING)
+                .body.append(format("cp -r %s/jboss-as-%s/%s . || exit $!", getInstallDir(), getVersion(), SERVER_TYPE))
+                .execute();
 
-                // Disable Management security (!) by deleting the security-realm attribute
-                format("sed -i.bk 's/http-interface security-realm=\"ManagementRealm\"/http-interface/' %s", CONFIG_FILE),
+        // Copy the keystore across, if there is one
+        String destinationKeystorePath = getRunDir()+"/"+".keystore";
+        if (isProtocolEnabled("HTTPS")) {
+            String keystoreUrl = getSslKeystoreUrl();
+            if (keystoreUrl == null) {
+                throw new NullPointerException("keystore URL must be specified if using HTTPS for "+entity);
+            }
+            InputStream keystoreStream = new ResourceUtils(this).getResourceFromUrl(keystoreUrl);
+            getMachine().copyTo(keystoreStream, destinationKeystorePath);
+        }
 
-                // Increase deployment timeout to ten minutes
-                format("sed -i.bk 's/\\(path=\"deployments\"\\)/\\1 deployment-timeout=\"600\"/' %s", CONFIG_FILE),
-
-                // Bind interfaces -- to all (does this work?)
-                format("sed -i.bk 's/\\(inet-address value=.*\\)127.0.0.1/\\1%s/' %s", entity.getConfig(JBoss7Server.BIND_ADDRESS), CONFIG_FILE)
-        ).execute();
+        // Copy the configuration file across
+        String configFileContents = getConfigFileContents(getTemplateConfigurationUrl(), destinationKeystorePath);
+        String destinationConfigFile = format("%s/%s/configuration/%s", getRunDir(), SERVER_TYPE, CONFIG_FILE);
+        getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
+        
+        // Copy the initial wars to the deploys directory
         ((JBoss7Server) entity).deployInitialWars();
     }
 
@@ -153,5 +201,74 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         options.add("-Xmx800m");
         options.add("-XX:MaxPermSize=400m");
         return options;
+    }
+
+    // Prepare the configuration file (from the template)
+    protected String getConfigFileContents(String templateConfigUrl, String destinationKeystorePath) {
+        Map<String,String> substitutions = Maps.newLinkedHashMap();
+        
+        substitutions.put("managementHttpsPort", "${jboss.management.https.port:"+getManagementHttpsPort()+"}");
+        substitutions.put("managementHttpPort", "${jboss.management.http.port:"+getManagementHttpPort()+"}");
+        substitutions.put("managementNativePort", "${jboss.management.native.port:"+getManagementNativePort()+"}");
+        substitutions.put("portOffset", "${jboss.socket.binding.port-offset:"+getPortIncrement()+"}");
+        substitutions.put("welcomeRootEnabled", ""+false);
+
+        substitutions.put("jbossServerConfigDir", "${jboss.server.config.dir}");
+
+        // Bind interfaces -- to all (does this work?)
+        substitutions.put("jbossBindAddress", "${jboss.bind.address:"+entity.getConfig(JBoss7Server.BIND_ADDRESS)+"}");
+        substitutions.put("jbossBindAddressManagement", "${jboss.bind.address.management:"+entity.getConfig(JBoss7Server.BIND_ADDRESS)+"}");
+        substitutions.put("jbossBindAddressUnsecure", "${jboss.bind.address.unsecure:"+entity.getConfig(JBoss7Server.BIND_ADDRESS)+"}");
+        
+        // Disable Management security (!) by excluding the security-realm attribute
+        substitutions.put("httpManagementInterfaceSecurityRealm", "");
+
+        substitutions.put("deploymentTimeout", ""+getDeploymentTimeoutSecs());
+
+        if (isProtocolEnabled("HTTP")) {
+            substitutions.put("httpEnabled", ""+true);
+            substitutions.put("httpPort", ""+getHttpPort());
+        } else {
+            substitutions.put("httpEnabled", ""+false);
+            substitutions.put("httpPort", ""+8080);
+        }
+
+        if (isProtocolEnabled("HTTPS")) {
+            substitutions.put("httpsEnabled", ""+true);
+            substitutions.put("httpsPort", ""+getHttpsPort());
+            substitutions.put("sslKeyAlias", getSslKeyAlias());
+            substitutions.put("sslKeystorePassword", getSslKeystorePassword());
+            substitutions.put("sslKeystorePath", checkNotNull(destinationKeystorePath, "destinationKeystorePath"));
+        } else {
+            substitutions.put("httpsEnabled", ""+false);
+            substitutions.put("httpsPort", ""+8443);
+            substitutions.put("sslKeyAlias", "none");
+            substitutions.put("sslKeystorePassword", "none");
+            substitutions.put("sslKeystorePath", "none");
+        }
+
+        return processTemplate(getTemplateConfigurationUrl(), substitutions);
+    }
+
+    private String processTemplate(String url, Map<String,String> substitutions) {
+        try {
+            String templateConfigFile = new ResourceUtils(this).getResourceAsString(url);
+            
+            Configuration cfg = new Configuration();
+            StringTemplateLoader templateLoader = new StringTemplateLoader();
+            templateLoader.putTemplate("config", templateConfigFile);
+            cfg.setTemplateLoader(templateLoader);
+            Template template = cfg.getTemplate("config");
+            
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Writer out = new OutputStreamWriter(baos);
+            template.process(substitutions, out);
+            out.flush();
+            
+            return new String(baos.toByteArray());
+        } catch (Exception e) {
+            log.warn("Error creating configuration file for "+entity, e);
+            throw Exceptions.propagate(e);
+        }
     }
 }

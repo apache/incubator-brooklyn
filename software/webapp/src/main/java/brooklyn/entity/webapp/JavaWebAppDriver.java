@@ -13,6 +13,8 @@ public interface JavaWebAppDriver extends JavaSoftwareProcessDriver {
 
     Integer getHttpsPort();
 
+    HttpsSslConfig getHttpsSslConfig();
+    
     void deploy(File file);
 
     void deploy(File f, String targetName);
