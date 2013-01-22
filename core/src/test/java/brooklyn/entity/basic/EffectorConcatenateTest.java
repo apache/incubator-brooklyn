@@ -1,11 +1,11 @@
 package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.fail;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,61 +38,62 @@ public class EffectorConcatenateTest {
     public static class MyEntity extends AbstractEntity {
 
         public static Effector<String> CONCATENATE = new MethodEffector<String>(MyEntity.class, "concatenate");
+        public static Effector<Void> WAIT_A_BIT = new MethodEffector<Void>(MyEntity.class, "waitabit");
+        public static Effector<Void> SPAWN_CHILD = new MethodEffector<Void>(MyEntity.class, "spawnchild");
     
         public MyEntity() {
             super();
         }
-        public MyEntity(Map flags) {
-            super(flags);
-        }
         public MyEntity(Entity parent) {
             super(parent);
         }
-        public MyEntity(Map flags, Entity parent) {
-            super(flags, parent);
-        }
 
-        AtomicReference<Task<?>> concatTask = new AtomicReference<Task<?>>();
-        // FIXME instead of waiting on this we should use semaphores -- seems we very occasionally get spurious wakes
-        AtomicReference<String> response = new AtomicReference<String>();
+        /** The "current task" representing the effector currently executing */
+        AtomicReference<Task<?>> waitingTask = new AtomicReference<Task<?>>();
         
-        @Description("sample effector concatenating strings and sometimes waiting")
+        /** latch is .countDown'ed by the effector at the beginning of the "waiting" point */
+        CountDownLatch nowWaitingLatch = new CountDownLatch(1);
+        
+        /** latch is await'ed on by the effector when it is in the "waiting" point */
+        CountDownLatch continueFromWaitingLatch = new CountDownLatch(1);
+        
+        @Description("sample effector concatenating strings")
         public String concatenate(@NamedParameter("first") @Description("first argument") String first,
                 @NamedParameter("second") @Description("2nd arg") String second) throws Exception {
-            if ("wait".equals(first)) {
-                // if first arg is wait, spawn a child, then wait
-                BasicExecutionContext.getCurrentExecutionContext().submit(
-                        MutableMap.of("displayName", "SarcyResponse"),
-                        new Callable<Void>() {
-                            public Void call() throws Exception {
-                                log.info("beginning scary response "+Tasks.current()+", with tags "+Tasks.current().getTags());
-                                synchronized (response) {
-                                    Tasks.setBlockingDetails("looks like the backstroke to me");
-                                    response.notifyAll();
-                                    response.wait(TIMEOUT);
-                                }
-                                return null;
-                            }});
-                
-                Tasks.setExtraStatusDetails("What's the soup du jour? That's the soup of the day!");
-                
-                // wait, setting task info from the second arg
-                // (test will assert that status details are reported correctly)
-                long startTime = System.currentTimeMillis();
-                synchronized (concatTask) {
-                    concatTask.set(Tasks.current());
-                    concatTask.notifyAll();
-                    Tasks.withBlockingDetails(second, new Callable<Void>() {
+            return first+second;
+        }
+        
+        @Description("sample effector doing some waiting")
+        public void waitabit() throws Exception {
+            waitingTask.set(Tasks.current());
+            
+            Tasks.setExtraStatusDetails("waitabit extra status details");
+            
+            Tasks.withBlockingDetails("waitabit.blocking", new Callable<Void>() {
+                    public Void call() throws Exception {
+                        nowWaitingLatch.countDown();
+                        if (!continueFromWaitingLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)) {
+                            fail("took too long to be told to continue");
+                        }
+                        return null;
+                    }});
+        }
+        
+        @Description("sample effector that spawns a child task that waits a bit")
+        public void spawnchild() throws Exception {
+            // spawn a child, then wait
+            BasicExecutionContext.getCurrentExecutionContext().submit(
+                    MutableMap.of("displayName", "SpawnedChildName"),
+                    new Callable<Void>() {
                         public Void call() throws Exception {
-                            concatTask.wait(TIMEOUT);
+                            log.info("beginning spawned child response "+Tasks.current()+", with tags "+Tasks.current().getTags());
+                            Tasks.setBlockingDetails("spawned child blocking details");
+                            nowWaitingLatch.countDown();
+                            if (!continueFromWaitingLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)) {
+                                fail("took too long to be told to continue");
+                            }
                             return null;
                         }});
-                    concatTask.set(null);
-                }
-                if (System.currentTimeMillis()-startTime >= TIMEOUT)
-                    fail("took too long, probably wasn't notified");
-            }
-            return first+second;
         }
     }
             
@@ -122,66 +123,33 @@ public class EffectorConcatenateTest {
     }
     
     @Test
-    public void testTaskReporting() throws Exception {
+    public void testReportsTaskDetails() throws Exception {
         final AtomicReference<String> result = new AtomicReference<String>();
 
         Thread bg = new Thread(new Runnable() {
             public void run() {
                 try {
-                    long startTime = System.currentTimeMillis();
-                    synchronized (e.concatTask) {
-                        try {
-                            while (e.concatTask.get()==null) {
-                                e.concatTask.wait(1000);
-                                if (System.currentTimeMillis()-startTime >= TIMEOUT) {
-                                    result.set("took too long, probably wasn't notified");
-                                    return;
-                                }
-                            }
-    
-                            Task t = e.concatTask.get();
-                            String status = t.getStatusDetail(true);
-                            log.info("concat task says:\n"+status);
-                            if (!status.startsWith("waiter, what's this fly doing")) {
-                                result.set("Status not in expected format: doesn't start with blocking details 'waiter...'\n"+status);
-                                return;
-                            }
-                            if (!status.contains("du jour")) {
-                                result.set("Status not in expected format: doesn't contain extra status details phrase 'du jour'\n"+status);
-                                return;
-                            }
-                            // looks healthy
-                        } finally {
-                            e.concatTask.notifyAll();
-                        }
+                    // Expect "wait a bit" to tell us it's blocking 
+                    if (!e.nowWaitingLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)) {
+                        result.set("took too long for waitabit to be waiting");
+                        return;
                     }
-    
-                    ExecutionManager em = e.getManagementContext().getExecutionManager();
-                    synchronized (e.response) {
-                        Task reply=null;
-                        while (reply==null) {
-                            Collection<Task<?>> entityTasks = em.getTasksWithTag(e);
-                            log.info("entity "+e+" running: "+entityTasks);
-                            Iterable<Task<?>> matchingTasks = Iterables.filter(entityTasks, new Predicate<Task<?>>() {
-                                public boolean apply(Task<?> input) {
-                                    return "SarcyResponse".equals(input.getDisplayName());
-                                }
-                            });
-                            reply = Iterables.getFirst(matchingTasks, null);
-                            if (reply!=null) break;
-                            if (System.currentTimeMillis()-startTime >= TIMEOUT) {
-                                result.set("response took too long, probably wasn't notified");
-                                return;
-                            }
-                            e.response.wait(TIMEOUT);
-                        }
-                        String status = reply.getStatusDetail(true);
-                        log.info("reply task says:\n"+status);
-                        if (!status.contains("backstroke")) {
-                            result.set("Status not in expected format: doesn't contain blocking details phrase 'backstroke'\n"+status);
+
+                    // Expect "wait a bit" to have retrieved and set its task
+                    try {
+                        Task<?> t = e.waitingTask.get();
+                        String status = t.getStatusDetail(true);
+                        log.info("waitabit task says:\n"+status);
+                        if (!status.contains("waitabit extra status details")) {
+                            result.set("Status not in expected format: doesn't contain extra status details phrase 'My extra status details'\n"+status);
                             return;
                         }
-                        e.response.notifyAll();
+                        if (!status.startsWith("waitabit.blocking")) {
+                            result.set("Status not in expected format: doesn't start with blocking details 'waitabit.blocking'\n"+status);
+                            return;
+                        }
+                    } finally {
+                        e.continueFromWaitingLatch.countDown();
                     }
                 } catch (Throwable t) {
                     log.warn("Failure: "+t, t);
@@ -190,9 +158,61 @@ public class EffectorConcatenateTest {
             }});
         bg.start();
     
-        e.invoke(MyEntity.CONCATENATE, ImmutableMap.of("first", "wait", "second", "waiter, what's this fly doing in my soup?")).get();
+        e.invoke(MyEntity.WAIT_A_BIT, ImmutableMap.<String,Object>of())
+                .get(TIMEOUT, TimeUnit.MILLISECONDS);
         
-        bg.join();
+        bg.join(TIMEOUT*2);
+        assertFalse(bg.isAlive());
+        
+        String problem = result.get();
+        if (problem!=null) fail(problem);
+    }
+    
+    @Test
+    public void testReportsSpawnedTaskDetails() throws Exception {
+        final AtomicReference<String> result = new AtomicReference<String>();
+
+        Thread bg = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    // Expect "spawned child" to tell us it's blocking 
+                    if (!e.nowWaitingLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)) {
+                        result.set("took too long for spawnchild's sub-task to be waiting");
+                        return;
+                    }
+
+                    // Expect spawned task to be have been tagged with entity
+                    ExecutionManager em = e.getManagementContext().getExecutionManager();
+                    Task<?> subtask = Iterables.find(em.getTasksWithTag(e), new Predicate<Task<?>>() {
+                        public boolean apply(Task<?> input) {
+                            return "SpawnedChildName".equals(input.getDisplayName());
+                        }
+                    });
+                    
+                    // Expect spawned task to haev correct "blocking details"
+                    try {
+                        String status = subtask.getStatusDetail(true);
+                        log.info("subtask task says:\n"+status);
+                        if (!status.contains("spawned child blocking details")) {
+                            result.set("Status not in expected format: doesn't contain blocking details phrase 'spawned child blocking details'\n"+status);
+                            return;
+                        }
+                    } finally {
+                        e.continueFromWaitingLatch.countDown();
+                    }
+                } catch (Throwable t) {
+                    log.warn("Failure: "+t, t);
+                    result.set("Failure: "+t);
+                }
+            }});
+        bg.start();
+    
+        e.invoke(MyEntity.SPAWN_CHILD, ImmutableMap.<String,Object>of())
+                .get(TIMEOUT, TimeUnit.MILLISECONDS);
+        
+        bg.join(TIMEOUT*2);
+        assertFalse(bg.isAlive());
+        
         String problem = result.get();
         if (problem!=null) fail(problem);
     }
