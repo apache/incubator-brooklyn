@@ -199,7 +199,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     @Override
     public String replaceMember(String memberId) {
-        Entity member = getManagementContext().getEntityManager().getEntity(memberId);
+        Entity member = getEntityManager().getEntity(memberId);
         logger.info("In {}, replacing member {} ({})", new Object[] {this, memberId, member});
 
         if (member == null) {
@@ -344,7 +344,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
             EntitySpec<?> wrappingEntitySpec = WrappingEntitySpec.newInstance(memberSpec).configure(flags).parent(this);
-            return getManagementSupport().getManagementContext(false).getEntityManager().createEntity(wrappingEntitySpec);
+            return getEntityManager().createEntity(wrappingEntitySpec);
         }
         
         EntityFactory<?> factory = getFactory();

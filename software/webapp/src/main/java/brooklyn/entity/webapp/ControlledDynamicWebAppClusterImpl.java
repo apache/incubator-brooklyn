@@ -81,7 +81,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         controller = getConfig(CONTROLLER);
         if (controller == null) {
             log.debug("creating default controller for {}", this);
-            controller = getManagementSupport().getManagementContext(true).getEntityManager().createEntity(BasicEntitySpec.newInstance(NginxController.class)
+            controller = getEntityManager().createEntity(BasicEntitySpec.newInstance(NginxController.class)
                     .parent(this));
             if (Entities.isManaged(this)) Entities.manage(controller);
         }

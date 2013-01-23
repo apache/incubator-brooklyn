@@ -164,7 +164,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             //but that could be handled by the impl at management
             //(keeping recently unmanaged things)  
             //  however unmanaging must be done last, _after_ we stop children and set attributes 
-            getManagementContext().getEntityManager().unmanage(this);
+            getEntityManager().unmanage(this);
         }
 
         log.info("Stopped application " + this);

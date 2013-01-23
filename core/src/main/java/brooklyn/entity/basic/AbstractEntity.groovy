@@ -2,10 +2,8 @@ package brooklyn.entity.basic
 
 import static com.google.common.base.Preconditions.checkNotNull
 
-import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.ExecutionException
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,7 +17,6 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityType
 import brooklyn.entity.Group
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
-import brooklyn.entity.proxying.EntityProxy
 import brooklyn.entity.proxying.InternalEntityFactory
 import brooklyn.entity.rebind.BasicEntityRebindSupport
 import brooklyn.entity.rebind.RebindSupport
@@ -31,12 +28,12 @@ import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.AttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.location.Location
+import brooklyn.management.EntityManager
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
-import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.EntityManagementSupport
 import brooklyn.management.internal.SubscriptionTracker
 import brooklyn.mementos.EntityMemento
@@ -535,6 +532,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return getManagementSupport().getManagementContext(false);
     }
 
+    protected EntityManager getEntityManager() {
+        return getManagementSupport().getManagementContext(true).getEntityManager();
+    }
+    
     @Override
     public EntityType getEntityType() {
         return entityType.getSnapshot();

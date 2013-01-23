@@ -192,7 +192,7 @@ public class DynamicFabricImpl extends AbstractEntity implements DynamicFabric {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
             EntitySpec<?> wrappingEntitySpec = WrappingEntitySpec.newInstance(memberSpec).configure(flags).parent(this);
-            return getManagementSupport().getManagementContext(false).getEntityManager().createEntity(wrappingEntitySpec);
+            return getEntityManager().createEntity(wrappingEntitySpec);
         }
         
         EntityFactory<?> factory = getFactory();

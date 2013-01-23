@@ -108,7 +108,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     
     @Override
     public <T extends Entity> T createChild(EntitySpec<T> spec) {
-        T child = getManagementSupport().getManagementContext(true).getEntityManager().createEntity(spec);
+        T child = getEntityManager().createEntity(spec);
         addChild(child);
         return child;
     }
@@ -117,7 +117,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec) {
         if (!getManagementSupport().isDeployed()) throw new IllegalStateException("Entity "+this+" not managed");
         T child = createChild(spec);
-        getManagementSupport().getManagementContext(false).getEntityManager().manage(child);
+        getEntityManager().manage(child);
         return child;
     }
     

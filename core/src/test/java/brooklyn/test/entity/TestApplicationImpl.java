@@ -30,7 +30,7 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
 
     @Override
     public <T extends Entity> T createChild(EntitySpec<T> spec) {
-        T child = getManagementSupport().getManagementContext(false).getEntityManager().createEntity(spec);
+        T child = getEntityManager().createEntity(spec);
         addChild(child);
         return child;
     }
@@ -39,7 +39,7 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec) {
         if (!getManagementSupport().isDeployed()) throw new IllegalStateException("Entity "+this+" not managed");
         T child = createChild(spec);
-        getManagementSupport().getManagementContext(false).getEntityManager().manage(child);
+        getEntityManager().manage(child);
         return child;
     }
     
