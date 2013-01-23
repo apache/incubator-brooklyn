@@ -5,13 +5,9 @@ import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.NamedParameter;
 
-/** 
- * This defines an identical ``move`` effector as MovableEntityTrait,
- * but shows examples of a pure-java syntax.
- */
-public interface MovableEntityTraitAlt {
+public interface MovableEntityTrait {
 
-    Effector<String> MOVE = new MethodEffector<String>(MovableEntityTraitAlt.class, "move");
+    Effector<String> MOVE = new MethodEffector<String>(MovableEntityTrait.class, "move");
     
     /** Effectively move the entity to the new location.
      * A new entity may be created (and the old destroyed) to effect this.
