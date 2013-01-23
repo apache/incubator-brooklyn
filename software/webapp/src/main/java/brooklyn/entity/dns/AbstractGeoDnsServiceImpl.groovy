@@ -29,8 +29,7 @@ import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableMap
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 
-
-abstract class AbstractGeoDnsService extends AbstractEntity {
+public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implements AbstractGeoDnsService {
     protected static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
 
     @SetFromFlag
@@ -38,22 +37,18 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
 
     protected Map<Entity, HostGeoInfo> targetHosts = Collections.synchronizedMap(new LinkedHashMap<Entity, HostGeoInfo>());
     
-    @SetFromFlag("pollPeriod")
-    public static final ConfigKey<Long> POLL_PERIOD = new BasicConfigKey<Long>(Long.class, "geodns.pollperiod", "Poll period (in milliseconds) for refreshing target hosts", 5000L)
-    public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
-    public static final Sensor SERVICE_UP = Startable.SERVICE_UP;
-    public static final BasicAttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
-    public static final BasicAttributeSensor TARGETS =
-        [ String, "geodns.targets", "Map of targets currently being managed (entity ID to URL)" ];
-
     // We complain when we encounter a target entity for whom we can't derive geo information; the commonest case is a
     // transient condition between the time the entity is created and the time it is started (at which point the location is
     // specified). This set contains those entities we've complained about already, to avoid repetitive logging.
     transient protected Set<Entity> entitiesWithoutGeoInfo = new HashSet<Entity>();
     
-
-    public AbstractGeoDnsService(Map properties = [:], Entity parent = null) {
+    public AbstractGeoDnsServiceImpl(Map properties = [:], Entity parent = null) {
         super(properties, parent);
+    }
+    
+    @Override
+    public Map<Entity, HostGeoInfo> getTargetHosts() {
+        return targetHosts;
     }
     
     @Override
@@ -73,13 +68,14 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
         super.destroy();
     }
         
+    @Override
     public void setServiceState(Lifecycle state) {
         setAttribute(HOSTNAME, getHostname());
         setAttribute(SERVICE_STATE, state);
         setAttribute(SERVICE_UP, state==Lifecycle.RUNNING);
     }
     
-    /** if target is a group, its members are searched; otherwise its children are searched */
+    @Override
     public void setTargetEntityProvider(final Entity entityProvider) {
         this.targetEntityProvider = checkNotNull(entityProvider, "targetEntityProvider");
     }
@@ -127,7 +123,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
     /** should set up so these hosts are targeted, and setServiceState appropriately */
     protected abstract void reconfigureService(Collection<HostGeoInfo> targetHosts);
     
-    /** should return the hostname which this DNS service is configuring */
+    @Override
     public abstract String getHostname();
     
     // TODO: remove group member polling once locations can be determined via subscriptions

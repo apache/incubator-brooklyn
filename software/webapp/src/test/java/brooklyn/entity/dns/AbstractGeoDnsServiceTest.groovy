@@ -13,20 +13,24 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicFabric
 import brooklyn.entity.group.DynamicFabricImpl
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.geo.HostGeoInfo
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
+import com.google.common.base.Predicates
 import com.google.common.collect.Iterables
 
 public class AbstractGeoDnsServiceTest {
@@ -54,7 +58,7 @@ public class AbstractGeoDnsServiceTest {
         name: "East child with location", address: EAST_IP, parentLocation: EAST_PARENT,
         latitude: EAST_LATITUDE, longitude: EAST_LONGITUDE); 
     
-    private AbstractApplication app;
+    private TestApplication app;
     private DynamicFabric fabric;
     private DynamicGroup testEntities;
     private GeoDnsTestService geoDns;
@@ -62,14 +66,15 @@ public class AbstractGeoDnsServiceTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        def factory = { properties -> new TestEntityImpl(properties) }
-        app = new AbstractApplication() { };
-        fabric = new DynamicFabricImpl(parent:app, factory:factory);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", { properties -> new TestEntityImpl(properties) }));
         
-        testEntities = new DynamicGroupImpl([:], app, { Entity e -> (e instanceof TestEntity) });
-        geoDns = new GeoDnsTestService(app, pollPeriod:10);
+        testEntities = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicGroup.class)
+            .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
+        geoDns = new GeoDnsTestService(app, polPeriod:10);
         geoDns.setTargetEntityProvider(testEntities);
-        Entities.startManagement(app);
+        Entities.startManagement(geoDns);
     }
 
     @AfterMethod(alwaysRun=true)
@@ -115,7 +120,7 @@ public class AbstractGeoDnsServiceTest {
     }
     
     
-    private class GeoDnsTestService extends AbstractGeoDnsService {
+    private static class GeoDnsTestService extends AbstractGeoDnsServiceImpl {
         public Map<String, HostGeoInfo> targetHostsByName = new LinkedHashMap<String, HostGeoInfo>();
         
         public GeoDnsTestService(properties=[:], Entity parent) {

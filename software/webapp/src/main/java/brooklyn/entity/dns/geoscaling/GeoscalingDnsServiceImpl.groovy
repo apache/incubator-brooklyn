@@ -2,42 +2,25 @@ package brooklyn.entity.dns.geoscaling
 
 import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.*
 import static com.google.common.base.Preconditions.*
-
-import java.util.Map
-import java.util.Set
-
 import brooklyn.config.render.RendererHints
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.Lifecycle
-import brooklyn.entity.dns.AbstractGeoDnsService
+import brooklyn.entity.dns.AbstractGeoDnsServiceImpl
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Identifiers
 
+import com.google.common.base.Function
 
-class GeoscalingDnsService extends AbstractGeoDnsService {
+public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implements GeoscalingDnsService {
     
-    @SetFromFlag("randomizeSubdomainName")
-    public static final BasicConfigKey RANDOMIZE_SUBDOMAIN_NAME = [ Boolean, "randomize.subdomain.name" ];
-    @SetFromFlag("username")
-    public static final BasicConfigKey GEOSCALING_USERNAME = [ String, "geoscaling.username" ];
-    @SetFromFlag("password")
-    public static final BasicConfigKey GEOSCALING_PASSWORD = [ String, "geoscaling.password" ];
-    @SetFromFlag("primaryDomainName")
-    public static final BasicConfigKey GEOSCALING_PRIMARY_DOMAIN_NAME = [ String, "geoscaling.primary.domain.name" ];
-    @SetFromFlag("smartSubdomainName")
-    public static final BasicConfigKey GEOSCALING_SMART_SUBDOMAIN_NAME = [ String, "geoscaling.smart.subdomain.name" ];
-    
-    public static final BasicAttributeSensor GEOSCALING_ACCOUNT =
-        [ String, "geoscaling.account", "Active user account for the GeoScaling.com service" ];
-    public static final BasicAttributeSensor<String> MANAGED_DOMAIN =
-        ([ String, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected" ] as BasicAttributeSensor<String>).with {
-        RendererHints.register(it, new RendererHints.NamedActionWithUrl("Open", { "http://"+it+"/" }));
-    };
+    static {
+        RendererHints.register(GeoscalingDnsService.MANAGED_DOMAIN, new RendererHints.NamedActionWithUrl("Open", new Function<Object,String>() {
+            public String apply(Object input) {
+                return "http://"+input+"/";
+            }}));
+    }
 
     // Must remember any desired redirection targets if they're specified before configure() has been called.
     private Set<HostGeoInfo> rememberedTargetHosts;
@@ -50,7 +33,7 @@ class GeoscalingDnsService extends AbstractGeoDnsService {
     private String primaryDomainName;
     private String smartSubdomainName;
     
-    public GeoscalingDnsService(Map properties = [:], Entity parent = null) {
+    public GeoscalingDnsServiceImpl(Map properties = [:], Entity parent = null) {
         super(properties, parent);
         
         // defaulting to randomized subdomains makes deploying multiple applications easier
