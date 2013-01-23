@@ -13,6 +13,7 @@ import brooklyn.config.BrooklynProperties
 import brooklyn.location.LocationRegistry
 import brooklyn.location.basic.BasicLocationRegistry
 import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.util.text.Strings
 
 /**
  * Cassandra live tests.
@@ -25,27 +26,26 @@ import brooklyn.location.basic.jclouds.JcloudsLocation
 public class CassandraLiveTest extends CassandraIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(CassandraLiveTest.class)
 
-    @DataProvider(name = "operatingSystemProvider")
-    public Object[][] operatingSystemProviderData() {
-        return [
-            [ "Ubuntu 12.0",    "aws-ec2:eu-west-1" ],
-            [ "CentOS 6.2",     "aws-ec2:eu-west-1" ],
-            [ "Ubuntu 12.0",    "rackspace-cloudservers-uk" ],
-            [ "CentOS 6.2",     "rackspace-cloudservers-uk" ],
+    @DataProvider(name = "virtualMachineData")
+    public Object[][] provideVirtualMachineData() {
+        return [ // ImageName, Provider, Region
+            [ "ubuntu", "aws-ec2", "eu-west-1" ],
+            [ "Ubuntu 12.0", "rackspace-cloudservers-uk", "" ],
+            [ "CentOS 6.2", "rackspace-cloudservers-uk", "" ],
         ];
     }
 
-    @Test(groups = "Live", dataProvider = "operatingSystemProvider")
-    protected void testOperatingSystemProvider(String operatingSystem, String provider) throws Exception {
-        log.info("Testing Cassandra on {} using {}", provider, operatingSystem)
+    @Test(groups = "Live", dataProvider = "virtualMachineData")
+    protected void testOperatingSystemProvider(String imageName, String provider, String region) throws Exception {
+        log.info("Testing Cassandra on {}{} using {}", provider, Strings.isNonEmpty(region) ? ":" + region : "", imageName)
 
         BrooklynProperties props = BrooklynProperties.Factory.newDefault()
-        props.put(String.format("brooklyn.jclouds.%s.image-name-regex", provider), operatingSystem)
         props.remove(String.format("brooklyn.jclouds.%s.image-id", provider))
+        props.put(String.format("brooklyn.jclouds.%s.image-name-matches", provider), imageName)
         props.put(String.format("brooklyn.jclouds.%s.inbound-ports", provider), "22,11099,9001,9876")
         LocationRegistry locationRegistry = new BasicLocationRegistry(props)
 
-        testLocation = (JcloudsLocation) locationRegistry.resolve(provider)
+        testLocation = (JcloudsLocation) locationRegistry.resolve(provider + (Strings.isNonEmpty(region) ? ":" + region : ""))
 
         testConnection()
     }

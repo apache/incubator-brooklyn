@@ -66,7 +66,6 @@ public class CassandraIntegrationTest {
             cassandra.stop()
         }
         Entities.destroy(app)
-        // Closeables.closeQuietly(testLocation)
     }
 
     /**
@@ -102,7 +101,7 @@ public class CassandraIntegrationTest {
      * Test that a keyspace and column family can be created and used with Astyanax client.
      */
     @Test(groups = "Integration")
-    public void testConnection() {
+    public void testConnection() throws Exception {
         cassandra = new CassandraServer(parent:app, thriftPort:'9876', jmxPort:'11099', rmiServerPort:'9001', clusterName:'TestCluster')
         Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))

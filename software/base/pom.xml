@@ -26,6 +26,11 @@
             <artifactId>brooklyn-jmxmp-agent</artifactId>
             <version>${brooklyn.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-jmxrmi-agent</artifactId>
+            <version>${brooklyn.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -65,13 +70,14 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Include-Resource>{maven-resources}, target/classes/brooklyn-jmxmp-agent-shaded-${project.version}.jar</Include-Resource>
+                        <Include-Resource>{maven-resources}, target/classes/brooklyn-jmxmp-agent-shaded-${project.version}.jar, target/classes/brooklyn-jmxrmi-agent-${project.version}.jar</Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <!-- copy the jmxmp-agent JAR so it is available on the classpath for programmatic deployment -->
+                <!-- copy the JMX agent JAR  files so they are available on the classpath for programmatic deployment -->
+                <!-- NB this can fail in eclipse trying to copy _from_ target/classes. see http://jira.codehaus.org/browse/MDEP-259 -->
                 <executions>
                     <execution>
                         <id>copy</id>
@@ -82,7 +88,6 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <!-- NB this can fail in eclipse trying to copy _from_ target/classes. see http://jira.codehaus.org/browse/MDEP-259 -->
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>brooklyn-jmxmp-agent</artifactId>
                                     <version>${project.version}</version>
@@ -91,6 +96,15 @@
                                     <overWrite>true</overWrite>
                                     <outputDirectory>target/classes</outputDirectory>
                                     <destFileName>brooklyn-jmxmp-agent-shaded-${project.version}.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>brooklyn-jmxrmi-agent</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>target/classes</outputDirectory>
+                                    <destFileName>brooklyn-jmxrmi-agent-${project.version}.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

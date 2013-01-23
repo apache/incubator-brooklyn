@@ -3,23 +3,23 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -90,7 +90,7 @@ public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements 
                 .add(String.format("sed -i.bk 's/log4j.appender.R.File=.*/log4j.appender.R.File=%s/g' %s/conf/log4j-server.properties", logFileEscaped, getRunDir()))
                 .add(String.format("sed -i.bk 's/\\/var\\/lib\\/cassandra/%s/g' %s/conf/cassandra.yaml", dataDirEscaped, getRunDir()))
                 .add(String.format("sed -i.bk \"s/^cluster_name: .*/cluster_name: '%s'/g\" %s/conf/cassandra.yaml", getClusterName(), getRunDir()))
-                .add(String.format("sed -i.bk 's/^JMX_PORT=.*/JMX_PORT=\"%d\"/g' %s/conf/cassandra-env.sh", getJmxPort(), getRunDir()))
+                .add(String.format("sed -i.bk '/JMX_PORT/d' %s/conf/cassandra-env.sh", getRunDir()))
                 .add(String.format("sed -i.bk 's/-Xss180k/-Xss280k/g' %s/conf/cassandra-env.sh", getRunDir())) // Stack size
                 .add(String.format("sed -i.bk 's/^rpc_port: .*/rpc_port: %d/g' %s/conf/cassandra.yaml", getThriftPort(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^rpc_address: .*/rpc_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
@@ -99,17 +99,31 @@ public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements 
                 .add(String.format("sed -i.bk 's/^listen_address: .*/listen_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
                 .add(String.format("sed -i.bk 's/- seeds:.*/- seeds: \"%s\"/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()));
 
-        // Open inbound ports (including ephemeral range)
+        // Open inbound ports
         for (Integer port : ports.values()) {
             commands.add(String.format("which iptables && iptables -I INPUT 1 -p tcp --dport %d -j ACCEPT", port));
         }
-        commands.add("which iptables && iptables -I INPUT 1 -p tcp --dport 32768:61000 -j ACCEPT");
         commands.add("which iptables && service iptables save");
         commands.add("which iptables && service iptables restart");
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
                 .execute();
+
+        // Copy JMX agent Jar to server
+        getMachine().copyTo(new ResourceUtils(this).getResourceFromUrl(getJmxRmiAgentJarUrl()), getJmxRmiAgentJarDestinationFilePath());
+    }
+
+    public String getJmxRmiAgentJarBasename() {
+        return "brooklyn-jmxrmi-agent-" + BrooklynVersion.get() + ".jar";
+    }
+
+    public String getJmxRmiAgentJarUrl() {
+        return "classpath://" + getJmxRmiAgentJarBasename();
+    }
+
+    public String getJmxRmiAgentJarDestinationFilePath() {
+        return getRunDir() + "/" + getJmxRmiAgentJarBasename();
     }
 
     @Override
@@ -134,10 +148,15 @@ public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements 
 
     @Override
     public Map<String, String> getShellEnvironment() {
+        String jvmOpts = String.format("-javaagent:%s -D%s=%d -D%s=%d -Djava.rmi.server.hostname=%s",
+                getJmxRmiAgentJarDestinationFilePath(),
+                JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, getJmxPort(),
+                JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, getRmiServerPort(),
+                getHostname());
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
 	            .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
-	            .put("JVM_OPTS", String.format("-Djava.rmi.server.hostname=%s", getHostname()))
+	            .put("JVM_OPTS", jvmOpts)
 	            .build();
     }
 }
