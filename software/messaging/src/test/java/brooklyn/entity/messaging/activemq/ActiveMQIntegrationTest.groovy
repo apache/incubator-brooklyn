@@ -48,7 +48,7 @@ public class ActiveMQIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
     }
 
     /**

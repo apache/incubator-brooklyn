@@ -38,7 +38,7 @@ public class MongoDbTest {
     @AfterMethod(alwaysRun = true)
     public void shutdownApp() {
         if (testApplication != null) {
-            Entities.destroy(testApplication)
+            Entities.destroyAll(testApplication)
         }
     }
 

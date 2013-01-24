@@ -30,6 +30,7 @@ import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.Policy;
@@ -398,6 +399,20 @@ public class Entities {
             if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
             if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
             unmanage(e);
+        }
+    }
+
+    /**
+     * stops, destroys, and unmanages the given application -- and terminates the mangaement context;
+     * does as many as are valid given the type and state
+     */
+    public static void destroyAll(Application app) {
+        if (isManaged(app)) {
+            ManagementContext managementContext = app.getManagementContext();
+            if (app instanceof Startable) Entities.invokeEffector((EntityLocal)app, app, Startable.STOP).getUnchecked();
+            if (app instanceof AbstractEntity) ((AbstractEntity)app).destroy();
+            if (managementContext instanceof AbstractManagementContext) ((AbstractManagementContext)managementContext).terminate();
+            unmanage(app);
         }
     }
 

@@ -49,7 +49,7 @@ public class QpidIntegrationTest {
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
     }
 
     /**

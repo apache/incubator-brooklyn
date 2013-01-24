@@ -47,7 +47,7 @@ public class TransformingEnricherTest {
     
     @AfterMethod(alwaysRun=true)
     public void after() {
-        if (app!=null) Entities.destroy(app);
+        if (app!=null) Entities.destroyAll(app);
     }
     
     @Test

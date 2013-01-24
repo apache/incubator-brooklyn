@@ -45,7 +45,7 @@ public class SshFeedIntegrationTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
         if (loc != null) Closeables.closeQuietly(loc);
     }
     
