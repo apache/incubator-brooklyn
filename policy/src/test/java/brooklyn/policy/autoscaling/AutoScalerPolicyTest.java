@@ -9,10 +9,12 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.test.entity.TestApplication;
@@ -28,7 +30,7 @@ public class AutoScalerPolicyTest {
 
     static { TimeExtras.init(); }
 
-    private static long TIMEOUT_MS = 10000;
+    private static long TIMEOUT_MS = 10*1000;
     private static long SHORT_WAIT_MS = 250;
     private static long OVERHEAD_DURATION_MS = 500;
     private static long EARLY_RETURN_MS = 10;
@@ -36,16 +38,26 @@ public class AutoScalerPolicyTest {
     AutoScalerPolicy policy;
     TestCluster cluster;
     LocallyResizableEntity resizable;
+    TestApplication app;
     
     @BeforeMethod(alwaysRun=true)
-    public void before() throws Exception {
-        TestApplication app = new TestApplication();
+    public void setUp() throws Exception {
+        app = new TestApplication();
         cluster = new TestCluster(app, 1);
         resizable = new LocallyResizableEntity(cluster, cluster);
         policy = new AutoScalerPolicy();
         resizable.addPolicy(policy);
         
         app.startManagement();
+    }
+
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (policy != null) policy.destroy();
+        if (app != null) Entities.destroy(app);
+        cluster = null;
+        resizable = null;
+        policy = null;
     }
 
     @Test
@@ -297,8 +309,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.POOL_HOT, message(1, 21L, 1*10L, 1*20L)); // would grow to 2
         Thread.sleep(resizeUpStabilizationDelay-OVERHEAD_DURATION_MS);
         
-        Stopwatch stopwatch2 = new Stopwatch();
-        stopwatch2.start();
+        long postSleepTime = stopwatch.elapsedMillis();
         
         resizable.emit(AutoScalerPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)); // would grow to 4
 
@@ -310,23 +321,21 @@ public class AutoScalerPolicyTest {
                 assertTrue(resizable.getCurrentSize() >= 2, "currentSize="+resizable.getCurrentSize());
             }});
         assertEquals(resizable.getCurrentSize(), (Integer)2, 
-                stopwatch.elapsedMillis()+"ms after first emission; "+stopwatch2.elapsedMillis()+"ms after last");
+                stopwatch.elapsedMillis()+"ms after first emission; "+(stopwatch.elapsedMillis()-postSleepTime)+"ms after last");
         
-        long timeToResize = stopwatch.elapsedMillis();
-        assertTrue(timeToResize >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
-                timeToResize <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 2: time="+timeToResize+"; resizeUpStabilizationDelay="+resizeUpStabilizationDelay);
+        long timeToResizeTo2 = stopwatch.elapsedMillis();
+        assertTrue(timeToResizeTo2 >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
+                timeToResizeTo2 <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
+                "Resizing to 2: time="+timeToResizeTo2+"; resizeUpStabilizationDelay="+resizeUpStabilizationDelay);
 
         // Will then grow to 4 $resizeUpStabilizationDelay milliseconds after that emission
-        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
-                public void run() { 
-                    assertEquals(resizable.getCurrentSize(), (Integer)4);
-                }});
-        long timeToResizeTo4 = stopwatch2.elapsedMillis();
+        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), 
+                currentSizeAsserter(resizable, 4));
+        long timeToResizeTo4 = stopwatch.elapsedMillis() - postSleepTime;
         
         assertTrue(timeToResizeTo4 >= resizeUpStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResizeTo4 <= resizeUpStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 4: time="+timeToResize+"; resizeUpStabilizationDelay="+resizeUpStabilizationDelay);
+                "Resizing to 4: timeToResizeTo4="+timeToResizeTo4+"; timeToResizeTo2="+timeToResizeTo2+"; resizeUpStabilizationDelay="+resizeUpStabilizationDelay);
     }
 
     @Test(groups="Integration")
@@ -415,31 +424,33 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.POOL_COLD, message(3, 20L, 3*10L, 3*20L)); // would shrink to 2
         Thread.sleep(resizeDownStabilizationDelay-OVERHEAD_DURATION_MS);
         
-        Stopwatch stopwatch2 = new Stopwatch();
-        stopwatch2.start();
+        long postSleepTime = stopwatch.elapsedMillis();
         
         resizable.emit(AutoScalerPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)); // would shrink to 1
 
-        // Wait for it to shrink to size 2, and confirm take expected time
-        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS),
-                currentSizeAsserter(resizable, 2));
+        // Wait for it to reach size 2, and confirm take expected time
+        // TODO This is time sensitive, and sometimes fails in CI with size=1 if we wait for currentSize==2 (presumably GC kicking in?)
+        //      Therefore do strong assertion of currentSize==2 later, so can write out times if it goes wrong.
+        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
+                public void run() {
+                    assertTrue(resizable.getCurrentSize() <= 2, "currentSize="+resizable.getCurrentSize());
+                }});
+        assertEquals(resizable.getCurrentSize(), (Integer)2, 
+                stopwatch.elapsedMillis()+"ms after first emission; "+(stopwatch.elapsedMillis()-postSleepTime)+"ms after last");
         
-        long timeToResize = stopwatch.elapsedMillis();
-        assertTrue(timeToResize >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
-                timeToResize <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 2: time="+timeToResize+"; resizeDownStabilizationDelay="+resizeDownStabilizationDelay);
+        long timeToResizeTo2 = stopwatch.elapsedMillis();
+        assertTrue(timeToResizeTo2 >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
+                timeToResizeTo2 <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
+                "Resizing to 2: time="+timeToResizeTo2+"; resizeDownStabilizationDelay="+resizeDownStabilizationDelay);
 
         // Will then shrink to 1 $resizeUpStabilizationDelay milliseconds after that emission
-        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
-                @Override public void run() {
-                    assertEquals(resizable.getCurrentSize(), (Integer)1);
-                }});
-        long timeToResizeTo1 = stopwatch2.elapsedMillis();
+        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), 
+                currentSizeAsserter(resizable, 1));
+        long timeToResizeTo1 = stopwatch.elapsedMillis() - postSleepTime;
         
         assertTrue(timeToResizeTo1 >= resizeDownStabilizationDelay-EARLY_RETURN_MS &&
                 timeToResizeTo1 <= resizeDownStabilizationDelay+OVERHEAD_DURATION_MS,
-                "Resizing to 1: time="+timeToResize+"; resizeDownStabilizationDelay="+resizeDownStabilizationDelay);
-
+                "Resizing to 1: timeToResizeTo1="+timeToResizeTo1+"; timeToResizeTo2="+timeToResizeTo2+"; resizeDownStabilizationDelay="+resizeDownStabilizationDelay);
     }
 
     @Test(groups="Integration")
