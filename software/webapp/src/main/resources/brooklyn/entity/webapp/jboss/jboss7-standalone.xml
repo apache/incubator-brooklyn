@@ -44,9 +44,15 @@
             <native-interface security-realm="ManagementRealm">
                 <socket-binding native="management-native"/>
             </native-interface>
-            <http-interface [#if httpManagementInterfaceSecurityRealm != ""]security-realm="${httpManagementInterfaceSecurityRealm}"[/#if]>
+            [#if entity.httpManagementInterfaceSecurityRealm != ""]
+            <http-interface security-realm="${entity.httpManagementInterfaceSecurityRealm}">
                 <socket-binding http="management-http"/>
             </http-interface>
+            [#else]
+            <http-interface>
+                <socket-binding http="management-http"/>
+            </http-interface>
+            [/#if]
         </management-interfaces>
     </management>
     <profile>
@@ -225,8 +231,8 @@
                             <module-option name="password-stacking" value="useFirstPass"/>
                         </login-module>
                         <login-module code="RealmUsersRoles" flag="required">
-                            <module-option name="usersProperties" value="${jbossServerConfigDir}/application-users.properties"/>
-                            <module-option name="rolesProperties" value="${jbossServerConfigDir}/application-roles.properties"/>
+                            <module-option name="usersProperties" value="[#noparse]${jboss.server.config.dir}[/#noparse]/application-users.properties"/>
+                            <module-option name="rolesProperties" value="[#noparse]${jboss.server.config.dir}[/#noparse]/application-roles.properties"/>
                             <module-option name="realm" value="ApplicationRealm"/>
                             <module-option name="password-stacking" value="useFirstPass"/>
                         </login-module>
@@ -255,18 +261,20 @@
             <coordinator-environment default-timeout="300"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="false">
-            <connector name="http" protocol="HTTP/1.1" scheme="http" socket-binding="http" enabled="${httpEnabled}"/>
-            <connector name="https" protocol="HTTP/1.1" scheme="https" socket-binding="https" secure="true" enabled="${httpsEnabled}">
-                <ssl key-alias="${sslKeyAlias}" password="${sslKeystorePassword}" certificate-key-file="${sslKeystorePath}"/>
+            <connector name="http" protocol="HTTP/1.1" scheme="http" socket-binding="http" enabled="${entity.httpEnabled?string}"/>
+            [#if entity.httpsEnabled]
+            <connector name="https" protocol="HTTP/1.1" scheme="https" socket-binding="https" secure="true" enabled="${entity.httpsEnabled?string}">
+                <ssl key-alias="${entity.httpsSslKeyAlias}" password="${entity.httpsSslKeystorePassword}" certificate-key-file="${entity.httpsSslKeystoreFile}"/>
             </connector>
-            <virtual-server name="default-host" enable-welcome-root="${welcomeRootEnabled}">
+            [/#if]
+            <virtual-server name="default-host" enable-welcome-root="${entity.welcomeRootEnabled?string}">
                 <alias name="localhost"/>
                 <alias name="example.com"/>
             </virtual-server>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:webservices:1.1">
             <modify-wsdl-address>true</modify-wsdl-address>
-            <wsdl-host>${jbossBindAddress}</wsdl-host>
+            <wsdl-host>${entity.bindAddress}</wsdl-host>
             <endpoint-config name="Standard-Endpoint-Config"/>
             <endpoint-config name="Recording-Endpoint-Config">
                 <pre-handler-chain name="recording-handlers" protocol-bindings="##SOAP11_HTTP ##SOAP11_HTTP_MTOM ##SOAP12_HTTP ##SOAP12_HTTP_MTOM">
@@ -278,10 +286,10 @@
     </profile>
     <interfaces>
         <interface name="management">
-            <inet-address value="${jbossBindAddressManagement}"/>
+            <inet-address value="${entity.managementBindAddress}"/>
         </interface>
         <interface name="public">
-            <inet-address value="${jbossBindAddress}"/>
+            <inet-address value="${entity.bindAddress}"/>
         </interface>
         <!-- TODO - only show this if the jacorb subsystem is added  -->
         <interface name="unsecure">
@@ -289,16 +297,16 @@
               ~  Used for IIOP sockets in the standard configuration.
               ~                  To secure JacORB you need to setup SSL 
               -->
-            <inet-address value="${jbossBindAddressUnsecure}"/>
+            <inet-address value="${entity.unsecureBindAddress}"/>
         </interface>
     </interfaces>
-    <socket-binding-group name="standard-sockets" default-interface="public" port-offset="${portOffset}">
-        <socket-binding name="management-native" interface="management" port="${managementNativePort}"/>
-        <socket-binding name="management-http" interface="management" port="${managementHttpPort}"/>
-        <socket-binding name="management-https" interface="management" port="${managementHttpsPort}"/>
+    <socket-binding-group name="standard-sockets" default-interface="public" port-offset="${entity.portOffset?c}">
+        <socket-binding name="management-native" interface="management" port="${entity.managementNativePort?c}"/>
+        <socket-binding name="management-http" interface="management" port="${entity.managementHttpPort?c}"/>
+        <socket-binding name="management-https" interface="management" port="${entity.managementHttpsPort?c}"/>
         <socket-binding name="ajp" port="8009"/>
-        <socket-binding name="http" port="${httpPort}"/>
-        <socket-binding name="https" port="${httpsPort}"/>
+        <socket-binding name="http" port="[#if entity.httpEnabled]${entity.httpPort?c}[#else]8080[/#if]"/>
+        <socket-binding name="https" port="[#if entity.httpsEnabled]${entity.httpsPort?c}[#else]8443[/#if]"/>
         <socket-binding name="osgi-http" interface="management" port="8090"/>
         <socket-binding name="remoting" port="4447"/>
         <socket-binding name="txn-recovery-environment" port="4712"/>

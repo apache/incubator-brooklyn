@@ -59,8 +59,8 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
     }
 
     //just provide better typing
-    public JavaWebAppSshDriver getDriver() {
-        return (JavaWebAppSshDriver) super.getDriver();
+    public JavaWebAppDriver getDriver() {
+        return (JavaWebAppDriver) super.getDriver();
     }
 
     public void deployInitialWars() {
@@ -114,7 +114,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
         try {
             checkNotNull(url, "url");
             checkNotNull(targetName, "targetName");
-            JavaWebAppSshDriver driver = getDriver();
+            JavaWebAppDriver driver = getDriver();
             String deployedName = driver.deploy(url, targetName);
             
             // Update attribute
@@ -136,7 +136,7 @@ public abstract class JavaWebAppSoftwareProcess extends SoftwareProcessEntity im
     public void undeploy(
             @NamedParameter("targetName") String targetName) {
         try {
-            JavaWebAppSshDriver driver = getDriver();
+            JavaWebAppDriver driver = getDriver();
             driver.undeploy(targetName);
             
             // Update attribute

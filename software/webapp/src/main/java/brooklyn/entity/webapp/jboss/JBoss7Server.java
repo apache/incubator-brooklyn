@@ -1,5 +1,6 @@
 package brooklyn.entity.webapp.jboss;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -7,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -32,9 +34,11 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
     // see https://community.jboss.org/thread/197780
     // 7.2.0.Final should be out during Q3 2012
 
-    public static final BasicConfigKey<String> BIND_ADDRESS =
-            new BasicConfigKey<String>(String.class, "jboss.bind.address", "Address of interface JBoss should listen on, "+ 
-                "defaulting 0.0.0.0 (but could set e.g. to attributeWhenReady(HOSTNAME)", "0.0.0.0");
+    @SetFromFlag("bindAddress")
+    public static final BasicAttributeSensorAndConfigKey<String> BIND_ADDRESS =
+            new BasicAttributeSensorAndConfigKey<String>(String.class, "jboss.bind.address", 
+                "Address of interface JBoss should listen on, defaulting 0.0.0.0 (but could set e.g. to attributeWhenReady(HOSTNAME)", 
+                "0.0.0.0");
 
     @SetFromFlag("managementHttpPort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_HTTP_PORT =
@@ -84,34 +88,46 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
         return JBoss7Driver.class;
     }
 
+    public JBoss7Driver getDriver() {
+        return (JBoss7Driver) super.getDriver();
+    }
+    
     @Override
     protected void connectSensors() {
         super.connectSensors();
 
         String host = getAttribute(HOSTNAME);
-        int port = getAttribute(MANAGEMENT_PORT) + getAttribute(PORT_INCREMENT);
-        
+        int port = getAttribute(MANAGEMENT_HTTP_PORT) + getAttribute(PORT_INCREMENT);
+
+        String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource", host, port);
+        Map<String,String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
+
         httpFeed = HttpFeed.builder()
                 .entity(this)
                 .period(200)
-                .baseUri(String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource", host, port))
-                .baseUriVars(ImmutableMap.of("include-runtime","true"))
+                .baseUri(managementUri)
                 .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
                         .onSuccess(HttpValueFunctions.responseCode()))
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                         .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                         .onError(Functions.constant(false)))
                 .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
+                        .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))
                 .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
+                        .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("errorCount", Integer.class)))
                 .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
+                        .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("processingTime", Integer.class)))
                 .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
+                        .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class)))
                 .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
+                        .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class)))
                 .poll(new HttpPollConfig<Long>(BYTES_SENT)
+                        .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class)))
                 .build();
     }
@@ -121,5 +137,87 @@ public class JBoss7Server extends JavaWebAppSoftwareProcess implements JavaWebAp
         super.disconnectSensors();
         
         if (httpFeed != null) httpFeed.stop();
+    }
+
+    public int getManagementHttpsPort() {
+        return getAttribute(MANAGEMENT_HTTPS_PORT);
+    }
+    
+    public int getManagementHttpPort() {
+        return getAttribute(MANAGEMENT_HTTP_PORT);
+    }
+    
+    public int getManagementNativePort() {
+        return getAttribute(MANAGEMENT_NATIVE_PORT);
+    }
+    
+    public int getPortOffset() {
+        return getAttribute(PORT_INCREMENT);
+    }
+    
+    public boolean isWelcomeRootEnabled() {
+        return false;
+    }
+
+    public String getBindAddress() {
+        return getConfig(BIND_ADDRESS);
+    }
+    
+    public String getManagementBindAddress() {
+        return getConfig(BIND_ADDRESS);
+    }
+    
+    public String getUnsecureBindAddress() {
+        return getConfig(BIND_ADDRESS);
+    }
+    
+    // If empty-string, disables Management security (!) by excluding the security-realm attribute
+    public String getHttpManagementInterfaceSecurityRealm() {
+        return "";
+    }
+
+    public int getDeploymentTimeoutSecs() {
+        return getAttribute(DEPLOYMENT_TIMEOUT);
+    }
+
+    public boolean isHttpEnabled() {
+        return isProtocolEnabled("HTTP");
+    }
+    
+    public boolean isHttpsEnabled() {
+        return isProtocolEnabled("HTTPS");
+    }
+    
+    public Integer getHttpPort() {
+        return getAttribute(HTTP_PORT);
+    }
+    
+    public Integer getHttpsPort() {
+        return getAttribute(HTTPS_PORT);
+    }
+    
+    public String getHttpsSslKeyAlias() {
+        HttpsSslConfig config = getAttribute(HTTPS_SSL_CONFIG);
+        return (config == null) ? null : config.getKeyAlias();
+    }
+    
+    public String getHttpsSslKeystorePassword() {
+        HttpsSslConfig config = getAttribute(HTTPS_SSL_CONFIG);
+        return (config == null) ? null : config.getKeystorePassword();
+    }
+    
+    /** Path of the keystore file on the AS7 server */
+    public String getHttpsSslKeystoreFile() {
+        return getDriver().getSslKeystoreFile();
+    }
+    
+    protected boolean isProtocolEnabled(String protocol) {
+        List<String> protocols = getAttribute(JavaWebAppSoftwareProcess.ENABLED_PROTOCOLS);
+        for (String contender : protocols) {
+            if (protocol.equalsIgnoreCase(contender)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

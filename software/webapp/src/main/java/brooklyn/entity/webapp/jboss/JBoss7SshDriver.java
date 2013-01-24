@@ -1,6 +1,5 @@
 package brooklyn.entity.webapp.jboss;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
@@ -22,7 +21,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
 
 import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
@@ -40,11 +39,17 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
 
     public static final String SERVER_TYPE = "standalone";
     private static final String CONFIG_FILE = "standalone-brooklyn.xml";
-
+    private static final String KEYSTORE_FILE = ".keystore";
+    
     public JBoss7SshDriver(JBoss7Server entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
+    @Override
+    public String getSslKeystoreFile() {
+        return format("%s/%s/configuration/%s", getRunDir(), SERVER_TYPE, KEYSTORE_FILE);
+    }
+    
     protected String getTemplateConfigurationUrl() {
         return entity.getAttribute(JBoss7Server.TEMPLATE_CONFIGURATION_URL);
     }
@@ -60,23 +65,23 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     /**
      * @deprecated since 0.5; use getManagementHttpPort() instead
      */
-    protected Integer getManagementPort() {
+    private Integer getManagementPort() {
         return getManagementHttpPort();
     }
 
-    protected Integer getManagementHttpPort() {
+    private Integer getManagementHttpPort() {
         return entity.getAttribute(JBoss7Server.MANAGEMENT_HTTP_PORT);
     }
 
-    protected Integer getManagementHttpsPort() {
+    private Integer getManagementHttpsPort() {
         return entity.getAttribute(JBoss7Server.MANAGEMENT_HTTPS_PORT);
     }
 
-    protected Integer getManagementNativePort() {
+    private Integer getManagementNativePort() {
         return entity.getAttribute(JBoss7Server.MANAGEMENT_NATIVE_PORT);
     }
 
-    protected Integer getPortIncrement() {
+    private Integer getPortIncrement() {
         return entity.getAttribute(JBoss7Server.PORT_INCREMENT);
     }
 
@@ -137,18 +142,18 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
                 .execute();
 
         // Copy the keystore across, if there is one
-        String destinationKeystorePath = getRunDir()+"/"+".keystore";
         if (isProtocolEnabled("HTTPS")) {
             String keystoreUrl = getSslKeystoreUrl();
             if (keystoreUrl == null) {
                 throw new NullPointerException("keystore URL must be specified if using HTTPS for "+entity);
             }
+            String destinationSslKeystoreFile = getSslKeystoreFile();
             InputStream keystoreStream = new ResourceUtils(this).getResourceFromUrl(keystoreUrl);
-            getMachine().copyTo(keystoreStream, destinationKeystorePath);
+            getMachine().copyTo(keystoreStream, destinationSslKeystoreFile);
         }
 
         // Copy the configuration file across
-        String configFileContents = getConfigFileContents(getTemplateConfigurationUrl(), destinationKeystorePath);
+        String configFileContents = getConfigFileContents(getTemplateConfigurationUrl());
         String destinationConfigFile = format("%s/%s/configuration/%s", getRunDir(), SERVER_TYPE, CONFIG_FILE);
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
         
@@ -204,53 +209,12 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
 
     // Prepare the configuration file (from the template)
-    protected String getConfigFileContents(String templateConfigUrl, String destinationKeystorePath) {
-        Map<String,String> substitutions = Maps.newLinkedHashMap();
-        
-        substitutions.put("managementHttpsPort", "${jboss.management.https.port:"+getManagementHttpsPort()+"}");
-        substitutions.put("managementHttpPort", "${jboss.management.http.port:"+getManagementHttpPort()+"}");
-        substitutions.put("managementNativePort", "${jboss.management.native.port:"+getManagementNativePort()+"}");
-        substitutions.put("portOffset", "${jboss.socket.binding.port-offset:"+getPortIncrement()+"}");
-        substitutions.put("welcomeRootEnabled", ""+false);
-
-        substitutions.put("jbossServerConfigDir", "${jboss.server.config.dir}");
-
-        // Bind interfaces -- to all (does this work?)
-        substitutions.put("jbossBindAddress", "${jboss.bind.address:"+entity.getConfig(JBoss7Server.BIND_ADDRESS)+"}");
-        substitutions.put("jbossBindAddressManagement", "${jboss.bind.address.management:"+entity.getConfig(JBoss7Server.BIND_ADDRESS)+"}");
-        substitutions.put("jbossBindAddressUnsecure", "${jboss.bind.address.unsecure:"+entity.getConfig(JBoss7Server.BIND_ADDRESS)+"}");
-        
-        // Disable Management security (!) by excluding the security-realm attribute
-        substitutions.put("httpManagementInterfaceSecurityRealm", "");
-
-        substitutions.put("deploymentTimeout", ""+getDeploymentTimeoutSecs());
-
-        if (isProtocolEnabled("HTTP")) {
-            substitutions.put("httpEnabled", ""+true);
-            substitutions.put("httpPort", ""+getHttpPort());
-        } else {
-            substitutions.put("httpEnabled", ""+false);
-            substitutions.put("httpPort", ""+8080);
-        }
-
-        if (isProtocolEnabled("HTTPS")) {
-            substitutions.put("httpsEnabled", ""+true);
-            substitutions.put("httpsPort", ""+getHttpsPort());
-            substitutions.put("sslKeyAlias", getSslKeyAlias());
-            substitutions.put("sslKeystorePassword", getSslKeystorePassword());
-            substitutions.put("sslKeystorePath", checkNotNull(destinationKeystorePath, "destinationKeystorePath"));
-        } else {
-            substitutions.put("httpsEnabled", ""+false);
-            substitutions.put("httpsPort", ""+8443);
-            substitutions.put("sslKeyAlias", "none");
-            substitutions.put("sslKeystorePassword", "none");
-            substitutions.put("sslKeystorePath", "none");
-        }
-
-        return processTemplate(getTemplateConfigurationUrl(), substitutions);
+    protected String getConfigFileContents(String templateConfigUrl) {
+        Map<String,?> model = ImmutableMap.of("entity", entity);
+        return processTemplate(getTemplateConfigurationUrl(), model);
     }
 
-    private String processTemplate(String url, Map<String,String> substitutions) {
+    private String processTemplate(String url, Map<String,? extends Object> substitutions) {
         try {
             String templateConfigFile = new ResourceUtils(this).getResourceAsString(url);
             
