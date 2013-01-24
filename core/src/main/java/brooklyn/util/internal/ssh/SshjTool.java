@@ -61,6 +61,7 @@ import org.jclouds.io.payloads.StringPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.util.Time;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.SshTool;
@@ -164,7 +165,7 @@ public class SshjTool implements SshTool {
 
     public static class Builder {
         private String host;
-        private int port = 22;
+        private int port = PROP_PORT.getDefaultValue();
         private String user = System.getProperty("user.name");
         private String password;
         private String privateKeyData;
@@ -180,12 +181,13 @@ public class SshjTool implements SshTool {
         
         @SuppressWarnings("unchecked")
         public Builder from(Map<String,?> props) {
-            host = getMandatoryVal(props, "host", String.class);
-            port = getOptionalVal(props, "port", Integer.class, port);
-            user = getOptionalVal(props, "user", String.class, user);
+            host = getMandatoryVal(props, PROP_HOST);
+            port = getOptionalVal(props, PROP_PORT, port);
+            user = getOptionalVal(props, PROP_USER, user);
             
-            password = getOptionalVal(props, "password", String.class, password);
+            password = getOptionalVal(props, PROP_PASSWORD, password);
             
+            // TODO use config keys for these
             warnOnDeprecated(props, "privateKey", "privateKeyData");
             privateKeyData = getOptionalVal(props, "privateKey", String.class, privateKeyData);
             privateKeyData = getOptionalVal(props, "privateKeyData", String.class, privateKeyData);
@@ -435,12 +437,12 @@ public class SshjTool implements SshTool {
      */
     @Override
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
-        OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
-        String scriptDir = getOptionalVal(props, "scriptDir", String.class, "/tmp");
+        OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
+        OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
+        String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
         String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
         
-        String scriptContents = toScript(commands, env);
+        String scriptContents = toScript(props, commands, env);
         
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
         
@@ -459,12 +461,12 @@ public class SshjTool implements SshTool {
     }
 
     public int execShellDirect(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
-        OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
+        OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
+        OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
         
         List<String> cmdSequence = toCommandSequence(commands, env);
         List<String> allcmds = ImmutableList.<String>builder()
-                .add("exec bash -e")
+                .add(getOptionalVal(props, PROP_DIRECT_HEADER))
                 .addAll(cmdSequence)
                 .add("exit $?")
                 .build();
@@ -486,9 +488,9 @@ public class SshjTool implements SshTool {
         if (props.containsKey("blocks") && props.get("blocks") == Boolean.FALSE) {
             throw new IllegalArgumentException("Cannot exec non-blocking: command="+commands);
         }
-        OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
-        OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
-        String separator = getOptionalVal(props, "separator", String.class, " ; ");
+        OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
+        OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
+        String separator = getOptionalVal(props, PROP_SEPARATOR);
 
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
@@ -500,12 +502,12 @@ public class SshjTool implements SshTool {
         return result.getExitStatus();
     }
 
-    private String toScript(List<String> commands, Map<String,?> env) {
+    private String toScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
         List<String> allcmds = toCommandSequence(commands, env);
         
         StringBuilder result = new StringBuilder();
         // -e causes it to fail on any command in the script which has an error (non-zero return code)
-        result.append("#!/bin/bash -e"+"\n");
+        result.append(getOptionalVal(props, PROP_SCRIPT_HEADER)+"\n");
         
         for (String cmd : allcmds) {
             result.append(cmd+"\n");
@@ -980,12 +982,41 @@ public class SshjTool implements SshTool {
             throw Throwables.propagate(e);
         }
     }
+
+    static <T> T getMandatoryVal(Map<String,?> map, ConfigKey<T> keyC) {
+        String key = keyC.getName();
+        checkArgument(map.containsKey(key), "must contain key '"+keyC+"'");
+        return TypeCoercions.coerce(map.get(key), keyC.getType());
+    }
     
+    static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC) {
+        String key = keyC.getName();
+        if (map.containsKey(key)) {
+            return TypeCoercions.coerce(map.get(key), keyC.getType());
+        } else {
+            return keyC.getDefaultValue();
+        }
+    }
+
+    /** returns the value of the key if specified, otherwise defaultValue */
+    static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC, T defaultValue) {
+        String key = keyC.getName();
+        if (map.containsKey(key)) {
+            return TypeCoercions.coerce(map.get(key), keyC.getType());
+        } else {
+            return defaultValue;
+        }
+    }
+
+    /** @deprecated since 0.5.0 use ConfigKey variant */
+    @Deprecated
     static <T> T getMandatoryVal(Map<String,?> map, String key, Class<T> clazz) {
         checkArgument(map.containsKey(key), "must contain key '"+key+"'");
         return TypeCoercions.coerce(map.get(key), clazz);
     }
     
+    /** @deprecated since 0.5.0 use ConfigKey variant */
+    @Deprecated
     static <T> T getOptionalVal(Map<String,?> map, String key, Class<T> clazz, T defaultVal) {
         if (map.containsKey(key)) {
             return TypeCoercions.coerce(map.get(key), clazz);

@@ -4,19 +4,26 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.basic.lifecycle.ScriptRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigUtils;
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.entity.basic.lifecycle.ScriptRunner;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.internal.SshTool;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -25,6 +32,11 @@ import com.google.common.collect.Sets;
 
 /**
  * An abstract SSH implementation of the {@link AbstractSoftwareProcessDriver}.
+ * 
+ * This provides conveniences for clients implementing the install/customize/launch/isRunning/stop lifecycle
+ * over SSH.  These conveniences include checking whether software is already installed,
+ * creating/using a PID file for some operations, and reading ssh-specific config from the entity
+ * to override/augment ssh flags on the session.  
  */
 public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareProcessDriver implements ScriptRunner {
 
@@ -35,6 +47,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public static final String DEFAULT_INSTALL_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"installs";
     public static final String DEFAULT_RUN_BASEDIR = BROOKLYN_HOME_DIR+File.separator+"apps";
     public static final String NO_VERSION_INFO = "no-version-info";
+
+    /** include this flag in newScript creation to prevent entity-level flags from being included;
+     * any SSH-specific flags passed to newScript override flags from the entity,
+     * and flags from the entity override flags on the location
+     * (where there aren't conflicts, flags from all three are used however) */
+    public static final String IGNORE_ENTITY_SSH_FLAGS = "ignoreEntitySshFlags"; 
 
     private volatile String runDir;
     private volatile String installDir;
@@ -98,13 +116,41 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public SshMachineLocation getMachine() { return getLocation(); }
     public String getHostname() { return entity.getAttribute(Attributes.HOSTNAME); }
 
+    /** extracts the values for the main brooklyn.ssh.config.* config keys (i.e. those declared in ConfigKeys) 
+     * as declared on the entity, and inserts them in a map using the unprefixed state, for ssh */ 
+    protected Map getSshFlags() {
+        Map result = new LinkedHashMap();
+        for (Field f: ConfigKeys.class.getFields()) {
+            if ((f.getModifiers() & Modifier.STATIC)!=0) {
+                if (ConfigKey.class.isAssignableFrom(f.getClass())) {
+                    ConfigKey c;
+                    try {
+                        c = (ConfigKey) f.get(null);
+                        if (c.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
+                            Object v = getEntity().getConfig(c);
+                            if (v!=null)
+                                result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, c).getName(), v);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Error scanning SSH field "+f+": "+e);
+                        Exceptions.propagateIfFatal(e);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     public int execute(List<String> script, String summaryForLogging) {
         return execute(Maps.newLinkedHashMap(), script, summaryForLogging);
     }
     
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
-        Map flags = Maps.newLinkedHashMap(flags2);
+        Map flags = new LinkedHashMap();
+        if (flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+            flags.putAll(getSshFlags());
+        flags.putAll(flags2);
         Map<String, String> environment = (Map<String, String>) ((flags.get("env") != null) ? flags.get("env") : getShellEnvironment());
         if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getName());
         return getMachine().execScript(flags, summaryForLogging, script, environment);
@@ -118,11 +164,19 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     public void copyFile(File src, String destination) {
-        getMachine().copyTo(src, destination);
+        copyFile(MutableMap.of(), src, destination);
     }
-
+    /** @deprecated since 0.5.  destination should be a string not a File */
     public void copyFile(File src, File destination) {
-        getMachine().copyTo(src, destination);
+    }
+    
+    public void copyFile(Map flags2, File src, String destination) {
+        Map flags = new LinkedHashMap();
+        if (flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+            flags.putAll(getSshFlags());
+        flags.putAll(flags2);
+        
+        getMachine().copyTo(flags, src, destination);
     }
 
     protected final static String INSTALLING = "installing";
@@ -132,6 +186,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     protected final static String STOPPING = "stopping";
     protected final static String KILLING = "killing";
     protected final static String RESTARTING = "restarting";
+    
+    /* flags */
+    
+    /** specify as a flag to use a PID file, creating for 'start', and reading it for 'status', 'start';
+     * value can be true, or a path to a pid file to use (either relative to RUN_DIR, or an absolute path) */
+    protected final static String USE_PID_FILE = "usePidFile";
     
     public final static String PID_FILENAME = "pid.txt";
 
@@ -176,8 +236,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase))
             s.updateTaskAndFailOnNonZeroResultCode();
 
-        if (truth(flags.get("usePidFile"))) {
-            String pidFile = (flags.get("usePidFile") instanceof CharSequence ? flags.get("usePidFile") : getRunDir()+"/"+PID_FILENAME).toString();
+        if (truth(flags.get(USE_PID_FILE))) {
+            String pidFile = (flags.get(USE_PID_FILE) instanceof CharSequence ? flags.get(USE_PID_FILE) : getRunDir()+"/"+PID_FILENAME).toString();
             if (LAUNCHING.equals(phase))
                 s.footer.prepend("echo $! > "+pidFile);
             else if (CHECK_RUNNING.equals(phase))
@@ -217,7 +277,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             // 1 is not running
 
             else
-                log.warn("usePidFile script option not valid for "+s.summary);
+                log.warn(USE_PID_FILE+": script option not valid for "+s.summary);
         }
 
         return s;

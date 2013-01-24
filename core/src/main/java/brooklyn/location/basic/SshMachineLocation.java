@@ -411,6 +411,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             logSsh.debug("{} on machine {} ending: no commands to run", summaryForLogging, this);
             return 0;
         }
+        // TODO
         final Map<String,Object> execFlags = MutableMap.copyOf(props);
         final Map<String,Object> sshFlags = MutableMap.<String,Object>builder().putAll(props).removeAll("logPrefix", "out", "err").build();
         
@@ -491,7 +492,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return copyTo(props, src, destination.getPath());
     }
 
-    // FIXME the return code is not a reliable indicator of success or failure
     public int copyTo(File src, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, destination);
     }
@@ -519,6 +519,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyTo(InputStream src, long filesize, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, filesize, destination);
     }
+    // FIXME the return code is not a reliable indicator of success or failure
     public int copyTo(final Map<String,?> props, InputStream src, long filesize, final String destination) {
 	    final long finalFilesize;
 	    final InputStream finalSrc;
