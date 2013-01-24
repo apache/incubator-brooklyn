@@ -20,6 +20,7 @@ import brooklyn.event.adapter.ConfigSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.location.basic.PortRanges;
@@ -70,7 +71,7 @@ public class TomcatServer extends JavaWebAppSoftwareProcess implements JavaWebAp
     public void connectSensors() {
         super.connectSensors();
 
-        sensorRegistry.register(new ConfigSensorAdapter());
+        ConfigToAttributes.apply(this);
 
         Map<String, Object> flags = new LinkedHashMap<String, Object>();
         flags.put("period", new TimeDuration(0, 0, 0, 0, 500));
