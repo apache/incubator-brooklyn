@@ -1,0 +1,493 @@
+package brooklyn.util.internal.ssh;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import brooklyn.util.MutableMap;
+import brooklyn.util.text.Identifiers;
+
+import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+/**
+ * Test the operation of the {@link SshJschTool} utility class.
+ */
+public abstract class SshToolIntegrationTest {
+
+    // TODO No tests for retry logic and exception handing yet
+    
+    protected List<SshTool> tools = Lists.newArrayList();
+    protected SshTool tool;
+    protected List<String> filesCreated;
+    protected String localFilePath;
+    protected String remoteFilePath;
+    
+    protected abstract SshTool newSshTool(Map<String,?> flags);
+    
+    @BeforeMethod(alwaysRun=true)//(groups = {"Integration"})
+    public void setUp() throws Exception {
+        localFilePath = "/tmp/ssh-test-local-"+Identifiers.makeRandomId(8);
+        remoteFilePath = "/tmp/ssh-test-remote-"+Identifiers.makeRandomId(8);
+        filesCreated = new ArrayList<String>();
+        filesCreated.add(localFilePath);
+        filesCreated.add(remoteFilePath);
+
+        tool = newSshTool(ImmutableMap.of("host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
+        tools.add(tool);
+        tool.connect();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void afterMethod() throws Exception {
+        for (SshTool t : tools) {
+            t.disconnect();
+        }
+        for (String fileCreated : filesCreated) {
+            new File(fileCreated).delete();
+        }
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecConsecutiveCommands() throws Exception {
+        String out = execShell("echo run1");
+        String out2 = execShell("echo run2");
+        
+        assertTrue(out.contains("run1"), "out="+out);
+        assertTrue(out2.contains("run2"), "out="+out);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecShellChainOfCommands() throws Exception {
+        String out = execShell("export MYPROP=abc", "echo val is $MYPROP");
+
+        assertTrue(out.contains("val is abc"), "out="+out);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecShellReturningNonZeroExitCode() throws Exception {
+        int exitcode = tool.execShell(MutableMap.<String,Object>of(), ImmutableList.of("exit 123"));
+        assertEquals(exitcode, 123);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecShellReturningZeroExitCode() throws Exception {
+        int exitcode = tool.execShell(MutableMap.<String,Object>of(), ImmutableList.of("date"));
+        assertEquals(exitcode, 0);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecShellCommandWithEnvVariables() throws Exception {
+        String out = execShell(ImmutableList.of("echo val is $MYPROP2"), ImmutableMap.of("MYPROP2", "myval"));
+
+        assertTrue(out.contains("val is myval"), "out="+out);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testScriptDataNotLost() throws Exception {
+        String out = execShell("echo `echo foo``echo bar`");
+
+        assertTrue(out.contains("foobar"), "out="+out);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecShellWithSleepThenExit() throws Exception {
+        String out = execShell("sleep 5", "exit 0");
+    }
+
+    // Really just tests that it returns; the command will be echo'ed automatically so this doesn't assert the command will have been executed
+    @Test(groups = {"Integration"})
+    public void testExecShellBigCommand() throws Exception {
+        String bigstring = Strings.repeat("a", 10000);
+        String out = execShell("echo "+bigstring);
+        
+        assertTrue(out.contains(bigstring), "out="+out);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecShellBigChainOfCommand() throws Exception {
+        String bigstring = Strings.repeat("abcdefghij", 100); // 1KB
+        List<String> cmds = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            cmds.add("export MYPROP"+i+"="+bigstring);
+            cmds.add("echo val"+i+" is $MYPROP"+i);
+        }
+        String out = execShell(cmds);
+        
+        for (int i = 0; i < 10; i++) {
+            assertTrue(out.contains("val"+i+" is "+bigstring), "out="+out);
+        }
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecShellAbortsOnCommandFailure() throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int exitcode = tool.execShell(ImmutableMap.of("out", out), ImmutableList.of("export MYPROP=myval", "acmdthatdoesnotexist", "echo val is $MYPROP"));
+        String outstr = new String(out.toByteArray());
+
+        assertFalse(outstr.contains("val is myval"), "out="+out);
+    }
+    
+    @Test(groups = {"Integration"})
+    public void testExecShellWithSleepThenBigCommand() throws Exception {
+        String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
+        String out = execShell("export MYPROP="+bigstring, "echo val is $MYPROP");
+        //String out = execShell([ "sleep 5", "export MYPROP="+bigstring, "echo val is \$MYPROP" ])
+        assertTrue(out.contains("val is "+bigstring), "out="+out);
+    }
+
+    @Test(groups = {"WIP", "Integration"})
+    public void testExecShellBigConcurrentCommand() throws Exception {
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+        List<ListenableFuture<?>> futures = new ArrayList<ListenableFuture<?>>();
+        try {
+            for (int i = 0; i < 10; i++) {
+                final SshTool localtool = newSshTool(ImmutableMap.of("host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
+                tools.add(localtool);
+                localtool.connect();
+                
+                futures.add(executor.submit(new Runnable() {
+                        public void run() {
+                            String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
+                            String out = execShell(localtool, ImmutableList.of("export MYPROP="+bigstring, "echo val is $MYPROP"));
+                            assertTrue(out.contains("val is "+bigstring), "outSize="+out.length()+"; out="+out);
+                        }}));
+            }
+            Futures.allAsList(futures).get();
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test(groups = {"WIP", "Integration"})
+    public void testExecShellBigConcurrentSleepyCommand() throws Exception {
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+        List<ListenableFuture<?>> futures = new ArrayList<ListenableFuture<?>>();
+        try {
+            long starttime = System.currentTimeMillis();
+            for (int i = 0; i < 10; i++) {
+                final SshTool localtool = newSshTool(ImmutableMap.of("host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
+                tools.add(localtool);
+                localtool.connect();
+                
+                futures.add(executor.submit(new Runnable() {
+                        public void run() {
+                            String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
+                            String out = execShell(localtool, ImmutableList.of("sleep 2", "export MYPROP="+bigstring, "echo val is $MYPROP"));
+                            assertTrue(out.contains("val is "+bigstring), "out="+out);
+                        }}));
+            }
+            Futures.allAsList(futures).get();
+            long runtime = System.currentTimeMillis() - starttime;
+            
+            long OVERHEAD = 20*1000;
+            assertTrue(runtime < 2000+OVERHEAD, "runtime="+runtime);
+            
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecChainOfCommands() throws Exception {
+        String out = execCommands("MYPROP=abc", "echo val is $MYPROP");
+
+        assertEquals(out, "val is abc\n");
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecReturningNonZeroExitCode() throws Exception {
+        int exitcode = tool.execCommands(MutableMap.<String,Object>of(), ImmutableList.of("exit 123"));
+        assertEquals(exitcode, 123);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecReturningZeroExitCode() throws Exception {
+        int exitcode = tool.execCommands(MutableMap.<String,Object>of(), ImmutableList.of("date"));
+        assertEquals(exitcode, 0);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecCommandWithEnvVariables() throws Exception {
+        String out = execCommands(ImmutableList.of("echo val is $MYPROP2"), ImmutableMap.of("MYPROP2", "myval"));
+
+        assertEquals(out, "val is myval\n");
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecBigCommand() throws Exception {
+        String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
+        String out = execCommands("echo "+bigstring);
+
+        assertEquals(out, bigstring+"\n", "actualSize="+out.length()+"; expectedSize="+bigstring.length());
+    }
+
+    @Test(groups = {"Integration"})
+    public void testExecBigConcurrentCommand() throws Exception {
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+        List<ListenableFuture<?>> futures = new ArrayList<ListenableFuture<?>>();
+        try {
+            for (int i = 0; i < 10; i++) {
+                futures.add(executor.submit(new Runnable() {
+                        public void run() {
+                            String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
+                            String out = execCommands("echo "+bigstring);
+                            assertEquals(out, bigstring+"\n", "actualSize="+out.length()+"; expectedSize="+bigstring.length());
+                        }}));
+            }
+            Futures.allAsList(futures).get();
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test(groups = {"Integration"})
+    public void testCreateFileFromString() throws Exception {
+        String contents = "echo hello world!\n";
+        
+        tool.createFile(MutableMap.<String,Object>of(), remoteFilePath, contents);
+        
+        assertRemoteFileContents(remoteFilePath, contents);
+        assertRemoteFilePermissions(remoteFilePath, "-rw-r--r--");
+
+        // TODO would like to also assert lastModified time, but on jenkins the jvm locale
+        // and the OS locale are different (i.e. different timezones) so the file time-stamp 
+        // is several hours out.
+        //assertRemoteFileLastModifiedIsNow(remoteFilePath);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testCreateFileWithPermissions() throws Exception {
+        tool.createFile(ImmutableMap.of("permissions","0754"), remoteFilePath, "echo hello world!\n");
+
+        String out = execCommands("ls -l "+remoteFilePath);
+        assertTrue(out.contains("-rwxr-xr--"), out);
+    }
+    
+    @Test(groups = {"Integration"})
+    public void testCreateFileWithLastModifiedDate() throws Exception {
+        long lastModificationTime = 1234567;
+        Date lastModifiedDate = new Date(lastModificationTime);
+        tool.createFile(ImmutableMap.of("lastModificationDate", lastModificationTime), remoteFilePath, "echo hello world!\n");
+
+        String lsout = execCommands("ls -l "+remoteFilePath);//+" | awk '{print \$6 \" \" \$7 \" \" \$8}'"])
+        //execCommands([ "ls -l "+remoteFilePath+" | awk '{print \$6 \" \" \$7 \" \" \$8}'"])
+        //varies depending on timezone
+        assertTrue(lsout.contains("Jan 15  1970") || lsout.contains("Jan 14  1970") || lsout.contains("Jan 16  1970"), lsout);
+        //assertLastModified(lsout, lastModifiedDate)
+    }
+    
+    @Test(groups = {"Integration"})
+    public void testCopyFileToServerWithPermissions() throws Exception {
+        String contents = "echo hello world!\n";
+        Files.write(contents, new File(localFilePath), Charsets.UTF_8);
+        tool.copyToServer(ImmutableMap.of("permissions", "0754"), new File(localFilePath), remoteFilePath);
+
+        assertRemoteFileContents(remoteFilePath, contents);
+
+        String lsout = execCommands("ls -l "+remoteFilePath);
+        assertTrue(lsout.contains("-rwxr-xr--"), lsout);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testTransferFileToServer() throws Exception {
+        String contents = "echo hello world!\n";
+        ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes());
+        tool.transferFileTo(MutableMap.<String,Object>of(), contentsStream, remoteFilePath);
+
+        assertRemoteFileContents(remoteFilePath, contents);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testCreateFileFromBytes() throws Exception {
+        String contents = "echo hello world!\n";
+        byte[] contentBytes = contents.getBytes();
+        tool.createFile(MutableMap.<String,Object>of(), remoteFilePath, contentBytes);
+
+        assertRemoteFileContents(remoteFilePath, contents);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testCreateFileFromInputStream() throws Exception {
+        String contents = "echo hello world!\n";
+        ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes());
+        tool.createFile(MutableMap.<String,Object>of(), remoteFilePath, contentsStream, contents.length());
+
+        assertRemoteFileContents(remoteFilePath, contents);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testTransferFileFromServer() throws Exception {
+        String contentsWithoutLineBreak = "echo hello world!";
+        String contents = contentsWithoutLineBreak+"\n";
+        tool.createFile(MutableMap.<String,Object>of(), remoteFilePath, contents);
+        
+        tool.transferFileFrom(MutableMap.<String,Object>of(), remoteFilePath, localFilePath);
+
+        List<String> actual = Files.readLines(new File(localFilePath), Charsets.UTF_8);
+        assertEquals(actual, ImmutableList.of(contentsWithoutLineBreak));
+    }
+    
+    // TODO No config options in sshj or scp for auto-creating the parent directories
+    @Test(enabled=false, groups = {"Integration"})
+    public void testCreateFileInNonExistantDir() throws Exception {
+        String contents = "echo hello world!\n";
+        String remoteFileDirPath = "/tmp/ssh-test-remote-dir-"+Identifiers.makeRandomId(8);
+        String remoteFileInDirPath = remoteFileDirPath + File.separator + "ssh-test-remote-"+Identifiers.makeRandomId(8);
+        filesCreated.add(remoteFileInDirPath);
+        filesCreated.add(remoteFileDirPath);
+        
+        tool.createFile(MutableMap.<String,Object>of(), remoteFileInDirPath, contents);
+
+        assertRemoteFileContents(remoteFileInDirPath, contents);
+    }
+    
+    // fails if terminal enabled
+    @Test(groups = {"Integration"})
+    public void testExecShellCapturesStderr() throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        String nonExistantCmd = "acmdthatdoesnotexist";
+        tool.execShell(ImmutableMap.of("out", out, "err", err), ImmutableList.of(nonExistantCmd));
+        assertTrue(new String(err.toByteArray()).contains(nonExistantCmd+": command not found"), "out="+out+"; err="+err);
+    }
+
+    // fails if terminal enabled
+    @Test(groups = {"Integration"})
+    public void testExecCapturesStderr() throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        String nonExistantCmd = "acmdthatdoesnotexist";
+        tool.execCommands(ImmutableMap.of("out", out, "err", err), ImmutableList.of(nonExistantCmd));
+        String errMsg = new String(err.toByteArray());
+        assertTrue(errMsg.contains(nonExistantCmd+": command not found\n"), "errMsg="+errMsg+"; out="+out+"; err="+err);
+        
+    }
+
+    @Test(groups = {"Integration"})
+    public void testConnectWithInvalidUserThrowsException() throws Exception {
+        final SshTool localtool = newSshTool(ImmutableMap.of("user", "wronguser", "host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
+        tools.add(localtool);
+        try {
+            localtool.connect();
+            fail();
+        } catch (SshException e) {
+            if (!e.toString().contains("failed to connect")) throw e;
+        }
+    }
+
+    private void assertRemoteFileContents(String remotePath, String expectedContents) {
+        String catout = execCommands("cat "+remotePath);
+        assertEquals(catout, expectedContents);
+    }
+    
+    /**
+     * @param remotePath
+     * @param expectedPermissions Of the form, for example, "-rw-r--r--"
+     */
+    private void assertRemoteFilePermissions(String remotePath, String expectedPermissions) {
+        String lsout = execCommands("ls -l "+remotePath);
+        assertTrue(lsout.contains(expectedPermissions), lsout);
+    }
+    
+    private void assertRemoteFileLastModifiedIsNow(String remotePath) {
+        // Check default last-modified time is `now`.
+        // Be lenient in assertion, in case unlucky that clock ticked over to next hour/minute as test was running.
+        // TODO Code could be greatly improved, but low priority!
+        // Output format:
+        //   -rw-r--r--  1   aled  wheel  18  Apr 24  15:03 /tmp/ssh-test-remote-CvFN9zQA
+        //   [0]         [1] [2]   [3]    [4] [5] [6] [7]   [8]
+        
+        String lsout = execCommands("ls -l "+remotePath);
+        
+        String[] lsparts = lsout.split("\\s+");
+        int day = Integer.parseInt(lsparts[6]);
+        int hour = Integer.parseInt(lsparts[7].split(":")[0]);
+        int minute = Integer.parseInt(lsparts[7].split(":")[1]);
+        
+        Calendar expected = Calendar.getInstance();
+        int expectedDay = expected.get(Calendar.DAY_OF_MONTH);
+        int expectedHour = expected.get(Calendar.HOUR_OF_DAY);
+        int expectedMinute = expected.get(Calendar.MINUTE);
+        
+        assertEquals(day, expectedDay, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts)+"; expected="+expected+"; expectedDay="+expectedDay+"; day="+day+"; zone="+expected.getTimeZone());
+        assertTrue(Math.abs(hour - expectedHour) <= 1, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts)+"; expected="+expected+"; expectedHour="+expectedHour+"; hour="+hour+"; zone="+expected.getTimeZone());
+        assertTrue(Math.abs(minute - expectedMinute) <= 1, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts)+"; expected="+expected+"; expectedMinute="+expectedMinute+"; minute="+minute+"; zone="+expected.getTimeZone());
+    }
+
+    private String execCommands(String... cmds) {
+        return execCommands(Arrays.asList(cmds));
+    }
+    
+    private String execCommands(List<String> cmds) {
+        return execCommands(cmds, ImmutableMap.<String,Object>of());
+    }
+
+    private String execCommands(List<String> cmds, Map<String,?> env) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        tool.execCommands(ImmutableMap.of("out", out), cmds, env);
+        return new String(out.toByteArray());
+    }
+
+    private String execShell(String... cmds) {
+        return execShell(tool, Arrays.asList(cmds));
+    }
+
+    private String execShell(List<String> cmds) {
+        return execShell(tool, cmds);
+    }
+
+    private String execShell(List<String> cmds, Map<String,?> env) {
+        return execShell(tool, cmds, env);
+    }
+
+    private String execShell(SshTool t, List<String> cmds) {
+        return execShell(t, cmds, ImmutableMap.<String,Object>of());
+    }
+
+    private String execShell(SshTool t, List<String> cmds, Map<String,?> env) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int exitcode = t.execShell(ImmutableMap.of("out", out), cmds, env);
+        String outstr = new String(out.toByteArray());
+        assertEquals(exitcode, 0, outstr);
+        return outstr;
+    }
+
+    private String execScript(List<String> cmds) {
+        return execScript(cmds, ImmutableMap.<String,Object>of());
+    }
+    
+    private String execScript(List<String> cmds, Map<String,?> env) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int exitcode = tool.execScript(ImmutableMap.of("out", out), cmds, env);
+        String outstr = new String(out.toByteArray());
+        assertEquals(exitcode, 0, outstr);
+        return outstr;
+    }
+
+
+}

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.internal.ssh;
+package brooklyn.util.internal.ssh.sshj;
 
 import static brooklyn.util.NetworkUtils.checkPortValid;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -63,8 +63,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.Time;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.internal.SshTool;
 import brooklyn.util.internal.StreamGobbler;
+import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
+import brooklyn.util.internal.ssh.SshException;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
