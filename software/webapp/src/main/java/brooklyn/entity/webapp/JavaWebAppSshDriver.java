@@ -22,7 +22,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
     protected boolean isProtocolEnabled(String protocol) {
         List<String> protocols = getEnabledProtocols();
         for (String contender : protocols) {
-            if (protocol.toLowerCase().equals(contender.toLowerCase())) {
+            if (protocol.equalsIgnoreCase(contender)) {
                 return true;
             }
         }
@@ -42,6 +42,26 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
     @Override
     public Integer getHttpsPort() {
         return entity.getAttribute(Attributes.HTTPS_PORT);
+    }
+
+    @Override
+    public HttpsSslConfig getHttpsSslConfig() {
+        return entity.getAttribute(WebAppServiceConstants.HTTPS_SSL_CONFIG);
+    }
+
+    protected String getSslKeystoreUrl() {
+        HttpsSslConfig ssl = getHttpsSslConfig();
+        return (ssl == null) ? null : ssl.getKeystoreUrl();
+    }
+    
+    protected String getSslKeystorePassword() {
+        HttpsSslConfig ssl = getHttpsSslConfig();
+        return (ssl == null) ? null : ssl.getKeystorePassword();
+    }
+    
+    protected String getSslKeyAlias() {
+        HttpsSslConfig ssl = getHttpsSslConfig();
+        return (ssl == null) ? null : ssl.getKeyAlias();
     }
 
     protected String inferRootUrl() {
@@ -95,11 +115,6 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         deploy("file://"+f.getAbsolutePath(), targetName);
     }
 
-    /** deploys a URL as a webapp at the appserver;
-     * returns a token which can be used as an argument to undeploy,
-     * typically the web context with leading slash where the app can be reached (just "/" for ROOT)
-     * <p>
-     * see {@link JavaWebAppSoftwareProcess#deploy(String, String)} for details of how input filenames are handled */
     @Override
     public String deploy(String url, String targetName) {
         String canonicalTargetName = getFilenameContextMapper().convertDeploymentTargetNameToFilename(targetName);
@@ -114,6 +129,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         return getFilenameContextMapper().convertDeploymentTargetNameToContext(canonicalTargetName);
     }
     
+    @Override
     public void undeploy(String targetName) {
         String dest = getDeployDir() + "/" + getFilenameContextMapper().convertDeploymentTargetNameToFilename(targetName);
         log.info("{} undeploying {}:{}", new Object[]{entity, getHostname(), dest});
@@ -121,7 +137,8 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         log.debug("{} undeployed {}:{}: result {}", new Object[]{entity, getHostname(), dest, result});
     }
     
-    protected FilenameToWebContextMapper getFilenameContextMapper() {
+    @Override
+    public FilenameToWebContextMapper getFilenameContextMapper() {
         return new FilenameToWebContextMapper();
     }
 }

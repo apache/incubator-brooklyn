@@ -98,6 +98,7 @@
         <git-like-cli.version>0.3</git-like-cli.version>
         <mockwebserver.version>20121111</mockwebserver.version>
         <httpclient.version>4.1.3</httpclient.version>
+        <freemarker.version>2.3.19</freemarker.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
