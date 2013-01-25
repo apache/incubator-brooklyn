@@ -1,10 +1,7 @@
 package brooklyn.entity.basic.lifecycle
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
-
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
-
 import groovy.transform.InheritConstructors
 
 import java.lang.management.ManagementFactory
@@ -14,23 +11,38 @@ import java.lang.management.ThreadMXBean
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
+import brooklyn.entity.basic.ConfigKeys
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.StreamGobbler
+import brooklyn.util.internal.ssh.SshTool
+import brooklyn.util.internal.ssh.cli.SshCliTool
+import brooklyn.util.internal.ssh.sshj.SshjTool
 
 class StartStopSshDriverTest {
 
     TestApplication app
     TestEntity entity
-    SshMachineLocation sshMachineLocation
+    SshMachineLocationWithSshTool sshMachineLocation
     AbstractSoftwareProcessSshDriver driver
 
+    protected static class SshMachineLocationWithSshTool extends SshMachineLocation {
+        SshTool lastTool;
+        public SshMachineLocationWithSshTool(Map flags) { super(flags); }
+        public SshTool connectSsh(Map args) {
+            SshTool result = super.connectSsh(args);
+            lastTool = result;
+            return result;
+        }
+    }
+    
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
         app = new TestApplication()
         entity = new TestEntity(app)
-        sshMachineLocation = new SshMachineLocation(address:"localhost")
+        sshMachineLocation = new SshMachineLocationWithSshTool(address:"localhost");
         driver = new BasicStartStopSshDriver(entity, sshMachineLocation)
     }
     
@@ -49,6 +61,24 @@ class StartStopSshDriverTest {
             currentThreadIds.removeAll(existingThreadIds)
             assertEquals(currentThreadIds, [])
         }
+    }
+
+    @Test(groups = [ "Integration" ])
+    public void testSshScriptHeaderUsedWhenSpecified() {
+        entity.setConfig(ConfigKeys.SSH_CONFIG_SCRIPT_HEADER, "#!/bin/bash -e\necho hello world");
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        driver.execute(out: out, Arrays.asList("echo goodbye"), "test");
+        String s = out.toString();
+        assertTrue(s.contains("goodbye"), "should have said goodbye: "+s);
+        assertTrue(s.contains("hello world"), "should have said hello: "+s);
+        assertTrue(sshMachineLocation.lastTool instanceof SshjTool, "expect sshj tool, got "+sshMachineLocation.lastTool);
+    }
+
+    @Test(groups = [ "Integration" ])
+    public void testSshCliPickedUpWhenSpecified() {
+        entity.setConfig(ConfigKeys.SSH_TOOL_CLASS, SshCliTool.class.getName());
+        driver.execute(Arrays.asList("echo hi"), "test");
+        assertTrue(sshMachineLocation.lastTool instanceof SshCliTool, "expect CLI tool, got "+sshMachineLocation.lastTool);
     }
     
     private List<ThreadInfo> getThreadsCalling(Class<?> clazz) {

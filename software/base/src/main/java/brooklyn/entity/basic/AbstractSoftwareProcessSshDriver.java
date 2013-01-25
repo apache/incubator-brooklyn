@@ -125,14 +125,17 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         Map result = new LinkedHashMap();
         for (Field f: ConfigKeys.class.getFields()) {
             if ((f.getModifiers() & Modifier.STATIC)!=0) {
-                if (ConfigKey.class.isAssignableFrom(f.getClass())) {
+                if (ConfigKey.class.isAssignableFrom(f.getType())) {
                     ConfigKey c;
                     try {
                         c = (ConfigKey) f.get(null);
                         if (c.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
-                            Object v = getEntity().getConfig(c);
-                            if (v!=null)
+                            // have to use raw config to test whether the config is set
+                            Object v = ((AbstractEntity)getEntity()).getConfigMap().getRawConfig(c);
+                            if (v!=null) {
+                                v = getEntity().getConfig(c);
                                 result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, c).getName(), v);
+                            }
                         }
                     } catch (Exception e) {
                         log.warn("Error scanning SSH field "+f+": "+e);
@@ -151,7 +154,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
         Map flags = new LinkedHashMap();
-        if (flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
             flags.putAll(getSshFlags());
         flags.putAll(flags2);
         Map<String, String> environment = (Map<String, String>) ((flags.get("env") != null) ? flags.get("env") : getShellEnvironment());
@@ -175,7 +178,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     
     public void copyFile(Map flags2, File src, String destination) {
         Map flags = new LinkedHashMap();
-        if (flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
             flags.putAll(getSshFlags());
         flags.putAll(flags2);
         

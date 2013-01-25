@@ -116,7 +116,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", 
-            "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport", "localTempDir");
+            "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport", "localTempDir",
+            "scriptHeader", "tool.class");
 
     public static final Set<String> REUSABLE_SSH_PROPS = ImmutableSet.of("out", "err", "scriptDir");
 
@@ -289,7 +290,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 }
             }
             if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
-            SshTool ssh = new SshjTool(args);
+            
+            // look up tool class
+            String sshToolClass = (String)props.get(SshTool.PROP_TOOL_CLASS.getName());
+            if (sshToolClass==null) sshToolClass = SshjTool.class.getName();
+            SshTool ssh = (SshTool) Class.forName(sshToolClass).getConstructor(Map.class).newInstance(args);
+            
             Tasks.setBlockingDetails("Opening ssh connection");
             try { ssh.connect(); } finally { Tasks.setBlockingDetails(null); }
             previouslyConnected = true;

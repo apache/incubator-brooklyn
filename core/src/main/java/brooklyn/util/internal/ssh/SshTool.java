@@ -22,6 +22,8 @@ public interface SshTool {
     /** Public-facing config keys are defined in ConfigKeys, and have this prefix pre-prended to the keys below. */
     public static String BROOKLYN_CONFIG_KEY_PREFIX = "brooklyn.ssh.config.";
     
+    public static ConfigKey<String> PROP_TOOL_CLASS = new StringConfigKey("tool.class", "SshTool implementation to use", null);
+    
     public static ConfigKey<String> PROP_HOST = new StringConfigKey("host", "Host to connect to (required)", null);
     public static ConfigKey<Integer> PROP_PORT = new BasicConfigKey<Integer>(Integer.class, "port", "Port on host to connect to", 22);
     public static ConfigKey<String> PROP_USER = new StringConfigKey("user", "User to connect as", null);
