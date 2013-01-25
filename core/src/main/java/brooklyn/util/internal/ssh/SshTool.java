@@ -26,7 +26,7 @@ public interface SshTool {
     
     public static final ConfigKey<String> PROP_HOST = new StringConfigKey("host", "Host to connect to (required)", null);
     public static final ConfigKey<Integer> PROP_PORT = new BasicConfigKey<Integer>(Integer.class, "port", "Port on host to connect to", 22);
-    public static final ConfigKey<String> PROP_USER = new StringConfigKey("user", "User to connect as", null);
+    public static final ConfigKey<String> PROP_USER = new StringConfigKey("user", "User to connect as", System.getProperty("user.name"));
     public static final ConfigKey<String> PROP_PASSWORD = new StringConfigKey("user", "Password to use to connect", null);
     
     public static final ConfigKey<OutputStream> PROP_OUT_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "out", "Stream to which to capture stdout");
@@ -50,11 +50,14 @@ public interface SshTool {
     public static final ConfigKey<Integer> PROP_SSH_TRIES_TIMEOUT = new BasicConfigKey<Integer>(Integer.class, "sshTriesTimeout", "Timeout when attempting to connect for ssh operations; so if too slow trying sshTries times, will abort anyway", 2*60*1000);
     public static final ConfigKey<Long> PROP_SSH_RETRY_DELAY = new BasicConfigKey<Long>(Long.class, "sshRetryDelay", "Time (in milliseconds) before first ssh-retry, after which it will do exponential backoff", 50L);
 
+    public static final ConfigKey<File> PROP_LOCAL_TEMP_DIR = new BasicConfigKey<File>(File.class, "localTempDir", "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
+            new File(System.getProperty("java.io.tmpdir"), "tmpssh"));
+    
     public static final ConfigKey<String> PROP_PERMISSIONS = new StringConfigKey("permissions", "Default permissions for files copied/created on remote machine; must be four-digit octal string, default '0644'", "0644");
     public static final ConfigKey<Long> PROP_LAST_MODIFICATION_DATE = new BasicConfigKey<Long>(Long.class, "lastModificationDate", "Last-modification-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to current)", 0L);
     public static final ConfigKey<Long> PROP_LAST_ACCESS_DATE = new BasicConfigKey<Long>(Long.class, "lastAccessDate", "Last-access-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to lastModificationDate)", 0L);
 
-    // FIXME Defined/used only in SshMachineLocation?
+    // TODO Could define the following in SshMachineLocation, or some such?
     //public static ConfigKey<String> PROP_LOG_PREFIX = new StringConfigKey("logPrefix", "???", ???);
     //public static ConfigKey<Boolean> PROP_NO_STDOUT_LOGGING = new StringConfigKey("noStdoutLogging", "???", ???);
     //public static ConfigKey<Boolean> PROP_NO_STDOUT_LOGGING = new StringConfigKey("noStdoutLogging", "???", ???);
@@ -86,14 +89,18 @@ public interface SshTool {
     public boolean isConnected();
 
     /**
-     * Executes the set of commands in a shell script; optional property 'out'
-     * should be an output stream. Blocks until completion (unless property
-     * 'block' set as false).
+     * Executes the set of commands in a shell script. Blocks until completion.
      * <p>
-     * values in environment parameters are wrapped in double quotes, with double quotes escaped 
+     * 
+     * Optional properties are:
+     * <ul>
+     *   <li>'out' {@link OutputStream} - see {@link PROP_OUT_STREAM}
+     *   <li>'err' {@link OutputStream} - see {@link PROP_ERR_STREAM}
+     * </ul>
      * 
      * @return exit status of script
-     * @throws SshException
+     * 
+     * @throws SshException If failed to connect
      */
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env);
 
@@ -102,22 +109,27 @@ public interface SshTool {
      */
     public int execScript(Map<String,?> props, List<String> commands);
 
-    /** @deprecated @see execScript(Map, List, Map) */
+    /** @deprecated since 0.4; use execScript(...) */
     public int execShell(Map<String,?> props, List<String> commands);
-    /** @deprecated @see execScript(Map, List, Map) */
+    
+    /** @deprecated since 0.4; execScript(...) */
     public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env);
 
     /**
-     * Executes the set of commands using ssh exec, ";" separated (overridable
-     * with property 'separator'.
-     *
-     * Optional properties 'out' and 'err' should be streams.
-     * <p>
-     * This is generally simpler/preferable to shell, but is not suitable if you need 
-     * env values whare are only set on a fully-fledged shell.
+     * Executes the set of commands using ssh exec.
      * 
-     * @return exit status
-     * @throws SshException
+     * This is generally more efficient than shell, but is not suitable if you need 
+     * env values which are only set on a fully-fledged shell.
+     *
+     * Optional properties are:
+     * <ul>
+     *   <li>'out' {@link OutputStream} - see {@link PROP_OUT_STREAM}
+     *   <li>'err' {@link OutputStream} - see {@link PROP_ERR_STREAM}
+     *   <li>'separator', defaulting to ";" - see {@link PROP_SEPARATOR}
+     * </ul>
+     * 
+     * @return exit status of commands
+     * @throws SshException If failed to connect
      */
     public int execCommands(Map<String,?> properties, List<String> commands, Map<String,?> env);
 
@@ -127,53 +139,69 @@ public interface SshTool {
     public int execCommands(Map<String,?> properties, List<String> commands);
 
     /**
-     * @see #createFile(Map, String, InputStream, long)
+     * Copies the file to the server at the given path.
+     * If path is null, empty, '.', '..', or ends with '/' then file name is used.
+     * <p>
+     * The file will not preserve the permission of last _access_ date.
+     * 
+     * Optional properties are:
+     * <ul>
+     *   <li>'permissions' (e.g. "0644") - see {@link PROP_PERMISSIONS}
+     *   <li>'lastModificationDate' see {@link PROP_LAST_MODIFICATION_DATE}; not supported by all SshTool implementations
+     *   <li>'lastAccessDate' see {@link PROP_LAST_ACCESS_DATE}; not supported by all SshTool implementations
+     * </ul>
+     * 
+     * @return exit code (not supported by all SshTool implementations, sometimes just returning 0)
+     */
+    public int copyToServer(Map<String,?> props, File localFile, String pathAndFileOnRemoteServer);
+
+    /**
+     * Closes the given input stream before returning.
+     * 
+     * @see copyToServer(Map, File, String)
+     */
+    public int copyToServer(Map<String,?> props, InputStream contents, String pathAndFileOnRemoteServer);
+
+    /**
+     * @see copyToServer(Map, File, String)
+     */
+    public int copyToServer(Map<String,?> props, byte[] contents, String pathAndFileOnRemoteServer);
+
+    /**
+     * Copies the file to the server at the given path.
+     * If path is null, empty, '.', '..', or ends with '/' then file name is used.
+     * <p>
+     * Optional properties are:
+     * <ul>
+     *   <li>'permissions' (e.g. "0644") - see {@link PROP_PERMISSIONS}
+     * </ul>
+     *
+     * @return exit code (not supported by all SshTool implementations, sometimes just returning 0)
+     */
+    public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File local);
+
+    /**
+     * @deprecated since 0.5; See copyToServer(Map, InputStream, String)
      */
     public int transferFileTo(Map<String,?> props, InputStream input, String pathAndFileOnRemoteServer);
     
     /**
-     * @see #createFile(Map, String, InputStream, long)
+     * @deprecated since 0.5; See copyFromServer(Map, InputStream, String)
      */
     public int transferFileFrom(Map<String,?> props, String pathAndFileOnRemoteServer, String pathAndFileOnLocalServer);
 
     /**
-     * Creates the given file with the given contents.
-     * 
-     * Properties can be:
-     * <ul>
-     * <li>permissions (must be four-digit octal string, default '0644');
-     * <li>lastModificationDate (should be UTC/1000, ie seconds since 1970; defaults to current);
-     * <li>lastAccessDate (again UTC/1000; defaults to lastModificationDate);
-     * </ul>
-     * If neither lastXxxDate set it does not send that line (unless property ptimestamp set true)
-     * 
-     * Closes the input stream before returning.
-     * 
-     * @param props
-     * @param pathAndFileOnRemoteServer
-     * @param input
-     * @param size
-     * @throws SshException
+     * @deprecated since 0.5; See copyToServer(Map, InputStream, String)
      */
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, InputStream input, long size);
 
     /**
-     * @see #createFile(Map, String, InputStream, long)
+     * @deprecated since 0.5; See copyToServer(Map, byte[], String)
      */
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, String contents);
 
     /**
-     * @see #createFile(Map, String, InputStream, long)
+     * @deprecated since 0.5; See copyToServer(Map, byte[], String)
      */
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, byte[] contents);
-
-    /**
-     * Copies file, but won't preserve permission of last _access_ date. 
-     * If path is null, empty, '.', '..', or ends with '/' then file name is used.
-     * <p>
-     * To set permissions (or override mod date) use for example 'permissions:"0644"',
-     *
-     * @see #createFile(Map, String, InputStream, long)
-     */
-    public int copyToServer(Map<String,?> props, File f, String pathAndFileOnRemoteServer);
 }

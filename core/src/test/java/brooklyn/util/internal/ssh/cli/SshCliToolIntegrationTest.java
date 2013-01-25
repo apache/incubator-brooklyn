@@ -1,13 +1,11 @@
 package brooklyn.util.internal.ssh.cli;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
 import java.util.Map;
 
 import org.testng.annotations.Test;
 
-import brooklyn.util.MutableMap;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.SshToolIntegrationTest;
@@ -44,20 +42,16 @@ public class SshCliToolIntegrationTest extends SshToolIntegrationTest {
         }
     }
     
+    // TODO ssh-cli doesn't support pass-phrases yet
+    @Test(enabled=false, groups = {"Integration"})
+    public void testSshKeyWithPassphrase() throws Exception {
+        super.testSshKeyWithPassphrase();
+    }
+
     // Setting last modified date not yet supported for cli-based ssh
     @Override
     @Test(enabled=false, groups = {"Integration"})
-    public void testCreateFileWithLastModifiedDate() throws Exception {
-        super.testCreateFileWithLastModifiedDate();
-    }
-    
-    @Test(groups = {"Integration"})
-    public void testCreateFileFromBytes() throws Exception {
-        super.testCreateFileFromBytes();
-    }
-    
-    @Test(groups = {"Integration"})
-    public void testExecShellReturningZeroExitCode() throws Exception {
-        super.testExecShellReturningZeroExitCode();
+    public void testCopyToServerWithLastModifiedDate() throws Exception {
+        super.testCopyToServerWithLastModifiedDate();
     }
 }

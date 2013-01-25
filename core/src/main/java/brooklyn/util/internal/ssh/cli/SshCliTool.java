@@ -2,7 +2,6 @@ package brooklyn.util.internal.ssh.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,44 +104,42 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         return true;
     }
 
-    private File writeTempFile(String contents) {
-        return writeTempFile(contents.getBytes());
+    @Override
+    public int copyToServer(java.util.Map<String,?> props, byte[] contents, String pathAndFileOnRemoteServer) {
+        return copyTempFileToServer(props, writeTempFile(contents), pathAndFileOnRemoteServer);
     }
-
-    private File writeTempFile(byte[] contents) {
-        return writeTempFile(new ByteArrayInputStream(contents));
+    
+    @Override
+    public int copyToServer(java.util.Map<String,?> props, InputStream contents, String pathAndFileOnRemoteServer) {
+        return copyTempFileToServer(props, writeTempFile(contents), pathAndFileOnRemoteServer);
     }
-
+    
     @Override
     public int transferFileTo(Map<String,?> props, InputStream input, String pathAndFileOnRemoteServer) {
-        return copyTempFileToServer(props, writeTempFile(input), pathAndFileOnRemoteServer);
+        return copyToServer(props, input, pathAndFileOnRemoteServer);
     }
     
     @Override
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, InputStream input, long size) {
-        return copyTempFileToServer(props, writeTempFile(input), pathAndFileOnRemoteServer);
+        return copyToServer(props, input, pathAndFileOnRemoteServer);
     }
 
     @Override
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, String contents) {
-        return copyTempFileToServer(props, writeTempFile(contents), pathAndFileOnRemoteServer);
+        return copyToServer(props, contents.getBytes(), pathAndFileOnRemoteServer);
     }
 
-    /** Creates the given file with the given contents.
-     *
-     * Permissions specified using 'permissions:0755'.
-     */
     @Override
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, byte[] contents) {
-        return copyTempFileToServer(props, writeTempFile(contents), pathAndFileOnRemoteServer);
+        return copyToServer(props, contents, pathAndFileOnRemoteServer);
     }
 
     @Override
     public int copyToServer(Map<String,?> props, File f, String pathAndFileOnRemoteServer) {
-        if (props.containsKey("lastModificationDate")) {
+        if (hasVal(props, PROP_LAST_MODIFICATION_DATE)) {
             LOG.warn("Unsupported ssh feature, setting lastModificationDate for {}:{}", this, pathAndFileOnRemoteServer);
         }
-        if (props.containsKey("lastAccessDate")) {
+        if (hasVal(props, PROP_LAST_ACCESS_DATE)) {
             LOG.warn("Unsupported ssh feature, setting lastAccessDate for {}:{}", this, pathAndFileOnRemoteServer);
         }
         String permissions = getOptionalVal(props, PROP_PERMISSIONS);
@@ -169,7 +166,12 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
 
     @Override
     public int transferFileFrom(Map<String,?> props, String pathAndFileOnRemoteServer, String pathAndFileOnLocalServer) {
-        return scpFromServer(props, pathAndFileOnRemoteServer, new File(pathAndFileOnLocalServer));
+        return copyFromServer(props, pathAndFileOnRemoteServer, new File(pathAndFileOnLocalServer));
+    }
+
+    @Override
+    public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
+        return scpFromServer(props, pathAndFileOnRemoteServer, localFile);
     }
 
     @Override
@@ -207,7 +209,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
                 "rm -f "+scriptPath+" < /dev/null"+separator+
                 "exit $RESULT";
         
-        Integer result = ssh(props, cmd);
+        Integer result = sshExec(props, cmd);
         return result != null ? result : -1;
     }
 
@@ -222,41 +224,20 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     }
     
     private int scpToServer(Map<String,?> props, File local, String remote) {
-        File tempFile = null;
-        try {
-            List<String> cmd = Lists.newArrayList();
-            cmd.add(getOptionalVal(props, PROP_SCP_EXECUTABLE, scpExecutable));
-            if (privateKeyFile != null) {
-                cmd.add("-i");
-                cmd.add(privateKeyFile.getAbsolutePath());
-            } else if (privateKeyData != null) {
-                tempFile = writeTempFile(privateKeyData);
-                cmd.add("-i");
-                cmd.add(tempFile.getAbsolutePath());
-            }
-            if (!strictHostKeyChecking) {
-                cmd.add("-o");
-                cmd.add("StrictHostKeyChecking=no");
-            }
-            if (port != 22) {
-                cmd.add("-P");
-                cmd.add(""+port);
-            }
-            cmd.add(local.getAbsolutePath());
-            cmd.add((Strings.isEmpty(getUsername()) ? "" : getUsername()+"@")+getHostAddress()+":"+remote);
-            
-            if (LOG.isTraceEnabled()) LOG.trace("Executing with command: {}", cmd);
-            int result = execProcess(props, cmd);
-            
-            if (LOG.isTraceEnabled()) LOG.trace("Executed command: {}; exit code {}", cmd, result);
-            return result;
-            
-        } finally {
-            if (tempFile != null) tempFile.delete();
-        }
+        String to = (Strings.isEmpty(getUsername()) ? "" : getUsername()+"@")+getHostAddress()+":"+remote;
+        return scpExec(props, local.getAbsolutePath(), to);
     }
 
     private int scpFromServer(Map<String,?> props, String remote, File local) {
+        String from = (Strings.isEmpty(getUsername()) ? "" : getUsername()+"@")+getHostAddress()+":"+remote;
+        return scpExec(props, from, local.getAbsolutePath());
+    }
+    
+    private int chmodOnServer(Map<String,?> props, String permissions, String remote) {
+        return sshExec(props, "chmod "+permissions+" "+remote);
+    }
+
+    private int scpExec(Map<String,?> props, String from, String to) {
         File tempFile = null;
         try {
             List<String> cmd = Lists.newArrayList();
@@ -277,8 +258,8 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
                 cmd.add("-P");
                 cmd.add(""+port);
             }
-            cmd.add((Strings.isEmpty(getUsername()) ? "" : getUsername()+"@")+getHostAddress()+":"+remote);
-            cmd.add(local.getAbsolutePath());
+            cmd.add(from);
+            cmd.add(to);
             
             if (LOG.isTraceEnabled()) LOG.trace("Executing with command: {}", cmd);
             int result = execProcess(props, cmd);
@@ -291,11 +272,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         }
     }
     
-    private int chmodOnServer(Map<String,?> props, String permissions, String remote) {
-        return ssh(props, "chmod "+permissions+" "+remote);
-    }
-    
-    private int ssh(Map<String,?> props, String command) {
+    private int sshExec(Map<String,?> props, String command) {
         File tempCmdFile = writeTempFile(command);
         File tempKeyFile = null;
         try {
@@ -344,23 +321,21 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         try {
             Process p = pb.start();
             
-            if (true) {// FIXME
-//            if (out != null) {
+            if (out != null) {
                 InputStream outstream = p.getInputStream();
-                outgobbler = new StreamGobbler(outstream, out, LOG).setLogPrefix("[stdout] ");// FIXME (Logger) null);
+                outgobbler = new StreamGobbler(outstream, out, (Logger) null);
                 outgobbler.start();
             }
-            if (true) {// FIXME
-//            if (err != null) {
+            if (err != null) {
                 InputStream errstream = p.getErrorStream();
-                errgobbler = new StreamGobbler(errstream, err, LOG).setLogPrefix("[stdout] ");// FIXME (Logger) null);
+                errgobbler = new StreamGobbler(errstream, err, (Logger) null);
                 errgobbler.start();
             }
             
             int result = p.waitFor();
             
-            outgobbler.blockUntilFinished();
-            errgobbler.blockUntilFinished();
+            if (outgobbler != null) outgobbler.blockUntilFinished();
+            if (errgobbler != null) errgobbler.blockUntilFinished();
             
             if (result==255)
                 // this is not definitive, but tests (and code?) expects throw exception if can't connect;

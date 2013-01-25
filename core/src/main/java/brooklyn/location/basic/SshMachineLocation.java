@@ -530,47 +530,27 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyTo(InputStream src, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, destination);
     }
-	public int copyTo(Map<String,?> props, InputStream src, String destination) {
-		return copyTo(props, src, -1, destination);
-	}
     public int copyTo(InputStream src, long filesize, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, filesize, destination);
     }
     // FIXME the return code is not a reliable indicator of success or failure
-    public int copyTo(final Map<String,?> props, InputStream src, long filesize, final String destination) {
-	    final long finalFilesize;
-	    final InputStream finalSrc;
-	    File tempFile = null;
-	    
-	    try {
-    		if (filesize==-1) {
-    		    try {
-    		        // TODO Use ConfigKeys.BROOKLYN_DATA_DIR, but how to get access to that here?
-    		        tempFile = ResourceUtils.writeToTempFile(src, localTempDir, "sshcopy", "data");
-    		        tempFile.setReadable(false, false);
-                    tempFile.setReadable(true, true);
-    	            tempFile.setWritable(false);
-    	            tempFile.setExecutable(false);
-    		        finalFilesize = tempFile.length();
-    		        finalSrc = new FileInputStream(tempFile);
-    		    } catch (IOException e) {
-    		        throw Throwables.propagate(e);
-    		    } finally {
-    		        Closeables.closeQuietly(src);
-    		    }
-    		} else {
-    		    finalFilesize = filesize;
-    		    finalSrc = src;
-    		}
-    		
+    public int copyTo(final Map<String,?> props, final InputStream src, final long filesize, final String destination) {
+        if (filesize == -1) {
+            return copyTo(props, src, destination);
+        } else {
             return execSsh(props, new Function<SshTool,Integer>() {
                 public Integer apply(SshTool ssh) {
-                    return ssh.createFile(props, destination, finalSrc, finalFilesize);
+                    return ssh.createFile(props, destination, src, filesize);
                 }});
-            
-	    } finally {
-	        if (tempFile != null) tempFile.delete();
-	    }
+        }
+    }
+    // FIXME the return code is not a reliable indicator of success or failure
+    // Closes input stream before returning
+    public int copyTo(final Map<String,?> props, final InputStream src, final String destination) {
+        return execSsh(props, new Function<SshTool,Integer>() {
+            public Integer apply(SshTool ssh) {
+                return ssh.copyToServer(props, src, destination);
+            }});
     }
 
     // FIXME the return code is not a reliable indicator of success or failure
@@ -580,7 +560,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyFrom(final Map<String,?> props, final String remote, final String local) {
         return execSsh(props, new Function<SshTool,Integer>() {
             public Integer apply(SshTool ssh) {
-                return ssh.transferFileFrom(props, remote, local);
+                return ssh.copyFromServer(props, remote, new File(local));
             }});
     }
 
