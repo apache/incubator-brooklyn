@@ -13,6 +13,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
 import brooklyn.entity.basic.ConfigKeys
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
@@ -44,6 +45,7 @@ class StartStopSshDriverTest {
         entity = new TestEntity(app)
         sshMachineLocation = new SshMachineLocationWithSshTool(address:"localhost");
         driver = new BasicStartStopSshDriver(entity, sshMachineLocation)
+        app.startManagement();
     }
     
     @Test(groups = [ "Integration" ])
@@ -71,14 +73,16 @@ class StartStopSshDriverTest {
         String s = out.toString();
         assertTrue(s.contains("goodbye"), "should have said goodbye: "+s);
         assertTrue(s.contains("hello world"), "should have said hello: "+s);
-        assertTrue(sshMachineLocation.lastTool instanceof SshjTool, "expect sshj tool, got "+sshMachineLocation.lastTool);
+        assertTrue(sshMachineLocation.lastTool instanceof SshjTool, "expect sshj tool, got "+
+            (sshMachineLocation.lastTool!=null ? ""+sshMachineLocation.lastTool.getClass()+":" : "") + sshMachineLocation.lastTool);
     }
 
     @Test(groups = [ "Integration" ])
     public void testSshCliPickedUpWhenSpecified() {
         entity.setConfig(ConfigKeys.SSH_TOOL_CLASS, SshCliTool.class.getName());
         driver.execute(Arrays.asList("echo hi"), "test");
-        assertTrue(sshMachineLocation.lastTool instanceof SshCliTool, "expect CLI tool, got "+sshMachineLocation.lastTool);
+        assertTrue(sshMachineLocation.lastTool instanceof SshCliTool, "expect CLI tool, got "+
+                        (sshMachineLocation.lastTool!=null ? ""+sshMachineLocation.lastTool.getClass()+":" : "") + sshMachineLocation.lastTool);
     }
     
     private List<ThreadInfo> getThreadsCalling(Class<?> clazz) {

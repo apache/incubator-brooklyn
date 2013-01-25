@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.ScriptRunner;
 import brooklyn.location.basic.SshMachineLocation;
@@ -123,6 +124,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
     protected Map getSshFlags() {
         Map result = new LinkedHashMap();
+        StringConfigMap mgmtConfig = getEntity().getManagementSupport().getManagementContext(true).getConfig();
         for (Field f: ConfigKeys.class.getFields()) {
             if ((f.getModifiers() & Modifier.STATIC)!=0) {
                 if (ConfigKey.class.isAssignableFrom(f.getType())) {
@@ -134,8 +136,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                             Object v = ((AbstractEntity)getEntity()).getConfigMap().getRawConfig(c);
                             if (v!=null) {
                                 v = getEntity().getConfig(c);
-                                result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, c).getName(), v);
+                            } else {
+                                v = mgmtConfig.getRawConfig(c);
+                                if (v!=null) v = mgmtConfig.getConfig(c);
                             }
+                            if (v!=null)
+                                result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, c).getName(), v);
                         }
                     } catch (Exception e) {
                         log.warn("Error scanning SSH field "+f+": "+e);
