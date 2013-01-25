@@ -117,7 +117,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public String getHostname() { return entity.getAttribute(Attributes.HOSTNAME); }
 
     /** extracts the values for the main brooklyn.ssh.config.* config keys (i.e. those declared in ConfigKeys) 
-     * as declared on the entity, and inserts them in a map using the unprefixed state, for ssh */ 
+     * as declared on the entity, and inserts them in a map using the unprefixed state, for ssh. */
+    /* currently this is computed for each call, which may be wasteful, but it is reliable in the face of config changes. 
+     * we could cache the Map.  note that we do _not_ cache (or even own) the SshTool; 
+     * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
     protected Map getSshFlags() {
         Map result = new LinkedHashMap();
         for (Field f: ConfigKeys.class.getFields()) {

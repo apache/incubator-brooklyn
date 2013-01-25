@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -180,7 +181,12 @@ public class SshjTool implements SshTool {
         private long sshRetryDelay = 50L;
         
         @SuppressWarnings("unchecked")
-        public Builder from(Map<String,?> props) {
+        public Builder from(Map<String,?> propsAll) {
+            Map<String,?> props = new LinkedHashMap<String,Object>(propsAll);
+            //TODO _remove_ props as they are used, then warn if non-empty at the end
+            // (to prevent flags being passed here which are not used here,
+            // e.g. out, scriptHeader, etc)
+            
             host = getMandatoryVal(props, PROP_HOST);
             port = getOptionalVal(props, PROP_PORT, port);
             user = getOptionalVal(props, PROP_USER, user);

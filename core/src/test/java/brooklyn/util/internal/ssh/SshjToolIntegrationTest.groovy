@@ -27,7 +27,7 @@ import com.google.common.util.concurrent.MoreExecutors
 /**
  * Test the operation of the {@link SshJschTool} utility class.
  */
-public class SshjToolLiveTest {
+public class SshjToolIntegrationTest {
 
     // TODO No tests for retry logic and exception handing yet
     
@@ -45,7 +45,7 @@ public class SshjToolLiveTest {
         filesCreated.add(localFilePath)
         filesCreated.add(remoteFilePath)
 
-        tool = new SshjTool(host:'localhost', privateKeyFile:"~/.ssh/id_rsa")
+        tool = new SshjTool(host:'localhost')
         tools.add(tool)
         tool.connect()
     }
@@ -460,6 +460,15 @@ public class SshjToolLiveTest {
         }
     }
 
+    @Test(groups = [ "Integration" ])
+    public void testScriptHeader() {
+        final SshjTool localtool = new SshjTool(host:'localhost')
+        tools.add(localtool)
+        def out = execScript(scriptHeader:'#!/bin/bash -e\necho hello world\n', localtool, ["echo goodbye world"]);
+        assertTrue(out.contains("goodbye world"), "no goodbye in output: "+out)
+        assertTrue(out.contains("hello world"), "no hello in output: "+out)
+    }
+
     private void assertRemoteFileContents(String remotePath, String expectedContents) {
         String catout = execCommands([ "cat "+remotePath ])
         assertEquals(catout, expectedContents);
@@ -518,8 +527,15 @@ public class SshjToolLiveTest {
     }
     
     private String execScript(List<String> cmds, Map<String,?> env=[:]) {
+        return execScript(tool, cmds, env)
+    }
+    private String execScript(SshjTool t, List<String> cmds, Map<String,?> env=[:]) {
+    }
+    private String execScript(Map<String,?> flags, SshjTool t, List<String> cmds, Map<String,?> env=[:]) {
+        Map<String,?> flags2 = new LinkedHashMap(flags);
         ByteArrayOutputStream out = new ByteArrayOutputStream()
-        int exitcode = tool.execScript(out:out, cmds, env)
+        flags2.put("out", out);
+        int exitcode = t.execScript(flags2, cmds, env)
         String outstr = new String(out.toByteArray())
         assertEquals(exitcode, 0, outstr)
         return outstr
