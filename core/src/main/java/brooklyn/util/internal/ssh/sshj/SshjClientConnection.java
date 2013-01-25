@@ -1,4 +1,4 @@
-package brooklyn.util.internal.ssh;
+package brooklyn.util.internal.ssh.sshj;
 
 import static com.google.common.base.Objects.equal;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.internal.ssh.SshjTool.SshAction;
+import brooklyn.util.internal.ssh.SshAbstractTool.SshAction;
 
 import com.google.common.base.Objects;
 import com.google.common.net.HostAndPort;

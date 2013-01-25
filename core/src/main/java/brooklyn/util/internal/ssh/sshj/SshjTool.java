@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.internal.ssh;
+package brooklyn.util.internal.ssh.sshj;
 
 import static brooklyn.util.NetworkUtils.checkPortValid;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import net.schmizz.sshj.connection.ConnectionException;
@@ -61,10 +60,15 @@ import org.jclouds.io.payloads.StringPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.util.Time;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.internal.SshTool;
 import brooklyn.util.internal.StreamGobbler;
+import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
+import brooklyn.util.internal.ssh.SshAbstractTool;
+import brooklyn.util.internal.ssh.SshException;
+import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.internal.ssh.SshAbstractTool.AbstractToolBuilder;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
@@ -77,7 +81,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.common.io.LimitInputStream;
@@ -92,12 +95,15 @@ import com.google.common.net.HostAndPort;
  * Not thread-safe. Use a different SshjTool for each concurrent thread. 
  * If passing from one thread to another, ensure code goes through a synchronized block.
  */
-public class SshjTool implements SshTool {
+public class SshjTool extends SshAbstractTool implements SshTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(SshjTool.class);
 
-    private class CloseFtpChannelOnCloseInputStream extends ProxyInputStream {
+    protected final int sshTriesTimeout;
+    protected final int sshTries;
+    protected final BackoffLimitedRetryHandler backoffLimitedRetryHandler;
 
+    private class CloseFtpChannelOnCloseInputStream extends ProxyInputStream {
         private final SFTPClient sftp;
 
         private CloseFtpChannelOnCloseInputStream(InputStream proxy, SFTPClient sftp) {
@@ -112,126 +118,26 @@ public class SshjTool implements SshTool {
         }
     }
 
-    public static interface SshAction<T> {
-        void clear() throws Exception;
-
-        T create() throws Exception;
-    }
-
-
-    private final String toString;
-
-    private final int sshTriesTimeout;
-
-    private final int sshTries;
-
     private final SshjClientConnection sshClientConnection;
-
-    private final BackoffLimitedRetryHandler backoffLimitedRetryHandler;
-
-    private final String host;
-    private final String user;
-    private final String password;
-    private final int port;
-    private String privateKeyPassphrase;
-    private String privateKeyData;
-    private File privateKeyFile;
-    private boolean strictHostKeyChecking;
-    private boolean allocatePTY;
-
 
     public static Builder builder() {
         return new Builder();
     }
     
-    private static void warnOnDeprecated(Map<String, ?> props, String deprecatedKey, String correctKey) {
-        if (props.containsKey(deprecatedKey)) {
-            if (correctKey != null && props.containsKey(correctKey)) {
-                Object dv = props.get(deprecatedKey);
-                Object cv = props.get(correctKey);
-                if (!Objects.equal(cv, dv)) {
-                    LOG.warn("SshjTool detected deprecated key '"+deprecatedKey+"' with different value ("+dv+") "+
-                            "than new key '"+correctKey+"' ("+cv+"); ambiguous which will be used");
-                } else {
-                    // ignore, the deprecated key populated for legacy reasons
-                }
-            } else {
-                Object dv = props.get(deprecatedKey);
-                LOG.warn("SshjTool detected deprecated key '"+deprecatedKey+"' used, with value ("+dv+")");     
-            }
-        }
-    }
-
-    public static class Builder {
-        private String host;
-        private int port = 22;
-        private String user = System.getProperty("user.name");
-        private String password;
-        private String privateKeyData;
-        public String privateKeyPassphrase;
-        private Set<String> privateKeyFiles = Sets.newLinkedHashSet();
-        private boolean strictHostKeyChecking = false;
-        private boolean allocatePTY = false;
-        private int connectTimeout;
-        private int sessionTimeout;
-        private int sshTries = 4;  //allow 4 tries by default, much safer
-        private int sshTriesTimeout = 2*60*1000;  //allow 2 minutesby default (so if too slow trying sshTries times, abort anyway)
-        private long sshRetryDelay = 50L;
-        
-        @SuppressWarnings("unchecked")
+    public static class Builder extends AbstractToolBuilder<SshjTool> {
+        protected int connectTimeout;
+        protected int sessionTimeout;
+        protected int sshTries = 4;  //allow 4 tries by default, much safer
+        protected int sshTriesTimeout = 2*60*1000;  //allow 2 minutesby default (so if too slow trying sshTries times, abort anyway)
+        protected long sshRetryDelay = 50L;
         public Builder from(Map<String,?> props) {
-            host = getMandatoryVal(props, "host", String.class);
-            port = getOptionalVal(props, "port", Integer.class, port);
-            user = getOptionalVal(props, "user", String.class, user);
-            
-            password = getOptionalVal(props, "password", String.class, password);
-            
-            warnOnDeprecated(props, "privateKey", "privateKeyData");
-            privateKeyData = getOptionalVal(props, "privateKey", String.class, privateKeyData);
-            privateKeyData = getOptionalVal(props, "privateKeyData", String.class, privateKeyData);
-            privateKeyPassphrase = getOptionalVal(props, "privateKeyPassphrase", String.class, privateKeyPassphrase);
-            
-            // for backwards compatibility accept keyFiles and privateKey
-            // but sshj accepts only a single privateKeyFile; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)
-            warnOnDeprecated(props, "keyFiles", null);
-            privateKeyFiles.addAll(getOptionalVal(props, "keyFiles", List.class, Collections.emptyList()));
-            String privateKeyFile = getOptionalVal(props, "privateKeyFile", String.class, null);
-            if (privateKeyFile != null) privateKeyFiles.add(privateKeyFile);
-            
-            strictHostKeyChecking = getOptionalVal(props, "strictHostKeyChecking", Boolean.class, strictHostKeyChecking);
-            allocatePTY = getOptionalVal(props, "allocatePTY", Boolean.class, allocatePTY);
-            connectTimeout = getOptionalVal(props, "connectTimeout", Integer.class, connectTimeout);
-            sessionTimeout = getOptionalVal(props, "sessionTimeout", Integer.class, sessionTimeout);
+            super.from(props);
             sshTries = getOptionalVal(props, "sshTries", Integer.class, sshTries);
             sshTriesTimeout = getOptionalVal(props, "sshTriesTimeout", Integer.class, sshTriesTimeout);
             sshRetryDelay = getOptionalVal(props, "sshRetryDelay", Long.class, sshRetryDelay);
-
+            connectTimeout = getOptionalVal(props, "connectTimeout", Integer.class, connectTimeout);
+            sessionTimeout = getOptionalVal(props, "sessionTimeout", Integer.class, sessionTimeout);
             return this;
-        }
-        public Builder host(String val) {
-            this.host = val; return this;
-        }
-        public Builder user(String val) {
-            this.user = val; return this;
-        }
-        public Builder password(String val) {
-            this.password = val; return this;
-        }
-        public Builder port(int val) {
-            this.port = val; return this;
-        }
-        public Builder privateKeyPassphrase(String val) {
-            this.privateKeyPassphrase = val; return this;
-        }
-        /** @deprecated 1.4.0, use privateKeyData */
-        public Builder privateKey(String val) {
-            this.privateKeyData = val; return this;
-        }
-        public Builder privateKeyData(String val) {
-            this.privateKeyData = val; return this;
-        }
-        public Builder privateKeyFile(String val) {
-            this.privateKeyFiles.add(val); return this;
         }
         public Builder connectTimeout(int val) {
             this.connectTimeout = val; return this;
@@ -254,42 +160,15 @@ public class SshjTool implements SshTool {
     }
 
     public SshjTool(Map<String,?> map) {
-        this(builder().from(map));
+        this((Builder)builder().from(map));
     }
     
     private SshjTool(Builder builder) {
-        // TODO Does this need to be ported from SshJschTool?
-//        if (host && host==~ /[^@]+@[^@]+/) {
-//            (user,host) = (host=~/([^@]+)@([^@]+)/)[0][1,2]
-//        }
-
-        host = checkNotNull(builder.host, "host");
-        port = builder.port;
-        user = builder.user;
-        password = builder.password;
-        strictHostKeyChecking = builder.strictHostKeyChecking;
-        allocatePTY = builder.allocatePTY;
+        super(builder);
+        
         sshTries = builder.sshTries;
         sshTriesTimeout = builder.sshTriesTimeout;
         backoffLimitedRetryHandler = new BackoffLimitedRetryHandler(sshTries, builder.sshRetryDelay);
-        privateKeyPassphrase = builder.privateKeyPassphrase;
-        privateKeyData = builder.privateKeyData;
-        
-        if (builder.privateKeyFiles.size() > 1) {
-            throw new IllegalArgumentException("sshj supports only a single private key-file; " +
-                    "for defaults of ~/.ssh/id_rsa and ~/.ssh/id_dsa leave blank");
-        } else if (builder.privateKeyFiles.size() == 1) {
-            String privateKeyFileStr = Iterables.get(builder.privateKeyFiles, 0);
-            String amendedKeyFile = privateKeyFileStr.startsWith("~") ? (System.getProperty("user.home")+privateKeyFileStr.substring(1)) : privateKeyFileStr;
-            privateKeyFile = new File(amendedKeyFile);
-        } else {
-            privateKeyFile = null;
-        }
-        
-        checkArgument(host.length() > 0, "host value must not be an empty string");
-        checkPortValid(port, "ssh port");
-
-        toString = String.format("%s@%s:%d", user, host, port);
 
         sshClientConnection = SshjClientConnection.builder()
                 .hostAndPort(HostAndPort.fromParts(host, port))
@@ -303,17 +182,9 @@ public class SshjTool implements SshTool {
                 .sessionTimeout(builder.sessionTimeout)
                 .build();
         
-        if (LOG.isTraceEnabled()) LOG.trace("Created SshjTool {} ({})", this, System.identityHashCode(this));
+        if (LOG.isTraceEnabled()) LOG.trace("Created SshTool {} ({})", this, System.identityHashCode(this));
     }
     
-    public String getHostAddress() {
-        return this.host;
-    }
-
-    public String getUsername() {
-        return this.user;
-    }
-
     @Override
     public void connect() {
         try {
@@ -435,12 +306,12 @@ public class SshjTool implements SshTool {
      */
     @Override
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
-        OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
-        String scriptDir = getOptionalVal(props, "scriptDir", String.class, "/tmp");
+        OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
+        OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
+        String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
         String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
         
-        String scriptContents = toScript(commands, env);
+        String scriptContents = toScript(props, commands, env);
         
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
         
@@ -459,12 +330,12 @@ public class SshjTool implements SshTool {
     }
 
     public int execShellDirect(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
-        OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
+        OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
+        OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
         
         List<String> cmdSequence = toCommandSequence(commands, env);
         List<String> allcmds = ImmutableList.<String>builder()
-                .add("exec bash -e")
+                .add(getOptionalVal(props, PROP_DIRECT_HEADER))
                 .addAll(cmdSequence)
                 .add("exit $?")
                 .build();
@@ -486,9 +357,9 @@ public class SshjTool implements SshTool {
         if (props.containsKey("blocks") && props.get("blocks") == Boolean.FALSE) {
             throw new IllegalArgumentException("Cannot exec non-blocking: command="+commands);
         }
-        OutputStream out = getOptionalVal(props, "out", OutputStream.class, null);
-        OutputStream err = getOptionalVal(props, "err", OutputStream.class, null);
-        String separator = getOptionalVal(props, "separator", String.class, " ; ");
+        OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
+        OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
+        String separator = getOptionalVal(props, PROP_SEPARATOR);
 
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
@@ -500,51 +371,13 @@ public class SshjTool implements SshTool {
         return result.getExitStatus();
     }
 
-    private String toScript(List<String> commands, Map<String,?> env) {
-        List<String> allcmds = toCommandSequence(commands, env);
-        
-        StringBuilder result = new StringBuilder();
-        // -e causes it to fail on any command in the script which has an error (non-zero return code)
-        result.append("#!/bin/bash -e"+"\n");
-        
-        for (String cmd : allcmds) {
-            result.append(cmd+"\n");
-        }
-        
-        return result.toString();
-    }
-
-    /**
-     * Merges the commands and env, into a single set of commands. Also escapes the commands as required.
-     * 
-     * Not all ssh servers handle "env", so instead convert env into exported variables
-     */
-    private List<String> toCommandSequence(List<String> commands, Map<String,?> env) {
-        List<String> result = new ArrayList<String>(env.size()+commands.size());
-        
-        for (Entry<String,?> entry : env.entrySet()) {
-            if (entry.getKey() == null || entry.getValue() == null) {
-                LOG.warn("env key-values must not be null; ignoring: key="+entry.getKey()+"; value="+entry.getValue());
-                continue;
-            }
-            String escapedVal = BashStringEscapes.escapeLiteralForDoubleQuotedBash(entry.getValue().toString());
-            result.add("export "+entry.getKey()+"=\""+escapedVal+"\"");
-        }
-        
-        for (CharSequence cmd : commands) { // objects in commands can be groovy GString so can't treat as String here
-            result.add(cmd.toString());
-        }
-
-        return result;
-    }
-
-    private void checkConnected() {
+    protected void checkConnected() {
         if (!isConnected()) {
             throw new IllegalStateException(String.format("(%s) ssh not connected!", toString()));
         }
     }
 
-    private void backoffForAttempt(int retryAttempt, String message) {
+    protected void backoffForAttempt(int retryAttempt, String message) {
         backoffLimitedRetryHandler.imposeBackoffExponentialDelay(retryAttempt, message);
     }
 
@@ -719,10 +552,6 @@ public class SshjTool implements SshTool {
 
         };
     }
-
-    private SshException propagate(Exception e, String message) throws SshException {
-        throw new SshException("(" + toString() + ") " + message + ":" + e.getMessage(), e);
-    }
     
     protected void allocatePTY(Session s) throws ConnectionException, TransportException {
         // this was set as the default, but it makes output harder to read
@@ -731,11 +560,6 @@ public class SshjTool implements SshTool {
         if (allocatePTY)
             s.allocatePTY("vt100", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
 //            s.allocatePTY("dumb", 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
-    }
-
-    @Override
-    public String toString() {
-        return toString;
     }
 
     protected SshAction<Session> newSessionAction() {
@@ -948,66 +772,4 @@ public class SshjTool implements SshTool {
         }
     }
 
-    private Payload toPayload(InputStream input, long length) {
-        InputStreamPayload payload = new InputStreamPayload(new LimitInputStream(input, length));
-        payload.getContentMetadata().setContentLength(length);
-        return payload;
-    }
-    
-    private Payload toPayload(InputStream input) {
-        /*
-         * TODO sshj needs to know the length of the InputStream to copy the file:
-         *   java.lang.NullPointerException
-         *     at brooklyn.util.internal.ssh.SshjTool$PutFileAction$1.getLength(SshjTool.java:574)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer$Uploader.upload(SFTPFileTransfer.java:174)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer$Uploader.access$100(SFTPFileTransfer.java:162)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer.upload(SFTPFileTransfer.java:61)
-         *     at net.schmizz.sshj.sftp.SFTPClient.put(SFTPClient.java:248)
-         *     at brooklyn.util.internal.ssh.SshjTool$PutFileAction.create(SshjTool.java:569)
-         * 
-         * Unfortunately that requires consuming the input stream to find out! We can't just do:
-         *   new InputStreamPayload(input)
-         * 
-         * This is nasty: we have to hold the entire file in-memory.
-         * It's worth a look at changing sshj to not need the length, if possible.
-         */
-        try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ByteStreams.copy(input, byteArrayOutputStream);
-            return new ByteArrayPayload(byteArrayOutputStream.toByteArray());
-        } catch (IOException e) {
-            LOG.warn("Error consuming stream", e);
-            throw Throwables.propagate(e);
-        }
-    }
-    
-    static <T> T getMandatoryVal(Map<String,?> map, String key, Class<T> clazz) {
-        checkArgument(map.containsKey(key), "must contain key '"+key+"'");
-        return TypeCoercions.coerce(map.get(key), clazz);
-    }
-    
-    static <T> T getOptionalVal(Map<String,?> map, String key, Class<T> clazz, T defaultVal) {
-        if (map.containsKey(key)) {
-            return TypeCoercions.coerce(map.get(key), clazz);
-        } else {
-            return defaultVal;
-        }
-    }
-    
-    /**
-     * Similar to Guava's Closeables.closeQuitely, except logs exception at debug with context in message.
-     */
-    private void closeWhispering(Closeable closeable, Object context) {
-        if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (IOException e) {
-                if (LOG.isDebugEnabled()) {
-                    String msg = String.format("<< exception during close, for %s -> %s (%s); continuing.", 
-                            SshjTool.this.toString(), context, closeable);
-                    LOG.debug(msg, e);
-                }
-            }
-        }
-    }
 }

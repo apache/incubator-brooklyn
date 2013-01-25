@@ -1,7 +1,11 @@
 package brooklyn.entity.basic;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigUtils;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.internal.ssh.sshj.SshjTool;
 
 
 /**
@@ -34,4 +38,16 @@ public class ConfigKeys {
             Boolean.class, "customize.latch", "Latch for blocking customize until ready");
     public static final BasicConfigKey<Boolean> LAUNCH_LATCH = new BasicConfigKey<Boolean>(
             Boolean.class, "launch.latch", "Latch for blocking launch until ready");
+
+        
+    /* selected properties from SshTool for external public access (e.g. putting on entities) */
+    
+    public static ConfigKey<String> SSH_TOOL_CLASS = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_TOOL_CLASS);
+    public static ConfigKey<Integer> SSH_CONFIG_PORT = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT);
+    public static ConfigKey<String> SSH_CONFIG_USER = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_USER);
+    public static ConfigKey<String> SSH_CONFIG_PASSWORD = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PASSWORD);
+    public static ConfigKey<String> SSH_CONFIG_SCRIPT_DIR = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_SCRIPT_DIR);
+    public static ConfigKey<String> SSH_CONFIG_SCRIPT_HEADER = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_SCRIPT_HEADER);
+    public static ConfigKey<String> SSH_CONFIG_DIRECT_HEADER = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_DIRECT_HEADER);
+
 }

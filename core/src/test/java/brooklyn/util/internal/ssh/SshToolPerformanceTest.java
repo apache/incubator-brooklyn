@@ -3,6 +3,7 @@ package brooklyn.util.internal.ssh;
 import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanServer;
@@ -26,18 +27,20 @@ import com.google.common.collect.ImmutableList;
  * 
  * Intended for human-invocation and inspection, to see which parts are most expensive.
  */
-public class SshjToolPerformanceTest {
+public abstract class SshToolPerformanceTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SshjToolPerformanceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SshToolPerformanceTest.class);
     
-    private SshjTool tool;
+    private SshTool tool;
+    
+    protected abstract SshTool newSshTool(Map<String,?> flags);
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
     }
     
     @AfterMethod(alwaysRun=true)
-    public void afterMethod() throws Exception {
+    public void tearDown() throws Exception {
         if (tool != null) tool.disconnect();
     }
 
@@ -45,7 +48,7 @@ public class SshjToolPerformanceTest {
     public void testConsecutiveConnectAndDisconnect() throws Exception {
         Runnable task = new Runnable() {
             public void run() {
-                tool = new SshjTool(MutableMap.of("host", "localhost"));
+                tool = newSshTool(MutableMap.of("host", "localhost"));
                 tool.connect();
                 tool.disconnect();
             }
@@ -103,7 +106,7 @@ public class SshjToolPerformanceTest {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         MutableMap<String,?> flags = (captureOutandErr) ? MutableMap.of("out", out, "err", err) : MutableMap.<String,Object>of();
         
-        tool = new SshjTool(MutableMap.of("host", "localhost"));
+        tool = newSshTool(MutableMap.of("host", "localhost"));
         tool.connect();
         int result = tool.execScript(flags, cmds);
         tool.disconnect();

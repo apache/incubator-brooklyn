@@ -13,7 +13,7 @@ import brooklyn.util.exceptions.Exceptions;
  */
 public class BackoffLimitedRetryHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SshjTool.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BackoffLimitedRetryHandler.class);
 
     private final int retryCountLimit;
 

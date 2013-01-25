@@ -38,10 +38,10 @@ import brooklyn.util.ReaderInputStream;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.internal.SshTool;
 import brooklyn.util.internal.StreamGobbler;
 import brooklyn.util.internal.ssh.SshException;
-import brooklyn.util.internal.ssh.SshjTool;
+import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.pool.BasicPool;
@@ -116,7 +116,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", 
-            "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport", "localTempDir");
+            "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport", "localTempDir",
+            "scriptHeader", "tool.class");
 
     public static final Set<String> REUSABLE_SSH_PROPS = ImmutableSet.of("out", "err", "scriptDir");
 
@@ -289,7 +290,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 }
             }
             if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
-            SshTool ssh = new SshjTool(args);
+            
+            // look up tool class
+            String sshToolClass = (String)props.get(SshTool.PROP_TOOL_CLASS.getName());
+            if (sshToolClass==null) sshToolClass = SshjTool.class.getName();
+            SshTool ssh = (SshTool) Class.forName(sshToolClass).getConstructor(Map.class).newInstance(args);
+            
             Tasks.setBlockingDetails("Opening ssh connection");
             try { ssh.connect(); } finally { Tasks.setBlockingDetails(null); }
             previouslyConnected = true;
@@ -411,6 +417,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             logSsh.debug("{} on machine {} ending: no commands to run", summaryForLogging, this);
             return 0;
         }
+        // TODO
         final Map<String,Object> execFlags = MutableMap.copyOf(props);
         final Map<String,Object> sshFlags = MutableMap.<String,Object>builder().putAll(props).removeAll("logPrefix", "out", "err").build();
         
@@ -491,7 +498,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return copyTo(props, src, destination.getPath());
     }
 
-    // FIXME the return code is not a reliable indicator of success or failure
     public int copyTo(File src, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, destination);
     }
@@ -519,6 +525,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public int copyTo(InputStream src, long filesize, String destination) {
         return copyTo(MutableMap.<String,Object>of(), src, filesize, destination);
     }
+    // FIXME the return code is not a reliable indicator of success or failure
     public int copyTo(final Map<String,?> props, InputStream src, long filesize, final String destination) {
 	    final long finalFilesize;
 	    final InputStream finalSrc;
