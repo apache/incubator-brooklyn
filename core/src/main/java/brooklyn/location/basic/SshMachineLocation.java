@@ -1,6 +1,7 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -48,6 +49,7 @@ import brooklyn.util.pool.BasicPool;
 import brooklyn.util.pool.Pool;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -112,7 +114,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             // deprecated in 0.4.0 -- prefer privateKeyData/privateKeyFile 
             // (confusion about whether other holds a file or data; and public not useful here)
             // they generate a warning where used 
-            "keyFiles", "publicKey", "privateKey");
+            "keyFiles", "publicKey", "privateKey",
+            "sshExecutable", "scpExecutable");
     
     //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
     public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", 
@@ -194,6 +197,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 	                setHostGeoInfo(HostGeoInfo.fromLocation(this));
 	        }
         }
+    }
+
+    // Once have reference to ManagementContext, then delete this?!
+    @Beta
+    public void addConfig(Map<String, Object> vals) {
+        config.putAll(checkNotNull(vals, "vals"));
     }
 
     @Override
@@ -292,9 +301,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
             
             // look up tool class
-            String sshToolClass = (String)props.get(SshTool.PROP_TOOL_CLASS.getName());
+            String sshToolClass = (String)allprops.get(SshTool.PROP_TOOL_CLASS.getName());
             if (sshToolClass==null) sshToolClass = SshjTool.class.getName();
             SshTool ssh = (SshTool) Class.forName(sshToolClass).getConstructor(Map.class).newInstance(args);
+            
+            if (LOG.isTraceEnabled()) LOG.trace("using ssh-tool {} (of type {}); props ", ssh, sshToolClass);
             
             Tasks.setBlockingDetails("Opening ssh connection");
             try { ssh.connect(); } finally { Tasks.setBlockingDetails(null); }

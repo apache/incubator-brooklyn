@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.jclouds.io.Payload;
 import org.jclouds.io.payloads.ByteArrayPayload;
@@ -74,7 +74,7 @@ public abstract class SshAbstractTool implements SshTool {
         }
     }
 
-    public static abstract class AbstractToolBuilder<T extends SshTool> {
+    public static abstract class AbstractToolBuilder<T extends SshTool, B extends AbstractToolBuilder<T,B>> {
         protected String host;
         protected int port = 22;
         protected String user = System.getProperty("user.name");
@@ -87,7 +87,12 @@ public abstract class SshAbstractTool implements SshTool {
         protected File localTempDir = new File(System.getProperty("java.io.tmpdir"), "tmpssh");
 
         @SuppressWarnings("unchecked")
-        public AbstractToolBuilder<T> from(Map<String,?> props) {
+        protected B self() {
+           return (B) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public B from(Map<String,?> props) {
             host = getMandatoryVal(props, "host", String.class);
             port = getOptionalVal(props, "port", Integer.class, port);
             user = getOptionalVal(props, "user", String.class, user);
@@ -111,45 +116,40 @@ public abstract class SshAbstractTool implements SshTool {
             
             localTempDir = getOptionalVal(props, "localTempDir", File.class, localTempDir);
             
-            return this;
+            return self();
         }
-        public AbstractToolBuilder<T> host(String val) {
-            this.host = val; return this;
+        public B host(String val) {
+            this.host = val; return self();
         }
-        public AbstractToolBuilder<T> user(String val) {
-            this.user = val; return this;
+        public B user(String val) {
+            this.user = val; return self();
         }
-        public AbstractToolBuilder<T> password(String val) {
-            this.password = val; return this;
+        public B password(String val) {
+            this.password = val; return self();
         }
-        public AbstractToolBuilder<T> port(int val) {
-            this.port = val; return this;
+        public B port(int val) {
+            this.port = val; return self();
         }
-        public AbstractToolBuilder<T> privateKeyPassphrase(String val) {
-            this.privateKeyPassphrase = val; return this;
+        public B privateKeyPassphrase(String val) {
+            this.privateKeyPassphrase = val; return self();
         }
         /** @deprecated 1.4.0, use privateKeyData */
-        public AbstractToolBuilder<T> privateKey(String val) {
-            this.privateKeyData = val; return this;
+        public B privateKey(String val) {
+            this.privateKeyData = val; return self();
         }
-        public AbstractToolBuilder<T> privateKeyData(String val) {
-            this.privateKeyData = val; return this;
+        public B privateKeyData(String val) {
+            this.privateKeyData = val; return self();
         }
-        public AbstractToolBuilder<T> privateKeyFile(String val) {
-            this.privateKeyFiles.add(val); return this;
+        public B privateKeyFile(String val) {
+            this.privateKeyFiles.add(val); return self();
         }
-        public AbstractToolBuilder<T> localTempDir(File val) {
-            this.localTempDir = val; return this;
+        public B localTempDir(File val) {
+            this.localTempDir = val; return self();
         }
         public abstract T build();
     }
 
-    protected SshAbstractTool(AbstractToolBuilder<?> builder) {
-        // TODO Does this need to be ported from SshJschTool?
-//        if (host && host==~ /[^@]+@[^@]+/) {
-//            (user,host) = (host=~/([^@]+)@([^@]+)/)[0][1,2]
-//        }
-
+    protected SshAbstractTool(AbstractToolBuilder<?,?> builder) {
         host = checkNotNull(builder.host, "host");
         port = builder.port;
         user = builder.user;
@@ -179,8 +179,6 @@ public abstract class SshAbstractTool implements SshTool {
         toString = String.format("%s@%s:%d", user, host, port);
     }
 
-    
-    
     protected Payload toPayload(InputStream input, long length) {
         InputStreamPayload payload = new InputStreamPayload(new LimitInputStream(input, length));
         payload.getContentMetadata().setContentLength(length);
