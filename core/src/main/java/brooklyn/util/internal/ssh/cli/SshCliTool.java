@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.StreamGobbler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
+import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
@@ -342,8 +343,19 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
                 errgobbler.start();
             }
             
-            return p.waitFor();
+            int result = p.waitFor();
             
+            outgobbler.blockUntilFinished();
+            errgobbler.blockUntilFinished();
+            
+            if (result==255)
+                // this is not definitive, but tests (and code?) expects throw exception if can't connect;
+                // only return exit code when it is exit code from underlying process;
+                // we have no way to distinguish 255 from ssh failure from 255 from the command run through ssh ...
+                // but probably 255 is from CLI ssh
+                throw new SshException("exit code 255 from CLI ssh; probably failed to connect");
+            
+            return result;
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         } catch (IOException e) {
