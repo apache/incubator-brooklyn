@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.internal.ssh;
+package brooklyn.util.internal.ssh.sshj;
 
 import static brooklyn.util.NetworkUtils.checkPortValid;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -65,8 +65,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.util.Time;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.internal.SshTool;
 import brooklyn.util.internal.StreamGobbler;
+import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
+import brooklyn.util.internal.ssh.SshAbstractTool;
+import brooklyn.util.internal.ssh.SshException;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
@@ -94,7 +97,7 @@ import com.google.common.net.HostAndPort;
  * Not thread-safe. Use a different SshjTool for each concurrent thread. 
  * If passing from one thread to another, ensure code goes through a synchronized block.
  */
-public class SshjTool implements SshTool {
+public class SshjTool extends SshAbstractTool implements SshTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(SshjTool.class);
 
@@ -528,17 +531,18 @@ public class SshjTool implements SshTool {
      * Not all ssh servers handle "env", so instead convert env into exported variables
      */
     private List<String> toCommandSequence(List<String> commands, Map<String,?> env) {
-        List<String> result = new ArrayList<String>(env.size()+commands.size());
+        List<String> result = new ArrayList<String>((env!=null ? env.size() : 0) + commands.size());
         
-        for (Entry<String,?> entry : env.entrySet()) {
-            if (entry.getKey() == null || entry.getValue() == null) {
-                LOG.warn("env key-values must not be null; ignoring: key="+entry.getKey()+"; value="+entry.getValue());
-                continue;
+        if (env!=null) {
+            for (Entry<String,?> entry : env.entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null) {
+                    LOG.warn("env key-values must not be null; ignoring: key="+entry.getKey()+"; value="+entry.getValue());
+                    continue;
+                }
+                String escapedVal = BashStringEscapes.escapeLiteralForDoubleQuotedBash(entry.getValue().toString());
+                result.add("export "+entry.getKey()+"=\""+escapedVal+"\"");
             }
-            String escapedVal = BashStringEscapes.escapeLiteralForDoubleQuotedBash(entry.getValue().toString());
-            result.add("export "+entry.getKey()+"=\""+escapedVal+"\"");
         }
-        
         for (CharSequence cmd : commands) { // objects in commands can be groovy GString so can't treat as String here
             result.add(cmd.toString());
         }

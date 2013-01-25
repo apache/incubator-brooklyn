@@ -23,7 +23,7 @@ import brooklyn.entity.basic.lifecycle.ScriptRunner;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.SshTool;
+import brooklyn.util.internal.ssh.SshTool;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;

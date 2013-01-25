@@ -3,7 +3,7 @@ package brooklyn.entity.basic;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.internal.SshTool;
+import brooklyn.util.internal.ssh.SshTool;
 
 
 /**

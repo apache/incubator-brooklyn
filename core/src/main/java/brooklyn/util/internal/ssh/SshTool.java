@@ -1,4 +1,4 @@
-package brooklyn.util.internal;
+package brooklyn.util.internal.ssh;
 
 import java.io.File;
 import java.io.InputStream;

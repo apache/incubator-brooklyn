@@ -10,7 +10,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.util.internal.ssh.SshjTool
+import brooklyn.util.internal.ssh.sshj.SshjTool;
 
 public abstract class AbstractJcloudsLocationTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJcloudsLocationTest.class)
