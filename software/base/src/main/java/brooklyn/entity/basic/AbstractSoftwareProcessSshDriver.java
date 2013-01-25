@@ -4,8 +4,6 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,7 +21,6 @@ import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.ScriptRunner;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshTool;
 
 import com.google.common.base.Predicates;
@@ -60,6 +57,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     
     public AbstractSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
+        machine.addConfig(getSshFlags());
     }
 
     /**
@@ -122,31 +120,25 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     /* currently this is computed for each call, which may be wasteful, but it is reliable in the face of config changes. 
      * we could cache the Map.  note that we do _not_ cache (or even own) the SshTool; 
      * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
-    protected Map getSshFlags() {
-        Map result = new LinkedHashMap();
-        StringConfigMap mgmtConfig = getEntity().getManagementSupport().getManagementContext(true).getConfig();
-        for (Field f: ConfigKeys.class.getFields()) {
-            if ((f.getModifiers() & Modifier.STATIC)!=0) {
-                if (ConfigKey.class.isAssignableFrom(f.getType())) {
-                    ConfigKey c;
-                    try {
-                        c = (ConfigKey) f.get(null);
-                        if (c.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
-                            // have to use raw config to test whether the config is set
-                            Object v = ((AbstractEntity)getEntity()).getConfigMap().getRawConfig(c);
-                            if (v!=null) {
-                                v = getEntity().getConfig(c);
-                            } else {
-                                v = mgmtConfig.getRawConfig(c);
-                                if (v!=null) v = mgmtConfig.getConfig(c);
-                            }
-                            if (v!=null)
-                                result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, c).getName(), v);
-                        }
-                    } catch (Exception e) {
-                        log.warn("Error scanning SSH field "+f+": "+e);
-                        Exceptions.propagateIfFatal(e);
-                    }
+    protected Map<String, Object> getSshFlags() {
+        Map<String, Object> result = Maps.newLinkedHashMap();
+        StringConfigMap globalConfig = getEntity().getManagementSupport().getManagementContext(true).getConfig();
+        Map<ConfigKey<?>, Object> mgmtConfig = globalConfig.getAllConfig();
+        Map<ConfigKey, Object> entityConfig = ((AbstractEntity)getEntity()).getAllConfig();
+        Map<ConfigKey<?>, Object> allConfig = MutableMap.<ConfigKey<?>, Object>builder().putAll(mgmtConfig).putAll((Map)entityConfig).build();
+        
+        for (ConfigKey<?> key : allConfig.keySet()) {
+            if (key.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
+                // have to use raw config to test whether the config is set
+                Object val = ((AbstractEntity)getEntity()).getConfigMap().getRawConfig(key);
+                if (val!=null) {
+                    val = getEntity().getConfig(key);
+                } else {
+                    val = globalConfig.getRawConfig(key);
+                    if (val!=null) val = globalConfig.getConfig(key);
+                }
+                if (val!=null) {
+                    result.put(ConfigUtils.unprefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, key).getName(), val);
                 }
             }
         }

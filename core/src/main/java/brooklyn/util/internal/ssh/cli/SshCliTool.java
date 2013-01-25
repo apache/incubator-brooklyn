@@ -1,22 +1,6 @@
-/**
- * Licensed to jclouds, Inc. (jclouds) under one or more
- * contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  jclouds licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
 package brooklyn.util.internal.ssh.cli;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -30,6 +14,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.StreamGobbler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
@@ -50,22 +36,50 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     
     private static final Logger LOG = LoggerFactory.getLogger(SshCliTool.class);
 
-    public static Builder builder() {
-        return new Builder();
+    public static final ConfigKey<String> PROP_SSH_EXECUTABLE = new StringConfigKey("sshExecutable", "command to execute for ssh (defaults to \"ssh\", but could be overridden to sshg3 for Tectia for example)", "ssh");
+    public static final ConfigKey<String> PROP_SCP_EXECUTABLE = new StringConfigKey("scpExecutable", "command to execute for scp (defaults to \"scp\", but could be overridden to scpg3 for Tectia for example)", "scp");
+
+    public static Builder<SshCliTool,?> builder() {
+        return new ConcreteBuilder();
     }
     
-    public static class Builder extends AbstractToolBuilder<SshCliTool> {
-        public SshCliTool build() {
-            return new SshCliTool(this);
+    private static class ConcreteBuilder extends Builder<SshCliTool, ConcreteBuilder> {
+    }
+    
+    public static class Builder<T extends SshCliTool, B extends Builder<T,B>> extends AbstractToolBuilder<T,B> {
+        private String sshExecutable;
+        private String scpExecutable;
+
+        @SuppressWarnings("unchecked")
+        public B from(Map<String,?> props) {
+            super.from(props);
+            sshExecutable = getOptionalVal(props, PROP_SSH_EXECUTABLE);
+            scpExecutable = getOptionalVal(props, PROP_SCP_EXECUTABLE);
+            return self();
+        }
+        public B sshExecutable(String val) {
+            this.sshExecutable = val; return self();
+        }
+        public B scpExecutable(String val) {
+            this.scpExecutable = val; return self();
+        }
+        @SuppressWarnings("unchecked")
+        public T build() {
+            return (T) new SshCliTool(this);
         }
     }
 
+    private final String sshExecutable;
+    private final String scpExecutable;
+
     public SshCliTool(Map<String,?> map) {
-        this((Builder)builder().from(map));
+        this(builder().from(map));
     }
     
-    private SshCliTool(Builder builder) {
+    private SshCliTool(Builder<?,?> builder) {
         super(builder);
+        sshExecutable = checkNotNull(builder.sshExecutable);
+        scpExecutable = checkNotNull(builder.scpExecutable);
         if (LOG.isTraceEnabled()) LOG.trace("Created SshCliTool {} ({})", this, System.identityHashCode(this));
     }
     
@@ -131,7 +145,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         if (props.containsKey("lastAccessDate")) {
             LOG.warn("Unsupported ssh feature, setting lastAccessDate for {}:{}", this, pathAndFileOnRemoteServer);
         }
-        String permissions = getOptionalVal(props, "permissions", String.class, "0644");
+        String permissions = getOptionalVal(props, PROP_PERMISSIONS);
         
         int result = scpToServer(props, f, pathAndFileOnRemoteServer);
         if (result == 0) {
@@ -211,7 +225,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         File tempFile = null;
         try {
             List<String> cmd = Lists.newArrayList();
-            cmd.add("scp");
+            cmd.add(getOptionalVal(props, PROP_SCP_EXECUTABLE, scpExecutable));
             if (privateKeyFile != null) {
                 cmd.add("-i");
                 cmd.add(privateKeyFile.getAbsolutePath());
@@ -246,7 +260,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         File tempFile = null;
         try {
             List<String> cmd = Lists.newArrayList();
-            cmd.add("scp");
+            cmd.add(getOptionalVal(props, PROP_SCP_EXECUTABLE, scpExecutable));
             if (privateKeyFile != null) {
                 cmd.add("-i");
                 cmd.add(privateKeyFile.getAbsolutePath());
@@ -286,7 +300,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         File tempKeyFile = null;
         try {
             List<String> cmd = Lists.newArrayList();
-            cmd.add("ssh");
+            cmd.add(getOptionalVal(props, PROP_SSH_EXECUTABLE, sshExecutable));
             if (privateKeyFile != null) {
                 cmd.add("-i");
                 cmd.add(privateKeyFile.getAbsolutePath());

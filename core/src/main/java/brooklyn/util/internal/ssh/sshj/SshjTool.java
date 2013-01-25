@@ -1,40 +1,16 @@
-/**
- * Licensed to jclouds, Inc. (jclouds) under one or more
- * contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  jclouds licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
 package brooklyn.util.internal.ssh.sshj;
 
-import static brooklyn.util.NetworkUtils.checkPortValid;
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Throwables.getCausalChain;
 import static com.google.common.collect.Iterables.any;
 
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import net.schmizz.sshj.connection.ConnectionException;
@@ -55,35 +31,25 @@ import org.jclouds.io.Payload;
 import org.jclouds.io.Payloads;
 import org.jclouds.io.payloads.ByteArrayPayload;
 import org.jclouds.io.payloads.FilePayload;
-import org.jclouds.io.payloads.InputStreamPayload;
 import org.jclouds.io.payloads.StringPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.util.Time;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.StreamGobbler;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
-import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.internal.ssh.SshAbstractTool.AbstractToolBuilder;
 import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.google.common.io.LimitInputStream;
 import com.google.common.net.HostAndPort;
 
 /**
@@ -120,50 +86,55 @@ public class SshjTool extends SshAbstractTool implements SshTool {
 
     private final SshjClientConnection sshClientConnection;
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<SshjTool,?> builder() {
+        return new ConcreteBuilder();
     }
     
-    public static class Builder extends AbstractToolBuilder<SshjTool> {
+    private static class ConcreteBuilder extends Builder<SshjTool, ConcreteBuilder> {
+    }
+    
+    public static class Builder<T extends SshjTool, B extends Builder<T,B>> extends AbstractToolBuilder<T,B> {
         protected int connectTimeout;
         protected int sessionTimeout;
         protected int sshTries = 4;  //allow 4 tries by default, much safer
         protected int sshTriesTimeout = 2*60*1000;  //allow 2 minutesby default (so if too slow trying sshTries times, abort anyway)
         protected long sshRetryDelay = 50L;
-        public Builder from(Map<String,?> props) {
+        
+        public B from(Map<String,?> props) {
             super.from(props);
-            sshTries = getOptionalVal(props, "sshTries", Integer.class, sshTries);
-            sshTriesTimeout = getOptionalVal(props, "sshTriesTimeout", Integer.class, sshTriesTimeout);
-            sshRetryDelay = getOptionalVal(props, "sshRetryDelay", Long.class, sshRetryDelay);
-            connectTimeout = getOptionalVal(props, "connectTimeout", Integer.class, connectTimeout);
-            sessionTimeout = getOptionalVal(props, "sessionTimeout", Integer.class, sessionTimeout);
-            return this;
+            sshTries = getOptionalVal(props, PROP_SSH_TRIES);
+            sshTriesTimeout = getOptionalVal(props, PROP_SSH_TRIES_TIMEOUT);
+            sshRetryDelay = getOptionalVal(props, PROP_SSH_RETRY_DELAY);
+            connectTimeout = getOptionalVal(props, PROP_CONNECT_TIMEOUT);
+            sessionTimeout = getOptionalVal(props, PROP_SESSION_TIMEOUT);
+            return self();
         }
-        public Builder connectTimeout(int val) {
-            this.connectTimeout = val; return this;
+        public B connectTimeout(int val) {
+            this.connectTimeout = val; return self();
         }
-        public Builder sessionTimeout(int val) {
-            this.sessionTimeout = val; return this;
+        public B sessionTimeout(int val) {
+            this.sessionTimeout = val; return self();
         }
-        public Builder sshRetries(int val) {
-            this.sshTries = val; return this;
+        public B sshRetries(int val) {
+            this.sshTries = val; return self();
         }
-        public Builder sshRetriesTimeout(int val) {
-            this.sshTriesTimeout = val; return this;
+        public B sshRetriesTimeout(int val) {
+            this.sshTriesTimeout = val; return self();
         }
-        public Builder sshRetryDelay(long val) {
-            this.sshRetryDelay = val; return this;
+        public B sshRetryDelay(long val) {
+            this.sshRetryDelay = val; return self();
         }
-        public SshjTool build() {
-            return new SshjTool(this);
+        @SuppressWarnings("unchecked")
+        public T build() {
+            return (T) new SshjTool(this);
         }
     }
 
     public SshjTool(Map<String,?> map) {
-        this((Builder)builder().from(map));
+        this(builder().from(map));
     }
     
-    private SshjTool(Builder builder) {
+    protected SshjTool(Builder<?,?> builder) {
         super(builder);
         
         sshTries = builder.sshTries;
