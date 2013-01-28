@@ -31,7 +31,7 @@ import org.jclouds.io.Payload;
 import org.jclouds.io.Payloads;
 import org.jclouds.io.payloads.ByteArrayPayload;
 import org.jclouds.io.payloads.FilePayload;
-import org.jclouds.io.payloads.StringPayload;
+import org.jclouds.io.payloads.InputStreamPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +50,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import com.google.common.io.LimitInputStream;
 import com.google.common.net.HostAndPort;
 
 /**
@@ -188,58 +189,89 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     }
     
     @Override
+    public int copyToServer(java.util.Map<String,?> props, byte[] contents, String pathAndFileOnRemoteServer) {
+        return copyToServer(props, toPayload(contents), pathAndFileOnRemoteServer);
+    }
+    
+    @Override
+    public int copyToServer(java.util.Map<String,?> props, InputStream contents, String pathAndFileOnRemoteServer) {
+        /*
+         * TODO sshj needs to know the length of the InputStream to copy the file:
+         *   java.lang.NullPointerException
+         *     at brooklyn.util.internal.ssh.SshjTool$PutFileAction$1.getLength(SshjTool.java:574)
+         *     at net.schmizz.sshj.sftp.SFTPFileTransfer$Uploader.upload(SFTPFileTransfer.java:174)
+         *     at net.schmizz.sshj.sftp.SFTPFileTransfer$Uploader.access$100(SFTPFileTransfer.java:162)
+         *     at net.schmizz.sshj.sftp.SFTPFileTransfer.upload(SFTPFileTransfer.java:61)
+         *     at net.schmizz.sshj.sftp.SFTPClient.put(SFTPClient.java:248)
+         *     at brooklyn.util.internal.ssh.SshjTool$PutFileAction.create(SshjTool.java:569)
+         * 
+         * Unfortunately that requires consuming the input stream to find out! We can't just do:
+         *   new InputStreamPayload(input)
+         * 
+         * This is nasty: we have to either write it to a temp file, or hold the entire contents in-memory.
+         * It's worth a look at changing sshj to not need the length, if possible.
+         * 
+         * TODO Could have a switch where we hold it in memory if less than some max size, but write it to the file if
+         * too big.
+         */
+        File tempFile = writeTempFile(contents);
+        try {
+            return copyToServer(props, tempFile, pathAndFileOnRemoteServer);
+        } finally {
+            tempFile.delete();
+        }
+    }
+    
+    @Override
+    public int copyToServer(java.util.Map<String,?> props, File localFile, String pathAndFileOnRemoteServer) {
+        return copyToServer(props, toPayload(localFile), pathAndFileOnRemoteServer);
+    }
+    
+    @Override
     public int transferFileTo(Map<String,?> props, InputStream input, String pathAndFileOnRemoteServer) {
-        return createFile(props, pathAndFileOnRemoteServer, toPayload(input));
+        return copyToServer(props, input, pathAndFileOnRemoteServer);
     }
     
     @Override
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, InputStream input, long size) {
-        return createFile(props, pathAndFileOnRemoteServer, toPayload(input, size));
+        return copyToServer(props, toPayload(input, size), pathAndFileOnRemoteServer);
     }
 
-    /**
-     * Creates the given file with the given contents.
-     *
-     * Permissions specified using 'permissions:0755'.
-     */
     @Override
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, String contents) {
-        return createFile(props, pathAndFileOnRemoteServer, new StringPayload(contents));
+        return copyToServer(props, contents.getBytes(), pathAndFileOnRemoteServer);
     }
 
-    /** Creates the given file with the given contents.
-     *
-     * Permissions specified using 'permissions:0755'.
-     */
     @Override
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, byte[] contents) {
-        return createFile(props, pathAndFileOnRemoteServer, new ByteArrayPayload(contents));
+        return copyToServer(props, contents, pathAndFileOnRemoteServer);
     }
 
-    @Override
-    public int copyToServer(Map<String,?> props, File f, String pathAndFileOnRemoteServer) {
-        return createFile(props, pathAndFileOnRemoteServer, new FilePayload(f));
+    private int copyToServer(Map<String,?> props, Payload contents, String pathAndFileOnRemoteServer) {
+        acquire(new PutFileAction(props, pathAndFileOnRemoteServer, contents));
+        return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
     }
 
     @Override
     public int transferFileFrom(Map<String,?> props, String pathAndFileOnRemoteServer, String pathAndFileOnLocalServer) {
+        return copyFromServer(props, pathAndFileOnRemoteServer, new File(pathAndFileOnLocalServer));
+    }
+    
+    @Override
+    public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
         Payload payload = acquire(new GetFileAction(pathAndFileOnRemoteServer));
         try {
-            Files.copy(InputSuppliers.of(payload.getInput()), new File(pathAndFileOnLocalServer));
+            Files.copy(InputSuppliers.of(payload.getInput()), localFile);
             return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
 
-    private int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, Payload payload) {
-        acquire(new PutFileAction(props, pathAndFileOnRemoteServer, payload));
-        return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
-    }
-
     public int execShell(Map<String,?> props, List<String> commands) {
         return execScript(props, commands, Collections.<String,Object>emptyMap());
     }
+    
     public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env) {
         return execScript(props, commands, env);
     }
@@ -286,7 +318,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
         
-        createFile(ImmutableMap.of("permissions", "0700"), scriptPath, scriptContents);
+        copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
         
         // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
         List<String> cmds = ImmutableList.of(
@@ -453,10 +485,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         private long lastAccessDate;
         
         PutFileAction(Map<String,?> props, String path, Payload contents) {
-            String permissions = getOptionalVal(props, "permissions", String.class, "0644");
+            String permissions = getOptionalVal(props, PROP_PERMISSIONS, "0644");
             permissionsMask = Integer.parseInt(permissions, 8);
-            lastModificationDate = getOptionalVal(props, "lastModificationDate", Long.class, 0L);
-            lastAccessDate = getOptionalVal(props, "lastAccessDate", Long.class, 0L);
+            lastModificationDate = getOptionalVal(props, PROP_LAST_MODIFICATION_DATE, 0L);
+            lastAccessDate = getOptionalVal(props, PROP_LAST_ACCESS_DATE, 0L);
             if (lastAccessDate <= 0 ^ lastModificationDate <= 0) {
                 lastAccessDate = Math.max(lastAccessDate, lastModificationDate);
                 lastModificationDate = Math.max(lastAccessDate, lastModificationDate);
@@ -743,4 +775,17 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     }
 
+    protected Payload toPayload(byte[] input) {
+        return new ByteArrayPayload(input);
+    }
+    
+    protected Payload toPayload(File input) {
+        return new FilePayload(input);
+    }
+    
+    protected Payload toPayload(InputStream input, long length) {
+        InputStreamPayload payload = new InputStreamPayload(new LimitInputStream(input, length));
+        payload.getContentMetadata().setContentLength(length);
+        return payload;
+    }
 }

@@ -4,21 +4,17 @@ import static brooklyn.util.NetworkUtils.checkPortValid;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.jclouds.io.Payload;
-import org.jclouds.io.payloads.ByteArrayPayload;
-import org.jclouds.io.payloads.InputStreamPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,11 +24,8 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.LimitInputStream;
 
 public abstract class SshAbstractTool implements SshTool {
 
@@ -93,28 +86,28 @@ public abstract class SshAbstractTool implements SshTool {
 
         @SuppressWarnings("unchecked")
         public B from(Map<String,?> props) {
-            host = getMandatoryVal(props, "host", String.class);
-            port = getOptionalVal(props, "port", Integer.class, port);
-            user = getOptionalVal(props, "user", String.class, user);
+            host = getMandatoryVal(props, PROP_HOST);
+            port = getOptionalVal(props, PROP_PORT);
+            user = getOptionalVal(props, PROP_USER);
             
-            password = getOptionalVal(props, "password", String.class, password);
+            password = getOptionalVal(props, PROP_PASSWORD);
             
             warnOnDeprecated(props, "privateKey", "privateKeyData");
-            privateKeyData = getOptionalVal(props, "privateKey", String.class, privateKeyData);
-            privateKeyData = getOptionalVal(props, "privateKeyData", String.class, privateKeyData);
-            privateKeyPassphrase = getOptionalVal(props, "privateKeyPassphrase", String.class, privateKeyPassphrase);
+            privateKeyData = getOptionalVal(props, PROP_PRIVATE_KEY);
+            privateKeyData = getOptionalVal(props, PROP_PRIVATE_KEY_DATA);
+            privateKeyPassphrase = getOptionalVal(props, PROP_PRIVATE_KEY_PASSPHRASE);
             
             // for backwards compatibility accept keyFiles and privateKey
             // but sshj accepts only a single privateKeyFile; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)
             warnOnDeprecated(props, "keyFiles", null);
-            privateKeyFiles.addAll(getOptionalVal(props, "keyFiles", List.class, Collections.emptyList()));
-            String privateKeyFile = getOptionalVal(props, "privateKeyFile", String.class, null);
+            privateKeyFiles.addAll(getOptionalVal(props, PROP_KEY_FILES));
+            String privateKeyFile = getOptionalVal(props, PROP_PRIVATE_KEY_FILE);
             if (privateKeyFile != null) privateKeyFiles.add(privateKeyFile);
             
-            strictHostKeyChecking = getOptionalVal(props, "strictHostKeyChecking", Boolean.class, strictHostKeyChecking);
-            allocatePTY = getOptionalVal(props, "allocatePTY", Boolean.class, allocatePTY);
+            strictHostKeyChecking = getOptionalVal(props, PROP_STRICT_HOST_KEY_CHECKING);
+            allocatePTY = getOptionalVal(props, PROP_ALLOCATE_PTY);
             
-            localTempDir = getOptionalVal(props, "localTempDir", File.class, localTempDir);
+            localTempDir = getOptionalVal(props, PROP_LOCAL_TEMP_DIR);
             
             return self();
         }
@@ -179,39 +172,16 @@ public abstract class SshAbstractTool implements SshTool {
         toString = String.format("%s@%s:%d", user, host, port);
     }
 
-    protected Payload toPayload(InputStream input, long length) {
-        InputStreamPayload payload = new InputStreamPayload(new LimitInputStream(input, length));
-        payload.getContentMetadata().setContentLength(length);
-        return payload;
-    }
-    
-    protected Payload toPayload(InputStream input) {
-        /*
-         * TODO sshj needs to know the length of the InputStream to copy the file:
-         *   java.lang.NullPointerException
-         *     at brooklyn.util.internal.ssh.SshjTool$PutFileAction$1.getLength(SshjTool.java:574)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer$Uploader.upload(SFTPFileTransfer.java:174)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer$Uploader.access$100(SFTPFileTransfer.java:162)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer.upload(SFTPFileTransfer.java:61)
-         *     at net.schmizz.sshj.sftp.SFTPClient.put(SFTPClient.java:248)
-         *     at brooklyn.util.internal.ssh.SshjTool$PutFileAction.create(SshjTool.java:569)
-         * 
-         * Unfortunately that requires consuming the input stream to find out! We can't just do:
-         *   new InputStreamPayload(input)
-         * 
-         * This is nasty: we have to hold the entire file in-memory.
-         * It's worth a look at changing sshj to not need the length, if possible.
-         */
-        try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ByteStreams.copy(input, byteArrayOutputStream);
-            return new ByteArrayPayload(byteArrayOutputStream.toByteArray());
-        } catch (IOException e) {
-            LOG.warn("Error consuming stream", e);
-            throw Throwables.propagate(e);
-        }
+    @Override
+    public String toString() {
+        return toString;
     }
 
+    protected static Boolean hasVal(Map<String,?> map, ConfigKey<?> keyC) {
+        String key = keyC.getName();
+        return map.containsKey(key);
+    }
+    
     protected static <T> T getMandatoryVal(Map<String,?> map, ConfigKey<T> keyC) {
         String key = keyC.getName();
         checkArgument(map.containsKey(key), "must contain key '"+keyC+"'");
@@ -275,11 +245,6 @@ public abstract class SshAbstractTool implements SshTool {
         throw new SshException("(" + toString() + ") " + message + ":" + e.getMessage(), e);
     }
     
-    @Override
-    public String toString() {
-        return toString;
-    }
-
     protected File writeTempFile(InputStream contents) {
         // TODO Use ConfigKeys.BROOKLYN_DATA_DIR, but how to get access to that here?
         File tempFile = ResourceUtils.writeToTempFile(contents, localTempDir, "sshcopy", "data");
@@ -288,6 +253,14 @@ public abstract class SshAbstractTool implements SshTool {
         tempFile.setWritable(false);
         tempFile.setExecutable(false);
         return tempFile;
+    }
+
+    protected File writeTempFile(String contents) {
+        return writeTempFile(contents.getBytes());
+    }
+
+    protected File writeTempFile(byte[] contents) {
+        return writeTempFile(new ByteArrayInputStream(contents));
     }
 
     public String getHostAddress() {

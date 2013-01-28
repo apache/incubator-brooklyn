@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import org.jclouds.util.Throwables2;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.util.MutableMap;
-import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.text.Identifiers;
 
 import com.beust.jcommander.internal.Lists;
@@ -37,11 +37,17 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 /**
- * Test the operation of the {@link SshJschTool} utility class.
+ * Test the operation of the {@link SshTool} utility class; to be extended to test concrete implementations.
  */
 public abstract class SshToolIntegrationTest {
 
+    // FIXME need tests which take properties set in entities and brooklyn.properties;
+    // but not in this class because it is lower level than entities, Aled would argue.
+
     // TODO No tests for retry logic and exception handing yet
+
+    public static final String SSH_KEY_WITH_PASSPHRASE = System.getProperty("sshPrivateKeyWithPassphrase", "~/.ssh/id_rsa_with_passphrase");
+    public static final String SSH_PASSPHRASE = System.getProperty("sshPrivateKeyPassphrase", "mypassphrase");
     
     protected List<SshTool> tools = Lists.newArrayList();
     protected SshTool tool;
@@ -51,7 +57,7 @@ public abstract class SshToolIntegrationTest {
     
     protected abstract SshTool newSshTool(Map<String,?> flags);
 
-    @BeforeMethod(alwaysRun=true)//(groups = {"Integration"})
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         localFilePath = "/tmp/ssh-test-local-"+Identifiers.makeRandomId(8);
         remoteFilePath = "/tmp/ssh-test-remote-"+Identifiers.makeRandomId(8);
@@ -283,18 +289,36 @@ public abstract class SshToolIntegrationTest {
     }
 
     @Test(groups = {"Integration"})
-    public void testCreateFileWithPermissions() throws Exception {
-        tool.createFile(ImmutableMap.of("permissions","0754"), remoteFilePath, "echo hello world!\n");
+    public void testCopyToServerFromBytes() throws Exception {
+        String contents = "echo hello world!\n";
+        byte[] contentBytes = contents.getBytes();
+        tool.copyToServer(MutableMap.<String,Object>of(), contentBytes, remoteFilePath);
+
+        assertRemoteFileContents(remoteFilePath, contents);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testCopyToServerFromInputStream() throws Exception {
+        String contents = "echo hello world!\n";
+        ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes());
+        tool.copyToServer(MutableMap.<String,Object>of(), contentsStream, remoteFilePath);
+
+        assertRemoteFileContents(remoteFilePath, contents);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testCopyToServerWithPermissions() throws Exception {
+        tool.copyToServer(ImmutableMap.of("permissions","0754"), "echo hello world!\n".getBytes(), remoteFilePath);
 
         String out = execCommands("ls -l "+remoteFilePath);
         assertTrue(out.contains("-rwxr-xr--"), out);
     }
     
     @Test(groups = {"Integration"})
-    public void testCreateFileWithLastModifiedDate() throws Exception {
+    public void testCopyToServerWithLastModifiedDate() throws Exception {
         long lastModificationTime = 1234567;
         Date lastModifiedDate = new Date(lastModificationTime);
-        tool.createFile(ImmutableMap.of("lastModificationDate", lastModificationTime), remoteFilePath, "echo hello world!\n");
+        tool.copyToServer(ImmutableMap.of("lastModificationDate", lastModificationTime), "echo hello world!\n".getBytes(), remoteFilePath);
 
         String lsout = execCommands("ls -l "+remoteFilePath);//+" | awk '{print \$6 \" \" \$7 \" \" \$8}'"])
         //execCommands([ "ls -l "+remoteFilePath+" | awk '{print \$6 \" \" \$7 \" \" \$8}'"])
@@ -316,6 +340,19 @@ public abstract class SshToolIntegrationTest {
     }
 
     @Test(groups = {"Integration"})
+    public void testCopyFromServer() throws Exception {
+        String contentsWithoutLineBreak = "echo hello world!";
+        String contents = contentsWithoutLineBreak+"\n";
+        tool.copyToServer(MutableMap.<String,Object>of(), contents.getBytes(), remoteFilePath);
+        
+        tool.copyFromServer(MutableMap.<String,Object>of(), remoteFilePath, new File(localFilePath));
+
+        List<String> actual = Files.readLines(new File(localFilePath), Charsets.UTF_8);
+        assertEquals(actual, ImmutableList.of(contentsWithoutLineBreak));
+    }
+    
+    @Test(groups = {"Integration"})
+    @Deprecated // tests deprecated code
     public void testTransferFileToServer() throws Exception {
         String contents = "echo hello world!\n";
         ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes());
@@ -325,6 +362,7 @@ public abstract class SshToolIntegrationTest {
     }
 
     @Test(groups = {"Integration"})
+    @Deprecated // tests deprecated code
     public void testCreateFileFromBytes() throws Exception {
         String contents = "echo hello world!\n";
         byte[] contentBytes = contents.getBytes();
@@ -334,6 +372,7 @@ public abstract class SshToolIntegrationTest {
     }
 
     @Test(groups = {"Integration"})
+    @Deprecated // tests deprecated code
     public void testCreateFileFromInputStream() throws Exception {
         String contents = "echo hello world!\n";
         ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes());
@@ -343,10 +382,11 @@ public abstract class SshToolIntegrationTest {
     }
 
     @Test(groups = {"Integration"})
+    @Deprecated // tests deprecated code
     public void testTransferFileFromServer() throws Exception {
         String contentsWithoutLineBreak = "echo hello world!";
         String contents = contentsWithoutLineBreak+"\n";
-        tool.createFile(MutableMap.<String,Object>of(), remoteFilePath, contents);
+        tool.copyToServer(MutableMap.<String,Object>of(), contents.getBytes(), remoteFilePath);
         
         tool.transferFileFrom(MutableMap.<String,Object>of(), remoteFilePath, localFilePath);
 
@@ -356,20 +396,21 @@ public abstract class SshToolIntegrationTest {
     
     // TODO No config options in sshj or scp for auto-creating the parent directories
     @Test(enabled=false, groups = {"Integration"})
-    public void testCreateFileInNonExistantDir() throws Exception {
+    public void testCopyFileToNonExistantDir() throws Exception {
         String contents = "echo hello world!\n";
         String remoteFileDirPath = "/tmp/ssh-test-remote-dir-"+Identifiers.makeRandomId(8);
         String remoteFileInDirPath = remoteFileDirPath + File.separator + "ssh-test-remote-"+Identifiers.makeRandomId(8);
         filesCreated.add(remoteFileInDirPath);
         filesCreated.add(remoteFileDirPath);
         
-        tool.createFile(MutableMap.<String,Object>of(), remoteFileInDirPath, contents);
+        tool.copyToServer(MutableMap.<String,Object>of(), contents.getBytes(), remoteFileInDirPath);
 
         assertRemoteFileContents(remoteFileInDirPath, contents);
     }
     
     // fails if terminal enabled
     @Test(groups = {"Integration"})
+    @Deprecated // tests deprecated code
     public void testExecShellCapturesStderr() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -380,6 +421,7 @@ public abstract class SshToolIntegrationTest {
 
     // fails if terminal enabled
     @Test(groups = {"Integration"})
+    @Deprecated // tests deprecated code
     public void testExecCapturesStderr() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -412,7 +454,33 @@ public abstract class SshToolIntegrationTest {
         assertTrue(out.contains("hello world"), "no hello in output: "+out);
     }
 
-//    XXX; // new tests which take properties set in entities and brooklyn.properties
+    // Requires setting up an extra ssh key, with a passphrase, and adding it to ~/.ssh/authorized_keys
+    @Test(groups = {"Integration"})
+    public void testSshKeyWithPassphrase() throws Exception {
+        final SshTool localtool = newSshTool(ImmutableMap.<String,Object>builder()
+                .put(SshTool.PROP_HOST.getName(), "localhost")
+                .put(SshTool.PROP_PRIVATE_KEY_FILE.getName(), SSH_KEY_WITH_PASSPHRASE)
+                .put(SshTool.PROP_PRIVATE_KEY_PASSPHRASE.getName(), SSH_PASSPHRASE)
+                .build());
+        tools.add(localtool);
+        localtool.connect();
+        
+        assertEquals(tool.execScript(MutableMap.<String,Object>of(), ImmutableList.of("date")), 0);
+
+        // Also needs the negative test to prove that we're really using an ssh-key with a passphrase
+        try {
+            final SshTool localtool2 = newSshTool(ImmutableMap.<String,Object>builder()
+                    .put(SshTool.PROP_HOST.getName(), "localhost")
+                    .put(SshTool.PROP_PRIVATE_KEY_FILE.getName(), SSH_KEY_WITH_PASSPHRASE)
+                    .build());
+            tools.add(localtool2);
+            localtool2.connect();
+            fail();
+        } catch (Exception e) {
+            SshException se = Throwables2.getFirstThrowableOfType(e, SshException.class);
+            if (se == null) throw e;
+        }
+    }
     
     private void assertRemoteFileContents(String remotePath, String expectedContents) {
         String catout = execCommands("cat "+remotePath);
