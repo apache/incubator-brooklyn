@@ -172,6 +172,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
     /** @deprecated since 0.5.  destination should be a string not a File */
     public void copyFile(File src, File destination) {
+        getMachine().copyTo(src, destination);
     }
     
     public void copyFile(Map flags2, File src, String destination) {
