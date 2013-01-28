@@ -69,10 +69,11 @@ public class QpidIntegrationTest {
     /**
      * Test that the broker starts up and sets SERVICE_UP correctly when plugins are configured.
      * 
-     * TODO the custom plugin was written against qpid 0.14, so that's the version we need to run
-     * this test against. We should update this plugin.
+     * FIXME the custom plugin was written against qpid 0.14, so that's the version we need to run
+     * this test against. However, v0.14 is no longer available from the download site.
+     * We should update this plugin so it works with the latest qpid.
      */
-    @Test(groups = "Integration")
+    @Test(enabled=false, groups = "Integration")
     public void canStartupAndShutdownWithPlugin() {
         Map qpidRuntimeFiles;
         String pluginjar = "src/test/resources/qpid-test-plugin.jar";

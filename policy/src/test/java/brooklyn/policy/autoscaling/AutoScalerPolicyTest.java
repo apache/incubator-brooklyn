@@ -51,6 +51,16 @@ public class AutoScalerPolicyTest {
         app.startManagement();
     }
 
+    @BeforeMethod(groups="Integration")
+    public void setUpIntegration() throws Exception {
+        // In jenkins for things like testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired, which runs
+        // a time-sensitive test 100 times, it fails periodically due to things taking too long. This is most
+        // likely caused by a full (slow) GC kicking in during the test.
+        //
+        // By GC'ing here, we attempt to avoid a GC in the middle of the time-sensitive test
+        System.gc(); System.gc();
+    }
+    
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (policy != null) policy.destroy();

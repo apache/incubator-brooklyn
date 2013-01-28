@@ -51,7 +51,7 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     public static final String PASSWD = "etc/passwd";
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "0.18");
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "0.20");
     
     @SetFromFlag("amqpPort")
     public static final PortAttributeSensorAndConfigKey AMQP_PORT = AmqpServer.AMQP_PORT;
