@@ -27,7 +27,7 @@ public interface SshTool {
     public static final ConfigKey<String> PROP_HOST = new StringConfigKey("host", "Host to connect to (required)", null);
     public static final ConfigKey<Integer> PROP_PORT = new BasicConfigKey<Integer>(Integer.class, "port", "Port on host to connect to", 22);
     public static final ConfigKey<String> PROP_USER = new StringConfigKey("user", "User to connect as", System.getProperty("user.name"));
-    public static final ConfigKey<String> PROP_PASSWORD = new StringConfigKey("user", "Password to use to connect", null);
+    public static final ConfigKey<String> PROP_PASSWORD = new StringConfigKey("password", "Password to use to connect", null);
     
     public static final ConfigKey<OutputStream> PROP_OUT_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "out", "Stream to which to capture stdout");
     public static final ConfigKey<OutputStream> PROP_ERR_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "err", "Stream to which to capture stderr");
