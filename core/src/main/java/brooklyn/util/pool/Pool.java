@@ -1,5 +1,8 @@
 package brooklyn.util.pool;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import com.google.common.base.Function;
 
 /**
@@ -42,11 +45,11 @@ import com.google.common.base.Function;
  * 
  * @author aled
  */
-public interface Pool<T> {
+public interface Pool<T> extends Closeable {
 
     Lease<T> leaseObject();
     
     <R> R exec(Function<T,R> receiver);
     
-    void closePool();
+    void close() throws IOException;
 }
