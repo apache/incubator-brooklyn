@@ -43,9 +43,9 @@ class StartStopSshDriverTest {
     public void setUp() {
         app = new TestApplication()
         entity = new TestEntity(app)
+        app.startManagement();
         sshMachineLocation = new SshMachineLocationWithSshTool(address:"localhost");
         driver = new BasicStartStopSshDriver(entity, sshMachineLocation)
-        app.startManagement();
     }
     
     @Test(groups = [ "Integration" ])
