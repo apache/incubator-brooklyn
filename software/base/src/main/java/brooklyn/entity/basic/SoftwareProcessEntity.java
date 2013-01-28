@@ -18,10 +18,10 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.adapter.ConfigSensorAdapter;
 import brooklyn.event.adapter.SensorRegistry;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
@@ -382,7 +382,7 @@ public abstract class SoftwareProcessEntity extends AbstractEntity implements St
         // Note: must only apply config-sensors after adding to locations and creating driver; 
         // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
         if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
-        ConfigSensorAdapter.apply(this);
+        ConfigToAttributes.apply(this);
         
 		setAttribute(HOSTNAME, machine.getAddress().getHostName());
 		setAttribute(ADDRESS, machine.getAddress().getHostAddress());

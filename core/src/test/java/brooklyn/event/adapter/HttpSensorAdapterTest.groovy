@@ -39,7 +39,7 @@ public class HttpSensorAdapterTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (registry != null) registry.close();
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
     }
 
 	@Test

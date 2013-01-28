@@ -32,7 +32,7 @@ public class AttributeMapTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
     }
     
     // See ENGR-2111

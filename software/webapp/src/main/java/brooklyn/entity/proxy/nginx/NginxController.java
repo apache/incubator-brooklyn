@@ -23,8 +23,8 @@ import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.adapter.ConfigSensorAdapter;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpPollValue;
@@ -113,7 +113,7 @@ public class NginxController extends AbstractController {
     public void connectSensors() {
         super.connectSensors();
         
-        ConfigSensorAdapter.apply(this);
+        ConfigToAttributes.apply(this);
 
         // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
         httpFeed = HttpFeed.builder()

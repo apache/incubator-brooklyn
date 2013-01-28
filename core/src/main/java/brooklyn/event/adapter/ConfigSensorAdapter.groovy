@@ -2,12 +2,17 @@ package brooklyn.event.adapter;
 
 import groovy.transform.InheritConstructors
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.Sensor
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
+import brooklyn.event.basic.AttributeSensorAndConfigKey
+import brooklyn.event.feed.ConfigToAttributes
 
 
-/** simple config adapter which, on registration, sets all config-attributes from config values */ 
+/** 
+ * Simple config adapter which, on registration, sets all config-attributes from config values
+ * 
+ * @deprecated since 0.5; use ConfigToAttributes instead
+ */ 
 @InheritConstructors
+@Deprecated
 public class ConfigSensorAdapter extends AbstractSensorAdapter {
 
     void register(SensorRegistry registry) {
@@ -21,17 +26,11 @@ public class ConfigSensorAdapter extends AbstractSensorAdapter {
 
     //normally just applied once, statically, not registered...
     public static void apply(EntityLocal entity) {
-        for (Sensor it : entity.getEntityType().getSensors()) {
-            if (it in AttributeSensorAndConfigKey && entity.getAttribute(it)==null) {
-                entity.setAttribute(it)
-            }
-        }
+        ConfigToAttributes.apply(entity);
     }
 
     //for selectively applying once (e.g. sub-classes of DynamicWebAppCluster that don't want to set HTTP_PORT etc!)
     public static void apply(EntityLocal entity, AttributeSensorAndConfigKey key) {
-        if (entity.getAttribute(key)==null) {
-            entity.setAttribute(key)
-        }
+        ConfigToAttributes.apply(entity, key);
     }
 }

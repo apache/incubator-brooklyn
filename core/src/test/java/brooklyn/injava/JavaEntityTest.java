@@ -32,13 +32,15 @@ public class JavaEntityTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
     }
     
     @Test
     public void testPolicySubscribesToEvents() {
         final ExampleJavaPolicy policy = new ExampleJavaPolicy();
+        entity = new ExampleJavaEntity(MutableMap.of("displayName", "myName", "myConfig1", "myVal1"), app);
         entity.addPolicy(policy);
+        Entities.manage(entity);
         
         entity.setAttribute(ExampleJavaEntity.MY_SENSOR1, "val1");
         

@@ -111,7 +111,7 @@ public class JmxFeedTest {
         if (feed != null) feed.stop();
         if (jmxHelper != null) jmxHelper.disconnect();
         if (jmxService != null) jmxService.shutdown();
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
         feed = null;
     }
 
@@ -345,7 +345,7 @@ public class JmxFeedTest {
                     assertEquals(received.get(0).getValue(), "abc");
                 }});
         } finally {
-            if (app != null) Entities.destroy(app);
+            if (app != null) Entities.destroyAll(app);
         }
     }
     

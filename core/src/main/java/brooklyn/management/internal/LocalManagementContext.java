@@ -30,7 +30,8 @@ public class LocalManagementContext extends AbstractManagementContext {
     private SubscriptionManager subscriptions;
     private LocalEntityManager entityManager;
     
-    private final String tostring = "LocalManagementContext("+Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5)+")";
+    private final String shortid = Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5);
+    private final String tostring = "LocalManagementContext("+shortid+")";
 
     /**
      * Creates a LocalManagement with default BrooklynProperties.
@@ -87,7 +88,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
         
         if (execution == null) {
-            execution = new BasicExecutionManager();
+            execution = new BasicExecutionManager(shortid);
             gc = new BrooklynGarbageCollector(configMap, execution);
         }
         return execution;

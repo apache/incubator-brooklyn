@@ -283,6 +283,7 @@ public class JcloudsUtil {
         //   For validating result, could use guava's InternetDomainName.isValidLenient(ip) or InetAddresses.isInetAddress(ip)
         //   He also mentioned context.utils.sshForNode
 
+        // TODO Inefficient code; should re-use executor
         Timeouts timeouts = new ComputeServiceConstants.Timeouts();
         ExecutorService executor = Executors.newCachedThreadPool();
         try {

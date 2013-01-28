@@ -33,7 +33,7 @@ public class MySqlIntegrationTest {
     @AfterMethod(alwaysRun=true)
     public void ensureShutDown() {
         if (tapp != null) {
-            Entities.destroy(tapp)
+            Entities.destroyAll(tapp)
             tapp = null;
         };
     }

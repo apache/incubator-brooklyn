@@ -28,7 +28,6 @@ import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.adapter.ConfigSensorAdapter;
 import brooklyn.event.adapter.JmxHelper;
 import brooklyn.event.adapter.JmxObjectNameAdapter;
 import brooklyn.event.adapter.JmxPostProcessors;
@@ -38,6 +37,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -165,7 +165,8 @@ public class KarafContainer extends SoftwareProcessEntity implements UsesJava, U
         //use of "properties.{user,password}" is non-standard; is that requried? use default jmxUser, jmxPassword flags?
         setAttribute(JMX_CONTEXT, String.format("karaf-%s", getConfig(KARAF_NAME.getConfigKey())));
         
-        sensorRegistry.register(new ConfigSensorAdapter());
+        ConfigToAttributes.apply(this);
+        
         jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(MutableMap.of("period", 500)));
 
         JmxObjectNameAdapter karafAdminObjectNameAdapter = jmxAdapter.objectName(String.format(KARAF_ADMIN, getConfig(KARAF_NAME.getConfigKey())));

@@ -60,7 +60,7 @@ public class HttpFeedTest {
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
         if (server != null) server.shutdown();
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
         feed = null;
     }
     

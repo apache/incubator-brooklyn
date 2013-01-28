@@ -1,10 +1,8 @@
 package brooklyn.entity.dns
 
-import brooklyn.entity.Entity;
-import java.util.Map
-import java.util.Set
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -16,14 +14,15 @@ import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.DynamicGroup
 import brooklyn.entity.basic.Lifecycle
-import brooklyn.entity.trait.Startable;
+import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.WebAppService
-import brooklyn.event.Sensor;
+import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.geo.HostGeoInfo
 
 import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableMap
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 
 
 abstract class AbstractGeoDnsService extends AbstractEntity {
@@ -87,7 +86,12 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
             log.warn("GeoDns $this has no targetEntityProvider, ignoring")
             return;
         }
-        poll = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+        
+        // TODO Should re-use the execution manager's thread pool, somehow
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("brooklyn-geodnsservice-%d")
+                .build();
+        poll = Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
             new Runnable() {
                 public void run() {
                     try {
@@ -102,6 +106,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
             }, 0, 5, TimeUnit.SECONDS
         );
     }
+    
     protected void endPoll() {
         if (poll!=null) {
             if (log.isDebugEnabled()) log.debug("GeoDns $this ending poll");

@@ -77,8 +77,8 @@ public class NginxRebindIntegrationTest {
         	monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
-        if (newApp != null) Entities.destroy(newApp);
-        if (origApp != null && origManagementContext.isRunning()) Entities.destroy(origApp);
+        if (newApp != null) Entities.destroyAll(newApp);
+        if (origApp != null && origManagementContext.isRunning()) Entities.destroyAll(origApp);
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 

@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
-import brooklyn.event.adapter.ConfigSensorAdapter;
 import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
@@ -92,7 +92,7 @@ public class VanillaJavaApp extends SoftwareProcessEntity implements UsesJava, U
     protected void connectSensors() {
         super.connectSensors();
         
-        sensorRegistry.register(new ConfigSensorAdapter());
+        ConfigToAttributes.apply(this);
         
         if ( ((VanillaJavaAppDriver)getDriver()).isJmxEnabled() ) {
             jmxPollPeriod = (jmxPollPeriod > 0) ? jmxPollPeriod : 500;

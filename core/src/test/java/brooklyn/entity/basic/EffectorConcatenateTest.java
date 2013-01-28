@@ -109,7 +109,7 @@ public class EffectorConcatenateTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
     }
     
     @Test

@@ -43,7 +43,7 @@ public class NginxLightIntegrationTest {
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app != null) Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
     }
 
     // FIXME Fails because getting addEntity callback for group members while nginx is still starting,
