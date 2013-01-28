@@ -206,8 +206,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     @Override
-    public void close() {
-        vanillaSshToolPool.closePool();
+    public void close() throws IOException {
+        vanillaSshToolPool.close();
     }
 
     @Override

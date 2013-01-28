@@ -2,6 +2,7 @@ package brooklyn.util.pool;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.IOException;
 import java.util.Deque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,6 +19,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
+import com.google.common.io.Closeables;
 
 public class BasicPool<T> implements Pool<T> {
 
@@ -126,12 +128,12 @@ public class BasicPool<T> implements Pool<T> {
             if (LOG.isTraceEnabled()) LOG.trace("{} executing {} with leasee {}", new Object[] {this, receiver, lease.leasedObject()});
             return receiver.apply(lease.leasedObject());
         } finally {
-            lease.close();
+            Closeables.closeQuietly(lease);
         }
     }
     
     @Override
-    public void closePool() {
+    public void close() throws IOException {
         synchronized (pool) {
             if (LOG.isDebugEnabled()) LOG.debug("{} closing, with {} resources ({})", new Object[] {this, pool.size(), getMetrics()});
             closed.set(true);

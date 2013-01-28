@@ -1,8 +1,11 @@
 package brooklyn.util.pool;
 
-public interface Lease<T> {
+import java.io.Closeable;
+import java.io.IOException;
+
+public interface Lease<T> extends Closeable {
 
     T leasedObject();
     
-    void close();
+    void close() throws IOException;
 }

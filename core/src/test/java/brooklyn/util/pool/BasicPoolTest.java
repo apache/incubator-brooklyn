@@ -126,7 +126,7 @@ public class BasicPoolTest {
         lease1.close();
         lease2.close();
 
-        pool.closePool();
+        pool.close();
         assertEquals(closedVals, ImmutableList.of(0, 1));
     }
     
@@ -135,7 +135,7 @@ public class BasicPoolTest {
         Pool<Integer> pool = BasicPool.<Integer>builder().supplier(supplier).closer(closer).build();
         
         Lease<Integer> lease1 = pool.leaseObject();
-        pool.closePool();
+        pool.close();
         assertEquals(closedVals, ImmutableList.of());
         
         lease1.close();
