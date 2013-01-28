@@ -23,6 +23,12 @@
 		</dependency>
         
         <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>core</artifactId>
+            <version>${osgi-core.version}</version>
+        </dependency>
+        
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <scope>test</scope>

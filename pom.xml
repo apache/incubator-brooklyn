@@ -99,6 +99,7 @@
         <mockwebserver.version>20121111</mockwebserver.version>
         <httpclient.version>4.1.3</httpclient.version>
         <freemarker.version>2.3.19</freemarker.version>
+        <osgi-core.version>4.3.0</osgi-core.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
