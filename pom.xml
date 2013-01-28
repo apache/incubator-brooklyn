@@ -102,7 +102,7 @@
         <osgi-core.version>4.3.0</osgi-core.version>
 
         <includedTestGroups />
-        <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
+        <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
         
         <!-- no passphrase by default, so we can do automated deploy builds;
              you can still supply your own passphrase with -Dgpg.passphrase=XXX -->
@@ -712,7 +712,42 @@
             <id>Integration</id>
             <properties>
                 <includedTestGroups>Integration</includedTestGroups>
-                <excludedTestGroups>Live,WIP</excludedTestGroups>
+                <excludedTestGroups>Acceptance,Live,WIP</excludedTestGroups>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <executions>
+                            <execution>
+                                <id>run-tests</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>integration-test</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>test-jar-creation</id>
+                                <configuration>
+                                    <skip>true</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>Acceptance</id>
+            <properties>
+                <includedTestGroups>Acceptance</includedTestGroups>
+                <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
             </properties>
             <build>
                 <plugins>
@@ -747,7 +782,7 @@
             <id>Live</id>
             <properties>
                 <includedTestGroups>Live</includedTestGroups>
-                <excludedTestGroups>WIP</excludedTestGroups>
+                <excludedTestGroups>Acceptance,WIP</excludedTestGroups>
             </properties>
             <build>
                 <plugins>
