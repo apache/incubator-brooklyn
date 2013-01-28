@@ -20,7 +20,7 @@ import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 public class JmxmpSslSupport {
 
-    final static String BROOKLYN_VERSION = "0.5.0-SNAPSHOT";  // BROOKLYN_VERSION (updated by script)
+    final static String BROOKLYN_VERSION = "0.5.0-M1";  // BROOKLYN_VERSION (updated by script)
     
     protected final JavaSoftwareProcessSshDriver driver;
     
