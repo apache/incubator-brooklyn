@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -37,6 +36,7 @@ import brooklyn.util.internal.LanguageUtils;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * TODO javadoc
@@ -83,20 +83,13 @@ public class BasicExecutionManager implements ExecutionManager {
         return Tasks.withBlockingDetails(description, code);
     }
 
-    private ThreadFactory threadFactory = newThreadFactory();
-    private ThreadFactory daemonThreadFactory = new ThreadFactory() {
-        public Thread newThread(Runnable r) {
-            Thread t = threadFactory.newThread(r); 
-            t.setDaemon(true); 
-            return t;
-        }
-    };
+    private final ThreadFactory threadFactory;
     
-    private ExecutorService runner = 
-		new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), daemonThreadFactory);
-//      above is Executors.newCachedThreadPool(daemonThreadFactory)  but timeout of 1s rather than 60s for better shutdown!
+    private final ThreadFactory daemonThreadFactory;
+    
+    private final ExecutorService runner;
         
-	private ScheduledExecutorService delayedRunner = new ScheduledThreadPoolExecutor(1, daemonThreadFactory);
+	private final ScheduledExecutorService delayedRunner;
 	
     // TODO Could have a set of all knownTasks; but instead we're having a separate set per tag,
     // so the same task could be listed multiple times if it has multiple tags...
@@ -105,12 +98,12 @@ public class BasicExecutionManager implements ExecutionManager {
     //(but more testing is needed before we are sure it is thread-safe!)
     //synch blocks are as finely grained as possible for efficiency
     //Not using a CopyOnWriteArraySet for each, because profiling showed this being a massive perf bottleneck.
-    private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap();
+    private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap<Object,Set<Task>>();
 
     @Deprecated
-    private ConcurrentMap<Object, TaskPreprocessor> preprocessorByTag = new ConcurrentHashMap();
+    private ConcurrentMap<Object, TaskPreprocessor> preprocessorByTag = new ConcurrentHashMap<Object, TaskPreprocessor>();
 
-    private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap();
+    private ConcurrentMap<Object, TaskScheduler> schedulerByTag = new ConcurrentHashMap<Object, TaskScheduler>();
     
     private final AtomicLong totalTaskCount = new AtomicLong();
     
@@ -120,9 +113,34 @@ public class BasicExecutionManager implements ExecutionManager {
     
     private final List<ExecutionListener> listeners = new CopyOnWriteArrayList<ExecutionListener>();
     
-	/** for use by overriders to use custom thread factory */
-	protected ThreadFactory newThreadFactory() {
-		return Executors.defaultThreadFactory();
+    public BasicExecutionManager(String contextid) {
+        threadFactory = newThreadFactory(contextid);
+        daemonThreadFactory = new ThreadFactoryBuilder()
+                .setThreadFactory(threadFactory)
+                .setDaemon(true)
+                .build();
+                
+        // use Executors.newCachedThreadPool(daemonThreadFactory), but timeout of 1s rather than 60s for better shutdown!
+        runner = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), 
+                daemonThreadFactory);
+            
+        delayedRunner = new ScheduledThreadPoolExecutor(1, daemonThreadFactory);
+    }
+    
+	/** 
+	 * For use by overriders to use custom thread factory.
+	 * But be extremely careful: called by constructor, so before sub-class' constructor will
+	 * have been invoked!
+	 */
+	protected ThreadFactory newThreadFactory(String contextid) {
+	    return new ThreadFactoryBuilder()
+        	    .setNameFormat("brooklyn-execmanager-"+contextid+"-%d")
+        	    .setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler(){
+                        @Override
+                        public void uncaughtException(Thread t, Throwable e) {
+                            log.error("Uncaught exception in thread "+t.getName(), e);
+                        }})
+                .build();
 	}
 	
     public void shutdownNow() {

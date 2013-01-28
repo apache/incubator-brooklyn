@@ -2,6 +2,7 @@ package brooklyn.entity.brooklyn
 
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 
 import brooklyn.entity.Entity
@@ -12,6 +13,8 @@ import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.LocalSubscriptionManager
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.task.BasicExecutionManager
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 
 public class BrooklynMetrics extends AbstractEntity {
 
@@ -39,7 +42,11 @@ public class BrooklynMetrics extends AbstractEntity {
     }
     
     public void onManagementBecomingMaster() {
-        executor = Executors.newSingleThreadScheduledExecutor()
+        // TODO Don't use own thread pool; use new "feeds" (see FunctionFeed, or variants there of)
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("brooklyn-brooklynmetrics-poller-%d")
+                .build();
+        executor = Executors.newSingleThreadScheduledExecutor(threadFactory)
         executor.scheduleWithFixedDelay(
                 { refreshSensors() }, 
                 0, 

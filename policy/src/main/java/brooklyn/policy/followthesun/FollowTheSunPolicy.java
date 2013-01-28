@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,6 +32,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class FollowTheSunPolicy extends AbstractPolicy {
 
@@ -51,7 +53,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     
     private FollowTheSunPool poolEntity;
     
-    private volatile ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private volatile ScheduledExecutorService executor;
     private final AtomicBoolean executorQueued = new AtomicBoolean(false);
     private volatile long executorTime = 0;
     private boolean loggedConstraintsIgnored = false;
@@ -109,6 +111,9 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         this.parameters = parameters;
         this.strategy = new FollowTheSunStrategy<Entity, Movable>(model, parameters); // TODO: extract interface, inject impl
         this.locationFinder = elvis(locationFinder, defaultLocationFinder);
+        
+        // TODO Should re-use the execution manager's thread pool, somehow
+        executor = Executors.newSingleThreadScheduledExecutor(newThreadFactory());
     }
     
     @Override
@@ -146,11 +151,17 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     @Override
     public void resume() {
         super.resume();
-        executor = Executors.newSingleThreadScheduledExecutor();
+        executor = Executors.newSingleThreadScheduledExecutor(newThreadFactory());
         executorTime = 0;
         executorQueued.set(false);
     }
     
+    private ThreadFactory newThreadFactory() {
+        return new ThreadFactoryBuilder()
+                .setNameFormat("brooklyn-followthesunpolicy-%d")
+                .build();
+    }
+
     private void scheduleLatencyReductionJig() {
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();

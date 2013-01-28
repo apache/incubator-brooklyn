@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -35,6 +36,7 @@ import brooklyn.util.flags.TypeCoercions;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 
 /**
@@ -225,9 +227,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     private Entity poolEntity;
     
-    private volatile ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final AtomicBoolean executorQueued = new AtomicBoolean(false);
     private volatile long executorTime = 0;
+    private volatile ScheduledExecutorService executor;
     
     private final TimeWindowedList<Number> recentDesiredResizes;
     
@@ -281,6 +283,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         
         long maxResizeStabilizationDelay = Math.max(resizeUpStabilizationDelay, resizeDownStabilizationDelay);
         recentDesiredResizes = new TimeWindowedList<Number>(MutableMap.of("timePeriod", maxResizeStabilizationDelay, "minExpiredVals", 1));
+        
+        // TODO Should re-use the execution manager's thread pool, somehow
+        executor = Executors.newSingleThreadScheduledExecutor(newThreadFactory());
     }
 
     public void setMetricLowerBound(Number val) {
@@ -328,7 +333,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @Override
     public void resume() {
         super.resume();
-        executor = Executors.newSingleThreadScheduledExecutor();
+        executor = Executors.newSingleThreadScheduledExecutor(newThreadFactory());
     }
     
     @Override
@@ -346,6 +351,12 @@ public class AutoScalerPolicy extends AbstractPolicy {
         subscribe(poolEntity, poolColdSensor, utilizationEventHandler);
         subscribe(poolEntity, poolHotSensor, utilizationEventHandler);
         subscribe(poolEntity, poolOkSensor, utilizationEventHandler);
+    }
+    
+    private ThreadFactory newThreadFactory() {
+        return new ThreadFactoryBuilder()
+                .setNameFormat("brooklyn-autoscalerpolicy-%d")
+                .build();
     }
     
     private void onMetricChanged(Number val) {
