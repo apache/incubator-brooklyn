@@ -5,6 +5,7 @@ import java.util.Map;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpServer;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -15,11 +16,9 @@ import com.google.common.annotations.Beta;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
  */
+@ImplementedBy(RabbitBrokerImpl.class)
 public interface RabbitBroker extends SoftwareProcess, MessageBroker, AmqpServer {
 
-    // FIXME Will not work in proxy-mode because RabbitDestination and RabbitQueue call into RabbitBroker directly
-    // (for setting up RabbitQueue's SshFeed). What is the best pattern to use here? 
-    
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.8.7");
 

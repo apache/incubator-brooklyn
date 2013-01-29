@@ -14,6 +14,7 @@ import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.messaging.MessageBroker
 import brooklyn.entity.messaging.amqp.AmqpExchange
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -34,7 +35,8 @@ import com.rabbitmq.client.QueueingConsumer
  * 
  *  - Is `erl` on your path for a non-interactive ssh session?
  *    Look in rabbit's $RUN_DIR/console-err.log (e.g. /tmp/brooklyn-aled/apps/someappid/entities/RabbitBroker_2.8.7_JROYTcSL/console-err.log)
- *    I worked around that (with a temporary hack) by adding "source /Users/aled/.profile" to in RabbitSshDriver.launch, isRunning and stop.
+ *    I worked around that by adding to my ~/.brooklyn/brooklyn.properties:
+ *      brooklyn.ssh.config.scriptHeader=#!/bin/bash -e\nif [ -f ~/.bashrc ] ; then . ~/.bashrc ; fi\nif [ -f ~/.profile ] ; then . ~/.profile ; fi\necho $PATH > /tmp/mypath.txt
  *    
  *  - Is the hostname resolving properly?
  *    Look in $RUN_DIR/console-out.log; is there a message like:
@@ -66,8 +68,7 @@ public class RabbitIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        rabbit = new RabbitBrokerImpl(parent:app);
-        Entities.startManagement(app);
+        rabbit = app.createAndManageChild(BasicEntitySpec.newInstance(RabbitBroker.class));
         rabbit.start([ testLocation ])
         executeUntilSucceedsWithShutdown(rabbit) {
             assertTrue rabbit.getAttribute(Startable.SERVICE_UP)
@@ -80,8 +81,7 @@ public class RabbitIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testClientConnection() {
-        rabbit = new RabbitBrokerImpl(parent:app);
-        Entities.startManagement(app);
+        rabbit = app.createAndManageChild(BasicEntitySpec.newInstance(RabbitBroker.class));
         rabbit.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue rabbit.getAttribute(Startable.SERVICE_UP)

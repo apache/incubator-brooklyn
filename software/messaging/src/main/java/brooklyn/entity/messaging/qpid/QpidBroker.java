@@ -19,9 +19,6 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(QpidBrokerImpl.class)
 public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, AmqpServer {
 
-    // FIXME Will not work in proxy-mode because Destination and Queue call into the entity directly
-    // (for setting up jmxFeed). What is the best pattern to use here? 
-
     /* Qpid runtime file locations for convenience. */
 
     public static final String CONFIG_XML = "etc/config.xml";
