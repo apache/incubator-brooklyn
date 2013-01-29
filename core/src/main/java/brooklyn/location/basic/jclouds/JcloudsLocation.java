@@ -555,7 +555,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             
             // Wait for the VM to be reachable over SSH
             if (setup.get("waitForSshable") != null ? truth(setup.get("waitForSshable")) : true) {
-                String vmIp = JcloudsUtil.getFirstReachableAddress(node);
+                String vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
                 final NodeMetadata nodeRef = node;
                 final LoginCredentials expectedCredentialsRef = expectedCredentials;
                 
@@ -1116,7 +1116,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         if ("aws-ec2".equals(setup != null ? setup.get("provider") : null)) {
             String vmIp = null;
             try {
-                vmIp = JcloudsUtil.getFirstReachableAddress(node);
+                vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
             } catch (Exception e) {
                 LOG.warn("Error reaching aws-ec2 instance on port 22; falling back to jclouds metadata for address", e);
             }

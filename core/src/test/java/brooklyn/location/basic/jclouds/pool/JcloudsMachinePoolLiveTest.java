@@ -1,17 +1,16 @@
 package brooklyn.location.basic.jclouds.pool;
 
+import java.util.Arrays;
+
+import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
-import org.jclouds.compute.ComputeServiceContextFactory;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
 
 public class JcloudsMachinePoolLiveTest {
 
@@ -53,12 +52,10 @@ public class JcloudsMachinePoolLiveTest {
 
     @Test(groups="Live")
     public void buildClaimAndDestroy() {
-        ComputeServiceContext context =
-                new ComputeServiceContextFactory().createContext("aws-ec2",
-                        getRequiredSystemProperty("identity"),
-                        getRequiredSystemProperty("credential"),
-                        ImmutableSet.<Module> of(new SLF4JLoggingModule(),
-                                new SshjSshClientModule()));
+        ComputeServiceContext context = ContextBuilder.newBuilder("aws-ec2")
+                .modules(Arrays.asList(new SshjSshClientModule(), new SLF4JLoggingModule()))
+                .credentials(getRequiredSystemProperty("identity"), getRequiredSystemProperty("credential"))
+                .build(ComputeServiceContext.class);
         ComputeService svc = context.getComputeService();
         SamplePool p = new SamplePool(svc);
         log.info("buildClaimAndDestroy: created pool");
