@@ -38,6 +38,8 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
 
     @Override
     public String getAmqpVersion() { return entity.getAttribute(QpidBroker.AMQP_VERSION); }
+
+    public Integer getHttpManagementPort() { return entity.getAttribute(QpidBroker.HTTP_MANAGEMENT_PORT); }
     
     protected String getInstallFilename() { return "qpid-java-broker-"+getVersion()+".tar.gz"; }
     protected String getInstallUrl() { return "http://download.nextag.com/apache/qpid/"+getVersion()+"/"+getInstallFilename(); }
@@ -93,9 +95,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     @Override
     public void launch() {
         newScript(ImmutableMap.of("usePidFile", false), LAUNCHING)
-                .body.append(
-                    format("nohup ./bin/qpid-server -b '*' -m %s -p %s > /dev/null 2>&1 &", getJmxPort(), getAmqpPort())
-                )
+                .body.append("nohup ./bin/qpid-server -b '*' > /dev/null 2>&1 &")
                 .execute();
     }
 
@@ -115,6 +115,20 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     @Override
     public void kill() {
         newScript(ImmutableMap.of("usePidFile", getPidFile()), KILLING).execute();
+    }
+
+    public Map<String, Object> getCustomJavaSystemProperties() {
+        Map<String, Object> props = MutableMap.<String, Object>builder()
+                .put("connector.port", getAmqpPort())
+                .put("management.enabled", "true")
+                .put("management.jmxport.registryServer", getJmxPort())
+                .put("management.jmxport.connectorServer", getRmiServerPort())
+                .put("management.http.enabled",  getHttpManagementPort() != null ? "true" : "false")
+                .build();
+        if (getHttpManagementPort() != null) {
+            props.put("management.http.port", getHttpManagementPort());
+        }
+        return props;
     }
 
     public Map<String, String> getShellEnvironment() {

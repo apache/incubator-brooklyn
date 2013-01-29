@@ -21,14 +21,12 @@ import brooklyn.entity.basic.SoftwareProcessEntity;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.jms.JMSBroker;
-import brooklyn.event.adapter.JmxHelper;
-import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.GroovyJavaMethods;
+import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
@@ -62,6 +60,9 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     @SetFromFlag("amqpVersion")
     public static final BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = new BasicAttributeSensorAndConfigKey<String>(
             AmqpServer.AMQP_VERSION, AmqpServer.AMQP_0_10);
+    
+    @SetFromFlag("httpManagementPort")
+    public static final PortAttributeSensorAndConfigKey HTTP_MANAGEMENT_PORT = new PortAttributeSensorAndConfigKey("qpid.http-management.port", "Qpid HTTP management plugin port");
 
     /** Files to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
     @SetFromFlag("runtimeFiles")
@@ -77,12 +78,6 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
             Attributes.JMX_PASSWORD, "admin");
 
     private transient JmxFeed jmxFeed;
-
-    //TODO if this is included, AbstractEntity complains about multiple sensors;
-//    //should be smart enough to exclude;
-//    //also, we'd prefer to hide this from being configurable full stop
-//    /** not configurable; must be 100 more than JMX port */
-//    public static final PortAttributeSensorAndConfigKey RMI_PORT = [ UsesJmx.RMI_PORT, 9101 ] 
     
     public QpidBroker() {
         this(MutableMap.of(), null);
@@ -151,17 +146,9 @@ public class QpidBroker extends JMSBroker<QpidQueue, QpidTopic> implements UsesJ
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = Sets.newLinkedHashSet(super.getRequiredOpenPorts());
         ports.add(getAttribute(AMQP_PORT));
-        Integer jmx = getAttribute(JMX_PORT);
-        if (jmx != null && jmx > 0) ports.add(jmx + 100);
+        ports.add(getAttribute(HTTP_MANAGEMENT_PORT));
         log.debug("getRequiredOpenPorts detected expanded (qpid) ports {} for {}", ports, this);
         return ports;
-    }
-
-    @Override
-    protected void preStart() {
-        super.preStart();
-        // NOTE difference of 100 hard-coded in Qpid - RMI port ignored
-        setAttribute(RMI_SERVER_PORT, getAttribute(JMX_PORT) + 100);
     }
 
     @Override
