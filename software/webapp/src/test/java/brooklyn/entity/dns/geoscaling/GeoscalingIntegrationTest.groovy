@@ -48,8 +48,8 @@ class GeoscalingIntegrationTest {
                 .configure("username", "cloudsoft")
                 .configure("password", "cl0uds0ft")
                 .configure("primaryDomainName", primaryDomain)
-                .configure("smartSubdomainName", subDomain));
-        geoDns.setTargetEntityProvider(group)
+                .configure("smartSubdomainName", subDomain)
+                .configure("targetEntityProvider", group));
         
         app.start([loc])
         
