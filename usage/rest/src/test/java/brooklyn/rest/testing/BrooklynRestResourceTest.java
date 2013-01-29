@@ -15,7 +15,7 @@ import com.sun.jersey.spi.inject.Errors;
 
 public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
 
-  @BeforeClass
+  @BeforeClass(alwaysRun=true)
   public void setUp() throws Exception {
       // need this to debug jersey inject errors 
     java.util.logging.Logger.getLogger(Errors.class.getName()).setLevel(Level.INFO);
@@ -23,7 +23,7 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
     setUpJersey();
   }
 
-  @AfterClass
+  @AfterClass(alwaysRun=false)
   public void tearDown() throws Exception {
     tearDownJersey();
   }

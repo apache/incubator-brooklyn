@@ -37,7 +37,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
 
   private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").
       entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
-      locations(ImmutableSet.of("/v1/locations/0")).
+      locations(ImmutableSet.of("localhost")).
       build();
 
   @Override
@@ -45,7 +45,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
       addResources();
   }
 
-  @AfterClass
+  @AfterClass(alwaysRun=true)
   @Override
   public void tearDown() throws Exception {
     super.tearDown();
@@ -56,9 +56,10 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
   public void testDeployRedisApplication() throws InterruptedException, TimeoutException {
     ClientResponse response = client().resource("/v1/applications")
         .post(ClientResponse.class, redisSpec);
-
+    
+    assertEquals(response.getStatus(), 201);
     assertEquals(getManagementContext().getApplications().size(), 1);
-    assertEquals(response.getLocation().getPath(), "/v1/applications/redis-app");
+    assertTrue(response.getLocation().getPath().startsWith("/v1/applications/"), "path="+response.getLocation().getPath()); // path uses id, rather than app name
 
     waitForApplicationToBeRunning(response.getLocation());
   }

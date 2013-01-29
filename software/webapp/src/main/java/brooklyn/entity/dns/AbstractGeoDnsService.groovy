@@ -1,5 +1,7 @@
 package brooklyn.entity.dns
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadFactory
@@ -19,6 +21,7 @@ import brooklyn.entity.webapp.WebAppService
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.geo.HostGeoInfo
+import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableMap
@@ -27,7 +30,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 
 abstract class AbstractGeoDnsService extends AbstractEntity {
     protected static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
+
+    @SetFromFlag
     protected Entity targetEntityProvider;
+
     protected Map<Entity, HostGeoInfo> targetHosts = Collections.synchronizedMap(new LinkedHashMap<Entity, HostGeoInfo>());
     
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
@@ -71,7 +77,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
     
     /** if target is a group, its members are searched; otherwise its children are searched */
     public void setTargetEntityProvider(final Entity entityProvider) {
-        this.targetEntityProvider = entityProvider;
+        this.targetEntityProvider = checkNotNull(entityProvider, "targetEntityProvider");
     }
     
     // TODO: remove polling once locations can be determined via subscriptions
@@ -83,8 +89,7 @@ abstract class AbstractGeoDnsService extends AbstractEntity {
             return;
         }
         if (targetEntityProvider==null) {
-            log.warn("GeoDns $this has no targetEntityProvider, ignoring")
-            return;
+            log.warn("GeoDns $this has no targetEntityProvider; polling will have no-effect until it is set")
         }
         
         // TODO Should re-use the execution manager's thread pool, somehow
