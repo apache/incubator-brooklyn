@@ -18,13 +18,13 @@ import brooklyn.util.text.Strings
 /**
  * Cassandra live tests.
  *
- * Test the operation of the {@link CassandraServer} class using the jclouds {@code rackspace-cloudservers-uk}
+ * Test the operation of the {@link CassandraNode} class using the jclouds {@code rackspace-cloudservers-uk}
  * and {@code aws-ec2} providers, with different OS images. The tests use the {@link #testConnection()} method
  * from the integration tests, and will need to have {@code brooklyn.jclouds.provider.identity} and {@code .credential}
  * set, usually in the {@code .brooklyn/bropoklyn.properties} file.
  */
-public class CassandraLiveTest extends CassandraIntegrationTest {
-    private static final Logger log = LoggerFactory.getLogger(CassandraLiveTest.class)
+public class CassandraNodeLiveTest extends CassandraNodeIntegrationTest {
+    private static final Logger log = LoggerFactory.getLogger(CassandraNodeLiveTest.class)
 
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {

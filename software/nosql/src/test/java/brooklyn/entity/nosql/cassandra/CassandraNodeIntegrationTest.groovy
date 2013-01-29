@@ -41,10 +41,10 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory
 /**
  * Cassandra integration tests.
  *
- * Test the operation of the {@link CassandraServer} class.
+ * Test the operation of the {@link CassandraNode} class.
  */
-public class CassandraIntegrationTest {
-    private static final Logger log = LoggerFactory.getLogger(CassandraIntegrationTest.class)
+public class CassandraNodeIntegrationTest {
+    private static final Logger log = LoggerFactory.getLogger(CassandraNodeIntegrationTest.class)
 
     static {
         TimeExtras.init()
@@ -52,7 +52,7 @@ public class CassandraIntegrationTest {
 
     protected Application app
     protected Location testLocation
-    protected CassandraServer cassandra
+    protected CassandraNode cassandra
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
@@ -73,7 +73,7 @@ public class CassandraIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        cassandra = new CassandraServer(parent:app)
+        cassandra = new CassandraNode(parent:app)
         Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceedsWithShutdown(cassandra, timeout:10*TimeUnit.MINUTES) {
@@ -88,7 +88,7 @@ public class CassandraIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithCustomJmx() {
-        cassandra = new CassandraServer(parent:app)
+        cassandra = new CassandraNode(parent:app)
         Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceedsWithShutdown(cassandra, timeout:10*TimeUnit.MINUTES) {
@@ -102,7 +102,7 @@ public class CassandraIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testConnection() throws Exception {
-        cassandra = new CassandraServer(parent:app, thriftPort:'9876', jmxPort:'11099', rmiServerPort:'9001', clusterName:'TestCluster')
+        cassandra = new CassandraNode(parent:app, thriftPort:'9876', jmxPort:'11099', rmiServerPort:'9001', clusterName:'TestCluster')
         Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceeds {
@@ -172,7 +172,7 @@ public class CassandraIntegrationTest {
         }
     }
 
-    protected AstyanaxContext<Keyspace> getAstyanaxContext(CassandraServer server) {
+    protected AstyanaxContext<Keyspace> getAstyanaxContext(CassandraNode server) {
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
                 .forCluster("TestCluster")
                 .forKeyspace("BrooklynIntegrationTest")

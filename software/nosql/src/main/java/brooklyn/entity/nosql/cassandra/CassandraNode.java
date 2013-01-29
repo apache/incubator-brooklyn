@@ -38,11 +38,11 @@ import com.google.common.collect.Maps;
 /**
  * An {@link brooklyn.entity.Entity} that represents an Cassandra service
  */
-public class CassandraServer extends SoftwareProcessEntity implements UsesJmx {
+public class CassandraNode extends SoftwareProcessEntity implements UsesJmx {
     /** serialVersionUID */
     private static final long serialVersionUID = -5430475649331861964L;
 
-    private static final Logger log = LoggerFactory.getLogger(CassandraServer.class);
+    private static final Logger log = LoggerFactory.getLogger(CassandraNode.class);
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "1.2.0");
@@ -68,15 +68,15 @@ public class CassandraServer extends SoftwareProcessEntity implements UsesJmx {
 
     public static final BasicAttributeSensor<Long> TOKEN = new BasicAttributeSensor<Long>(Long.class, "cassandra.token", "Cassandra Token");
 
-    public CassandraServer(Map<?, ?> flags){
+    public CassandraNode(Map<?, ?> flags){
         this(flags, null);
     }
 
-    public CassandraServer(Entity owner){
+    public CassandraNode(Entity owner){
         this(Maps.newHashMap(), owner);
     }
 
-    public CassandraServer(Map<?, ?> flags, Entity owner) {
+    public CassandraNode(Map<?, ?> flags, Entity owner) {
         super(flags, owner);
     }
     
@@ -87,7 +87,7 @@ public class CassandraServer extends SoftwareProcessEntity implements UsesJmx {
 
     @Override
     public Class getDriverInterface() {
-        return CassandraDriver.class;
+        return CassandraNodeDriver.class;
     }
 
     private JmxFeed jmxFeed;

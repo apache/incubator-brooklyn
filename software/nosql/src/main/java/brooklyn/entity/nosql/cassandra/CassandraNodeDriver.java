@@ -5,7 +5,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import brooklyn.entity.java.JavaSoftwareProcessDriver;
 
-public interface CassandraDriver extends JavaSoftwareProcessDriver {
+public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
 
     Integer getGossipPort();
 

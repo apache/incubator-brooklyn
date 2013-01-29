@@ -24,13 +24,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Start a {@link CassandraServer} in a {@link Location} accessible over ssh.
+ * Start a {@link CassandraNode} in a {@link Location} accessible over ssh.
  */
-public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements CassandraDriver {
+public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver implements CassandraNodeDriver {
 
-    private static final Logger log = LoggerFactory.getLogger(CassandraSshDriver.class);
+    private static final Logger log = LoggerFactory.getLogger(CassandraNodeSshDriver.class);
     
-    public CassandraSshDriver(CassandraServer entity, SshMachineLocation machine) {
+    public CassandraNodeSshDriver(CassandraNode entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -38,23 +38,23 @@ public class CassandraSshDriver extends JavaSoftwareProcessSshDriver implements 
     protected String getLogFileLocation() { return String.format("%s/cassandra.log", getRunDir()); }
 
     @Override
-    public Integer getGossipPort() { return entity.getAttribute(CassandraServer.GOSSIP_PORT); }
+    public Integer getGossipPort() { return entity.getAttribute(CassandraNode.GOSSIP_PORT); }
 
     @Override
-    public Integer getSslGossipPort() { return entity.getAttribute(CassandraServer.SSL_GOSSIP_PORT); }
+    public Integer getSslGossipPort() { return entity.getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
 
     @Override
-    public Integer getThriftPort() { return entity.getAttribute(CassandraServer.THRIFT_PORT); }
+    public Integer getThriftPort() { return entity.getAttribute(CassandraNode.THRIFT_PORT); }
 
     @Override
-    public String getClusterName() { return entity.getAttribute(CassandraServer.CLUSTER_NAME); }
+    public String getClusterName() { return entity.getAttribute(CassandraNode.CLUSTER_NAME); }
     
     @Override
     public void install() {
         log.info("Installing {}", entity);
-        String url = entity.getConfig(CassandraServer.TGZ_URL);
+        String url = entity.getConfig(CassandraNode.TGZ_URL);
         if (Strings.isEmpty(url)) {
-            url = entity.getConfig(CassandraServer.MIRROR_URL) + String.format("/%1$s/apache-cassandra-%1$s-bin.tar.gz", getVersion());
+            url = entity.getConfig(CassandraNode.MIRROR_URL) + String.format("/%1$s/apache-cassandra-%1$s-bin.tar.gz", getVersion());
         }
         String saveAs = String.format("apache-cassandra-%s-bin.tar.gz", getVersion());
         List<String> commands = ImmutableList.<String>builder()

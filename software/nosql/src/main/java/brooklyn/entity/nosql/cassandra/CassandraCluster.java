@@ -24,7 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 /**
- * A cluster of {@link CassandraServer}s based on {@link DynamicCluster} which can be resized by a policy if required.
+ * A cluster of {@link CassandraNode}s based on {@link DynamicCluster} which can be resized by a policy if required.
  *
  * TODO add sensors with aggregated Cassandra statistics from cluster
  */
@@ -49,10 +49,10 @@ public class CassandraCluster extends DynamicCluster {
     public CassandraCluster(Map<?, ?> flags, Entity owner) {
         super(flags, owner);
 
-        setFactory(new EntityFactory<CassandraServer>() {
+        setFactory(new EntityFactory<CassandraNode>() {
             @Override
-            public CassandraServer newEntity(Map factoryflags, Entity factoryOwner) {
-                return new CassandraServer(factoryflags, factoryOwner);
+            public CassandraNode newEntity(Map factoryflags, Entity factoryOwner) {
+                return new CassandraNode(factoryflags, factoryOwner);
             }
         });
     }
@@ -92,7 +92,7 @@ public class CassandraCluster extends DynamicCluster {
         int n = getMembers().size();
         for (int i = 0; i < n; i++) {
             log.info("Update cassandra cluster member {} of {}", i, n);
-            CassandraServer server = (CassandraServer) Iterables.get(getMembers(), i);
+            CassandraNode server = (CassandraNode) Iterables.get(getMembers(), i);
             BigInteger token = BigInteger.valueOf(2L).pow(127).divide(BigInteger.valueOf(n)).multiply(BigInteger.valueOf(i));
             server.setToken(token.toString());
         }
