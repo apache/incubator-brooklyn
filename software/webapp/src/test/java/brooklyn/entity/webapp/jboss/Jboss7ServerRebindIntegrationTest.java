@@ -62,7 +62,7 @@ public class Jboss7ServerRebindIntegrationTest {
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        origApp = ApplicationBuilder.builder(TestApplication.class).manage();
+        origApp = ApplicationBuilder.builder(TestApplication.class).manage(origManagementContext);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
