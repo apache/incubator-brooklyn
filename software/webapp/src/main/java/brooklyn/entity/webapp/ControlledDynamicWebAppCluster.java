@@ -12,6 +12,8 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -75,18 +77,21 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
     public static ConfigKey<Integer> INITIAL_SIZE = new BasicConfigKey<Integer>(Cluster.INITIAL_SIZE, 1);
 
     @SetFromFlag("controller")
-    public static ConfigKey<AbstractController> CONTROLLER = new BasicConfigKey<AbstractController>(
+    public static BasicAttributeSensorAndConfigKey<AbstractController> CONTROLLER = new BasicAttributeSensorAndConfigKey<AbstractController>(
             AbstractController.class, "controlleddynamicweballcluster.controller", "Controller for the cluster; if null a default will created");
 
     /** factory (or closure) to create the web server, given flags */
     @SetFromFlag("factory")
-    public static ConfigKey<ConfigurableEntityFactory<? extends WebAppService>> FACTORY = new BasicConfigKey(
+    public static BasicAttributeSensorAndConfigKey<ConfigurableEntityFactory<? extends WebAppService>> FACTORY = new BasicAttributeSensorAndConfigKey(
             ConfigurableEntityFactory.class, "controlleddynamicweballcluster.factory", "factory (or closure) to create the web server");
 
     /** Spec for web server entiites to be created */
     @SetFromFlag("memberSpec")
-    public static ConfigKey<EntitySpec<? extends WebAppService>> MEMBER_SPEC = new BasicConfigKey(
+    public static BasicAttributeSensorAndConfigKey<EntitySpec<? extends WebAppService>> MEMBER_SPEC = new BasicAttributeSensorAndConfigKey(
             EntitySpec.class, "controlleddynamicweballcluster.memberSpec", "Spec for web server entiites to be created");
+
+    public static AttributeSensor<DynamicWebAppCluster> CLUSTER = new BasicAttributeSensor<DynamicWebAppCluster>(
+            DynamicWebAppCluster.class, "controlleddynamicweballcluster.cluster", "Underlying web-app cluster");
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
 

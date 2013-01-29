@@ -19,6 +19,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
@@ -32,12 +33,6 @@ import com.google.common.collect.Lists;
 public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implements ControlledDynamicWebAppCluster {
 
     public static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterImpl.class);
-            
-    // TODO convert to use attributes, to support rebind
-    private AbstractController controller;
-    private ConfigurableEntityFactory<? extends WebAppService> webServerFactory;
-    private EntitySpec<? extends WebAppService> webServerSpec;
-    private DynamicWebAppCluster cluster;
 
     public ControlledDynamicWebAppClusterImpl() {
         this(MutableMap.of(), null);
@@ -58,11 +53,16 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
 
     @Override
     public void postConstruct() {
-        webServerFactory = getConfig(FACTORY);
-        webServerSpec = getConfig(MEMBER_SPEC);
+        ConfigToAttributes.apply(this, FACTORY);
+        ConfigToAttributes.apply(this, MEMBER_SPEC);
+        ConfigToAttributes.apply(this, CONTROLLER);
+        
+        ConfigurableEntityFactory<? extends WebAppService> webServerFactory = getAttribute(FACTORY);
+        EntitySpec<? extends WebAppService> webServerSpec = getAttribute(MEMBER_SPEC);
         if (webServerFactory == null && webServerSpec == null) {
             log.debug("creating default web server spec for {}", this);
             webServerSpec = BasicEntitySpec.newInstance(JBoss7Server.class);
+            setAttribute(MEMBER_SPEC, webServerSpec);
         }
         
         log.debug("creating cluster child for {}", this);
@@ -73,31 +73,33 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         } else {
             flags = MutableMap.<String,Object>of("factory", webServerFactory);
         }
-        cluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(DynamicWebAppCluster.class)
+        DynamicWebAppCluster cluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(DynamicWebAppCluster.class)
                 .parent(this)
                 .configure(flags));
         if (Entities.isManaged(this)) Entities.manage(cluster);
+        setAttribute(CLUSTER, cluster);
         
-        controller = getConfig(CONTROLLER);
+        AbstractController controller = getAttribute(CONTROLLER);
         if (controller == null) {
             log.debug("creating default controller for {}", this);
             controller = getEntityManager().createEntity(BasicEntitySpec.newInstance(NginxController.class)
                     .parent(this));
             if (Entities.isManaged(this)) Entities.manage(controller);
+            setAttribute(CONTROLLER, controller);
         }
     }
     
     public AbstractController getController() {
-        return controller;
+        return getAttribute(CONTROLLER);
     }
 
     public synchronized ConfigurableEntityFactory<WebAppService> getFactory() {
-        return (ConfigurableEntityFactory<WebAppService>) webServerFactory;
+        return (ConfigurableEntityFactory<WebAppService>) getAttribute(FACTORY);
     }
     
     // TODO convert to an entity reference which is serializable
     public synchronized DynamicWebAppCluster getCluster() {
-        return cluster;
+        return getAttribute(CLUSTER);
     }
     
     public void start(Collection<? extends Location> locations) {
@@ -150,7 +152,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     void connectSensors() {
         SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(getCluster(), SERVICE_UP, ROOT_URL).
             addToEntityAndEmitAll(this);
-        SensorPropagatingEnricher.newInstanceListeningTo(getCluster(), AbstractController.HOSTNAME, SERVICE_UP, ROOT_URL).
+        SensorPropagatingEnricher.newInstanceListeningTo(getController(), AbstractController.HOSTNAME, SERVICE_UP, ROOT_URL).
             addToEntityAndEmitAll(this);
     }
 
