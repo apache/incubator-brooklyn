@@ -91,18 +91,11 @@ public class SensorRegistryTest {
         assertApproxPeriod(callTimes, PERIOD, 500)
     }
 
-    @Test(groups="Integration")
+    private int removeSensorStopsItBeingUpdatedManyTimesCounter = 0;
+    @Test(groups=["Integration","Acceptance"], invocationCount=100)
     public void testRemoveSensorStopsItBeingUpdatedManyTimes() {
-        for (int i=0; i<100; i++) {
-            log.info("running testRemoveSensorStopsItBeingUpdated iteration $i");
-            try {
-                setUp();
-                testRemoveSensorStopsItBeingUpdated();
-            } catch (Throwable t) {
-                log.info("failed testRemoveSensorStopsItBeingUpdated, iteration $i: $t");
-                throw t;
-            }
-        }
+        log.info("running testRemoveSensorStopsItBeingUpdated iteration {}", ++removeSensorStopsItBeingUpdatedManyTimesCounter);
+        testRemoveSensorStopsItBeingUpdated();
     }
     
     @Test(groups="Integration")
@@ -115,7 +108,7 @@ public class SensorRegistryTest {
         sensorRegistry.addSensor(FOO, { return desiredVal.get() } as ValueProvider)
 
         TimeExtras.init();
-        TestUtils.executeUntilSucceeds(period:10*TimeUnit.MILLISECONDS, timeout:1*TimeUnit.SECONDS, { entity.getAttribute(FOO)!=null });
+        TestUtils.executeUntilSucceeds(period:1*TimeUnit.MILLISECONDS, timeout:10*TimeUnit.SECONDS, { entity.getAttribute(FOO)!=null });
         assertEquals(entity.getAttribute(FOO), 1)
         
         sensorRegistry.removeSensor(FOO)
