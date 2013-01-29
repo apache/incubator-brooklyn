@@ -1,8 +1,5 @@
 package brooklyn.entity.webapp
 
-import brooklyn.location.PortRange
-import brooklyn.location.basic.PortRanges
-
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.AssertJUnit.*
@@ -11,7 +8,9 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.webapp.tomcat.*
+import brooklyn.location.PortRange
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.basic.PortRanges
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.test.entity.TestApplication
 
@@ -37,17 +36,17 @@ public class TomcatAutoScalerPolicyTest {
          * assert cluster size 2
          */
         
-        Integer port = 7880
-        Integer jmxP = 32199
-        Integer shutdownP = 31880
+        PortRange httpPort = PortRanges.fromString("7880+");
+        PortRange jmxP = PortRanges.fromString("32199+");
+        PortRange shutdownP = PortRanges.fromString("31880+");
         TestApplication app = new TestApplication()
         try {
             DynamicWebAppCluster cluster = new DynamicWebAppCluster(
                 factory: { Map properties, Entity parent ->
-                    properties.httpPort = port++
                     def tc = new TomcatServer(properties, parent)
-                    tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP++)
-                    tc.setConfig(TomcatServer.SHUTDOWN_PORT, new PortRanges.SinglePort(shutdownP++))
+                    tc.setConfig(TomcatServer.HTTP_PORT.configKey, httpPort)
+                    tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP)
+                    tc.setConfig(TomcatServer.SHUTDOWN_PORT, shutdownP)
                     tc
                 },
                 initialSize: 1,
