@@ -59,11 +59,24 @@ public class EntityManagementSupport {
     
     private volatile EntityChangeListener entityChangeListener = EntityChangeListener.NOOP;
 
+    /**
+     * Whether this entity is managed (i.e. "onManagementStarting" has been called, so the framework knows about it,
+     * and it has not been unmanaged).
+     */
     public boolean isDeployed() { return currentlyDeployed.get(); }
     public boolean isNoLongerManaged() {
         return wasDeployed() && !isDeployed();
     }
     public boolean wasDeployed() { return everDeployed.get(); }
+
+    /**
+     * Whether the entity's management lifecycle is complete (i.e. both "onManagementStarting" and "onManagementStarted" have
+     * been called, and it is has not been unmanaged). 
+     * @return
+     */
+    public boolean isFullyManaged() {
+        return (nonDeploymentManagementContext == null) && currentlyDeployed.get();
+    }
 
     public void onRebind(ManagementTransitionInfo info) {
         nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_REBINDING);
@@ -72,12 +85,20 @@ public class EntityManagementSupport {
     public void onManagementStarting(ManagementTransitionInfo info) {
         try {
             synchronized (this) {
-                if (nonDeploymentManagementContext == null || !nonDeploymentManagementContext.getMode().isPreManaged()) {
-                    throw new IllegalStateException("Already managed: "+entity+" ("+nonDeploymentManagementContext+")");
+                boolean alreadyManaging = isDeployed();
+                
+                if (alreadyManaging) {
+                    log.warn("Already managed: "+entity+" ("+nonDeploymentManagementContext+"); onManagementStarted is no-op");
+                } else if (nonDeploymentManagementContext == null || !nonDeploymentManagementContext.getMode().isPreManaged()) {
+                    throw new IllegalStateException("Not in expected pre-managed state: "+entity+" ("+nonDeploymentManagementContext+")");
                 }
                 if (managementContext != null && !managementContext.equals(info.getManagementContext())) {
                     throw new IllegalStateException("Already has management context: "+managementContext+"; can't set "+info.getManagementContext());
                 }
+                if (alreadyManaging) {
+                    return;
+                }
+                
                 this.managementContext = info.getManagementContext();
                 nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTING);
                 
@@ -113,12 +134,20 @@ public class EntityManagementSupport {
     public void onManagementStarted(ManagementTransitionInfo info) {
         try {
             synchronized (this) {
-                if (nonDeploymentManagementContext == null || nonDeploymentManagementContext.getMode() != NonDeploymentManagementContextMode.MANAGEMENT_STARTING) {
-                    throw new IllegalStateException("Already managed: "+entity+" ("+nonDeploymentManagementContext+")");
+                boolean alreadyManaged = isFullyManaged();
+                
+                if (alreadyManaged) {
+                    log.warn("Already managed: "+entity+" ("+nonDeploymentManagementContext+"); onManagementStarted is no-op");
+                } else if (nonDeploymentManagementContext == null || nonDeploymentManagementContext.getMode() != NonDeploymentManagementContextMode.MANAGEMENT_STARTING) {
+                    throw new IllegalStateException("Not in expected \"management starting\" state: "+entity+" ("+nonDeploymentManagementContext+")");
                 }
                 if (managementContext != info.getManagementContext()) {
                     throw new IllegalStateException("Already has management context: "+managementContext+"; can't set "+info.getManagementContext());
                 }
+                if (alreadyManaged) {
+                    return;
+                }
+                
                 nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTED);
                 
                 /*

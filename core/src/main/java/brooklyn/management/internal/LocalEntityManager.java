@@ -70,15 +70,23 @@ public class LocalEntityManager implements EntityManager {
         
         final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
         recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
-            preManageNonRecursive(it);
-            it.getManagementSupport().onManagementStarting(info); 
-            return manageNonRecursive(it);
+            if (it.getManagementSupport().isDeployed()) {
+                return false;
+            } else {
+                preManageNonRecursive(it);
+                it.getManagementSupport().onManagementStarting(info); 
+                return manageNonRecursive(it);
+            }
         } });
         
         recursively(e, new Predicate<EntityLocal>() { public boolean apply(EntityLocal it) {
-            it.getManagementSupport().onManagementStarted(info);
-            managementContext.getRebindManager().getChangeListener().onManaged(it);
-            return true; 
+            if (it.getManagementSupport().isFullyManaged()) {
+                return false;
+            } else {
+                it.getManagementSupport().onManagementStarted(info);
+                managementContext.getRebindManager().getChangeListener().onManaged(it);
+                return true;
+            }
         } });
     }
     
@@ -133,7 +141,10 @@ public class LocalEntityManager implements EntityManager {
     }
 
     private void recursively(Entity e, Predicate<EntityLocal> action) {
-        action.apply( (EntityLocal)e );
+        boolean success = action.apply( (EntityLocal)e );
+        if (!success) {
+            return; // Don't manage children if action false/unnecessary for parent
+        }
         for (Entity child : e.getChildren()) {
             recursively(child, action);
         }
