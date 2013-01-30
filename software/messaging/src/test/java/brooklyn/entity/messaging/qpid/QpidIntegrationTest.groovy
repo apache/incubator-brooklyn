@@ -53,15 +53,31 @@ public class QpidIntegrationTest {
     }
 
     /**
-     * Test that the broker starts up and sets SERVICE_UP correctly.
+     * Test that the broker starts up with JMX and RMI ports configured, and sets SERVICE_UP correctly.
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        qpid = new QpidBroker(parent:app);
+        qpid = new QpidBroker(parent:app, jmxPort:'9909', rmiServerPort:'9910');
         Entities.startManagement(app);
         qpid.start([ testLocation ])
         executeUntilSucceedsWithShutdown(qpid) {
             assertTrue qpid.getAttribute(Startable.SERVICE_UP)
+        }
+        assertFalse qpid.getAttribute(Startable.SERVICE_UP)
+    }
+
+    /**
+     * Test that the broker starts up with HTTP management enabled, and we can connect to the URL.
+     */
+    @Test(groups = "Integration")
+    public void canStartupAndShutdownWithHttpManagement() {
+        qpid = new QpidBroker(parent:app, httpManagementPort:'8888');
+        Entities.startManagement(app);
+        qpid.start([ testLocation ])
+        executeUntilSucceedsWithShutdown(qpid) {
+            assertTrue qpid.getAttribute(Startable.SERVICE_UP)
+            URI.create("http://localhost:8888/").toURL().openConnection().connect()
+            // TODO check actual REST output
         }
         assertFalse qpid.getAttribute(Startable.SERVICE_UP)
     }
