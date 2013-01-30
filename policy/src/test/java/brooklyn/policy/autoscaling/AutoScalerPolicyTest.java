@@ -288,7 +288,8 @@ public class AutoScalerPolicyTest {
     // setUp method (to avoid pauses mid-test), but still had errors.
     // 
     // Should come back to this, to make it less time sensitive.
-    @Test(groups="Integration", invocationCount=2)
+    // FIXME Putting back to 100 to get gc-verbose info, to confirm it's a GC problem
+    @Test(groups={"Integration"}, invocationCount=100)
     public void testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired() throws Exception {
         testResizeUpStabilizationDelayTakesMaxSustainedDesired();
     }
@@ -403,7 +404,8 @@ public class AutoScalerPolicyTest {
     }
 
     // FIXME decreased invocationCount from 100; see comment against testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired
-    @Test(groups="Integration", invocationCount=2)
+    // FIXME Putting back to 100 to get gc-verbose info, to confirm it's a GC problem
+    @Test(groups="Integration", invocationCount=100)
     public void testRepeatedResizeDownStabilizationDelayTakesMinSustainedDesired() throws Exception {
         testResizeDownStabilizationDelayTakesMinSustainedDesired();
     }
