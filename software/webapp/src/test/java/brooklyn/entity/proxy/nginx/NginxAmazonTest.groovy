@@ -10,17 +10,18 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.config.BrooklynProperties
+import brooklyn.entity.Application
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.location.Location
 import brooklyn.location.MachineLocation
-import brooklyn.location.basic.jclouds.CredentialsFromEnv
-import brooklyn.location.basic.jclouds.JcloudsLocation
-import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 import brooklyn.test.HttpTestUtils
+import brooklyn.location.basic.BasicLocationRegistry
 import brooklyn.test.entity.TestApplication
 
 /**
@@ -32,34 +33,23 @@ import brooklyn.test.entity.TestApplication
 public class NginxAmazonTest {
     private static final Logger LOG = LoggerFactory.getLogger(NginxAmazonTest.class)
     
-    private static final String REGION_NAME = "us-east-1"
-    private static final String IMAGE_ID = REGION_NAME+"/"+"ami-2342a94a"
-    
-    private JcloudsLocation loc
-    private File sshPrivateKey
-    private File sshPublicKey
-
     private TestApplication app
     private NginxController nginx
     private DynamicCluster cluster
+    private Location loc
 
-    @BeforeMethod(alwaysRun=true)
-    public void setup() {
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
+        Entities.manage(app)
         
-        URL resource = getClass().getClassLoader().getResource("jclouds/id_rsa.private")
-        assertNotNull resource
-        sshPrivateKey = new File(resource.path)
-        resource = getClass().getClassLoader().getResource("jclouds/id_rsa.pub")
-        assertNotNull resource
-        sshPublicKey = new File(resource.path)
-        
-        CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
-		JcloudsLocationFactory locationFactory = new JcloudsLocationFactory(provider:"aws-ec2",identity:creds.getIdentity(), credential:creds.getCredential())
-        loc = locationFactory.newLocation(REGION_NAME)
+        BrooklynProperties props = BrooklynProperties.Factory.newDefault()
+        props.put("brooklyn.location.jclouds.aws-ec2.image-id", "us-east-1/ami-2342a94a")
+
+        loc = new BasicLocationRegistry(props).resolve("aws-ec2:us-east-1")
     }
-    
-    @AfterMethod(alwaysRun=true)
+
+    @AfterMethod(alwaysRun = true)
     public void shutdown() {
         if (app != null) Entities.destroyAll(app);
     }
@@ -69,18 +59,6 @@ public class NginxAmazonTest {
         URL war = getClass().getClassLoader().getResource("swf-booking-mvc.war")
         assertNotNull war, "Unable to locate resource $war"
         
-        Map imageData = [
-	            imageId:IMAGE_ID,
-	            providerLocationId:REGION_NAME,
-	            sshPublicKey:sshPublicKey,
-	            sshPrivateKey:sshPrivateKey,
-	            securityGroups:[ "everything" ]
-            ]
-        loc.setTagMapping([
-            "brooklyn.entity.webapp.jboss.JBoss7Server":imageData,
-            "brooklyn.entity.proxy.nginx.NginxController":imageData,
-        ])
- 
         cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
                 .configure("initialSize", 2)
