@@ -30,8 +30,11 @@ import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -66,7 +69,12 @@ public class CassandraNode extends SoftwareProcessEntity implements UsesJmx {
     @SetFromFlag("thriftPort")
     public static final PortAttributeSensorAndConfigKey THRIFT_PORT = new PortAttributeSensorAndConfigKey("cassandra.thrift.port", "Cassandra Thrift RPC port", PortRanges.fromString("9160+"));
 
+    @SetFromFlag("seeds")
+    public static final ConfigKey<String> SEEDS = new BasicConfigKey<String>(String.class, "cassandra.seeds", "List of seed node hosts in cluster");
+
     public static final BasicAttributeSensor<Long> TOKEN = new BasicAttributeSensor<Long>(Long.class, "cassandra.token", "Cassandra Token");
+
+    public static final BasicAttributeSensor<Integer> PEERS = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.peers", "Number of peers in cluster");
 
     public CassandraNode(Map<?, ?> flags){
         this(flags, null);
@@ -114,13 +122,26 @@ public class CassandraNode extends SoftwareProcessEntity implements UsesJmx {
                         .attributeName("TokenToEndpointMap")
                         .onSuccess((Function) new Function<Map, Long>() {
                             @Override
-                            public Long apply(@Nullable Map input) { // FIXME
+                            public Long apply(@Nullable Map input) {
                                 if (input == null || input.isEmpty()) return 0L;
-                                Set tokens = Maps.filterValues(input, Predicates.equalTo(getAttribute(HOSTNAME))).keySet();
-                                return Long.parseLong(Iterables.getFirst(tokens, "0"));
+                                // FIXME does not work on aws-ec2, uses RFC1918 address
+                                Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS)));
+                                Set tokens = Maps.filterValues(input, self).keySet();
+                                return Long.parseLong(Iterables.getFirst(tokens, "-1"));
                             }
                         })
-                        .onError(Functions.constant(0L)))
+                        .onError(Functions.constant(-1L)))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(PEERS)
+                        .objectName(storageServiceMBean)
+                        .attributeName("TokenToEndpointMap")
+                        .onSuccess((Function) new Function<Map, Integer>() {
+                            @Override
+                            public Integer apply(@Nullable Map input) {
+                                if (input == null || input.isEmpty()) return 0;
+                                return input.size();
+                            }
+                        })
+                        .onError(Functions.constant(-1)))
                 .build();
     }
 

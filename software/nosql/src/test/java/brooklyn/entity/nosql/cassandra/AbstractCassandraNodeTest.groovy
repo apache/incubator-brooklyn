@@ -111,7 +111,7 @@ public class AbstractCassandraNodeTest {
             OperationResult<ColumnList<String>> query = keyspace.prepareQuery(cf)
                     .getKey("one")
                     .execute()
-            assertEquals(insert.host.hostName, cassandra.getAttribute(Attributes.HOSTNAME))
+            assertEquals(query.host.hostName, cassandra.getAttribute(Attributes.HOSTNAME))
             assertTrue(query.latency > 0L)
 
             ColumnList<String> columns = query.getResult()

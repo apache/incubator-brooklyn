@@ -3,8 +3,8 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
-import java.math.BigInteger;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -17,10 +17,15 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
+import brooklyn.management.Task;
 import brooklyn.util.MutableMap;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -55,6 +60,24 @@ public class CassandraCluster extends DynamicCluster {
         setFactory(new EntityFactory<CassandraNode>() {
             @Override
             public CassandraNode newEntity(Map factoryflags, Entity factoryOwner) {
+                CassandraCluster cluster = (CassandraCluster) factoryOwner;
+                Iterable<Entity> members = cluster.getMembers();
+                List<String> nodes = Lists.newArrayList();
+                List<Task<String>> tasks = Lists.newArrayList();
+                for (Entity node : members) {
+                    String hostname = node.getAttribute(CassandraNode.HOSTNAME);
+                    if (hostname != null) {
+                        nodes.add(hostname);
+                    } else {
+                        tasks.add(DependentConfiguration.attributeWhenReady(node, CassandraNode.HOSTNAME));
+                    }
+                }
+                if (nodes.size() > 0) {
+                    String seeds = Joiner.on(",").join(nodes);
+                    factoryflags.put(CassandraNode.SEEDS, seeds);
+                } else if (tasks.size() > 0) {
+                    factoryflags.put(CassandraNode.SEEDS, Iterables.get(tasks, 0));
+                }
                 return new CassandraNode(factoryflags, factoryOwner);
             }
         });
@@ -93,17 +116,17 @@ public class CassandraCluster extends DynamicCluster {
         setAttribute(Startable.SERVICE_UP, false);
     }
     
+    // TODO is this required?
     @Description("Updates the cluster members ring tokens")
     public void update() {
-        synchronized (mutex) {
-            Iterable<Entity> members = getMembers();
-            int n = Iterables.size(members);
-            for (int i = 0; i < n; i++) {
-                log.info("Update cassandra cluster member {} of {}", i, n);
-                CassandraNode node = (CassandraNode) Iterables.get(members, i);
-                BigInteger token = BigInteger.valueOf(2L).pow(127).divide(BigInteger.valueOf(n)).multiply(BigInteger.valueOf(i));
-                node.setToken(token.toString());
-            }
-        }
+//        synchronized (mutex) {
+//            Iterable<Entity> members = getMembers();
+//            int n = Iterables.size(members);
+//            for (int i = 0; i < n; i++) {
+//                CassandraNode node = (CassandraNode) Iterables.get(members, i);
+//                Long token = (Long.MAX_VALUE / n) * i;
+//                node.setToken(token.toString());
+//            }
+//        }
     }
 }

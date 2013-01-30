@@ -107,8 +107,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .add(String.format("sed -i.bk 's/^rpc_address: .*/rpc_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^storage_port: .*/storage_port: %d/g' %s/conf/cassandra.yaml", getGossipPort(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^ssl_storage_port: .*/ssl_storage_port: %d/g' %s/conf/cassandra.yaml", getSslGossipPort(), getRunDir()))
-                .add(String.format("sed -i.bk 's/^listen_address: .*/listen_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
-                .add(String.format("sed -i.bk 's/- seeds:.*/- seeds: \"%s\"/g' %s/conf/cassandra.yaml", getHostname(), getRunDir())); // TODO configurable list
+                .add(String.format("sed -i.bk 's/^listen_address: .*/listen_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()));
+
+        String seeds = entity.getConfig(CassandraNode.SEEDS);
+        commands.add(String.format("sed -i.bk 's/- seeds:.*/- seeds: \"%s\"/g' %s/conf/cassandra.yaml", (seeds != null) ? seeds : getHostname(), getRunDir()));
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
