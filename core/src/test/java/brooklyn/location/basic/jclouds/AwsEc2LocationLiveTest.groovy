@@ -37,7 +37,7 @@ class AwsEc2LocationLiveTest extends AbstractJcloudsLocationTest {
         return []
     }
     
-    @Test
+    @Test(enabled=false)
     public void noop() { /* just exists to let testNG IDE run the test */ }
 
 }

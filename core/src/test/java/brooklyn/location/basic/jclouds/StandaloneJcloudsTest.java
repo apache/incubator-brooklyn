@@ -40,6 +40,10 @@ import com.google.common.io.Files;
 
 public class StandaloneJcloudsTest {
 
+    // FIXME Why do this?
+    // Were we seeing bugs in jclouds for which this was easier to debug and report
+    // Is it because testProvisioningVmWithCustomUsername is disabled and not working?
+    
     public static final Logger LOG = LoggerFactory.getLogger(StandaloneJcloudsTest.class);
     
     static BrooklynProperties globals = BrooklynProperties.Factory.newDefault();

@@ -23,6 +23,8 @@ import com.google.common.base.Throwables;
 
 public class SimpleJcloudsLocationUserLoginAndConfigTest {
 
+    // FIXME And tidy up this one
+    
     private static final Logger log = LoggerFactory.getLogger(SimpleJcloudsLocationUserLoginAndConfigTest.class);
     
     @SuppressWarnings("rawtypes")

@@ -8,9 +8,12 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
+import brooklyn.management.ManagementContext
 
+import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 
 public class JcloudsLocationRebindTest {
@@ -21,11 +24,11 @@ public class JcloudsLocationRebindTest {
     private static final String EUWEST_IMAGE_ID = EUWEST_REGION_NAME+"/"+"ami-89def4fd"
     private static final String IMAGE_OWNER = "411009282317"
 
-    protected JcloudsLocationFactory locFactory;
+    protected ManagementContext managementContext;
     protected JcloudsLocation loc; // if private, can't be accessed from within closure in teardown! See http://jira.codehaus.org/browse/GROOVY-4692
     private Collection<SshMachineLocation> machines = []
-    private File sshPrivateKey
-    private File sshPublicKey
+//    private File sshPrivateKey
+//    private File sshPublicKey
 
     protected CredentialsFromEnv getCredentials() {
         return new CredentialsFromEnv(PROVIDER);
@@ -33,20 +36,22 @@ public class JcloudsLocationRebindTest {
     
     @BeforeMethod(groups = "Live")
     public void setUp() {
-        URL resource = getClass().getClassLoader().getResource("jclouds/id_rsa.private")
-        assertNotNull resource
-        sshPrivateKey = new File(resource.path)
-        resource = getClass().getClassLoader().getResource("jclouds/id_rsa.pub")
-        assertNotNull resource
-        sshPublicKey = new File(resource.path)
+//        URL resource = getClass().getClassLoader().getResource("jclouds/id_rsa.private")
+//        assertNotNull resource
+//        sshPrivateKey = new File(resource.path)
+//        resource = getClass().getClassLoader().getResource("jclouds/id_rsa.pub")
+//        assertNotNull resource
+//        sshPublicKey = new File(resource.path)
         
-        CredentialsFromEnv creds = getCredentials();
-        locFactory = new JcloudsLocationFactory([
-                provider:PROVIDER,
-                identity:creds.getIdentity(), 
-                credential:creds.getCredential(), 
-                sshPublicKey:sshPublicKey,
-                sshPrivateKey:sshPrivateKey])
+        ManagementContext managementContext = Entities.newManagementContext(
+            ImmutableMap.of("provider", PROVIDER));
+//        CredentialsFromEnv creds = getCredentials();
+//        locFactory = new JcloudsLocationFactory([
+//                provider:PROVIDER,
+//                identity:creds.getIdentity(), 
+//                credential:creds.getCredential(), 
+//                sshPublicKey:sshPublicKey,
+//                sshPrivateKey:sshPrivateKey])
     }
 
     @AfterMethod(groups = "Live")
@@ -68,7 +73,7 @@ public class JcloudsLocationRebindTest {
     
     @Test(groups = [ "Live" ])
     public void testRebindWithIncorrectId() {
-        loc = locFactory.newLocation(EUWEST_REGION_NAME)
+        loc = managementContext.getLocationRegistry().resolve(provider+":"+EUWEST_REGION_NAME);
         try {
             loc.rebindMachine(id:"incorrectid", hostname:"myhostname", userName:"myusername")
         } catch (IllegalArgumentException e) {
@@ -82,15 +87,13 @@ public class JcloudsLocationRebindTest {
     
     @Test(groups = [ "Live" ])
     public void testRebindVm() {
-        loc = locFactory.newLocation(EUWEST_REGION_NAME)
-        loc.setTagMapping([MyEntityType:[
-            imageId:EUWEST_IMAGE_ID,
-            imageOwner:IMAGE_OWNER
-        ]])
+        // FIXME How to create a machine - go directly through jclouds instead?
+        //       Going through LocationRegistry.resolve, loc and loc2 might be same instance
+        
+        loc = managementContext.getLocationRegistry().resolve(provider+":"+EUWEST_REGION_NAME);
 
         // Create a VM through jclouds
-        Map flags = loc.getProvisioningFlags(["MyEntityType"])
-        JcloudsSshMachineLocation machine = obtainMachine(flags)
+        JcloudsSshMachineLocation machine = obtainMachine([imageId:EUWEST_IMAGE_ID, imageOwner:IMAGE_OWNER])
         assertTrue(machine.isSshable())
 
         String id = machine.getJcloudsId()
@@ -99,7 +102,7 @@ public class JcloudsLocationRebindTest {
         String user = machine.getUser()
         
         // Create a new jclouds location, and re-bind the existing VM to that
-        JcloudsLocation loc2 = locFactory.newLocation(EUWEST_REGION_NAME)
+        JcloudsLocation loc2 = managementContext.getLocationRegistry().resolve(provider+":"+EUWEST_REGION_NAME);
         SshMachineLocation machine2 = loc2.rebindMachine(id:id, hostname:hostname, user:user)
         
         // Confirm the re-bound machine is wired up
@@ -114,15 +117,11 @@ public class JcloudsLocationRebindTest {
     
     @Test(groups = [ "Live" ])
     public void testRebindVmDeprecated() {
-        loc = locFactory.newLocation(EUWEST_REGION_NAME)
-        loc.setTagMapping([MyEntityType:[
-            imageId:EUWEST_IMAGE_ID,
-            imageOwner:IMAGE_OWNER
-        ]])
+        // FIXME See comments in testRebindVm
+        loc = managementContext.getLocationRegistry().resolve(provider+":"+EUWEST_REGION_NAME);
 
         // Create a VM through jclouds
-        Map flags = loc.getProvisioningFlags(["MyEntityType"])
-        JcloudsSshMachineLocation machine = obtainMachine(flags)
+        JcloudsSshMachineLocation machine = obtainMachine([imageId:EUWEST_IMAGE_ID, imageOwner:IMAGE_OWNER])
         assertTrue(machine.isSshable())
 
         String id = machine.getJcloudsId()
@@ -131,7 +130,7 @@ public class JcloudsLocationRebindTest {
         String username = machine.getUser()
         
         // Create a new jclouds location, and re-bind the existing VM to that
-        JcloudsLocation loc2 = locFactory.newLocation(EUWEST_REGION_NAME)
+        JcloudsLocation loc2 = managementContext.getLocationRegistry().resolve(provider+":"+EUWEST_REGION_NAME);
         // pass deprecated userName
         SshMachineLocation machine2 = loc2.rebindMachine(id:id, hostname:hostname, userName:username)
         
@@ -148,11 +147,7 @@ public class JcloudsLocationRebindTest {
     // Useful for debugging; accesss a hard-coded existing instance so don't need to wait for provisioning a new one
     @Test(enabled=false, groups = [ "Live" ])
     public void testRebindVmToHardcodedInstance() {
-        loc = locFactory.newLocation(EUWEST_REGION_NAME)
-        loc.setTagMapping([MyEntityType:[
-            imageId:EUWEST_IMAGE_ID,
-            imageOwner:IMAGE_OWNER
-        ]])
+        loc = managementContext.getLocationRegistry().resolve(provider+":"+EUWEST_REGION_NAME);
 
         String id = "eu-west-1/i-5504f21d"
         InetAddress address = InetAddress.getByName("ec2-176-34-93-58.eu-west-1.compute.amazonaws.com")
