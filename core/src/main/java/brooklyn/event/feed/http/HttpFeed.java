@@ -177,6 +177,12 @@ public class HttpFeed extends AbstractFeed {
             this.credentials = new UsernamePasswordCredentials(username, password);
             return this;
         }
+        public Builder credentialsIfNotNull(String username, String password) {
+            if (username != null) {
+                this.credentials = new UsernamePasswordCredentials(username, password);
+            }
+            return this;
+        }
         public HttpFeed build() {
             built = true;
             HttpFeed result = new HttpFeed(this);
