@@ -109,22 +109,21 @@ public class NetworkUtils {
         }
     }
 
-    /** return true if the IP (v4 only currently) address indicates a private subnet address, 
-     * not exposed on the public internet */
+    /**
+     * Check if this is a private address, not exposed on the public Internet.
+     *
+     * For IPV4 addresses this is an RFC1918 subnet address ({code 10.0.0.0/8},
+     * {@code 172.16.0.0/12} and {@code 192.168.0.0/16}), a link-local address
+     * ({@code 169.254.0.0/16}) or a loopback address ({@code 127.0.0.1/0}).
+     * <p>
+     * For IPV6 addresses this is the RFC3514 link local block ({@code fe80::/10})
+     * and site local block ({@code feco::/10}) or the loopback block
+     * ({@code ::1/128}).
+     *
+     * @return true if the address is private
+     */
     public static boolean isPrivateSubnet(InetAddress address) {
-//      127.0.0.1/0
-//      10.0.0.0/8
-//      172.16.0.0/12
-//      192.168.0.0/16
-        byte[] bytes = address.getAddress();
-        if (bytes[0]==10) return true;
-        if (((bytes[0] & 0xFF) == 172) && (bytes[1] & 240)==16) return true;
-        if (((bytes[0] & 0xFF) == 192) && ((bytes[1] & 0xFF) == 168)) return true;
-        
-        if ((bytes[0] & 0xFF) == 169) return true;
-        if (bytes[0]==127 && bytes[1]==0 && bytes[2]==0 && bytes[3]==1) return true;
-        
-        return false;
+        return address.isSiteLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress();
     }
 
     private static boolean triedUnresolvableHostname = false;
