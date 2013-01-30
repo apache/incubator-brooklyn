@@ -34,7 +34,7 @@ toc: /toc.json
 * Understand the location hierarchy:  software process entities typically get an ``SshMachineLocation``,
   and use a ``*SshDriver`` to do what they need.  This will usually have a ``MachineProvisioningLocation`` parent, e.g. a
   ``JcloudsLocation`` (e.g. AWS eu-west-1 with credentials) or possibly a ``LocalhostMachineProvisioningLocation``.
-  Clusters will take such a ``MachineProvisioningLocation`` (or a singleton list), and fabrics a list of locations.
+  Clusters will take such a ``MachineProvisioningLocation`` (or a singleton list); fabircs take a list of locations.
   Some PaaS systems have their own location model, such as ``OpenShiftLocation``.
 
 Finally, don't be shy about [talking with others]({{site.url}}/meta/contact.html), 

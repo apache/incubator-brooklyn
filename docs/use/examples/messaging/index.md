@@ -41,7 +41,13 @@ default configuration, specifying only the AMQP port and creates
 no queues or topics:
 
 {% highlight java %}
-QpidBroker broker = new QpidBroker(app, amqpPort:5672)
+public class StandaloneBrokerExample extends ApplicationBuilder {
+    protected void doBuild() {
+        // Configure the Qpid broker entity
+    	QpidBroker broker = createChild(BasicEntitySpec.newInstance(QpidBroker.class)
+    	        .configure("amqpPort", 5672));
+    }
+}
 {% endhighlight %}
 
 To install the custom configuration files and extra libraries for
@@ -53,9 +59,16 @@ here we copy a custom XML configuration file and a new password
 file:
 
 {% highlight java %}
-QpidBroker broker = new QpidBroker(app,
-        runtimeFiles:[ (QpidBroker.CONFIG_XML):"classpath://custom-config.xml",
-                       (QpidBroker.PASSWD):"classpath://passwd" ])
+        final String CUSTOM_CONFIG_PATH = "classpath://custom-config.xml";
+        final String PASSWD_PATH = "classpath://passwd";
+
+    	QpidBroker broker = createChild(BasicEntitySpec.newInstance(QpidBroker.class)
+    	        .configure("amqpPort", 5672)
+    	        .configure("amqpVersion", AmqpServer.AMQP_0_10)
+    	        .configure("runtimeFiles", ImmutableMap.builder()
+    	                .put(QpidBroker.CONFIG_XML, CUSTOM_CONFIG_PATH)
+    	                .put(QpidBroker.PASSWD, PASSWD_PATH)
+    	                .build()));
 {% endhighlight %}
 
 Finally, we come to the complete configuration of our ``QpidBroker``
@@ -64,16 +77,23 @@ the AMQP version and that a queue named _testQueue_ should be created
 on startup.
 
 {% highlight java %}
-// Configure the Qpid broker entity
-QpidBroker broker = new QpidBroker(app,
-        amqpPort:5672,
-        amqpVersion:AmqpServer.AMQP_0_10,
-        runtimeFiles:[ (QpidBroker.CONFIG_XML):CUSTOM_CONFIG_PATH,
-                       (QpidBroker.PASSWD):PASSWD_PATH,
-                       ("lib/opt/qpid-bdbstore-0.14.jar"):QPID_BDBSTORE_JAR_PATH ],
-                       ("lib/opt/je-5.0.34.jar"):BDBSTORE_JAR_PATH ],
-        queue:"testQueue")
+        final String CUSTOM_CONFIG_PATH = "classpath://custom-config.xml";
+        final String PASSWD_PATH = "classpath://passwd";
+        final String QPID_BDBSTORE_JAR_PATH = "classpath://qpid-bdbstore-0.14.jar";
+        final String BDBSTORE_JAR_PATH = "classpath://je-5.0.34.jar";
+
+    	QpidBroker broker = createChild(BasicEntitySpec.newInstance(QpidBroker.class)
+    	        .configure("amqpPort", 5672)
+    	        .configure("amqpVersion", AmqpServer.AMQP_0_10)
+    	        .configure("runtimeFiles", ImmutableMap.builder()
+    	                .put(QpidBroker.CONFIG_XML, CUSTOM_CONFIG_PATH)
+    	                .put(QpidBroker.PASSWD, PASSWD_PATH)
+    	                .put("lib/opt/qpid-bdbstore-0.14.jar", QPID_BDBSTORE_JAR_PATH)
+    	                .put("lib/opt/je-5.0.34.jar", BDBSTORE_JAR_PATH)
+    	                .build())
+    	        .configure("queue", "testQueue"));
 {% endhighlight %}
+
 
 ### Running the Example
 
@@ -85,7 +105,7 @@ as follows:
 % ${BROOKLYN_HOME}/bin/brooklyn -v launch --app brooklyn.demo.StandaloneBrokerExample --location localhost
 {% endhighlight %}
 
-Now, visit the the Brooklyn web console on port 8081 using credentials
+Now, visit the Brooklyn web console on port 8081 using credentials
 admin/password.  This allows you to view the Brooklyn entities and
 their current state for debugging.
 

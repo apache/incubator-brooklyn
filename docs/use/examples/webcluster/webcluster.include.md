@@ -24,15 +24,15 @@ The simplest of these, ``SingleWebServerExample``, starts JBoss on a single mach
 with a single line:
 
 {% highlight java %}
-public class SingleWebServerExample extends AbstractApplication {
+public class SingleWebServerExample extends ApplicationBuilder {
+    private static final String WAR_PATH = "classpath://hello-world-webapp.war";
 
-    JBoss7Server web = new JBoss7Server(this, 
-        war: "classpath://hello-world-webapp.war", 
-        httpPort: 8080)
-        
-    // other housekeeping removed, including public static void main
-    // you'll find this in the github repo code mentioned above
-     
+    @Override
+    protected void doBuild() {
+        createChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+                .configure("war", WAR_PATH)
+                .configure("httpPort", 8080));
+    }
 }
 {% endhighlight %}
 
@@ -75,22 +75,32 @@ with an Nginx load-balancer set up in front of them, and backed by a MySQL datab
 The essential code fragment looks like this:
 
 {% highlight java %}
-public class WebClusterDatabaseExample extends AbstractApplication {
+public class WebClusterDatabaseExample extends ApplicationBuilder {
+    public static final String WAR_PATH = "classpath://hello-world-sql-webapp.war";
     
-    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this, war: WAR_PATH);
-    MySqlNode mysql = new MySqlNode(this, creationScriptUrl: DB_SETUP_SQL_URL);
-
-    {
-        web.factory.configure(
-            httpPort: "8080+", 
-            (UsesJava.JAVA_OPTIONS):
-                ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
-                    { "jdbc:"+it+"visitors?user=${DB_USERNAME}\\&password=${DB_PASSWORD}" }) ]);
-
-        web.cluster.addPolicy(new
-            ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-                setSizeRange(1, 5).
-                setMetricRange(10, 100));
+    public static final String DB_SETUP_SQL_URL = "classpath://visitors-creation-script.sql";
+    
+    public static final String DB_TABLE = "visitors";
+    public static final String DB_USERNAME = "brooklyn";
+    public static final String DB_PASSWORD = "br00k11n";
+    
+    protected void doBuild() {
+        MySqlNode mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+                .configure("creationScriptUrl", DB_SETUP_SQL_URL));
+        
+        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+                .configure("memberSpec", BasicEntitySpec.newInstance(JBoss7Server.class)
+                        .configure("httpPort", "8080+")
+                        .configure("war", WAR_PATH)
+                        .configure(javaSysProp("brooklyn.example.db.url"), 
+                                formatString("jdbc:%s%s?user=%s\\&password=%s", 
+                                        attributeWhenReady(mysql, MySqlNode.MYSQL_URL), DB_TABLE, DB_USERNAME, DB_PASSWORD))));
+        
+        web.getCluster().addPolicy(AutoScalerPolicy.builder().
+                        metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
+                        sizeRange(1, 5).
+                        metricRange(10, 100).
+                        build());
     }
 }
 {% endhighlight %}
@@ -101,10 +111,9 @@ tweak the database start script, or drop in your favourite WAR.
 
 ## A Few Other Things
 
-The project includes several variants of the examples shown here.
-In particular note the pure-Java version in `WebClusterDatabaseExampleAltJava.java`
-some other variations in syntax (the `*Alt*` files), and a
-web-only cluster (no database) in ``WebClusterExample``.
+The project includes variants of the examples shown here, 
+including alternative syntax (the `*Alt*` files), 
+and a web-only cluster (no database) in `WebClusterExample``.
 
 The webapp that is used is included under ``examples/hello-world-webapp``.
 

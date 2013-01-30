@@ -39,7 +39,7 @@ Application entities are the top-level entities created and managed externally, 
 
 Applications are typically defined in Brooklyn as an ***application descriptor***. 
 This is a Java class specifying the entities which make up the application,
-by extending the class ``AbstractApplication``, and specifying how these entities should be configured and managed.
+by extending the class ``ApplicationBuilder``, and specifying how these entities should be configured and managed.
 
 All entities, including applications, can be the parent of other entities. 
 This means that the "child" is typically started, configured, and managed by the parent.
@@ -62,17 +62,20 @@ Configuration, Sensors and Effectors
 All entities contain a map of config information. This can contain arbitrary values, typically keyed under static ``ConfigKey`` fields on the ``Entity`` sub-class. These values are inherited, so setting a configuration value at the
 application level will make it available in all entities underneath unless it is overridden.
 
-Configuration is propagated when an application "goes live" (i.e. its ``deploy()`` or ``start()`` method is invoked), so config values must be set before this occurs. 
+Configuration is propagated when an application "goes live" (i.e. it becomes "managed", either explicitly or when its ``start()`` method is invoked), so config values must be set before this occurs. 
 
 Configuration values can be specified in a configuration file (``~/.brooklyn/brooklyn.properties``)
-to apply universally, and/or programmatically to a specific entity and its descendants using the ``entity.setConfig(KEY, VALUE)``
-method.
-Additionally, many common configuration parameters are available as "flags" which can be supplied in the entity's constructor 
-of the form ``new MyEntity(parent, config1: "value1", config2: "value2")``. 
+to apply universally, and/or programmatically to a specific entity and its descendants 
+by calling `.configure(KEY, VALUE)` in the entity spec when creating it.
+There is also an ``entity.setConfig(KEY, VALUE)`` method.
 
-Documentation of the flags available for individual constructors can normally be found in the javadocs, 
-or by inspecting ``@SetFromFlag`` annotations on the ``ConfigKey`` static field definitions
-in the class or its ancestors (often in interfaces).
+Additionally, many common configuration parameters are available as "flags" which can be supplied as Strings when constructing
+then entity, in the form
+``BasicEntitySpec.newInstance(MyEntity.class).configure("config1", "value1").configure("config2", "value2")``. 
+
+Documentation of the flags available for individual entities can normally be found in the javadocs. 
+The ``@SetFromFlag`` annotations on ``ConfigKey`` static field definitions
+in the entity's interface is the recommended mechanism for exposing configuration options.
 
 
 ### Sensors and Effectors
@@ -83,8 +86,9 @@ Sensors can be updated by the entity or associated tasks, and sensors from an en
 
 Effectors can be invoked by an entity's parent remotely, and the invoker is able to track the execution of that effector. Effectors can be invoked by other entities, but use this functionality with care to prevent too many managers!
 
-Entities are Java classes and data can also be stored in internal fields.
-This data will not be inherited and will not be externally visible (and resilience is more limited), but the data will be moved when an entity's master location is changed.
+An entity consists of a Java interface (used when interacting with the entity) and a Java class. For resilience. it is recommended to store 
+the entity's state in attributes (see `getAttribute(AttributeKey)``). If internal fields can be used then the data will be lost on brooklyn 
+restart, and may cause problems if the entity is to be moved to a different brooklyn management node.
 
 Next: [Advanced Concepts]({{site.url}}/use/guide/defining-applications/advanced-concepts.html).
 See also: [Management > Sensors and Effectors]({{site.url}}/use/guide/management/index.html#sensors-and-effectors).

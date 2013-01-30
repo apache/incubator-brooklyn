@@ -171,9 +171,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             if (flags==null) {
                 throw new IllegalArgumentException("Flags passed to entity $this must not be null (try no-arguments or empty map)")
             }
-            if (flags.size() > 0 || parent != null) {
-                LOG.warn("Deprecated use of old-style entity construction for "+getClass().getName()+"; instead use EntityManager().createEntity(spec)");
-            }
             if (flags.parent != null && parent != null && flags.parent != parent) {
                 throw new IllegalArgumentException("Multiple parents supplied, ${flags.parent} and $parent")
             }
@@ -198,6 +195,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             _legacyConstruction = !InternalEntityFactory.FactoryConstructionTracker.isConstructing();
             
             if (_legacyConstruction) {
+                LOG.warn("Deprecated use of old-style entity construction for "+getClass().getName()+"; instead use EntityManager().createEntity(spec)");
                 def checkWeGetThis = configure(flags);
                 assert this == checkWeGetThis : "$this configure method does not return itself; returns $checkWeGetThis instead"
             }

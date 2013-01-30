@@ -8,26 +8,33 @@ categories: [use, guide, defining-applications]
 Lifecycle and ManagementContext
 -------------------------------
 
-A Brooklyn deployment consists of many entities in a hierarchical tree, with  the privileged *application* entity at the top level.
+Under-the-covers, at heart of the brooklyn management plane is the ``ManagementContext``. 
+This is started automatically when using launching an application using the brooklyn CLI. For programmatic use, see 
+``BrooklynLauncher.newLauncher().launch()``.
 
-An application entity (``Application`` class) defines a management context  (``ManagementContext`` instance) and is responsible for starting the deployment of all its child entities (i.e. the entire entity tree under its ownership). Only an application entity can define the ``ManagementContext``.
+A Brooklyn deployment consists of many entities in a hierarchical tree, with the privileged *application* entity at the top level.
 
-An ``Application``'s ``start()`` method begins provisioning the management plane and distributing the management of child entities of the application (and their entities, recursively). 
+An application entity (``Application`` class) is responsible for starting the deployment of all its child entities (i.e. the entire entity tree under its ownership).
+
+An ``Application``'s ``start()`` method begins provisioning the child entities of the application (and their entities, recursively). 
 
 Provisioning of entities typically happens in parallel automatically,
 although this can be customized. This is implemented as ***tasks*** which are tracked by the management plane and is visible in the [web-based management console]({{site.url}}/use/guide/management/index.html#console).
 
 Customized provisioning can be useful where two starting entities depend on each other. For example, it is often necessary to delay start of one entity until another entity reaches a certain state, and to supply run-time information about the latter to the former.
 
-When new entities join an existing network, the entity is deployed to the management plane when it is wired in to an application i.e. by giving it a parent. Templates for new entities are also deployed to the management plane in the same manner.
+<!-- TODO ambiguous language; need a better description of the "manage" lifecycle -->
+When new entities are created, the entity is wired up to an application by giving it a parent. The entity is then explicitly "managed", which allows other entities to discover it.
 
-Typically a Brooklyn deployment has a single management context which records all the entities under management, as well as:
+Typically a Brooklyn deployment has a single management context which records:
 
-*	the state associated with each entity parented (directly or recursively) by any application,
+*   all entities under management that are reachable by the application(s) via the parent-child relationships,
+*	the state associated with each entity,
 *	subscribers (listeners) to sensor events arising from the entities,
 *	active tasks (jobs) associated with any the entity,
 *	which Brooklyn management node is mastering (managing) each entity.
 
+<!-- TODO Distributed brooklyn not yet supported; needs clarification in docs -->
 
 In a multi-location deployment, management operates in all regions, with brooklyn entity instances being mastered in the relevant region.
 
@@ -43,16 +50,16 @@ tracking the transfer of events (subscriptions) between ``Entity`` instances, an
 Dependent Configuration
 -----------------------
 
-Under the covers Brooklyn has a sophisticated sensor event and subscription model, but conveniences around this model make it very simple to express  cross-entity dependencies. Consider the example where Tomcat instances need to know a set of URLs to connect to a Monterey processing fabric (or a database tier or other entities)
+Under the covers Brooklyn has a sophisticated sensor event and subscription model, but conveniences around this model make it very simple to express cross-entity dependencies. Consider the example where Tomcat instances need to know the URL of a database (or a set of URLs to connect to a Monterey processing fabric, or other entities)
 
 {% highlight java %}
-web.factory.setConfig(UsesJava.JAVA_OPTIONS, ["mysql.url":
-	attributeWhenReady(mysql, MySqlNode.MY_SQL_URL) ])
+setConfiguration(UsesJava.JAVA_OPTIONS, ImmutableMap.of("mysql.url", 
+	    attributeWhenReady(mysql, MySqlNode.MY_SQL_URL) ))
 {% endhighlight %}
 
 The ``attributeWhenReady(Entity, Sensor)`` call (a static method on the class ``DependentConfiguration``)
 causes the configuration value to be set when that given entity's attribue is ready. 
-In the example, ``attributeWhenReady()`` causes the JVM system property ``monterey.urls`` to be set to the value of the ``Monterey.MGMT_PLANE_URLS`` sensor from ``monterey`` when that value is ready. As soon as a management plane URL is announced by the Monterey entity, the configuration value will be available to the Tomcat cluster. 
+In the example, ``attributeWhenReady()`` causes the JVM system property ``mysql.url`` to be set to the value of the ``MySqlNode.MY_SQL_URL`` sensor from ``mysql`` when that value is ready. As soon as the database URL is announced by the MySql entity, the configuration value will be available to the Tomcat cluster. 
 
 By default "ready" means being *set* (non-null) and, if appropriate, *non-empty* (for collections and strings) or *non-zero* (for numbers). Formally the interpretation of ready is that of "Groovy truth" defined by an ``asBoolean()`` method on the class and in the Groovy language extensions. 
 
@@ -119,11 +126,11 @@ The execution of a typical overall start-up sequence is shown below:
 One vital aspect of Brooklyn is its ability to communicate with the systems it starts. This is abstracted using a ***driver*** facility in Brooklyn, where a
 driver describes how a process or service can be installed and managed using a particular technology.
 
-For example, a ``TomcatServer`` may implement start and other effectors using a ``TomcatSshDriver`` which inherits from ``JavaSshStartStopDriver`` (for JVM and JMX start confguration), inheriting from ``AbstractSshDriver``
+For example, a ``TomcatServer`` may implement start and other effectors using a ``TomcatSshDriver`` which inherits from ``JavaSoftwareProcessSshDriver`` (for JVM and JMX start confguration), inheriting from ``AbstractSoftwareProcessSshDriver``
 (for SSH scripting support).
 
 Particularly for sensors, some technologies are used so frequently that they are
-packaged as ***adapters*** which can discover their configuration (including from drivers). These include JMX and HTTP.
+packaged as ***feeds*** which can discover their configuration (including from drivers). These include JMX and HTTP (see ``JmxFeed`` and ``HttpFeed``).
 
 Brooklyn comes with entity implementations for a growing number of commonly used systems, including various web application servers, databases and NoSQL data stores, and messaging systems. See: [Extras]({{site.url}}/use/guide/extras/index.html).
 

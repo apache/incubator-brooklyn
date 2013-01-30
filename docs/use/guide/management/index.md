@@ -107,11 +107,14 @@ This console is not designed as a management dashboard or portal --
 many good options exist in that space --
 but what could be useful is to embed widgets from the brooklyn portal for selected high-level views.
 
-To start a management console from your own code, use the ``BrooklynLaucher.manage`` method:
+<!-- FIXME Update to use new construction pattern, rather than calling app's constructor -->
+To start a management console from your own code, use ``BrooklynLaucher.launch``:
 {% highlight java %}
-public static void main(String\[\] argv) {
-	application app = new MyApplicationExample(displayName:"myapp")
-	brooklyn.launcher.BrooklynLauncher.manage(app)
+public static void main(String[] argv) {
+	Application app = new MyApplicationExample(displayName:"myapp")
+    BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+            .managing(app)
+            .launch();
 	// ...
 }
 {% endhighlight %}

@@ -19,17 +19,24 @@ Here's the essential code which creates these and sets them up
 for management:
 
 {% highlight java %}
-public class WebClusterDatabaseExample extends AbstractApplication {
-    ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppCluster(this);
-    MySqlNode mysql = new MySqlNode(this);   
+public class WebClusterDatabaseExample extends ApplicationBuilder {
+    protected void doBuild() {
+        MySqlNode mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class));
+        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class));
+    }
 }
 {% endhighlight %}
 
 
 ## Runtime: the Web Console
 
-Run this Brooklyn "Application", specifying a target location,
-and our application is deployed.
+Build and run this Brooklyn "Application", specifying a target location, and our application is deployed.
+
+{% highlight bash %}
+export BROOKLYN_CLASSPATH=/path/to/your/project/target/classes
+brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location jclouds:aws-ec2:eu-west-1
+{% endhighlight %}
+
 Amazon is used in these screenshots, but lots of targets are supported (using [jclouds](http://jclouds.org))
 including fixed IP addresses and private clouds, 
 or just localhost (very handy for dev/test, and with port conflicts resolved automatically!).
@@ -43,6 +50,7 @@ aggregates these for clusters and other groups (using "enrichers"),
 and exposes operations ("effectors") that can be performed on entities.
 
 [![Web Console Details](walkthrough-webconsole-details-w700.png "Web Console Details")](walkthrough-webconsole-details.png) 
+
 
 ## Some Configuration and Management
 
@@ -59,28 +67,26 @@ on the classpath, but a range of URL formats is supported.
 The "dependent inter-process configuration" -- giving the database's URL
 to the webapps -- we'll do here with a JVM system property,
 but you're free to use any mechanism you wish.
-Under the covers, ``valueWhenAttributeReady`` is monitoring a sensor from MySQL
-and generating a string to pass to the webapp software processes;
-due to the use of closures, the Brooklyn webapp entities will automatically
+Under the covers, ``attributeWhenReady`` is monitoring a sensor from MySQL
+and generating a string to pass to the webapp software processes; ``formatString``
+is a similar utility that returns a string once all of its parts have been resolved.
+Due to the use of futures, the Brooklyn webapp entities will automatically
 block "at the last moment" when the value is needed
 (but after e.g. the VMs have been provisioned, to speed things up).
 
 {% highlight java %}
-public class WebClusterDatabaseExample extends AbstractApplication {
-    ControlledDynamicWebAppCluster webCluster = new ControlledDynamicWebAppCluster(this,
-        war: "classpath://hello-world-webapp.war");
-
-    MySqlNode mysql = new MySqlNode(this, 
-        creationScriptUrl: "classpath://visitors-database-setup.sql"); 
-    
-    {
-        web.factory.configure(
-            httpPort: "8080+", 
-            (JBoss7Server.JAVA_OPTIONS):
-                // -Dbrooklyn.example.db.url="jdbc:mysql://192.168.1.2:3306
-                //     /visitors?user=brooklyn\\&password=br00k11n"
-                ["brooklyn.example.db.url": valueWhenAttributeReady(mysql, MySqlNode.MYSQL_URL,
-                    { "jdbc:"+it+"visitors?user=brooklyn\\&password=br00k11n" }) ]);
+public class WebClusterDatabaseExample extends ApplicationBuilder {
+    protected void doBuild() {
+        MySqlNode mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+                .configure(MySqlNode.CREATION_SCRIPT_URL, "classpath://visitors-database-setup.sql"));
+        
+        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+                .configure("memberSpec", BasicEntitySpec.newInstance(JBoss7Server.class)
+                        .configure("httpPort", "8080+")
+                        .configure("war", WAR_PATH)
+                        .configure(javaSysProp("brooklyn.example.db.url"), 
+                                formatString("jdbc:%s%s?user=%s\\&password=%s", 
+                                        attributeWhenReady(mysql, MySqlNode.MYSQL_URL), DB_TABLE, DB_USERNAME, DB_PASSWORD))));
     }
 }
 {% endhighlight %}
@@ -95,12 +101,11 @@ This is a naively simple policy, but it shows Brooklyn's real metier,
 running management policies for applications whose topology it knows. 
 
 {% highlight java %}
-    {
-        web.cluster.addPolicy(
-            new ResizerPolicy(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
-                setSizeRange(1, 5).
-                setMetricRange(10, 100);
-    }
+        web.getCluster().addPolicy(AutoScalerPolicy.builder().
+                        metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND).
+                        sizeRange(1, 5).
+                        metricRange(10, 100).
+                        build());
 {% endhighlight %}
         
 *Policies* in Brooklyn typically subscribe to sensors, 
@@ -111,7 +116,7 @@ and groups themselves can be hierarchical.
 It's also handy that often Brooklyn creates the entities,
 so it knows what the hierarchy is.
 
-Under the covers, this ``ResizerPolicy`` attaches to any ``Resizable`` entity
+Under the covers, this ``AutoScalerPolicy`` attaches to any ``Resizable`` entity
 (exposing a ``resize`` effector), and monitors a specified sensor (or function)
 attempting to keep it within healthy limits.
 A separate policy operates at the ``Controlled`` cluster to ensure the
@@ -141,26 +146,34 @@ and [contribute it]({{site.url}}/dev/how-to-contrib.html).
 
 <!--
 
-Alternatively you can just add a ``main`` method to the Groovy class as follows:
+Alternatively you can just add a ``main`` method to the application class as follows:
 
 {% highlight java %}
     public static void main(String[] argv) {
-        ArrayList args = new ArrayList(Arrays.asList(argv));
-        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = CommandLineLocations.getLocationsById(args ?: [DEFAULT_LOCATION])
+        List<String> args = Lists.newArrayList(argv);
+        String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
+        String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
-        def app = new WebClusterDatabaseExample(name:'Brooklyn WebApp Cluster with Database example')
-            
-        BrooklynLauncher.manage(app, port)
-        app.start(locations)
-        Entities.dumpInfo(app)
+        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+                .webconsolePort(port)
+                .launch();
+
+        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
+
+        BasicApplication app = (BasicApplication) new WebClusterDatabaseExample()
+                .appDisplayName("Brooklyn WebApp Cluster with Database example")
+                .manage(server.getManagementContext());
+        
+        app.start(ImmutableList.of(loc));
+        
+        Entities.dumpInfo(app);
     }
 {% endhighlight %}
 
 Compile and run this with the [``brooklyn-all`` jar]({{site.url}}/start/download.html) on the classpath,
 pointing at your favourite WAR on your filesystem. 
 (If the ``import`` packages aren't picked up correctly,
-you can cheat by looking at [the file in Github](https://github.com/brooklyncentral/brooklyn/blob/master/examples/simple-web-cluster/src/main/java/brooklyn/demo/WebClusterDatabaseExample.groovy);
+you can cheat by looking at [the file in Github](https://github.com/brooklyncentral/brooklyn/blob/master/examples/simple-web-cluster/src/main/java/brooklyn/demo/WebClusterDatabaseExample.java);
 and you'll find a sample WAR which uses the database as configured above 
 [here](https://http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/io/brooklyn/).)
  TODO example webapp url 

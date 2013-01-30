@@ -15,4 +15,4 @@ Handy places:
   and [http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/](http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/) for snapshots
   (under ``io/brooklyn``)
             
-* **CI server** is not yet set up (CloudBees?)
+* **CI server** is currently a private server managed by Cloudsoft. There is a proposal to move to CloudBees.

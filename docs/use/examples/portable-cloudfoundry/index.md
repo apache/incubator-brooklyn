@@ -40,27 +40,23 @@ in this example in ``src/main/java``.
 Let's start by showing how the ``ElasticJavaWebAppService`` can start
 a java webapp in VMware's Cloud Foundry PaaS, just as easily as creating it
 from scratch in a VM-based cloud.
-We'll create our application in a Groovy class ``MovableCloudFoundryClusterExample``:
+We'll create our application in a Java class ``MovableCloudFoundryClusterExample``:
 
 {% highlight java %}
-public class MovableCloudFoundryClusterExample extends AbstractApplication {
+public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
 
-    public static final String DEFAULT_LOCATION = "cloudfoundry";
     public static final String WAR_FILE_URL = "classpath://hello-world-webapp.war";
 
-    ElasticJavaWebAppService websvc = new ElasticWebAppService(this, war: WAR_FILE_URL);
-    
-    public static void main(String[] argv) {
-        Application app = new MovableCloudFoundryClusterExample(name:'Movable Web Cluster');
-        BrooklynLauncher.manage(app, port);
-        app.start(new LocationRegistry().resolve("cloudfoundry") );
-        Entities.dumpInfo(app)
+    @Override
+    protected void doBuild() {
+        // FIXME Code not supported; temporary situation while we update to new mechanism!
+        // ElasticJavaWebAppService websvc = new ElasticWebAppService(MutableMap.of("war", WAR_FILE_URL), getApp());
     }
 }
 {% endhighlight %}
 
-We supply the location spec string ``"cloudfoundry"`` instead of 
-jclouds VM locations ``"cloudservers-uk"`` or ``"aws-ec2:us-west-1"``;
+We supply the location spec string ``"cloudfoundry"`` (instead of 
+jclouds VM locations such as ``"cloudservers-uk"`` or ``"aws-ec2:us-west-1"``);
 apart from that the code is unchanged.
 Logic in ``"ElasticJavaWebAppService"`` determines the appropriate strategy for any cloud.
 You can supply a specific Cloud Foundry endpoint by appending ``:endpoint``;
@@ -112,19 +108,33 @@ accepts the method-reference notation, ``new MethodEffector<String>(MovableEntit
 
 With this defined, let us create an entity which implements ``Movable``, and otherwise
 simply wraps a webapp cluster.
-We start with the ``Startable`` interface methods (effectors), 
-with an implementation that delegates to an ``ElasticJavaWebAppService`` entity,
-creating it if necessary, and advertising its ID through a sensor.
+We start with its interface, extending ``Startable`` to inherit its methods (effectors).
 
 {% highlight java %}
-@InheritConstructors
-class MovableElasticWebAppCluster extends AbstractEntity implements Startable, MovableEntityTrait {
+@ImplementedBy(MovableElasticWebAppClusterImpl.class)
+public interface MovableElasticWebAppCluster extends Entity, Startable, MovableEntityTrait {
 
+    // this advertises that this config key is easily available on this entity,
+    // either by passing (war: "classpath://...") in the constructor or by setConfig(ROOT_WAR).
+    // as a config variable, it will be inherited by children, so the children web app entities will pick it up.
     @SetFromFlag("war")
     public static final BasicConfigKey<String> ROOT_WAR = JavaWebAppService.ROOT_WAR;
     
-    public static final BasicAttributeSensor<String> PRIMARY_SVC_ENTITY_ID = 
-            [ String, "movable.primary.id", "Entity ID of primary web-app service" ];
+    public static final BasicAttributeSensor<String> PRIMARY_SVC_ENTITY_ID = new BasicAttributeSensor<String>(
+            String.class, "movable.primary.id", "Entity ID of primary web-app service");
+}
+{% endhighlight %}
+
+The implementation will delegate to an ``ElasticJavaWebAppService`` entity,
+creating it if necessary, and advertising its ID through a sensor.
+
+{% highlight java %}
+public class MovableElasticWebAppClusterImpl extends AbstractEntity implements MovableElasticWebAppCluster {
+
+    public static final Logger log = LoggerFactory.getLogger(MovableElasticWebAppClusterImpl.class);
+    
+    public MovableElasticWebAppClusterImpl() {
+    }
     
     @Override
     public void start(Collection<? extends Location> locations) {
@@ -140,9 +150,11 @@ class MovableElasticWebAppCluster extends AbstractEntity implements Startable, M
     }
 
     public EntityLocal createClusterIn(Location location) {
-        return new ElasticJavaWebAppService.Factory().
-            newFactoryForLocation(location).
-            newEntity([:], this);
+        EntityLocal result = new ElasticJavaWebAppService.Factory()
+                .newFactoryForLocation(location)
+                .newEntity([:], this);
+        Entities.manage(result);
+        return result;
     }
     
     @Override
@@ -154,24 +166,24 @@ class MovableElasticWebAppCluster extends AbstractEntity implements Startable, M
     public void restart() {
         StartableMethods.restart(this);
     }
-    
+
     @Override
     public String move(String location) {
         throw new UnsupportedOperationException();
     }
-    
 }
 {% endhighlight %}
 
-Note also that we define the ``ROOT_WAR`` config key here,
-with a flag, so that users can easily specify the config value on this entity
+Note also that we define the ``ROOT_WAR`` config key with a flag, 
+so that users can easily specify the config value on this entity
 (with configuration being inherited by descendant entities such as the wrapped cluster).  
 This means we could run our new entity by changing one line in the
 ``MovableCloudFoundryClusterExample`` application above 
 (although of course ``move`` will throw an exception):
 
 {% highlight java %}
-    MovableElasticWebAppCluster websvc = new MovableElasticWebAppCluster(this, war: WAR_FILE_URL);
+        createChild(BasicEntitySpec.newInstance(MovableElasticWebAppCluster.class)
+                .configure("war", WAR_FILE_URL));
 {% endhighlight %}
 
 
@@ -196,27 +208,29 @@ You might, for instance, defer the destory step,
 leaving the secondary active (and possibly configured so if forwards to the primary),
 until DNS updates have finished propagating.
 
-Let's add these three steps as effectors, along with a sensor for ``Collection<String> SECONDARY_SVC_ENTITY_IDS``.
+Let's add these three steps as effectors, along with a sensor for ``Collection<String> SECONDARY_SVC_ENTITY_IDS``
+(declaring the sensors and effectors in the interface, and implementing them in our entity class).
 First, we'll create a secondary cluster:
 
 {% highlight java %}
-    public static final BasicAttributeSensor<Collection<String>> SECONDARY_SVC_ENTITY_IDS = 
-            [ List, "movable.secondary.ids", "Entity IDs of secondary web-app services" ];
-
-    public static final Effector<String> CREATE_SECONDARY_IN_LOCATION = 
-            new MethodEffector<String>(this.&createSecondaryInLocation);
+    public static final BasicAttributeSensor<Collection<String>> SECONDARY_SVC_ENTITY_IDS = new BasicAttributeSensor( 
+            Collection.class, "movable.secondary.ids", "Entity IDs of secondary web-app services");
     
-    /** creates a new secondary instance, in the given location, 
-     * returning the ID of the secondary created and started */
+    public static final Effector<String> CREATE_SECONDARY_IN_LOCATION = new MethodEffector<String>(MovableElasticWebAppCluster.class, "createSecondaryInLocation");
+    
+    /** creates a new secondary instance, in the given location, returning the ID of the secondary created and started */
     @Description("create a new secondary instance in the given location")
     public String createSecondaryInLocation(
-            @NamedParameter("location") 
-            @Description("the location where to start the secondary")
-            String l) {
-            
+            @NamedParameter("location") @Description("the location where to start the secondary") String l);
+{% endhighlight %}
+
+    
+{% highlight java %}
+    @Override
+    public String createSecondaryInLocation(String l) {
         Location location = new LocationRegistry().resolve(l);
         Entity svc = createClusterIn(location);
-        Entities.start(managementContext, svc, [location]);
+        Entities.start(svc, [location]);
         setAttribute(SECONDARY_SVC_ENTITY_IDS, (getAttribute(SECONDARY_SVC_ENTITY_IDS) ?: []) + svc.id);
         return svc.id;
     }
@@ -226,22 +240,23 @@ Next, we'll promote that cluster and demote the former primary, emitting sensors
 for the new primaries and set of secondaries:
 
 {% highlight java %}
-    public static final Effector<String> PROMOTE_SECONDARY = 
-            new MethodEffector<String>(this.&promoteSecondary);
-    
+    public static final Effector<String> PROMOTE_SECONDARY = new MethodEffector<String>(MovableElasticWebAppCluster.class, "promoteSecondary");
+
     /** promotes the indicated secondary,
      * returning the ID of the former-primary which has been demoted */
     @Description("promote the indicated secondary to primary (demoting the existing primary)")
     public String promoteSecondary(
-            @NamedParameter("idOfSecondaryToPromote") 
-            @Description("ID of secondary entity to promote")
-            String idOfSecondaryToPromote) {
-            
-        Collection<String> currentSecondaryIds = getAttribute(SECONDARY_SVC_ENTITY_IDS);
-        if (!currentSecondaryIds.contains(idOfSecondaryToPromote))
-            throw new IllegalStateException(
-                    "Cannot promote unknown secondary $idOfSecondaryToPromote "+
-                    "(available secondaries are $currentSecondaryIds)");
+            @NamedParameter("idOfSecondaryToPromote") @Description("ID of secondary entity to promote") 
+            String idOfSecondaryToPromote);
+{% endhighlight %}
+    
+{% highlight java %}
+    @Override
+    public String promoteSecondary(String idOfSecondaryToPromote) {
+        Collection<String> currentSecondaryIds = getAttribute(SECONDARY_SVC_ENTITY_IDS)
+        if (!currentSecondaryIds.contains(idOfSecondaryToPromote)) 
+            throw new IllegalStateException("Cannot promote unknown secondary $idOfSecondaryToPromote "+
+                "(available secondaries are $currentSecondaryIds)");
             
         String primaryId = getAttribute(PRIMARY_SVC_ENTITY_ID);
         
@@ -258,27 +273,29 @@ Step 3 is to destroy the demoted secondary.
 achieved by a resizer policy scaling it back when it isn't being consumed.)  
 
 {% highlight java %}
-    public static final Effector<String> DESTROY_SECONDARY = 
-            new MethodEffector<String>(this.&destroySecondary);
+    public static final Effector<String> DESTROY_SECONDARY = new MethodEffector<String>(MovableElasticWebAppCluster.class, "destroySecondary");
     
     /** destroys the indicated secondary */
     @Description("destroy the indicated secondary")
     public void destroySecondary(
-            @NamedParameter("idOfSecondaryToDestroy") 
-            @Description("ID of secondary entity to destroy")
-            String idOfSecondaryToDestroy) {
-            
-        Collection<String> currentSecondaryIds = getAttribute(SECONDARY_SVC_ENTITY_IDS);
+            @NamedParameter("idOfSecondaryToDestroy") @Description("ID of secondary entity to destroy")
+            String idOfSecondaryToDestroy);
+{% endhighlight %}
+
+{% highlight java %}
+    
+    @Override
+    public void destroySecondary(String idOfSecondaryToDestroy) {
+        Collection<String> currentSecondaryIds = getAttribute(SECONDARY_SVC_ENTITY_IDS)
         if (!currentSecondaryIds.contains(idOfSecondaryToDestroy))
-            throw new IllegalStateException(
-                    "Cannot promote unknown secondary $idOfSecondaryToDestroy "+
-                    "(available secondaries are $currentSecondaryIds)");
+            throw new IllegalStateException("Cannot promote unknown secondary $idOfSecondaryToDestroy "+
+                "(available secondaries are $currentSecondaryIds)");
             
         currentSecondaryIds.remove(idOfSecondaryToDestroy);
         setAttribute(SECONDARY_SVC_ENTITY_IDS, currentSecondaryIds);
         
-        Entity secondary = getManagementContext().getEntity(idOfSecondaryToDestroy);
-        Entities.destroy(managementContext, secondary);
+        Entity secondary = getEntityManager().getEntity(idOfSecondaryToDestroy);
+        Entities.destroy(secondary);
     }
 {% endhighlight %}
 
@@ -307,7 +324,7 @@ Note that we have our webapp running in Cloud Foundry, and we have the effectors
 
 [![MovableElasticWebAppCluster Effectors](console-sensors-750px.png "MovableElasticWebAppCluster Effectors")](console-sensors.png)
 
-By clicking ``move`` and specifying a location, 
+By selecting the cluster, viewing its effectors, clicking ``move`` and specifying a location, 
 the webapp will come up at the new location and go down at the old.
 This allows, for instance, moving from a CF micro-cloud to ``cloudfoundry.com``,
 or to a private install (including Stackato).
