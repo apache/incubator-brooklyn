@@ -1,6 +1,8 @@
 package brooklyn.management.internal;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static brooklyn.util.GroovyJavaMethods.elvis;
 
 import java.util.Collection;
 import java.util.Map;
@@ -39,6 +41,11 @@ public class LocalManagementContext extends AbstractManagementContext {
     public LocalManagementContext() {
         this(BrooklynProperties.Factory.newDefault());
     }
+
+    public LocalManagementContext(Map<?,?> brooklynProperties) {
+        this();
+        configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
+     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
        super(brooklynProperties);

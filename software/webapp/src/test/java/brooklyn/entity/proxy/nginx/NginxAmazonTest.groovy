@@ -10,8 +10,6 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.config.BrooklynProperties
-import brooklyn.entity.Application
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicCluster
 import brooklyn.entity.proxying.BasicEntitySpec
@@ -21,8 +19,10 @@ import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.Location
 import brooklyn.location.MachineLocation
 import brooklyn.test.HttpTestUtils
-import brooklyn.location.basic.BasicLocationRegistry
+import brooklyn.management.ManagementContext
 import brooklyn.test.entity.TestApplication
+
+import com.google.common.collect.ImmutableMap
 
 /**
  * Test Nginx proxying a cluster of JBoss7Server entities on AWS for ENGR-1689.
@@ -40,13 +40,12 @@ public class NginxAmazonTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
-        Entities.manage(app)
+        ManagementContext managementContext = Entities.newManagementContext(
+                ImmutableMap.of("brooklyn.location.jclouds.aws-ec2.image-id", "us-east-1/ami-2342a94a"));
         
-        BrooklynProperties props = BrooklynProperties.Factory.newDefault()
-        props.put("brooklyn.location.jclouds.aws-ec2.image-id", "us-east-1/ami-2342a94a")
-
-        loc = new BasicLocationRegistry(props).resolve("aws-ec2:us-east-1")
+        loc = managementContext.getLocationRegistry().resolve("aws-ec2:us-east-1")
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        Entities.startManagement(app, managementContext)
     }
 
     @AfterMethod(alwaysRun = true)

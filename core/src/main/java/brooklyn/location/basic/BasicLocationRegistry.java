@@ -33,7 +33,17 @@ import com.google.common.collect.ImmutableMap;
 public class BasicLocationRegistry implements brooklyn.location.LocationRegistry {
 
     public static final Logger log = LoggerFactory.getLogger(BasicLocationRegistry.class);
-    
+
+    /**
+     * Splits a comma-separated list of locations (names or specs) into an explicit list.
+     * The splitting is very careful to handle commas embedded within specs, to split correctly.
+     */
+    public static List<String> expandCommaSeparateLocations(String locations) {
+        return WildcardGlobs.getGlobsAfterBraceExpansion("{"+locations+"}", false, PhraseTreatment.INTERIOR_NOT_EXPANDABLE, PhraseTreatment.INTERIOR_NOT_EXPANDABLE);
+        // don't do this, it tries to expand commas inside parentheses which is not good!
+//        QuotedStringTokenizer.builder().addDelimiterChars(",").buildList((String)id);
+    }
+
     /** @deprecated only for compatibility with legacy {@link LocationRegistry} */
     private final Map properties;
 
@@ -163,6 +173,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
     public final Location resolve(String spec) {
         return resolve(spec, new MutableMap());
     }
+
     public Location resolve(String spec, Map locationFlags) {
         try {
             Set<String> seenSoFar = specsSeen.get();
@@ -273,12 +284,6 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         }
     }
 
-    private List<String> expandCommaSeparateLocationSpecList(String specListCommaSeparated) {
-        return WildcardGlobs.getGlobsAfterBraceExpansion("{"+specListCommaSeparated+"}", false, PhraseTreatment.INTERIOR_NOT_EXPANDABLE, PhraseTreatment.INTERIOR_NOT_EXPANDABLE);
-        // don't do this, it tries to expand commas inside parentheses which is not good!
-//        QuotedStringTokenizer.builder().addDelimiterChars(",").buildList((String)id);
-    }
-    
     public Map getProperties() {
         if (mgmt!=null) return mgmt.getConfig().asMapWithStringKeys();
         return properties;
