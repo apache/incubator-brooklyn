@@ -11,6 +11,6 @@ public class MonitoredCassandraClusterExample extends AbstractApplication {
 
     CassandraNode server = new CassandraNode(this,
             clusterName:'CassandraDemo',
-            jmxPort:'11099', rmiPort:'9001', thriftPort:'9160', gossipPort:'7000')
+            jmxPort:'11099+', rmiPort:'9001+', thriftPort:'9160+')
 
 }

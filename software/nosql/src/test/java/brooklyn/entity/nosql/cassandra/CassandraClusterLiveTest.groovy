@@ -4,6 +4,8 @@ import static brooklyn.test.TestUtils.executeUntilSucceeds
 import static brooklyn.test.TestUtils.executeUntilSucceedsWithShutdown
 import static org.testng.Assert.*
 
+import java.util.concurrent.TimeUnit
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -28,8 +30,7 @@ class CassandraClusterLiveTest {
     }
 
     // private String provider = "rackspace-cloudservers-uk"
-    private String provider = "named:test"
-    // private String provider = "aws-ec2:eu-west-1"
+    private String provider = "aws-ec2:eu-west-1"
 
     protected TestApplication app
     protected Location testLocation
@@ -38,10 +39,7 @@ class CassandraClusterLiveTest {
     @BeforeMethod(alwaysRun = true)
     public void setup() {
         app = new TestApplication()
-        Entities.startManagement(app)
-
-        LocationRegistry locationRegistry = new BasicLocationRegistry(app.managementContext)
-        testLocation = locationRegistry.resolve(provider)
+        testLocation = new BasicLocationRegistry().resolve(provider)
     }
 
     @AfterMethod(alwaysRun = true)
@@ -58,14 +56,16 @@ class CassandraClusterLiveTest {
     @Test(groups = "Live")
     public void canStartupAndShutdown() {
         cluster = new CassandraCluster(parent:app, initialSize:2, clusterName:'Amazon Cluster')
+        assertEquals cluster.currentSize, 0
+
+        Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
-        executeUntilSucceeds(cluster) {
-            assertTrue cluster.currentSize == 2
+
+        executeUntilSucceeds(timeout:10*TimeUnit.MINUTES) {
+            assertEquals cluster.currentSize, 2
             cluster.members.each {
                 assertTrue it.getAttribute(Startable.SERVICE_UP)
             }
         }
-        // cluster.stop()
-        // assertFalse cluster.getAttribute(Startable.SERVICE_UP)
     }
 }

@@ -5,6 +5,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 
 /**
  * Start a {@link CassandraNode} in a {@link Location} accessible over ssh.
@@ -59,8 +61,8 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         String saveAs = String.format("apache-cassandra-%s-bin.tar.gz", getVersion());
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
-		        .add(CommonCommands.INSTALL_TAR)
-		        .add("tar xzfv " + saveAs)
+                .add(CommonCommands.INSTALL_TAR)
+                .add("tar xzfv " + saveAs)
                 .build();
 
         newScript(INSTALLING)
@@ -69,17 +71,26 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .execute();
     }
 
-    @Override
-    public void customize() {
-        log.info("Customizing {} (Cluster {})", entity, getClusterName());
-        Map<String, Integer> ports = ImmutableMap.<String, Integer>builder()
+    public Set<Integer> getPortsUsed() {
+        Set<Integer> result = Sets.newLinkedHashSet(super.getPortsUsed());
+        result.addAll(getPortMap().values());
+        return result;
+    }
+
+    private Map<String, Integer> getPortMap() {
+        return ImmutableMap.<String, Integer>builder()
                 .put("jmxPort", getJmxPort())
                 .put("rmiPort", getRmiServerPort())
                 .put("gossipPort", getGossipPort())
                 .put("sslGossipPort:", getSslGossipPort())
                 .put("thriftPort", getThriftPort())
                 .build();
-        NetworkUtils.checkPortsValid(ports);
+    }
+
+    @Override
+    public void customize() {
+        log.info("Customizing {} (Cluster {})", entity, getClusterName());
+        NetworkUtils.checkPortsValid(getPortMap());
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
         String dataDirEscaped = (getRunDir() + "/data").replace("/", "\\/"); // escape slashes
@@ -97,20 +108,14 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .add(String.format("sed -i.bk 's/^storage_port: .*/storage_port: %d/g' %s/conf/cassandra.yaml", getGossipPort(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^ssl_storage_port: .*/ssl_storage_port: %d/g' %s/conf/cassandra.yaml", getSslGossipPort(), getRunDir()))
                 .add(String.format("sed -i.bk 's/^listen_address: .*/listen_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
-                .add(String.format("sed -i.bk 's/- seeds:.*/- seeds: \"%s\"/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()));
-
-        // Open inbound ports
-        for (Integer port : ports.values()) {
-            commands.add(String.format("which iptables && iptables -I INPUT 1 -p tcp --dport %d -j ACCEPT", port));
-        }
-        commands.add("which iptables && service iptables save");
-        commands.add("which iptables && service iptables restart");
+                .add(String.format("sed -i.bk 's/- seeds:.*/- seeds: \"%s\"/g' %s/conf/cassandra.yaml", getHostname(), getRunDir())); // TODO configurable list
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
                 .execute();
 
         // Copy JMX agent Jar to server
+        // TODO do this based on config property in UsesJmx
         getMachine().copyTo(new ResourceUtils(this).getResourceFromUrl(getJmxRmiAgentJarUrl()), getJmxRmiAgentJarDestinationFilePath());
     }
 
@@ -148,6 +153,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public Map<String, String> getShellEnvironment() {
+        // TODO do this based on config property in UsesJmx
         String jvmOpts = String.format("-javaagent:%s -D%s=%d -D%s=%d -Djava.rmi.server.hostname=%s",
                 getJmxRmiAgentJarDestinationFilePath(),
                 JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, getJmxPort(),
@@ -156,7 +162,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
 	            .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
-	            .put("JVM_OPTS", jvmOpts)
+	            .put("JVM_OPTS", jvmOpts) // TODO see QPID_OPTS setting in QpidSshDriver
 	            .build();
     }
 }

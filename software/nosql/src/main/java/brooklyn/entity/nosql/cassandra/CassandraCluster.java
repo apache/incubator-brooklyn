@@ -36,6 +36,9 @@ public class CassandraCluster extends DynamicCluster {
 
     public static final MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
 
+    // Mutex for synchronizing during re-size operations
+    private final Object mutex = new Object[0];
+    
     private AbstractMembershipTrackingPolicy policy;
 
     public CassandraCluster(Map<?, ?> flags){
@@ -79,22 +82,28 @@ public class CassandraCluster extends DynamicCluster {
     public void stop() {
         super.stop();
 
-        setAttribute(Startable.SERVICE_UP, false);
-    }
+        // Stop all member nodes
+        synchronized (mutex) {
+            for (Entity member : getMembers()) {
+                CassandraNode node = (CassandraNode) member;
+                node.stop();
+            }
+        }
 
-    @Override
-    public void restart() {
-        throw new UnsupportedOperationException();
+        setAttribute(Startable.SERVICE_UP, false);
     }
     
     @Description("Updates the cluster members ring tokens")
-    public synchronized void update() {
-        int n = getMembers().size();
-        for (int i = 0; i < n; i++) {
-            log.info("Update cassandra cluster member {} of {}", i, n);
-            CassandraNode server = (CassandraNode) Iterables.get(getMembers(), i);
-            BigInteger token = BigInteger.valueOf(2L).pow(127).divide(BigInteger.valueOf(n)).multiply(BigInteger.valueOf(i));
-            server.setToken(token.toString());
+    public void update() {
+        synchronized (mutex) {
+            Iterable<Entity> members = getMembers();
+            int n = Iterables.size(members);
+            for (int i = 0; i < n; i++) {
+                log.info("Update cassandra cluster member {} of {}", i, n);
+                CassandraNode node = (CassandraNode) Iterables.get(members, i);
+                BigInteger token = BigInteger.valueOf(2L).pow(127).divide(BigInteger.valueOf(n)).multiply(BigInteger.valueOf(i));
+                node.setToken(token.toString());
+            }
         }
     }
 }

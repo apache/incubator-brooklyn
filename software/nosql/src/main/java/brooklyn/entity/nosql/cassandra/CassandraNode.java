@@ -86,7 +86,7 @@ public class CassandraNode extends SoftwareProcessEntity implements UsesJmx {
     public String getClusterName() { return getAttribute(CLUSTER_NAME); }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<CassandraNodeDriver> getDriverInterface() {
         return CassandraNodeDriver.class;
     }
 
@@ -130,19 +130,6 @@ public class CassandraNode extends SoftwareProcessEntity implements UsesJmx {
 
         if (jmxFeed != null) jmxFeed.stop();
         if (jmxHelper.isConnected()) jmxHelper.disconnect();
-    }
-
-    @Override
-    public void waitForServiceUp() {
-        super.waitForServiceUp();
-
-        try {
-            if (!jmxHelper.isConnected()) jmxHelper.connect();
-            jmxHelper.assertMBeanExistsEventually(storageServiceMBean, 60*1000);
-            log.info("Connected to StorageService version {}", jmxHelper.getAttribute(storageServiceMBean, "ReleaseVersion"));
-        } catch (IOException ioe) {
-            Throwables.propagate(ioe);
-        }
     }
 
     public void setToken(String token) {

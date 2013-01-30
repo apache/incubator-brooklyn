@@ -21,6 +21,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
+import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.netflix.astyanax.AstyanaxContext
@@ -43,30 +44,8 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory
  *
  * Test the operation of the {@link CassandraNode} class.
  */
-public class CassandraNodeIntegrationTest {
+public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeIntegrationTest.class)
-
-    static {
-        TimeExtras.init()
-    }
-
-    protected Application app
-    protected Location testLocation
-    protected CassandraNode cassandra
-
-    @BeforeMethod(alwaysRun = true)
-    public void setup() {
-        app = new TestApplication()
-        testLocation = new LocalhostMachineProvisioningLocation()
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void shutdown() {
-        if (cassandra != null && cassandra.getAttribute(Startable.SERVICE_UP)) {
-            cassandra.stop()
-        }
-        Entities.destroy(app)
-    }
 
     /**
      * Test that the server starts up and sets SERVICE_UP correctly.
@@ -88,7 +67,7 @@ public class CassandraNodeIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithCustomJmx() {
-        cassandra = new CassandraNode(parent:app)
+        cassandra = new CassandraNode(parent:app, jmxPort:'11099+', rmiServerPort:'19001+')
         Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceedsWithShutdown(cassandra, timeout:10*TimeUnit.MINUTES) {
@@ -102,91 +81,13 @@ public class CassandraNodeIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testConnection() throws Exception {
-        cassandra = new CassandraNode(parent:app, thriftPort:'9876', jmxPort:'11099', rmiServerPort:'9001', clusterName:'TestCluster')
+        cassandra = new CassandraNode(parent:app, thriftPort:'9876+', clusterName:'TestCluster')
         Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceeds {
             assertTrue cassandra.getAttribute(Startable.SERVICE_UP)
         }
 
-        // Create context
-        AstyanaxContext<Keyspace> context = getAstyanaxContext(cassandra)
-        try {
-            // (Re) Create keyspace
-            Keyspace keyspace = context.getEntity()
-            try {
-                keyspace.dropKeyspace()
-            } catch (Exception e) { /* Ignore */ }
-            keyspace.createKeyspace(ImmutableMap.<String, Object>builder()
-                .put("strategy_options", ImmutableMap.<String, Object>of("replication_factor", "1"))
-                .put("strategy_class", "SimpleStrategy")
-                .build());
-            assertNull(keyspace.describeKeyspace().getColumnFamily("Rabbits"))
-            assertNull(keyspace.describeKeyspace().getColumnFamily("People"))
-
-            // Create column family
-            ColumnFamily<String, String> cf = new ColumnFamily<String, String>(
-                    "People", // Column Family Name
-                    StringSerializer.get(), // Key Serializer
-                    StringSerializer.get()) // Column Serializer
-            keyspace.createColumnFamily(cf, null);
-
-            // Insert rows
-            MutationBatch m = keyspace.prepareMutationBatch()
-            m.withRow(cf, "one")
-                    .putColumn("name", "Alice", null)
-                    .putColumn("company", "Cloudsoft Corp", null)
-            m.withRow(cf, "two")
-                    .putColumn("name", "Bob", null)
-                    .putColumn("company", "Cloudsoft Corp", null)
-                    .putColumn("pet", "Cat", null)
-
-            OperationResult<Void> insert = m.execute()
-            assertEquals(insert.host.hostName, cassandra.getAttribute(Attributes.HOSTNAME))
-            assertTrue(insert.latency > 0L)
-
-            // Query data
-            OperationResult<ColumnList<String>> query = keyspace.prepareQuery(cf)
-                    .getKey("one")
-                    .execute()
-            assertEquals(insert.host.hostName, cassandra.getAttribute(Attributes.HOSTNAME))
-            assertTrue(query.latency > 0L)
-
-            ColumnList<String> columns = query.getResult()
-            assertEquals(columns.size(), 2)
-
-            // Lookup columns in response by name
-            String name = columns.getColumnByName("name").getStringValue()
-            assertEquals(name, "Alice")
-
-            // Iterate through the columns
-            for (Column<String> c : columns) {
-                assertTrue(ImmutableList.of("name", "company").contains(c.getName()))
-            }
-        } catch (ConnectionException ce) {
-            ce.printStackTrace()
-            fail("Error connecting to Cassandra")
-        } finally {
-            context.shutdown()
-            cassandra.stop() // Stop
-        }
-    }
-
-    protected AstyanaxContext<Keyspace> getAstyanaxContext(CassandraNode server) {
-        AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
-                .forCluster("TestCluster")
-                .forKeyspace("BrooklynIntegrationTest")
-                .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
-                        .setDiscoveryType(NodeDiscoveryType.NONE))
-                .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl("BrooklynPool")
-                        .setPort(server.getThriftPort())
-                        .setMaxConnsPerHost(1)
-                        .setConnectTimeout(5000) // 10s
-                        .setSeeds(String.format("%s:%d", server.getAttribute(Attributes.HOSTNAME), server.getThriftPort())))
-                .withConnectionPoolMonitor(new CountingConnectionPoolMonitor())
-                .buildKeyspace(ThriftFamilyFactory.getInstance())
-
-        context.start()
-        return context
+        astyanaxTest()
     }
 }
