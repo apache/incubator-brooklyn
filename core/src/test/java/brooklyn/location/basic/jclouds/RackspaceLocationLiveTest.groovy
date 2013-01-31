@@ -20,13 +20,13 @@ public class RackspaceLocationLiveTest extends AbstractJcloudsLocationTest {
     @Override
     @DataProvider(name = "fromImageId")
     public Object[][] cloudAndImageIds() {
-        return [ [REGION_NAME, IMAGE_ID, IMAGE_OWNER] ]
+        return [ [ REGION_NAME, IMAGE_ID, IMAGE_OWNER ] ]
     }
 
     @Override
     @DataProvider(name = "fromImageNamePattern")
     public Object[][] cloudAndImageNamePatterns() {
-        return [ [REGION_NAME, IMAGE_NAME_PATTERN, IMAGE_OWNER] ]
+        return [ [ REGION_NAME, IMAGE_NAME_PATTERN, IMAGE_OWNER ] ]
     }
     
     @Override
@@ -35,7 +35,7 @@ public class RackspaceLocationLiveTest extends AbstractJcloudsLocationTest {
         return []
     }
     
-    @Test
+    @Test(enabled = false)
     public void noop() { /* just exists to let testNG IDE run the test */ }
     
 }

@@ -15,26 +15,21 @@ import brooklyn.management.ManagementContext
 import brooklyn.util.internal.ssh.sshj.SshjTool
 
 import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Maps
 
 public abstract class AbstractJcloudsLocationTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJcloudsLocationTest.class)
-    
+
     private final String provider
-//    protected JcloudsLocationFactory locFactory;
-    protected JcloudsLocation loc; // if private, can't be accessed from within closure in teardown! See http://jira.codehaus.org/browse/GROOVY-4692
-    private Collection<SshMachineLocation> machines = []
-//    private File sshPrivateKey
-//    private File sshPublicKey
-    protected ManagementContext managementContext;
-    
+
+    protected JcloudsLocation loc;
+    protected Collection<SshMachineLocation> machines = []
+    protected ManagementContext ctx;
+
     protected AbstractJcloudsLocationTest(String provider) {
         this.provider = provider
     }
-    
-    protected CredentialsFromEnv getCredentials() {
-        return new CredentialsFromEnv(provider);
-    }
-        
+
     /**
      * The location and image id tuplets to test.
      */
@@ -64,24 +59,7 @@ public abstract class AbstractJcloudsLocationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-//        URL resource = getClass().getClassLoader().getResource("jclouds/id_rsa.private")
-//        assertNotNull resource
-//        sshPrivateKey = new File(resource.path)
-//        resource = getClass().getClassLoader().getResource("jclouds/id_rsa.pub")
-//        assertNotNull resource
-//        sshPublicKey = new File(resource.path)
-        
-        managementContext = Entities.newManagementContext(
-            ImmutableMap.of("provider", provider));
-        
-
-//        CredentialsFromEnv creds = getCredentials();
-//        locFactory = new JcloudsLocationFactory([
-//                provider:provider,
-//                identity:creds.getIdentity(), 
-//                credential:creds.getCredential(), 
-//                sshPublicKey:sshPublicKey,
-//                sshPrivateKey:sshPrivateKey])
+        ctx = Entities.newManagementContext(ImmutableMap.of("provider", provider));
     }
 
     @AfterMethod(alwaysRun=true)
@@ -100,33 +78,29 @@ public abstract class AbstractJcloudsLocationTest {
         }
         machines.clear()
     }
-    
+
     @Test(dataProvider="fromImageId")
     public void testTagMapping(String regionName, String imageId, String imageOwner) {
-        loc = managementContext.getLocationRegistry().resolve(provider+":"+regionName);
-//        loc = locFactory.newLocation(regionName)
-        Map tagMapping = [
-            imageId:imageId,
-            imageOwner:imageOwner
-        ];
+        loc = ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName), [ identity:"DUMMY", credential:"DUMMY" ])
+        Map tagMapping = [ imageId:imageId, imageOwner:imageOwner, ]
         loc.setTagMapping([MyEntityType:tagMapping])
-        
+
         Map flags = loc.getProvisioningFlags(["MyEntityType"])
-        assertTrue(flags.contains(tagMapping), "flags="+flags);
+        assertTrue(Maps.difference(flags, tagMapping).entriesOnlyOnRight().isEmpty(), "flags="+flags);
     }
-    
+
     @Test(groups = [ "Live" ], dataProvider="fromImageId")
     public void testProvisionVmUsingImageId(String regionName, String imageId, String imageOwner) {
-        loc = managementContext.getLocationRegistry().resolve(provider+":"+regionName);
+        loc = ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
         SshMachineLocation machine = obtainMachine([imageId:imageId, imageOwner:imageOwner])
-        
+
         LOG.info("Provisioned vm $machine; checking if ssh'able")
         assertTrue machine.isSshable()
     }
     
     @Test(groups = [ "Live" ], dataProvider="fromImageNamePattern")
     public void testProvisionVmUsingImageNamePattern(String regionName, String imageNamePattern, String imageOwner) {
-        loc = managementContext.getLocationRegistry().resolve(provider+":"+regionName);
+        loc = ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
         SshMachineLocation machine = obtainMachine([imageNamePattern:imageNamePattern, imageOwner:imageOwner])
         
         LOG.info("Provisioned AWS vm $machine; checking if ssh'able")
@@ -135,7 +109,7 @@ public abstract class AbstractJcloudsLocationTest {
     
     @Test(groups = "Live", dataProvider="fromImageDescriptionPattern")
     public void testProvisionVmUsingImageDescriptionPattern(String regionName, String imageDescriptionPattern, String imageOwner) {
-         loc = managementContext.getLocationRegistry().resolve(provider+":"+regionName);
+        loc = ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
         SshMachineLocation machine = obtainMachine([imageDescriptionPattern:imageDescriptionPattern, imageOwner:imageOwner])
         
         LOG.info("Provisioned AWS vm $machine; checking if ssh'able")
@@ -146,27 +120,21 @@ public abstract class AbstractJcloudsLocationTest {
     // FIXME Do we really want to hard-code ssh key paths here?
     @Test(groups = ["Live","WIP"], dataProvider="fromFirstImageId")
     public void testProvisioningVmWithCustomUsername(String regionName, String imageId, String imageOwner) {
-        loc = managementContext.getLocationRegistry().resolve(provider+":"+regionName);
+        loc = ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
         Map flags = [
             imageId:imageId,
             imageOwner:imageOwner,
-            userName:"myname",
-            rootSshPrivateKey:sshPrivateKey,
-            rootSshPublicKey:sshPublicKey,
-            sshPrivateKey:sshPrivateKey,
-            sshPublicKey:sshPublicKey
+            userName:"myname"
         ]
-        
+
         SshMachineLocation machine = obtainMachine(flags)
-        
         LOG.info("Provisioned vm $machine; checking if ssh'able")
-        
-        def t = new SshjTool(user:"myname", host:machine.address.getHostName(), publicKeyFile:sshPublicKey.getAbsolutePath(), privateKeyFile:sshPrivateKey.getAbsolutePath())
+
+        def t = new SshjTool(user:"myname", host:machine.address.getHostName(), publicKeyFile:sshpublicKey.getAbsolutePath(), privateKeyFile:sshPrivateKey.getAbsolutePath())
         t.connect()
         t.execCommands([ "date" ])
         t.disconnect()
 
-        
         assertTrue machine.isSshable()
     }
 

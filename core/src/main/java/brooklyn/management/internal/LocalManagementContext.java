@@ -4,6 +4,7 @@ import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static brooklyn.util.GroovyJavaMethods.elvis;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -119,7 +120,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     
     @Override
     public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
-		manageIfNecessary(entity, (elvis(flags.get("displayName"), flags.get("description"), flags, c)));
+		manageIfNecessary(entity, elvis(Arrays.asList(flags.get("displayName"), flags.get("description"), flags, c)));
         return getExecutionContext(entity).submit(flags, c);
     }
 

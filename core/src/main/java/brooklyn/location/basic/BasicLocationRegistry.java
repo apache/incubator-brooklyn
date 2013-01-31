@@ -249,7 +249,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         for (Object id : spec) {
             if (id instanceof String) {
                 // if it as comma-separated list -- TODO with no comma in the brackets
-                List<String> l = expandCommaSeparateLocationSpecList((String)id);
+                List<String> l = expandCommaSeparateLocations((String)id);
                 if (l.size()>1) id = l;
             } else if (id instanceof Iterable) {
                 log.warn("LocationRegistry got list of list of location strings, "+spec+"; flattening");
