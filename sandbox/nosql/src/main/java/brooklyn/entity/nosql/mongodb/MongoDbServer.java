@@ -1,7 +1,8 @@
 package brooklyn.entity.nosql.mongodb;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.adapter.FunctionSensorAdapter;
@@ -22,7 +23,7 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public class MongoDbServer extends SoftwareProcessEntity {
+public class MongoDbServer extends SoftwareProcessImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDbServer.class);
 
@@ -141,7 +142,7 @@ public class MongoDbServer extends SoftwareProcessEntity {
                 LOG.debug("No serverStatus data for {}: Service not up", entity);
                 return null;
             }
-            String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME);
+            String hostname = entity.getAttribute(SoftwareProcess.HOSTNAME);
             Integer port = entity.getAttribute(PORT);
             MongoClient client = null;
             try {

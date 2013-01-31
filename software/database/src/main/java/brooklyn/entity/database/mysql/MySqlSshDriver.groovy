@@ -1,21 +1,19 @@
 package brooklyn.entity.database.mysql
 
+import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs
+import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage
+import static brooklyn.entity.basic.lifecycle.CommonCommands.ok
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.basic.SoftwareProcessEntity
-import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
+import brooklyn.entity.basic.lifecycle.CommonCommands
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.BasicOsDetails.OsArchs
 import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
 import brooklyn.util.ResourceUtils
 import brooklyn.util.text.Identifiers
-
-import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs
-import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage
-import static brooklyn.entity.basic.lifecycle.CommonCommands.ok;
 
 /**
  * The SSH implementation of the {@link MySlDriver}.
@@ -24,12 +22,12 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
     
-    public MySqlSshDriver(MySqlNode entity, SshMachineLocation machine) {
+    public MySqlSshDriver(MySqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
     
     protected String getVersion() {
-        entity.getConfig(SoftwareProcessEntity.SUGGESTED_VERSION) ?: getDefaultVersion();
+        entity.getConfig(MySqlNode.SUGGESTED_VERSION) ?: getDefaultVersion();
     }
 
     public String getOsTag() {
@@ -90,7 +88,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     final String socketUid = Identifiers.makeRandomId(6);
     String secretPassword = Identifiers.makeRandomId(6);
     public String getPassword() { secretPassword }
-    public MySqlNode getEntity() { return super.getEntity() }
+    public MySqlNodeImpl getEntity() { return super.getEntity() }
     public int getPort() { return entity.port }
     
     @Override

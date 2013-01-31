@@ -88,7 +88,7 @@ public class Entities {
 		        }});
 		}
 	    ParallelTask<T> invoke = new ParallelTask<T>(tasks);
-	    callingEntity.getManagementSupport().getExecutionContext().submit(invoke);
+	    ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(invoke);
 	    return invoke;
 	}
     public static <T> Task<List<T>> invokeEffectorListWithMap(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall, 
@@ -378,7 +378,7 @@ public class Entities {
     /** @deprecated since 0.4; use destroy(Entity) */
     public static void destroy(ManagementContext context, Entity e) {
         if (e instanceof Startable) ((Startable)e).stop();
-        if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
+        if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
         if (context != null) context.getEntityManager().unmanage(e);
     }
 
@@ -397,7 +397,7 @@ public class Entities {
     public static void destroy(Entity e) {
         if (isManaged(e)) {
             if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
-            if (e instanceof AbstractEntity) ((AbstractEntity)e).destroy();
+            if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
             unmanage(e);
         }
     }
@@ -417,7 +417,7 @@ public class Entities {
     }
 
     public static boolean isManaged(Entity e) {
-        return ((AbstractEntity)e).getManagementSupport().isDeployed() && ((AbstractEntity)e).getManagementSupport().getManagementContext(true).isRunning();
+        return ((EntityInternal)e).getManagementSupport().isDeployed() && ((EntityInternal)e).getManagementSupport().getManagementContext(true).isRunning();
     }
     
     /** brings this entity under management iff its ancestor is managed, returns true in that case;
@@ -433,7 +433,7 @@ public class Entities {
             o = o.getParent();
         }
         if (isManaged(o)) {
-            ((AbstractEntity)o).getManagementSupport().getManagementContext(false).getEntityManager().manage(eum);
+            ((EntityInternal)o).getManagementSupport().getManagementContext(false).getEntityManager().manage(eum);
             return true;
         }
         if (!(o instanceof Application))
@@ -460,7 +460,7 @@ public class Entities {
             o = o.getParent();
         }
         if (isManaged(o)) {
-            ManagementContext mgmt = ((AbstractEntity)o).getManagementSupport().getManagementContext(false);
+            ManagementContext mgmt = ((EntityInternal)o).getManagementSupport().getManagementContext(false);
             mgmt.getEntityManager().manage(eum);
             return mgmt;
         }
@@ -499,9 +499,17 @@ public class Entities {
         return mgmt;
     }
     
+    public static ManagementContext newManagementContext() {
+        return new LocalManagementContext();
+    }
+    
+    public static ManagementContext newManagementContext(BrooklynProperties props) {
+        return new LocalManagementContext(props);
+    }
+
     public static void unmanage(Entity entity) {
-        if (((AbstractEntity)entity).getManagementSupport().isDeployed()) {
-            ((AbstractEntity)entity).getManagementSupport().getManagementContext(true).getEntityManager().unmanage(entity);
+        if (((EntityInternal)entity).getManagementSupport().isDeployed()) {
+            ((EntityInternal)entity).getManagementSupport().getManagementContext(true).getEntityManager().unmanage(entity);
         }
     }
 

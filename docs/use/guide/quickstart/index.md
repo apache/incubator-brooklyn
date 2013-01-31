@@ -36,14 +36,14 @@ to launch a three-tier application in the cloud,
 complete with management:
 
 {% highlight java %}
-{% read WebClusterAndDatabase.groovy %}
+{% read WebClusterAndDatabase.java %}
 {% endhighlight %}
 
 This consists of a JBoss web-app tier
 behind an nginx load-balancer (built up in the class ``ControlledDynamicWebAppCluster``),
 connected to a MySQL database instance.
 
-The ``web.factory.configure`` call tells the appservers to run on the first available port >= 8080
+The ``JBoss7Server`` spec tells the appservers to run on the first available port >= 8080
 (which will be 8080 except when running multiple instances on ``localhost``),
 and wires the URL where the database is running in to the app servers.
 The MySQL URL is exposed as an attribute sensor,
@@ -55,7 +55,7 @@ This "just-in-time" approach to dependent configuration simplifies -- as much as
 some of the trickiest issues when setting up sophisticated applications.
 
 A management plane is launched with the application, 
-running the policy configured with the ``web.cluster.addPolicy`` command
+running the policy configured with the ``web.getCluster().addPolicy(...)`` command
 (as well as other policies which ensure the load-balancer is updated whenever the ``web.cluster`` members change).
 Keeping a handle on the application instance allows programmatic monitoring, manual management, and
 policy change; the management plane can also be accessed through a command-line console, a web console, or a REST web

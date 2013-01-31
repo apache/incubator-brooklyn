@@ -2,20 +2,22 @@ package brooklyn.event.adapter;
 
 import static org.testng.Assert.assertEquals
 
-import org.testng.annotations.BeforeMethod;
+import java.util.concurrent.TimeUnit
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestEntity
-import java.util.concurrent.TimeUnit
-
-import brooklyn.test.entity.TestApplication
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
+import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 
+@Deprecated // Class under test is deprecated
 public class FunctionSensorAdapterTest {
     private static final Logger log = LoggerFactory.getLogger(FunctionSensorAdapterTest.class)
 
@@ -25,8 +27,8 @@ public class FunctionSensorAdapterTest {
 
     @BeforeMethod
     public void setup() {
-        app = new TestApplication();
-        entity = new TestEntity(app);
+        app = new TestApplicationImpl();
+        entity = new TestEntityImpl(app);
         entityRegistry = new SensorRegistry(entity);
         app.startManagement();
     }

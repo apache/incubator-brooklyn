@@ -11,11 +11,14 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
+import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -34,7 +37,7 @@ public class RebindDynamicGroupTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = new TestApplication();
+        origApp = new TestApplicationImpl();
     }
 
     @AfterMethod
@@ -44,8 +47,8 @@ public class RebindDynamicGroupTest {
     
     @Test
     public void testRestoresDynamicGroup() throws Exception {
-        MyEntity origE = new MyEntity(origApp);
-        DynamicGroup origG = new DynamicGroup(origApp, Predicates.instanceOf(MyEntity.class));
+        MyEntity origE = new MyEntityImpl(origApp);
+        DynamicGroup origG = new DynamicGroupImpl(origApp, Predicates.instanceOf(MyEntity.class));
         Entities.startManagement(origApp, managementContext);
         
         TestApplication newApp = rebind();
@@ -57,7 +60,7 @@ public class RebindDynamicGroupTest {
         assertGroupMemebers(newG, ImmutableSet.of(newE));
 
         // And should detect new members that match the filter
-        final MyEntity newE2 = new MyEntity(newApp);
+        final MyEntity newE2 = new MyEntityImpl(newApp);
         Entities.manage(newE2);
         
         TestUtils.assertEventually(new Runnable() {

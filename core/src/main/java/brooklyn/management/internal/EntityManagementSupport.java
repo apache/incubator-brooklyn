@@ -1,5 +1,7 @@
 package brooklyn.management.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -10,6 +12,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
@@ -46,6 +49,7 @@ public class EntityManagementSupport {
     protected transient AbstractEntity entity;
     NonDeploymentManagementContext nonDeploymentManagementContext;
     
+    protected transient ManagementContext initialManagementContext;
     protected transient ManagementContext managementContext;
     protected transient SubscriptionContext subscriptionContext;
     protected transient ExecutionContext executionContext;
@@ -78,6 +82,20 @@ public class EntityManagementSupport {
         return (nonDeploymentManagementContext == null) && currentlyDeployed.get();
     }
 
+    public synchronized void setManagementContext(ManagementContext val) {
+        if (initialManagementContext != null) {
+            throw new IllegalStateException("Initial management context is already set for "+entity+"; cannot change");
+        }
+        if (managementContext != null && !managementContext.equals(val)) {
+            throw new IllegalStateException("Management context is already set for "+entity+"; cannot change");
+        }
+        
+        this.initialManagementContext = checkNotNull(val, "managementContext");
+        if (nonDeploymentManagementContext != null) {
+            nonDeploymentManagementContext.setManagementContext(val);
+        }
+    }
+    
     public void onRebind(ManagementTransitionInfo info) {
         nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_REBINDING);
     }
@@ -94,6 +112,9 @@ public class EntityManagementSupport {
                 }
                 if (managementContext != null && !managementContext.equals(info.getManagementContext())) {
                     throw new IllegalStateException("Already has management context: "+managementContext+"; can't set "+info.getManagementContext());
+                }
+                if (initialManagementContext != null && !initialManagementContext.equals(info.getManagementContext())) {
+                    throw new IllegalStateException("Already has different initial management context: "+initialManagementContext+"; can't set "+info.getManagementContext());
                 }
                 if (alreadyManaging) {
                     return;
@@ -201,7 +222,7 @@ public class EntityManagementSupport {
         // TODO custom stopping activities
         // TODO framework stopping events - no more sensors, executions, etc
         
-        if (entity.getParent()!=null) entity.getParent().removeChild(entity);
+        if (entity.getParent()!=null) entity.getParent().removeChild(entity.getProxyIfAvailable());
         // new subscriptions will be queued / not allowed
         nonDeploymentManagementContext.getSubscriptionManager().stopDelegatingForSubscribing();
         // new publications will be queued / not allowed
@@ -269,12 +290,16 @@ public class EntityManagementSupport {
         }
         if (entity instanceof Application) {
             log.warn("Autodeployment with new management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
-            Entities.startManagement(entity);
+            if (initialManagementContext != null) {
+                initialManagementContext.getEntityManager().manage(entity);
+            } else {
+                Entities.startManagement(entity);
+            }
             return;
         }
         if ("start".equals(effectorName)) {
             Entity e=entity;
-            if (e.getParent()!=null && ((AbstractEntity)e.getParent()).getManagementSupport().isDeployed()) { 
+            if (e.getParent()!=null && ((EntityInternal)e.getParent()).getManagementSupport().isDeployed()) { 
                 log.warn("Autodeployment in parent's management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
                 ((AbstractEntity)e.getParent()).getManagementSupport().getManagementContext(false).getEntityManager().manage(entity);
                 return;

@@ -1,16 +1,20 @@
 package brooklyn.entity.webapp.tomcat;
 
-import brooklyn.entity.basic.BasicConfigurableEntityFactory;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class TomcatServerFactory extends BasicConfigurableEntityFactory<TomcatServer> {
+import brooklyn.entity.basic.BasicConfigurableEntityFactory;
+
+/**
+ * @deprecated since 0.5; instead use new BasicConfigurableEntityFactory(TomcatServerImpl.class)
+ */
+@Deprecated
+public class TomcatServerFactory extends BasicConfigurableEntityFactory<TomcatServerImpl> {
     public TomcatServerFactory() {
         this(new LinkedHashMap());
     }
 
     public TomcatServerFactory(Map flags) {
-        super(flags, TomcatServer.class);
+        super(flags, TomcatServerImpl.class);
     }
 }

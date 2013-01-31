@@ -13,6 +13,7 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableList;
@@ -25,7 +26,7 @@ public class JavaEntityTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         Entities.startManagement(app);
         app.start(ImmutableList.of(new SimulatedLocation()));
     }

@@ -13,6 +13,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.PortRanges
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 import com.google.common.collect.Iterables
 
@@ -39,11 +40,11 @@ public class TomcatAutoScalerPolicyTest {
         PortRange httpPort = PortRanges.fromString("7880+");
         PortRange jmxP = PortRanges.fromString("32199+");
         PortRange shutdownP = PortRanges.fromString("31880+");
-        TestApplication app = new TestApplication()
+        TestApplication app = new TestApplicationImpl()
         try {
-            DynamicWebAppCluster cluster = new DynamicWebAppCluster(
+            DynamicWebAppCluster cluster = new DynamicWebAppClusterImpl(
                 factory: { Map properties, Entity parent ->
-                    def tc = new TomcatServer(properties, parent)
+                    def tc = new TomcatServerImpl(properties, parent)
                     tc.setConfig(TomcatServer.HTTP_PORT.configKey, httpPort)
                     tc.setConfig(TomcatServer.JMX_PORT.configKey, jmxP)
                     tc.setConfig(TomcatServer.SHUTDOWN_PORT, shutdownP)
@@ -64,8 +65,8 @@ public class TomcatAutoScalerPolicyTest {
             
             assertEquals 1, cluster.currentSize
             
-            TomcatServer tc = Iterables.getOnlyElement(cluster.getMembers())
-            2.times { connectToURL(tc.getAttribute(TomcatServer.ROOT_URL)) }
+            TomcatServerImpl tc = Iterables.getOnlyElement(cluster.getMembers())
+            2.times { connectToURL(tc.getAttribute(TomcatServerImpl.ROOT_URL)) }
             
             executeUntilSucceeds(timeout: 3*SECONDS) {
                 assertEquals 2.0d/cluster.currentSize, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)

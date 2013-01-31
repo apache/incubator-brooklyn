@@ -15,6 +15,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -32,7 +33,7 @@ public class RebindPolicyTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
-        origApp = new TestApplication();
+        origApp = new TestApplicationImpl();
         Entities.startManagement(origApp, managementContext);
     }
 

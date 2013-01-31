@@ -7,6 +7,9 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation
@@ -23,9 +26,10 @@ class BrooklynMetricsTest {
     
     @BeforeMethod
     public void setUp() {
-        app = new TestApplication()
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         loc = new SimulatedLocation()
         brooklynMetrics = new BrooklynMetrics(updatePeriod:10L, parent:app)
+        Entities.manage(brooklynMetrics);
     }
     
     @Test
@@ -45,7 +49,7 @@ class BrooklynMetricsTest {
     
     @Test
     public void testBrooklynMetricsIncremented() {
-        TestEntity e = new TestEntity(parent:app)
+        TestEntity e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         app.start([loc])
 
         executeUntilSucceeds(timeout:TIMEOUT_MS) {

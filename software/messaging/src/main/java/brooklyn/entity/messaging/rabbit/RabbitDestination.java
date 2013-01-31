@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.event.adapter.SensorRegistry;
-import brooklyn.event.adapter.SshSensorAdapter;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.MutableMap;
@@ -50,9 +48,10 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
         setAttribute(RabbitBroker.VIRTUAL_HOST_NAME, virtualHost);
         
         machine = (SshMachineLocation) Iterables.find(getParent().getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-        shellEnvironment = getParent().getDriver().getShellEnvironment();
+        shellEnvironment = getParent().getShellEnvironment();
     }
 
+    // FIXME Should return RabbitBroker; won't work if gets a proxy rather than "real" entity
     public RabbitBroker getParent() {
         return (RabbitBroker) super.getParent();
     }

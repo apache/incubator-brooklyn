@@ -52,52 +52,38 @@ It is then started in a localhost location (other locations are shown in the nex
 The Tomcat's configuration indicates that the given WAR should be deployed to the Tomcat server when it is started.
 
 {% highlight java %}
-{% readj example_files/tomcat_simple.groovy %}
+{% readj example_files/tomcat_simple.java %}
 {% endhighlight %}
 
-While this is written in Groovy, the code can be written in pure Java if preferred, 
-using the long-hand syntax of ``tomcat.setConfig(TomcatServer.HTTP_PORT, 80)``
-in lieu of the flags (named arguments in ``flagKey: value`` notation).
-
-The ``wars`` flag is also supported (with config keys ``ROOT_WAR`` and ``NAMED_WARS`` the long-hand syntax);
+The ``wars`` config is also supported (with config keys ``ROOT_WAR`` and ``NAMED_WARS`` the long-hand syntax);
 they accept EARs and other common archives, and can be described as files or as URLs (as Strings), 
 with URLs supporting an optional ``classpath://org/acme/resources/xxx.war`` syntax.
 
 
-### Starting a Tomcat Cluster in Amazon EC2
+### Starting Tomcat in Amazon EC2
 
-The code below starts a tomcat cluster in Amazon EC2:
+To start a tomcat node or cluster in Amazon EC2, the application is identical to that for localhost. 
+The only difference is the location supplied.
 
-*In this release, the following snippet should be considered pseudo code.*
+The Brooklyn CLI can be used to launch the application in your choice of location, such as:
 
-{% highlight java %}
-{% readj example_files/tomcat_EC2.groovy %}
+{% highlight bash %}
+brooklyn launch --app TomcatServerApp --location localhost
+brooklyn launch --app TomcatServerApp --location aws-ec2:eu-west-1
 {% endhighlight %}
 
-The ``newEntity`` flag in the cluster constructor indicates how new entities should be created. The WAR configuration set on the cluster is inherited by each of the TomcatServer contained by (i.e. "children of") the cluster.
-
-The ``DynamicWebAppCluster`` is dynamic in that it supports resizing the cluster, adding and removing servers, as managed either manually or by policies embedded in the entity.
-
-The main method creates a ``JcloudsLocationFactory`` with appropriate credentials for the AWS account, along with the
-RSA key to used for subsequently logging into the VM. It also specifies the relevant security group which should enable
-the 8080 port configured above. Finally, a JcloudsLocation allows to select the Amazon region the cluster will run in.
-
-
+ 
 ### Starting a Tomcat Cluster with Nginx
 
 The code below starts a Tomcat cluster along with an Nginx instance, where each Tomcat server in the cluster is registered with the Nginx instance.
 
 {% highlight java %}
-{% readj example_files/tomcat_nginx.groovy %}
+{% readj example_files/tomcat_nginx.java %}
 {% endhighlight %}
 
 This creates a cluster that of Tomcat servers, along with an Nginx instance. The ``NginxController`` instance
 is notified whenever a member of the cluster joins or leaves; the entity is configured to look at the ``HTTP_PORT``
 attribute of that instance so that the Nginx configuration can be updated with the ip:port of the cluster member.
-
-The beauty of OO programming is that classes can be re-used.  The compound entity created above is
-available off-the-shelf as the ``LoadBalancedWebCluster`` entity, as used in the following example. 
-
 
 <!---
 TODO things may need tidying (paragraphs, and/or eliminating any extra setConfig calls, though looks like these have gone)
@@ -116,16 +102,18 @@ and maybe a data store and/or messaging service; it is the last "most advanced" 
 FIXME Discuss above comment with Aled/Alex as it is contentious
 -->
 
+The ``ControlledDynamicWebAppCluster`` entity used above can also be used with a DynamicFabric to start
+a web-cluster in each location.
+
 {% highlight java %}
-{% readj example_files/tomcat_multi-location.groovy %}
+{% readj example_files/tomcat_multi-location.java %}
 {% endhighlight %}
 
-This creates a web-fabric. When started, this creates a web-cluster in each location supplied.
 
 Examples Source
 ---------------
 
-The source code for these examples is available for download from GitHub. To retrieve the source, execute the following command:
+Source code for (more up-to-date!) examples is available for download from GitHub. To retrieve the source, execute the following command:
 
     git clone git@github.com:brooklyncentral/brooklyn-examples.git
 

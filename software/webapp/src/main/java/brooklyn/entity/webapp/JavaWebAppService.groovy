@@ -30,5 +30,4 @@ interface JavaWebAppService extends WebAppService, UsesJava {
     @Deprecated
     @SetFromFlag("deployments")
     public static final BasicConfigKey<List> NAMED_DEPLOYMENTS = NAMED_WARS;
-    
 }

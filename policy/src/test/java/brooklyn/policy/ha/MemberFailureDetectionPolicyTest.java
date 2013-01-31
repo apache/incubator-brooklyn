@@ -11,9 +11,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -31,16 +34,16 @@ public class MemberFailureDetectionPolicyTest {
     private static final int TIMEOUT_MS = 10*1000;
 
     private MemberFailureDetectionPolicy policy;
-    private BasicGroup group;
     private TestApplication app;
+    private BasicGroup group;
     private List<SensorEvent<FailureDescriptor>> events;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         events = new CopyOnWriteArrayList<SensorEvent<FailureDescriptor>>();
-        app = new TestApplication();
-        group = new BasicGroup(MutableMap.of("childrenAsMembers", true), app);
-        Entities.startManagement(app);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        group = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class)
+                .configure("childrenAsMembers", true));
         
         app.getManagementSupport().getManagementContext(false).getSubscriptionManager().subscribe(
                 null, 
@@ -64,20 +67,25 @@ public class MemberFailureDetectionPolicyTest {
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app);
     }
+
+    private TestEntity createAndManageChildOf(Entity parent) {
+        TestEntity e = app.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(TestEntity.class));
+        e.setParent(parent);
+        Entities.manage(e);
+        return e;
+    }
     
     @Test(groups="Integration") // Has a 1 second wait
     public void testNotNotifiedOfFailuresForHealthyMembers() throws Exception {
         // Create members before and after the policy is registered, to test both scenarios
-        TestEntity e1 = new TestEntity(group);
-        Entities.manage(e1);
+        TestEntity e1 = createAndManageChildOf(group);
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
         e1.setAttribute(TestEntity.SERVICE_UP, true);
         
         policy = new MemberFailureDetectionPolicy(MutableMap.<String,Object>of());
         group.addPolicy(policy);
         
-        TestEntity e2 = new TestEntity(group);
-        Entities.manage(e2);
+        TestEntity e2 = createAndManageChildOf(group);
         e2.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
         e2.setAttribute(TestEntity.SERVICE_UP, true);
 
@@ -92,8 +100,7 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.<String,Object>of());
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(group);
-        Entities.manage(e1);
+        TestEntity e1 = createAndManageChildOf(group);
         
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
         e1.setAttribute(TestEntity.SERVICE_UP, true);
@@ -108,8 +115,7 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.<String,Object>of());
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(group);
-        Entities.manage(e1);
+        TestEntity e1 = createAndManageChildOf(group);
         
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.ON_FIRE);
 
@@ -122,8 +128,7 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.<String,Object>of());
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(group);
-        Entities.manage(e1);
+        TestEntity e1 = createAndManageChildOf(group);
         
         // Make the entity fail
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
@@ -143,8 +148,7 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.<String,Object>of());
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(group);
-        Entities.manage(e1);
+        TestEntity e1 = createAndManageChildOf(group);
         
         // Make the entity fail
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
@@ -161,8 +165,7 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.<String,Object>of());
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(group);
-        Entities.manage(e1);
+        TestEntity e1 = createAndManageChildOf(group);
         
         // Make the entity fail
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.STARTING);
@@ -180,8 +183,7 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.of("onlyReportIfPreviouslyUp", false));
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(group);
-        Entities.manage(e1);
+        TestEntity e1 = createAndManageChildOf(group);
         
         // Make the entity fail
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
@@ -195,8 +197,7 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.of("useServiceStateRunning", false));
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(group);
-        Entities.manage(e1);
+        TestEntity e1 = createAndManageChildOf(group);
         
         // Make the entity fail
         e1.setAttribute(TestEntity.SERVICE_UP, true);
@@ -210,10 +211,9 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.of("onlyReportIfPreviouslyUp", false));
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(app);
+        TestEntity e1 = createAndManageChildOf(group);
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
         e1.setAttribute(TestEntity.SERVICE_UP, false);
-        Entities.manage(e1);
 
         group.addMember(e1);
         
@@ -225,9 +225,8 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.of("onlyReportIfPreviouslyUp", false));
         group.addPolicy(policy);
         
-        TestEntity e1 = new TestEntity(app);
+        TestEntity e1 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.ON_FIRE);
-        Entities.manage(e1);
 
         group.addMember(e1);
         

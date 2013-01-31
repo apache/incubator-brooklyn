@@ -19,6 +19,7 @@ import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.ScriptRunner;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
@@ -73,7 +74,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     protected String getVersion() {
-        return elvis(getEntity().getConfig(SoftwareProcessEntity.SUGGESTED_VERSION), getDefaultVersion());
+        return elvis(getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION), getDefaultVersion());
     }
 
     protected String getEntityVersionLabel() {
@@ -89,11 +90,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         // Cache it; evaluate lazily (and late) to ensure managementContext.config is accessible and completed its setup
         // Caching has the benefit that the driver is usable, even if the entity is unmanaged (useful in some tests!)
         if (installDir == null) {
-            String installBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
+            String installBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
             if (installBasedir == null) installBasedir = DEFAULT_INSTALL_BASEDIR;
             if (installBasedir.endsWith(File.separator)) installBasedir.substring(0, installBasedir.length()-1);
             
-            installDir = elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_INSTALL_DIR),
+            installDir = elvis(entity.getConfig(SoftwareProcess.SUGGESTED_INSTALL_DIR),
                     installBasedir+"/"+getEntityVersionLabel("/"));
         }
         return installDir;
@@ -101,11 +102,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     
     public String getRunDir() {
         if (runDir == null) {
-            String runBasedir = entity.getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
+            String runBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.run");
             if (runBasedir == null) runBasedir = DEFAULT_RUN_BASEDIR;
             if (runBasedir.endsWith(File.separator)) runBasedir.substring(0, runBasedir.length()-1);
             
-            runDir = elvis(entity.getConfig(SoftwareProcessEntity.SUGGESTED_RUN_DIR), 
+            runDir = elvis(entity.getConfig(SoftwareProcess.SUGGESTED_RUN_DIR), 
                     runBasedir+"/"+entity.getApplication().getId()+"/"+"entities"+"/"+
                     getEntityVersionLabel()+"_"+entity.getId());
         }
@@ -122,15 +123,15 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
     protected Map<String, Object> getSshFlags() {
         Map<String, Object> result = Maps.newLinkedHashMap();
-        StringConfigMap globalConfig = getEntity().getManagementSupport().getManagementContext(true).getConfig();
+        StringConfigMap globalConfig = ((EntityInternal)getEntity()).getManagementSupport().getManagementContext(true).getConfig();
         Map<ConfigKey<?>, Object> mgmtConfig = globalConfig.getAllConfig();
-        Map<ConfigKey, Object> entityConfig = ((AbstractEntity)getEntity()).getAllConfig();
+        Map<ConfigKey<?>, Object> entityConfig = ((EntityInternal)getEntity()).getAllConfig();
         Map<ConfigKey<?>, Object> allConfig = MutableMap.<ConfigKey<?>, Object>builder().putAll(mgmtConfig).putAll((Map)entityConfig).build();
         
         for (ConfigKey<?> key : allConfig.keySet()) {
             if (key.getName().startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                 // have to use raw config to test whether the config is set
-                Object val = ((AbstractEntity)getEntity()).getConfigMap().getRawConfig(key);
+                Object val = ((EntityInternal)getEntity()).getConfigMap().getRawConfig(key);
                 if (val!=null) {
                     val = getEntity().getConfig(key);
                 } else {
@@ -164,7 +165,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * The environment variables to be set when executing the commands (for install, run, check running, etc).
      */
     public Map<String, String> getShellEnvironment() {
-        return Maps.newLinkedHashMap(entity.getConfig(SoftwareProcessEntity.SHELL_ENVIRONMENT, Collections.emptyMap()));
+        return Maps.newLinkedHashMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT, Collections.emptyMap()));
     }
 
     public void copyFile(File src, String destination) {

@@ -252,8 +252,8 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
     }
     
     private static Object findConfigValue(AbstractEntity entity, String configKeyName) {
-        Map<ConfigKey, Object> config = entity.getAllConfig();
-        for (Entry<ConfigKey, Object> entry : config.entrySet()) {
+        Map<ConfigKey<?>, Object> config = entity.getAllConfig();
+        for (Entry<ConfigKey<?>, Object> entry : config.entrySet()) {
             if (configKeyName.equals(entry.getKey().getName()))
                 return entry.getValue();
         }

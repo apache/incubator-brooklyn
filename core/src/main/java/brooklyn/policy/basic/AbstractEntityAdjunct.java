@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
@@ -50,7 +51,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
     protected synchronized SubscriptionTracker getSubscriptionTracker() {
         if (_subscriptionTracker!=null) return _subscriptionTracker;
         if (entity==null) return null;
-        _subscriptionTracker = new SubscriptionTracker(entity.getManagementSupport().getSubscriptionContext());
+        _subscriptionTracker = new SubscriptionTracker(((EntityInternal)entity).getManagementSupport().getSubscriptionContext());
         return _subscriptionTracker;
     }
     
@@ -77,7 +78,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
     protected boolean check(Entity producer) {
         if (destroyed.get()) return false;
         if (entity==null) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because it is not associated to an entity");
-        if (entity.getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because the associated entity "+entity+" is no longer managed");
+        if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because the associated entity "+entity+" is no longer managed");
         return true;
     }
         
@@ -111,7 +112,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct {
     
     /** @deprecated since 0.4.0 shouldn't be needed? */
     protected ManagementContext getManagementContext() {
-        return entity.getManagementContext();
+        return ((EntityInternal)entity).getManagementContext();
     }
     
     /** 

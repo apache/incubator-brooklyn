@@ -110,7 +110,7 @@ public class JBoss7WideAreaExample extends WebAppWideAreaExample {
     }
 
     protected JavaWebAppService newWebServer(Map flags, Entity cluster) {
-        return new JBoss7Server(flags, cluster).configure(httpPort: 8080, war: WAR_PATH)
+        return new JBoss7ServerImpl(flags, cluster).configure(httpPort: 8080, war: WAR_PATH)
     }
     
 }

@@ -11,7 +11,8 @@ import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableList;
@@ -28,7 +29,7 @@ public class ElasticCustomLocationTest {
         }
     }
     
-    public static class MockWebService extends TestEntity implements ElasticJavaWebAppService {
+    public static class MockWebService extends TestEntityImpl implements ElasticJavaWebAppService {
         public MockWebService() {
         } 
         public MockWebService(Map flags) {
@@ -45,7 +46,7 @@ public class ElasticCustomLocationTest {
     @Test
     public void testElasticClusterCreatesTestEntity() {
         MockWebServiceLocation l = new MockWebServiceLocation();
-        TestApplication app = new TestApplication();
+        TestApplication app = new TestApplicationImpl();
         app.setConfig(MockWebService.ROOT_WAR, "WAR0");
         app.setConfig(MockWebService.NAMED_WARS, ImmutableList.of("ignore://WARn"));
         

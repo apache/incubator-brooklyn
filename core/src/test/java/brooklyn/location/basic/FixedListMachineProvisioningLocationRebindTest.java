@@ -11,7 +11,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -43,8 +43,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
     			.keyData("myKeyData")
     			.keyPassphrase("myKeyPassphrase")
     			.build();
-    	origApp = new TestApplication();
-    	Entities.startManagement(origApp, managementContext);
+        origApp = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
     	origApp.start(ImmutableList.of(origLoc));
     }
 

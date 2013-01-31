@@ -26,7 +26,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
 
     private static final Logger log = LoggerFactory.getLogger(RabbitSshDriver.class);
 
-    public RabbitSshDriver(RabbitBroker entity, SshMachineLocation machine) {
+    public RabbitSshDriver(RabbitBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -39,8 +39,8 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     public String getErlangVersion() { return entity.getConfig(RabbitBroker.ERLANG_VERSION); }
 
     @Override
-    public RabbitBroker getEntity() {
-        return (RabbitBroker) super.getEntity();
+    public RabbitBrokerImpl getEntity() {
+        return (RabbitBrokerImpl) super.getEntity();
     }
     
     @Override

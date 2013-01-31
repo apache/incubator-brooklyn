@@ -1,24 +1,24 @@
 package brooklyn.entity.basic;
 
-import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.location.Location;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
-import brooklyn.management.internal.EntityManagementSupport;
-import brooklyn.policy.basic.AbstractPolicy;
+
+import com.google.common.annotations.Beta;
 
 /** 
  * Extended Entity interface for use in places where the caller should have certain privileges,
@@ -31,12 +31,17 @@ public interface EntityLocal extends Entity {
 
     /**
      * Sets the entity's display name.
+     * Must be called before the entity is managed.
      */
     void setDisplayName(String displayName);
 
-    void addLocations(Collection<? extends Location> locations);
-
-    void removeLocations(Collection<? extends Location> locations);
+    /**
+     * Must be called before the entity is managed.
+     */
+    <T> T setConfig(ConfigKey<T> key, T val);
+    <T> T setConfig(ConfigKey<T> key, Task<T> val);
+    <T> T setConfig(HasConfigKey<T> key, T val);
+    <T> T setConfig(HasConfigKey<T> key, Task<T> val);
 
     /**
      * Sets the {@link Sensor} data for the given attribute to the specified value.
@@ -48,26 +53,33 @@ public interface EntityLocal extends Entity {
      */
     <T> T setAttribute(AttributeSensor<T> sensor, T val);
 
-    /**
+    /** sets the value of the given attribute sensor from the config key value herein,
+     * if the config key resolves to a non-null value as a sensor
      * 
-     * Like {@link setAttribute(AttributeSensor, T)}, except does not publish an attribute-change event.
+     * @deprecated since 0.5; use {@link #setAttribute(AttributeSensor, Object)}, such as 
+     * <pre>
+     * T val = getConfig(KEY.getConfigKey());
+     * if (val != null) {
+     *     setAttribute(KEY, val)
+     * }
+     * </pre>
+     * 
+     * @return old value
      */
-    <T> T setAttributeWithoutPublishing(AttributeSensor<T> sensor, T val);
+    <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor);
 
-    // ??? = policy which detects a group is too hot and want the entity to fire a TOO_HOT event
-    
+    /**
+     * @deprecated in 0.5; use {@link #getConfig(ConfigKey)}
+     */
     <T> T getConfig(ConfigKey<T> key, T defaultValue);
+    
     <T> T getConfig(HasConfigKey<T> key);
-    <T> T getConfig(HasConfigKey<T> key, T defaultValue);
     
     /**
-     * Must be called before the entity is started.
+     * @deprecated in 0.5; use {@link #getConfig(HasConfigKey)}
      */
-    <T> T setConfig(ConfigKey<T> key, T val);
-    <T> T setConfig(ConfigKey<T> key, Task<T> val);
-    <T> T setConfig(HasConfigKey<T> key, T val);
-    <T> T setConfig(HasConfigKey<T> key, Task<T> val);
-    
+    <T> T getConfig(HasConfigKey<T> key, T defaultValue);
+
     /**
      * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).
      * <p>
@@ -84,39 +96,40 @@ public interface EntityLocal extends Entity {
      * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
      */
     // FIXME remove from interface?
+    @Beta
     <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
     /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
     // FIXME remove from interface?
+    @Beta
     <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
+    /** @see SubscriptionManager#subscribeToMembers(Group, Sensor, SensorEventListener) */
+    // FIXME remove from interface?
+    @Beta
+    <T> SubscriptionHandle subscribeToMembers(Group group, Sensor<T> sensor, SensorEventListener<? super T> listener);
+
     /**
-     * Adds the given policy to this entity. Also calls policy.setEntity if available.
+     * Unsubscribes from the given producer.
+     *
+     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
      */
-    void addPolicy(AbstractPolicy policy);
-    
+    @Beta
+    boolean unsubscribe(Entity producer);
+
     /**
-     * Removes the given policy from this entity. 
-     * @return True if the policy existed at this entity; false otherwise
+     * Unsubscribes the given handle.
+     *
+     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
      */
-    boolean removePolicy(AbstractPolicy policy);
-    
+    @Beta
+    boolean unsubscribe(Entity producer, SubscriptionHandle handle);
+
     /**
      * Removes all policy from this entity. 
      * @return True if any policies existed at this entity; false otherwise
      */
     boolean removeAllPolicies();
-    
-    /**
-     * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
-     */
-    void addEnricher(AbstractEnricher enricher);
-    
-    /**
-     * Removes the given enricher from this entity. 
-     * @return True if the policy enricher at this entity; false otherwise
-     */
-    boolean removeEnricher(AbstractEnricher enricher);
     
     /**
      * Removes all enricher from this entity.
@@ -126,19 +139,16 @@ public interface EntityLocal extends Entity {
     boolean removeAllEnrichers();
     
     /** 
-     * @return Routings for accessing and inspecting the management context of the entity
-     */
-    EntityManagementSupport getManagementSupport();
-
-    /** 
      * @return The management context for the entity, or null if it is not yet managed.
      * @deprecated since 0.4.0 access via getManagementSupport
+     * @see EntityInternal.getManagementContext()
      */
     ManagementContext getManagementContext();
 
     /** 
      * @return The task execution context for the entity, or null if it is not yet managed.
      * @deprecated since 0.4.0 access via getManagementSupport
+     * @see EntityInternal.getExecutionContext()
      */    
     ExecutionContext getExecutionContext();
 }

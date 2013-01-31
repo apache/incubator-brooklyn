@@ -29,11 +29,15 @@ Brooklyn is split into the following projects and subprojects:
     * **``openshift``**:  entity for deploying and managing OpenShift webapps 
     * **...**
 * **``usage``**: projects which make Brooklyn easier to use, either for end-users or Brooklyn developers
-    * **web-console**: Grails web-app for the brooklyn management web console (builds a WAR)
-    * **launcher**: CLI support and provides a JAR including the web-console WAR
-    * **test-support**: provides support for tests, used by nearly all projects in scope ``test`` 
     * **all**: maven project to supply a shaded JAR (containing all dependencies) for convenience 
+    * **cli**: backing implementation for Brooklyn's command line interface
+    * **dist**: builds brooklyn as a downloadable .zip and .tar.gz
+    * **jsgui**: Javascript web-app for the brooklyn management web console (builds a WAR)
+    * **launcher**: for launching brooklyn, either using a main method or invoked from the cli project
+    * **qa**: longevity and stress tests
+    * **rest**: implementation of brooklyn's REST api 
     * **scripts**: various scripts useful for building, updating, etc. (see comments in the scripts)
+    * **test-support**: provides support for tests, used by nearly all projects in scope ``test`` 
 * **``docs``**: the markdown source code for this documentation, as described [here]({{site.url}}/dev/tips/update-docs.html)
 * **``examples``**: some canonical examples, as listed [here]({{site.url}}/use/examples)
 * **``sandbox``**: various projects, entities, and policies which the Brooklyn Project is incubating

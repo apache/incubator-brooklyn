@@ -9,9 +9,10 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -19,6 +20,7 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
+import brooklyn.test.HttpTestUtils
 import brooklyn.test.entity.TestApplication
 
 /**
@@ -37,22 +39,14 @@ public class NginxAmazonTest {
     private File sshPrivateKey
     private File sshPublicKey
 
-    private Application app
+    private TestApplication app
     private NginxController nginx
     private DynamicCluster cluster
 
-    @BeforeMethod(groups = "Live")
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplication();
-    }
-
-    @AfterMethod(groups = "Live")
-    public void shutdown() {
-        if (app != null) Entities.destroyAll(app);
-    }
-    
-    @BeforeMethod(groups = "Live")
-    public void setUp() {
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        
         URL resource = getClass().getClassLoader().getResource("jclouds/id_rsa.private")
         assertNotNull resource
         sshPrivateKey = new File(resource.path)
@@ -65,8 +59,16 @@ public class NginxAmazonTest {
         loc = locationFactory.newLocation(REGION_NAME)
     }
     
+    @AfterMethod(alwaysRun=true)
+    public void shutdown() {
+        if (app != null) Entities.destroyAll(app);
+    }
+    
     @Test(groups = "Live")
     public void testProvisionAwsCluster() {
+        URL war = getClass().getClassLoader().getResource("swf-booking-mvc.war")
+        assertNotNull war, "Unable to locate resource $war"
+        
         Map imageData = [
 	            imageId:IMAGE_ID,
 	            providerLocationId:REGION_NAME,
@@ -79,33 +81,29 @@ public class NginxAmazonTest {
             "brooklyn.entity.proxy.nginx.NginxController":imageData,
         ])
  
-        def template = { Map properties -> new JBoss7Server(properties) }
+        cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+                .configure("initialSize", 2)
+                .configure("httpPort", 8080)
+                .configure(JavaWebAppService.ROOT_WAR, war.path));
         
-        cluster = new DynamicCluster(parent:app, factory:template, initialSize:2, httpPort:8080 )
-        URL war = getClass().getClassLoader().getResource("swf-booking-mvc.war")
-        assertNotNull war, "Unable to locate resource $war"
-        cluster.setConfig(JavaWebAppService.ROOT_WAR, war.path)
-        cluster.start([ loc ])
+        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("cluster", cluster)
+                .configure("domain", "localhost")
+                .configure("port", 8000)
+                .configure("portNumberSensor", WebAppService.HTTP_PORT));
 
-        nginx = new NginxController([
-                "parent" : app,
-                "cluster" : cluster,
-                "domain" : "localhost",
-                "port" : 8000,
-                "portNumberSensor" : WebAppService.HTTP_PORT,
-            ])
-
-        nginx.start([ loc ])
+        app.start([ loc ])
         
         executeUntilSucceeds {
             // Nginx URL is available
             MachineLocation machine = nginx.locations.find { true }
-            String url = "http://" + machine.address.hostName + ":" + nginx.getAttribute(NginxController.HTTP_PORT) + "/swf-booking-mvc"
-            assertTrue urlRespondsWithStatusCode200(url)
+            String url = "http://" + machine.address.hostName + ":" + nginx.getAttribute(NginxController.PROXY_HTTP_PORT) + "/swf-booking-mvc"
+            HttpTestUtils.assertHttpStatusCodeEquals(url, 200)
 
             // Web-app URL is available
             cluster.members.each {
-                assertTrue urlRespondsWithStatusCode200(it.getAttribute(JavaWebAppService.ROOT_URL) + "swf-booking-mvc")
+                HttpTestUtils.assertHttpStatusCodeEquals(it.getAttribute(JavaWebAppService.ROOT_URL) + "swf-booking-mvc", 200)
             }
         }
 

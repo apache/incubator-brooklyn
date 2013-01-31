@@ -13,13 +13,14 @@ import brooklyn.config.ConfigKey
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.entity.Group
-import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.Repeater
 
 import com.google.common.base.Preconditions
@@ -58,9 +59,9 @@ public class AbstractLoadBalancingPolicyTest {
         
         model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model");
         
-        app = new TestApplication()
-        containerGroup = new DynamicGroup([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
-        itemGroup = new DynamicGroup([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
+        app = new TestApplicationImpl()
+        containerGroup = new DynamicGroupImpl([name:"containerGroup"], app, { e -> (e instanceof MockContainerEntity) })
+        itemGroup = new DynamicGroupImpl([name:"itemGroup"], app, { e -> (e instanceof MockItemEntity) })
         pool = new BalanceableWorkerPool([:], app)
         pool.setContents(containerGroup, itemGroup)
         policy = new LoadBalancingPolicy([:], TEST_METRIC, model)

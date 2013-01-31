@@ -17,14 +17,15 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;
@@ -61,7 +62,7 @@ public class Jboss7ServerRebindIntegrationTest {
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        origApp = new TestApplication();
+        origApp = ApplicationBuilder.builder(TestApplication.class).manage(origManagementContext);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
@@ -96,8 +97,8 @@ public class Jboss7ServerRebindIntegrationTest {
     @Test(groups = "Integration")
     public void testRebindsToRunningServer() throws Exception {
     	// Start an app-server, and wait for it to be fully up
-        JBoss7Server origServer = new JBoss7Server(MutableMap.of("war", warUrl.toString()), origApp);
-        Entities.startManagement(origApp, origManagementContext);
+        JBoss7Server origServer = origApp.createAndManageChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+                    .configure("war", warUrl.toString()));
         
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         
@@ -112,7 +113,7 @@ public class Jboss7ServerRebindIntegrationTest {
         assertEquals(newServer.getAttribute(JBoss7Server.MANAGEMENT_PORT), origServer.getAttribute(JBoss7Server.MANAGEMENT_PORT));
         assertEquals(newServer.getAttribute(JBoss7Server.DEPLOYED_WARS), origServer.getAttribute(JBoss7Server.DEPLOYED_WARS));
         
-        assertAttributeEventually(newServer, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(newServer, SoftwareProcess.SERVICE_UP, true);
         assertUrlStatusCodeEventually(newServer.getAttribute(JBoss7Server.ROOT_URL), 200);
 
         // confirm that deploy() effector affects the correct jboss server 

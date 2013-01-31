@@ -10,7 +10,9 @@ import java.util.Set;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
+import brooklyn.util.GroovyJavaMethods;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
 /** registry of hints for displaying items such as sensors, e.g. in the web console */
@@ -43,13 +45,18 @@ public class RendererHints {
      */
     public static class NamedActionWithUrl extends Hint<Sensor> implements NamedAction {
         private final String actionName;
-        private final Closure postProcessing;
+        private final Function<Object,String> postProcessing;
 
         public NamedActionWithUrl(String actionName) {
-            this(actionName, null);
+            this(actionName, (Function<Object,String>)null);
         }
 
-        public NamedActionWithUrl(String actionName, Closure postProcessing) {
+        public NamedActionWithUrl(String actionName, Closure<String> postProcessing) {
+            this.actionName = actionName;
+            this.postProcessing = (postProcessing == null) ? null : GroovyJavaMethods.functionFromClosure(postProcessing);
+        }
+
+        public NamedActionWithUrl(String actionName, Function<Object,String> postProcessing) {
             this.actionName = actionName;
             this.postProcessing = postProcessing;
         }
@@ -65,7 +72,7 @@ public class RendererHints {
         /** this is the method invoked by web console SensorSummary, at the moment */
         public String getUrlFromValue(Object v) {
             if (postProcessing != null) {
-                v = postProcessing.call(v);
+                v = postProcessing.apply(v);
             }
             if (v != null) {
                 return "" + v;

@@ -23,8 +23,8 @@ Web
 ### Clusters and Interfaces
 
 The class ``ControlledDynamicWebAppCluster`` creates a load-balanced cluster of web servers.
-It defaults to Nginx and JBoss 7, but this is configurable with the ``controller:`` and ``factory:``
-named flags in the constructor. 
+It defaults to Nginx and JBoss 7, but this is configurable with the ``controller`` and 
+either the ``factory`` or ``memberSpec`` configuration options.
 
 Most web app server processes, and some clusters and PaaS implementations,
 support the interface ``WebAppService`` which defines many sensors including requests per second.
@@ -45,7 +45,7 @@ including switching from JMX to HTTP/JSON as the preferred metrics mechanism.)
 
 Apache Tomcat is supported in the class ``TomcatServer``.
 (Note that this currently uses a legacy Brooklyn class hierarchy,
-and could benefit from being ported to the ``JavaStartStopSshDriver`` implementation.)
+and could benefit from being ported to the ``JavaSoftwareProcessSshDriver`` implementation.)
 
 
 ### Nginx Load Balancer
@@ -91,7 +91,7 @@ NoSQL
 
 Redis is a distributed key-value store, supporting master/slave replication of a store as a clustered cache. This gives
 a series of read-only slaves and a single read-write master, which propagates to the slaves with eventual consistency.
-See RedisSetup.groovy.
+
 
 ### Infinispan
 

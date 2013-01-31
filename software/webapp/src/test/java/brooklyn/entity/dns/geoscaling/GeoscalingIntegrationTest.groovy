@@ -5,16 +5,18 @@ import static org.testng.Assert.*
 
 import org.testng.annotations.Test
 
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractApplication
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.DynamicGroup
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
-import brooklyn.entity.basic.Attributes
+
+import com.google.common.base.Predicates
 
 /**
  * {@link GeoscalingScriptGenerator} unit tests.
@@ -34,16 +36,21 @@ class GeoscalingIntegrationTest {
     
     @Test(groups=["Integration"])
     public void testRoutesToExpectedLocation() {
-        AbstractApplication app = new TestApplication()
-        TestEntity target = new TestEntity(parent:app)
+        TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage();
+        TestEntity target = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         target.setAttribute(Attributes.HOSTNAME,addr.getHostName())
-        DynamicGroup group = new DynamicGroup([:], app, { Entity e -> (e instanceof TestEntity) })
         
-        GeoscalingDnsService geoDns = new GeoscalingDnsService(displayName: 'Geo-DNS',
-                username: 'cloudsoft', password: 'cl0uds0ft', primaryDomainName: primaryDomain, smartSubdomainName: subDomain,
-                app)
+        DynamicGroup group = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicGroup.class)
+                .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
         
-        geoDns.setTargetEntityProvider(group)
+        GeoscalingDnsService geoDns = app.createAndManageChild(BasicEntitySpec.newInstance(GeoscalingDnsService.class)
+                .displayName("Geo-DNS")
+                .configure("username", "cloudsoft")
+                .configure("password", "cl0uds0ft")
+                .configure("primaryDomainName", primaryDomain)
+                .configure("smartSubdomainName", subDomain)
+                .configure("targetEntityProvider", group));
+        
         app.start([loc])
         
         println("geo-scaling test, using $subDomain.$primaryDomain; expect to be wired to $addr")
@@ -51,10 +58,10 @@ class GeoscalingIntegrationTest {
         new Repeater("Wait for target hosts")
             .repeat()
             .every(500 * MILLISECONDS)
-            .until { geoDns.targetHosts.size() == 1 }
+            .until { geoDns.getTargetHosts().size() == 1 }
             .limitIterationsTo(20)
             .run();
         
-        assertEquals(geoDns.targetHosts.size(), 1);
+        assertEquals(geoDns.getTargetHosts().size(), 1);
     }
 }

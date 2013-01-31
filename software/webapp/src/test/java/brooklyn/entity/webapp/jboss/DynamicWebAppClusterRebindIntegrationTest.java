@@ -19,7 +19,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -61,8 +63,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        origApp = new TestApplication();
-        Entities.startManagement(origApp, origManagementContext);
+    	origApp = ApplicationBuilder.builder(TestApplication.class).manage(origManagementContext);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
@@ -96,13 +97,9 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     
     @Test(groups = "Integration")
     public void testRebindsToRunningCluster() throws Exception {
-        DynamicWebAppCluster origCluster = new DynamicWebAppCluster(
-    			MutableMap.builder()
-    					.put("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
-    					.put("initialSize", 1)
-    					.build(),
-    			origApp);
-        Entities.manage(origCluster);
+        DynamicWebAppCluster origCluster = origApp.createAndManageChild(BasicEntitySpec.newInstance(DynamicWebAppCluster.class)
+                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
+				.configure("initialSize", 1));
     	
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         JBoss7Server origJboss = (JBoss7Server) Iterables.find(origCluster.getChildren(), Predicates.instanceOf(JBoss7Server.class));

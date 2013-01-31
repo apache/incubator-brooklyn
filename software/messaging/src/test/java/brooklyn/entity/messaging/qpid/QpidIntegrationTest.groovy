@@ -19,8 +19,10 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -43,7 +45,7 @@ public class QpidIntegrationTest {
     public void setup() {
         String workingDir = System.getProperty("user.dir");
         println workingDir
-        app = new TestApplication();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         testLocation = new LocalhostMachineProvisioningLocation()
     }
 
@@ -57,8 +59,9 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        qpid = new QpidBroker(parent:app, jmxPort:'9909', rmiServerPort:'9910');
-        Entities.startManagement(app);
+        qpid = app.createAndManageChild(BasicEntitySpec.newInstance(QpidBroker.class)
+                .configure("jmxPort", "9909+")
+                .configure("rmiServerPort", "9910+"));
         qpid.start([ testLocation ])
         executeUntilSucceedsWithShutdown(qpid) {
             assertTrue qpid.getAttribute(Startable.SERVICE_UP)
@@ -71,7 +74,8 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithHttpManagement() {
-        qpid = new QpidBroker(parent:app, httpManagementPort:'8888');
+        qpid = app.createAndManageChild(BasicEntitySpec.newInstance(QpidBroker.class)
+                .configure("httpManagementPort", "8888"));
         Entities.startManagement(app);
         qpid.start([ testLocation ])
         executeUntilSucceedsWithShutdown(qpid) {
@@ -103,9 +107,10 @@ public class QpidIntegrationTest {
                    ('lib/plugins/sample-plugin.jar'):new File('software/messaging/'+pluginjar),
                    ('etc/config.xml'):new File('software/messaging/'+configfile) ]
         }
-        qpid = new QpidBroker(parent:app, runtimeFiles:qpidRuntimeFiles);
-        qpid.setConfig(QpidBroker.SUGGESTED_VERSION, "0.14");
-        Entities.startManagement(app);
+        qpid = app.createAndManageChild(BasicEntitySpec.newInstance(QpidBroker.class)
+                .configure("runtimeFiles", qpidRuntimeFiles)
+                .configure(QpidBroker.SUGGESTED_VERSION, "0.14"));
+
         qpid.start([ testLocation ])
         //TODO assert the files/plugins were installed?
         executeUntilSucceedsWithShutdown(qpid) {
@@ -130,8 +135,10 @@ public class QpidIntegrationTest {
         String content = "01234567890123456789012345678901"
 
         // Start broker with a configured queue
-        qpid = new QpidBroker(parent:app, queue:queueName);
-        Entities.startManagement(app);
+        // FIXME Can't use app.createAndManageChild, because of QpidDestination reffing impl directly
+        qpid = app.createAndManageChild(BasicEntitySpec.newInstance(QpidBroker.class)
+                .configure("queue", queueName));
+        
         qpid.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue qpid.getAttribute(Startable.SERVICE_UP)

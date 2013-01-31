@@ -1,6 +1,6 @@
 package brooklyn.entity.basic;
 
-import org.jclouds.util.Throwables2;
+import org.jclouds.util.Throwables2
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -11,6 +11,7 @@ import brooklyn.location.MachineLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 import com.google.common.collect.ImmutableSet
 
@@ -23,7 +24,7 @@ public class SoftwareProcessEntityTest {
     public void testBasicSoftwareProcessEntityLifecycle() {
         SshMachineLocation machine = new SshMachineLocation(address:"localhost");
         def loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
-        TestApplication app = new TestApplication();
+        TestApplication app = new TestApplicationImpl();
         MyService entity = new MyService(app)
         app.startManagement();
         entity.start([loc]);
@@ -38,7 +39,7 @@ public class SoftwareProcessEntityTest {
     public void testShutdownIsIdempotent() {
         SshMachineLocation machine = new SshMachineLocation(address:"localhost");
         def loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
-        TestApplication app = new TestApplication();
+        TestApplication app = new TestApplicationImpl();
         MyService entity = new MyService(app)
         app.startManagement();
         entity.start([loc]);
@@ -51,7 +52,7 @@ public class SoftwareProcessEntityTest {
     public void testReleaseEvenIfErrorDuringStop() {
         SshMachineLocation machine = new SshMachineLocation(address:"localhost");
         FixedListMachineProvisioningLocation loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
-        TestApplication app = new TestApplication();
+        TestApplication app = new TestApplicationImpl();
         MyService entity = new MyService(app) {
             @Override public Class getDriverInterface() {
                 return SimulatedFailOnStopDriver.class;
@@ -70,7 +71,10 @@ public class SoftwareProcessEntityTest {
         }
     }
     
-    public static class MyService extends SoftwareProcessEntity {
+    public static class MyService extends SoftwareProcessImpl {
+        public MyService() {
+            super();
+        }
         public MyService(Entity parent) {
             super(parent);
         }

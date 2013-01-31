@@ -1,38 +1,37 @@
 package brooklyn.entity.basic;
 
-import static brooklyn.entity.basic.AbstractEntity.SENSOR_ADDED;
-import static brooklyn.entity.basic.AbstractEntity.SENSOR_REMOVED;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
+import static brooklyn.entity.basic.AbstractEntity.SENSOR_ADDED
+import static brooklyn.entity.basic.AbstractEntity.SENSOR_REMOVED
+import static org.testng.Assert.assertEquals
+import static org.testng.Assert.assertFalse
+import static org.testng.Assert.assertNull
+import static org.testng.Assert.assertTrue
 
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
-import brooklyn.entity.SimpleEntity;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicSensorEvent;
-import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication;
+import brooklyn.event.AttributeSensor
+import brooklyn.event.Sensor
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.event.basic.BasicSensorEvent
+import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplicationImpl
 
-import com.google.common.base.Predicates;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Predicates
+import com.google.common.base.Suppliers
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 
 public class EntityTypeTest {
     private static final AttributeSensor<String> TEST_SENSOR = new BasicAttributeSensor<String>(String.class, "test.sensor");
-    private TestApplication app;
+    private TestApplicationImpl app;
     private AbstractEntity entity;
     private EntitySubscriptionTest.RecordingSensorEventListener listener;
     
     @BeforeMethod
     public void setUpTestEntity() throws Exception{
-        app = new TestApplication();
-        entity = new SimpleEntity(app);
+        app = new TestApplicationImpl();
+        entity = new AbstractEntity(app) {};
         
         listener = new EntitySubscriptionTest.RecordingSensorEventListener();
         app.getSubscriptionContext().subscribe(entity, SENSOR_ADDED, listener);

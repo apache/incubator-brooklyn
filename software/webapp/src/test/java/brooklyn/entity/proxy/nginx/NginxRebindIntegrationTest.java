@@ -19,20 +19,20 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;
@@ -65,9 +65,10 @@ public class NginxRebindIntegrationTest {
 
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+        origApp = ApplicationBuilder.builder(TestApplication.class).manage(origManagementContext);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        origApp = new TestApplication();
+
         executor = Executors.newCachedThreadPool();
     }
 
@@ -108,14 +109,13 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithEmptyServerPool() throws Exception {
     	
         // Set up nginx with a server pool
-        DynamicCluster origServerPool = new DynamicCluster(MutableMap.of("factory", new JBoss7ServerFactory(), "initialSize", 0), origApp);
+        DynamicCluster origServerPool = origApp.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+                .configure("initialSize", 0));
         
-        NginxController origNginx = new NginxController(MutableMap.builder()
-                .put("parent", origApp)
-                .put("serverPool", origServerPool)
-                .put("domain", "localhost")
-                .build());
-        Entities.startManagement(origApp, origManagementContext);
+        NginxController origNginx = origApp.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", origServerPool)
+                .configure("domain", "localhost"));
         
         // Start the app, and ensure reachable; start polling the URL
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
@@ -138,7 +138,7 @@ public class NginxRebindIntegrationTest {
         assertEquals(newNginx.getAttribute(NginxController.PROXY_HTTP_PORT), origNginx.getAttribute(NginxController.PROXY_HTTP_PORT));
         assertEquals(newNginx.getConfig(NginxController.STICKY), origNginx.getConfig(NginxController.STICKY));
         
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEventuallyEquals(rootUrl, 404);
         
         assertEquals(monitor.getFailures(), 0);
@@ -151,17 +151,14 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithoutLosingServerPool() throws Exception {
         
         // Set up nginx with a server pool
-        DynamicCluster origServerPool = new DynamicCluster(
-                MutableMap.of("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())), "initialSize", 1), 
-                origApp);
+        DynamicCluster origServerPool = origApp.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class).configure("war", warUrl.toString()))
+                .configure("initialSize", 1));
         
-        NginxController origNginx = new NginxController(MutableMap.builder()
-                .put("parent", origApp)
-                .put("domain", "localhost")
-                .put("serverPool", origServerPool)
-                .build());
-        Entities.startManagement(origApp, origManagementContext);
-
+        NginxController origNginx = origApp.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", origServerPool)
+                .configure("domain", "localhost"));
+        
         // Start the app, and ensure reachable; start polling the URL
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         
@@ -178,7 +175,7 @@ public class NginxRebindIntegrationTest {
         DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
         JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
 
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEventuallyEquals(rootUrl, 200);
 
         assertEquals(newNginx.getConfigFile(), origConfigFile);
@@ -213,25 +210,23 @@ public class NginxRebindIntegrationTest {
     public void testRebindsWithoutLosingUrlMappings() throws Exception {
         
         // Set up nginx with a url-mapping
-        Group origUrlMappingsGroup = new BasicGroup(MutableMap.of("childrenAsMembers", true), origApp);
+        Group origUrlMappingsGroup = origApp.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class)
+                .configure("childrenAsMembers", true));
+        
+        DynamicCluster origServerPool = origApp.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class).configure("war", warUrl.toString()))
+                .configure("initialSize", 1)); 
 
-        DynamicCluster origMappingPool = new DynamicCluster(
-                MutableMap.of("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())), "initialSize", 1), 
-                origApp);
-        UrlMapping origMapping = new UrlMapping(
-                MutableMap.builder()
-                        .put("domain", "localhost1")
-                        .put("target", origMappingPool)
-                        .put("rewrites", ImmutableList.of(new UrlRewriteRule("/foo/(.*)", "/$1")))
-                        .build(),
-                origUrlMappingsGroup);
-
-        NginxController origNginx = new NginxController(MutableMap.builder()
-                .put("parent", origApp)
-                .put("domain", "localhost")
-                .put("urlMappings", origUrlMappingsGroup)
-                .build());
-        Entities.startManagement(origApp, origManagementContext);
+        UrlMapping origMapping = origApp.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(UrlMapping.class)
+                .configure("domain", "localhost1")
+                .configure("target", origServerPool)
+                .configure("rewrites", ImmutableList.of(new UrlRewriteRule("/foo/(.*)", "/$1")))
+                .parent(origUrlMappingsGroup));
+        Entities.manage(origMapping);
+        
+        NginxController origNginx = origApp.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("domain", "localhost")
+                .configure("urlMappings", origUrlMappingsGroup));
 
         // Start the app, and ensure reachable; start polling the URL
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
@@ -246,10 +241,10 @@ public class NginxRebindIntegrationTest {
         newApp = rebind();
         ManagementContext newManagementContext = newApp.getManagementContext();
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
-        DynamicCluster newMappingPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origMappingPool.getId());
-        JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newMappingPool.getMembers());
+        DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
+        JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
         
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEventuallyEquals(mappingGroupUrl, 200);
         
         assertEquals(newNginx.getConfigFile(), origConfigFile);
@@ -264,7 +259,7 @@ public class NginxRebindIntegrationTest {
         //  - wait for nginx to definitely be updates (TODO nicer way to wait for updated?)
         //  - terminate old server
         //  - confirm can still route messages
-        newMappingPool.resize(2);
+        newServerPool.resize(2);
         
         Thread.sleep(10*1000);
         

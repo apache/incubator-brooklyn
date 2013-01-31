@@ -21,14 +21,17 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.nginx.NginxController;
+import brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 
@@ -53,7 +56,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     private LocalManagementContext origManagementContext;
     private File mementoDir;
     
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
     	String warPath = "hello-world.war";
         warUrl = checkNotNull(getClass().getClassLoader().getResource(warPath), "warUrl");
@@ -64,10 +67,10 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        origApp = new TestApplication();
+        origApp = new TestApplicationImpl();
     }
 
-    @AfterMethod(groups = "Integration", alwaysRun=true)
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         for (WebAppMonitor monitor : webAppMonitors) {
         	monitor.terminate();
@@ -99,9 +102,9 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     // FIXME Fails before rebind (getting 404 from nginx)! Need to investigate this more.
     @Test(groups = {"Integration"})
     public void testRebindsToRunningCluster() throws Exception {
-        NginxController origNginx = new NginxController(MutableMap.of("domain", "localhost"), origApp);
+        NginxController origNginx = new NginxControllerImpl(MutableMap.of("domain", "localhost"), origApp);
 
-        new ControlledDynamicWebAppCluster(
+        new ControlledDynamicWebAppClusterImpl(
     			MutableMap.builder()
     					.put("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
     					.put("initialSize", 1)
@@ -121,7 +124,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
         ControlledDynamicWebAppCluster newCluster = (ControlledDynamicWebAppCluster) Iterables.find(newApp.getChildren(), Predicates.instanceOf(ControlledDynamicWebAppCluster.class));
 
-        assertAttributeEqualsEventually(newNginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEquals(rootUrl, 200);
 
         // Confirm the cluster is usable: we can scale-up

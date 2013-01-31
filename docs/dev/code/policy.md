@@ -38,7 +38,7 @@ You'll want to do more complicated things, no doubt,
 like access other entities, perform multiple subscriptions,
 and emit other sensors -- and you can.
 See the source code, and see some commonly used policies
-in ``ResizerPolicy`` and ``RollingMeanEnricher``. 
+in ``AutoScalerPolicy`` and ``RollingMeanEnricher``. 
 
 One rule of thumb, to close on:
 try to keep policies simple, and compose them together at runtime;

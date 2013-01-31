@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements ActiveMQDriver {
 
-    public ActiveMQSshDriver(ActiveMQBroker entity, SshMachineLocation machine) {
+    public ActiveMQSshDriver(ActiveMQBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 

@@ -23,6 +23,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -114,19 +115,19 @@ public class BrooklynRestResourceUtils {
     public Application create(ApplicationSpec spec) {
         log.debug("REST creating application instance for {}", spec);
 
-        final AbstractApplication instance;
+        final Application instance;
         
         try {
             if (spec.getType()!=null) {
-                instance = (AbstractApplication) newEntityInstance(spec.getType(), null, spec.getConfig());
+                instance = (Application) newEntityInstance(spec.getType(), null, spec.getConfig());
             } else {
                 instance = new AbstractApplication() {};
             }
-            if (spec.getName()!=null && !spec.getName().isEmpty()) instance.setDisplayName(spec.getName());
+            if (spec.getName()!=null && !spec.getName().isEmpty()) ((EntityLocal)instance).setDisplayName(spec.getName());
 
             if (spec.getEntities()!=null) for (EntitySpec entitySpec : spec.getEntities()) {
                 log.info("REST creating instance for entity {}", entitySpec.getType());
-                AbstractEntity entity = newEntityInstance(entitySpec.getType(), instance, entitySpec.getConfig());
+                EntityLocal entity = newEntityInstance(entitySpec.getType(), instance, entitySpec.getConfig());
                 if (entitySpec.getName()!=null && !spec.getName().isEmpty()) entity.setDisplayName(entitySpec.getName());
             }
         } catch (Exception e) {
@@ -155,11 +156,11 @@ public class BrooklynRestResourceUtils {
                 MutableMap.of("locations", locations));
     }
 
-    private AbstractEntity newEntityInstance(String type, Entity parent, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    private EntityLocal newEntityInstance(String type, Entity parent, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
         Class<? extends Entity> clazz = getCatalog().loadClassByType(type, Entity.class);
         Map<String, String> config = Maps.newHashMap(configO);
         Constructor<?>[] constructors = clazz.getConstructors();
-        AbstractEntity result = null;
+        EntityLocal result = null;
         if (parent==null) {
             result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
             if (result!=null) return result;
@@ -169,30 +170,30 @@ public class BrooklynRestResourceUtils {
 
         result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
         if (result!=null) {
-            if (parent!=null) ((AbstractEntity)result).setParent(parent);
+            if (parent!=null) result.setParent(parent);
             return result;
         }
 
         result = tryInstantiateEntity(constructors, new Class[] { Entity.class }, new Object[] { parent });
         if (result!=null) {
-            ((AbstractEntity)result).configure(config);
+            ((EntityInternal)result).configure(config);
             return result;
         }
 
         result = tryInstantiateEntity(constructors, new Class[] {}, new Object[] {});
         if (result!=null) {
-            if (parent!=null) ((AbstractEntity)result).setParent(parent);
-            ((AbstractEntity)result).configure(config);
+            if (parent!=null) result.setParent(parent);
+            ((EntityInternal)result).configure(config);
             return result;
         }
 
         throw new IllegalStateException("No suitable constructor for instantiating entity "+type);
     }
 
-    private AbstractEntity tryInstantiateEntity(Constructor<?>[] constructors, Class<?>[] classes, Object[] objects) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    private EntityLocal tryInstantiateEntity(Constructor<?>[] constructors, Class<?>[] classes, Object[] objects) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
         for (Constructor<?> c: constructors) {
             if (Arrays.equals(c.getParameterTypes(), classes)) {
-                return (AbstractEntity) c.newInstance(objects);
+                return (EntityLocal) c.newInstance(objects);
             }
         }
         return null;
@@ -202,7 +203,7 @@ public class BrooklynRestResourceUtils {
         return mgmt.getExecutionManager().submit(new Runnable() {
             @Override
             public void run() {
-                ((AbstractApplication)application).destroy();
+                ((EntityInternal)application).destroy();
                 mgmt.getEntityManager().unmanage(application);
             }
         });

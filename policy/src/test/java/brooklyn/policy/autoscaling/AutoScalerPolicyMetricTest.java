@@ -9,9 +9,9 @@ import static org.testng.Assert.assertTrue;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.test.entity.TestEntity;
@@ -29,16 +29,17 @@ public class AutoScalerPolicyMetricTest {
     
     @BeforeMethod()
     public void before() {
-        app = new TestApplication();
-        tc = new TestCluster(app, 1);
-        Entities.startManagement(app);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        tc = app.createAndManageChild(BasicEntitySpec.newInstance(TestCluster.class)
+                .configure("initialSize", 1));
     }
     
     @Test
     public void testIncrementsSizeIffUpperBoundExceeded() {
-        tc.size = 1;
+        tc.resize(1);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
 
         tc.setAttribute(MY_ATTRIBUTE, 100);
         assertSucceedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 1));
@@ -49,9 +50,10 @@ public class AutoScalerPolicyMetricTest {
     
     @Test
     public void testDecrementsSizeIffLowerBoundExceeded() {
-        tc.size = 2;
+        tc.resize(2);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
 
         tc.setAttribute(MY_ATTRIBUTE, 50);
         assertSucceedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 2));
@@ -62,9 +64,10 @@ public class AutoScalerPolicyMetricTest {
     
     @Test
     public void testIncrementsSizeInProportionToMetric() {
-        tc.size = 5;
+        tc.resize(5);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
         
         // workload 200 so requires doubling size to 10 to handle: (200*5)/100 = 10
         tc.setAttribute(MY_ATTRIBUTE, 200);
@@ -77,9 +80,10 @@ public class AutoScalerPolicyMetricTest {
     
     @Test
     public void testDecrementsSizeInProportionToMetric() {
-        tc.size = 5;
+        tc.resize(5);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
         
         // workload can be handled by 4 servers, within its valid range: (49*5)/50 = 4.9
         tc.setAttribute(MY_ATTRIBUTE, 49);
@@ -95,12 +99,13 @@ public class AutoScalerPolicyMetricTest {
     
     @Test
     public void obeysMinAndMaxSize() {
-        tc.size = 4;
+        tc.resize(4);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE)
                 .metricLowerBound(50).metricUpperBound(100)
                 .minPoolSize(2).maxPoolSize(6)
                 .build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
 
         // Decreases to min-size only
         tc.setAttribute(MY_ATTRIBUTE, 0);
@@ -113,9 +118,10 @@ public class AutoScalerPolicyMetricTest {
     
     @Test
     public void testDestructionState() {
-        tc.size = 1;
+        tc.resize(1);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
 
         policy.destroy();
         assertTrue(policy.isDestroyed());
@@ -131,7 +137,7 @@ public class AutoScalerPolicyMetricTest {
     @Test
     public void testSuspendState() {
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
         
         policy.suspend();
         assertFalse(policy.isRunning());
@@ -144,9 +150,10 @@ public class AutoScalerPolicyMetricTest {
 
     @Test
     public void testPostSuspendActions() {
-        tc.size = 1;
+        tc.resize(1);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
 
         policy.suspend();
         
@@ -156,9 +163,10 @@ public class AutoScalerPolicyMetricTest {
     
     @Test
     public void testPostResumeActions() {
-        tc.size = 1;
+        tc.resize(1);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        policy.setEntity(tc);
+        tc.addPolicy(policy);
         
         policy.suspend();
         policy.resume();
@@ -168,10 +176,10 @@ public class AutoScalerPolicyMetricTest {
     
     @Test
     public void testSubscribesToMetricOnSpecifiedEntity() {
-        TestEntity entityWithMetric = new TestEntity(app);
-        Entities.manage(entityWithMetric);
+        TestEntity entityWithMetric = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
-        tc.size = 1;
+        tc.resize(1);
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder()
                 .metric(TestEntity.SEQUENCE)
                 .entityWithMetric(entityWithMetric)

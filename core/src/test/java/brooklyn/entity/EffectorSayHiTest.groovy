@@ -9,6 +9,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.DefaultValue
 import brooklyn.entity.basic.Description
@@ -20,7 +21,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
 import brooklyn.management.Task
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 
 /**
  * Test the operation of the {@link Effector} implementations.
@@ -35,7 +36,7 @@ public class EffectorSayHiTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
         e = new MyEntity(app);
         Entities.startManagement(app);
     }
@@ -177,7 +178,7 @@ interface CanSayHi {
 }
 
 @InheritConstructors
-public class MyEntity extends SimpleEntity implements CanSayHi {
+public class MyEntity extends AbstractEntity implements CanSayHi {
 	public String sayHi1(String name, String greeting) { "$greeting $name" }
 	public String sayHi2(String name, String greeting) { "$greeting $name" }
 }

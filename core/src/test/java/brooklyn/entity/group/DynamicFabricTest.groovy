@@ -17,6 +17,8 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
@@ -25,6 +27,7 @@ import brooklyn.test.TestUtils
 import brooklyn.test.entity.BlockingEntity
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
@@ -44,11 +47,35 @@ class DynamicFabricTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = new TestApplication()
         loc1 = new SimulatedLocation()
         loc2 = new SimulatedLocation()
         loc3 = new SimulatedLocation()
-        app.startManagement();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+    }
+    
+    @Test
+    public void testDynamicFabricUsesMemberSpecToCreateAndStartEntityWhenGivenSingleLocation() {
+        runWithEntitySpecWithLocations([loc1])
+    }
+
+    @Test
+    public void testDynamicFabricUsesMemberSpecToCreateAndStartsEntityWhenGivenManyLocations() {
+        runWithEntitySpecWithLocations([loc1,loc2,loc3])
+    }
+    
+    private void runWithEntitySpecWithLocations(Collection<Location> locs) {
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("memberSpec", BasicEntitySpec.newInstance(TestEntity.class)));
+        app.start(locs)
+        
+        assertEquals(fabric.children.size(), locs.size(), Joiner.on(",").join(fabric.children))
+        fabric.children.each {
+            TestEntity child = it
+            assertEquals(child.counter.get(), 1)
+            assertEquals(child.locations.size(), 1, Joiner.on(",").join(child.locations))
+            assertTrue(locs.removeAll(child.locations))
+        }
+        assertTrue(locs.isEmpty(), Joiner.on(",").join(locs))
     }
     
     @Test
@@ -62,8 +89,8 @@ class DynamicFabricTest {
     }
     
     private void runWithLocations(Collection<Location> locs) {
-        DynamicFabric fabric = new DynamicFabric(factory:{ properties -> return new TestEntity(properties) }, app)
-        app.manage(fabric);
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", { properties -> return new TestEntityImpl(properties) }));
         app.start(locs)
         
         assertEquals(fabric.children.size(), locs.size(), Joiner.on(",").join(fabric.children))
@@ -80,13 +107,11 @@ class DynamicFabricTest {
     public void testNotifiesPostStartListener() {
         List<Entity> entitiesAdded = new CopyOnWriteArrayList<Entity>()
         
-        DynamicFabric fabric = new DynamicFabric(
-                factory:{ properties, parent -> 
-                        def result = new TestEntity(properties, parent)
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", { properties, parent -> 
+                        def result = new TestEntityImpl(properties, parent)
                         entitiesAdded.add(result)
-                        result },
-                app)
-        app.manage(fabric);
+                        result }));
         
         app.start([loc1,loc2])
         
@@ -96,12 +121,14 @@ class DynamicFabricTest {
     
     @Test
     public void testSizeEnricher() {
-        Collection<Location> locs = [ new SimulatedLocation(), new SimulatedLocation(), new SimulatedLocation() ]
-        DynamicFabric fabric = new DynamicFabric(factory:{ fabricProperties, parent ->
-            return new DynamicCluster(parent:parent, initialSize:0,
-                factory:{ clusterProperties -> return new TestEntity(clusterProperties) })
-            }, app)
-        app.manage(fabric);
+        Collection<Location> locs = [loc1, loc2, loc3 ]
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", { fabricProperties, parent ->
+                return new DynamicClusterImpl(
+                        parent:parent, 
+                        initialSize:0,
+                        factory:{ clusterProperties -> return new TestEntityImpl(clusterProperties) })
+                }));
         app.start(locs)
         
         int i = 0, total = 0
@@ -120,14 +147,12 @@ class DynamicFabricTest {
     @Test
     public void testDynamicFabricStartsEntitiesInParallel() {
         List<CountDownLatch> latches = [] as CopyOnWriteArrayList<CountDownLatch>
-        DynamicFabric fabric = new DynamicFabric(
-                factory:{ properties -> 
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", { properties -> 
                         CountDownLatch latch = new CountDownLatch(1); 
                         latches.add(latch); 
                         return new BlockingEntity(properties, latch) 
-                }, 
-                app)
-        app.manage(fabric);
+                })); 
         Collection<Location> locs = [ loc1, loc2 ]
         
         Task task = fabric.invoke(Startable.START, [ locations:locs ])
@@ -169,8 +194,8 @@ class DynamicFabricTest {
     public void testDynamicFabricStopsEntitiesInParallel() {
         List<CountDownLatch> shutdownLatches = [] as CopyOnWriteArrayList<CountDownLatch>
         List<CountDownLatch> executingShutdownNotificationLatches = [] as CopyOnWriteArrayList<CountDownLatch>
-        DynamicFabric fabric = new DynamicFabric(
-                factory:{ properties -> 
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", { properties -> 
                         CountDownLatch shutdownLatch = new CountDownLatch(1); 
                         CountDownLatch executingShutdownNotificationLatch = new CountDownLatch(1); 
                         shutdownLatches.add(shutdownLatch);
@@ -179,9 +204,7 @@ class DynamicFabricTest {
                                 .shutdownLatch(shutdownLatch)
                                 .executingShutdownNotificationLatch(executingShutdownNotificationLatch)
                                 .build() 
-                }, 
-                app)
-        app.manage(fabric);
+                })); 
         Collection<Location> locs = [ loc1, loc2 ]
         
         // Start the fabric (and check we have the required num things to concurrently stop)
@@ -193,7 +216,7 @@ class DynamicFabricTest {
         Collection<BlockingEntity> children = fabric.children
         
         // On stop, expect each child to get as far as blocking on its latch
-        Task task = fabric.invoke(Startable.STOP)
+        Task task = fabric.invoke(Startable.STOP, [:])
 
         executingShutdownNotificationLatches.each {
             assertTrue(it.await(10*1000, TimeUnit.MILLISECONDS))
@@ -217,10 +240,8 @@ class DynamicFabricTest {
     
     @Test
     public void testDynamicFabricDoesNotAcceptUnstartableChildren() {
-        DynamicFabric fabric = new DynamicFabric(
-                factory:{ properties -> return new AbstractEntity(properties) {} }, 
-                app)
-        app.manage(fabric);
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", { properties -> return new AbstractEntity(properties) {} })); 
         
         try {
             fabric.start([loc1])
@@ -239,10 +260,9 @@ class DynamicFabricTest {
     // Thus we have "unstoppable" entities. Let's be relaxed about it, rather than blowing up.
     @Test
     public void testDynamicFabricIgnoresExtraUnstoppableChildrenOnStop() {
-        DynamicFabric fabric = new DynamicFabric(
-                factory:{ properties -> return new TestEntity(properties) }, 
-                app)
-        app.manage(fabric);
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", { properties -> return new TestEntityImpl(properties) }));
+        
         fabric.start([loc1])
         
         AbstractEntity extraChild = new AbstractEntity(parent:fabric) {}
@@ -254,20 +274,18 @@ class DynamicFabricTest {
     public void testDynamicFabricPropagatesProperties() {
 		Closure entityFactory = { properties -> 
             def entityProperties = properties + [b: "avail"]
-            return new TestEntity(entityProperties) 
+            return new TestEntityImpl(entityProperties) 
         }
         Closure clusterFactory = { properties -> 
             def clusterProperties = properties + [factory:entityFactory, a: "ignored"]
-            new DynamicCluster(clusterProperties) {
+            new DynamicClusterImpl(clusterProperties) {
                 protected Map getCustomChildFlags() { [fromCluster: "passed to base entity"] }
             }
         }
-		DynamicFabric fabric = new DynamicFabric(factory:clusterFactory, app) {
-            protected Map getCustomChildFlags() { [fromFabric: "passed to cluster but not base entity"] }
-        }
-        //available through inheritance (as a PortRange)
-        fabric.setConfig(Attributes.HTTP_PORT, 1234)
-        app.manage(fabric);
+        DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+            .configure("factory", clusterFactory)
+            .configure("customChildFlags", [fromFabric: "passed to cluster but not base entity"])
+            .configure(Attributes.HTTP_PORT, 1234)); // for inheritance by children (as a port range)
         
 		app.start([ new SimulatedLocation() ])
         

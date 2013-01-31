@@ -7,6 +7,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.util.MutableMap;
@@ -47,7 +48,7 @@ public class RedisCluster extends AbstractEntity implements Startable {
         master.start(locations);
         redisProperties.put("master", master);
         
-        slaves = new DynamicCluster(redisProperties, this);
+        slaves = new DynamicClusterImpl(redisProperties, this);
         slaves.start(locations);
         
         setAttribute(Startable.SERVICE_UP, true);

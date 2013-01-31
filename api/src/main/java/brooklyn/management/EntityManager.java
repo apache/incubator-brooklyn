@@ -2,19 +2,31 @@ package brooklyn.management;
 
 import java.util.Collection;
 
-import brooklyn.catalog.BrooklynCatalog;
-import brooklyn.config.StringConfigMap;
-import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.drivers.EntityDriverFactory;
-import brooklyn.entity.rebind.RebindManager;
-import brooklyn.location.LocationRegistry;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.EntityTypeRegistry;
 
 /**
  * For managing and querying entities.
  */
 public interface EntityManager {
 
+    /**
+     * Returns the type registry, used to identify the entity implementation when instantiating an
+     * entity of a given type.
+     * 
+     * @see EntityManager.createEntity(EntitySpec)
+     */
+    EntityTypeRegistry getEntityTypeRegistry();
+    
+    /**
+     * Creates a new (unmanaged) entity.
+     * 
+     * @param spec
+     * @return A proxy to the created entity (rather than the actual entity itself).
+     */
+    <T extends Entity> T createEntity(EntitySpec<T> spec);
+    
     /**
      * All entities under control of this management plane
      */
@@ -33,6 +45,7 @@ public interface EntityManager {
      *
      * depending on the implementation of the management context,
      * this might push it out to one or more remote management nodes.
+     * Manage an entity.
      */
     void manage(Entity e);
     

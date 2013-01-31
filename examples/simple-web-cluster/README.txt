@@ -27,8 +27,8 @@ Other examples:
   # A simple app: just load-balancer and appservers
   brooklyn launch --app brooklyn.demo.WebClusterExample --location localhost
 
-  # Pure Java three-tier example
-  brooklyn launch --app brooklyn.demo.WebClusterDatabaseExampleAltJava --location localhost
+  # Three-tier example
+  brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
 
 
 Redistributable embedded example:

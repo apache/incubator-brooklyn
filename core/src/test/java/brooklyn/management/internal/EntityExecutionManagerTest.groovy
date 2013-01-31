@@ -14,7 +14,9 @@ import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
@@ -22,6 +24,7 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
 import com.google.common.base.Stopwatch
+import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
 
@@ -32,10 +35,10 @@ class EntityExecutionManagerTest {
     private static final int TIMEOUT_MS = 10*1000
     
     private TestApplication app;
+    private TestEntity e;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = new TestApplication();
     }
     
     @AfterMethod(alwaysRun=true)
@@ -45,8 +48,8 @@ class EntityExecutionManagerTest {
 
     @Test
     public void testGetTasksOfEntity() throws Exception {
-        TestEntity e = new TestEntity([parent:app])
-        Entities.startManagement(app);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
         CountDownLatch latch = new CountDownLatch(1)
         Task task = e.executionContext.submit( [tag : AbstractManagementContext.NON_TRANSIENT_TASK_TAG], { latch.countDown() } )
@@ -58,11 +61,11 @@ class EntityExecutionManagerTest {
     
     @Test
     public void testUnmanagedEntityCanBeGcedEvenIfPreviouslyTagged() throws Exception {
-        TestEntity e = new TestEntity([parent:app])
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         String eId = e.getId();
-        Entities.startManagement(app);
         
-        e.invoke(TestEntity.MY_EFFECTOR).get();
+        e.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
         Set<Task<?>> tasks = app.getManagementContext().getExecutionManager().getTasksWithTag(e);
         Task task = Iterables.get(tasks, 0);
         assertTrue(task.getTags().contains(e));
@@ -84,17 +87,16 @@ class EntityExecutionManagerTest {
     
     @Test(groups="Integration")
     public void testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked() throws Exception {
-        Entities.startManagement(app);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         
         BasicAttributeSensor byteArrayAttrib = new BasicAttributeSensor(Object.class, "test.byteArray", "");
 
         for (int i = 0; i < 1000; i++) {
             try {
                 LOG.debug("testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked: iteration="+i);
-                TestEntity entity = new TestEntity([parent:app])
+                TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
                 entity.setAttribute(byteArrayAttrib, new BigObject(10*1000*1000));
-                Entities.manage(entity);
-                entity.invoke(TestEntity.MY_EFFECTOR).get();
+                entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
                 Entities.destroy(entity);
             } catch (OutOfMemoryError e) {
                 LOG.info("testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked: OOME at iteration="+i);
@@ -109,12 +111,13 @@ class EntityExecutionManagerTest {
      */
     @Test(groups="Integration")
     public void testEffectorTasksGcedSoNoOome() throws Exception {
+        
         BrooklynProperties brooklynProperties = new BrooklynProperties();
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
-        TestEntity entity = new TestEntity([parent:app])
-        Entities.startManagement(app, brooklynProperties);
+        app = ApplicationBuilder.builder(TestApplication.class).manage(Entities.newManagementContext(brooklynProperties));
+        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
         for (int i = 0; i < 1000; i++) {
             try {
@@ -137,13 +140,13 @@ class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1000);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
-        TestEntity entity = new TestEntity([parent:app])
-        Entities.startManagement(app, brooklynProperties);
+        app = ApplicationBuilder.builder(TestApplication.class).manage(Entities.newManagementContext(brooklynProperties));
+        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
         List<Task<?>> tasks = Lists.newArrayList();
         
         for (int i = 0; i < (maxNumTasks+1); i++) {
-            Task<?> task = entity.invoke(TestEntity.MY_EFFECTOR);
+            Task<?> task = entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of());
             task.get();
             tasks.add(task);
         }
@@ -169,11 +172,11 @@ class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASK_AGE, maxTaskAge);
         
-        TestEntity entity = new TestEntity([parent:app])
-        Entities.startManagement(app, brooklynProperties);
+        app = ApplicationBuilder.builder(TestApplication.class).manage(Entities.newManagementContext(brooklynProperties));
+        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
         Stopwatch stopwatch = new Stopwatch().start();
-        Task<?> oldTask = entity.invoke(TestEntity.MY_EFFECTOR);
+        Task<?> oldTask = entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of());
         oldTask.get();
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {

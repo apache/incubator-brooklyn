@@ -5,7 +5,7 @@ toc: /toc.json
 ---
 
 Gone are the days when IDE integration always just works...  Maven and Eclipse fight, 
-neither quite gets along perfectly with Groovy, let alone Grails,
+neither quite gets along perfectly with Groovy,
 git branch switches (sooo nice) can be slow, etc etc.
 
 But with a bit of a dance the IDE can still be your friend,
@@ -13,7 +13,7 @@ making it much easier to run tests and debug.
 
 Here are some general tips:
 
-* Add your favourite plugins for Maven, Groovy, and Git, if necessary
+* Add your favourite plugins for Maven, Groovy, Git and JavaScript, if necessary
 
 * Turn off auto-rebuild if it bothers you
 
@@ -27,7 +27,7 @@ See instructions below for specific IDEs.
     
 ## Eclipse
 
-If you're an Eclipse user, you'll probably want the Groovy, Maven (m2e), Git, and TestNG plugins. 
+If you're an Eclipse user, you'll probably want the Groovy, Maven (m2e), Git, JavaScript and TestNG plugins. 
 Via Help -> Install New Software, or from the Eclipse Marketplace,
 we recommend:
 
@@ -70,6 +70,10 @@ If you encounter issues, the following hints may be helpful:
   or edit the ``.project`` manually adding it to the project properties).
   The tips [for jclouds maven-eclipse](http://www.jclouds.org/documentation/devguides/using-eclipse) might be helpful. 
 
+ <!-- 
+ FIXME Relates to old Grails, rather than new JavaScript web-console.
+ Should we just delete this section, or does any of it apply to the new web-console?
+ 
 * Getting the web console project to build nicely can be trickier. 
   If you're lucky it will just work...
   But you may find you have to first build from the command-line, 
@@ -77,8 +81,8 @@ If you encounter issues, the following hints may be helpful:
   Easier may be just to run "grails run-app" in the directory to launch it (plus that does dynamic restarts),
   and use the IDE as just a text editor (or use a different text editor for that project only).
   Note too that some jiggery-pokery may currently be needed to get Groovy 1.8 playing nicely with Grails 1.3.
-  
-
+ -->
+ 
 If the pain starts to be too much, come find us on IRC #brooklyncentral or [elsewhere]({{site.url}}/meta/contact.html) and we can hopefully share our pearls.
 (And if you have a tip we haven't mentioned please let us know that too!)
 

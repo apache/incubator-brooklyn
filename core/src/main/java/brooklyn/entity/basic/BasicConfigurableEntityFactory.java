@@ -15,14 +15,14 @@ import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 
 public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractConfigurableEntityFactory<T> {
-    private transient Class<T> clazz;
+    private transient Class<? extends T> clazz;
     private final String clazzName;
 
-    public BasicConfigurableEntityFactory(Class<T> clazz) {
+    public BasicConfigurableEntityFactory(Class<? extends T> clazz) {
         this(new HashMap(), clazz);
     }
 
-    public BasicConfigurableEntityFactory(Map flags, Class<T> clazz) {
+    public BasicConfigurableEntityFactory(Map flags, Class<? extends T> clazz) {
         super(flags);
         this.clazz = checkNotNull(clazz, "clazz");
         this.clazzName = clazz.getName();
@@ -30,7 +30,7 @@ public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractCo
 
     public T newEntity2(Map flags, Entity parent) {
         try {
-            Constructor<T> constructor = clazz.getConstructor(Map.class, Entity.class);
+            Constructor<? extends T> constructor = clazz.getConstructor(Map.class, Entity.class);
             return constructor.newInstance(flags, parent);
         } catch (InstantiationException e) {
             throw Throwables.propagate(e);

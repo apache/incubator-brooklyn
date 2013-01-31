@@ -9,6 +9,7 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicSensorEvent
@@ -37,19 +38,18 @@ public class EntitySubscriptionTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = new TestApplication();
-        entity = new TestEntity(parent:app);
-        observedEntity = new TestEntity(parent:app);
-        observedChildEntity = new TestEntity(parent:observedEntity);
-        
-        observedGroup = new BasicGroup(parent:app);
-        observedMemberEntity = new TestEntity(parent:app);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        observedEntity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        observedChildEntity = observedEntity.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+
+        observedGroup = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class));
+        observedMemberEntity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         observedGroup.addMember(observedMemberEntity);
         
-        otherEntity = new TestEntity(parent:app);
-        listener = new RecordingSensorEventListener();
+        otherEntity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
-        Entities.startManagement(app);
+        listener = new RecordingSensorEventListener();
         
         app.start([loc])
     }
@@ -112,9 +112,8 @@ public class EntitySubscriptionTest {
     public void testSubscribeToChildrenReceivesEventsForDynamicallyAddedChildren() {
         entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
         
-        TestEntity observedChildEntity2 = new TestEntity(parent:observedEntity);
+        TestEntity observedChildEntity2 = observedEntity.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         observedChildEntity2.setAttribute(TestEntity.SEQUENCE, 123);
-        Entities.manage(observedChildEntity2);
         
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(listener.events, [
@@ -141,8 +140,7 @@ public class EntitySubscriptionTest {
     public void testSubscribeToMembersReceivesEventsForDynamicallyAddedMembers() {
         entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
-        TestEntity observedMemberEntity2 = new TestEntity(parent:app);
-        Entities.manage(observedMemberEntity2);
+        TestEntity observedMemberEntity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         observedGroup.addMember(observedMemberEntity2);
         observedMemberEntity2.setAttribute(TestEntity.SEQUENCE, 123);
         

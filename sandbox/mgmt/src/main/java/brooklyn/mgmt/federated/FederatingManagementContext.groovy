@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Application
 import brooklyn.entity.Entity
+import brooklyn.management.EntityManager
 import brooklyn.management.ExecutionManager
 import brooklyn.management.SubscriptionManager
 import brooklyn.management.Task
@@ -77,7 +78,8 @@ public class FederatingManagementContext extends AbstractManagementContext {
     
     public SubscriptionManager getSubscriptionManager() { return rem.getContext().getSubscriptionManager(); }
     public ExecutionManager getExecutionManager() { return rem.getContext().getExecutionManager(); }
-
+    public EntityManager getEntityManager() { return rem.getContext().getEntityManager(); }
+    
     public void onApplicationStart(Application app) {
         String remoteNodeUid = LanguageUtils.newUid();
         c.addListener(new NodeStartListener());

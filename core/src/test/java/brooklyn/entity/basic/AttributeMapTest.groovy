@@ -11,10 +11,11 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
-import brooklyn.entity.SimpleEntity
 import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
+import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestEntityImpl
 
 public class AttributeMapTest {
 
@@ -24,8 +25,8 @@ public class AttributeMapTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplication()
-        SimpleEntity e = new SimpleEntity(app)
+        app = new TestApplicationImpl()
+        TestEntity e = new TestEntityImpl(app)
         map = new AttributeMap(e)
         Entities.startManagement(app);
     }

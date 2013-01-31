@@ -2,25 +2,25 @@ package brooklyn.event.adapter;
 
 //import static brooklyn.event.adapter.HttpResponseContextTest.JSON_RESPONSE;
 //import static brooklyn.event.adapter.HttpResponseContextTest.SIMPLE_RESPONSE;
-import static brooklyn.test.TestUtils.*;
-import static org.testng.Assert.assertEquals;
-
-import com.google.mockwebserver.MockResponse;
-import com.google.mockwebserver.MockWebServer;
-
-import java.net.URL;
+import static brooklyn.test.TestUtils.*
+import static org.testng.Assert.assertEquals
 
 import org.testng.annotations.AfterMethod
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.entity.basic.EntityLocal
+import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestApplicationImpl
+import brooklyn.test.entity.TestEntityImpl
 
+import com.google.mockwebserver.MockResponse
+import com.google.mockwebserver.MockWebServer
+
+@Deprecated // Class under test is deprecated
 public class HttpSensorAdapterIntegrationTest {
 
 	final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
@@ -46,8 +46,8 @@ public class HttpSensorAdapterIntegrationTest {
         baseUrl = server.getUrl("/");
 
         loc = new LocalhostMachineProvisioningLocation();
-        app = new TestApplication();        
-        entity = new TestEntity(app);
+        app = new TestApplicationImpl();        
+        entity = new TestEntityImpl(app);
         app.start([loc]);
         
         registry = new SensorRegistry(entity);

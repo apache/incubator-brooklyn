@@ -40,7 +40,7 @@ public class RabbitQueue extends RabbitDestination implements Queue {
 
     @Override
     protected void connectSensors() {
-        String runDir = getParent().getDriver().getRunDir();
+        String runDir = getParent().getRunDir();
         String cmd = String.format("%s/sbin/rabbitmqctl list_queues -p /%s  | grep '%s'", runDir, virtualHost, getQueueName());
         
         sshFeed = SshFeed.builder()

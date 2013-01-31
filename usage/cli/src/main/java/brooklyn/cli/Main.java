@@ -1,12 +1,12 @@
 package brooklyn.cli;
 
-import brooklyn.config.BrooklynProperties;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -22,23 +22,23 @@ import org.iq80.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.location.Location;
-import brooklyn.location.basic.CommandLineLocations;
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.text.QuotedStringTokenizer;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class Main {
 
@@ -190,34 +190,21 @@ public class Main {
             List<Location> brooklynLocations = locations!=null ?
                     new LocationRegistry(brooklynProperties).getLocationsById(Arrays.asList(locations)) : null;
             
-            // Create the instance of the brooklyn app
-            AbstractApplication application = null;
-            if (app!=null) {
-                log.debug("Load the user's application: {}", app);
-                application = loadApplicationFromClasspathOrParse(utils, loader, app);
-                launcher.managing(application);
+            if (app != null) {
+                // Create the instance of the brooklyn app
+                Object loadedApp = loadApplicationFromClasspathOrParse(utils, loader, app);
+                if (loadedApp instanceof ApplicationBuilder) {
+                    launcher.managing((ApplicationBuilder)loadedApp);
+                } else {
+                    launcher.managing((AbstractApplication)loadedApp);
+                }
             }
             
             // Launch server
             log.info("Launching Brooklyn web console management");
             BrooklynServerDetails server = launcher.launch();
             
-            // Start application
-            if (application!=null) {
-                log.info("Starting brooklyn application {} in location{} {}", new Object[] { app, brooklynLocations.size()!=1?"s":"", brooklynLocations });
-                if (!noShutdownOnExit) Entities.invokeStopOnShutdown(application);
-                try {
-                    application.start(brooklynLocations);
-                } catch (Exception e) {
-                    log.error("Error starting "+application+": "+e, e);
-                }
-            } else if (brooklynLocations!=null && !brooklynLocations.isEmpty()) {
-                log.warn("Locations specified without any applications; ignoring");
-            }
-            
-            if (verbose) {
-                if (application!=null) Entities.dumpInfo(application);
-            }
+            startAllApps(server.getManagementContext().getApplications(), brooklynLocations);
             
             // force load of catalog (so web console is up to date)
             server.getManagementContext().getCatalog().getCatalogItems();
@@ -226,7 +213,7 @@ public class Main {
             	// Wait for the user to type a key
             	log.info("Server started. Press return to stop.");
             	System.in.read();
-            	application.stop();
+            	stopAllApps(server.getManagementContext().getApplications());
             } else {
                 // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
                 log.info("Launched Brooklyn; now blocking to wait for cntrl-c or kill");
@@ -235,39 +222,85 @@ public class Main {
             return null;
         }
 
-        private synchronized void waitUntilInterrupted() {
-            try {
-                while (true) {
-                    wait();
-                    log.debug("suprious wake in brooklyn Main, how about that!");
+        @VisibleForTesting
+        void waitUntilInterrupted() {
+            Object mutex = new Object();
+            synchronized (mutex) {
+                try {
+                    while (true) {
+                        mutex.wait();
+                        log.debug("spurious wake in brooklyn Main, how about that!");
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return; // exit gracefully
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return; // exit gracefully
             }
         }
         
         /**
-         * Helper method that gets an instance of a brooklyn application
+         * Helper method that gets an instance of a brooklyn {@link AbstractApplication} or an {@link ApplicationBuilder}.
+         * Guaranteed to be non-null result of one of those types (throwing exception if app not appropriate).
          */
         @VisibleForTesting
-        AbstractApplication loadApplicationFromClasspathOrParse(ResourceUtils utils, GroovyClassLoader loader, String app) 
+        Object loadApplicationFromClasspathOrParse(ResourceUtils utils, GroovyClassLoader loader, String app) 
                 throws SecurityException, NoSuchMethodException, IllegalArgumentException, InstantiationException, 
                 IllegalAccessException, InvocationTargetException {
-            Class<?> appClass;
+            Class<?> clazz;
             try {
                 log.debug("Trying to load application as class on classpath: {}", app);
-                appClass = loader.loadClass(app, true, false);
+                clazz = loader.loadClass(app, true, false);
             } catch (ClassNotFoundException cnfe) { // Not a class on the classpath
                 log.debug("Loading \"{}\" as class on classpath failed, now trying as .groovy source file",app);
                 String content = utils.getResourceAsString(app);
-                appClass = loader.parseClass(content);
+                clazz = loader.parseClass(content);
             }
-            
-            Constructor<?> constructor = appClass.getConstructor();
-            return (AbstractApplication) constructor.newInstance();
+            if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
+                Constructor<?> constructor = clazz.getConstructor();
+                return (ApplicationBuilder) constructor.newInstance();
+            } else if (AbstractApplication.class.isAssignableFrom(clazz)) {
+                Constructor<?> constructor = clazz.getConstructor();
+                return (AbstractApplication) constructor.newInstance();
+            } else {
+                throw new IllegalArgumentException("Application class "+clazz+" must extend one of ApplicationBuilder or AbstractApplication");
+            }
         }
 
+        @VisibleForTesting
+        void startAllApps(Collection<? extends Application> applications, List<? extends Location> brooklynLocations) {
+            if (applications.size() > 0) {
+                for (Application application : applications) {
+                    // Start application
+                    if (application!=null) {
+                        log.info("Starting brooklyn application {} in location{} {}", new Object[] { application, brooklynLocations.size()!=1?"s":"", brooklynLocations });
+                        if (!noShutdownOnExit) Entities.invokeStopOnShutdown(application);
+                        try {
+                            ((Startable)application).start(brooklynLocations);
+                        } catch (Exception e) {
+                            log.error("Error starting "+application+": "+e, e);
+                        }
+                    }
+                    
+                    if (verbose) {
+                        if (application!=null) Entities.dumpInfo(application);
+                    }
+                }
+            } else if (brooklynLocations!=null && !brooklynLocations.isEmpty()) {
+                log.warn("Locations specified without any applications; ignoring");
+            }
+        }
+        
+        @VisibleForTesting
+        void stopAllApps(Collection<? extends Application> applications) {
+            for (Application application : applications) {
+                try {
+                    ((Startable)application).stop();
+                } catch (Exception e) {
+                    log.error("Error stopping "+application+": "+e, e);
+                }
+            }
+        }
+        
         @Override
         public ToStringHelper string() {
             return super.string()

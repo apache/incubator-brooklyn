@@ -6,7 +6,6 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
@@ -17,18 +16,21 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.entity.Application
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
+import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
 import brooklyn.entity.webapp.jboss.JBoss7Server
+import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
 import brooklyn.location.basic.jclouds.CredentialsFromEnv
 import brooklyn.location.basic.jclouds.JcloudsLocation
 import brooklyn.location.basic.jclouds.JcloudsLocationFactory
 import brooklyn.test.TestUtils
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
-import brooklyn.entity.basic.SoftwareProcessEntity
 
 /**
  * This tests that we can run jboss entity on AWS.
@@ -51,7 +53,7 @@ public class WebAppLiveIntegrationTest {
     public static final int PORT_INCREMENT = 400
 
     // The parent application entity for these tests
-    Application application = new TestApplication()
+    Application application = new TestApplicationImpl()
 
     private JcloudsLocationFactory locFactory
     private JcloudsLocation loc
@@ -65,9 +67,9 @@ public class WebAppLiveIntegrationTest {
      */
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
-        TomcatServer tomcat = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
-        JBoss6Server jboss6 = [ parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT ]
-        JBoss7Server jboss7 = [ parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT ]
+        TomcatServer tomcat = new TomcatServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
+        JBoss6Server jboss6 = new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
+        JBoss7Server jboss7 = new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
         return [ [ tomcat ], [ jboss6 ], [ jboss7 ] ]
     }
 
@@ -88,10 +90,11 @@ public class WebAppLiveIntegrationTest {
                 sshPrivateKey:sshPrivateKey])
 
         loc = locFactory.newLocation(USEAST_REGION_NAME)
+        // FIXME Will these tags fail to match, because using JBoss6Server instead of JBoss6ServerImpl etc?
         loc.setTagMapping( [
                 (JBoss6Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
                 (JBoss7Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
-                (TomcatServer.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]]
+                (TomcatServerImpl.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]]
                 ])
     }
 
@@ -112,7 +115,7 @@ public class WebAppLiveIntegrationTest {
     }
 
     @Test(groups = [ "Live" ], dataProvider="basicEntities")
-    public void testStartsWebAppInAws(final SoftwareProcessEntity entity) {
+    public void testStartsWebAppInAws(final SoftwareProcess entity) {
         entity.start([ loc ])
         executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:75*SECONDS, useGroovyTruth:true) {
             assertTrue(entity.getAttribute(Startable.SERVICE_UP))

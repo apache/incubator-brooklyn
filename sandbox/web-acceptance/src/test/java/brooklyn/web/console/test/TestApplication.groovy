@@ -1,16 +1,16 @@
 package brooklyn.web.console.test
 
+import javax.naming.OperationNotSupportedException
+
+import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.ParameterType
-import brooklyn.entity.webapp.tomcat.TomcatServer
-import brooklyn.event.basic.BasicAttributeSensor
-import java.util.concurrent.atomic.AtomicInteger
-import javax.naming.OperationNotSupportedException
 import brooklyn.entity.basic.*
-import brooklyn.entity.Effector
-import brooklyn.management.Task
-import brooklyn.location.basic.SimulatedLocation
+import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.event.Sensor
+import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.location.basic.SimulatedLocation
+import brooklyn.management.Task
 
 public class TestEffector extends AbstractEffector {
 
@@ -80,7 +80,7 @@ class TestApplication extends AbstractApplication {
         new Thread(r).start();
     }
 
-    public static class TestGroupEntity extends AbstractGroup {
+    public static class TestGroupEntity extends AbstractGroupImpl {
         public static final BasicAttributeSensor<Integer> CHILDREN = new BasicAttributeSensor<Integer>(Integer.class, "Children",
                 "Direct children of this group");
         public static final BasicAttributeSensor<String> DATA_RATE = new BasicAttributeSensor<String>(String.class, "DataRate");
@@ -169,7 +169,7 @@ class TestApplication extends AbstractApplication {
                             latitude: 40.0, longitude: -120.0])]
             
             // Stealing the sensors from TomcatNode
-            getMutableEntityType().addSensors(new TomcatServer().getEntityType().getSensors())
+            getMutableEntityType().addSensors(new TomcatServerImpl().getEntityType().getSensors())
 
             parameterTypeList.add(tomcatStartLocation)
             parameterTypeList.add(actionDate)

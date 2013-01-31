@@ -10,15 +10,16 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.basic.SoftwareProcessDriver
-import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.SoftwareProcessImpl
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver
 import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.ResourceUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.text.Identifiers
@@ -32,7 +33,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplication();
+        app = new TestApplicationImpl();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -45,16 +46,16 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         MyEntity entity = new MyEntity(app);
         app.start([ localhost ]);
         executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertTrue entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            assertTrue entity.getAttribute(SoftwareProcess.SERVICE_UP)
         }
         
         entity.stop()
-        assertFalse entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+        assertFalse entity.getAttribute(SoftwareProcess.SERVICE_UP)
     }
 }
 
 @InheritConstructors
-class MyEntity extends SoftwareProcessEntity {
+class MyEntity extends SoftwareProcessImpl {
     
     @Override
     Class getDriverInterface() {
@@ -67,7 +68,7 @@ class MyEntity extends SoftwareProcessEntity {
 
         sensorRegistry.register(new FunctionSensorAdapter(
             { driver.isRunning() } )).
-        poll(SoftwareProcessEntity.SERVICE_UP); 
+        poll(SoftwareProcess.SERVICE_UP); 
     }
 }
 
@@ -76,7 +77,7 @@ interface MyEntityDriver extends SoftwareProcessDriver {}
 class MyEntitySshDriver extends JavaSoftwareProcessSshDriver implements MyEntityDriver {
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcessEntity.SUGGESTED_VERSION, "0.1"]
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = [SoftwareProcess.SUGGESTED_VERSION, "0.1"]
 
     public MyEntitySshDriver(MyEntity entity, SshMachineLocation machine) {
         super(entity, machine);

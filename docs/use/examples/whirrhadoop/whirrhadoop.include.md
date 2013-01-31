@@ -29,10 +29,17 @@ and integrate them as part of bespoke applications.
 ## Whirr Hadoop
 
 The class ``WhirrHadoopExample`` shows how a Hadoop cluster can be started
-with an arbitrary size, with one line using the ``WhirrHadoopCluster`` entity.
+with an arbitrary size, using the ``WhirrHadoopCluster`` entity.
 
 {% highlight java %}
-    WhirrCluster cluster = new WhirrHadoopCluster(this, size: 2, memory: 2048);
+public class WhirrHadoopExample extends ApplicationBuilder {
+    @Override
+    protected void doBuild() {
+        WhirrCluster cluster = createChild(BasicEntitySpec.newInstance(WhirrHadoopCluster.class)
+                .configure("size", 2)
+                .configure("memory", 2048));
+    }
+}
 {% endhighlight %}
 
 You can run this by running:
@@ -41,7 +48,7 @@ You can run this by running:
 % ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.extras.whirr.WhirrHadoopExample --stopOnKeyPress --location aws-ec2:eu-west-1
 {% endhighlight %}
 
-This targets ``aws-ec2:eu-west-1``,
+This targets ``aws-ec2:eu-west-1`` (using jclouds),
 so you will need to set your AWS credentials as described [here]({{site.url}}/use/guide/management/index.html#startup-config). 
 
 [![Web Console Showing Whirr-launched Hadoop Cluster](whirrhadoop-w750.png "Web Console Showing Whirr-launched Hadoop Cluster")](whirrhadoop.png) 
@@ -58,13 +65,17 @@ The class ``WhirrExample`` shows how an arbitrary [Whirr](http://whirr.apache.or
 can be run from within Brooklyn:
 
 {% highlight java %}
-    public static final String RECIPE = '''
-whirr.cluster-name=brooklyn-whirr
-whirr.hardware-min-ram=1024
-whirr.instance-templates= 1 noop, 1 elasticsearch
-'''
+public class WhirrExample extends ApplicationBuilder {
+    public static final String RECIPE =
+            "whirr.cluster-name=brooklyn-whirr"+"\n"+
+            "whirr.hardware-min-ram=1024"+"\n"+
+            "whirr.instance-templates=1 noop, 1 elasticsearch"+"\n";
 
-    WhirrCluster cluster = new WhirrCluster(this, recipe: RECIPE);
+    protected void doBuild() {
+        WhirrCluster cluster = createChild(BasicEntitySpec.newInstance(WhirrCluster.class)
+                .configure("recipe", RECIPE));
+    }
+}
 {% endhighlight %}
 
 This can be launched by running:
@@ -102,5 +113,5 @@ with your custom applications which use these systems.
 One example, combining the [Global Web Fabric example]({{ site.url }}/use/examples/global-web-fabric)
 with the Whirr Hadoop entity, is included in this example project.
 A Hadoop-based chatroom web app, performing map-reduce (and a few necessary contortions to work with private subnets)
-is in ``WebFabrixWithHadoopExample``. 
+is in ``WebFabricWithHadoopExample``. 
  

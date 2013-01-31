@@ -7,23 +7,24 @@ import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.sudo;
 import static java.lang.String.format;
 
-import javax.annotation.Nullable;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
 
 /**
  * The SSH implementation of the {@link PostgreSqlDriver}.
@@ -46,7 +47,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
             "/bin/"
     );
 
-    public PostgreSqlSshDriver(PostgreSqlNode entity, SshMachineLocation machine) {
+    public PostgreSqlSshDriver(PostgreSqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -156,7 +157,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     }
 
     @Override
-    public PostgreSqlNode getEntity() {
-        return (PostgreSqlNode) super.getEntity();
+    public PostgreSqlNodeImpl getEntity() {
+        return (PostgreSqlNodeImpl) super.getEntity();
     }
 }

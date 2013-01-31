@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyService;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
+import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
@@ -39,7 +40,7 @@ public class SoftwareProcessEntityRebindTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
-        origApp = new MyApplication();
+        origApp = new MyApplicationImpl();
         Entities.startManagement(origApp, managementContext);
     }
 

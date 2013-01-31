@@ -12,12 +12,11 @@ import org.slf4j.LoggerFactory
 import brooklyn.enricher.RollingTimeWindowMeanEnricher
 import brooklyn.enricher.TimeFractionDeltaEnricher
 import brooklyn.entity.basic.EntityLocal
-import brooklyn.entity.basic.SoftwareProcessEntity
 import brooklyn.event.adapter.JmxSensorAdapter
 
 class JavaAppUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(SoftwareProcessEntity.class)
+    private static final Logger log = LoggerFactory.getLogger(JavaAppUtils.class)
     
     /* TODO we should switch to:
      * 

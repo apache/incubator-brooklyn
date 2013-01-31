@@ -10,7 +10,9 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -27,8 +29,7 @@ public class KarafContainerTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplication();
-        Entities.startManagement(app);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -38,8 +39,11 @@ public class KarafContainerTest {
 
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        karaf = new KarafContainer(parent:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiServerPort:"9099+");
-        Entities.manage(karaf);
+        karaf = app.createAndManageChild(BasicEntitySpec.newInstance(KarafContainer.class)
+                .configure("name", LanguageUtils.newUid())
+                .configure("displayName", "Karaf Test")
+                .configure("jmxPort", "8099+")
+                .configure("rmiServerPort", "9099+"));
         
         app.start([ localhost ]);
         executeUntilSucceeds(timeout:30 * SECONDS) {
@@ -55,8 +59,11 @@ public class KarafContainerTest {
     
     @Test(groups = "Integration")
     public void testCanInstallAndUninstallBundle() {
-        karaf = new KarafContainer(parent:app, name:LanguageUtils.newUid(), displayName:"Karaf Test", jmxPort:"8099+", rmiServerPort:"9099+");
-        Entities.manage(karaf);
+        karaf = app.createAndManageChild(BasicEntitySpec.newInstance(KarafContainer.class)
+            .configure("name", LanguageUtils.newUid())
+            .configure("displayName", "Karaf Test")
+            .configure("jmxPort", "8099+")
+            .configure("rmiServerPort", "9099+"));
         
         app.start([ localhost ]);
         

@@ -93,19 +93,19 @@ The heavy lifting will be done by off-the-shelf Brooklyn classes:
  * `GeoscalingDnsService` monitors children of a specified entity (the `DynamicFabric`) 
    and adds them as DNS targets for the region they are in  
 
-First, however, let's create the Groovy class -- call it `GlobalWebFabricExample`.
-This will extend the Brooklyn `AbstractApplication` and inheriting the default constructors:
+First, however, let's create the Java class -- call it `GlobalWebFabricExample`.
+This will extend the Brooklyn `ApplicationBuilder`:
 
 {% highlight java %}
-package brooklyn.demo
+package brooklyn.demo;
 
-import brooklyn.entity.basic.AbstractApplication
+import static com.google.common.base.Preconditions.checkNotNull;
+import brooklyn.entity.basic.ApplicationBuilder;
 
-@InheritConstructors
-public class GlobalWebFabricExample extends AbstractApplication {
-
-    // TODO create our app!
-
+public class GlobalWebFabricExample extends ApplicationBuilder {
+    protected void doBuild() {
+        // TODO create our app!
+    }
 }
 {% endhighlight %}
 
@@ -121,12 +121,10 @@ or perhaps a `CloudFoundryJavaWebAppCluster` if deploying to a Cloud Foundry loc
 (see below). 
 
 {% highlight java %}
-    DynamicFabric webFabric = new DynamicFabric(this, name: "Web Fabric", 
-            factory: new ElasticJavaWebAppService.Factory());
-    { 
-        //specify the WAR file to use
-        webFabric.setConfig(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH);
-    }
+        DynamicFabric webFabric = createChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+                .displayName("Web Fabric")
+                .configure(DynamicFabric.FACTORY, new ElasticJavaWebAppService.Factory())
+                .configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH));
 {% endhighlight %}
 
 Here we have specified the WAR to use with `setConfig`.
@@ -145,10 +143,11 @@ First, however, let's make sure any load-balancer proxies (e.g. nginx) in these 
 are listening on port 80:
 
 {% highlight java %}
-    { 
-        //load-balancer instances must run on 80 to work with GeoDNS (default is 8000)
-        webFabric.setConfig(AbstractController.PROXY_HTTP_PORT, 80);
-    }
+        DynamicFabric webFabric = createChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+                .displayName("Web Fabric")
+                .configure(DynamicFabric.FACTORY, new ElasticJavaWebAppService.Factory())
+                .configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH)
+                .configure(AbstractController.PROXY_HTTP_PORT, PortRanges.fromInteger(80)));
 {% endhighlight %}
 
 Let's now define the Geoscaling entity which does the stitching.
@@ -159,20 +158,21 @@ lightweight sub-domains to prevent DNS caching and multiple instances of our app
 from confusing us -- e.g. `brooklyn-1234.yourname.geopaas.org`.
 
 {% highlight java %}
-    GeoscalingDnsService geoDns = new GeoscalingDnsService(this, name: "GeoScaling DNS",
-            username: config.getFirst("brooklyn.geoscaling.username", failIfNone:true),
-            password: config.getFirst("brooklyn.geoscaling.password", failIfNone:true),
-            primaryDomainName: config.getFirst("brooklyn.geoscaling.primaryDomain", failIfNone:true), 
-            smartSubdomainName: 'brooklyn');    
+        StringConfigMap config = getManagementContext().getConfig();
+        
+        GeoscalingDnsService geoDns = createChild(BasicEntitySpec.newInstance(GeoscalingDnsService.class)
+                .displayName("GeoScaling DNS")
+                .configure("username", checkNotNull(config.getFirst("brooklyn.geoscaling.username"), "username"))
+                .configure("password", checkNotNull(config.getFirst("brooklyn.geoscaling.password"), "password"))
+                .configure("primaryDomainName", checkNotNull(config.getFirst("brooklyn.geoscaling.primaryDomain"), "primaryDomain")) 
+                .configure("smartSubdomainName", "brooklyn"));
 {% endhighlight %}
 
 Lastly we need to tell this instance what entity it should monitor
 for children to include as targets:
 
 {% highlight java %}
-    {
         geoDns.setTargetEntityProvider(webFabric);
-    }
 {% endhighlight %}
 
 
@@ -200,90 +200,90 @@ We will use the `DependentConfiguration.attributeWhenReady` convenience to
 listen for the `HOSTNAME` sensor on `geoDns` and set the relevant Cloud Foundry 
 config parameter on the `webFabric`. 
 Other PaaS targets may expose a similar config key.
-Please note that this command must be placed in your class 
-*after* `webFabric` and `geoDns` are defined.
+Add the following configuration line in the construction of the webFabric (which must 
+come after construction of the geoDns).
 
 {% highlight java %}
-    {
-        webFabric.setConfig(CloudFoundryJavaWebAppCluster.HOSTNAME_TO_USE_FOR_URL,
-            DependentConfiguration.attributeWhenReady(geoDns, Attributes.HOSTNAME));
-    }
+                .configure(CloudFoundryJavaWebAppCluster.HOSTNAME_TO_USE_FOR_URL,
+                        DependentConfiguration.attributeWhenReady(geoDns, Attributes.HOSTNAME)));
 {% endhighlight %}
 
 This config key will only apply to Cloud Foundry targets, 
 so it is safe to include in your class whether or not you are deploying there.
 
 
-### Statics
+### Imports
 
-In the interest of readability above, we have omitted certain static constants we use,
-the `main` method, and the imports.  Your complete class will of course have to include these: 
+Your imports should look as follows:
+
+{% highlight java %}
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.config.StringConfigMap;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
+import brooklyn.entity.group.DynamicFabric;
+import brooklyn.entity.proxy.AbstractController;
+import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.webapp.ElasticJavaWebAppService;
+import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster;
+import brooklyn.location.basic.PortRanges;
+{% endhighlight %}
+
+
+### Use of main method (optional)
+
+In this example, we will use the brooklyn CLI launcher. However, it is possible to write your own main method.
 
 The following static constants are assumed (most of these as in the [Simple Web Cluster](../webcluster) example and others): 
 
- * `config`, read from `~/.brooklyn/brooklyn.properties` (as well as from environment variables)
-   to provide the login data for Geoscaling.
- * `log`, a logger
  * `WAR_PATH`, pointing to the webapp to deploy (a default supplied as part of the Brooklyn examples is used here)
  * `DEFAULT_LOCATIONS`, containing a string spec of the locations to deploy to if none are supplied on the command-line;
    for this example `localhost` will frequently not work unless Geoscaling can see it 
    (i.e. it has a public IP and appropriate firewall settings)
 
-The code for these is as follows:
+The code (which can safely be omitted) is as follows:
 
 {% highlight java %}
     public static final Logger log = LoggerFactory.getLogger(GlobalWebFabricExample.class);
     
+    // points to the webapp to deploy (a default supplied as part of the Brooklyn examples is used here)
     public static final String WAR_PATH = "classpath://hello-world-webapp.war";
     
+    // locations to deploy to if none are supplied on the command-line; for this example `localhost` will 
+    // frequently not work unless Geoscaling can see it (i.e. it has a public IP and appropriate firewall settings)
     static final List<String> DEFAULT_LOCATIONS = [
             "aws-ec2:eu-west-1",
             "aws-ec2:ap-southeast-1",
             "aws-ec2:us-west-1", 
         ];
         
-    static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
-{% endhighlight %}
-
-Our `main` method looks like this:
-
-{% highlight java %}
     public static void main(String[] argv) {
-        ArrayList args = new ArrayList(Arrays.asList(argv));
-        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = new LocationRegistry().getLocationsById(args ?: DEFAULT_LOCATIONS)
+        List<String> args = Lists.newArrayList(argv);
+        String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
+        String locations = CommandLineUtil.getCommandLineOption(args, "--locations", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
-        GlobalWebFabricExample app = new GlobalWebFabricExample(name: 'Brooklyn Global Web Fabric Example');
-            
-        BrooklynLauncher.manage(app, port)
-        app.start(locations)
-        Entities.dumpInfo(app)
+        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+                .webconsolePort(port)
+                .launch();
+
+        List<Location> locs = new LocationRegistry().getLocationsById(Arrays.asList(locations));
+
+        StartableApplication app = new GlobalWebFabricExample()
+                .appDisplayName("Brooklyn Global Web Fabric Example")
+                .manage(server.getManagementContext());
+        
+        app.start(locs);
+        
+        Entities.dumpInfo(app);
     }
 {% endhighlight %}
 
-And finally, the imports are as follows:
-
-{% highlight java %}
-import groovy.transform.InheritConstructors
-
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-import brooklyn.config.BrooklynProperties
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.Entities
-import brooklyn.entity.dns.geoscaling.GeoscalingDnsService
-import brooklyn.entity.group.AbstractController
-import brooklyn.entity.group.DynamicFabric
-import brooklyn.entity.webapp.ElasticJavaWebAppService
-import brooklyn.event.basic.DependentConfiguration
-import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster
-import brooklyn.launcher.BrooklynLauncher
-import brooklyn.location.Location
-import brooklyn.location.basic.LocationRegistry
-import brooklyn.util.CommandLineUtil
-{% endhighlight %}
 
 
 ## Running the Example
@@ -292,13 +292,13 @@ Now let's run this example.  You will need to specify increased heap size and me
 as well as the appropriate classpath.
 
 {% highlight bash %}
+export BROOKLYN_CLASSPATH=/path/to/your/project/target/classes
 ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.GlobalWebFabricExample \
---location locahost
+    --location jclouds:aws-ec2:eu-west-1,jclouds:aws-ec2:ap-southeast-1,jclouds:aws-ec2:us-west-1 
 {% endhighlight %}
 
 The management web console will start,
 followed by the web-app services in the locations specified
-(in `DEFAULT_LOCATIONS`, or as arguments on the command-line),
 creating the VM's as needed.
 Let's look at the management web console, on port 8081 (default credentials are admin/password):
 
@@ -309,7 +309,7 @@ and Singapore (AWS ap-southeast-1),
 as well as a few other places (wrong locations picked up for some AWS IP's!).
 This also shows the progress of the most recent tasks.
 
-Navigating to the details tab, we can view sensors, invoke effectors, control policies,
+Navigating to the "applications" tab, we can view sensors, invoke effectors, control policies,
 and track activity, 
 for instance if a cluster is slow to start and you want to find out what is going on
 (you'll find additional information in the `brooklyn.log` file).
@@ -318,9 +318,10 @@ Let's drill down on the Geoscaling DNS entity's sensors:
 [![Web Console Geoscaling Details](console-geoscaling-details-w700.png "Web Console Geoscaling Details")](console-geoscaling-details.png)
 
 Here we see it has chosen `brooklyn-csgFCzTM.geopaas.org` as the geo-load-balanced domain name.
-(Your will be under `yourname.geopaas.org`, unless you chose a different domain earlier.)
+(Yours will be under `yourname.geopaas.org`, unless you chose a different domain earlier.)
 We can also see the hosts it is forwarding to, one for each cluster, corresponding to the
 children of the Web Fabric (propagated from the nginx hostnames, in the case of the ControlledDynamicWebAppCluster instances).
+
 
 ### Checking the Web App
 
@@ -399,4 +400,3 @@ Here are some questions to think about and code challenges to give you a steer f
     This isn't for the faint-hearted, but whatever you create will certainly be of interest
     to people in the Brooklyn community.
     Please [let us know]({{ site.url }}/meta/contact.html) what you've built!
-

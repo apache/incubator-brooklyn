@@ -16,7 +16,7 @@ import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.driver.MockSshDriver
 import brooklyn.entity.group.Cluster
-import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.group.DynamicClusterImpl
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.location.Location
@@ -25,7 +25,8 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestEntity
+import brooklyn.test.entity.TestApplicationImpl
+import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.flags.SetFromFlag
 
 class AbstractControllerTest {
@@ -48,11 +49,11 @@ class AbstractControllerTest {
         loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines:machines)
         updates = new CopyOnWriteArrayList();
         
-        app = new TestApplication()
-        cluster = new DynamicCluster(parent:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
+        app = new TestApplicationImpl()
+        cluster = new DynamicClusterImpl(parent:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
         
         final AtomicInteger invokeCountForStart = new AtomicInteger(0);
-        controller = new AbstractController(
+        controller = new AbstractControllerImpl(
                 parent:app, 
                 serverPool:cluster, 
                 portNumberSensor:ClusteredEntity.HTTP_PORT,
@@ -161,7 +162,7 @@ class AbstractControllerTest {
     }
 }
 
-class ClusteredEntity extends TestEntity {
+class ClusteredEntity extends TestEntityImpl {
     public ClusteredEntity(Map flags=[:], Entity parent=null) { super(flags,parent) }
     public ClusteredEntity(Entity parent) { this([:],parent) }
     

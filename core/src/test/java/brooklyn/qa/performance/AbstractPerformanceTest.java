@@ -10,6 +10,7 @@ import org.testng.annotations.BeforeMethod;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.internal.DoubleSystemProperty;
 
 import com.google.common.base.Stopwatch;
@@ -50,7 +51,7 @@ public class AbstractPerformanceTest {
     public void setUp() {
         for (int i = 0; i < 5; i++) System.gc();
         loc = new SimulatedLocation();
-        app = new TestApplication();
+        app = new TestApplicationImpl();
     }
     
     @AfterMethod(alwaysRun=true)

@@ -1,11 +1,7 @@
 package brooklyn.entity.webapp.jboss;
 
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
-import brooklyn.entity.webapp.JavaWebAppSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
-import brooklyn.util.StringUtils;
+import static brooklyn.util.StringUtils.isEmpty;
+import static java.lang.String.format;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -13,8 +9,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static brooklyn.util.StringUtils.isEmpty;
-import static java.lang.String.format;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.webapp.JavaWebAppSshDriver;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.NetworkUtils;
 
 public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver {
 
@@ -22,10 +21,15 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
     public static final int DEFAULT_HTTP_PORT = 8080;
     private static final String PORT_GROUP_NAME = "ports-brooklyn";
 
-    public JBoss6SshDriver(JBoss6Server entity, SshMachineLocation machine) {
+    public JBoss6SshDriver(JBoss6ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
+    @Override
+    public JBoss6ServerImpl getEntity() {
+        return (JBoss6ServerImpl) super.getEntity();
+    }
+    
     protected String getLogFileLocation() {
         return format("%s/server/%s/log/server.log",getRunDir(),SERVER_TYPE);
     }
@@ -80,7 +84,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
                 format("sed -i.bk 's/<parameter>300<\\/parameter>/<parameter>%s<\\/parameter>/' $BJB",getPortIncrement())
                 ).execute();
 
-        ((JBoss6Server)entity).deployInitialWars();
+        getEntity().deployInitialWars();
     }
 
     @Override

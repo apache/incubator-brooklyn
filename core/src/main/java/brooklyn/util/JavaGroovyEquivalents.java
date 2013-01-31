@@ -1,6 +1,7 @@
 package brooklyn.util;
 
 import groovy.lang.Closure;
+import groovy.lang.GString;
 import groovy.time.TimeDuration;
 
 import java.util.Collection;
@@ -41,7 +42,22 @@ public class JavaGroovyEquivalents {
     public static String elvisString(Object preferred, Object fallback) {
         return elvis(asString(preferred), asString(fallback));
     }
+    public static <T> T elvis(T preferred, T fallback) {
+        return groovyTruth(preferred) ? preferred : fallback;
+    }
+    public static <T> T elvis(Object... preferences) {
+        if (preferences.length == 0) throw new IllegalArgumentException("preferences must not be empty for elvis");
+        for (Object contender : preferences) {
+            if (groovyTruth(contender)) return (T) fix(contender);
+        }
+        return (T) fix(preferences[preferences.length-1]);
+    }
     
+    public static Object fix(Object o) {
+        if (o instanceof GString) return (o.toString());
+        return o;
+    }
+
     public static String asString(Object o) {
         if (o==null) return null;
         return o.toString();

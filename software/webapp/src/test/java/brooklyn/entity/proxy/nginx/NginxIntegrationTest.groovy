@@ -11,9 +11,12 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.group.DynamicClusterImpl
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -22,7 +25,6 @@ import brooklyn.test.HttpTestUtils
 import brooklyn.test.WebAppMonitor
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
-
 /**
  * Test the operation of the {@link NginxController} class.
  */
@@ -36,12 +38,12 @@ public class NginxIntegrationTest {
     private NginxController nginx
     private DynamicCluster serverPool
 
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplication();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
     }
 
-    @AfterMethod(groups = "Integration", alwaysRun=true)
+    @AfterMethod(alwaysRun=true)
     public void shutdown() {
         if (app != null) Entities.destroyAll(app);
     }
@@ -51,20 +53,17 @@ public class NginxIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testWhenNoServersReturns404() {
-        def serverFactory = { throw new UnsupportedOperationException(); }
-        serverPool = new DynamicCluster(parent:app, factory:serverFactory, initialSize:0)
+        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.FACTORY, { throw new UnsupportedOperationException(); })
+                .configure("initialSize", 0));
         
-        nginx = new NginxController([
-                "parent" : app,
-                "serverPool" : serverPool,
-                "domain" : "localhost"
-            ])
-        
-        Entities.startManagement(app);
+        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", serverPool)
+                .configure("domain", "localhost"));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
-        assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(nginx, SoftwareProcess.SERVICE_UP, true);
         assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 404);
     }
 
@@ -73,28 +72,24 @@ public class NginxIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testCanStartupAndShutdown() {
-        def template = { Map properties -> new JBoss7Server(properties) }
+        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+                .configure("initialSize", 1)
+                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
-        serverPool = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
-        
-        nginx = new NginxController([
-	            "parent" : app,
-	            "serverPool" : serverPool,
-	            "domain" : "localhost",
-	            "portNumberSensor" : WebAppService.HTTP_PORT,
-            ])
-        
-        Entities.startManagement(app);
+        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", serverPool)
+                .configure("domain", "localhost")
+	            .configure("portNumberSensor", WebAppService.HTTP_PORT));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
         // App-servers and nginx has started
         assertEventually {        
             serverPool.members.each { 
-                assertTrue it.getAttribute(SoftwareProcessEntity.SERVICE_UP);
+                assertTrue it.getAttribute(SoftwareProcess.SERVICE_UP);
             }
-            assertTrue nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP);
+            assertTrue nginx.getAttribute(SoftwareProcess.SERVICE_UP);
         }
 
         // URLs reachable        
@@ -106,10 +101,10 @@ public class NginxIntegrationTest {
         app.stop();
 
         // Services have stopped
-        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
-        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(nginx.getAttribute(SoftwareProcess.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcess.SERVICE_UP));
         serverPool.members.each {
-            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+            assertFalse(it.getAttribute(SoftwareProcess.SERVICE_UP));
         }
     }
     
@@ -118,27 +113,24 @@ public class NginxIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testDomainless() {
-        def template = { Map properties -> new JBoss7Server(properties) }
+        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+                .configure("initialSize", 1)
+                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
-        serverPool = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
-        
-        nginx = new NginxController([
-                "parent" : app,
-                "serverPool" : serverPool,
-                "portNumberSensor" : WebAppService.HTTP_PORT,
-            ])
-        
-        Entities.startManagement(app);
+        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", serverPool)
+                .configure("domain", "localhost")
+                .configure("portNumberSensor", WebAppService.HTTP_PORT));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
         
         // App-servers and nginx has started
-        assertAttributeEventually(serverPool, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(serverPool, SoftwareProcess.SERVICE_UP, true);
         serverPool.members.each {
-            assertAttributeEventually(it, SoftwareProcessEntity.SERVICE_UP, true);
+            assertAttributeEventually(it, SoftwareProcess.SERVICE_UP, true);
         }
-        assertAttributeEventually(nginx, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(nginx, SoftwareProcess.SERVICE_UP, true);
 
         // URLs reachable
         assertUrlStatusCodeEventually(nginx.getAttribute(NginxController.ROOT_URL), 200);
@@ -149,32 +141,28 @@ public class NginxIntegrationTest {
         app.stop();
 
         // Services have stopped
-        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
-        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(nginx.getAttribute(SoftwareProcess.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcess.SERVICE_UP));
         serverPool.members.each {
-            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+            assertFalse(it.getAttribute(SoftwareProcess.SERVICE_UP));
         }
     }
     
     @Test(groups = "Integration")
     public void testTwoNginxesGetDifferentPorts() {
-        def serverFactory = { throw new UnsupportedOperationException(); }
-        serverPool = new DynamicCluster(parent:app, factory:serverFactory, initialSize:0)
+        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.FACTORY, { throw new UnsupportedOperationException(); })
+                .configure("initialSize", 0));
         
-        def nginx1 = new NginxController([
-                "parent" : app,
-                "serverPool" : serverPool,
-                "domain" : "localhost",
-                "port" : "14000+"
-            ]);
-        def nginx2 = new NginxController([
-            "parent" : app,
-            "serverPool" : serverPool,
-            "domain" : "localhost",
-            "port" : "14000+"
-        ])
-
-        Entities.startManagement(app);
+        NginxController nginx1 = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", serverPool)
+                .configure("domain", "localhost")
+                .configure("port", "14000+"));
+        
+        NginxController nginx2 = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", serverPool)
+                .configure("domain", "localhost")
+                .configure("port", "14000+"));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
 
@@ -186,8 +174,8 @@ public class NginxIntegrationTest {
         assertNotEquals(url1, url2, "Two nginxs should listen on different ports, not both on "+url1);
         
         // Nginx has started
-        assertAttributeEventually(nginx1, SoftwareProcessEntity.SERVICE_UP, true);
-        assertAttributeEventually(nginx2, SoftwareProcessEntity.SERVICE_UP, true);
+        assertAttributeEventually(nginx1, SoftwareProcess.SERVICE_UP, true);
+        assertAttributeEventually(nginx2, SoftwareProcess.SERVICE_UP, true);
 
         // Nginx reachable (returning default 404)
         assertUrlStatusCodeEventually(url1, 404);
@@ -198,14 +186,13 @@ public class NginxIntegrationTest {
     // FIXME test disabled -- reload isn't a problem, but #365 is
     @Test(enabled = false, groups = "Integration")
     public void testServiceContinuity() {
-        def template = { Map properties -> new JBoss7Server(properties) }
+        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+                .configure("initialSize", 1)
+                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
-        serverPool = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
-        
-        nginx = new NginxController(app, serverPool: serverPool);
-        
-        Entities.startManagement(app);
+        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", serverPool));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
 
@@ -241,10 +228,10 @@ public class NginxIntegrationTest {
         app.stop();
 
         // Services have stopped
-        assertFalse(nginx.getAttribute(SoftwareProcessEntity.SERVICE_UP));
-        assertFalse(serverPool.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+        assertFalse(nginx.getAttribute(SoftwareProcess.SERVICE_UP));
+        assertFalse(serverPool.getAttribute(SoftwareProcess.SERVICE_UP));
         serverPool.members.each {
-            assertFalse(it.getAttribute(SoftwareProcessEntity.SERVICE_UP));
+            assertFalse(it.getAttribute(SoftwareProcess.SERVICE_UP));
         }
     }
 
@@ -258,14 +245,13 @@ public class NginxIntegrationTest {
      */
     @Test(enabled=false, groups = "Integration")
     public void testContinuityNginxAndJboss() {
-        def template = { Map properties -> new JBoss7Server(properties) }
+        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+                .configure("initialSize", 1)
+                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
-        serverPool = new DynamicCluster(parent:app, factory:template, initialSize:1)
-        serverPool.setConfig(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL)
-        
-        nginx = new NginxController(app, serverPool: serverPool);
-        
-        Entities.startManagement(app);
+        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+                .configure("serverPool", serverPool));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
 

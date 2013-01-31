@@ -11,7 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
@@ -27,7 +27,6 @@ import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
-
 public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
 
     /*
@@ -41,8 +40,13 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     private static final String CONFIG_FILE = "standalone-brooklyn.xml";
     private static final String KEYSTORE_FILE = ".keystore";
     
-    public JBoss7SshDriver(JBoss7Server entity, SshMachineLocation machine) {
+    public JBoss7SshDriver(JBoss7ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
+    }
+
+    @Override
+    public JBoss7ServerImpl getEntity() {
+        return (JBoss7ServerImpl) super.getEntity();
     }
 
     @Override
@@ -133,7 +137,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         NetworkUtils.checkPortsValid(ports);
 
         // Check hostname is defined
-        String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME);
+        String hostname = entity.getAttribute(SoftwareProcess.HOSTNAME);
         Preconditions.checkNotNull(hostname, "AS 7 entity must set hostname otherwise server will only be visible on localhost");
         
         // Copy the install files to the run-dir
@@ -158,7 +162,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
         
         // Copy the initial wars to the deploys directory
-        ((JBoss7Server) entity).deployInitialWars();
+        getEntity().deployInitialWars();
     }
 
     @Override

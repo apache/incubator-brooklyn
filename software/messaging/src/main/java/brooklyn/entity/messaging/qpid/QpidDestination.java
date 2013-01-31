@@ -31,7 +31,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
     protected ObjectName virtualHostManager;
     protected ObjectName exchange;
     protected transient JmxHelper jmxHelper;
-    protected transient JmxFeed jmxFeed;
+    protected volatile JmxFeed jmxFeed;
 
     public QpidDestination() {
         this(MutableMap.of(), null);
@@ -46,6 +46,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
         super(properties, parent);
     }
 
+    // FIXME Should return QpidBroker; won't work if gets a proxy rather than "real" entity
     @Override
     public QpidBroker getParent() {
         return (QpidBroker) super.getParent();
@@ -58,7 +59,7 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
             if (virtualHost == null) virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME);
             setAttribute(QpidBroker.VIRTUAL_HOST_NAME, virtualHost);
             virtualHostManager = new ObjectName(format("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"%s\"", virtualHost));
-            jmxHelper = new JmxHelper(getParent());
+            jmxHelper = new JmxHelper((EntityLocal)getParent());
         } catch (MalformedObjectNameException e) {
             throw Exceptions.propagate(e);
         }

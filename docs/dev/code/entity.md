@@ -7,10 +7,17 @@ toc: /toc.json
 
 ## Things To Know
 
-All entities inherit from `AbstractEntity`, 
-usually through one of the following:
+All entities have an interface and an implementation. The methods on the interface 
+are its effectors; the interface also defines its sensors.
 
-* **`SoftwareProcessEntity`**:  if it's a software process
+Entities are created through the management context (rather than calling the  
+constructor directly). This returns a proxy for the entity rather than the real 
+instance, which is important in a distributed management plane.
+
+All entity implementations inherit from `AbstractEntity`, 
+often through one of the following:
+
+* **`SoftwareProcess`**:  if it's a software process
 * **`VanillaJavaApp`**:  if it's a plain-old-java app
 * **`JavaWebAppSoftwareProcess`**:  if it's a JVM-based web-app
 * **`WhirrEntity`**:  if it's a service launched using Whirr
@@ -18,13 +25,13 @@ usually through one of the following:
 
 Software-based processes tend to use *drivers* to install and
 launch the remote processes onto *locations* which support that driver type.
-For example, `StartStopSshDriver` is a common driver superclass,
+For example, `AbstractSoftwareProcessSshDriver` is a common driver superclass,
 targetting `SshMachineLocation` (a machine to which Brooklyn can ssh).
-The various `SoftwareProcess` entities above (and some the exemplars 
+The various `SoftwareProcess` entities above (and some of the exemplars 
 listed at the end of this page) have their own dedicated drivers.
 
-Finally, there are a collection of *traits* 
-in the package ``brooklyn.entity.trait`` providing common
+Finally, there are a collection of *traits*, such as `Resizable`, 
+in the package ``brooklyn.entity.trait``. These provide common
 sensors and effectors on entities, supplied as interfaces.
 Choose one (or more) as appropriate.
 
@@ -34,20 +41,35 @@ Choose one (or more) as appropriate.
 
 So to get started:
 
-1. Create your entity class, extending the appropriate selection from above
-2. Create the driver class, again extending as appropriate
-3. Wire the `entity.newDriver(Location)` method to the driver 
-4. Provide the implementation of missing lifecycle methods in your driver class (details below)
-5. Connect the sensors from your entity
+1. Create your entity interface, extending the appropriate selection from above,
+   to define the effectors and sensors.
+2. Include an annotation like `@ImplementedBy(YourEntityImpl.class)` on your interface,
+   where YourEntityImpl will be the class name for your entity implementation.
+3. Create your entity class, implementing your entity interface and extending the 
+   classes for your chosen entity super-types. Naming convention is a suffix "Impl"
+   for the entity class.
+4. Create a driver interface, again extending as appropriate (e.g. `SoftwareProcessDriver`).
+   The naming convention is to have a suffix "Driver". 
+5. Create the driver class, implementing your driver interface, and again extending as appropriate.
+   Naming convention is to have a suffix "SshDriver" for an ssh-based implementation.
+   The correct driver implementation is found using this naming convention, or via custom
+   namings provided by the `BasicEntityDriverFactory`.
+6. Wire the `public Class getDriverInterface()` method in the entity implementation, to specify
+   your driver interface.
+7. Provide the implementation of missing lifecycle methods in your driver class (details below)
+8. Connect the sensors from your entity (e.g. overriding `connectSensors()` of `SoftwareProcessImpl`)..
+   See the sensor feeds, such as `HttpFeed` and `JmxFeed`.
+
+Any JVM language can be used to write an entity. However use of pure Java is encouraged for
+entities in core brooklyn. 
 
 
 ## Helpful References
 
 A few handy pointers will help make it easy to build your own entities.
 Check out some of the exemplar existing entities
-(note, some of the other entities use a deprecated class hierarchy,
-obvious with the word *legacy* in the FQN; it is suggested to avoid these,
-looking at the ones below instead):
+(note, some of the other entities use deprecated utilities and a deprecated class 
+hierarchy; it is suggested to avoid these, looking at the ones below instead):
 
 * JBoss7Server
 * MySqlNode

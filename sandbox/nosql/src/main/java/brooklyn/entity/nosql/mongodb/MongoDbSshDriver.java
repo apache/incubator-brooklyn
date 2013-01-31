@@ -2,7 +2,7 @@ package brooklyn.entity.nosql.mongodb;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
@@ -51,7 +51,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     public void customize() {
         Map ports = ImmutableMap.of("port", getServerPort());
         NetworkUtils.checkPortsValid(ports);
-        String hostname = entity.getAttribute(SoftwareProcessEntity.HOSTNAME);
+        String hostname = entity.getAttribute(SoftwareProcess.HOSTNAME);
         String command = String.format("mkdir -p %s/data", getRunDir());
         newScript(CUSTOMIZING)
                 .updateTaskAndFailOnNonZeroResultCode()
@@ -69,7 +69,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     @Override
     public void launch() {
         List<String> commands = new LinkedList<String>();
-        String bindIpAddress = entity.getAttribute(SoftwareProcessEntity.HOSTNAME);
+        String bindIpAddress = entity.getAttribute(SoftwareProcess.HOSTNAME);
         Integer port = entity.getAttribute(MongoDbServer.PORT);
         String args = Joiner.on(" ").join(ImmutableList.of(
                 "--config", getConfFile(),

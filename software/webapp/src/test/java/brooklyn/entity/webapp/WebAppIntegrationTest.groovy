@@ -13,12 +13,14 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessEntity
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
+import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
 import brooklyn.entity.webapp.jboss.JBoss7Server
-import brooklyn.entity.webapp.tomcat.TomcatServer
+import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
+import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -26,6 +28,7 @@ import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.test.TestUtils.BooleanWithMessage
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.MutableMap
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
@@ -37,7 +40,7 @@ import com.google.common.collect.ImmutableSet
  * Tests that implementations of JavaWebApp can start up and shutdown, 
  * post request and error count metrics and deploy wars, etc.
  * 
- * Currently tests {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server}.
+ * Currently tests {@link TomcatServerImpl}, {@link JBoss6Server} and {@link JBoss7Server}.
  */
 public class WebAppIntegrationTest {
     
@@ -53,7 +56,7 @@ public class WebAppIntegrationTest {
 
     // The parent application entity for these tests
     private List<AbstractApplication> applications = new ArrayList<AbstractApplication>()
-    SoftwareProcessEntity entity
+    SoftwareProcess entity
     
 	static { TimeExtras.init() }
     
@@ -83,11 +86,7 @@ public class WebAppIntegrationTest {
     public void shutdownApp() {
         if (entity != null) {
             AbstractApplication app = entity.getApplication();
-            try {
-                entity.stop();
-            } finally {
-                if (app != null) Entities.destroyAll(app);
-            }
+            if (app != null) Entities.destroyAll(app);
         }
     }
 
@@ -95,7 +94,7 @@ public class WebAppIntegrationTest {
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
-        Integer shutdownPort = entity?.getAttribute(TomcatServer.SHUTDOWN_PORT)
+        Integer shutdownPort = entity?.getAttribute(TomcatServerImpl.SHUTDOWN_PORT)
         
         if (shutdownPort != null) {
             boolean socketClosed = new Repeater("Checking Tomcat has shut down")
@@ -131,27 +130,27 @@ public class WebAppIntegrationTest {
      * @return
      */
     private TestApplication newTestApplication() {
-        TestApplication ta = new TestApplication()
+        TestApplication ta = new TestApplicationImpl()
         Entities.startManagement(ta);
         applications.add(ta)
         return ta
     }
 
     /**
-     * Provides instances of {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
+     * Provides instances of {@link TomcatServerImpl}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
      *
      * TODO combine the data provider here with live integration test
      *
      * @see WebAppLiveIntegrationTest#basicEntities()
      */
     @DataProvider(name = "basicEntities")
-    public JavaWebAppSoftwareProcess[][] basicEntities() {
+    public JavaWebAppSoftwareProcessImpl[][] basicEntities() {
 		//FIXME we should start the application, not the entity
-        TomcatServer tomcat = new TomcatServer(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        TomcatServerImpl tomcat = new TomcatServerImpl(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         Entities.manage(tomcat);
-        JBoss6Server jboss6 = new JBoss6Server( parent:newTestApplication(), portIncrement:PORT_INCREMENT);
+        JBoss6Server jboss6 = new JBoss6ServerImpl( parent:newTestApplication(), portIncrement:PORT_INCREMENT);
         Entities.manage(jboss6);
-        JBoss7Server jboss7 = new JBoss7Server(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
+        JBoss7Server jboss7 = new JBoss7ServerImpl(parent:newTestApplication(), httpPort:DEFAULT_HTTP_PORT);
         Entities.manage(jboss7);
         return [ 
             [ tomcat ],
@@ -164,7 +163,7 @@ public class WebAppIntegrationTest {
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void canStartAndStop(SoftwareProcessEntity entity) {
+    public void canStartAndStop(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=canStartAndStop; entity="+entity+"; app="+entity.getApplication())
         
@@ -181,7 +180,7 @@ public class WebAppIntegrationTest {
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void testReportsServiceDownWhenKilled(SoftwareProcessEntity entity) {
+    public void testReportsServiceDownWhenKilled(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication())
         
@@ -202,14 +201,14 @@ public class WebAppIntegrationTest {
      * connecting to a non-existent URL several times.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void publishesRequestAndErrorCountMetrics(SoftwareProcessEntity entity) {
+    public void publishesRequestAndErrorCountMetrics(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=publishesRequestAndErrorCountMetrics; entity="+entity+"; app="+entity.getApplication())
         
         entity.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
         
         executeUntilSucceeds(timeout:10*SECONDS) {
-            assertTrue entity.getAttribute(SoftwareProcessEntity.SERVICE_UP)
+            assertTrue entity.getAttribute(SoftwareProcess.SERVICE_UP)
         }
         
         String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist"
@@ -243,7 +242,7 @@ public class WebAppIntegrationTest {
      * fall to zero after a period of no activity.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void publishesRequestsPerSecondMetric(SoftwareProcessEntity entity) {
+    public void publishesRequestsPerSecondMetric(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=publishesRequestsPerSecondMetric; entity="+entity+"; app="+entity.getApplication())
         
@@ -309,7 +308,7 @@ public class WebAppIntegrationTest {
      * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
-    public void publishesZeroRequestsPerSecondMetricRepeatedly(SoftwareProcessEntity entity) {
+    public void publishesZeroRequestsPerSecondMetricRepeatedly(SoftwareProcess entity) {
         this.entity = entity
         log.info("test=publishesZeroRequestsPerSecondMetricRepeatedly; entity="+entity+"; app="+entity.getApplication())
         
@@ -365,17 +364,17 @@ public class WebAppIntegrationTest {
 				"" // no sub-page path
             ]
         } + [
-            [   new TomcatServer(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),newTestApplication()),
+            [   new TomcatServerImpl(MutableMap.of("httpPort",DEFAULT_HTTP_PORT),newTestApplication()),
                 "swf-booking-mvc.war",
                 "swf-booking-mvc/",
 				"spring/intro",
             ],
             // FIXME seam-booking does not work
-//            [   new JBoss6Server(parent:application, portIncrement:PORT_INCREMENT),
+//            [   new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT),
 //				"seam-booking-as6.war",
 //                "seam-booking-as6/",
 //            ],
-//            [   new JBoss7Server(parent:application, httpPort:DEFAULT_HTTP_PORT),
+//            [   new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT),
 //                "seam-booking-as7.war",
 //                "seam-booking-as7/",
 //            ],
@@ -386,7 +385,7 @@ public class WebAppIntegrationTest {
      * Tests given entity can deploy the given war.  Checks given httpURL to confirm success.
      */
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
-    public void initialRootWarDeployments(SoftwareProcessEntity entity, String war, 
+    public void initialRootWarDeployments(SoftwareProcess entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity
         log.info("test=initialRootWarDeployments; entity="+entity+"; app="+entity.getApplication())
@@ -402,13 +401,13 @@ public class WebAppIntegrationTest {
             // TODO get this URL from a WAR file entity
             assertTrue urlRespondsWithStatusCode200(entity.getAttribute(WebAppService.ROOT_URL)+urlSubPathToPageToQuery)
             
-            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/"))
+            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcessImpl.DEPLOYED_WARS), ImmutableSet.of("/"))
             true
         }
     }
 	
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
-    public void initialNamedWarDeployments(SoftwareProcessEntity entity, String war, 
+    public void initialNamedWarDeployments(SoftwareProcess entity, String war, 
 			String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity
         log.info("test=initialNamedWarDeployments; entity="+entity+"; app="+entity.getApplication())
@@ -426,7 +425,7 @@ public class WebAppIntegrationTest {
     }
 	
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
-    public void testWarDeployAndUndeploy(JavaWebAppSoftwareProcess entity, String war, 
+    public void testWarDeployAndUndeploy(JavaWebAppSoftwareProcessImpl entity, String war, 
             String urlSubPathToWebApp, String urlSubPathToPageToQuery) {
         this.entity = entity;
         log.info("test=testWarDeployAndUndeploy; entity="+entity+"; app="+entity.getApplication())
@@ -441,7 +440,7 @@ public class WebAppIntegrationTest {
         executeUntilSucceeds(abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity
             assertTrue urlRespondsWithStatusCode200(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname/"+urlSubPathToPageToQuery)
-            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/myartifactname"))
+            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcessImpl.DEPLOYED_WARS), ImmutableSet.of("/myartifactname"))
             true
         }
         
@@ -450,7 +449,7 @@ public class WebAppIntegrationTest {
         executeUntilSucceeds(abortOnError:false, timeout:60*SECONDS) {
             // TODO get this URL from a WAR file entity
             assertEquals(urlRespondsStatusCode(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname"+urlSubPathToPageToQuery), 404);
-            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of())
+            assertEquals(entity.getAttribute(JavaWebAppSoftwareProcessImpl.DEPLOYED_WARS), ImmutableSet.of())
             true
         }
     }

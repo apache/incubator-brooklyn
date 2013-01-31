@@ -1,9 +1,9 @@
 package brooklyn.entity.basic
 
-import java.util.concurrent.CancellationException
+import static com.google.common.base.Preconditions.checkNotNull
+
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.ExecutionException
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,7 +17,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityType
 import brooklyn.entity.Group
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
-import brooklyn.entity.basic.EntityReferences.EntityReference
+import brooklyn.entity.proxying.InternalEntityFactory
 import brooklyn.entity.rebind.BasicEntityRebindSupport
 import brooklyn.entity.rebind.RebindSupport
 import brooklyn.event.AttributeSensor
@@ -28,12 +28,12 @@ import brooklyn.event.basic.AttributeMap
 import brooklyn.event.basic.AttributeSensorAndConfigKey
 import brooklyn.event.basic.BasicNotificationSensor
 import brooklyn.location.Location
+import brooklyn.management.EntityManager
 import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
 import brooklyn.management.SubscriptionContext
 import brooklyn.management.SubscriptionHandle
 import brooklyn.management.Task
-import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.EntityManagementSupport
 import brooklyn.management.internal.SubscriptionTracker
 import brooklyn.mementos.EntityMemento
@@ -45,6 +45,7 @@ import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.text.Identifiers
 
+import com.google.common.annotations.Beta
 import com.google.common.base.Objects
 import com.google.common.base.Objects.ToStringHelper
 import com.google.common.collect.ImmutableSet
@@ -52,18 +53,31 @@ import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
 
 /**
- * Default {@link Entity} implementation.
+ * Default {@link Entity} implementation, which should be extended whenever implementing an entity.
  *
- * Provides several common fields ({@link #name}, {@link #id});
- * a map {@link #config} which contains arbitrary config data;
- * sensors and effectors; policies; managementContext.
- * <p>
- * Fields in config can be accessed (get and set) without referring to config,
- * (through use of propertyMissing). Note that config is typically inherited
- * by children, whereas the fields are not. (Attributes cannot be so accessed,
- * nor are they inherited.)
+ * Provides several common fields ({@link #name}, {@link #id}), and supports the core features of
+ * an entity such as configuration keys, attributes, subscriptions and effector invocation.
+ * 
+ * Though currently Groovy code, this is very likely to change to pure Java in a future release of 
+ * Brooklyn so Groovy'isms should not be relied on.
+ * 
+ * Sub-classes should have a no-argument constructor. When brooklyn creates an entity, it will:
+ * <ol>
+ *   <li>Construct the entity via the no-argument constructor
+ *   <li>Set the managment context
+ *   <li>Set the proxy, which should be used by everything else when referring to this entity
+ *       (except for drivers/policies that are attached to the entity, which can be given a 
+ *       reference to this entity itself).
+ *   <li>Configure the entity, first via the "flags" map and then via configuration keys
+ *   <li>Set  the parent
+ * </ol>
+ * 
+ * The legacy (pre 0.5) mechanism for creating entities is for others to call the constructor directly.
+ * This is now deprecated.
+ * 
+ * Note that config is typically inherited by children, whereas the fields and attributes are not.
  */
-public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, GroovyInterceptable {
+public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, EntityInternal, GroovyInterceptable {
     
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class)
     static { BrooklynLanguageExtensions.init(); }
@@ -78,6 +92,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     String displayName
     
+    private Entity selfProxy;
     private volatile Entity parent
     private volatile Application application
     final EntityCollectionReference<Group> groups = new EntityCollectionReference<Group>(this);
@@ -97,7 +112,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     /**
      * Whether we are still being constructed, in which case never warn in "assertNotYetOwned"
      */
-    private boolean preConfigured = true;
+    private boolean inConstruction = true;
     
     private final EntityDynamicType entityType;
     
@@ -123,12 +138,34 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     protected transient SubscriptionTracker _subscriptionTracker;
 
+    private final boolean _legacyConstruction;
+    
+    public AbstractEntity() {
+        this([:], null)
+    }
+
+    /**
+     * @deprecated since 0.5; instead use no-arg constructor with EntityManager().createEntity(spec)
+     */
+    @Deprecated
+    public AbstractEntity(Map flags) {
+        this(flags, null);
+    }
+
+    /**
+     * @deprecated since 0.5; instead use no-arg constructor with EntityManager().createEntity(spec)
+     */
+    @Deprecated
     public AbstractEntity(Entity parent) {
-        this([:], parent)
+        this([:], parent);
     }
 
     // FIXME don't leak this reference in constructor - even to utils
-    public AbstractEntity(Map flags=[:], Entity parent=null) {
+    /**
+     * @deprecated since 0.5; instead use no-arg constructor with EntityManager().createEntity(spec)
+     */
+    @Deprecated
+    public AbstractEntity(Map flags, Entity parent) {
         this.@skipInvokeMethodEffectorInterception.set(true)
         try {
             if (flags==null) {
@@ -155,16 +192,52 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             // TODO Don't let `this` reference escape during construction
             entityType = new EntityDynamicType(this);
             
-            def checkWeGetThis = configure(flags);
-            assert this == checkWeGetThis : "$this configure method does not return itself; returns $checkWeGetThis instead"
-
-            preConfigured = false;
+            _legacyConstruction = !InternalEntityFactory.FactoryConstructionTracker.isConstructing();
+            
+            if (_legacyConstruction) {
+                LOG.warn("Deprecated use of old-style entity construction for "+getClass().getName()+"; instead use EntityManager().createEntity(spec)");
+                def checkWeGetThis = configure(flags);
+                assert this == checkWeGetThis : "$this configure method does not return itself; returns $checkWeGetThis instead"
+            }
+            
+            inConstruction = false;
             
         } finally { this.@skipInvokeMethodEffectorInterception.set(false) }
     }
 
+    public int hashCode() {
+        return id.hashCode();
+    }
+    
+    public boolean equals(Object o) {
+        return o != null && (o.is(this) || o.is(selfProxy));
+    }
+    
+    protected boolean isLegacyConstruction() {
+        return _legacyConstruction;
+    }
+    
     public String getId() {
         return id;
+    }
+    
+    public void setProxy(Entity proxy) {
+        if (selfProxy != null) throw new IllegalStateException("Proxy is already set; cannot reset proxy for "+toString());
+        this.@selfProxy = checkNotNull(proxy, "proxy");
+    }
+    
+    public Entity getProxy() {
+        return this.@selfProxy;
+    }
+    
+    /**
+     * Returns the proxy, or if not available (because using legacy code) then returns the real entity.
+     * This method will be deleted in a future release; it will be kept while deprecated legacy code
+     * still exists that creates entities without setting the proxy.
+     */
+    @Beta
+    public Entity getProxyIfAvailable() {
+        return getProxy() ?: this;
     }
     
     /** @deprecated since 0.4.0 now handled by EntityMangementSupport */
@@ -198,9 +271,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     public AbstractEntity configure(Map flags=[:]) {
         assertNotYetOwned()
         
+        // FIXME Need to set parent with proxy, rather than `this`
         Entity suppliedParent = flags.remove('parent') ?: null
-        if (suppliedParent) suppliedParent.addChild(this)
-
+        if (suppliedParent) {
+            suppliedParent.addChild(getProxyIfAvailable())
+        }
+        
         Map<ConfigKey,Object> suppliedOwnConfig = flags.remove('config')
         if (suppliedOwnConfig != null) {
             for (Map.Entry<ConfigKey, Object> entry : suppliedOwnConfig.entrySet()) {
@@ -255,6 +331,28 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return this;
     }
 
+    public void setManagementContext(ManagementContext managementContext) {
+        getManagementSupport().setManagementContext(managementContext);
+    }
+
+    /**
+     * Called by framework (in new-style entities) after configuring, setting parent, etc,
+     * but before a reference to this entity is shared with other entities.
+     * 
+     * To preserve backwards compatibility for if the entity is constructed directly, one
+     * can add to the start method the code below, but that means it will be called after
+     * references to this entity have been shared with other entities.
+     * <pre>
+     * {@code
+     * if (isLegacyConstruction()) {
+     *     postConstruct();
+     * }
+     * }
+     * </pre>
+     */
+    public void postConstruct() {
+    }
+    
     /**
      * Adds this as a child of the given entity; registers with application if necessary.
      */
@@ -282,8 +380,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         
         parent = entity
         //previously tested entity!=null but that should be guaranteed?
-        entity.addChild(this)
-        configsInternal.setInheritedConfig(entity.getAllConfig());
+        entity.addChild(getProxyIfAvailable())
+        configsInternal.setInheritedConfig(((EntityInternal)entity).getAllConfig());
         previouslyOwned = true
         
         getApplication()
@@ -302,7 +400,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         if (parent == null) return
         Entity oldParent = parent
         parent = null
-        oldParent?.removeChild(this)
+        oldParent?.removeChild(getProxyIfAvailable())
     }
     
     @Override
@@ -320,7 +418,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         synchronized (children) {
             if (child == null) throw new NullPointerException("child must not be null (for entity "+this+")")
             if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
-            child.setParent(this)
+            child.setParent(getProxyIfAvailable())
             children.add(child)
             
             getManagementSupport().getEntityChangeListener().onChildrenChanged();
@@ -416,7 +514,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             if (this.@application.id != app.id) {
                 throw new IllegalStateException("Cannot change application of entity (attempted for $this from ${this.application} to ${app})")
             }
-            return;
         }
         this.application = app;
     }
@@ -433,6 +530,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return getManagementSupport().getManagementContext(false);
     }
 
+    protected EntityManager getEntityManager() {
+        return getManagementSupport().getManagementContext(true).getEntityManager();
+    }
+    
     @Override
     public EntityType getEntityType() {
         return entityType.getSnapshot();
@@ -468,6 +569,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     /**
      * Should be invoked at end-of-life to clean up the item.
      */
+    @Override
     public void destroy() {
         // TODO we need some way of deleting stale items
     }
@@ -544,9 +646,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return configsInternal.getConfig(key, defaultValue);
     }
 
+    // TODO assertNotYetManaged would be a better name?
     protected void assertNotYetOwned() {
-        if (!preConfigured && getManagementSupport().isDeployed())
+        if (!inConstruction && getManagementSupport().isDeployed()) {
             LOG.warn("configuration being made to $this after deployment; may not be supported in future versions");
+        }
         //throw new IllegalStateException("Cannot set configuration $key on active entity $this")
     }
 
@@ -588,7 +692,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     public void refreshInheritedConfig() {
         if (getParent() != null) {
-            configsInternal.setInheritedConfig(getParent().getAllConfig())
+            configsInternal.setInheritedConfig(((EntityInternal)getParent()).getAllConfig())
         } else {
             configsInternal.clearInheritedConfig();
         }
@@ -598,7 +702,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     void refreshInheritedConfigOfChildren() {
         children.get().each {
-            ((AbstractEntity)it).refreshInheritedConfig()
+            ((EntityInternal)it).refreshInheritedConfig()
         }
     }
 
@@ -606,7 +710,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return configsInternal;
     }
     
-    public Map<ConfigKey,Object> getAllConfig() {
+    public Map<ConfigKey<?>,Object> getAllConfig() {
         return configsInternal.getAllConfig();
     }
 
@@ -644,18 +748,20 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      *
      * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
      */
-    protected boolean unsubscribe(Entity producer) {
+    @Override
+    public boolean unsubscribe(Entity producer) {
         return subscriptionTracker.unsubscribe(producer)
     }
 
     /**
-    * Unsubscribes the given handle.
-    *
-    * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
-    */
-   protected boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
-       return subscriptionTracker.unsubscribe(producer, handle)
-   }
+     * Unsubscribes the given handle.
+     *
+     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+     */
+    @Override
+    public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+        return subscriptionTracker.unsubscribe(producer, handle)
+    }
 
     public synchronized SubscriptionContext getSubscriptionContext() {
         return getManagementSupport().getSubscriptionContext();
@@ -715,16 +821,16 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     @Override
-    public void addPolicy(AbstractPolicy policy) {
+    public void addPolicy(Policy policy) {
         policies.add(policy)
-        policy.setEntity(this)
+        ((AbstractPolicy)policy).setEntity(this)
         
         getManagementSupport().getEntityChangeListener().onPoliciesChanged();
     }
 
     @Override
-    boolean removePolicy(AbstractPolicy policy) {
-        policy.destroy()
+    boolean removePolicy(Policy policy) {
+        ((AbstractPolicy)policy).destroy()
         boolean changed = policies.remove(policy)
         
         if (changed) {
@@ -752,14 +858,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     @Override
-    public void addEnricher(AbstractEnricher enricher) {
+    public void addEnricher(Enricher enricher) {
         enrichers.add(enricher)
-        enricher.setEntity(this)
+        ((AbstractEnricher)enricher).setEntity(this)
     }
 
     @Override
-    boolean removeEnricher(AbstractEnricher enricher) {
-        enricher.destroy()
+    boolean removeEnricher(Enricher enricher) {
+        ((AbstractEnricher)enricher).destroy()
         return enrichers.remove(enricher)
     }
 
@@ -788,7 +894,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     @Override
     public <T> void emitInternal(Sensor<T> sensor, T val) {
-        subscriptionContext?.publish(sensor.newEvent(this, val))
+        subscriptionContext?.publish(sensor.newEvent(getProxyIfAvailable(), val))
     }
 
     // -------- EFFECTORS --------------

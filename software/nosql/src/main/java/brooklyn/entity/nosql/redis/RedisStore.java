@@ -10,7 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.nosql.DataStore;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.adapter.FunctionSensorAdapter;
@@ -27,12 +28,12 @@ import brooklyn.util.flags.SetFromFlag;
  *
  * TODO add sensors with Redis statistics using INFO command
  */
-public class RedisStore extends SoftwareProcessEntity implements DataStore {
+public class RedisStore extends SoftwareProcessImpl implements DataStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class);
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "2.6.7");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.6.7");
 
     public static final PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", 6379);
     public static final ConfigKey<String> REDIS_CONFIG_FILE = new BasicConfigKey<String>(String.class, "redis.config.file", "Redis user configuration file");

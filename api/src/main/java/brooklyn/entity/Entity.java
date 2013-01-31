@@ -16,6 +16,8 @@ import brooklyn.policy.Policy;
 /**
  * The basic interface for a Brooklyn entity.
  * 
+ * Implementors of entities are strongly encouraged to extend {@link AbstractEntity}.
+ * 
  * @see AbstractEntity
  */
 public interface Entity extends Serializable, Rebindable<EntityMemento> {
@@ -88,37 +90,37 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
     boolean removeChild(Entity child);
     
     /**
-     * @deprecated see getParent()
+     * @deprecated since 0.5; see getParent()
      */
     @Deprecated
     Entity getOwner();
 
     /** 
-     * @deprecated see getChildren()
+     * @deprecated since 0.5; see getChildren()
      */
     @Deprecated
     Collection<Entity> getOwnedChildren();
     
     /**
-     * @deprecated see setOwner(Entity)
+     * @deprecated since 0.5; see setOwner(Entity)
      */
     @Deprecated
     Entity setOwner(Entity group);
     
     /**
-     * @deprecated see clearParent()
+     * @deprecated since 0.5; see clearParent()
      */
     @Deprecated
     void clearOwner();
     
     /** 
-     * @deprecated see addChild(Entity)
+     * @deprecated since 0.5; see addChild(Entity)
      */
     @Deprecated
     Entity addOwnedChild(Entity child);
     
     /** 
-     * @deprecated see removeChild(Entity)
+     * @deprecated since 0.5; see removeChild(Entity)
      */
     @Deprecated
     boolean removeOwnedChild(Entity child);
@@ -168,4 +170,26 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
      * Invokes the given effector, with the given parameters to that effector.
      */
     <T> Task<T> invoke(Effector<T> eff, Map<String,?> parameters);
+    
+    /**
+     * Adds the given policy to this entity. Also calls policy.setEntity if available.
+     */
+    void addPolicy(Policy policy);
+    
+    /**
+     * Removes the given policy from this entity. 
+     * @return True if the policy existed at this entity; false otherwise
+     */
+    boolean removePolicy(Policy policy);
+    
+    /**
+     * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
+     */
+    void addEnricher(Enricher enricher);
+    
+    /**
+     * Removes the given enricher from this entity. 
+     * @return True if the policy enricher at this entity; false otherwise
+     */
+    boolean removeEnricher(Enricher enricher);
 }

@@ -13,8 +13,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionHandle;
@@ -34,9 +37,8 @@ public class LocalSubscriptionManagerTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplication();
-        entity = new TestEntity(app);
-        Entities.startManagement(app);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
     }
 
     private void manage(Entity ...entities) {
@@ -98,8 +100,8 @@ public class LocalSubscriptionManagerTest {
     
     @Test
     public void testSubscribeToMemberAttributeChange() throws Exception {
-        BasicGroup group = new BasicGroup(app);
-        TestEntity member = new TestEntity(app);
+        BasicGroup group = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class));
+        TestEntity member = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         manage(group, member);
         
         group.addMember(member);
@@ -126,7 +128,7 @@ public class LocalSubscriptionManagerTest {
     @Test(groups="Integration")
     public void testConcurrentSubscribingAndPublishing() throws Exception {
         final AtomicReference<Exception> threadException = new AtomicReference<Exception>();
-        TestEntity entity = new TestEntity(app);
+        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
         // Repeatedly subscribe and unsubscribe, so listener-set constantly changing while publishing to it.
         // First create a stable listener so it is always the same listener-set object.
@@ -137,10 +139,10 @@ public class LocalSubscriptionManagerTest {
                         @Override public void onEvent(SensorEvent<Object> event) {
                         }
                     };
-                    app.getSubscriptionContext().subscribe(null, TestEntity.SEQUENCE, noopListener);
+                    app.subscribe(null, TestEntity.SEQUENCE, noopListener);
                     while (!Thread.currentThread().isInterrupted()) {
-                        SubscriptionHandle handle = app.getSubscriptionContext().subscribe(null, TestEntity.SEQUENCE, noopListener);
-                        app.getSubscriptionContext().unsubscribe(handle);
+                        SubscriptionHandle handle = app.subscribe(null, TestEntity.SEQUENCE, noopListener);
+                        app.unsubscribe(null, handle);
                     }
                 } catch (Exception e) {
                     threadException.set(e);

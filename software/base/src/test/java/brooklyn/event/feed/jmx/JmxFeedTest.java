@@ -47,7 +47,9 @@ import brooklyn.test.GeneralisedDynamicMBean;
 import brooklyn.test.JmxService;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -89,13 +91,13 @@ public class JmxFeedTest {
         
         // Create an entity and configure it with the above JMX service
         app = new AbstractApplication() {};
-        entity = new TestEntity(app) {
+        entity = new TestEntityImpl(app) {
             @Override public void start(Collection<? extends Location> locs) {
                         super.start(locs);
-                        entity.setAttribute(Attributes.HOSTNAME, "localhost");
-                        entity.setAttribute(Attributes.JMX_PORT, 40123);
-                        entity.setAttribute(Attributes.RMI_PORT, 40124);
-                        entity.setAttribute(Attributes.JMX_CONTEXT);
+                        setAttribute(Attributes.HOSTNAME, "localhost");
+                        setAttribute(Attributes.JMX_PORT, 40123);
+                        setAttribute(Attributes.RMI_PORT, 40124);
+                        setAttribute(Attributes.JMX_CONTEXT);
                     }
         };
         Entities.startManagement(app);
@@ -314,7 +316,7 @@ public class JmxFeedTest {
     // Test reproduces functionality used in Monterey, for Venue entity being told of requestActor
     @Test
     public void testSubscribeToJmxNotificationAndEmitCorrespondingNotificationSensor() throws Exception {
-        TestApplication app = new TestApplication();
+        TestApplication app = new TestApplicationImpl();
         final EntityWithEmitter entity = new EntityWithEmitter(app);
         Entities.startManagement(app);
         try {

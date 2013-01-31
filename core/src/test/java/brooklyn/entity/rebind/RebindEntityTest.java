@@ -23,11 +23,15 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicGroup;
+import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.rebind.RebindLocationTest.MyLocation;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
@@ -41,6 +45,7 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
@@ -57,7 +62,9 @@ import com.google.common.io.Files;
 public class RebindEntityTest {
 
     // FIXME Add test about dependent configuration serialization?!
-
+    
+    // TODO Convert, so not calling entity constructors
+    
     private static final long TIMEOUT_MS = 10*1000;
     
     private ClassLoader classLoader = getClass().getClassLoader();
@@ -69,7 +76,7 @@ public class RebindEntityTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = new MyApplication();
+        origApp = new MyApplicationImpl();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -89,8 +96,8 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresEntityHierarchy() throws Exception {
-        MyEntity origE = new MyEntity(origApp);
-        MyEntity origE2 = new MyEntity(origE);
+        MyEntity origE = new MyEntityImpl(origApp);
+        MyEntity origE2 = new MyEntityImpl(origE);
         Entities.startManagement(origApp, managementContext);
         
         MyApplication newApp = rebind();
@@ -114,9 +121,9 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresGroupMembers() throws Exception {
-        MyEntity origE = new MyEntity(origApp);
-        MyEntity origE2 = new MyEntity(origApp);
-        BasicGroup origG = new BasicGroup(origApp);
+        MyEntity origE = new MyEntityImpl(origApp);
+        MyEntity origE2 = new MyEntityImpl(origApp);
+        BasicGroup origG = new BasicGroupImpl(origApp);
         origG.addMember(origE);
         origG.addMember(origE2);
         Entities.startManagement(origApp, managementContext);
@@ -130,7 +137,7 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresEntityConfig() throws Exception {
-        MyEntity origE = new MyEntity(MutableMap.of("myconfig", "myval"), origApp);
+        MyEntity origE = new MyEntityImpl(MutableMap.of("myconfig", "myval"), origApp);
         Entities.startManagement(origApp, managementContext);
         
         MyApplication newApp = rebind();
@@ -142,7 +149,7 @@ public class RebindEntityTest {
     public void testRestoresEntitySensors() throws Exception {
         AttributeSensor<String> myCustomAttribute = new BasicAttributeSensor<String>(String.class, "my.custom.attribute");
         
-        MyEntity origE = new MyEntity(origApp);
+        MyEntity origE = new MyEntityImpl(origApp);
         Entities.startManagement(origApp, managementContext);
         origE.setAttribute(myCustomAttribute, "myval");
         
@@ -153,7 +160,7 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresEntityIdAndDisplayName() throws Exception {
-        MyEntity origE = new MyEntity(MutableMap.of("displayName", "mydisplayname"), origApp);
+        MyEntity origE = new MyEntityImpl(MutableMap.of("displayName", "mydisplayname"), origApp);
         String eId = origE.getId();
         Entities.startManagement(origApp, managementContext);
         
@@ -165,31 +172,31 @@ public class RebindEntityTest {
     
     @Test
     public void testCanCustomizeRebind() throws Exception {
-        MyEntity2 origE = new MyEntity2(MutableMap.of("myfield", "myval"), origApp);
+        MyEntity2 origE = new MyEntity2Impl(MutableMap.of("myfield", "myval"), origApp);
         Entities.startManagement(origApp, managementContext);
         
         MyApplication newApp = rebind();
         
         MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity2.class));
-        assertEquals(newE.myfield, "myval");
+        assertEquals(newE.getMyfield(), "myval");
     }
     
     @Test
     public void testRebindsSubscriptions() throws Exception {
-        MyEntity2 origE = new MyEntity2(MutableMap.of("subscribe", true), origApp);
+        MyEntity2 origE = new MyEntity2Impl(MutableMap.of("subscribe", true), origApp);
         Entities.startManagement(origApp, managementContext);
         
         MyApplication newApp = rebind();
         MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity2.class));
         
         newApp.setAttribute(MyApplication.MY_SENSOR, "mysensorval");
-        TestUtils.assertEventually(Suppliers.ofInstance(newE.events), Predicates.equalTo(ImmutableList.of("mysensorval")));
+        TestUtils.assertEventually(Suppliers.ofInstance(newE.getEvents()), Predicates.equalTo(ImmutableList.of("mysensorval")));
     }
     
     @Test
     public void testHandlesReferencingOtherEntities() throws Exception {
-        MyEntity origOtherE = new MyEntity(origApp);
-        MyEntityReffingOthers origE = new MyEntityReffingOthers(
+        MyEntity origOtherE = new MyEntityImpl(origApp);
+        MyEntityReffingOthers origE = new MyEntityReffingOthersImpl(
                 MutableMap.builder()
                         .put("entityRef", origOtherE)
                         .build(),
@@ -208,7 +215,7 @@ public class RebindEntityTest {
     @Test
     public void testHandlesReferencingOtherLocations() throws Exception {
         MyLocation origLoc = new MyLocation();
-        MyEntityReffingOthers origE = new MyEntityReffingOthers(
+        MyEntityReffingOthers origE = new MyEntityReffingOthersImpl(
                 MutableMap.builder()
                         .put("locationRef", origLoc)
                         .build(),
@@ -227,11 +234,11 @@ public class RebindEntityTest {
 
     @Test
     public void testEntityManagementLifecycleAndVisibilityDuringRebind() throws Exception {
-        MyLatchingEntity.latching = false;
-        MyLatchingEntity origE = new MyLatchingEntity(origApp);
+        MyLatchingEntityImpl.latching = false;
+        MyLatchingEntity origE = new MyLatchingEntityImpl(origApp);
         Entities.startManagement(origApp, managementContext);
-        MyLatchingEntity.reset(); // after origE has been managed
-        MyLatchingEntity.latching = true;
+        MyLatchingEntityImpl.reset(); // after origE has been managed
+        MyLatchingEntityImpl.latching = true;
         
         // Serialize and rebind, but don't yet manage the app
         RebindTestUtils.waitForPersisted(origApp);
@@ -249,39 +256,39 @@ public class RebindEntityTest {
         try {
             thread.start();
             
-            assertTrue(MyLatchingEntity.reconstructStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            assertTrue(MyLatchingEntityImpl.reconstructStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
             assertNull(newManagementContext.getEntityManager().getEntity(origApp.getId()));
             assertNull(newManagementContext.getEntityManager().getEntity(origE.getId()));
-            assertTrue(MyLatchingEntity.managingStartedLatch.getCount() > 0);
+            assertTrue(MyLatchingEntityImpl.managingStartedLatch.getCount() > 0);
             
-            MyLatchingEntity.reconstructContinuesLatch.countDown();
-            assertTrue(MyLatchingEntity.managingStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            MyLatchingEntityImpl.reconstructContinuesLatch.countDown();
+            assertTrue(MyLatchingEntityImpl.managingStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
             assertNotNull(newManagementContext.getEntityManager().getEntity(origApp.getId()));
             assertNull(newManagementContext.getEntityManager().getEntity(origE.getId()));
-            assertTrue(MyLatchingEntity.managedStartedLatch.getCount() > 0);
+            assertTrue(MyLatchingEntityImpl.managedStartedLatch.getCount() > 0);
             
-            MyLatchingEntity.managingContinuesLatch.countDown();
-            assertTrue(MyLatchingEntity.managedStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            MyLatchingEntityImpl.managingContinuesLatch.countDown();
+            assertTrue(MyLatchingEntityImpl.managedStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
             assertNotNull(newManagementContext.getEntityManager().getEntity(origApp.getId()));
             assertNotNull(newManagementContext.getEntityManager().getEntity(origE.getId()));
-            MyLatchingEntity.managedContinuesLatch.countDown();
+            MyLatchingEntityImpl.managedContinuesLatch.countDown();
 
             thread.join(TIMEOUT_MS);
             assertFalse(thread.isAlive());
             
         } finally {
             thread.interrupt();
-            MyLatchingEntity.reset();
+            MyLatchingEntityImpl.reset();
         }
     }
     
     @Test(groups="Integration") // takes more than 4 seconds, due to assertContinually calls
     public void testSubscriptionAndPublishingOnlyActiveWhenEntityIsManaged() throws Exception {
-        MyLatchingEntity.latching = false;
-        MyLatchingEntity origE = new MyLatchingEntity(MutableMap.of("subscribe", MyApplication.MY_SENSOR, "publish", "myvaltopublish"), origApp);
+        MyLatchingEntityImpl.latching = false;
+        MyLatchingEntity origE = new MyLatchingEntityImpl(MutableMap.of("subscribe", MyApplication.MY_SENSOR, "publish", "myvaltopublish"), origApp);
         Entities.startManagement(origApp, managementContext);
-        MyLatchingEntity.reset(); // after origE has been managed
-        MyLatchingEntity.latching = true;
+        MyLatchingEntityImpl.reset(); // after origE has been managed
+        MyLatchingEntityImpl.latching = true;
 
         // Serialize and rebind, but don't yet manage the app
         RebindTestUtils.waitForPersisted(origApp);
@@ -300,51 +307,51 @@ public class RebindEntityTest {
             thread.start();
             final List<Object> events = new CopyOnWriteArrayList<Object>();
             
-            newManagementContext.getSubscriptionManager().subscribe(null, MyLatchingEntity.MY_SENSOR, new SensorEventListener<Object>() {
+            newManagementContext.getSubscriptionManager().subscribe(null, MyLatchingEntityImpl.MY_SENSOR, new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
                     events.add(event.getValue());
                 }});
 
             // In entity's reconstruct, publishes events are queued, and subscriptions don't yet take effect
-            assertTrue(MyLatchingEntity.reconstructStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            assertTrue(MyLatchingEntityImpl.reconstructStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
             newManagementContext.getSubscriptionManager().publish(new BasicSensorEvent<String>(MyApplication.MY_SENSOR, null, "myvaltooearly"));
             
-            TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(MyLatchingEntity.events), Predicates.equalTo(Collections.emptyList()));
+            TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(MyLatchingEntityImpl.events), Predicates.equalTo(Collections.emptyList()));
             TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(events), Predicates.equalTo(Collections.emptyList()));
             
 
             // When the entity is notified of "managing", then subscriptions take effect (but missed events not delivered); 
             // published events remain queued
-            MyLatchingEntity.reconstructContinuesLatch.countDown();
-            assertTrue(MyLatchingEntity.managingStartedLatch.getCount() > 0);
+            MyLatchingEntityImpl.reconstructContinuesLatch.countDown();
+            assertTrue(MyLatchingEntityImpl.managingStartedLatch.getCount() > 0);
 
             TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(events), Predicates.equalTo(Collections.emptyList()));
-            TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(MyLatchingEntity.events), Predicates.equalTo(Collections.emptyList()));
+            TestUtils.assertContinuallyFromJava(Suppliers.ofInstance(MyLatchingEntityImpl.events), Predicates.equalTo(Collections.emptyList()));
 
             newManagementContext.getSubscriptionManager().publish(new BasicSensorEvent<String>(MyApplication.MY_SENSOR, null, "myvaltoreceive"));
-            TestUtils.assertEventually(Suppliers.ofInstance(MyLatchingEntity.events), Predicates.equalTo(ImmutableList.of("myvaltoreceive")));
+            TestUtils.assertEventually(Suppliers.ofInstance(MyLatchingEntityImpl.events), Predicates.equalTo(ImmutableList.of("myvaltoreceive")));
 
             // When the entity is notified of "managed", its events are only then delivered
-            MyLatchingEntity.managingContinuesLatch.countDown();
-            assertTrue(MyLatchingEntity.managedStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            MyLatchingEntityImpl.managingContinuesLatch.countDown();
+            assertTrue(MyLatchingEntityImpl.managedStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
-            TestUtils.assertEventually(Suppliers.ofInstance(MyLatchingEntity.events), Predicates.equalTo(ImmutableList.of("myvaltoreceive")));
+            TestUtils.assertEventually(Suppliers.ofInstance(MyLatchingEntityImpl.events), Predicates.equalTo(ImmutableList.of("myvaltoreceive")));
             
-            MyLatchingEntity.managedContinuesLatch.countDown();
+            MyLatchingEntityImpl.managedContinuesLatch.countDown();
             
             thread.join(TIMEOUT_MS);
             assertFalse(thread.isAlive());
             
         } finally {
             thread.interrupt();
-            MyLatchingEntity.reset();
+            MyLatchingEntityImpl.reset();
         }
 
     }
     
     @Test
     public void testRestoresConfigKeys() throws Exception {
-        TestEntity origE = new TestEntity(origApp);
+        TestEntity origE = new TestEntityImpl(origApp);
         origE.setConfig(TestEntity.CONF_LIST_PLAIN, ImmutableList.of("val1", "val2"));
         origE.setConfig(TestEntity.CONF_MAP_PLAIN, ImmutableMap.of("akey", "aval"));
         Entities.startManagement(origApp, managementContext);
@@ -359,7 +366,7 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresListConfigKey() throws Exception {
-        TestEntity origE = new TestEntity(origApp);
+        TestEntity origE = new TestEntityImpl(origApp);
         origE.setConfig(TestEntity.CONF_LIST_THING.subKey(), "val1");
         origE.setConfig(TestEntity.CONF_LIST_THING.subKey(), "val2");
         Entities.startManagement(origApp, managementContext);
@@ -372,7 +379,7 @@ public class RebindEntityTest {
 
     @Test
     public void testRestoresMapConfigKey() throws Exception {
-        TestEntity origE = new TestEntity(origApp);
+        TestEntity origE = new TestEntityImpl(origApp);
         origE.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), "aval");
         origE.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval");
         Entities.startManagement(origApp, managementContext);
@@ -385,7 +392,7 @@ public class RebindEntityTest {
 
     @Test
     public void testRebindPreservesInheritedConfig() throws Exception {
-        MyEntity origE = new MyEntity(origApp);
+        MyEntity origE = new MyEntityImpl(origApp);
         origApp.setConfig(MyEntity.MY_CONFIG, "myValInSuper");
         Entities.startManagement(origApp, managementContext);
 
@@ -397,7 +404,7 @@ public class RebindEntityTest {
         assertEquals(newApp.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
         
         // This config should be inherited by dynamically-added children of app
-        MyEntity newE2 = new MyEntity(origApp);
+        MyEntity newE2 = new MyEntityImpl(origApp);
         Entities.manage(newE2);
         
         assertEquals(newE2.getConfig(MyEntity.MY_CONFIG), "myValInSuper");
@@ -406,7 +413,7 @@ public class RebindEntityTest {
 
     @Test
     public void testRebindPreservesGetConfigWithDefault() throws Exception {
-        MyEntity origE = new MyEntity(origApp);
+        MyEntity origE = new MyEntityImpl(origApp);
         Entities.startManagement(origApp, managementContext);
 
         assertNull(origE.getConfig(MyEntity.MY_CONFIG));
@@ -421,7 +428,7 @@ public class RebindEntityTest {
 
     @Test
     public void testRebindPersistsNullAttribute() throws Exception {
-        MyEntity origE = new MyEntity(origApp);
+        MyEntity origE = new MyEntityImpl(origApp);
         origE.setAttribute(MyEntity.MY_SENSOR, null);
         Entities.startManagement(origApp, managementContext);
 
@@ -438,38 +445,51 @@ public class RebindEntityTest {
         RebindTestUtils.checkCurrentMementoSerializable(origApp);
         return (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
-    
-    public static class MyApplication extends AbstractApplication {
-        private static final long serialVersionUID = 1L;
-        
+
+    // TODO Don't want to extend EntityLocal, but tests want to call app.setAttribute
+    @ImplementedBy(MyApplicationImpl.class)
+    public interface MyApplication extends Application, Startable, EntityLocal {
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
                         String.class, "test.app.mysensor", "My test sensor");
+    }
+    
+    public static class MyApplicationImpl extends AbstractApplication implements MyApplication {
+        private static final long serialVersionUID = 1L;
         
-        public MyApplication() {
+        public MyApplicationImpl() {
+            super();
         }
 
-        public MyApplication(Map flags) {
+        public MyApplicationImpl(Map flags) {
             super(flags);
         }
     }
-    
-    public static class MyEntity extends AbstractEntity implements Startable {
-        private static final long serialVersionUID = 1L;
-        
+
+    // TODO Don't want to extend EntityLocal, but tests want to call app.setAttribute
+    @ImplementedBy(MyEntityImpl.class)
+    public interface MyEntity extends Entity, Startable, EntityLocal {
         @SetFromFlag("myconfig")
         public static final ConfigKey<String> MY_CONFIG = new BasicConfigKey<String>(
                         String.class, "test.myentity.myconfig", "My test config");
 
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
                 String.class, "test.myentity.mysensor", "My test sensor");
+    }
+    
+    public static class MyEntityImpl extends AbstractEntity implements MyEntity {
+        private static final long serialVersionUID = 1L;
         
         private final Object dummy = new Object(); // so not serializable
 
-        public MyEntity(Entity parent) {
+        public MyEntityImpl() {
+            super();
+        }
+
+        public MyEntityImpl(Entity parent) {
             super(parent);
         }
         
-        public MyEntity(Map flags, Entity parent) {
+        public MyEntityImpl(Map flags, Entity parent) {
             super(flags, parent);
         }
 
@@ -486,8 +506,26 @@ public class RebindEntityTest {
         public void restart() {
         }
     }
+
+    // TODO Don't want to extend EntityLocal, but tests want to call app.setAttribute
+    @ImplementedBy(MyEntityReffingOthersImpl.class)
+    public interface MyEntityReffingOthers extends Entity, EntityLocal {
+        @SetFromFlag("entityRef")
+        public static final ConfigKey<Entity> ENTITY_REF_CONFIG = new BasicConfigKey<Entity>(
+                        Entity.class, "test.config.entityref", "Ref to other entity");
+
+        @SetFromFlag("locationRef")
+        public static final ConfigKey<Location> LOCATION_REF_CONFIG = new BasicConfigKey<Location>(
+                Location.class, "test.config.locationref", "Ref to other location");
+        
+        public static final AttributeSensor<Entity> ENTITY_REF_SENSOR = new BasicAttributeSensor<Entity>(
+                Entity.class, "test.attribute.entityref", "Ref to other entity");
+        
+        public static final AttributeSensor<Location> LOCATION_REF_SENSOR = new BasicAttributeSensor<Location>(
+                Location.class, "test.attribute.locationref", "Ref to other location");
+    }
     
-    public static class MyEntityReffingOthers extends AbstractEntity {
+    public static class MyEntityReffingOthersImpl extends AbstractEntity implements MyEntityReffingOthers {
         private static final long serialVersionUID = 1L;
         
         @SetFromFlag("entityRef")
@@ -506,18 +544,17 @@ public class RebindEntityTest {
         
         private final Object dummy = new Object(); // so not serializable
 
-        public MyEntityReffingOthers(Entity parent) {
+        public MyEntityReffingOthersImpl(Entity parent) {
             super(parent);
         }
         
-        public MyEntityReffingOthers(Map flags, Entity parent) {
+        public MyEntityReffingOthersImpl(Map flags, Entity parent) {
             super(flags, parent);
         }
     }
-    
-    public static class MyEntity2 extends AbstractEntity {
-        private static final long serialVersionUID = 1L;
-        
+
+    @ImplementedBy(MyEntity2.class)
+    public interface MyEntity2 extends Entity {
         @SetFromFlag("myconfig")
         public static final ConfigKey<String> MY_CONFIG = new BasicConfigKey<String>(
                         String.class, "test.myconfig", "My test config");
@@ -526,6 +563,14 @@ public class RebindEntityTest {
         public static final ConfigKey<Boolean> SUBSCRIBE = new BasicConfigKey<Boolean>(
                 Boolean.class, "test.subscribe", "Whether to do some subscriptions on re-bind", false);
         
+        public List<String> getEvents();
+        
+        public String getMyfield();
+    }
+    
+    public static class MyEntity2Impl extends AbstractEntity implements MyEntity2 {
+        private static final long serialVersionUID = 1L;
+        
         @SetFromFlag
         String myfield;
         
@@ -533,8 +578,20 @@ public class RebindEntityTest {
 
         private final Object dummy = new Object(); // so not serializable
 
-        public MyEntity2(Map flags, Entity parent) {
+        public MyEntity2Impl() {
+            super();
+        }
+
+        public MyEntity2Impl(Map flags, Entity parent) {
             super(flags, parent);
+        }
+
+        public List<String> getEvents() {
+            return events;
+        }
+
+        public String getMyfield() {
+            return myfield;
         }
         
         @Override
@@ -562,19 +619,9 @@ public class RebindEntityTest {
             };
         }
     }
-    
-    public static class MyLatchingEntity extends AbstractEntity {
-        private static final long serialVersionUID = 1L;
-        static volatile CountDownLatch reconstructStartedLatch;
-        static volatile CountDownLatch reconstructContinuesLatch;
-        static volatile CountDownLatch managingStartedLatch;
-        static volatile CountDownLatch managingContinuesLatch;
-        static volatile CountDownLatch managedStartedLatch;
-        static volatile CountDownLatch managedContinuesLatch;
 
-        static volatile boolean latching = false;
-        static volatile List<Object> events;
-
+    @ImplementedBy(MyLatchingEntityImpl.class)
+    public interface MyLatchingEntity extends Entity {
         @SetFromFlag("subscribe")
         public static final ConfigKey<AttributeSensor<?>> SUBSCRIBE = new BasicConfigKey(
                 AttributeSensor.class, "test.mylatchingentity.subscribe", "Sensor to subscribe to (or null means don't)", null);
@@ -585,6 +632,19 @@ public class RebindEntityTest {
 
         public static final AttributeSensor<String> MY_SENSOR = new BasicAttributeSensor<String>(
                 String.class, "test.mylatchingentity.mysensor", "My test sensor");
+    }
+    
+    public static class MyLatchingEntityImpl extends AbstractEntity implements MyLatchingEntity {
+        private static final long serialVersionUID = 1L;
+        static volatile CountDownLatch reconstructStartedLatch;
+        static volatile CountDownLatch reconstructContinuesLatch;
+        static volatile CountDownLatch managingStartedLatch;
+        static volatile CountDownLatch managingContinuesLatch;
+        static volatile CountDownLatch managedStartedLatch;
+        static volatile CountDownLatch managedContinuesLatch;
+
+        static volatile boolean latching = false;
+        static volatile List<Object> events;
 
         static void reset() {
             latching = false;
@@ -598,11 +658,15 @@ public class RebindEntityTest {
             managedContinuesLatch = new CountDownLatch(1);
         }
 
-        public MyLatchingEntity(Entity parent) {
+        public MyLatchingEntityImpl() {
+            super();
+        }
+
+        public MyLatchingEntityImpl(Entity parent) {
             super(parent);
         }
         
-        public MyLatchingEntity(Map flags, Entity parent) {
+        public MyLatchingEntityImpl(Map flags, Entity parent) {
             super(flags, parent);
         }
 
@@ -656,7 +720,7 @@ public class RebindEntityTest {
         public RebindSupport<EntityMemento> getRebindSupport() {
             return new BasicEntityRebindSupport(this) {
                 @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
-                    MyLatchingEntity.this.onReconstruct();
+                    MyLatchingEntityImpl.this.onReconstruct();
                 }
             };
         }

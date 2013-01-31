@@ -3,12 +3,13 @@ package brooklyn.policy.basic;
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
-import java.util.List
 import java.util.concurrent.CopyOnWriteArrayList
 
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicSensorEvent
@@ -34,9 +35,9 @@ public class PolicySubscriptionTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = new TestApplication();
-        entity = new TestEntity(parent:app);
-        entity2 = new TestEntity(parent:app);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         listener = new RecordingSensorEventListener();
         policy = new AbstractPolicy() {};
         entity.addPolicy(policy);
