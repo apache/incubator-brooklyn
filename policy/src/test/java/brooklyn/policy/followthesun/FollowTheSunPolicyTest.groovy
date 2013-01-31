@@ -199,8 +199,14 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         assertItemDistributionContinually([(containerA):[item1, item2], (containerB):[]])
     }
 
-    @Test(groups="Integration", invocationCount=20)
-    public void testRespectsMinPeriodBetweenExecsRepeated() {
+    // FIXME Failed in jenkins once with event times [2647, 2655]
+    // My guess is that there was a delay notifying the listener the first time
+    // (which happens async), causing the listener to be notified in rapid 
+    // succession. The policy execs probably happened with a 1000ms separation.
+    // 
+    // Marked as "Acceptance" due to time-sensitive nature :-(
+    @Test(groups=["Integration", "Acceptance"], invocationCount=20)
+    public void testRepeatedRespectsMinPeriodBetweenExecs() {
         testRespectsMinPeriodBetweenExecs();
     }
     
