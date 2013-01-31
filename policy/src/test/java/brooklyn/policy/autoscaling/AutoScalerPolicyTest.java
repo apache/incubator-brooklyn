@@ -5,6 +5,12 @@ import static brooklyn.test.TestUtils.executeUntilSucceeds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -290,10 +296,15 @@ public class AutoScalerPolicyTest {
     // Should come back to this, to make it less time sensitive.
     // FIXME Putting back to 100 to get gc-verbose info, to confirm it's a GC problem
     @Test(groups={"Integration"}, invocationCount=100)
-    public void testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired() throws Exception {
-        testResizeUpStabilizationDelayTakesMaxSustainedDesired();
+    public void testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired() throws Throwable {
+        try {
+            testResizeUpStabilizationDelayTakesMaxSustainedDesired();
+        } catch (Throwable t) {
+            dumpThreadsEtc();
+            throw t;
+        }
     }
-    
+
     @Test(groups="Integration")
     public void testResizeUpStabilizationDelayTakesMaxSustainedDesired() throws Exception {
         long resizeUpStabilizationDelay = 1100L;
@@ -406,8 +417,13 @@ public class AutoScalerPolicyTest {
     // FIXME decreased invocationCount from 100; see comment against testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired
     // FIXME Putting back to 100 to get gc-verbose info, to confirm it's a GC problem
     @Test(groups="Integration", invocationCount=100)
-    public void testRepeatedResizeDownStabilizationDelayTakesMinSustainedDesired() throws Exception {
-        testResizeDownStabilizationDelayTakesMinSustainedDesired();
+    public void testRepeatedResizeDownStabilizationDelayTakesMinSustainedDesired() throws Throwable {
+        try {
+            testResizeDownStabilizationDelayTakesMinSustainedDesired();
+        } catch (Throwable t) {
+            dumpThreadsEtc();
+            throw t;
+        }
     }
     
     @Test(groups="Integration")
@@ -509,5 +525,27 @@ public class AutoScalerPolicyTest {
                 assertEquals(resizable.getCurrentSize(), desired);
             }
         };
+    }
+    
+    public static void dumpThreadsEtc() {
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        ThreadInfo[] threads = threadMXBean.dumpAllThreads(true, true);
+        for (ThreadInfo thread : threads) {
+            System.out.println(thread.getThreadName()+" ("+thread.getThreadState()+")");
+            for (StackTraceElement stackTraceElement : thread.getStackTrace()) {
+                System.out.println("\t"+stackTraceElement);
+            }
+        }
+        
+        MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
+        MemoryUsage nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage();
+        System.out.println("Memory:");
+        System.out.println("\tHeap: used="+heapMemoryUsage.getUsed()+"; max="+heapMemoryUsage.getMax()+"; init="+heapMemoryUsage.getInit()+"; committed="+heapMemoryUsage.getCommitted());
+        System.out.println("\tNon-heap: used="+nonHeapMemoryUsage.getUsed()+"; max="+nonHeapMemoryUsage.getMax()+"; init="+nonHeapMemoryUsage.getInit()+"; committed="+nonHeapMemoryUsage.getCommitted());
+
+        OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+        System.out.println("OS:");
+        System.out.println("\tsysLoadAvg="+operatingSystemMXBean.getSystemLoadAverage()+"; availableProcessors="+operatingSystemMXBean.getAvailableProcessors()+"; arch="+operatingSystemMXBean.getArch());
     }
 }
