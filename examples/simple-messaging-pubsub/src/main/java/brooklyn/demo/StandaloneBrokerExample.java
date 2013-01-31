@@ -3,8 +3,8 @@ package brooklyn.demo;
 import java.util.List;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.qpid.QpidBroker;
 import brooklyn.entity.proxying.BasicEntitySpec;
@@ -52,7 +52,7 @@ public class StandaloneBrokerExample extends ApplicationBuilder {
 
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
-        BasicApplication app = (BasicApplication) new StandaloneBrokerExample()
+        StartableApplication app = new StandaloneBrokerExample()
                 .appDisplayName("Qpid app")
                 .manage(server.getManagementContext());
         

@@ -160,7 +160,7 @@ Alternatively you can just add a ``main`` method to the application class as fol
 
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
-        BasicApplication app = (BasicApplication) new WebClusterDatabaseExample()
+        StartableApplication app = new WebClusterDatabaseExample()
                 .appDisplayName("Brooklyn WebApp Cluster with Database example")
                 .manage(server.getManagementContext());
         

@@ -20,9 +20,9 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
@@ -53,7 +53,7 @@ import com.google.common.io.Files;
  * Starts hadoop and a webapp using hadoop in the location supplied (just one location),
  * configuring the webapp to connect to hadoop
  */
-public class WebClusterWithHadoopExample extends AbstractApplication implements BasicApplication {
+public class WebClusterWithHadoopExample extends AbstractApplication implements StartableApplication {
 
     private static final Logger log = LoggerFactory.getLogger(WebClusterWithHadoopExample.class);
 
@@ -201,7 +201,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
 
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
-        BasicApplication app = server.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(BasicApplication.class)
+        StartableApplication app = server.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(StartableApplication.class)
                 .displayName("Brooklyn Global Web Fabric with Hadoop Example")
                 .impl(WebClusterWithHadoopExample.class));
         Entities.startManagement(app, server.getManagementContext());

@@ -11,11 +11,11 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BasicApplication;
-import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 
@@ -37,12 +37,12 @@ public class InternalEntityFactoryTest {
     
     @Test
     public void testCreatesEntity() throws Exception {
-        EntitySpec<BasicApplication> spec = BasicEntitySpec.newInstance(BasicApplication.class);
-        BasicApplicationImpl app = (BasicApplicationImpl) factory.createEntity(spec);
+        EntitySpec<TestApplication> spec = BasicEntitySpec.newInstance(TestApplication.class);
+        TestApplicationImpl app = (TestApplicationImpl) factory.createEntity(spec);
         
         Entity proxy = app.getProxy();
         assertTrue(proxy instanceof Application, "proxy="+app);
-        assertFalse(proxy instanceof BasicApplicationImpl, "proxy="+app);
+        assertFalse(proxy instanceof TestApplicationImpl, "proxy="+app);
         
         assertEquals(proxy.getParent(), null);
         assertSame(proxy.getApplication(), proxy);
@@ -50,10 +50,10 @@ public class InternalEntityFactoryTest {
     
     @Test
     public void testCreatesProxy() throws Exception {
-        BasicApplication app = new BasicApplicationImpl();
+        TestApplication app = new TestApplicationImpl();
         Application proxy = factory.createEntityProxy(Application.class, app);
         
-        assertFalse(proxy instanceof BasicApplication, "proxy="+app);
+        assertFalse(proxy instanceof TestApplication, "proxy="+app);
         assertTrue(proxy instanceof EntityProxy, "proxy="+app);
     }
     

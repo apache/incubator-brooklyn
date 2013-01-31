@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.launcher.BrooklynLauncher;
@@ -48,7 +48,7 @@ public class SingleWebServerExample extends ApplicationBuilder {
         // TODO Want to parse, to handle multiple locations
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
-        BasicApplication app = ApplicationBuilder.builder()
+        StartableApplication app = ApplicationBuilder.builder()
                 .child(BasicEntitySpec.newInstance(JBoss7Server.class)
                         .configure("war", WAR_PATH)
                         .configure("httpPort", 8080))

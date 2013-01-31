@@ -11,5 +11,5 @@ import brooklyn.entity.trait.Startable;
  * @author aled
  */
 @ImplementedBy(BasicApplicationImpl.class)
-public interface BasicApplication extends Application, Startable {
+public interface BasicApplication extends StartableApplication {
 }

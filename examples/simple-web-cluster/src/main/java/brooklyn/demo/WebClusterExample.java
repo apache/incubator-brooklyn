@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
@@ -76,7 +76,7 @@ public class WebClusterExample extends ApplicationBuilder {
         // TODO Want to parse, to handle multiple locations
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
-        BasicApplication app = (BasicApplication) new WebClusterExample()
+        StartableApplication app = new WebClusterExample()
                 .appDisplayName("Brooklyn WebApp Cluster example")
                 .manage(server.getManagementContext());
 

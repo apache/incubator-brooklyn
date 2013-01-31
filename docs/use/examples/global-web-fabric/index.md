@@ -274,7 +274,7 @@ The code (which can safely be omitted) is as follows:
 
         List<Location> locs = new LocationRegistry().getLocationsById(Arrays.asList(locations));
 
-        BasicApplication app = (BasicApplication) new GlobalWebFabricExample()
+        StartableApplication app = new GlobalWebFabricExample()
                 .appDisplayName("Brooklyn Global Web Fabric Example")
                 .manage(server.getManagementContext());
         

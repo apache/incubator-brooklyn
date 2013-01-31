@@ -3,8 +3,8 @@ package brooklyn.example.cloudfoundry;
 import java.util.List;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -36,7 +36,7 @@ public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
 
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
-        BasicApplication app = (BasicApplication) new MovableCloudFoundryClusterExample()
+        StartableApplication app = new MovableCloudFoundryClusterExample()
                 .appDisplayName("Movable Web Cluster")
                 .manage(server.getManagementContext());
         

@@ -58,8 +58,8 @@ public abstract class ApplicationBuilder {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationBuilder.class);
 
-    public static Builder<BasicApplication> builder() {
-        return new Builder<BasicApplication>().app(BasicEntitySpec.newInstance(BasicApplication.class));
+    public static Builder<StartableApplication> builder() {
+        return new Builder<StartableApplication>().app(BasicEntitySpec.newInstance(BasicApplication.class));
     }
 
     public static <T extends Application> Builder<T> builder(EntitySpec<T> appSpec) {
@@ -126,15 +126,15 @@ public abstract class ApplicationBuilder {
     }
     
     protected volatile boolean managed = false;
-    private BasicEntitySpec<? extends Application, ?> appSpec;
+    private BasicEntitySpec<? extends StartableApplication, ?> appSpec;
     private ManagementContext managementContext;
-    private Application app;
+    private StartableApplication app;
     
     public ApplicationBuilder() {
         this.appSpec = BasicEntitySpec.newInstance(BasicApplication.class);
     }
 
-    public ApplicationBuilder(EntitySpec<? extends Application> appSpec) {
+    public ApplicationBuilder(EntitySpec<? extends StartableApplication> appSpec) {
         this.appSpec = WrappingEntitySpec.newInstance(appSpec);
     }
 
@@ -164,7 +164,7 @@ public abstract class ApplicationBuilder {
         return checkNotNull(managementContext, "must only be called after manage()");
     }
 
-    protected final Application getApp() {
+    protected final StartableApplication getApp() {
         return checkNotNull(app, "must only be called after manage()");
     }
 
@@ -173,11 +173,11 @@ public abstract class ApplicationBuilder {
      */
     protected abstract void doBuild();
 
-    public final Application manage() {
+    public final StartableApplication manage() {
         return manage(Entities.newManagementContext());
     }
     
-    public final Application manage(ManagementContext managementContext) {
+    public final StartableApplication manage(ManagementContext managementContext) {
         checkNotManaged();
         this.app = managementContext.getEntityManager().createEntity(appSpec);
         this.managementContext = managementContext;

@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
@@ -73,7 +73,7 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
 
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
-        BasicApplication app = (BasicApplication) new WebClusterDatabaseExample()
+        StartableApplication app = new WebClusterDatabaseExample()
                 .appDisplayName("Brooklyn WebApp Cluster with Database example")
                 .manage(server.getManagementContext());
         

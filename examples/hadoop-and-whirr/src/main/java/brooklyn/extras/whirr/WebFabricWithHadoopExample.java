@@ -25,9 +25,9 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
@@ -65,7 +65,7 @@ import com.google.common.io.Files;
  * Starts hadoop in the first location supplied, and the hadoop-friendly webapp in all other locations.
  * Webapp get configured via the configure.jsp page, plus supplying the proxy command, to connect to hadoop.
  */
-public class WebFabricWithHadoopExample extends AbstractApplication implements BasicApplication {
+public class WebFabricWithHadoopExample extends AbstractApplication implements StartableApplication {
 
     private static final Logger log = LoggerFactory.getLogger(WebFabricWithHadoopExample.class);
 
@@ -277,7 +277,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements B
 
         List<Location> locs = new LocationRegistry().getLocationsById(ImmutableList.of(location));
 
-        BasicApplication app = server.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(BasicApplication.class)
+        StartableApplication app = server.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(StartableApplication.class)
                 .displayName("Brooklyn Global Web Fabric with Hadoop Example")
                 .impl(WebFabricWithHadoopExample.class));
         Entities.startManagement(app, server.getManagementContext());
