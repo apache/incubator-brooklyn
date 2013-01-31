@@ -289,13 +289,14 @@ public class AutoScalerPolicyTest {
     }
 
     // FIXME decreased invocationCount from 100, because was failing in jenkins occassionally.
-    // Error was things like it taking a couple of seconds too long to scale-up. This is most
-    // likely caused by a full (slow) GC kicking in during the test. I tried System.gc in the
-    // setUp method (to avoid pauses mid-test), but still had errors.
+    // Error was things like it taking a couple of seconds too long to scale-up. This is *not*
+    // just caused by a slow GC (running with -verbose:gc shows during a failure several 
+    // incremental GCs that usually don't amount to more than 0.2 of a second at most, often less).
+    // Doing a thread-dump etc immediately after the too-long delay shows no strange thread usage,
+    // and shows releng3 system load averages of numbers like 1.73, 2.87 and 1.22.
     // 
-    // Should come back to this, to make it less time sensitive.
-    // FIXME Putting back to 100 to get gc-verbose info, to confirm it's a GC problem
-    @Test(groups={"Integration"}, invocationCount=100)
+    // Have put it in the "Acceptance" group for now.
+    @Test(groups={"Integration", "Acceptance"}, invocationCount=100)
     public void testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired() throws Throwable {
         try {
             testResizeUpStabilizationDelayTakesMaxSustainedDesired();
@@ -415,8 +416,8 @@ public class AutoScalerPolicyTest {
     }
 
     // FIXME decreased invocationCount from 100; see comment against testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired
-    // FIXME Putting back to 100 to get gc-verbose info, to confirm it's a GC problem
-    @Test(groups="Integration", invocationCount=100)
+    // Have put it in the "Acceptance" group for now.
+    @Test(groups={"Integration", "Acceptance"}, invocationCount=100)
     public void testRepeatedResizeDownStabilizationDelayTakesMinSustainedDesired() throws Throwable {
         try {
             testResizeDownStabilizationDelayTakesMinSustainedDesired();
