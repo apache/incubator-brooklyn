@@ -35,26 +35,33 @@ public class BrooklynWebServerTest {
     @Test
     public void verifyHttp() throws Exception {
         BrooklynWebServer webServer = new BrooklynWebServer(new LocalManagementContext(brooklynProperties));
-        webServer.start();
-
-        DefaultHttpClient httpclient = new DefaultHttpClient();
-
-        HttpGet httpget = new HttpGet(webServer.getRootUrl());
-        HttpResponse response = httpclient.execute(httpget);
-        HttpEntity entity = response.getEntity();
-        InputStream instream = entity.getContent();
+        try {
+            webServer.start();
+    
+            DefaultHttpClient httpclient = new DefaultHttpClient();
+    
+            HttpGet httpget = new HttpGet(webServer.getRootUrl());
+            HttpResponse response = httpclient.execute(httpget);
+            HttpEntity entity = response.getEntity();
+            InputStream instream = entity.getContent();
+        } finally {
+            webServer.stop();
+        }
     }
 
     @Test
     public void verifyHttps() throws Exception {
         BrooklynWebServer webServer = buildWebServer();
-
-        DefaultHttpClient httpclient = buildHttpsClient(webServer);
-
-        HttpGet httpget = new HttpGet(webServer.getRootUrl());
-        HttpResponse response = httpclient.execute(httpget);
-        HttpEntity entity = response.getEntity();
-        InputStream instream = entity.getContent();
+        try {
+            DefaultHttpClient httpclient = buildHttpsClient(webServer);
+    
+            HttpGet httpget = new HttpGet(webServer.getRootUrl());
+            HttpResponse response = httpclient.execute(httpget);
+            HttpEntity entity = response.getEntity();
+            InputStream instream = entity.getContent();
+        } finally {
+            webServer.stop();
+        }
     }
 
     private BrooklynWebServer buildWebServer() throws Exception {
