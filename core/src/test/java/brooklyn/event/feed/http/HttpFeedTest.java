@@ -104,7 +104,7 @@ public class HttpFeedTest {
     @Test(groups="Integration")
     // marked as integration so it doesn't fail the plain build in environments
     // with dodgy DNS (ie where "thisdoesnotexistdefinitely" resolves as a host
-    // which happily serves you adverts for your ISP)
+    // which happily serves you adverts for your ISP, yielding "success" here)
     public void testPollsAndParsesHttpErrorResponseWild() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
@@ -121,7 +121,9 @@ public class HttpFeedTest {
     public void testPollsAndParsesHttpErrorResponseLocal() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
-                .baseUri("http://localhost/path/should/not/exist")
+                // combo of port 46069 and unknown path will hopefully give an error
+                // (without the port, in jenkins it returns some bogus success page)
+                .baseUri("http://localhost:46069/path/should/not/exist")
                 .poll(new HttpPollConfig<String>(SENSOR_STRING)
                         .onSuccess(Functions.constant("success"))
                         .onError(Functions.constant("error")))
