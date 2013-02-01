@@ -2,12 +2,14 @@
 #
 # Brooklyn
 #
+# Copyright 2011-2013 by Cloudsoft Corp.
+# Licensed under the Apache 2.0 License
 
 #set -x # debug
 
 # discover BROOKLYN_HOME if not set, by attempting to resolve absolute path of this command (brooklyn)
-if [ -z "$BROOKLYN_HOME" ] ;
-    then BROOKLYN_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd) ;
+if [ -z "$BROOKLYN_HOME" ] ; then
+    BROOKLYN_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
 fi
 
 # use default memory settings, if not specified
@@ -15,11 +17,16 @@ if [ -z "${JAVA_OPTS}" ] ; then
     JAVA_OPTS="-Xms256m -Xmx1g -XX:MaxPermSize=256m"
 fi
 
-# set up the classpath; specify additional CP args in BROOKLYN_CLASSPATH
-BROOKLYN_CLASSPATH=${BROOKLYN_CLASSPATH}:${BROOKLYN_HOME}/conf:${BROOKLYN_HOME}/lib/*
+# set up the classpath
+INITIAL_CLASSPATH=${BROOKLYN_HOME}/conf:${BROOKLYN_HOME}/lib/*
+# specify additional CP args in BROOKLYN_CLASSPATH
+if [ ! -z "${BROOKLYN_CLASSPATH}" ]; then
+    INITIAL_CLASSPATH=${BROOKLYN_CLASSPATH}:${INITIAL_CLASSPATH}
+fi
 
-# force resolution of localhost to be loopback, otherwise we hit problems (should be changed in code)
+# force resolution of localhost to be loopback, otherwise we hit problems
+# TODO should be changed in code
 JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
-# Start Brooklyn
-exec java ${JAVA_OPTS} -cp "${BROOKLYN_CLASSPATH}" brooklyn.cli.Main "$@"
+# start Brooklyn
+exec java ${JAVA_OPTS} -cp "${INITIAL_CLASSPATH}" brooklyn.cli.Main "$@"
