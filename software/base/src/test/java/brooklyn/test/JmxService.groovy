@@ -76,6 +76,10 @@ class JmxService {
         logger.info "JMX tester service started at URL {}", address
     }
 
+    public int getJmxPort() {
+        return jmxPort;
+    }
+    
     public void shutdown() {
         connectorServer.stop();
         namingServiceMBean.stop()

@@ -101,11 +101,27 @@ public class HttpFeedTest {
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
     }
     
-    @Test
-    public void testPollsAndParsesHttpErrorResponse() throws Exception {
+    @Test(groups="Integration")
+    // marked as integration so it doesn't fail the plain build in environments
+    // with dodgy DNS (ie where "thisdoesnotexistdefinitely" resolves as a host
+    // which happily serves you adverts for your ISP)
+    public void testPollsAndParsesHttpErrorResponseWild() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
                 .baseUri("http://thisdoesnotexistdefinitely")
+                .poll(new HttpPollConfig<String>(SENSOR_STRING)
+                        .onSuccess(Functions.constant("success"))
+                        .onError(Functions.constant("error")))
+                .build();
+        
+        assertSensorEventually(SENSOR_STRING, "error", TIMEOUT_MS);
+    }
+    
+    @Test
+    public void testPollsAndParsesHttpErrorResponseLocal() throws Exception {
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUri("http://localhost/path/should/not/exist")
                 .poll(new HttpPollConfig<String>(SENSOR_STRING)
                         .onSuccess(Functions.constant("success"))
                         .onError(Functions.constant("error")))
