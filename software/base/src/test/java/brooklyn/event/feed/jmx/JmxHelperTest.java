@@ -17,6 +17,8 @@ import javax.management.ObjectName;
 import javax.management.StandardEmitterMBean;
 
 import org.jclouds.util.Throwables2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -26,12 +28,15 @@ import brooklyn.test.GeneralisedDynamicMBean;
 import brooklyn.test.JmxService;
 import brooklyn.test.TestUtils;
 import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class JmxHelperTest {
+
+    private static final Logger log = LoggerFactory.getLogger(JmxHelperTest.class);
     
     private static final int TIMEOUT_MS = 5000;
     private static final int SHORT_WAIT_MS = 250;
@@ -50,7 +55,7 @@ public class JmxHelperTest {
     public void setUp() throws Exception {
         jmxObjectName = new ObjectName(objectName);
         jmxObjectNameWithWildcard = new ObjectName(objectNameWithWildcard);
-        jmxService = new JmxService("localhost", 40123);
+        jmxService = newJmxServiceRetrying("localhost", 5);
         jmxHelper = new JmxHelper(jmxService.getUrl());
         jmxHelper.setMinTimeBetweenReconnectAttempts(0);
         jmxHelper.connect(TIMEOUT_MS);
@@ -142,6 +147,7 @@ public class JmxHelperTest {
 
     @Test
     public void testReconnectsOnJmxServerTemporaryFailure() throws Exception {
+        int port = jmxService.getJmxPort();
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(MutableMap.of("myattr", "myval"), objectName);
         assertEquals(jmxHelper.getAttribute(jmxObjectName, "myattr"), "myval");
         
@@ -159,7 +165,7 @@ public class JmxHelperTest {
         }
 
         // Simulate the network restarting
-        jmxService = new JmxService("localhost", 40123);
+        jmxService = new JmxService("localhost", port);
         
         GeneralisedDynamicMBean mbean2 = jmxService.registerMBean(MutableMap.of("myattr", "myval2"), objectName);
         assertEquals(jmxHelper.getAttribute(jmxObjectName, "myattr"), "myval2");
@@ -239,7 +245,7 @@ public class JmxHelperTest {
         jmxService.shutdown();
         jmxHelper.disconnect();
         
-        jmxService = new JmxService("127.0.0.1", (int)(11000+(100*Math.random())));
+        jmxService = newJmxServiceRetrying("127.0.0.1", 5);
         jmxHelper = new JmxHelper(jmxService.getUrl());
         jmxHelper.connect();
         
@@ -247,6 +253,16 @@ public class JmxHelperTest {
         //     JMX object DoesNotExist:type=DoesNotExist not found at service:jmx:rmi://127.0.0.1:1099/jndi/rmi://localhost:9001/jmxrmi"
         for (int i = 0; i < 10; i++) {
             jmxHelper.findMBean(wrongObjectName);
+        }
+    }
+
+    private JmxService newJmxServiceRetrying(String host, int retries) {
+        try {
+            return new JmxService(host, (int)(11000+(500*Math.random())));
+        } catch (Exception e) {
+            log.debug("Unable to create JMX service during test - "+retries+" retries remaining");
+            if (retries==0) throw Exceptions.propagate(e);
+            return newJmxServiceRetrying(host, retries-1);
         }
     }
 
