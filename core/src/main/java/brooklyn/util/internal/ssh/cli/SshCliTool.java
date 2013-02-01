@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     private static final Logger LOG = LoggerFactory.getLogger(SshCliTool.class);
 
     public static final ConfigKey<String> PROP_SSH_EXECUTABLE = new StringConfigKey("sshExecutable", "command to execute for ssh (defaults to \"ssh\", but could be overridden to sshg3 for Tectia for example)", "ssh");
+    public static final ConfigKey<String> PROP_SSH_FLAGS = new StringConfigKey("sshFlags", "flags to pass to ssh, as a space separated list", "");
     public static final ConfigKey<String> PROP_SCP_EXECUTABLE = new StringConfigKey("scpExecutable", "command to execute for scp (defaults to \"scp\", but could be overridden to scpg3 for Tectia for example)", "scp");
 
     public static Builder<SshCliTool,?> builder() {
@@ -47,12 +49,14 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     
     public static class Builder<T extends SshCliTool, B extends Builder<T,B>> extends AbstractToolBuilder<T,B> {
         private String sshExecutable;
+        private String sshFlags;
         private String scpExecutable;
 
         @SuppressWarnings("unchecked")
         public B from(Map<String,?> props) {
             super.from(props);
             sshExecutable = getOptionalVal(props, PROP_SSH_EXECUTABLE);
+            sshFlags = getOptionalVal(props, PROP_SSH_FLAGS);
             scpExecutable = getOptionalVal(props, PROP_SCP_EXECUTABLE);
             return self();
         }
@@ -69,6 +73,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     }
 
     private final String sshExecutable;
+    private final String sshFlags;
     private final String scpExecutable;
 
     public SshCliTool(Map<String,?> map) {
@@ -78,6 +83,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     private SshCliTool(Builder<?,?> builder) {
         super(builder);
         sshExecutable = checkNotNull(builder.sshExecutable);
+        sshFlags = checkNotNull(builder.sshFlags);
         scpExecutable = checkNotNull(builder.scpExecutable);
         if (LOG.isTraceEnabled()) LOG.trace("Created SshCliTool {} ({})", this, System.identityHashCode(this));
     }
@@ -278,6 +284,9 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         try {
             List<String> cmd = Lists.newArrayList();
             cmd.add(getOptionalVal(props, PROP_SSH_EXECUTABLE, sshExecutable));
+            String propsFlags = getOptionalVal(props, PROP_SSH_FLAGS, sshFlags);
+            if (propsFlags!=null && propsFlags.trim().length()>0)
+                cmd.addAll(Arrays.asList(propsFlags.trim().split(" ")));
             if (privateKeyFile != null) {
                 cmd.add("-i");
                 cmd.add(privateKeyFile.getAbsolutePath());

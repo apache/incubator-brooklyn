@@ -1,9 +1,17 @@
 package brooklyn.util.internal.ssh.cli;
 
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.util.internal.ssh.SshException;
@@ -18,9 +26,35 @@ import com.google.common.collect.ImmutableMap;
  */
 public class SshCliToolIntegrationTest extends SshToolIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(SshCliToolIntegrationTest.class);
+    
     @Override
     protected SshTool newSshTool(Map<String,?> flags) {
         return new SshCliTool(flags);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testFlags() throws Exception {
+        final SshTool localtool = newSshTool(ImmutableMap.of("sshFlags", "-vvv -tt", "host", "localhost"));
+        tools.add(localtool);
+        try {
+            localtool.connect();
+            Map<String,Object> props = new LinkedHashMap<String, Object>();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ByteArrayOutputStream err = new ByteArrayOutputStream();
+            props.put("out", out);
+            props.put("err", err);
+            int exitcode = localtool.execScript(props, Arrays.asList("echo hello err > /dev/stderr"), null);
+            Assert.assertEquals(0, exitcode, "exitCode="+exitcode+", but expected 0");
+            log.debug("OUT from ssh -vvv command is: "+out);
+            log.debug("ERR from ssh -vvv command is: "+err);
+            assertFalse(err.toString().contains("hello err"), "hello found where it shouldn't have been, in stderr (should have been tty merged to stdout): "+err);
+            assertTrue(out.toString().contains("hello err"), "no hello in stdout: "+err);
+            // look for word 'ssh' to confirm we got verbose output
+            assertTrue(err.toString().toLowerCase().contains("ssh"), "no mention of ssh in stderr: "+err);
+        } catch (SshException e) {
+            if (!e.toString().contains("failed to connect")) throw e;
+        }
     }
 
     // Need to have at least one test method here (rather than just inherited) for eclipse to recognize it
