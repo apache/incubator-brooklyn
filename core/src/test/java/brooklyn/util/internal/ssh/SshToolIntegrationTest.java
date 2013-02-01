@@ -38,6 +38,17 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Test the operation of the {@link SshTool} utility class; to be extended to test concrete implementations.
+ * 
+ * Requires keys set up, e.g. running:
+ * 
+ * <pre>
+ * cd ~/.ssh
+ * ssh-keygen
+ * id_rsa_with_passphrase
+ * mypassphrase
+ * mypassphrase
+ * </pre>
+ * 
  */
 public abstract class SshToolIntegrationTest {
 
@@ -452,6 +463,36 @@ public abstract class SshToolIntegrationTest {
         		localtool, Arrays.asList("echo goodbye world"), null);
         assertTrue(out.contains("goodbye world"), "no goodbye in output: "+out);
         assertTrue(out.contains("hello world"), "no hello in output: "+out);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testStdErr() {
+        final SshTool localtool = newSshTool(MutableMap.of("host", "localhost"));
+        tools.add(localtool);
+        Map<String,Object> props = new LinkedHashMap<String, Object>();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        props.put("out", out);
+        props.put("err", err);
+        int exitcode = localtool.execScript(props, Arrays.asList("echo hello err > /dev/stderr"), null);
+        assertFalse(out.toString().contains("hello err"), "hello found where it shouldn't have been, in stdout: "+out);
+        assertTrue(err.toString().contains("hello err"), "no hello in stderr: "+err);
+        assertEquals(0, exitcode);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testAllocatePty() {
+        final SshTool localtool = newSshTool(MutableMap.of("host", "localhost", SshTool.PROP_ALLOCATE_PTY.getName(), true));
+        tools.add(localtool);
+        Map<String,Object> props = new LinkedHashMap<String, Object>();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        props.put("out", out);
+        props.put("err", err);
+        int exitcode = localtool.execScript(props, Arrays.asList("echo hello err > /dev/stderr"), null);
+        assertTrue(out.toString().contains("hello err"), "no hello in output: "+out+" (err is '"+err+"')");
+        assertFalse(err.toString().contains("hello err"), "hello found in stderr: "+err);
+        assertEquals(0, exitcode);
     }
 
     // Requires setting up an extra ssh key, with a passphrase, and adding it to ~/.ssh/authorized_keys
