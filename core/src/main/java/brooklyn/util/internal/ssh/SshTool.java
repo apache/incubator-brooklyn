@@ -29,15 +29,6 @@ public interface SshTool {
     public static final ConfigKey<String> PROP_USER = new StringConfigKey("user", "User to connect as", System.getProperty("user.name"));
     public static final ConfigKey<String> PROP_PASSWORD = new StringConfigKey("password", "Password to use to connect", null);
     
-    public static final ConfigKey<OutputStream> PROP_OUT_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "out", "Stream to which to capture stdout");
-    public static final ConfigKey<OutputStream> PROP_ERR_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "err", "Stream to which to capture stderr");
-    
-    public static final ConfigKey<String> PROP_SEPARATOR = new StringConfigKey("separator", "string to insert between caller-supplied commands being executed as commands", " ; ");
-    
-    public static final ConfigKey<String> PROP_SCRIPT_DIR = new StringConfigKey("scriptDir", "directory where scripts should be copied", "/tmp");
-    public static final ConfigKey<String> PROP_SCRIPT_HEADER = new StringConfigKey("scriptHeader", "lines to insert at the start of scripts generated for caller-supplied commands for script execution", "#!/bin/bash -e\n");
-    public static final ConfigKey<String> PROP_DIRECT_HEADER = new StringConfigKey("directHeader", "commands to run remotely before any caller-supplied commands for direct execution", "exec bash -e");
-
     public static final ConfigKey<String> PROP_PRIVATE_KEY_FILE = new StringConfigKey("privateKeyFile", "the path of an ssh private key file; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)", null);
     public static final ConfigKey<String> PROP_PRIVATE_KEY_DATA = new StringConfigKey("privateKeyData", "the private ssh key (e.g. contents of an id_rsa.pub or id_dsa.pub file)", null);
     public static final ConfigKey<String> PROP_PRIVATE_KEY_PASSPHRASE = new StringConfigKey("privateKeyPassphrase", "the passphrase for the ssh private key", null);
@@ -53,6 +44,18 @@ public interface SshTool {
     public static final ConfigKey<File> PROP_LOCAL_TEMP_DIR = new BasicConfigKey<File>(File.class, "localTempDir", "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
             new File(System.getProperty("java.io.tmpdir"), "tmpssh"));
     
+    // NB -- items above apply for _session_ (a tool), below apply for a _call_
+    // TODO would be nice to track which arguments are used, so we can indicate whether extras are supplied
+
+    public static final ConfigKey<OutputStream> PROP_OUT_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "out", "Stream to which to capture stdout");
+    public static final ConfigKey<OutputStream> PROP_ERR_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "err", "Stream to which to capture stderr");
+    
+    public static final ConfigKey<String> PROP_SEPARATOR = new StringConfigKey("separator", "string to insert between caller-supplied commands being executed as commands", " ; ");
+    
+    public static final ConfigKey<String> PROP_SCRIPT_DIR = new StringConfigKey("scriptDir", "directory where scripts should be copied", "/tmp");
+    public static final ConfigKey<String> PROP_SCRIPT_HEADER = new StringConfigKey("scriptHeader", "lines to insert at the start of scripts generated for caller-supplied commands for script execution", "#!/bin/bash -e\n");
+    public static final ConfigKey<String> PROP_DIRECT_HEADER = new StringConfigKey("directHeader", "commands to run remotely before any caller-supplied commands for direct execution", "exec bash -e");
+
     public static final ConfigKey<String> PROP_PERMISSIONS = new StringConfigKey("permissions", "Default permissions for files copied/created on remote machine; must be four-digit octal string, default '0644'", "0644");
     public static final ConfigKey<Long> PROP_LAST_MODIFICATION_DATE = new BasicConfigKey<Long>(Long.class, "lastModificationDate", "Last-modification-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to current)", 0L);
     public static final ConfigKey<Long> PROP_LAST_ACCESS_DATE = new BasicConfigKey<Long>(Long.class, "lastAccessDate", "Last-access-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to lastModificationDate)", 0L);

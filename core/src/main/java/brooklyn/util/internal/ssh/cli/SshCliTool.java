@@ -294,6 +294,13 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
                 cmd.add("-P");
                 cmd.add(""+port);
             }
+            if (allocatePTY) {
+                // have to be careful with double -tt as it can leave a shell session active
+                // when done from bash (ie  ssh -tt localhost < /tmp/myscript.sh);
+                // hover that doesn't seem to be a problem the way we use it from brooklyn
+                // (and note single -t doesn't work _programmatically_ since the input isn't a terminal)
+                cmd.add("-tt");
+            }
             cmd.add((Strings.isEmpty(getUsername()) ? "" : getUsername()+"@")+getHostAddress());
             cmd.add("$(<"+tempCmdFile.getAbsolutePath()+")");
             //cmd.add("\""+command+"\"");
