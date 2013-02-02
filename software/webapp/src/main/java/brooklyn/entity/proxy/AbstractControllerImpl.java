@@ -160,11 +160,11 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     /** returns URL, if it can be inferred; null otherwise */
     protected String inferUrl() {
-        String protocol = checkNotNull(getProtocol(), "protocol must not be null");
+        String protocol = checkNotNull(getProtocol(), "no protocol configured");
         String domain = getDomain();
         if (domain==null) domain = getAttribute(HOSTNAME);
         if (domain==null) return null;
-        Integer port = checkNotNull(getPort(), "port must not be null");
+        Integer port = checkNotNull(getPort(), "no port configured (the requested port may be in use)");
         return protocol+"://"+domain+":"+port+"/";
     }
     
@@ -183,7 +183,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         setAttribute(DOMAIN_NAME);
         setAttribute(ROOT_URL, inferUrl());
         
-        checkNotNull(getPortNumberSensor(), "port number sensor must not be null");
+        checkNotNull(getPortNumberSensor(), "no sensor configured to infer port number");
     }
     
     @Override

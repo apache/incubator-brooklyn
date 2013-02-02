@@ -7,7 +7,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
@@ -74,6 +73,7 @@ public class InternalEntityFactory {
                 new EntityProxyImpl(entity));
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
         if (spec.getFlags().containsKey("parent") || spec.getFlags().containsKey("owner")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+spec);
@@ -90,6 +90,9 @@ public class InternalEntityFactory {
                 FactoryConstructionTracker.reset();
             }
             
+            if (spec.getDisplayName()!=null)
+                ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
+            
             if (isNewStyleEntity(clazz)) {
                 ((AbstractEntity)entity).setManagementContext(managementContext);
                 ((AbstractEntity)entity).setProxy(createEntityProxy(spec.getType(), entity));
@@ -98,9 +101,6 @@ public class InternalEntityFactory {
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
-            }
-            for (Map.Entry<HasConfigKey<?>, Object> entry : spec.getConfig2().entrySet()) {
-                ((EntityLocal)entity).setConfig((HasConfigKey)entry.getKey(), entry.getValue());
             }
             ((AbstractEntity)entity).postConstruct();
             

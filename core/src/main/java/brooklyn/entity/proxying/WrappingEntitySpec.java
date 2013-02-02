@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.util.MutableMap;
 
@@ -46,10 +45,4 @@ public class WrappingEntitySpec<T extends Entity> extends BasicEntitySpec<T, Wra
                 .build());
     }
     
-    public Map<HasConfigKey<?>, Object> getConfig2() {
-        return Collections.unmodifiableMap(MutableMap.<HasConfigKey<?>,Object>builder()
-                .putAll(delegate.getConfig2())
-                .putAll(super.getConfig2())
-                .build());
-    }
 }

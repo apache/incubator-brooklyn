@@ -25,6 +25,7 @@ import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.ListConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.util.MutableMap;
+import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Mock entity for testing.
@@ -50,6 +51,7 @@ public interface TestEntity extends Entity, Startable, EntityLocal, EntityIntern
         }
     }
     
+    @SetFromFlag("confName")
     public static final BasicConfigKey<String> CONF_NAME = new BasicConfigKey<String>(String.class, "test.confName", "Configuration key, my name", "defaultval");
     public static final BasicConfigKey<Map> CONF_MAP_PLAIN = new BasicConfigKey<Map>(Map.class, "test.confMapPlain", "Configuration key that's a plain map", MutableMap.of());
     public static final BasicConfigKey<List> CONF_LIST_PLAIN = new BasicConfigKey<List>(List.class, "test.confListPlain", "Configuration key that's a plain list", Lists.newArrayList());

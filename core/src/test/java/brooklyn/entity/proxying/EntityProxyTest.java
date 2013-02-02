@@ -16,12 +16,14 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -89,7 +91,7 @@ public class EntityProxyTest {
         }
         assertEquals(ImmutableSet.copyOf(entities), ImmutableSet.of(app, entity));
     }
-    
+
     @Test
     public void testCreateAndManageChild() {
         TestEntity result = entity.createAndManageChild(TestEntity.Spec.newInstance());
@@ -98,7 +100,54 @@ public class EntityProxyTest {
         assertIsProxy(result.getParent());
         assertIsProxy(managementContext.getEntityManager().getEntity(result.getId()));
     }
-    
+
+    @Test
+    public void testDisplayName() {
+        TestEntity result = entity.createAndManageChild(TestEntity.Spec.newInstance().displayName("Boo"));
+        assertIsProxy(result);
+        assertEquals(result.getDisplayName(), "Boo");
+    }
+
+    @Test
+    public void testCreateRespectsFlags() {
+        TestEntity entity2 = app.createAndManageChild(TestEntity.Spec.newInstance().
+                configure("confName", "boo"));
+        assertEquals(entity2.getConfig(TestEntity.CONF_NAME), "boo");
+    }
+
+    @Test
+    public void testCreateRespectsConfigKey() {
+        TestEntity entity2 = app.createAndManageChild(TestEntity.Spec.newInstance().
+                configure(TestEntity.CONF_NAME, "foo"));
+        assertEquals(entity2.getConfig(TestEntity.CONF_NAME), "foo");
+    }
+
+    @Test
+    public void testCreateRespectsConfInMap() {
+        TestEntity entity2 = app.createAndManageChild(TestEntity.Spec.newInstance().
+                configure(MutableMap.of(TestEntity.CONF_NAME, "bar")));
+        assertEquals(entity2.getConfig(TestEntity.CONF_NAME), "bar");
+    }
+
+    @Test
+    public void testCreateRespectsFlagInMap() {
+        TestEntity entity2 = app.createAndManageChild(TestEntity.Spec.newInstance().
+                configure(MutableMap.of("confName", "baz")));
+        assertEquals(entity2.getConfig(TestEntity.CONF_NAME), "baz");
+    }
+
+    @Test
+    public void testCreateInAppWithClassAndMap() {
+        ApplicationBuilder appB = new ApplicationBuilder() {
+            @Override
+            protected void doBuild() {
+                createChild(MutableMap.of("confName", "faz"), TestEntity.class);
+            }
+        };
+        StartableApplication app2 = appB.manage();
+        assertEquals(Iterables.getOnlyElement(app2.getChildren()).getConfig(TestEntity.CONF_NAME), "faz");
+    }
+
     private void assertIsProxy(Entity e) {
         assertFalse(e instanceof AbstractEntity, "e="+e+";e.class="+(e != null ? e.getClass() : null));
         assertTrue(e instanceof EntityProxy, "e="+e+";e.class="+(e != null ? e.getClass() : null));
