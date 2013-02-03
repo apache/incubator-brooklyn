@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 by Andrew Kennedy
+ * Copyright 2012-2013 by Cloudsoft Corp.
  */
 package brooklyn.entity.nosql.cassandra;
 
@@ -31,8 +31,8 @@ import com.google.common.collect.Sets;
 public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver implements CassandraNodeDriver {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeSshDriver.class);
-    
-    public CassandraNodeSshDriver(CassandraNode entity, SshMachineLocation machine) {
+
+    public CassandraNodeSshDriver(CassandraNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -50,7 +50,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public String getClusterName() { return entity.getAttribute(CassandraNode.CLUSTER_NAME); }
-    
+
     @Override
     public void install() {
         log.info("Installing {}", entity);
@@ -142,7 +142,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
 
     public String getPidFile() { return String.format("%s/cassandra.pid", getRunDir()); }
-    
+
     @Override
     public boolean isRunning() {
         return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING).body.append("true").execute() == 0;

@@ -1,18 +1,18 @@
+/*
+ * Copyright 2012-2013 by Cloudsoft Corp.
+ */
 package brooklyn.entity.nosql.cassandra
 
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.concurrent.TimeUnit
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
-import org.testng.annotations.Test
 
-import brooklyn.entity.Application
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
@@ -49,13 +49,13 @@ public class AbstractCassandraNodeTest {
         TimeExtras.init()
     }
 
-    protected Application app
+    protected TestApplication app
     protected Location testLocation
     protected CassandraNode cassandra
 
     @BeforeMethod(alwaysRun = true)
-    public void setup() {
-        app = new TestApplication()
+    public void setup() throws Exception {
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         testLocation = new LocalhostMachineProvisioningLocation()
     }
 
@@ -64,7 +64,7 @@ public class AbstractCassandraNodeTest {
         if (cassandra != null && cassandra.getAttribute(Startable.SERVICE_UP)) {
             cassandra.stop()
         }
-        Entities.destroy(app)
+        Entities.destroyAll(app)
     }
 
     /**
@@ -135,7 +135,7 @@ public class AbstractCassandraNodeTest {
 
     protected AstyanaxContext<Keyspace> getAstyanaxContext(CassandraNode server) {
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
-                .forCluster("TestCluster")
+                .forCluster(server.getClusterName())
                 .forKeyspace("BrooklynIntegrationTest")
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                         .setDiscoveryType(NodeDiscoveryType.NONE))

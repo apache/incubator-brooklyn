@@ -1,3 +1,6 @@
+/*
+ * Copyright 2012-2013 by Cloudsoft Corp.
+ */
 package brooklyn.entity.nosql.cassandra
 
 import static brooklyn.test.TestUtils.*
@@ -9,12 +12,10 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
-import brooklyn.config.BrooklynProperties
-import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
-import brooklyn.location.LocationRegistry
-import brooklyn.location.basic.BasicLocationRegistry
 import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.util.MutableMap
 import brooklyn.util.text.Strings
 
 import com.google.common.collect.ImmutableList
@@ -43,15 +44,13 @@ public class CassandraNodeLiveTest extends AbstractCassandraNodeTest {
     protected void testOperatingSystemProvider(String imageName, String provider, String region) throws Exception {
         log.info("Testing Cassandra on {}{} using {}", provider, Strings.isNonEmpty(region) ? ":" + region : "", imageName)
 
-        BrooklynProperties props = BrooklynProperties.Factory.newDefault()
-        props.remove(String.format("brooklyn.jclouds.%s.image-id", provider))
-        props.put(String.format("brooklyn.jclouds.%s.image-name-matches", provider), imageName)
-        LocationRegistry locationRegistry = new BasicLocationRegistry(props)
+        Map<String, String> properties = MutableMap.of("image-name-matches", imageName);
+        testLocation = (JcloudsLocation) app.getManagementContext().getLocationRegistry()
+                .resolve(provider + (Strings.isNonEmpty(region) ? ":" + region : ""), properties)
 
-        testLocation = (JcloudsLocation) locationRegistry.resolve(provider + (Strings.isNonEmpty(region) ? ":" + region : ""))
-
-        cassandra = new CassandraNode(parent:app, thriftPort:'9876+', clusterName:'TestCluster')
-        Entities.startManagement(app)
+        cassandra = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraNode.class)
+                .configure("thriftPort", "9876+")
+                .configure("clusterName", "TestCluster"));
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceeds {
             assertTrue cassandra.getAttribute(Startable.SERVICE_UP)

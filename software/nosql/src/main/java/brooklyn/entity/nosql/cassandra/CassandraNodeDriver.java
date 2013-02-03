@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 by Andrew Kennedy
+ * Copyright 2012-2013 by Cloudsoft Corp.
  */
 package brooklyn.entity.nosql.cassandra;
 

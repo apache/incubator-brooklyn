@@ -1,7 +1,10 @@
+/*
+ * Copyright 2012-2013 by Cloudsoft Corp.
+ */
 package brooklyn.entity.nosql.cassandra
 
-import static brooklyn.test.TestUtils.executeUntilSucceeds
-import static brooklyn.test.TestUtils.executeUntilSucceedsWithShutdown
+import static brooklyn.test.TestUtils.*
+import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
 import java.util.concurrent.TimeUnit
@@ -12,11 +15,13 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.Entity
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
-import brooklyn.location.basic.BasicLocationRegistry
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
 
@@ -61,8 +66,8 @@ class CassandraClusterLiveTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
-        app = new TestApplication()
-        testLocation = new BasicLocationRegistry().resolve(provider)
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        testLocation = app.getManagementContext().getLocationRegistry().resolve(provider)
     }
 
     @AfterMethod(alwaysRun = true)
@@ -74,21 +79,22 @@ class CassandraClusterLiveTest {
     }
 
     /**
-     * Test that the cluster starts up and sets SERVICE_UP correctly.
+     * Test that a two node cluster starts up and allows access via the Astyanax API through both nodes.
      */
     @Test(groups = "Live")
     public void canStartupAndShutdown() {
-        cluster = new CassandraCluster(parent:app, initialSize:2, clusterName:'AmazonCluster')
+        cluster = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraCluster.class)
+                .configure("initialSize", "2")
+                .configure("clusterName", "AmazonCluster"));
         assertEquals cluster.currentSize, 0
 
-        Entities.startManagement(app)
         app.start(ImmutableList.of(testLocation))
 
         executeUntilSucceeds(timeout:10*TimeUnit.MINUTES) {
             assertEquals cluster.currentSize, 2
-            cluster.members.each {
-                assertTrue it.getAttribute(Startable.SERVICE_UP)
-                assertEquals it.getAttribute(CassandraNode.PEERS), 2
+            cluster.members.each { Entity e ->
+                assertTrue e.getAttribute(Startable.SERVICE_UP)
+                assertEquals e.getAttribute(CassandraNode.PEERS), 2
             }
         }
 
@@ -187,7 +193,7 @@ class CassandraClusterLiveTest {
 
     protected AstyanaxContext<Keyspace> getAstyanaxContext(CassandraNode server) {
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
-                .forCluster("AmazonCluster")
+                .forCluster(server.getClusterName())
                 .forKeyspace("BrooklynIntegrationTest")
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                         .setDiscoveryType(NodeDiscoveryType.NONE))
