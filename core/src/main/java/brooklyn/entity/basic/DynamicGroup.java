@@ -29,13 +29,20 @@ public interface DynamicGroup extends AbstractGroup {
      */
     public void stop();
 
+    /** rescans _all_ entities to determine whether they match the filter */
     public void rescanEntities();
     
+    /** sets {@link #ENTITY_FILTER}, overriding (and rescanning all) if already set */
     public void setEntityFilter(Predicate<? super Entity> filter);
     
+    /** see {@link #setEntityFilter(Predicate)} */
     public void setEntityFilter(Closure<Boolean> filter);
     
+    /** as {@link #addSubscription(Entity, Sensor)} but with an additional filter */
     public <T> void addSubscription(Entity producer, Sensor<T> sensor, final Predicate<? super SensorEvent<? super T>> filter);
 
+    /** indicates an entity and/or sensor this group should monitor; if either is null it means "all".
+     * note that subscriptions do not _restrict_ what can be added, they merely ensure prompt
+     * membership checking (via {@link #ENTITY_FILTER}) for those entities so subscribed */
     public <T> void addSubscription(Entity producer, Sensor<T> sensor);
 }

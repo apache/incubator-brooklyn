@@ -36,7 +36,6 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
     private Entity parent;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
-    private final Map<HasConfigKey<?>, Object> config2 = Maps.newLinkedHashMap();
     private final List<Policy> policies = Lists.newArrayList();
     
     public BasicEntitySpec(Class<T> type) {
@@ -65,8 +64,16 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
         return self();
     }
     
-    public S configure(Map<String,?> val) {
-        flags.putAll(checkNotNull(val, "key"));
+    public S configure(Map<?,?> val) {
+        for (Map.Entry<?, ?> entry: val.entrySet()) {
+            if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");
+            if (entry.getKey() instanceof String)
+                flags.put((String)entry.getKey(), entry.getValue());
+            else if (entry.getKey() instanceof ConfigKey<?>)
+                config.put((ConfigKey<?>)entry.getKey(), entry.getValue());
+            else if (entry.getKey() instanceof HasConfigKey<?>)
+                config.put(((HasConfigKey<?>)entry.getKey()).getConfigKey(), entry.getValue());
+        }
         return self();
     }
     
@@ -86,12 +93,12 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
     }
 
     public <V> S configure(HasConfigKey<V> key, V val) {
-        config2.put(checkNotNull(key, "key"), val);
+        config.put(checkNotNull(key, "key").getConfigKey(), val);
         return self();
     }
 
     public <V> S configure(HasConfigKey<V> key, Task<? extends V> val) {
-        config2.put(checkNotNull(key, "key"), val);
+        config.put(checkNotNull(key, "key").getConfigKey(), val);
         return self();
     }
 
@@ -129,12 +136,7 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
     public Map<ConfigKey<?>, Object> getConfig() {
         return Collections.unmodifiableMap(config);
     }
-    
-    @Override
-    public Map<HasConfigKey<?>, Object> getConfig2() {
-        return Collections.unmodifiableMap(config2);
-    }
-    
+        
     @Override
     public List<Policy> getPolicies() {
         return policies;

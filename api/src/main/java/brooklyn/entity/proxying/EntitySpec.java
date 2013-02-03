@@ -59,13 +59,6 @@ public interface EntitySpec<T extends Entity> {
      * @return Read-only configuration values
      */
     public Map<ConfigKey<?>, Object> getConfig();
-
-    /**
-     * @return Read-only configuration values
-     * Note: this name will undoubtedly change; if you use BasicEntitySpec then your code will not be affected by the rename! 
-     */
-    @Beta
-    public Map<HasConfigKey<?>, Object> getConfig2();
     
     public List<Policy> getPolicies();
 }

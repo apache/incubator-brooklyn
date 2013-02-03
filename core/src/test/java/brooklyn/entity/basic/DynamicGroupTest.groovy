@@ -135,13 +135,22 @@ public class DynamicGroupTest {
     @Test
     public void testGroupDetectsChangedEntitiesMatchingFilter() {
         final BasicAttributeSensor<String> MY_ATTRIBUTE = [ String, "test.myAttribute", "My test attribute" ]
-        
-        group.setEntityFilter( { it.getAttribute(MY_ATTRIBUTE) == "yes" } )
+        group.setEntityFilter( { 
+            if (!(it.getAttribute(MY_ATTRIBUTE) == "yes")) 
+                return false
+            if (it == e1) {
+                LOG.info("testGroupDetectsChangedEntitiesMatchingFilter scanned e1 when MY_ATTRIBUTE is yes; not a bug, but indicates things may be running slowly")
+                return false
+            }
+            return true
+        } )
         group.addSubscription(null, MY_ATTRIBUTE, { SensorEvent event -> e1 != event.source } as Predicate)
         
         assertEquals(group.getMembers(), [])
         
-        // Ignores anything that does not match predicate filter; so event from e1 will be ignored
+        // Does not subscribe to things which do not match predicate filter, 
+        // so event from e1 should normally be ignored 
+        // but pending rescans may cause it to pick up e1, so we ignore e1 in the entity filter also
         e1.setAttribute(MY_ATTRIBUTE, "yes")
         e2.setAttribute(MY_ATTRIBUTE, "yes")
         

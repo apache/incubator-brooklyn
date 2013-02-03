@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,6 +158,13 @@ public abstract class ApplicationBuilder {
     
     protected final <T extends Entity> T createChild(EntitySpec<T> spec) {
         checkNotManaged();
+        return addChild(createEntity(spec));
+    }
+    
+    protected final <T extends Entity> T createChild(Map<?,?> config, Class<T> type) {
+        checkNotManaged();
+        BasicEntitySpec<T,?> spec = BasicEntitySpec.newInstance(type);
+        spec.configure(config);
         return addChild(createEntity(spec));
     }
     
