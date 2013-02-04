@@ -150,6 +150,8 @@ public abstract class ApplicationBuilder {
         return entityManager.createEntity(spec);
     }
 
+    protected final StartableApplication getApplication() { return app; }
+    
     protected final <T extends Entity> T addChild(T entity) {
         checkNotManaged();
         app.addChild(entity);
