@@ -90,10 +90,10 @@ public interface WebClusterDatabaseExampleApp extends StartableApplication {
                     sizeRange(2, 5).
                     build());
             
-            getApplication().addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
+            getApp().addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
                     WebAppServiceConstants.ROOT_URL,
                     DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW));
-            getApplication().addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
+            getApp().addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
                     DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT, Functions.<Integer>identity()));
         }
     }

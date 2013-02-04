@@ -72,10 +72,10 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
                 build());
 
         // expose some KPI's
-        getApplication().addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
+        getApp().addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
                 WebAppServiceConstants.ROOT_URL,
                 DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW));
-        getApplication().addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
+        getApp().addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
                 DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT, Functions.<Integer>identity()));
     }
 
