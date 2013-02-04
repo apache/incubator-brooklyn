@@ -1,7 +1,12 @@
 package brooklyn.policy;
 
+import java.util.Map;
+
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.mementos.PolicyMemento;
+
+import com.google.common.annotations.Beta;
 
 /**
  * Policies implement actions and thus must be suspendable; policies should continue to evaluate their sensors
@@ -21,6 +26,12 @@ public interface Policy extends EntityAdjunct, Rebindable<PolicyMemento> {
     String getName();
 
     /**
+     * Information about the type of this entity; analogous to Java's object.getClass.
+     */
+    @Beta
+    PolicyType getPolicyType();
+
+    /**
      * Resume the policy
      */
     void resume();
@@ -34,4 +45,10 @@ public interface Policy extends EntityAdjunct, Rebindable<PolicyMemento> {
      * Whether the policy is suspended
      */
     boolean isSuspended();
+    
+    <T> T getConfig(ConfigKey<T> key);
+    
+    <T> T setConfig(ConfigKey<T> key, T val);
+    
+    Map<ConfigKey<?>, Object> getAllConfig();
 }
