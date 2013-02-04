@@ -1,26 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<packaging>bundle</packaging>
-    
-	<artifactId>brooklyn-core</artifactId>
-    
-	<name>Brooklyn Core</name>
-	<description>
-		Entity implementation classes, events, and other core elements  
-	</description>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>bundle</packaging>
 
-	<parent>
-		<groupId>io.brooklyn</groupId>
-		<artifactId>brooklyn-parent</artifactId>
-		<version>0.5.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
-		<relativePath>../pom.xml</relativePath>
-	</parent>
+    <artifactId>brooklyn-core</artifactId>
 
-	<dependencies>
-		<dependency>
-			<groupId>io.brooklyn</groupId>
-			<artifactId>brooklyn-api</artifactId>
-		</dependency>
+    <name>Brooklyn Core</name>
+    <description>
+        Entity implementation classes, events, and other core elements
+    </description>
+
+    <parent>
+        <groupId>io.brooklyn</groupId>
+        <artifactId>brooklyn-parent</artifactId>
+        <version>0.5.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -41,50 +41,29 @@
             <groupId>org.jclouds.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>
         </dependency>
-        
-		<dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-all</artifactId>
-		</dependency>
+
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+        </dependency>
         <dependency>
             <groupId>net.schmizz</groupId>
             <artifactId>sshj</artifactId>
             <version>${sshj.version}</version>
         </dependency>
-		<dependency>
-			<groupId>com.thoughtworks.xstream</groupId>
-			<artifactId>xstream</artifactId>
-		</dependency>
-		<dependency>
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-		
-		<dependency>
-			<groupId>org.jclouds.provider</groupId>
-			<artifactId>aws-ec2</artifactId>
-			<version>${jclouds.version}</version>
-		</dependency>
+
         <dependency>
-            <groupId>org.jclouds.api</groupId>
-            <artifactId>cloudstack</artifactId>
-            <version>${jclouds.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jclouds.api</groupId>
-            <artifactId>cloudservers</artifactId>
-            <version>${jclouds.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jclouds.provider</groupId>
-            <artifactId>cloudservers-uk</artifactId>
-            <version>${jclouds.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jclouds.api</groupId>
-            <artifactId>vcloud</artifactId>
-            <version>${jclouds.version}</version>
+            <groupId>org.jclouds</groupId>
+            <artifactId>jclouds-allcompute</artifactId>
         </dependency>
 
         <dependency>
@@ -92,13 +71,7 @@
             <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
         </dependency>
-        
-        <dependency>
-            <groupId>org.jclouds.api</groupId>
-            <artifactId>openstack-nova</artifactId>
-            <version>${jclouds.version}</version>
-        </dependency>
-		
+
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk16</artifactId>
@@ -123,8 +96,8 @@
             <artifactId>brooklyn-test-support</artifactId>
             <scope>test</scope>
         </dependency>
-        
-	    <dependency>
+
+        <dependency>
             <groupId>com.google.mockwebserver</groupId>
             <artifactId>mockwebserver</artifactId>
             <version>${mockwebserver.version}</version>
@@ -136,7 +109,7 @@
             <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
-       
+
     </dependencies>
 
   <!-- add maxmind geo-ip library; exact copy of source included as required by LGPL2 -->

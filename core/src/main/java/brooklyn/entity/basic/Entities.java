@@ -507,6 +507,10 @@ public class Entities {
         return new LocalManagementContext(props);
     }
 
+    public static ManagementContext newManagementContext(Map<?,?> props) {
+        return new LocalManagementContext(props);
+    }
+
     public static void unmanage(Entity entity) {
         if (((EntityInternal)entity).getManagementSupport().isDeployed()) {
             ((EntityInternal)entity).getManagementSupport().getManagementContext(true).getEntityManager().unmanage(entity);

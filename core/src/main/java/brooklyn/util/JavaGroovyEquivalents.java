@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 public class JavaGroovyEquivalents {
@@ -44,6 +45,9 @@ public class JavaGroovyEquivalents {
     }
     public static <T> T elvis(T preferred, T fallback) {
         return groovyTruth(preferred) ? preferred : fallback;
+    }
+    public static <T> T elvis(Iterable<?> preferences) {
+        return elvis(Iterables.toArray(preferences, Object.class));
     }
     public static <T> T elvis(Object... preferences) {
         if (preferences.length == 0) throw new IllegalArgumentException("preferences must not be empty for elvis");

@@ -6,10 +6,10 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 class AwsEc2LocationLiveTest extends AbstractJcloudsLocationTest {
-    
+
     private static final String PROVIDER = "aws-ec2"
-    private static final String EUWEST_REGION_NAME = "eu-west-1" 
-    private static final String USEAST_REGION_NAME = "us-east-1" 
+    private static final String EUWEST_REGION_NAME = "eu-west-1"
+    private static final String USEAST_REGION_NAME = "us-east-1"
     private static final String EUWEST_IMAGE_ID = EUWEST_REGION_NAME+"/"+"ami-89def4fd"
     private static final String USEAST_IMAGE_ID = USEAST_REGION_NAME+"/"+"ami-2342a94a"
     private static final String IMAGE_OWNER = "411009282317"
@@ -18,26 +18,29 @@ class AwsEc2LocationLiveTest extends AbstractJcloudsLocationTest {
     public AwsEc2LocationLiveTest() {
         super(PROVIDER)
     }
-    
+
     @Override
     @DataProvider(name = "fromImageId")
     public Object[][] cloudAndImageIds() {
-        return [ [EUWEST_REGION_NAME, EUWEST_IMAGE_ID, IMAGE_OWNER], [USEAST_REGION_NAME, USEAST_IMAGE_ID, IMAGE_OWNER] ]
+        return [
+            [ EUWEST_REGION_NAME, EUWEST_IMAGE_ID, IMAGE_OWNER ],
+            [ USEAST_REGION_NAME, USEAST_IMAGE_ID, IMAGE_OWNER] ]
     }
 
     @Override
     @DataProvider(name = "fromImageDescriptionPattern")
     public Object[][] cloudAndImageDescriptionPatterns() {
-        return [ [USEAST_REGION_NAME, IMAGE_PATTERN, IMAGE_OWNER], [USEAST_REGION_NAME, IMAGE_PATTERN, IMAGE_OWNER] ]
+        return [
+            [ USEAST_REGION_NAME, IMAGE_PATTERN, IMAGE_OWNER ],
+            [ USEAST_REGION_NAME, IMAGE_PATTERN, IMAGE_OWNER] ]
     }
-    
+
     @Override
     @DataProvider(name = "fromImageNamePattern")
     public Object[][] cloudAndImageNamePatterns() {
         return []
     }
-    
-    @Test
-    public void noop() { /* just exists to let testNG IDE run the test */ }
 
+    @Test(enabled = false)
+    public void noop() { } /* just exists to let testNG IDE run the test */
 }

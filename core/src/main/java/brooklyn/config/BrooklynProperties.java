@@ -221,6 +221,14 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         return super.put(key, value);
     }
 
+    /** like normal map.putAll, except config keys are dereferenced on the way in */
+    @Override
+    public void putAll(Map vals) {
+        for (Map.Entry<?,?> entry : ((Map<?,?>)vals).entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     public <T> Object put(HasConfigKey<T> key, T value) {
         return super.put(key.getConfigKey().getName(), value);

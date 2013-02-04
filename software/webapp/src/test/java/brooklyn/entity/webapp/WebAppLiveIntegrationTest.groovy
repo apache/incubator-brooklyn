@@ -15,8 +15,10 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
+import brooklyn.config.BrooklynProperties
 import brooklyn.entity.Application
 import brooklyn.entity.basic.SoftwareProcess
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
@@ -25,9 +27,7 @@ import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
-import brooklyn.location.basic.jclouds.CredentialsFromEnv
-import brooklyn.location.basic.jclouds.JcloudsLocation
-import brooklyn.location.basic.jclouds.JcloudsLocationFactory
+import brooklyn.location.basic.BasicLocationRegistry
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
@@ -37,12 +37,6 @@ import brooklyn.util.internal.TimeExtras
  */
 public class WebAppLiveIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(WebAppLiveIntegrationTest.class)
-
-    private static final String USEAST_REGION_NAME = "us-east-1"
-    private static final String USEAST_IMAGE_ID = USEAST_REGION_NAME+"/"+"ami-2342a94a"
-    private static final String EUWEST_REGION_NAME = "eu-west-1"
-    private static final String EUWEST_IMAGE_ID = EUWEST_REGION_NAME+"/"+"ami-89def4fd"
-    private static final String IMAGE_OWNER = "411009282317"
 
     static { TimeExtras.init() }
 
@@ -55,8 +49,7 @@ public class WebAppLiveIntegrationTest {
     // The parent application entity for these tests
     Application application = new TestApplicationImpl()
 
-    private JcloudsLocationFactory locFactory
-    private JcloudsLocation loc
+    Location loc
 
     /**
      * Provides instances of {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
@@ -77,44 +70,23 @@ public class WebAppLiveIntegrationTest {
         return TestUtils.getResource(path, getClass().getClassLoader());
     }
 
-    @BeforeMethod(groups = "Live")
+    @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        File sshPrivateKey = getResource("jclouds/id_rsa.private")
-        File sshPublicKey = getResource("jclouds/id_rsa.pub")
-        CredentialsFromEnv creds = new CredentialsFromEnv("aws-ec2");
-        locFactory = new JcloudsLocationFactory([
-                provider:"aws-ec2",
-                identity:creds.getIdentity(),
-                credential:creds.getCredential(),
-                sshPublicKey:sshPublicKey,
-                sshPrivateKey:sshPrivateKey])
+        Entities.manage(application)
 
-        loc = locFactory.newLocation(USEAST_REGION_NAME)
-        // FIXME Will these tags fail to match, because using JBoss6Server instead of JBoss6ServerImpl etc?
-        loc.setTagMapping( [
-                (JBoss6Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
-                (JBoss7Server.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]],
-                (TomcatServerImpl.class.getName()):[imageId:USEAST_IMAGE_ID,securityGroups:["brooklyn-all"]]
-                ])
+        BrooklynProperties props = BrooklynProperties.Factory.newDefault()
+        props.put("brooklyn.location.jclouds.aws-ec2.imagel-id", "us-east-1/ami-2342a94a")
+        props.put("brooklyn.location.jclouds.aws-ec2.image-owner", "411009282317")
+
+        loc = new BasicLocationRegistry(props).resolve("aws-ec2:us-east-1")
     }
 
-    @AfterMethod(groups = "Live")
-    public void tearDown() {
-        List<Exception> exceptions = []
-        for (Location child : loc.getChildLocations()) {
-            try {
-                loc?.release(child)
-            } catch (Exception e) {
-                LOG.warn("Error releasing machine $child; continuing...", e)
-                exceptions.add(e)
-            }
-        }
-        if (exceptions) {
-            throw exceptions.get(0)
-        }
+    @AfterMethod(alwaysRun = true)
+    public void shutdown() {
+        if (app != null) Entities.destroyAll(app);
     }
 
-    @Test(groups = [ "Live" ], dataProvider="basicEntities")
+    @Test(groups = "Live", dataProvider="basicEntities")
     public void testStartsWebAppInAws(final SoftwareProcess entity) {
         entity.start([ loc ])
         executeUntilSucceedsWithShutdown(entity, abortOnError:false, timeout:75*SECONDS, useGroovyTruth:true) {
