@@ -84,7 +84,7 @@ class CassandraClusterLiveTest {
     @Test(groups = "Live")
     public void canStartupAndShutdown() {
         cluster = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraCluster.class)
-                .configure("initialSize", "2")
+                .configure("initialSize", 2)
                 .configure("clusterName", "AmazonCluster"));
         assertEquals cluster.currentSize, 0
 

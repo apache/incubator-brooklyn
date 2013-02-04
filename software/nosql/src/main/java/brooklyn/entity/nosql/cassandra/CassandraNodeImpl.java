@@ -57,6 +57,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
     public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
     public Long getToken() { return getAttribute(CassandraNode.TOKEN); }
+    public String getSeeds() { return getConfig(CassandraNode.SEEDS); }
 
     @Override
     public Class<CassandraNodeDriver> getDriverInterface() {

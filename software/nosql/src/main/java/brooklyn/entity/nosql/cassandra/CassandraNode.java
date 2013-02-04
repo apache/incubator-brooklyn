@@ -55,6 +55,8 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
 
     BasicAttributeSensor<Integer> PEERS = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.peers", "Number of peers in cluster");
 
+    ConfigKey<String> SEEDS = new BasicConfigKey<String>(String.class, "cassandra.seeds", "List of seed node hosts in cluster");
+
     Integer getGossipPort();
 
     Integer getSslGossipPort();
@@ -62,6 +64,8 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     Integer getThriftPort();
 
     String getClusterName();
+
+    String getSeeds();
 
     Long getToken();
 
