@@ -47,6 +47,7 @@ public class PolicySummary {
 
     this.links = ImmutableMap.<String, URI>builder()
         .put("self", URI.create(entityUri + "/policies/" + policy.getId()))
+        .put("config", URI.create(entityUri + "/policies/" + policy.getId() + "/config"))
         .put("start", URI.create(entityUri + "/policies/" + policy.getId() + "/start"))
         .put("stop", URI.create(entityUri + "/policies/" + policy.getId() + "/stop"))
         .put("destroy", URI.create(entityUri + "/policies/" + policy.getId() + "/destroy"))

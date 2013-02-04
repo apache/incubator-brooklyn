@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class CatalogPolicySummary extends CatalogItemSummary {
 
-    private final Set<ConfigSummary> config;
+    private final Set<PolicyConfigSummary> config;
 
     public CatalogPolicySummary(
             @JsonProperty("id") String id,
@@ -22,7 +22,7 @@ public class CatalogPolicySummary extends CatalogItemSummary {
             @JsonProperty("type") String type,
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
-            @JsonProperty("config") Set<ConfigSummary> config,
+            @JsonProperty("config") Set<PolicyConfigSummary> config,
             @JsonProperty("links") Map<String, URI> links
         ) {
         super(id, name, type, description, iconUrl, links);
@@ -31,13 +31,13 @@ public class CatalogPolicySummary extends CatalogItemSummary {
     }
 
     public static CatalogPolicySummary from(BrooklynRestResourceUtils b, CatalogItem<? extends Entity> item) {
-        Set<ConfigSummary> config = ImmutableSet.of();
+        Set<PolicyConfigSummary> config = ImmutableSet.of();
         return new CatalogPolicySummary(item.getId(), item.getName(), item.getJavaType(), 
                 item.getDescription(), item.getIconUrl(), config, 
                 makeLinks(item));
     }
 
-    public Set<ConfigSummary> getConfig() {
+    public Set<PolicyConfigSummary> getConfig() {
         return config;
     }
 

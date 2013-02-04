@@ -19,7 +19,7 @@ import com.google.common.collect.Sets;
 
 public class CatalogEntitySummary extends CatalogItemSummary {
 
-    private final Set<ConfigSummary> config;
+    private final Set<EntityConfigSummary> config;
     private final Set<SensorSummary> sensors;
     private final Set<EffectorSummary> effectors;
 
@@ -29,7 +29,7 @@ public class CatalogEntitySummary extends CatalogItemSummary {
             @JsonProperty("type") String type,
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
-            @JsonProperty("config") Set<ConfigSummary> config, 
+            @JsonProperty("config") Set<EntityConfigSummary> config, 
             @JsonProperty("sensors") Set<SensorSummary> sensors, 
             @JsonProperty("effectors") Set<EffectorSummary> effectors,
             @JsonProperty("links") Map<String, URI> links
@@ -43,11 +43,11 @@ public class CatalogEntitySummary extends CatalogItemSummary {
     public static CatalogEntitySummary from(BrooklynRestResourceUtils b, CatalogItem<? extends Entity> item) {
         EntityType type = EntityTypes.getDefinedEntityType(b.getCatalog().loadClass(item)).getSnapshot();
         
-        Set<ConfigSummary> config = Sets.newLinkedHashSet();
+        Set<EntityConfigSummary> config = Sets.newLinkedHashSet();
         Set<SensorSummary> sensors = Sets.newLinkedHashSet();
         Set<EffectorSummary> effectors = Sets.newLinkedHashSet();
         
-        for (ConfigKey<?> x: type.getConfigKeys()) config.add(ConfigSummary.forCatalog(x));
+        for (ConfigKey<?> x: type.getConfigKeys()) config.add(EntityConfigSummary.forCatalog(x));
         for (Sensor<?> x: type.getSensors()) sensors.add(SensorSummary.forCatalog(x));
         for (Effector<?> x: type.getEffectors()) effectors.add(EffectorSummary.forCatalog(x));
 
@@ -57,7 +57,7 @@ public class CatalogEntitySummary extends CatalogItemSummary {
                 makeLinks(item));
     }
     
-    public Set<ConfigSummary> getConfig() {
+    public Set<EntityConfigSummary> getConfig() {
         return config;
     }
     
