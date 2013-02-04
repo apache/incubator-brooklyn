@@ -27,37 +27,39 @@ public interface WebAppServiceConstants {
     public static final BasicAttributeSensorAndConfigKey<HttpsSslConfig> HTTPS_SSL_CONFIG = new BasicAttributeSensorAndConfigKey<HttpsSslConfig>(
             HttpsSslConfig.class, "webapp.https.ssl", "SSL Configuration for HTTPS", null);
     
-    public static final brooklyn.event.basic.BasicAttributeSensor<Integer> ERROR_COUNT =
-            new brooklyn.event.basic.BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.errors", "Request errors");
-    public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME =
-            new BasicAttributeSensor<Integer>(Integer.class, "webpp.reqs.processing.max", "Max processing time");
     public static final BasicAttributeSensor<Integer> REQUEST_COUNT =
             new BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.total", "Request count");
+    public static final brooklyn.event.basic.BasicAttributeSensor<Integer> ERROR_COUNT =
+            new brooklyn.event.basic.BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.errors", "Request errors");
     public static final BasicAttributeSensor<Integer> TOTAL_PROCESSING_TIME =
-            new BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.processing.time", "Total processing time");
+            new BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.processingTime.total", "Total processing time (millis)");
+    public static final BasicAttributeSensor<Integer> MAX_PROCESSING_TIME =
+            new BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.processingTime.max", "Max processing time (millis)");
 
     public static final BasicAttributeSensor<Long> BYTES_RECEIVED =
             new BasicAttributeSensor<Long>(Long.class, "webapp.reqs.bytes.received", "Total bytes received by the webserver");
     public static final BasicAttributeSensor<Long> BYTES_SENT =
             new BasicAttributeSensor<Long>(Long.class, "webapp.reqs.bytes.sent", "Total bytes sent by the webserver");
 
-    /**
-     * This is the normalised req/second based on a delta of the last request count.
-     */
-    public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND =
-            new BasicAttributeSensor<Double>(Double.class, "webapp.reqs.persec.last", "Reqs/Sec");
+    /** req/second computed from the delta of the last request count and an associated timestamp */
+    public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND_LAST =
+            new BasicAttributeSensor<Double>(Double.class, "webapp.reqs.perSec.last", "Reqs/sec (last datapoint)");
+    /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_LAST */
+    public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND = REQUESTS_PER_SECOND_LAST;
 
-    public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = 10 * 1000;
-    public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND
-            = new BasicAttributeSensor<Double>(Double.class, String.format("webapp.reqs.persec.avg.%s", AVG_REQUESTS_PER_SECOND_PERIOD),
-            String.format("Average Reqs/Sec (over the last %sms)", AVG_REQUESTS_PER_SECOND_PERIOD));
+    // TODO make this a config key
+    public static final Integer REQUESTS_PER_SECOND_WINDOW_PERIOD = 10 * 1000;
+    /** rolled-up req/second for a window */
+    public static final BasicAttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW
+            = new BasicAttributeSensor<Double>(Double.class, String.format("webapp.reqs.perSec.windowed", REQUESTS_PER_SECOND_WINDOW_PERIOD),
+                    String.format("Reqs/sec (over time window)", REQUESTS_PER_SECOND_WINDOW_PERIOD));
+    /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_WINDOW_PERIOD */
+    public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = REQUESTS_PER_SECOND_WINDOW_PERIOD;
+    /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_IN_WINDOW */
+    public static final BasicAttributeSensor<Double> AVG_REQUESTS_PER_SECOND = REQUESTS_PER_SECOND_IN_WINDOW;
 
     public static final BasicAttributeSensor<String> ROOT_URL = RootUrl.ROOT_URL;
 
-//    public static final BasicAttributeSensor<String> HTTP_SERVER =
-//            new BasicAttributeSensor<String>(String.class, "webapp.http.server", "Server name");
-//    public static final BasicAttributeSensor<Integer> HTTP_STATUS =
-//            new BasicAttributeSensor<Integer>(Integer.class, "webapp.http.status", "HTTP response code for the server");
 }
 
 //this class is added because the ROOT_URL relies on a static initialization which unfortunately can't be added to

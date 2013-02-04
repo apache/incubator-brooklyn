@@ -7,6 +7,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
@@ -20,6 +23,8 @@ import com.google.common.collect.Maps;
 
 public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> implements EntitySpec<T> {
 
+    private static final Logger log = LoggerFactory.getLogger(BasicEntitySpec.ConcreteEntitySpec.class);
+    
     private static class ConcreteEntitySpec<T extends Entity> extends BasicEntitySpec<T, ConcreteEntitySpec<T>> {
         ConcreteEntitySpec(Class<T> type) {
             super(type);
@@ -67,18 +72,21 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
     public S configure(Map<?,?> val) {
         for (Map.Entry<?, ?> entry: val.entrySet()) {
             if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");
-            if (entry.getKey() instanceof String)
-                flags.put((String)entry.getKey(), entry.getValue());
+            if (entry.getKey() instanceof CharSequence)
+                flags.put(entry.getKey().toString(), entry.getValue());
             else if (entry.getKey() instanceof ConfigKey<?>)
                 config.put((ConfigKey<?>)entry.getKey(), entry.getValue());
             else if (entry.getKey() instanceof HasConfigKey<?>)
                 config.put(((HasConfigKey<?>)entry.getKey()).getConfigKey(), entry.getValue());
+            else {
+                log.warn("Spec "+this+" ignoring unknown config key "+entry.getKey());
+            }
         }
         return self();
     }
     
-    public S configure(String key, Object val) {
-        flags.put(checkNotNull(key, "key"), val);
+    public S configure(CharSequence key, Object val) {
+        flags.put(checkNotNull(key, "key").toString(), val);
         return self();
     }
     

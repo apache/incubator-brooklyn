@@ -39,7 +39,7 @@ public class EntityProxyTest {
     public void setUp() throws Exception {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(TestEntity.Spec.newInstance());
-        managementContext = app.getManagementContext();
+        managementContext = app.getManagementSupport().getManagementContext(false);
     }
     
     @AfterMethod(alwaysRun=true)
@@ -138,14 +138,19 @@ public class EntityProxyTest {
 
     @Test
     public void testCreateInAppWithClassAndMap() {
-        ApplicationBuilder appB = new ApplicationBuilder() {
-            @Override
-            protected void doBuild() {
-                createChild(MutableMap.of("confName", "faz"), TestEntity.class);
-            }
-        };
-        StartableApplication app2 = appB.manage();
-        assertEquals(Iterables.getOnlyElement(app2.getChildren()).getConfig(TestEntity.CONF_NAME), "faz");
+        StartableApplication app2 = null;
+        try {
+            ApplicationBuilder appB = new ApplicationBuilder() {
+                @Override
+                protected void doBuild() {
+                    createChild(MutableMap.of("confName", "faz"), TestEntity.class);
+                }
+            };
+            app2 = appB.manage();
+            assertEquals(Iterables.getOnlyElement(app2.getChildren()).getConfig(TestEntity.CONF_NAME), "faz");
+        } finally {
+            if (app2 != null) Entities.destroyAll(app2);
+        }
     }
 
     private void assertIsProxy(Entity e) {
