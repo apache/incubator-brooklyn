@@ -14,10 +14,8 @@ import brooklyn.util.flags.TypeCoercions;
 * The {@link ConfigKey} will have the same name and description as the sensor but not necessarily the same type.
 * Conversion to set the sensor value from the config key must be supplied in a subclass.
 */
-// TODO replace entity.ConfigKey with config.ConfigKey
-@SuppressWarnings("deprecation")
 public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends BasicAttributeSensor<SensorType> 
-        implements brooklyn.entity.ConfigKey.HasConfigKey<ConfigType> {
+        implements ConfigKey.HasConfigKey<ConfigType> {
     private static final long serialVersionUID = -3103809215973264600L;
 
     private ConfigKey<ConfigType> configKey;

@@ -43,6 +43,7 @@ import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
+import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.text.Identifiers
 
 import com.google.common.annotations.Beta
@@ -665,12 +666,21 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         configsInternal.setConfig(key, val);
     }
 
+    public <T> T setConfig(ConfigKey<T> key, DeferredSupplier val) {
+        assertNotYetOwned()
+        configsInternal.setConfig(key, val);
+    }
+
     @Override
     public <T> T setConfig(HasConfigKey<T> key, T val) {
         setConfig(key.configKey, val)
     }
 
     public <T> T setConfig(HasConfigKey<T> key, Task<T> val) {
+        setConfig(key.configKey, val)
+    }
+
+    public <T> T setConfig(HasConfigKey<T> key, DeferredSupplier val) {
         setConfig(key.configKey, val)
     }
 
