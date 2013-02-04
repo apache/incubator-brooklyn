@@ -20,11 +20,9 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.policy.Policy;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.basic.Policies;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.PolicySummary;
-import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
@@ -116,7 +114,7 @@ public class PolicyResource extends AbstractBrooklynRestResource {
             policyType.getMethod("setConfig", Map.class).invoke(policy, config);
         }
         log.debug("REST API adding policy "+policy+" to "+entity);
-        entity.addPolicy((AbstractPolicy) policy);
+        entity.addPolicy(policy);
         return policy.getId();
     } catch (Exception e) {
         throw Exceptions.propagate(e);
@@ -139,8 +137,8 @@ public class PolicyResource extends AbstractBrooklynRestResource {
       @ApiParam(name = "policy", value = "Policy ID or name", required = true)
       @PathParam("policy") String policyId
   ) {
-      EntityLocal entity = brooklyn().getEntity(application, entityToken);
-      return Policies.getPolicyStatus(findPolicy(policyId, entity));
+    Policy policy = brooklyn().getPolicy(application, entityToken, policyId);
+    return Policies.getPolicyStatus(policy);
   }
 
   @POST
@@ -159,8 +157,7 @@ public class PolicyResource extends AbstractBrooklynRestResource {
           @ApiParam(name = "policy", value = "Policy ID or name", required = true)
           @PathParam("policy") String policyId
   ) {
-      EntityLocal entity = brooklyn().getEntity(application, entityToken);
-    final Policy policy = findPolicy(policyId, entity);
+    Policy policy = brooklyn().getPolicy(application, entityToken, policyId);
 
     policy.resume();
     return Response.status(Response.Status.OK).build();
@@ -182,8 +179,7 @@ public class PolicyResource extends AbstractBrooklynRestResource {
           @ApiParam(name = "policy", value = "Policy ID or name", required = true)
           @PathParam("policy") String policyId
   ) {
-      EntityLocal entity = brooklyn().getEntity(application, entityToken);
-    final Policy policy = findPolicy(policyId, entity);
+    Policy policy = brooklyn().getPolicy(application, entityToken, policyId);
 
     policy.suspend();
     return Response.status(Response.Status.OK).build();
@@ -203,27 +199,13 @@ public class PolicyResource extends AbstractBrooklynRestResource {
           @PathParam("entity") String entityToken,
           
           @ApiParam(name = "policy", value = "Policy ID or name", required = true)
-          @PathParam("policy") String policyId
+          @PathParam("policy") String policyToken
   ) {
-      EntityLocal entity = brooklyn().getEntity(application, entityToken);
-    final Policy policy = findPolicy(policyId, entity);
+    EntityLocal entity = brooklyn().getEntity(application, entityToken);
+    Policy policy = brooklyn().getPolicy(entity, policyToken);
 
     policy.suspend();
-    entity.removePolicy((AbstractPolicy) policy);
+    entity.removePolicy(policy);
     return Response.status(Response.Status.OK).build();
   }
-
-  protected Policy findPolicy(String policyId, final EntityLocal entity) {
-      for (Policy p: entity.getPolicies()) {
-          if (policyId.equals(p.getId())) return p;
-      }
-      for (Policy p: entity.getPolicies()) {
-          if (policyId.equals(p.getName())) return p;
-      }
-      throw WebResourceUtils.notFound("No policy "+policyId+" found on entity "+entity);
-  }
-
-  
-  // TODO policy config -- but this requires changes to policies
-  
 }

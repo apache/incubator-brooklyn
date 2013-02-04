@@ -1,9 +1,8 @@
 package brooklyn.util.flags;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObject;
 
@@ -20,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.trait.Configurable;
 import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Objects;
@@ -92,9 +91,8 @@ public class FlagUtils {
 		return getFieldsWithFlagsInternal(o, filteredFields);
     }
     
-    // TODO Don't want to use class AbstractEntity here...
-    public static Map<String, ? extends Object> setConfigKeysFromFlags(Map<String, ? extends Object> flags, AbstractEntity entity) {
-        return setConfigKeysFromFlagsInternal(flags, entity, getAllFields(entity.getClass()));
+    public static Map<String, ? extends Object> setConfigKeysFromFlags(Map<String, ? extends Object> flags, Configurable instance) {
+        return setConfigKeysFromFlagsInternal(flags, instance, getAllFields(instance.getClass()));
     }
 
 	/** returns all fields on the given class, superclasses, and interfaces thereof, in that order of preference,
@@ -205,7 +203,7 @@ public class FlagUtils {
         return remaining;
     }
 
-    private static Map<String, ? extends Object> setConfigKeysFromFlagsInternal(Map<String,? extends Object> flags, AbstractEntity entity, Collection<Field> fields) {
+    private static Map<String, ? extends Object> setConfigKeysFromFlagsInternal(Map<String,? extends Object> flags, Configurable instance, Collection<Field> fields) {
         Map<String, Object> remaining = Maps.newLinkedHashMap();
         if (truth(flags)) remaining.putAll(flags);
         for (Field f: fields) {
@@ -213,9 +211,9 @@ public class FlagUtils {
             if (cf != null) {
                 ConfigKey key = null;
                 if (ConfigKey.class.isAssignableFrom(f.getType())) {
-                    key = (ConfigKey) getField(entity, f);
+                    key = (ConfigKey) getField(instance, f);
                 } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-                    key = ((HasConfigKey)getField(entity, f)).getConfigKey();
+                    key = ((HasConfigKey)getField(instance, f)).getConfigKey();
                 } else {
                     
                 }
@@ -223,7 +221,7 @@ public class FlagUtils {
                     String flagName = elvis(cf.value(), key.getName());
                     if (truth(flagName) && remaining.containsKey(flagName)) {
                         Object v = remaining.remove(flagName);
-                        entity.setConfig(key, v);
+                        instance.setConfig(key, v);
                     }
                 }
             }

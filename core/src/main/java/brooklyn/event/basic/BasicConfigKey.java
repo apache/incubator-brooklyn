@@ -12,23 +12,84 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 
 public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializable {
     private static final long serialVersionUID = -1762014059150215376L;
     
     private static final Splitter dots = Splitter.on('.');
+
+    // TODO For use with generics; TODO accept some form of ParameterizedType
+    @Beta
+    public static <T> Builder<T> builder(TypeToken<T> type) {
+        return new Builder<T>().type(type);
+    }
+
+    public static <T> Builder<T> builder(Class<T> type) {
+        return new Builder<T>().type(type);
+    }
+    
+    public static class Builder<T> {
+        private String name;
+        private Class<T> type;
+        private String description;
+        private T defaultValue;
+        private boolean reconfigurable;
+        
+        public Builder<T> name(String val) {
+            this.name = val; return this;
+        }
+        public Builder<T> type(Class<T> val) {
+            this.type = val; return this;
+        }
+        @SuppressWarnings("unchecked")
+        public Builder<T> type(TypeToken<T> val) {
+            this.type = (Class<T>) val.getRawType(); return this;
+        }
+        public Builder<T> description(String val) {
+            this.description = val; return this;
+        }
+        public Builder<T> defaultValue(T val) {
+            this.defaultValue = val; return this;
+        }
+        public Builder<T> reconfigurable(boolean val) {
+            this.reconfigurable = val; return this;
+        }
+        public BasicConfigKey<T> build() {
+            return new BasicConfigKey<T>(this);
+        }
+    }
     
     private String name;
     private Class<T> type;
     private String description;
     private T defaultValue;
+    private boolean reconfigurable;
 
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicConfigKey() { /* for gson */ }
+
+    // TODO How to do this without cast; the but T in TypeToken could be a ParameterizedType 
+    // so it really could be a super-type of T rather than Class<T>!
+    @SuppressWarnings("unchecked")
+    public BasicConfigKey(TypeToken<T> type, String name) {
+        this((Class<T>) type.getRawType(), name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public BasicConfigKey(TypeToken<T> type, String name, String description) {
+        this((Class<T>) type.getRawType(), name, description);
+    }
+
+    @SuppressWarnings("unchecked")
+    public BasicConfigKey(TypeToken<T> type, String name, String description, T defaultValue) {
+        this((Class<T>) type.getRawType(), name, description, defaultValue);
+    }
 
     public BasicConfigKey(Class<T> type, String name) {
         this(type, name, name, null);
@@ -43,6 +104,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.name = checkNotNull(name, "name");
         this.type = checkNotNull(type, "type");
         this.defaultValue = defaultValue;
+        this.reconfigurable = false;
     }
 
     public BasicConfigKey(ConfigKey<T> key, T defaultValue) {
@@ -50,6 +112,15 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.name = checkNotNull(key.getName(), "name");
         this.type = checkNotNull(key.getType(), "type");
         this.defaultValue = defaultValue;
+        this.reconfigurable = false;
+    }
+
+    protected BasicConfigKey(Builder<T> builder) {
+        this.name = checkNotNull(builder.name, "name");
+        this.type = checkNotNull(builder.type, "type");
+        this.description = builder.description;
+        this.defaultValue = builder.defaultValue;
+        this.reconfigurable = builder.reconfigurable;
     }
     
     /** @see ConfigKey#getName() */
@@ -72,6 +143,11 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         return defaultValue != null;
     }
 
+    @Override
+    public boolean isReconfigurable() {
+        return reconfigurable;
+    }
+    
     /** @see ConfigKey#getNameParts() */
     public Collection<String> getNameParts() {
         return Lists.newArrayList(dots.split(name));

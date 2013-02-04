@@ -1,4 +1,4 @@
-package brooklyn.entity.basic;
+package brooklyn.policy.basic;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 
@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.entity.basic.ConfigMapViewWithStringKeys;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
@@ -20,14 +23,16 @@ import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 @SuppressWarnings("deprecation")
-public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
+public class PolicyConfigMap implements brooklyn.config.ConfigMap {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EntityConfigMap.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyConfigMap.class);
 
-    /** entity against which config resolution / task execution will occur */
-    private final AbstractEntity entity;
+    /** policy against which config resolution / task execution will occur */
+    private final AbstractPolicy policy;
 
     private final ConfigMapViewWithStringKeys mapViewWithStringKeys = new ConfigMapViewWithStringKeys(this);
 
@@ -46,10 +51,9 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
      * entity.
      */
     private final Map<ConfigKey<?>,Object> ownConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
-    private final Map<ConfigKey<?>,Object> inheritedConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
 
-    public EntityConfigMap(AbstractEntity entity) {
-        this.entity = Preconditions.checkNotNull(entity, "entity must be specified");
+    public PolicyConfigMap(AbstractPolicy policy) {
+        this.policy = Preconditions.checkNotNull(policy, "policy must be specified");
     }
 
     public <T> T getConfig(ConfigKey<T> key) {
@@ -75,16 +79,15 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
         // TODO If ask for a config value that's not in our configKeys, should we really continue with rest of method and return key.getDefaultValue?
         //      e.g. SshBasedJavaAppSetup calls setAttribute(JMX_USER), which calls getConfig(JMX_USER)
         //           but that example doesn't have a default...
-        ConfigKey<T> ownKey = entity!=null ? (ConfigKey<T>)elvis(entity.getEntityType().getConfigKey(key.getName()), key) : key;
-        
-        ExecutionContext exec = entity.getExecutionContext();
+        ConfigKey<T> ownKey = policy!=null ? (ConfigKey<T>)elvis(policy.getPolicyType().getConfigKey(key.getName()), key) : key;
         
         // Don't use groovy truth: if the set value is e.g. 0, then would ignore set value and return default!
         if (ownKey instanceof ConfigKeySelfExtracting) {
             if (((ConfigKeySelfExtracting<T>)ownKey).isSet(ownConfig)) {
+                // FIXME Should we support config from futures? How to get execution context before setEntity?
+                EntityLocal entity = policy.entity;
+                ExecutionContext exec = (entity != null) ? entity.getExecutionContext() : null;
                 return ((ConfigKeySelfExtracting<T>)ownKey).extractValue(ownConfig, exec);
-            } else if (((ConfigKeySelfExtracting<T>)ownKey).isSet(inheritedConfig)) {
-                return ((ConfigKeySelfExtracting<T>)ownKey).extractValue(inheritedConfig, exec);
             }
         } else {
             LOG.warn("Config key {} of {} is not a ConfigKeySelfExtracting; cannot retrieve value; returning default", ownKey, this);
@@ -95,25 +98,15 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
     @Override
     public Object getRawConfig(ConfigKey<?> key) {
         if (ownConfig.containsKey(key)) return ownConfig.get(key);
-        if (inheritedConfig.containsKey(key)) return inheritedConfig.get(key);
         return null;
     }
     
-    /** returns the config visible at this entity, local and inherited (preferring local) */
+    /** returns the config of this policy */
     public Map<ConfigKey<?>,Object> getAllConfig() {
-        Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(inheritedConfig.size()+ownConfig.size());
-        result.putAll(inheritedConfig);
-        result.putAll(ownConfig);
-        return Collections.unmodifiableMap(result);
+        // Don't use ImmutableMap because valide for values to be null
+        return Collections.unmodifiableMap(Maps.newLinkedHashMap(ownConfig));
     }
 
-    /** returns the config defined at this entity, ie not inherited */
-    public Map<ConfigKey<?>,Object> getLocalConfig() {
-        Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(ownConfig.size());
-        result.putAll(ownConfig);
-        return Collections.unmodifiableMap(result);
-    }
-    
     public Object setConfig(ConfigKey<?> key, Object v) {
         Object val;
         if ((v instanceof Future) || (v instanceof DeferredSupplier)) {
@@ -135,24 +128,12 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
         } else {
             oldVal = ownConfig.put(key, val);
         }
-        entity.refreshInheritedConfigOfChildren();
         return oldVal;
     }
     
-    public void setInheritedConfig(Map<ConfigKey<?>, ? extends Object> vals) {
-        inheritedConfig.putAll(vals);
-    }
-    
-    public void clearInheritedConfig() {
-        inheritedConfig.clear();
-    }
-
     @Override
-    public EntityConfigMap submap(Predicate<ConfigKey<?>> filter) {
-        EntityConfigMap m = new EntityConfigMap(entity);
-        for (Map.Entry<ConfigKey<?>,Object> entry: inheritedConfig.entrySet())
-            if (filter.apply(entry.getKey()))
-                m.inheritedConfig.put(entry.getKey(), entry.getValue());
+    public PolicyConfigMap submap(Predicate<ConfigKey<?>> filter) {
+        PolicyConfigMap m = new PolicyConfigMap(policy);
         for (Map.Entry<ConfigKey<?>,Object> entry: ownConfig.entrySet())
             if (filter.apply(entry.getKey()))
                 m.ownConfig.put(entry.getKey(), entry.getValue());
@@ -161,7 +142,7 @@ public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
 
     @Override
     public String toString() {
-        return super.toString()+"[own="+Entities.sanitize(ownConfig)+"; inherited="+Entities.sanitize(inheritedConfig)+"]";
+        return super.toString()+"[own="+Entities.sanitize(ownConfig)+"]";
     }
     
     public Map<String,Object> asMapWithStringKeys() {

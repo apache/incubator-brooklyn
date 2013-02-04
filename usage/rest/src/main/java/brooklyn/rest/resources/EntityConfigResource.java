@@ -15,7 +15,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.rest.apidoc.Apidoc;
-import brooklyn.rest.domain.ConfigSummary;
+import brooklyn.rest.domain.EntityConfigSummary;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -28,16 +28,16 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/applications/{application}/entities/{entity}/config")
 @Apidoc("Entity config")
 @Produces("application/json")
-public class ConfigResource extends AbstractBrooklynRestResource {
+public class EntityConfigResource extends AbstractBrooklynRestResource {
 
   @GET
   @ApiOperation(value = "Fetch the config keys for a specific application entity",
-      responseClass = "brooklyn.rest.domain.SensorSummary",
+      responseClass = "brooklyn.rest.domain.ConfigSummary",
       multiValueResponse = true)
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application or entity")
   })
-  public List<ConfigSummary> list(
+  public List<EntityConfigSummary> list(
       @ApiParam(value = "Application ID or name", required = true)
       @PathParam("application") final String application,
       @ApiParam(value = "Entity ID or name", required = true)
@@ -47,10 +47,10 @@ public class ConfigResource extends AbstractBrooklynRestResource {
 
     return Lists.newArrayList(transform(
         entity.getEntityType().getConfigKeys(),
-        new Function<ConfigKey<?>, ConfigSummary>() {
+        new Function<ConfigKey<?>, EntityConfigSummary>() {
           @Override
-          public ConfigSummary apply(ConfigKey<?> config) {
-            return new ConfigSummary(entity, config);
+          public EntityConfigSummary apply(ConfigKey<?> config) {
+            return new EntityConfigSummary(entity, config);
           }
         }));
   }

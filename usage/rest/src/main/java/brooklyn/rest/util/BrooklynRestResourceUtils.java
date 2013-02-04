@@ -30,6 +30,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
@@ -59,6 +60,34 @@ public class BrooklynRestResourceUtils {
     
     public LocationRegistry getLocationRegistry() {
         return mgmt.getLocationRegistry();
+    }
+
+    /** finds the policy indicated by the given ID or name.
+     * @see {@link getEntity(String,String)}; it then searches the policies of that
+     * entity for one whose ID or name matches that given.
+     * <p>
+     * 
+     * @throws 404 or 412 (unless input is null in which case output is null) */
+    public Policy getPolicy(String application, String entity, String policy) {
+        return getPolicy(getEntity(application, entity), policy);
+    }
+
+    /** finds the policy indicated by the given ID or name.
+     * @see {@link getPolicy(String,String,String)}.
+     * <p>
+     * 
+     * @throws 404 or 412 (unless input is null in which case output is null) */
+    public Policy getPolicy(Entity entity, String policy) {
+        if (policy==null) return null;
+
+        for (Policy p: entity.getPolicies()) {
+            if (policy.equals(p.getId())) return p;
+        }
+        for (Policy p: entity.getPolicies()) {
+            if (policy.equals(p.getName())) return p;
+        }
+        
+        throw WebResourceUtils.notFound("Cannot find policy '%s' in entity '%s'", policy, entity);
     }
 
     /** finds the entity indicated by the given ID or name

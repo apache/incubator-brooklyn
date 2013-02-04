@@ -1,6 +1,5 @@
 package brooklyn.policy.autoscaling;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.Closure;
@@ -16,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Resizable;
@@ -24,6 +24,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.loadbalancing.LoadBalancingPolicy;
@@ -36,6 +37,7 @@ import brooklyn.util.flags.TypeCoercions;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 
@@ -136,21 +138,21 @@ public class AutoScalerPolicy extends AbstractPolicy {
         private Map<String,?> toFlags() {
             return MutableMap.<String,Object>builder()
                     .putIfNotNull("id", id)
-                    .put("name", name)
-                    .put("metric", metric)
-                    .put("entityWithMetric", entityWithMetric)
-                    .put("metricUpperBound", metricUpperBound)
-                    .put("metricLowerBound", metricLowerBound)
-                    .put("minPoolSize", minPoolSize)
-                    .put("maxPoolSize", maxPoolSize)
-                    .put("minPeriodBetweenExecs", minPeriodBetweenExecs)
-                    .put("resizeUpStabilizationDelay", resizeUpStabilizationDelay)
-                    .put("resizeDownStabilizationDelay", resizeDownStabilizationDelay)
-                    .put("resizeOperator", resizeOperator)
-                    .put("currentSizeOperator", currentSizeOperator)
-                    .put("poolHotSensor", poolHotSensor)
-                    .put("poolColdSensor", poolColdSensor)
-                    .put("poolOkSensor", poolOkSensor)
+                    .putIfNotNull("name", name)
+                    .putIfNotNull("metric", metric)
+                    .putIfNotNull("entityWithMetric", entityWithMetric)
+                    .putIfNotNull("metricUpperBound", metricUpperBound)
+                    .putIfNotNull("metricLowerBound", metricLowerBound)
+                    .putIfNotNull("minPoolSize", minPoolSize)
+                    .putIfNotNull("maxPoolSize", maxPoolSize)
+                    .putIfNotNull("minPeriodBetweenExecs", minPeriodBetweenExecs)
+                    .putIfNotNull("resizeUpStabilizationDelay", resizeUpStabilizationDelay)
+                    .putIfNotNull("resizeDownStabilizationDelay", resizeDownStabilizationDelay)
+                    .putIfNotNull("resizeOperator", resizeOperator)
+                    .putIfNotNull("currentSizeOperator", currentSizeOperator)
+                    .putIfNotNull("poolHotSensor", poolHotSensor)
+                    .putIfNotNull("poolColdSensor", poolColdSensor)
+                    .putIfNotNull("poolOkSensor", poolOkSensor)
                     .build();
         }
     }
@@ -171,11 +173,11 @@ public class AutoScalerPolicy extends AbstractPolicy {
     }
     
     // Pool workrate notifications.
-    public static BasicNotificationSensor<Map> POOL_HOT = new BasicNotificationSensor<Map>(
+    public static BasicNotificationSensor<Map> DEFAULT_POOL_HOT_SENSOR = new BasicNotificationSensor<Map>(
         Map.class, "resizablepool.hot", "Pool is over-utilized; it has insufficient resource for current workload");
-    public static BasicNotificationSensor<Map> POOL_COLD = new BasicNotificationSensor<Map>(
+    public static BasicNotificationSensor<Map> DEFAULT_POOL_COLD_SENSOR = new BasicNotificationSensor<Map>(
         Map.class, "resizablepool.cold", "Pool is under-utilized; it has too much resource for current workload");
-    public static BasicNotificationSensor<Map> POOL_OK = new BasicNotificationSensor<Map>(
+    public static BasicNotificationSensor<Map> DEFAULT_POOL_OK_SENSOR = new BasicNotificationSensor<Map>(
         Map.class, "resizablepool.cold", "Pool utilization is ok; the available resources are fine for the current workload");
 
     public static final String POOL_CURRENT_SIZE_KEY = "pool.current.size";
@@ -183,48 +185,92 @@ public class AutoScalerPolicy extends AbstractPolicy {
     public static final String POOL_LOW_THRESHOLD_KEY = "pool.low.threshold";
     public static final String POOL_CURRENT_WORKRATE_KEY = "pool.current.workrate";
     
-    @SetFromFlag
-    private AttributeSensor<? extends Number> metric;
+    @SetFromFlag("metric")
+    public static final ConfigKey<AttributeSensor<? extends Number>> METRIC = BasicConfigKey.builder(new TypeToken<AttributeSensor<? extends Number>>() {})
+            .name("autoscaler.metric")
+            .build();
 
-    @SetFromFlag
-    private Entity entityWithMetric;
+    @SetFromFlag("entityWithMetric")
+    public static final ConfigKey<Entity> ENTITY_WITH_METRIC = BasicConfigKey.builder(Entity.class)
+            .name("autoscaler.entityWithMetric")
+            .build();
     
-    @SetFromFlag
-    private Number metricLowerBound;
+    @SetFromFlag("metricLowerBound")
+    public static final ConfigKey<Number> METRIC_LOWER_BOUND = BasicConfigKey.builder(Number.class)
+            .name("autoscaler.metricLowerBound")
+            .build();
     
-    @SetFromFlag
-    private Number metricUpperBound;
+    @SetFromFlag("metricUpperBound")
+    public static final ConfigKey<Number> METRIC_UPPER_BOUND = BasicConfigKey.builder(Number.class)
+            .name("autoscaler.metricUpperBound")
+            .build();
     
-    @SetFromFlag(defaultVal="100")
-    private long minPeriodBetweenExecs;
+    @SetFromFlag("minPeriodBetweenExecs")
+    public static final ConfigKey<Long> MIN_PERIOD_BETWEEN_EXECS = BasicConfigKey.builder(Long.class)
+            .name("autoscaler.minPeriodBetweenExecs")
+            .defaultValue(100L)
+            .build();
     
-    @SetFromFlag
-    private long resizeUpStabilizationDelay;
+    @SetFromFlag("resizeUpStabilizationDelay")
+    public static final ConfigKey<Long> RESIZE_UP_STABILIZATION_DELAY = BasicConfigKey.builder(Long.class)
+            .name("autoscaler.resizeUpStabilizationDelay")
+            .defaultValue(0l)
+            .build();
     
-    @SetFromFlag
-    private long resizeDownStabilizationDelay;
+    @SetFromFlag("resizeDownStabilizationDelay")
+    public static final ConfigKey<Long> RESIZE_DOWN_STABILIZATION_DELAY = BasicConfigKey.builder(Long.class)
+            .name("autoscaler.resizeDownStabilizationDelay")
+            .defaultValue(0l)
+            .build();
+
+    @SetFromFlag("minPoolSize")
+    public static final ConfigKey<Integer> MIN_POOL_SIZE = BasicConfigKey.builder(Integer.class)
+            .name("autoscaler.minPoolSize")
+            .defaultValue(0)
+            .build();
     
-    @SetFromFlag
-    private int minPoolSize;
+    @SetFromFlag("maxPoolSize")
+    public static final ConfigKey<Integer> MAX_POOL_SIZE = BasicConfigKey.builder(Integer.class)
+            .name("autoscaler.maxPoolSize")
+            .defaultValue(Integer.MAX_VALUE)
+            .build();
+
+    @SetFromFlag("resizeOperator")
+    public static final ConfigKey<ResizeOperator> RESIZE_OPERATOR = BasicConfigKey.builder(ResizeOperator.class)
+            .name("autoscaler.resizeOperator")
+            .defaultValue(new ResizeOperator() {
+                    public Integer resize(Entity entity, Integer desiredSize) {
+                        return ((Resizable)entity).resize(desiredSize);
+                    }})
+            .build();
     
-    @SetFromFlag(defaultVal="2147483647") // defaultVal=Integer.MAX_VALUE
-    private int maxPoolSize;
-    
-    @SetFromFlag
-    private ResizeOperator resizeOperator;
-    
-    @SetFromFlag
-    private Function<Entity,Integer> currentSizeOperator;
-    
-    @SetFromFlag
-    private BasicNotificationSensor<? extends Map> poolHotSensor;
-    
-    @SetFromFlag
-    private BasicNotificationSensor<? extends Map> poolColdSensor;
-    
-    @SetFromFlag
-    private BasicNotificationSensor<? extends Map> poolOkSensor;
-    
+    @SetFromFlag("currentSizeOperator")
+    public static final ConfigKey<Function<Entity,Integer>> CURRENT_SIZE_OPERATOR = BasicConfigKey.builder(new TypeToken<Function<Entity,Integer>>() {})
+            .name("autoscaler.currentSizeOperator")
+            .defaultValue(new Function<Entity,Integer>() {
+                    public Integer apply(Entity entity) {
+                        return ((Resizable)entity).getCurrentSize();
+                    }})
+            .build();
+
+    @SetFromFlag("poolHotSensor")
+    public static final ConfigKey<BasicNotificationSensor<? extends Map>> POOL_HOT_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? extends Map>>() {})
+            .name("autoscaler.poolHotSensor")
+            .defaultValue(DEFAULT_POOL_HOT_SENSOR)
+            .build();
+
+    @SetFromFlag("poolColdSensor")
+    public static final ConfigKey<BasicNotificationSensor<? extends Map>> POOL_COLD_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? extends Map>>() {})
+            .name("autoscaler.poolColdSensor")
+            .defaultValue(DEFAULT_POOL_COLD_SENSOR)
+            .build();
+
+    @SetFromFlag("poolOkSensor")
+    public static final ConfigKey<BasicNotificationSensor<? extends Map>> POOL_OK_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? extends Map>>() {})
+            .name("autoscaler.poolOkSensor")
+            .defaultValue(DEFAULT_POOL_OK_SENSOR)
+            .build();
+
     private Entity poolEntity;
     
     private final AtomicBoolean executorQueued = new AtomicBoolean(false);
@@ -233,28 +279,16 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     private final TimeWindowedList<Number> recentDesiredResizes;
     
-    private final ResizeOperator defaultResizeOperator = new ResizeOperator() {
-        public Integer resize(Entity entity, Integer desiredSize) {
-            return ((Resizable)entity).resize(desiredSize);
-        }
-    };
-    
-    private final Function<Entity,Integer> defaultCurrentSizeOperator = new Function<Entity,Integer>() {
-        public Integer apply(Entity entity) {
-            return ((Resizable)entity).getCurrentSize();
-        }
-    };
-    
     private final SensorEventListener<Map> utilizationEventHandler = new SensorEventListener<Map>() {
         public void onEvent(SensorEvent<Map> event) {
             Map<String, ?> properties = (Map<String, ?>) event.getValue();
             Sensor<?> sensor = event.getSensor();
             
-            if (sensor.equals(poolColdSensor)) {
+            if (sensor.equals(getPoolColdSensor())) {
                 onPoolCold(properties);
-            } else if (sensor.equals(poolHotSensor)) {
+            } else if (sensor.equals(getPoolHotSensor())) {
                 onPoolHot(properties);
-            } else if (sensor.equals(poolOkSensor)) {
+            } else if (sensor.equals(getPoolOkSensor())) {
                 onPoolOk(properties);
             } else {
                 throw new IllegalStateException("Unexpected sensor type: "+sensor+"; event="+event);
@@ -264,7 +298,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
 
     private final SensorEventListener<Number> metricEventHandler = new SensorEventListener<Number>() {
         public void onEvent(SensorEvent<Number> event) {
-            assert event.getSensor().equals(metric);
+            assert event.getSensor().equals(getMetric());
             onMetricChanged(event.getValue());
         }
     };
@@ -275,13 +309,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     public AutoScalerPolicy(Map<String,?> props) {
         super(props);
-        resizeOperator = elvis(resizeOperator, defaultResizeOperator);
-        currentSizeOperator = elvis(currentSizeOperator, defaultCurrentSizeOperator);
-        poolHotSensor = elvis(poolHotSensor, POOL_HOT);
-        poolColdSensor = elvis(poolColdSensor, POOL_COLD);
-        poolOkSensor = elvis(poolOkSensor, POOL_OK);
         
-        long maxResizeStabilizationDelay = Math.max(resizeUpStabilizationDelay, resizeDownStabilizationDelay);
+        long maxResizeStabilizationDelay = Math.max(getResizeUpStabilizationDelay(), getResizeDownStabilizationDelay());
         recentDesiredResizes = new TimeWindowedList<Number>(MutableMap.of("timePeriod", maxResizeStabilizationDelay, "minExpiredVals", 1));
         
         // TODO Should re-use the execution manager's thread pool, somehow
@@ -289,38 +318,94 @@ public class AutoScalerPolicy extends AbstractPolicy {
     }
 
     public void setMetricLowerBound(Number val) {
-        if (LOG.isInfoEnabled()) LOG.info("{} changing metricLowerBound from {} to {}", new Object[] {this, metricLowerBound, val});
-        this.metricLowerBound = checkNotNull(val);
+        if (LOG.isInfoEnabled()) LOG.info("{} changing metricLowerBound from {} to {}", new Object[] {this, getMetricLowerBound(), val});
+        setConfig(METRIC_LOWER_BOUND, checkNotNull(val));
     }
     
     public void setMetricUpperBound(Number val) {
-        if (LOG.isInfoEnabled()) LOG.info("{} changing metricUpperBound from {} to {}", new Object[] {this, metricUpperBound, val});
-        this.metricUpperBound = checkNotNull(val);
+        if (LOG.isInfoEnabled()) LOG.info("{} changing metricUpperBound from {} to {}", new Object[] {this, getMetricUpperBound(), val});
+        setConfig(METRIC_UPPER_BOUND, checkNotNull(val));
     }
     
     public void setMinPeriodBetweenExecs(long val) {
-        if (LOG.isInfoEnabled()) LOG.info("{} changing minPeriodBetweenExecs from {} to {}", new Object[] {this, minPeriodBetweenExecs, val});
-        this.minPeriodBetweenExecs = val;
+        if (LOG.isInfoEnabled()) LOG.info("{} changing minPeriodBetweenExecs from {} to {}", new Object[] {this, getMinPeriodBetweenExecs(), val});
+        setConfig(MIN_PERIOD_BETWEEN_EXECS, val);
     }
     
     public void setResizeUpStabilizationDelay(long val) {
-        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeUpStabilizationDelay from {} to {}", new Object[] {this, resizeUpStabilizationDelay, val});
-        this.resizeUpStabilizationDelay = val;
+        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeUpStabilizationDelay from {} to {}", new Object[] {this, getResizeUpStabilizationDelay(), val});
+        setConfig(RESIZE_UP_STABILIZATION_DELAY, val);
     }
     
     public void setResizeDownStabilizationDelay(long val) {
-        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeDownStabilizationDelay from {} to {}", new Object[] {this, resizeDownStabilizationDelay, val});
-        this.resizeDownStabilizationDelay = val;
+        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeDownStabilizationDelay from {} to {}", new Object[] {this, getResizeDownStabilizationDelay(), val});
+        setConfig(RESIZE_DOWN_STABILIZATION_DELAY, val);
     }
     
     public void setMinPoolSize(int val) {
-        if (LOG.isInfoEnabled()) LOG.info("{} changing minPoolSize from {} to {}", new Object[] {this, minPoolSize, val});
-        this.minPoolSize = val;
+        if (LOG.isInfoEnabled()) LOG.info("{} changing minPoolSize from {} to {}", new Object[] {this, getMinPoolSize(), val});
+        setConfig(MIN_POOL_SIZE, val);
     }
     
     public void setMaxPoolSize(int val) {
-        if (LOG.isInfoEnabled()) LOG.info("{} changing maxPoolSize from {} to {}", new Object[] {this, maxPoolSize, val});
-        this.maxPoolSize = val;
+        if (LOG.isInfoEnabled()) LOG.info("{} changing maxPoolSize from {} to {}", new Object[] {this, getMaxPoolSize(), val});
+        setConfig(MAX_POOL_SIZE, val);
+    }
+    
+    private AttributeSensor<? extends Number> getMetric() {
+        return getConfig(METRIC);
+    }
+
+    private Entity getEntityWithMetric() {
+        return getConfig(ENTITY_WITH_METRIC);
+    }
+    
+    private Number getMetricLowerBound() {
+        return getConfig(METRIC_LOWER_BOUND);
+    }
+    
+    private Number getMetricUpperBound() {
+        return getConfig(METRIC_UPPER_BOUND);
+    }
+    
+    private long getMinPeriodBetweenExecs() {
+        return getConfig(MIN_PERIOD_BETWEEN_EXECS);
+    }
+    
+    private long getResizeUpStabilizationDelay() {
+        return getConfig(RESIZE_UP_STABILIZATION_DELAY);
+    }
+    
+    private long getResizeDownStabilizationDelay() {
+        return getConfig(RESIZE_DOWN_STABILIZATION_DELAY);
+    }
+    
+    private int getMinPoolSize() {
+        return getConfig(MIN_POOL_SIZE);
+    }
+    
+    private int getMaxPoolSize() {
+        return getConfig(MAX_POOL_SIZE);
+    }
+    
+    private ResizeOperator getResizeOperator() {
+        return getConfig(RESIZE_OPERATOR);
+    }
+    
+    private Function<Entity,Integer> getCurrentSizeOperator() {
+        return getConfig(CURRENT_SIZE_OPERATOR);
+    }
+    
+    private BasicNotificationSensor<? extends Map> getPoolHotSensor() {
+        return getConfig(POOL_HOT_SENSOR);
+    }
+    
+    private BasicNotificationSensor<? extends Map> getPoolColdSensor() {
+        return getConfig(POOL_COLD_SENSOR);
+    }
+    
+    private BasicNotificationSensor<? extends Map> getPoolOkSensor() {
+        return getConfig(POOL_OK_SENSOR);
     }
     
     @Override
@@ -338,19 +423,19 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     @Override
     public void setEntity(EntityLocal entity) {
-        if (resizeOperator == defaultResizeOperator) {
+        if (configsInternal.getRawConfig(RESIZE_OPERATOR) == null) {
             Preconditions.checkArgument(entity instanceof Resizable, "Provided entity must be an instance of Resizable, because no custom-resizer operator supplied");
         }
         super.setEntity(entity);
         this.poolEntity = entity;
         
-        if (metric != null) {
-            Entity entityToSubscribeTo = (entityWithMetric != null) ? entityWithMetric : entity;
-            subscribe(entityToSubscribeTo, metric, metricEventHandler);
+        if (getMetric() != null) {
+            Entity entityToSubscribeTo = (getEntityWithMetric() != null) ? getEntityWithMetric() : entity;
+            subscribe(entityToSubscribeTo, getMetric(), metricEventHandler);
         }
-        subscribe(poolEntity, poolColdSensor, utilizationEventHandler);
-        subscribe(poolEntity, poolHotSensor, utilizationEventHandler);
-        subscribe(poolEntity, poolOkSensor, utilizationEventHandler);
+        subscribe(poolEntity, getPoolColdSensor(), utilizationEventHandler);
+        subscribe(poolEntity, getPoolHotSensor(), utilizationEventHandler);
+        subscribe(poolEntity, getPoolOkSensor(), utilizationEventHandler);
     }
     
     private ThreadFactory newThreadFactory() {
@@ -363,9 +448,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-metric for {}: {}", new Object[] {this, poolEntity, val});
 
         double currentMetricD = val.doubleValue();
-        double metricUpperBoundD = metricUpperBound.doubleValue();
-        double metricLowerBoundD = metricLowerBound.doubleValue();
-        int currentSize = currentSizeOperator.apply(entity);
+        double metricUpperBoundD = getMetricUpperBound().doubleValue();
+        double metricLowerBoundD = getMetricLowerBound().doubleValue();
+        int currentSize = getCurrentSizeOperator().apply(entity);
         double currentTotalActivity = currentSize * currentMetricD;
         int desiredSize;
         
@@ -466,8 +551,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
     }
     
     private int toBoundedDesiredPoolSize(int size) {
-        int result = Math.max(minPoolSize, size);
-        result = Math.min(maxPoolSize, result);
+        int result = Math.max(getMinPoolSize(), size);
+        result = Math.min(getMaxPoolSize(), result);
         return result;
     }
 
@@ -505,7 +590,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         
         if (isRunning() && executorQueued.compareAndSet(false, true) && isEntityUp()) {
             long now = System.currentTimeMillis();
-            long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now);
+            long delay = Math.max(0, (executorTime + getMinPeriodBetweenExecs()) - now);
             if (LOG.isTraceEnabled()) LOG.trace("{} scheduling resize in {}ms", this, delay);
             
             executor.schedule(new Runnable() {
@@ -514,7 +599,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                         executorTime = System.currentTimeMillis();
                         executorQueued.set(false);
 
-                        long currentPoolSize = currentSizeOperator.apply(poolEntity);
+                        long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
                         CalculatedDesiredPoolSize calculatedDesiredPoolSize = calculateDesiredPoolSize(currentPoolSize);
                         long desiredPoolSize = calculatedDesiredPoolSize.size;
                         boolean stable = calculatedDesiredPoolSize.stable;
@@ -536,10 +621,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
                         }
                         
                         if (LOG.isDebugEnabled()) LOG.debug("{} requesting resize to {}; current {}, min {}, max {}", 
-                                new Object[] {this, desiredPoolSize, currentPoolSize, minPoolSize, maxPoolSize});
+                                new Object[] {this, desiredPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
                         
                         // TODO Should we use int throughout, rather than casting here?
-                        resizeOperator.resize(poolEntity, (int) desiredPoolSize);
+                        getResizeOperator().resize(poolEntity, (int) desiredPoolSize);
                         
                     } catch (Exception e) {
                         if (isRunning()) {
@@ -567,20 +652,20 @@ public class AutoScalerPolicy extends AbstractPolicy {
      */
     private CalculatedDesiredPoolSize calculateDesiredPoolSize(long currentPoolSize) {
         long now = System.currentTimeMillis();
-        List<TimestampedValue<Number>> downsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeDownStabilizationDelay);
-        List<TimestampedValue<Number>> upsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, resizeUpStabilizationDelay);
+        List<TimestampedValue<Number>> downsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, getResizeDownStabilizationDelay());
+        List<TimestampedValue<Number>> upsizeWindowVals = recentDesiredResizes.getValuesInWindow(now, getResizeUpStabilizationDelay());
         // this is the largest size that has been requested in the "stable-for-shrinking" period:
-        long minDesiredPoolSize = maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay).longValue();
+        long minDesiredPoolSize = maxInWindow(downsizeWindowVals, getResizeDownStabilizationDelay()).longValue();
         // this is the smallest size that has been requested in the "stable-for-growing" period:
-        long maxDesiredPoolSize = minInWindow(upsizeWindowVals, resizeUpStabilizationDelay).longValue();
+        long maxDesiredPoolSize = minInWindow(upsizeWindowVals, getResizeUpStabilizationDelay()).longValue();
         // (it is a logical consequence of the above that minDesired >= maxDesired -- this is correct, if confusing:
         // think of minDesired as the minimum size we are allowed to resize to, and similarly for maxDesired; 
         // if min > max we can scale to max if current < max, or scale to min if current > min)
 
         long desiredPoolSize;
         
-        boolean stableForShrinking = (minInWindow(downsizeWindowVals, resizeDownStabilizationDelay).equals(maxInWindow(downsizeWindowVals, resizeDownStabilizationDelay)));
-        boolean stableForGrowing = (minInWindow(upsizeWindowVals, resizeUpStabilizationDelay).equals(maxInWindow(upsizeWindowVals, resizeUpStabilizationDelay)));
+        boolean stableForShrinking = (minInWindow(downsizeWindowVals, getResizeDownStabilizationDelay()).equals(maxInWindow(downsizeWindowVals, getResizeDownStabilizationDelay())));
+        boolean stableForGrowing = (minInWindow(upsizeWindowVals, getResizeUpStabilizationDelay()).equals(maxInWindow(upsizeWindowVals, getResizeUpStabilizationDelay())));
         boolean stable;
         
         if (currentPoolSize < maxDesiredPoolSize) {

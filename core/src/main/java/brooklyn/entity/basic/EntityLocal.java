@@ -6,6 +6,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.trait.Configurable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -24,7 +25,7 @@ import com.google.common.annotations.Beta;
  * Extended Entity interface for use in places where the caller should have certain privileges,
  * such as setting attribute values, adding policies, etc.
  */
-public interface EntityLocal extends Entity {
+public interface EntityLocal extends Entity, Configurable {
     
     // FIXME Rename to something other than EntityLocal.
     // Separate out what is specific to "local jvm", and what is here for an SPI rather than API.

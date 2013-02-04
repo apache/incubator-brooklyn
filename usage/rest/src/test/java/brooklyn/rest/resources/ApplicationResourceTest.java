@@ -24,8 +24,8 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.ConfigSummary;
 import brooklyn.rest.domain.EffectorSummary;
+import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.PolicySummary;
@@ -176,8 +176,8 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
   @Test(dependsOnMethods = "testDeployApplication")
   public void testListConfig() {
-    Set<ConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/config")
-        .get(new GenericType<Set<ConfigSummary>>() {
+    Set<EntityConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/config")
+        .get(new GenericType<Set<EntityConfigSummary>>() {
         });
     assertTrue(config.size() > 0);
     System.out.println(("CONFIG: "+config));
