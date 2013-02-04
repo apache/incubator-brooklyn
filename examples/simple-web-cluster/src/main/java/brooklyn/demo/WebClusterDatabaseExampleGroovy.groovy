@@ -28,6 +28,8 @@ import com.google.common.collect.Lists;
 
 /**
  * Launches a 3-tier app with nginx, clustered jboss, and mysql.
+ * <p>
+ * This variant of {@link WebClusterDatabaseExample} demonstrates <i>Groovy</i> language conveniences.
  **/
 public class WebClusterDatabaseExampleGroovy extends ApplicationBuilder {
     
@@ -50,7 +52,6 @@ public class WebClusterDatabaseExampleGroovy extends ApplicationBuilder {
         ControlledDynamicWebAppCluster web = createChild(ControlledDynamicWebAppCluster,
                 war: WAR_PATH,
                 httpPort: "8080+",
-                memberSpec: BasicEntitySpec.newInstance(JBoss7Server.class),
                 (javaSysProp("brooklyn.example.db.url")): 
                     formatString("jdbc:%s%s?user=%s\\&password=%s", 
                             attributeWhenReady(mysql, MySqlNode.MYSQL_URL), 
@@ -82,4 +83,5 @@ public class WebClusterDatabaseExampleGroovy extends ApplicationBuilder {
         
         Entities.dumpInfo(app);
     }
+    
 }
