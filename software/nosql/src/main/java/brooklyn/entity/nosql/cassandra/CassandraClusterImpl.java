@@ -6,12 +6,15 @@ package brooklyn.entity.nosql.cassandra;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
@@ -96,11 +99,17 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
 
         policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Cluster Tracker")) {
             @Override
-            protected void onEntityChange(Entity member) { update(); }
+            protected void onEntityChange(Entity member) { }
             @Override
-            protected void onEntityAdded(Entity member) { update(); }
+            protected void onEntityAdded(Entity member) {
+                log.debug("Node added to Cluster {}", getClusterName());
+                update();
+            }
             @Override
-            protected void onEntityRemoved(Entity member) { update(); }
+            protected void onEntityRemoved(Entity member) {
+                log.debug("Node removed from Cluster {}", getClusterName());
+                update();
+            }
         };
         addPolicy(policy);
         policy.setGroup(this);
@@ -123,17 +132,17 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         setAttribute(Startable.SERVICE_UP, false);
     }
 
+    private Random random = new Random();
+
     @Override
     public void update() {
         synchronized (mutex) {
-            // TODO is this required?
-//            Iterable<Entity> members = getMembers();
-//            int n = Iterables.size(members);
-//            for (int i = 0; i < n; i++) {
-//                CassandraNode node = (CassandraNode) Iterables.get(members, i);
-//                Long token = (Long.MAX_VALUE / n) * i;
-//                node.setToken(token.toString());
-//            }
+            Iterable<Entity> members = getMembers();
+            int n = Iterables.size(members);
+            // Choose a random cluster member
+            CassandraNode node = (CassandraNode) Iterables.get(members, random.nextInt(n));
+            setAttribute(HOSTNAME, node.getAttribute(Attributes.HOSTNAME));
+            setAttribute(THRIFT_PORT, node.getAttribute(CassandraNode.THRIFT_PORT));
         }
     }
 }

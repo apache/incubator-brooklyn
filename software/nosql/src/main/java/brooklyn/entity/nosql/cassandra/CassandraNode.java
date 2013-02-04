@@ -31,7 +31,7 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     ConfigKey<String> TGZ_URL = new BasicConfigKey<String>(String.class, "cassandra.install.tgzUrl", "URL of TGZ download file");
 
     @SetFromFlag("clusterName")
-    BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
+    BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = CassandraCluster.CLUSTER_NAME;
 
     @SetFromFlag("gossipPort")
     PortAttributeSensorAndConfigKey GOSSIP_PORT = new PortAttributeSensorAndConfigKey("cassandra.gossip.port", "Cassandra Gossip communications port", PortRanges.fromString("7000+"));
@@ -55,7 +55,7 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
 
     BasicAttributeSensor<Integer> PEERS = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.peers", "Number of peers in cluster");
 
-    ConfigKey<String> SEEDS = new BasicConfigKey<String>(String.class, "cassandra.seeds", "List of seed node hosts in cluster");
+    ConfigKey<String> SEEDS = CassandraCluster.SEEDS;
 
     Integer getGossipPort();
 

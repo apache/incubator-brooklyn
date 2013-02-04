@@ -300,7 +300,7 @@ listen_address: ${driver.hostname}
 
 # Address to broadcast to other Cassandra nodes
 # Leaving this blank will set it to the same value as listen_address
-# broadcast_address: 1.2.3.4
+broadcast_address: ${driver.hostname}
 
 
 # Whether to start the native transport server.
