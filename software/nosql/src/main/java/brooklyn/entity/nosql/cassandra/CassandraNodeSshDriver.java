@@ -3,6 +3,10 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,12 +22,17 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+
+import freemarker.cache.StringTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 
 /**
  * Start a {@link CassandraNode} in a {@link Location} accessible over ssh.
@@ -50,6 +59,12 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public String getClusterName() { return entity.getAttribute(CassandraNode.CLUSTER_NAME); }
+
+    @Override
+    public String getCassandraConfigTemplateUrl() { return entity.getAttribute(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL); }
+
+    @Override
+    public String getCassandraConfigFileName() { return entity.getAttribute(CassandraNode.CASSANDRA_CONFIG_FILE_NAME); }
 
     @Override
     public void install() {
@@ -93,28 +108,22 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         NetworkUtils.checkPortsValid(getPortMap());
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
-        String dataDirEscaped = (getRunDir() + "/data").replace("/", "\\/"); // escape slashes
 
         ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
                 .add(String.format("cp -R %s/apache-cassandra-%s/{bin,conf,lib,interface,pylib,tools} .", getInstallDir(), getVersion()))
                 .add("mkdir data")
                 .add(String.format("sed -i.bk 's/log4j.appender.R.File=.*/log4j.appender.R.File=%s/g' %s/conf/log4j-server.properties", logFileEscaped, getRunDir()))
-                .add(String.format("sed -i.bk 's/\\/var\\/lib\\/cassandra/%s/g' %s/conf/cassandra.yaml", dataDirEscaped, getRunDir()))
-                .add(String.format("sed -i.bk \"s/^cluster_name: .*/cluster_name: '%s'/g\" %s/conf/cassandra.yaml", getClusterName(), getRunDir()))
                 .add(String.format("sed -i.bk '/JMX_PORT/d' %s/conf/cassandra-env.sh", getRunDir()))
-                .add(String.format("sed -i.bk 's/-Xss180k/-Xss280k/g' %s/conf/cassandra-env.sh", getRunDir())) // Stack size
-                .add(String.format("sed -i.bk 's/^rpc_port: .*/rpc_port: %d/g' %s/conf/cassandra.yaml", getThriftPort(), getRunDir()))
-                .add(String.format("sed -i.bk 's/^rpc_address: .*/rpc_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()))
-                .add(String.format("sed -i.bk 's/^storage_port: .*/storage_port: %d/g' %s/conf/cassandra.yaml", getGossipPort(), getRunDir()))
-                .add(String.format("sed -i.bk 's/^ssl_storage_port: .*/ssl_storage_port: %d/g' %s/conf/cassandra.yaml", getSslGossipPort(), getRunDir()))
-                .add(String.format("sed -i.bk 's/^listen_address: .*/listen_address: %s/g' %s/conf/cassandra.yaml", getHostname(), getRunDir()));
-
-        String seeds = entity.getConfig(CassandraNode.SEEDS);
-        commands.add(String.format("sed -i.bk 's/- seeds:.*/- seeds: \"%s\"/g' %s/conf/cassandra.yaml", (seeds != null) ? seeds : getHostname(), getRunDir()));
+                .add(String.format("sed -i.bk 's/-Xss180k/-Xss280k/g' %s/conf/cassandra-env.sh", getRunDir())); // Stack size
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
                 .execute();
+
+        // Copy the configuration file across
+        String configFileContents = processTemplate(getCassandraConfigTemplateUrl());
+        String destinationConfigFile = String.format("%s/conf/%s", getRunDir(), getCassandraConfigFileName());
+        getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
 
         // Copy JMX agent Jar to server
         // TODO do this based on config property in UsesJmx
@@ -156,15 +165,41 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public Map<String, String> getShellEnvironment() {
         // TODO do this based on config property in UsesJmx
-        String jvmOpts = String.format("-javaagent:%s -D%s=%d -D%s=%d -Djava.rmi.server.hostname=%s",
+        String jvmOpts = String.format("-javaagent:%s -D%s=%d -D%s=%d -Djava.rmi.server.hostname=%s -Dcassandra.config=%s",
                 getJmxRmiAgentJarDestinationFilePath(),
                 JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, getJmxPort(),
                 JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, getRmiServerPort(),
-                getHostname());
+                getHostname(),
+                getCassandraConfigFileName());
         return MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
-	            .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
-	            .put("JVM_OPTS", jvmOpts) // TODO see QPID_OPTS setting in QpidSshDriver
-	            .build();
+                .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
+                .put("JVM_OPTS", jvmOpts) // TODO see QPID_OPTS setting in QpidSshDriver
+                .build();
+    }
+
+    // Prepare the configuration file (from the template)
+    private String processTemplate(String templateConfigUrl) {
+        Map<String,?> substitutions = ImmutableMap.of("entity", entity, "driver", this);
+
+        try {
+            String templateConfigFile = new ResourceUtils(this).getResourceAsString(templateConfigUrl);
+
+            Configuration cfg = new Configuration();
+            StringTemplateLoader templateLoader = new StringTemplateLoader();
+            templateLoader.putTemplate("config", templateConfigFile);
+            cfg.setTemplateLoader(templateLoader);
+            Template template = cfg.getTemplate("config");
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Writer out = new OutputStreamWriter(baos);
+            template.process(substitutions, out);
+            out.flush();
+
+            return new String(baos.toByteArray());
+        } catch (Exception e) {
+            log.warn("Error creating configuration file for "+entity, e);
+            throw Exceptions.propagate(e);
+        }
     }
 }

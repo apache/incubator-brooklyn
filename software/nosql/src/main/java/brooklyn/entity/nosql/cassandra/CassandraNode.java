@@ -42,6 +42,14 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     @SetFromFlag("thriftPort")
     PortAttributeSensorAndConfigKey THRIFT_PORT = new PortAttributeSensorAndConfigKey("cassandra.thrift.port", "Cassandra Thrift RPC port", PortRanges.fromString("9160+"));
 
+    @SetFromFlag("cassandraConfigTemplateUrl")
+    BasicAttributeSensorAndConfigKey<String> CASSANDRA_CONFIG_TEMPLATE_URL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "cassandra.config.templateUrl", "Template file (in freemarker format) for the cassandra.yaml config file", 
+            "classpath://brooklyn/entity/nosql/cassandra/cassandra.yaml");
+
+    @SetFromFlag("cassandraConfigFileName")
+    BasicAttributeSensorAndConfigKey<String> CASSANDRA_CONFIG_FILE_NAME = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "cassandra.config.fileName", "Name for the copied config file", "cassandra.yaml");
 
     BasicAttributeSensor<Long> TOKEN = new BasicAttributeSensor<Long>(Long.class, "cassandra.token", "Cassandra Token");
 

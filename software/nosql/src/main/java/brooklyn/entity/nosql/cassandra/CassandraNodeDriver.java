@@ -15,4 +15,8 @@ public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
 
     String getClusterName();
 
+    String getCassandraConfigTemplateUrl();
+
+    String getCassandraConfigFileName();
+
 }
