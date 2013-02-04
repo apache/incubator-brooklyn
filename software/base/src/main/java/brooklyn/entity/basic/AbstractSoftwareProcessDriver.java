@@ -2,14 +2,26 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+
+import freemarker.cache.StringTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.exceptions.Exceptions;
 
 /**
  * An abstract implementation of the {@link SoftwareProcessDriver}.
@@ -96,9 +108,43 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	public EntityLocal getEntity() { return entity; } 
 
 	public Location getLocation() { return location; } 
-	
+    
     public InputStream getResource(String url) {
         return new ResourceUtils(entity).getResourceFromUrl(url);
+    }
+    
+    public String getResourceAsString(String url) {
+        return new ResourceUtils(entity).getResourceAsString(url);
+    }
+
+    public String processTemplate(String templateConfigUrl) {
+        Map<String, Object> config = getEntity().getApplication().getManagementContext().getConfig().asMapWithStringKeys();
+        Map<String, Object> substitutions = ImmutableMap.<String, Object>builder()
+                .putAll(config)
+                .put("entity", entity)
+                .put("driver", this)
+                .put("location", getLocation())
+                .build();
+
+        try {
+            String templateConfigFile = getResourceAsString(templateConfigUrl);
+
+            Configuration cfg = new Configuration();
+            StringTemplateLoader templateLoader = new StringTemplateLoader();
+            templateLoader.putTemplate("config", templateConfigFile);
+            cfg.setTemplateLoader(templateLoader);
+            Template template = cfg.getTemplate("config");
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Writer out = new OutputStreamWriter(baos);
+            template.process(substitutions, out);
+            out.flush();
+
+            return new String(baos.toByteArray());
+        } catch (Exception e) {
+            log.warn("Error creating configuration file for "+entity, e);
+            throw Exceptions.propagate(e);
+        }
     }
 		
     protected void waitForConfigKey(ConfigKey<?> configKey) {

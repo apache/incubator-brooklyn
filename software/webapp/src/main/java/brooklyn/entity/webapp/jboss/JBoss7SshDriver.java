@@ -157,7 +157,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         }
 
         // Copy the configuration file across
-        String configFileContents = getConfigFileContents(getTemplateConfigurationUrl());
+        String configFileContents = processTemplate(getTemplateConfigurationUrl());
         String destinationConfigFile = format("%s/%s/configuration/%s", getRunDir(), SERVER_TYPE, CONFIG_FILE);
         getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
         
@@ -182,7 +182,6 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
                         format(" >> %s/console 2>&1 </dev/null &", getRunDir())
         ).execute();
     }
-
 
     @Override
     public boolean isRunning() {
@@ -212,31 +211,4 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         return options;
     }
 
-    // Prepare the configuration file (from the template)
-    protected String getConfigFileContents(String templateConfigUrl) {
-        Map<String,?> model = ImmutableMap.of("entity", entity);
-        return processTemplate(templateConfigUrl, model);
-    }
-
-    private String processTemplate(String url, Map<String,? extends Object> substitutions) {
-        try {
-            String templateConfigFile = new ResourceUtils(this).getResourceAsString(url);
-            
-            Configuration cfg = new Configuration();
-            StringTemplateLoader templateLoader = new StringTemplateLoader();
-            templateLoader.putTemplate("config", templateConfigFile);
-            cfg.setTemplateLoader(templateLoader);
-            Template template = cfg.getTemplate("config");
-            
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            Writer out = new OutputStreamWriter(baos);
-            template.process(substitutions, out);
-            out.flush();
-            
-            return new String(baos.toByteArray());
-        } catch (Exception e) {
-            log.warn("Error creating configuration file for "+entity, e);
-            throw Exceptions.propagate(e);
-        }
-    }
 }

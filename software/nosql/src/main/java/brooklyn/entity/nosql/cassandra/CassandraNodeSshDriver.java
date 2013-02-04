@@ -4,9 +4,6 @@
 package brooklyn.entity.nosql.cassandra;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,17 +19,12 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-
-import freemarker.cache.StringTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 
 /**
  * Start a {@link CassandraNode} in a {@link Location} accessible over ssh.
@@ -176,30 +168,5 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .put("CASSANDRA_CONF", String.format("%s/conf", getRunDir()))
                 .put("JVM_OPTS", jvmOpts) // TODO see QPID_OPTS setting in QpidSshDriver
                 .build();
-    }
-
-    // Prepare the configuration file (from the template)
-    private String processTemplate(String templateConfigUrl) {
-        Map<String,?> substitutions = ImmutableMap.of("entity", entity, "driver", this);
-
-        try {
-            String templateConfigFile = new ResourceUtils(this).getResourceAsString(templateConfigUrl);
-
-            Configuration cfg = new Configuration();
-            StringTemplateLoader templateLoader = new StringTemplateLoader();
-            templateLoader.putTemplate("config", templateConfigFile);
-            cfg.setTemplateLoader(templateLoader);
-            Template template = cfg.getTemplate("config");
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            Writer out = new OutputStreamWriter(baos);
-            template.process(substitutions, out);
-            out.flush();
-
-            return new String(baos.toByteArray());
-        } catch (Exception e) {
-            log.warn("Error creating configuration file for "+entity, e);
-            throw Exceptions.propagate(e);
-        }
     }
 }
