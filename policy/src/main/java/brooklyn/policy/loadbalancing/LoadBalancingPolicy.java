@@ -182,7 +182,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
                                     AutoScalerPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
                                     AutoScalerPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
             
-                            poolEntity.emit(AutoScalerPolicy.POOL_COLD, eventVal);
+                            poolEntity.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, eventVal);
                             
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolLowThreshold()/model.getPoolSize()));
@@ -200,7 +200,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
                                     AutoScalerPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
                                     AutoScalerPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
                             
-                            poolEntity.emit(AutoScalerPolicy.POOL_HOT, eventVal);
+                            poolEntity.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, eventVal);
                             
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolHighThreshold()/model.getPoolSize()));

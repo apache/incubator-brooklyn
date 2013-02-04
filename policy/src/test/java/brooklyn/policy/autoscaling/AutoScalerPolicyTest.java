@@ -71,7 +71,7 @@ public class AutoScalerPolicyTest {
     @Test
     public void testShrinkColdPool() throws Exception {
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 30L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 30L, 4*10L, 4*20L));
         
         // expect pool to shrink to 3 (i.e. maximum to have >= 40 per container)
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
@@ -80,7 +80,7 @@ public class AutoScalerPolicyTest {
     @Test
     public void testShrinkColdPoolRoundsUpDesiredNumberOfContainers() throws Exception {
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 1L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 1L, 4*10L, 4*20L));
         
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
@@ -88,7 +88,7 @@ public class AutoScalerPolicyTest {
     @Test
     public void testGrowHotPool() throws Exception {
         resizable.resize(2);
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(2, 41L, 2*10L, 2*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(2, 41L, 2*10L, 2*20L));
         
         // expect pool to grow to 3 (i.e. minimum to have <= 80 per container)
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
@@ -113,7 +113,7 @@ public class AutoScalerPolicyTest {
         resizable.addPolicy(policy);
         
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 0L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 0L, 4*10L, 4*20L));
         
         // expect pool to shrink only to the minimum
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 2));
@@ -128,7 +128,7 @@ public class AutoScalerPolicyTest {
         resizable.addPolicy(policy);
         
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(4, 1000000L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(4, 1000000L, 4*10L, 4*20L));
         
         // expect pool to grow only to the maximum
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
@@ -137,7 +137,7 @@ public class AutoScalerPolicyTest {
     @Test
     public void testNeverGrowColdPool() throws Exception {
         resizable.resize(2);
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(2, 1000L, 2*10L, 2*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(2, 1000L, 2*10L, 2*20L));
         
         Thread.sleep(SHORT_WAIT_MS);
         assertEquals(resizable.getCurrentSize(), (Integer)2);
@@ -147,7 +147,7 @@ public class AutoScalerPolicyTest {
     public void testNeverShrinkHotPool() throws Exception {
         resizable.resizeSleepTime = 0;
         resizable.resize(2);
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(2, 0L, 2*10L, 2*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(2, 0L, 2*10L, 2*20L));
         
         // if had been a POOL_COLD, would have shrunk to 3
         Thread.sleep(SHORT_WAIT_MS);
@@ -158,10 +158,10 @@ public class AutoScalerPolicyTest {
     public void testConcurrentShrinkShrink() throws Exception {
         resizable.resizeSleepTime = 250;
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 30L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 30L, 4*10L, 4*20L));
         // would cause pool to shrink to 3
         
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 1L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 1L, 4*10L, 4*20L));
         // now expect pool to shrink to 1
         
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
@@ -171,10 +171,10 @@ public class AutoScalerPolicyTest {
     public void testConcurrentGrowGrow() throws Exception {
         resizable.resizeSleepTime = 250;
         resizable.resize(2);
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(2, 41L, 2*10L, 2*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(2, 41L, 2*10L, 2*20L));
         // would cause pool to grow to 3
         
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(2, 81L, 2*10L, 2*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(2, 81L, 2*10L, 2*20L));
         // now expect pool to grow to 5
         
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
@@ -184,10 +184,10 @@ public class AutoScalerPolicyTest {
     public void testConcurrentGrowShrink() throws Exception {
         resizable.resizeSleepTime = 250;
         resizable.resize(2);
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(2, 81L, 2*10L, 2*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(2, 81L, 2*10L, 2*20L));
         // would cause pool to grow to 5
         
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(2, 1L, 2*10L, 2*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(2, 1L, 2*10L, 2*20L));
         // now expect pool to shrink to 1
         
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
@@ -197,10 +197,10 @@ public class AutoScalerPolicyTest {
     public void testConcurrentShrinkGrow() throws Exception {
         resizable.resizeSleepTime = 250;
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 1L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 1L, 4*10L, 4*20L));
         // would cause pool to shrink to 1
         
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(4, 81L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(4, 81L, 4*10L, 4*20L));
         // now expect pool to grow to 5
         
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
@@ -213,9 +213,9 @@ public class AutoScalerPolicyTest {
         // TODO is this too time sensitive? the resize takes only 250ms so if it finishes before the next emit we'd also see size=2
         resizable.resizeSleepTime = 500;
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 30L, 4*10L, 4*20L)); // shrink to 3
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 20L, 4*10L, 4*20L)); // shrink to 2
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(4, 10L, 4*10L, 4*20L)); // shrink to 1
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 30L, 4*10L, 4*20L)); // shrink to 3
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 20L, 4*10L, 4*20L)); // shrink to 2
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 10L, 4*10L, 4*20L)); // shrink to 1
         
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
         assertEquals(resizable.sizes, ImmutableList.of(4, 3, 1));
@@ -236,7 +236,7 @@ public class AutoScalerPolicyTest {
                 .build();
         resizable.addPolicy(policy);
         
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(1, 21L, 1*10L, 1*20L)); // grow to 2
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(1, 21L, 1*10L, 1*20L)); // grow to 2
         
         executeUntilSucceeds(MutableMap.of("timeout",TIMEOUT_MS), new Runnable() {
                 public void run() {
@@ -279,9 +279,9 @@ public class AutoScalerPolicyTest {
         resizable.resize(1);
         
         // Ignores temporary blip
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)); // would grow to 4
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(1, 61L, 1*10L, 1*20L)); // would grow to 4
         Thread.sleep(resizeUpStabilizationDelay-OVERHEAD_DURATION_MS);
-        resizable.emit(AutoScalerPolicy.POOL_OK, message(1, 11L, 4*10L, 4*20L)); // but 1 is still adequate
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_OK_SENSOR, message(1, 11L, 4*10L, 4*20L)); // but 1 is still adequate
         
         assertEquals(resizable.getCurrentSize(), (Integer)1);
         assertSucceedsContinually(MutableMap.of("duration", 2000L), new Runnable() {
@@ -326,13 +326,13 @@ public class AutoScalerPolicyTest {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
         
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)); // would grow to 4
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(1, 21L, 1*10L, 1*20L)); // would grow to 2
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(1, 61L, 1*10L, 1*20L)); // would grow to 4
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(1, 21L, 1*10L, 1*20L)); // would grow to 2
         Thread.sleep(resizeUpStabilizationDelay-OVERHEAD_DURATION_MS);
         
         long postSleepTime = stopwatch.elapsedMillis();
         
-        resizable.emit(AutoScalerPolicy.POOL_HOT, message(1, 61L, 1*10L, 1*20L)); // would grow to 4
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(1, 61L, 1*10L, 1*20L)); // would grow to 4
 
         // Wait for it to reach size 2, and confirm take expected time
         // TODO This is time sensitive, and sometimes fails in CI with size=4 if we wait for currentSize==2 (presumably GC kicking in?)
@@ -375,14 +375,14 @@ public class AutoScalerPolicyTest {
         // After suitable delay, grows to desired
         final long emitTime = System.currentTimeMillis();
         final Map<String, Object> need4 = message(1, 61L, 1*10L, 1*20L);
-        resizable.emit(AutoScalerPolicy.POOL_HOT, need4); // would grow to 4
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, need4); // would grow to 4
         final AtomicInteger emitCount = new AtomicInteger(0);
         
         executeUntilSucceeds(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 if (System.currentTimeMillis() - emitTime > (2+emitCount.get())*resizeUpStabilizationDelay) {
                     //first one may not have been received, in a registration race 
-                    resizable.emit(AutoScalerPolicy.POOL_HOT, need4);
+                    resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, need4);
                     emitCount.incrementAndGet();
                 }
                 assertEquals(resizable.getCurrentSize(), (Integer)4);
@@ -406,9 +406,9 @@ public class AutoScalerPolicyTest {
         resizable.resize(2);
         
         // Ignores temporary blip
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(2, 1L, 2*10L, 2*20L)); // would shrink to 1
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(2, 1L, 2*10L, 2*20L)); // would shrink to 1
         Thread.sleep(resizeStabilizationDelay-OVERHEAD_DURATION_MS);
-        resizable.emit(AutoScalerPolicy.POOL_OK, message(2, 20L, 1*10L, 1*20L)); // but 2 is still adequate
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_OK_SENSOR, message(2, 20L, 1*10L, 1*20L)); // but 2 is still adequate
         
         assertEquals(resizable.getCurrentSize(), (Integer)2);
         assertSucceedsContinually(MutableMap.of("duration", 2000L), new Runnable() {
@@ -448,13 +448,13 @@ public class AutoScalerPolicyTest {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
         
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)); // would shrink to 1
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(3, 20L, 3*10L, 3*20L)); // would shrink to 2
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(3, 1L, 3*10L, 3*20L)); // would shrink to 1
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(3, 20L, 3*10L, 3*20L)); // would shrink to 2
         Thread.sleep(resizeDownStabilizationDelay-OVERHEAD_DURATION_MS);
         
         long postSleepTime = stopwatch.elapsedMillis();
         
-        resizable.emit(AutoScalerPolicy.POOL_COLD, message(3, 1L, 3*10L, 3*20L)); // would shrink to 1
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(3, 1L, 3*10L, 3*20L)); // would shrink to 1
 
         // Wait for it to reach size 2, and confirm take expected time
         // TODO This is time sensitive, and sometimes fails in CI with size=1 if we wait for currentSize==2 (presumably GC kicking in?)
@@ -497,14 +497,14 @@ public class AutoScalerPolicyTest {
         // After suitable delay, grows to desired
         final long emitTime = System.currentTimeMillis();
         final Map<String, Object> needJust1 = message(2, 1L, 2*10L, 2*20L);
-        resizable.emit(AutoScalerPolicy.POOL_COLD, needJust1); // would shrink to 1
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, needJust1); // would shrink to 1
         final AtomicInteger emitCount = new AtomicInteger(0);
         
         executeUntilSucceeds(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
                 public void run() {
                     if (System.currentTimeMillis() - emitTime > (2+emitCount.get())*resizeDownStabilizationDelay) {
                         //first one may not have been received, in a registration race
-                        resizable.emit(AutoScalerPolicy.POOL_COLD, needJust1); // would shrink to 1
+                        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, needJust1); // would shrink to 1
                         emitCount.incrementAndGet();
                     }
                     assertEquals(resizable.getCurrentSize(), (Integer)1);
