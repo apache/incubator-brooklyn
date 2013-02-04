@@ -1,76 +1,154 @@
 ---
-title: brooklyn Introduction
+title: Getting Started
 layout: page
 toc: ../guide_toc.json
 categories: [use, guide]
 ---
 
-**brooklyn** is a library that simplifies application deployment and management.
-It allows you to:
+This guide will get you up and running with Brooklyn quickly. You will become familiar with launching Brooklyn from the command line, using the web interface and deploying an application (to a public cloud).
 
-- Describe an application topology once, and use this definition to set it up (provision) and keep it up (manage)
-- Describe the application topology in code, for re-use, version control, power and readability
-- Run multiple tiers and even varying stacks, configured and managed together
-- Run in multiple locations with efficient, secure, wide-area management
+### Before We Start
+You are going to need some basic tools (that are normally installed by default). You will need `curl`, `wget`, `tar`, `ssh` and `ssh-keygen`.
 
-Prerequisites
--------------
+### Download Brooklyn
+Download the Brooklyn distribution. This contains Brooklyn, ready to run.
 
-This guide requires that you have the Java 6 JDK, curl, wget and Maven 3 installed.
+[Download Page]({{site.url}}/start/download.html#distro) (Get the Distro as a tgz.)
 
-If you are using Eclipse, you will likely want the Git, Groovy, and Maven plugins.
-Via Help -> Install New Software, or from the Eclipse Marketplace,
-we recommend:
+Save the Distro tgz file to your home directory `~/`, or a location of your choice. 
 
-{% readj eclipse.include.md %}
+Untar the tgz. Each Distro is timestamped, so your filename will be different. 
 
-For more information and other development environments,
-visit the [IDE section]({{site.url}}/dev/build/ide.html) of the brooklyn web site.
+	$ tar -zxf brooklyn-dist-<version>-<timestamp>-dist.tar.tar.gz
+
+This will create a brooklyn-\<version\> folder. At the time of writing this was `brooklyn-0.5.0-SNAPSHOT`.
+
+Let's setup some paths for easy commands.
+
+	$ cd brooklyn-<version>
+	$ BROOKLYN_HOME=$(pwd)
+	$ export PATH=$PATH:$BROOKLYN_HOME/bin/
+
+### A Quick Test Drive
+
+Running Brooklyn now will launch the web interface, but there will be little to do, as we haven't configured any deployment locations or added a service catalog. Check your progress by running:
+
+	$ brooklyn launch
+
+Brooklyn will output the address of the management interface:
+
+`... Started Brooklyn console at http://127.0.0.1:8081/` [link](http://127.0.0.1:8081/)
+
+Login with default credentials: `admin:password`
+
+Stop Brooklyn with ctrl-c.
+
+### Setting up Locations and Applications
+
+Brooklyn loads  configuration parameters from `~/.brooklyn/brooklyn.properties` and a service catalog from `~/.brooklyn/catalog.xml`. 
+
+Create a .brooklyn folder:
+
+	$ mkdir ~/.brooklyn
+
+Then download the following default/template files.
+
+### brooklyn.properties
+Download the [brooklyn.properties example](brooklyn.properties) (to `~/.brooklyn`).
+
+brooklyn.properties is a standard java .properties file. 
+
+Edit this file (in any text editor) to add credentials for your favorite cloud.
+
+### catalog.xml
+Download the [catalog.xml example](catalog.xml) (to `~/.brooklyn`).
+
+catalog.xml is catalog of application or service blueprints. The example file contains two demos which will be automatically downloaded from the web if you run them.
+
+Edit this file (text editor) and check that the links to the demo applications' .jars are valid. At the time of writing these were for version `0.5.0-SNAPSHOT`, but if this has changed you may need to update the links.
+
+### SSH Keys
+If this is a new machine, or you haven't used SSH before, you will need to create keys for Brooklyn to use.
+
+	$ ssh-keygen -t rsa
+	$ ssh-keygen -t dsa
+
+These commands will setup keys in the default directories, and Brooklyn will find them.
 
 
-Web Cluster and Database Example
---------------------------------
+### 3-2-1 Go!
 
-Here is an example class which uses the Brooklyn library
-to launch a three-tier application in the cloud,
-complete with management:
+Now when we launch Brooklyn:
 
-{% highlight java %}
-{% read WebClusterAndDatabase.java %}
-{% endhighlight %}
+	$ brooklyn launch
 
-This consists of a JBoss web-app tier
-behind an nginx load-balancer (built up in the class ``ControlledDynamicWebAppCluster``),
-connected to a MySQL database instance.
+Brooklyn will use the `brooklyn.properties` and `catalog.xml` files. There will be more locations available in the management interface at [localhost:8081](http://localhost:8081), and the blueprints from the service catalog will be available for deployment.
 
-The ``JBoss7Server`` spec tells the appservers to run on the first available port >= 8080
-(which will be 8080 except when running multiple instances on ``localhost``),
-and wires the URL where the database is running in to the app servers.
-The MySQL URL is exposed as an attribute sensor,
-as soon as the MySQL instance is started,
-and the ``valueWhenAttributeReady`` call sets up a Java ``Future``
-so that the provisioning of the appservers can proceed as much as possible
-until the value is actually required.
-This "just-in-time" approach to dependent configuration simplifies -- as much as possible --
-some of the trickiest issues when setting up sophisticated applications.
+Click "add application". The Create Application dialog will appear.
 
-A management plane is launched with the application, 
-running the policy configured with the ``web.getCluster().addPolicy(...)`` command
-(as well as other policies which ensure the load-balancer is updated whenever the ``web.cluster`` members change).
-Keeping a handle on the application instance allows programmatic monitoring, manual management, and
-policy change; the management plane can also be accessed through a command-line console, a web console, or a REST web
-API. The management web console shows the hierarchy of entities active in real-time -- 
-from a high-level view all the way down to the level of
-each JBoss process on every VM, if desired.
+Select the "Demo Web Cluster with DB", then "Next".
 
-<!-- TODO screenshot could be useful? -->
+For the time being we'll use "localhost" as our deployment location. Click "Finish" and the Create Application dialog will close.
 
+You will see Brooklyn create an Application with status "STARTING".
 
-<!--
-TODO: could be useful to include an about- the guide here, with links
+It make take some time for Brooklyn to download everything and configure the application's initial topography, so lets have a look at the web interface while we wait.
 
-About the Guide
----------------
+### Exploring the Hierarchy of Web Cluster with DB
 
-The guide is divided into sections aimed at developers building applications using Brooklyn ...
--->
+Clicking on an application listed on the home page, or the Applications tab, will show you the management hierarchy.
+
+Exploring the hierarchy tree, you will see that the Demo Web Cluster with DB is a classic three tier web application, consisting of a `ControlledDynamicWebAppCluster` and a `MySqlNode`. The `ControlledDynamicWebAppCluster` contains an nginx software loadbalancer (`NginxController`) and as many `JBoss7Servers` as required (it autoscales).
+
+Clicking on the `ControlledDynamicWebAppCluster` and then the Sensor tab will show if the cluster is ready to serve and, when ready, will provide a web address for the front of the loadbalancer.
+
+If the `service.isUp`, you can view the demo web application in your browser at the `webapp.url.`
+
+### Testing the Policies
+
+Brooklyn at its heart is a policy driven management plane. After codifying your technical and business policies, Brooklyn can implement them automatically. 
+
+Brooklyn's policies work autonomically: they are like a nervous system. The need for action, and the correct action to take, are  observed, decided and implemented as low down the management hierarchy (as close to the 'problem') as possible.
+
+The Web Cluster with DB demo comes pre-configured with an `AutoScalerPolicy`, attached to the cluster of JBoss7 servers and a `targets` policy attached to the loadbalancer. You can observe policies this in the management console using the Policy tab of the relevant entity (e.g. `DynamicWebAppCluster` shows the `AutoScalerPolicy`. 
+
+The cluster autoscaler policy will automatically scale the cluster up or down to be the right size for the current load. ('One server' is the minimum size allowed by the policy.)
+The loadbalancer will automatically be updated by the targets policy as the cluster size changes.
+
+Sitting idle, your cluster will only contain one server, but you can check that the policy works  using a tool like [jmeter](http://jmeter.apache.org/) pointed at the nginx endpoint to create load on the cluster. 
+
+Brooklyn's policies are configurable, customizable, and can be completely bespoke to your needs. As an example, the `AutoScalerPolicy` is tunable, can be applied to any relevant metric (here, average requests per second), and is a sufficiently complex piece of math that it understand hysteresis and prevents thrashing.
+
+### REST API Browser
+Click on the Script tab at the top of the web interface and select REST API. Brooklyn supports a REST, JSON and Java API to allow you to integrate it with (pretty much) anything.
+
+The Script tab allows you to explore the API.
+
+Try: Locations > GET:/v1/locations > Try it out!
+
+You will be presented with a json response of the currently configured locations.
+
+### Stopping the Web Cluster with DB
+By now the Web Cluster with DB should have started, and you will have been able to view the application in your browser. 
+
+Returning to the "Applications" tab, and selecting the `WebClusterDatabaseExample`'s Effectors, we can Invoke the Stop Effector. This will cleanly shutdown the Web Cluster with DB example.
+
+### Deploying to Cloud
+The user experience of using the service catalog to deploy an application to a cloud is exactly the same as deploying to localhost. Brooklyn transparently handles the differences between locations and environments.
+
+Return to the Create Application dialog, reselect the Web Cluster with DB Demo, and select your public cloud of choice.
+
+(If you have added credentials to your brooklyn.properties file,) Brooklyn will request VMs in the public cloud, provision the application components, and wire them together, returning a cloud IP from which the demo application will be available.
+
+Remember to invoke the stop method when you are finished.
+
+### Closing Thoughts
+This guide has shown two aspects of Brooklyn in action: policy driven management capability, and the service catalog/web interface. Additionally, we briefly explored Brooklyn's API.
+
+It is worth noting that Brooklyn could be included as a library in your own applications (no command line required), or it could be used just as a management plane (without a service catalog). 
+
+During this guide we have been using Brooklyn's web interface, but Brooklyn's APIs are extensive and powerful. Brooklyn can be used with (controlled by and make data available to) your existing management UI. Brooklyn is intended to complement (not replace) your existing technologies and tooling.
+
+### Next 
+
+The [Elastic Web Cluster Example]({{site.url}}/use/examples/webcluster/index.html) page details how to build the demo application from scratch. It shows how Brooklyn can complement your application with policy driven management, and how an application can be run without using the service catalog.
