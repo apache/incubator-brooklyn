@@ -43,6 +43,11 @@ public interface ConfigKey<T> {
      */
     boolean hasDefaultValue();
     
+    /**
+     * @return True if the configuration can be changed at runtime.
+     */
+    boolean isReconfigurable();
+
     /** Interface for elements which want to be treated as a config key without actually being one
      * (e.g. config attribute sensors).
      */

@@ -22,10 +22,42 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     
     private static final Splitter dots = Splitter.on('.');
     
+    public static <T> Builder<T> builder(Class<T> type) {
+        return new Builder<T>().type(type);
+    }
+    
+    public static class Builder<T> {
+        private String name;
+        private Class<T> type;
+        private String description;
+        private T defaultValue;
+        private boolean reconfigurable;
+        
+        public Builder<T> name(String val) {
+            this.name = val; return this;
+        }
+        public Builder<T> type(Class<T> val) {
+            this.type = val; return this;
+        }
+        public Builder<T> description(String val) {
+            this.description = val; return this;
+        }
+        public Builder<T> defaultValue(T val) {
+            this.defaultValue = val; return this;
+        }
+        public Builder<T> reconfigurable(boolean val) {
+            this.reconfigurable = val; return this;
+        }
+        public BasicConfigKey<T> build() {
+            return new BasicConfigKey<T>(this);
+        }
+    }
+    
     private String name;
     private Class<T> type;
     private String description;
     private T defaultValue;
+    private boolean reconfigurable;
 
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicConfigKey() { /* for gson */ }
@@ -43,6 +75,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.name = checkNotNull(name, "name");
         this.type = checkNotNull(type, "type");
         this.defaultValue = defaultValue;
+        this.reconfigurable = false;
     }
 
     public BasicConfigKey(ConfigKey<T> key, T defaultValue) {
@@ -50,6 +83,15 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.name = checkNotNull(key.getName(), "name");
         this.type = checkNotNull(key.getType(), "type");
         this.defaultValue = defaultValue;
+        this.reconfigurable = false;
+    }
+
+    protected BasicConfigKey(Builder<T> builder) {
+        this.name = checkNotNull(builder.name, "name");
+        this.type = checkNotNull(builder.type, "type");
+        this.description = builder.description;
+        this.defaultValue = builder.defaultValue;
+        this.reconfigurable = builder.reconfigurable;
     }
     
     /** @see ConfigKey#getName() */
@@ -72,6 +114,11 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         return defaultValue != null;
     }
 
+    @Override
+    public boolean isReconfigurable() {
+        return reconfigurable;
+    }
+    
     /** @see ConfigKey#getNameParts() */
     public Collection<String> getNameParts() {
         return Lists.newArrayList(dots.split(name));
