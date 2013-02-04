@@ -215,7 +215,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     // Prepare the configuration file (from the template)
     protected String getConfigFileContents(String templateConfigUrl) {
         Map<String,?> model = ImmutableMap.of("entity", entity);
-        return processTemplate(getTemplateConfigurationUrl(), model);
+        return processTemplate(templateConfigUrl, model);
     }
 
     private String processTemplate(String url, Map<String,? extends Object> substitutions) {
