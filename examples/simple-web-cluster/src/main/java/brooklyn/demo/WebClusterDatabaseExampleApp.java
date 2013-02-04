@@ -103,6 +103,11 @@ public interface WebClusterDatabaseExampleApp extends StartableApplication {
         // any app-specific implementation / subclassing can be done here
         // (it's not necessary to have this, in which case you don't need the custom 
         // Builder constructor above; this is just supplied to show how it is done)
+     
+        // TODO as per https://github.com/brooklyncentral/brooklyn/pull/509/files#r2884309
+        // we can (should?) do everything in a postConstruct method here, _instead_ of defining a custom builder
+        // i (alex) need to iterate that before it becomes totally clear, deferred for now
+        // (this pattern works, it's just probably not recommended)
         
     }
     
