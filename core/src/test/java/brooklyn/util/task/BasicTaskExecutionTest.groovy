@@ -389,11 +389,13 @@ public class BasicTaskExecutionTest {
         
         assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
         
-        long prev = timestamps.get(0);
-        for (long timestamp : timestamps.subList(1, timestamps.size())) {
-            assertTrue(timestamp > prev+period-earlyReturnGrace, "timestamps="+timestamps);
-            assertTrue(timestamp < prev+period+maxOverhead, "timestamps="+timestamps);
-            prev = timestamp;
+        synchronized (timestamps) {
+            long prev = timestamps.get(0);
+            for (long timestamp : timestamps.subList(1, timestamps.size())) {
+                assertTrue(timestamp > prev+period-earlyReturnGrace, "timestamps="+timestamps);
+                assertTrue(timestamp < prev+period+maxOverhead, "timestamps="+timestamps);
+                prev = timestamp;
+            }
         }
     }
 
