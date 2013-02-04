@@ -373,7 +373,7 @@ public class BasicTaskExecutionTest {
         int earlyReturnGrace = 25; // saw 13ms early return on jenkins!
         int numTimestamps = 4;
         final CountDownLatch latch = new CountDownLatch(1);
-        final List<Long> timestamps = Lists.newArrayList();
+        final List<Long> timestamps = Collections.synchronizedList(Lists.newArrayList());
         final Stopwatch stopwatch = new Stopwatch().start();
         
         Callable<Task> taskFactory = new Callable<Task>() {
