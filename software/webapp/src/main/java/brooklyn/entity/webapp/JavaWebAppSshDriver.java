@@ -6,8 +6,11 @@ import java.io.File;
 import java.util.List;
 
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+
+import com.google.common.collect.ImmutableList;
 
 public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver implements JavaWebAppDriver {
 
@@ -132,9 +135,16 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         getMachine().run(String.format("mv -f %s %s.bak > /dev/null 2>&1", dest, dest)); //back up old file/directory
         int result = -1;
         // TODO allow s3://bucket/file URIs for AWS S3 resources
-        if (url.startsWith("http")) {
-            result = getMachine().run(String.format("wget --no-check-certificate %s -O %s", url, dest)); // try resolving http resources remotely
-        } else {
+        // TODO use PAX-URL style URIs for maven artifacts
+        if (url.toLowerCase().matches("^https?://.*")) {
+            // try resolving http resources remotely using wget
+            result = getMachine().execCommands("download",
+                    ImmutableList.of(
+                            CommonCommands.INSTALL_WGET,
+                            String.format("wget --no-check-certificate %s -O %s > /dev/null 2>&1", url, dest)));
+        }
+        // if unsuccessful, retrieve locally and copy across
+        if (result != 0) {
 	        result = getMachine().copyTo(getResource(url), dest);
         }
         log.debug("{} deployed {} to {}:{}: result {}", new Object[]{entity, url, getHostname(), dest, result});
