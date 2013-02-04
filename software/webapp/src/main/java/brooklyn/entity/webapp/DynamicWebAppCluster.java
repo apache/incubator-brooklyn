@@ -17,29 +17,33 @@ import brooklyn.event.basic.BasicAttributeSensor;
 @ImplementedBy(DynamicWebAppClusterImpl.class)
 public interface DynamicWebAppCluster extends DynamicCluster, WebAppService {
 
-    //FIXME align with WebAppService data points
-    //e.g. TOTAL_REQUEST_COUNT isn't needed; just use REQUEST_COUNT (and update that description)
-    //for AVERAGE_REQUEST_COUNT (and others) rename to REQUEST_COUNT_PER_NODE 
-    //and instead of cluster.reqs...
-    //use (following WebAbbService) webapp.reqs.total.perNode
+    public static final AttributeSensor<Double> REQUEST_COUNT_PER_NODE = new BasicAttributeSensor<Double>(
+            Double.class, "webapp.reqs.total.perNode", "Cluster entity request average");
+    /** @deprecated since 0.5.0, just use WebAppServiceConstants.REQUEST_COUNT */
+    public static final AttributeSensor<Integer> TOTAL_REQUEST_COUNT = WebAppServiceConstants.REQUEST_COUNT;
+    /** @deprecated since 0.5.0, just use REQUEST_COUNT_PER_NODE */
+    public static final AttributeSensor<Double> AVERAGE_REQUEST_COUNT = REQUEST_COUNT_PER_NODE;
+
+    public static final AttributeSensor<Integer> ERROR_COUNT_PER_NODE = new BasicAttributeSensor<Integer>(
+            Integer.class, "webapp.reqs.errors.perNode", "Cluster entity request error average");
+    /** @deprecated since 0.5.0, just use WebAppServiceConstants.ERROR_COUNT */
+    public static final AttributeSensor<Integer> TOTAL_ERROR_COUNT = WebAppServiceConstants.ERROR_COUNT;
+    /** @deprecated since 0.5.0, use ERROR_COUNT_PER_NODE */
+    public static final AttributeSensor<Integer> AVERAGE_ERROR_COUNT = ERROR_COUNT_PER_NODE;
+
+    public static final AttributeSensor<Double> REQUESTS_PER_SECOND_LAST_PER_NODE = new BasicAttributeSensor<Double>(
+            Double.class, "webapp.reqs.perSec.last.perNode", "Reqs/sec (last datapoint) averaged over all nodes");
+    /** @deprecated since 0.5.0, just use WebAppServiceConstants.REQUESTS_PER_SECOND_LAST */    
+    public static final AttributeSensor<Double> TOTAL_REQUESTS_PER_SECOND = WebAppServiceConstants.REQUESTS_PER_SECOND_LAST;
+    /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_PER_NODE */
+    public static final AttributeSensor<Double> AVERAGE_REQUESTS_PER_SECOND = REQUESTS_PER_SECOND_LAST_PER_NODE;
+
+    public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE = new BasicAttributeSensor<Double>(
+            Double.class, "webapp.reqs.perSec.windowed.perNode", "Reqs/sec (over time window) averaged over all nodes");
+
+    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME_PER_NODE = new BasicAttributeSensor<Integer>(
+            Integer.class, "webapp.reqs.processingTime.perNode", "Total processing time per node");
+    /** @deprecated since 0.5.0, use TOTAL_PROCESSING_TIME_PER_NODE */
+    public static final AttributeSensor<Integer> AVERAGE_PROCESSING_TIME = TOTAL_PROCESSING_TIME_PER_NODE;
     
-    public static final AttributeSensor<Integer> TOTAL_REQUEST_COUNT = new BasicAttributeSensor<Integer>(
-            Integer.class, "cluster.reqs.count.total", "Cluster-wide entity request count");
-    public static final AttributeSensor<Double> AVERAGE_REQUEST_COUNT = new BasicAttributeSensor<Double>(
-            Double.class, "cluster.reqs.count.average", "Cluster entity request average");
-
-    public static final AttributeSensor<Integer> TOTAL_ERROR_COUNT = new BasicAttributeSensor<Integer>(
-            Integer.class, "cluster.reqs.errors.total", "Cluster-wide entity request error count");
-    public static final AttributeSensor<Integer> AVERAGE_ERROR_COUNT = new BasicAttributeSensor<Integer>(
-            Integer.class, "cluster.reqs.errors.average", "Cluster entity request error average");
-
-    public static final AttributeSensor<Double> TOTAL_REQUESTS_PER_SECOND = new BasicAttributeSensor<Double>(
-            Double.class, "cluster.reqs.persec.total", "Cluster-wide entity requests/sec");
-    public static final AttributeSensor<Double> AVERAGE_REQUESTS_PER_SECOND = new BasicAttributeSensor<Double>(
-            Double.class, "cluster.reqs.persec.average", "Cluster entity requests/sec average");
-
-    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = new BasicAttributeSensor<Integer>(
-            Integer.class, "cluster.reqs.processing-time.total", "Cluster-wide entity total processing time");
-    public static final AttributeSensor<Integer> AVERAGE_PROCESSING_TIME = new BasicAttributeSensor<Integer>(
-            Integer.class, "cluster.reqs.processing-time.average", "Cluster entity average total processing time");
 }

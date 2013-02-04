@@ -28,10 +28,11 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         // Enricher attribute setup.  A way of automatically discovering these (but avoiding
         // averaging things like HTTP port and response codes) would be neat.
         List<List<BasicAttributeSensor>> enricherSetup = [
-            [WebAppService.REQUEST_COUNT, TOTAL_REQUEST_COUNT, AVERAGE_REQUEST_COUNT],
-            [WebAppService.ERROR_COUNT, TOTAL_ERROR_COUNT, AVERAGE_ERROR_COUNT],
-            [WebAppService.AVG_REQUESTS_PER_SECOND, TOTAL_REQUESTS_PER_SECOND, AVERAGE_REQUESTS_PER_SECOND],
-            [WebAppService.TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME, AVERAGE_PROCESSING_TIME]
+            [REQUEST_COUNT, REQUEST_COUNT, REQUEST_COUNT_PER_NODE],
+            [ERROR_COUNT, ERROR_COUNT, ERROR_COUNT_PER_NODE],
+            [REQUESTS_PER_SECOND_LAST, REQUESTS_PER_SECOND_LAST, REQUESTS_PER_SECOND_LAST_PER_NODE],
+            [REQUESTS_PER_SECOND_IN_WINDOW, REQUESTS_PER_SECOND_IN_WINDOW, REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE],
+            [TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME_PER_NODE]
         ]
         
         for (List es : enricherSetup) {
