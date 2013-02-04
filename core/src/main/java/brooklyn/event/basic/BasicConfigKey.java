@@ -12,16 +12,24 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 
 public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializable {
     private static final long serialVersionUID = -1762014059150215376L;
     
     private static final Splitter dots = Splitter.on('.');
-    
+
+    // TODO For use with generics; TODO accept some form of ParameterizedType
+    @Beta
+    public static <T> Builder<T> builder(TypeToken<T> type) {
+        return new Builder<T>().type(type);
+    }
+
     public static <T> Builder<T> builder(Class<T> type) {
         return new Builder<T>().type(type);
     }
@@ -38,6 +46,10 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         }
         public Builder<T> type(Class<T> val) {
             this.type = val; return this;
+        }
+        @SuppressWarnings("unchecked")
+        public Builder<T> type(TypeToken<T> val) {
+            this.type = (Class<T>) val.getRawType(); return this;
         }
         public Builder<T> description(String val) {
             this.description = val; return this;
@@ -61,6 +73,23 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
 
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicConfigKey() { /* for gson */ }
+
+    // TODO How to do this without cast; the but T in TypeToken could be a ParameterizedType 
+    // so it really could be a super-type of T rather than Class<T>!
+    @SuppressWarnings("unchecked")
+    public BasicConfigKey(TypeToken<T> type, String name) {
+        this((Class<T>) type.getRawType(), name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public BasicConfigKey(TypeToken<T> type, String name, String description) {
+        this((Class<T>) type.getRawType(), name, description);
+    }
+
+    @SuppressWarnings("unchecked")
+    public BasicConfigKey(TypeToken<T> type, String name, String description, T defaultValue) {
+        this((Class<T>) type.getRawType(), name, description, defaultValue);
+    }
 
     public BasicConfigKey(Class<T> type, String name) {
         this(type, name, name, null);
