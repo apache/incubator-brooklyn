@@ -42,6 +42,10 @@ public class SizeHistory {
         recentDesiredResizes.add(val);
     }
 
+    public void setWindowSize(long newWindowSize) {
+        recentDesiredResizes.setTimePeriod(newWindowSize);
+    }
+    
     /**
      * Summarises the history of values in this time window, with a few special things:
      * <ul>

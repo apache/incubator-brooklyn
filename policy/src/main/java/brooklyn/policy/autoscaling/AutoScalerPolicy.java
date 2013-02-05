@@ -72,6 +72,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         private BasicNotificationSensor<?> poolColdSensor;
         private BasicNotificationSensor<?> poolOkSensor;
         private Function<? super MaxPoolSizeReachedEvent, Void> maxReachedListener;
+        private long maxReachedNotificationDelay;
         
         public Builder id(String val) {
             this.id = val; return this;
@@ -134,6 +135,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         public Builder maxReachedListener(Function<? super MaxPoolSizeReachedEvent, Void> val) {
             this.maxReachedListener = val; return this;
         }
+        public Builder maxReachedNotificationDelay(long val) {
+            this.maxReachedNotificationDelay = val; return this;
+        }
         public AutoScalerPolicy build() {
             return new AutoScalerPolicy(toFlags());
         }
@@ -156,6 +160,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     .putIfNotNull("poolColdSensor", poolColdSensor)
                     .putIfNotNull("poolOkSensor", poolOkSensor)
                     .putIfNotNull("maxReachedListener", maxReachedListener)
+                    .putIfNotNull("maxReachedNotificationDelay", maxReachedNotificationDelay)
                     .build();
         }
     }
@@ -201,11 +206,13 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @SetFromFlag("metricLowerBound")
     public static final ConfigKey<Number> METRIC_LOWER_BOUND = BasicConfigKey.builder(Number.class)
             .name("autoscaler.metricLowerBound")
+            .reconfigurable(true)
             .build();
     
     @SetFromFlag("metricUpperBound")
     public static final ConfigKey<Number> METRIC_UPPER_BOUND = BasicConfigKey.builder(Number.class)
             .name("autoscaler.metricUpperBound")
+            .reconfigurable(true)
             .build();
     
     @SetFromFlag("minPeriodBetweenExecs")
@@ -218,24 +225,28 @@ public class AutoScalerPolicy extends AbstractPolicy {
     public static final ConfigKey<Long> RESIZE_UP_STABILIZATION_DELAY = BasicConfigKey.builder(Long.class)
             .name("autoscaler.resizeUpStabilizationDelay")
             .defaultValue(0l)
+            .reconfigurable(true)
             .build();
     
     @SetFromFlag("resizeDownStabilizationDelay")
     public static final ConfigKey<Long> RESIZE_DOWN_STABILIZATION_DELAY = BasicConfigKey.builder(Long.class)
             .name("autoscaler.resizeDownStabilizationDelay")
             .defaultValue(0l)
+            .reconfigurable(true)
             .build();
 
     @SetFromFlag("minPoolSize")
     public static final ConfigKey<Integer> MIN_POOL_SIZE = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.minPoolSize")
             .defaultValue(0)
+            .reconfigurable(true)
             .build();
     
     @SetFromFlag("maxPoolSize")
     public static final ConfigKey<Integer> MAX_POOL_SIZE = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.maxPoolSize")
             .defaultValue(Integer.MAX_VALUE)
+            .reconfigurable(true)
             .build();
 
     @SetFromFlag("resizeOperator")
@@ -438,7 +449,30 @@ public class AutoScalerPolicy extends AbstractPolicy {
     private long getMaxReachedNotificationDelay() {
         return getConfig(MAX_REACHED_NOTIFICATION_DELAY);
     }
-    
+
+    @Override
+    protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
+        if (key.equals(RESIZE_UP_STABILIZATION_DELAY)) {
+            long maxResizeStabilizationDelay = Math.max((Long)val, getResizeDownStabilizationDelay());
+            recentDesiredResizes.setWindowSize(maxResizeStabilizationDelay);
+        } else if (key.equals(RESIZE_DOWN_STABILIZATION_DELAY)) {
+            long maxResizeStabilizationDelay = Math.max((Long)val, getResizeUpStabilizationDelay());
+            recentDesiredResizes.setWindowSize(maxResizeStabilizationDelay);
+        } else if (key.equals(METRIC_LOWER_BOUND)) {
+            // TODO If recorded what last metric value was then we could recalculate immediately
+            // Rely on next metric-change to trigger recalculation; 
+            // and same for those below...
+        } else if (key.equals(METRIC_UPPER_BOUND)) {
+
+        } else if (key.equals(MIN_POOL_SIZE)) {
+
+        } else if (key.equals(MAX_POOL_SIZE)) {
+            
+        } else {
+            throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
+        }
+    }
+
     @Override
     public void suspend() {
         super.suspend();
@@ -637,11 +671,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
     }
 
     private void scheduleResize() {
-        // TODO perhaps make concurrent calls, rather than waiting for first resize to entirely 
-        // finish? On ec2 for example, this can cause us to grow very slowly if first request is for
+        // TODO Make scale-out calls concurrent, rather than waiting for first resize to entirely 
+        // finish. On ec2 for example, this can cause us to grow very slowly if first request is for
         // just one new VM to be provisioned.
-        
-        // Alex comments: yes, for scale out
         
         if (isRunning() && isEntityUp() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();
