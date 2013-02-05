@@ -12,42 +12,35 @@ import static org.jclouds.scriptbuilder.domain.Statements.newStatementList;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
+import org.jclouds.aws.ec2.AWSEC2ApiMetadata;
 import org.jclouds.aws.ec2.AWSEC2Client;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
-import org.jclouds.compute.ComputeServiceContextFactory;
 import org.jclouds.compute.RunScriptOnNodesException;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.compute.predicates.OperatingSystemPredicates;
-import org.jclouds.compute.reference.ComputeServiceConstants;
-import org.jclouds.compute.reference.ComputeServiceConstants.Timeouts;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.domain.PasswordDataAndPrivateKey;
 import org.jclouds.ec2.compute.functions.WindowsLoginCredentialsFromEncryptedData;
 import org.jclouds.ec2.domain.PasswordData;
 import org.jclouds.ec2.services.WindowsClient;
-import org.jclouds.compute.util.ConcurrentOpenSocketFinder;
-import org.jclouds.compute.util.OpenSocketFinder;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
-import org.jclouds.predicates.InetSocketAddressConnect;
 import org.jclouds.predicates.RetryablePredicate;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
+import org.jclouds.ssh.SshClient;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +55,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import com.google.common.net.HostAndPort;
 import com.google.inject.Module;
 
 public class JcloudsUtil {
@@ -179,6 +171,10 @@ public class JcloudsUtil {
     }
     public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf, boolean allowReuse) {
         Properties properties = new Properties();
+        String provider = (String)conf.get("provider"); unusedConf.remove("provider");
+        String identity = (String)conf.get("identity"); unusedConf.remove("identity");
+        String credential = (String)conf.get("credential"); unusedConf.remove("credential");
+        
         properties.setProperty(Constants.PROPERTY_PROVIDER, (String)conf.get("provider")); unusedConf.remove("provider");
         properties.setProperty(Constants.PROPERTY_IDENTITY, (String)conf.get("identity")); unusedConf.remove("identity");
         properties.setProperty(Constants.PROPERTY_CREDENTIAL, (String)conf.get("credential")); unusedConf.remove("credential");
@@ -187,7 +183,7 @@ public class JcloudsUtil {
                 
         // Enable aws-ec2 lazy image fetching, if given a specific imageId; otherwise customize for specific owners; or all as a last resort
         // See https://issues.apache.org/jira/browse/WHIRR-416
-        if ("aws-ec2".equals(conf.get("provider"))) {
+        if ("aws-ec2".equals(provider)) {
             if (truth(conf.get("imageId"))) {
                 properties.setProperty(PROPERTY_EC2_AMI_QUERY, "");
                 properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "");
@@ -202,14 +198,15 @@ public class JcloudsUtil {
                 // and requiring extra memory allocated on the command-line)
                 unusedConf.remove("anyOwner");
                 properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine");
-            
-                // by default the following filters are applied:
-//            Filter.1.Name=owner-id&Filter.1.Value.1=137112412989&
-//            Filter.1.Value.2=063491364108&
-//            Filter.1.Value.3=099720109477&
-//            Filter.1.Value.4=411009282317&
-//            Filter.2.Name=state&Filter.2.Value.1=available&
-//            Filter.3.Name=image-type&Filter.3.Value.1=machine&
+                /*
+                 * by default the following filters are applied:
+                 * Filter.1.Name=owner-id&Filter.1.Value.1=137112412989&
+                 * Filter.1.Value.2=063491364108&
+                 * Filter.1.Value.3=099720109477&
+                 * Filter.1.Value.4=411009282317&
+                 * Filter.2.Name=state&Filter.2.Value.1=available&
+                 * Filter.3.Name=image-type&Filter.3.Value.1=machine&
+                 */
             }
         }
 
@@ -230,22 +227,12 @@ public class JcloudsUtil {
                 new SLF4JLoggingModule(),
                 new BouncyCastleCryptoModule());
 
-        // TODO update to new (jclouds 1.5) syntax
-        // this is the syntax, it's kinda hard to figure out,
-        // but nice enough once you know it!
-//        ComputeServiceContext computeServiceContext = ContextBuilder.newBuilder("aws-ec2").
-//                modules(Arrays.asList(new SshjSshClientModule(), new SLF4JLoggingModule())).
-//                credentials(identity, credential).
-//                overrides(properties).
-//                build(ComputeServiceContext.class);
-//        
-//        final ComputeService computeService = computeServiceContext.getComputeService();
-
-        ComputeServiceContextFactory computeServiceFactory = new ComputeServiceContextFactory();
-        
-        ComputeService computeService = computeServiceFactory
-                .createContext((String)conf.get("provider"), modules, properties)
-                .getComputeService();
+        ComputeServiceContext computeServiceContext = ContextBuilder.newBuilder(provider)
+                .modules(modules)
+                .credentials(identity, credential)
+                .overrides(properties)
+                .build(ComputeServiceContext.class);
+        final ComputeService computeService = computeServiceContext.getComputeService();
                 
         if (allowReuse) {
             synchronized (cachedComputeServices) {
@@ -277,64 +264,20 @@ public class JcloudsUtil {
                  interpret("chmod 600 /root/.ssh/authorized_keys"));
      }
 
-    public static String getFirstReachableAddress(NodeMetadata node) {
-        // Notes from Adrian:
-        //   In Whirr, DnsUtil does this sort of stuff so could take from there?
-        //   For validating result, could use guava's InternetDomainName.isValidLenient(ip) or InetAddresses.isInetAddress(ip)
-        //   He also mentioned context.utils.sshForNode
-
-        // TODO Inefficient code; should re-use executor
-        Timeouts timeouts = new ComputeServiceConstants.Timeouts();
-        ExecutorService executor = Executors.newCachedThreadPool();
+    public static String getFirstReachableAddress(ComputeServiceContext context, NodeMetadata node) {
+        SshClient client = context.utils().sshForNode().apply(node);
         try {
-            OpenSocketFinder socketFinder = new ConcurrentOpenSocketFinder(new InetSocketAddressConnect(), null, executor);
-            HostAndPort reachableSocketOnNode = socketFinder.findOpenSocketOnNode(node, 22, timeouts.portOpen, TimeUnit.MILLISECONDS);
-            return reachableSocketOnNode.getHostText();
+            client.connect();
+            return client.getHostAddress();
         } finally {
-            executor.shutdown();
-        }
-        
-        //previous approach, keep for a few weeks if any problems with above (from 26 Jun 2012):
-//        ExecutorService executor = Executors.newCachedThreadPool();
-//        try {
-//            OpenSocketFinder socketFinder = new ConcurrentOpenSocketFinder(new InetSocketAddressConnect(), null, executor);
-//            HostAndPort reachableSocketOnNode = socketFinder.findOpenSocketOnNode(node, 22, timeouts.portOpen, TimeUnit.MILLISECONDS);
-//            String result = reachableSocketOnNode.toString().trim();
-//            // sometimes get  IP:22  here (jclouds 1.5 AWS ?)
-//            result=StringUtils.removeEnd(result, ":22");
-//            return result;
-//        } finally {
-//            executor.shutdown();
-//        }
-    }
-    
-    /**
-     * Returns the IP address for a node which should be used by other nodes to
-     * contact it. When using a VPN, this could be a private address. It could
-     * also be a public one. The method tries to guess what will work.
-     */
-	//TODO this method doesn't have enough info; better to have a method on the target, eg MachineLocation.getHostnameForUseFrom(Location source)
-    public static String getNodeAddress(NodeMetadata node) {
-        String addr = JcloudsUtil.getFirstReachableAddress(node);
-
-        if (addr != null) {
-            return addr;
-        } else if (node.getPublicAddresses().size() > 0) {
-            String publicAddr = Iterables.get(node.getPublicAddresses(), 0);
-            LOG.warn("No reachable address found for node; using " + publicAddr);
-            return publicAddr;
-        } else {
-            throw new IllegalStateException("Could not discover a suitable address for " + node);
+            client.disconnect();
         }
     }
     
     // Suggest at least 15 minutes for timeout
     public static String waitForPasswordOnAws(ComputeService computeService, final NodeMetadata node, long timeout, TimeUnit timeUnit) throws TimeoutException {
-        //TODO For jclouds 1.5, switch to this:        
-        //     final WindowsClient client = computeServiceContext.unwrap(EC2ApiMetadata.CONTEXT_TOKEN).getApi().getWindowsServices();
-        
         ComputeServiceContext computeServiceContext = computeService.getContext();
-        AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceContext.getProviderSpecificContext().getApi());
+        AWSEC2Client ec2Client = computeServiceContext.unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi();
         final WindowsClient client = ec2Client.getWindowsServices();
         final String region = node.getLocation().getParent().getId();
       

@@ -13,7 +13,6 @@ import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.compute.domain.NodeState;
 import org.jclouds.compute.domain.Template;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,9 +114,9 @@ public class MachinePool {
             if (log.isDebugEnabled()) log.debug("Pool "+this+", ignoring "+(appearedMachinesIncludingBlacklist.size()-appearedMachines.size())+" disallowed");
         int matchedAppeared = 0;
         for (NodeMetadata m: appearedMachines) {
-            if (m.getState() != NodeState.RUNNING) {
+            if (m.getStatus() != NodeMetadata.Status.RUNNING) {
                 if (log.isDebugEnabled()) 
-                    log.debug("Pool "+this+", newly detected machine "+m+", not running ("+m.getState()+")");
+                    log.debug("Pool "+this+", newly detected machine "+m+", not running ("+m.getStatus()+")");
             } else {
                 Set<ReusableMachineTemplate> ts = getTemplatesMatchingInstance(m);
                 if (!ts.isEmpty()) {
