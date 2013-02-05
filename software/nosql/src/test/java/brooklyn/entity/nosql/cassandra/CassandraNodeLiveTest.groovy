@@ -7,6 +7,8 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.DataProvider
@@ -52,7 +54,7 @@ public class CassandraNodeLiveTest extends AbstractCassandraNodeTest {
                 .configure("thriftPort", "9876+")
                 .configure("clusterName", "TestCluster"));
         app.start(ImmutableList.of(testLocation))
-        executeUntilSucceeds {
+        executeUntilSucceeds(timeout:2*TimeUnit.MINUTES) {
             assertTrue cassandra.getAttribute(Startable.SERVICE_UP)
         }
 

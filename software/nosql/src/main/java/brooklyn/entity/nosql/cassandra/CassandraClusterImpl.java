@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
@@ -55,6 +54,9 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     public CassandraClusterImpl(Map<?, ?> properties, Entity parent) {
         super(properties, parent);
 
+        // This DeferredSupplier will return a comma separated list of all available
+        // hostnames in the cluster or if none are available yet then a Task for the first
+        // hostname in the list when it is ready. If there are no nodes yet it returns null.
         setConfig(SEEDS, new DeferredSupplier() {
                 public Object get() {
                     Iterable<Entity> members = getMembers();
@@ -102,12 +104,12 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
             protected void onEntityChange(Entity member) { }
             @Override
             protected void onEntityAdded(Entity member) {
-                log.debug("Node added to Cluster {}", getClusterName());
+                if (log.isDebugEnabled()) log.debug("Node {} added to Cluster {}", member, getClusterName());
                 update();
             }
             @Override
             protected void onEntityRemoved(Entity member) {
-                log.debug("Node removed from Cluster {}", getClusterName());
+                if (log.isDebugEnabled()) log.debug("Node {} removed from Cluster {}", member, getClusterName());
                 update();
             }
         };

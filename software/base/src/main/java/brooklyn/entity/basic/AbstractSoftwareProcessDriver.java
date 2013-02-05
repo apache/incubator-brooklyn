@@ -11,17 +11,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-
-import freemarker.cache.StringTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+
+import com.google.common.collect.ImmutableMap;
+
+import freemarker.cache.StringTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 
 /**
  * An abstract implementation of the {@link SoftwareProcessDriver}.

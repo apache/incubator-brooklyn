@@ -33,7 +33,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
     public void canStartupAndShutdown() {
         cassandra = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraNode.class));
         app.start(ImmutableList.of(testLocation))
-        executeUntilSucceedsWithShutdown(cassandra, timeout:10*TimeUnit.MINUTES) {
+        executeUntilSucceedsWithShutdown(cassandra, timeout:2*TimeUnit.MINUTES) {
             assertTrue cassandra.getAttribute(Startable.SERVICE_UP)
         }
         assertFalse cassandra.getAttribute(Startable.SERVICE_UP)
@@ -48,7 +48,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
                 .configure("jmxPort", "11099+")
                 .configure("rmiServerPort", "19001+"));
         app.start(ImmutableList.of(testLocation))
-        executeUntilSucceedsWithShutdown(cassandra, timeout:10*TimeUnit.MINUTES) {
+        executeUntilSucceedsWithShutdown(cassandra, timeout:2*TimeUnit.MINUTES) {
             assertTrue cassandra.getAttribute(Startable.SERVICE_UP)
         }
         assertFalse cassandra.getAttribute(Startable.SERVICE_UP)
@@ -62,7 +62,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
         cassandra = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraNode.class)
                 .configure("thriftPort", "9876+"));
         app.start(ImmutableList.of(testLocation))
-        executeUntilSucceeds {
+        executeUntilSucceeds(timeout:2*TimeUnit.MINUTES) {
             assertTrue cassandra.getAttribute(Startable.SERVICE_UP)
         }
 

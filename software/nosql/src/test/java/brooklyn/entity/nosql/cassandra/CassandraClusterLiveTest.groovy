@@ -72,10 +72,7 @@ class CassandraClusterLiveTest {
 
     @AfterMethod(alwaysRun = true)
     public void shutdown() {
-        if (cluster != null && cluster.getAttribute(Startable.SERVICE_UP)) {
-            cluster.stop()
-        }
-        Entities.destroy(app)
+        Entities.destroyAll(app)
     }
 
     /**
@@ -90,7 +87,7 @@ class CassandraClusterLiveTest {
 
         app.start(ImmutableList.of(testLocation))
 
-        executeUntilSucceeds(timeout:10*TimeUnit.MINUTES) {
+        executeUntilSucceeds(timeout:2*TimeUnit.MINUTES) {
             assertEquals cluster.currentSize, 2
             cluster.members.each { Entity e ->
                 assertTrue e.getAttribute(Startable.SERVICE_UP)

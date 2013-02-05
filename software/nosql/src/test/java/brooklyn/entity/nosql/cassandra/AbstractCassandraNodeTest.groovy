@@ -61,9 +61,6 @@ public class AbstractCassandraNodeTest {
 
     @AfterMethod(alwaysRun = true)
     public void shutdown() {
-        if (cassandra != null && cassandra.getAttribute(Startable.SERVICE_UP)) {
-            cassandra.stop()
-        }
         Entities.destroyAll(app)
     }
 
