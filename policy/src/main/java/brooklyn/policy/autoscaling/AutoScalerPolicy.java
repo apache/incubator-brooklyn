@@ -73,7 +73,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
         private BasicNotificationSensor<?> poolHotSensor;
         private BasicNotificationSensor<?> poolColdSensor;
         private BasicNotificationSensor<?> poolOkSensor;
-
+        private Function<? super MaxPoolSizeReachedEvent, Void> maxReachedListener;
+        
         public Builder id(String val) {
             this.id = val; return this;
         }
@@ -132,6 +133,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         public Builder poolOkSensor(BasicNotificationSensor<?> val) {
             this.poolOkSensor = val; return this;
         }
+        public Builder maxReachedListener(Function<? super MaxPoolSizeReachedEvent, Void> val) {
+            this.maxReachedListener = val; return this;
+        }
         public AutoScalerPolicy build() {
             return new AutoScalerPolicy(toFlags());
         }
@@ -153,6 +157,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     .putIfNotNull("poolHotSensor", poolHotSensor)
                     .putIfNotNull("poolColdSensor", poolColdSensor)
                     .putIfNotNull("poolOkSensor", poolOkSensor)
+                    .putIfNotNull("maxReachedListener", maxReachedListener)
                     .build();
         }
     }
@@ -271,13 +276,30 @@ public class AutoScalerPolicy extends AbstractPolicy {
             .defaultValue(DEFAULT_POOL_OK_SENSOR)
             .build();
 
+    @SetFromFlag("maxReachedListener")
+    public static final ConfigKey<Function<? super MaxPoolSizeReachedEvent, Void>> MAX_REACHED_LISTENER = BasicConfigKey.builder(new TypeToken<Function<? super MaxPoolSizeReachedEvent, Void>>() {})
+            .name("autoscaler.maxReachedListener")
+            .description("Listener to be notified when we consistently wanted to resize the pool above the max allowed size, for maxReachedNotificationDelay milliseconds")
+            .build();
+    
+    @SetFromFlag("maxReachedNotificationDelay")
+    public static final ConfigKey<Long> MAX_REACHED_NOTIFICATION_DELAY = BasicConfigKey.builder(Long.class)
+            .name("autoscaler.maxReachedNotificationDelay")
+            .description("Time (milliseconds) that the we consistently wanted to go above the maxPoolSize for, after which the maxReachedListener (if any) will be notified")
+            .defaultValue(0l)
+            .build();
+    
     private Entity poolEntity;
     
     private final AtomicBoolean executorQueued = new AtomicBoolean(false);
     private volatile long executorTime = 0;
     private volatile ScheduledExecutorService executor;
-    
+
+    private final TimeWindowedList<Number> recentUnboundedResizes;
+
     private final TimeWindowedList<Number> recentDesiredResizes;
+    
+    private long maxReachedLastNotifiedTime;
     
     private final SensorEventListener<Map> utilizationEventHandler = new SensorEventListener<Map>() {
         public void onEvent(SensorEvent<Map> event) {
@@ -309,6 +331,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     public AutoScalerPolicy(Map<String,?> props) {
         super(props);
+        
+        long maxReachedNotificationDelay = getMaxReachedNotificationDelay();
+        recentUnboundedResizes = new TimeWindowedList<Number>(MutableMap.of("timePeriod", maxReachedNotificationDelay, "minExpiredVals", 1));
         
         long maxResizeStabilizationDelay = Math.max(getResizeUpStabilizationDelay(), getResizeDownStabilizationDelay());
         recentDesiredResizes = new TimeWindowedList<Number>(MutableMap.of("timePeriod", maxResizeStabilizationDelay, "minExpiredVals", 1));
@@ -408,6 +433,14 @@ public class AutoScalerPolicy extends AbstractPolicy {
         return getConfig(POOL_OK_SENSOR);
     }
     
+    private Function<? super MaxPoolSizeReachedEvent, Void> getMaxReachedListener() {
+        return getConfig(MAX_REACHED_LISTENER);
+    }
+    
+    private long getMaxReachedNotificationDelay() {
+        return getConfig(MAX_REACHED_NOTIFICATION_DELAY);
+    }
+    
     @Override
     public void suspend() {
         super.suspend();
@@ -452,6 +485,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         double metricLowerBoundD = getMetricLowerBound().doubleValue();
         int currentSize = getCurrentSizeOperator().apply(entity);
         double currentTotalActivity = currentSize * currentMetricD;
+        int unboundedSize;
         int desiredSize;
         
         /* We always scale out (modulo stabilization delay) if:
@@ -470,18 +504,20 @@ public class AutoScalerPolicy extends AbstractPolicy {
          */
         if (currentMetricD > metricUpperBoundD) {
             // scale out
-            desiredSize = (int)Math.ceil(currentTotalActivity/metricUpperBoundD);
-            desiredSize = toBoundedDesiredPoolSize(desiredSize);
+            unboundedSize = (int)Math.ceil(currentTotalActivity/metricUpperBoundD);
+            desiredSize = toBoundedDesiredPoolSize(unboundedSize);
             if (desiredSize > currentSize) {
                 if (LOG.isTraceEnabled()) LOG.trace("{} resizing out pool {} from {} to {} ({} > {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricUpperBoundD});
                 scheduleResize(desiredSize);
             } else {
                 if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} > {} > {}, but scale-out blocked eg by bounds/check)", new Object[] {this, poolEntity, currentSize, currentMetricD, metricUpperBoundD, metricLowerBoundD});
             }
+            onNewUnboundedPoolSize(unboundedSize);
+            
         } else if (currentMetricD < metricLowerBoundD) {
             // scale back
-            desiredSize = (int)Math.floor(currentTotalActivity/metricLowerBoundD);
-            desiredSize = toBoundedDesiredPoolSize(desiredSize);
+            unboundedSize = (int)Math.floor(currentTotalActivity/metricLowerBoundD);
+            desiredSize = toBoundedDesiredPoolSize(unboundedSize);
             if (desiredSize < currentTotalActivity/metricUpperBoundD) {
                 // this desired size would cause scale-out on next run, ie thrashing, so tweak
                 if (LOG.isTraceEnabled()) LOG.trace("{} resizing back pool {} from {}, tweaking from {} to prevent thrashing", new Object[] {this, poolEntity, currentSize, desiredSize });
@@ -494,6 +530,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
             } else {
                 if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} < {} < {}, but scale-back blocked eg by bounds/check)", new Object[] {this, poolEntity, currentSize, currentMetricD, metricLowerBoundD, metricUpperBoundD});
             }
+            onNewUnboundedPoolSize(unboundedSize);
+            
         } else {
             if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} within range {}..{})", new Object[] {this, poolEntity, currentSize, currentMetricD, metricLowerBoundD, metricUpperBoundD});
             abortResize(currentSize);
@@ -510,8 +548,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
         
         // Shrink the pool to force its low threshold to fall below the current workrate.
         // NOTE: assumes the pool is homogeneous for now.
-        int desiredPoolSize = (int) Math.ceil(poolCurrentWorkrate / (poolLowThreshold/poolCurrentSize));
-        desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize);
+        int unboundedPoolSize = (int) Math.ceil(poolCurrentWorkrate / (poolLowThreshold/poolCurrentSize));
+        int desiredPoolSize = toBoundedDesiredPoolSize(unboundedPoolSize);
+        
         if (desiredPoolSize < poolCurrentSize) {
             if (LOG.isTraceEnabled()) LOG.trace("{} resizing cold pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
             scheduleResize(desiredPoolSize);
@@ -519,6 +558,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
             if (LOG.isTraceEnabled()) LOG.trace("{} not resizing cold pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
             abortResize(poolCurrentSize);
         }
+        
+        onNewUnboundedPoolSize(unboundedPoolSize);
     }
     
     private void onPoolHot(Map<String, ?> properties) {
@@ -530,8 +571,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
         
         // Grow the pool to force its high threshold to rise above the current workrate.
         // FIXME: assumes the pool is homogeneous for now.
-        int desiredPoolSize = (int) Math.ceil(poolCurrentWorkrate / (poolHighThreshold/poolCurrentSize));
-        desiredPoolSize = toBoundedDesiredPoolSize(desiredPoolSize);
+        int unboundedPoolSize = (int) Math.ceil(poolCurrentWorkrate / (poolHighThreshold/poolCurrentSize));
+        int desiredPoolSize = toBoundedDesiredPoolSize(unboundedPoolSize);
         if (desiredPoolSize > poolCurrentSize) {
             if (LOG.isTraceEnabled()) LOG.trace("{} resizing hot pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
             scheduleResize(desiredPoolSize);
@@ -539,6 +580,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             if (LOG.isTraceEnabled()) LOG.trace("{} not resizing hot pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
             abortResize(poolCurrentSize);
         }
+        onNewUnboundedPoolSize(unboundedPoolSize);
     }
     
     private void onPoolOk(Map<String, ?> properties) {
@@ -567,8 +609,23 @@ public class AutoScalerPolicy extends AbstractPolicy {
         scheduleResize();
     }
 
+    /**
+     * If a listener is registered to be notified of the max-pool-size cap being reached, then record
+     * what our unbounded size would be and schedule a check to see if this unbounded size is sustained.
+     * 
+     * Piggie backs off the existing scheduleResize execution, which now also checks if the listener
+     * needs to be called.
+     */
+    private void onNewUnboundedPoolSize(final int val) {
+        if (getMaxReachedListener() != null) {
+            recentUnboundedResizes.add(val);
+            scheduleResize();
+        }
+    }
+    
     private void abortResize(final int currentSize) {
         recentDesiredResizes.add(currentSize);
+        recentUnboundedResizes.add(currentSize);
     }
 
     private boolean isEntityUp() {
@@ -580,7 +637,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             return true;
         }
     }
-    
+
     private void scheduleResize() {
         // TODO perhaps make concurrent calls, rather than waiting for first resize to entirely 
         // finish? On ec2 for example, this can cause us to grow very slowly if first request is for
@@ -599,32 +656,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
                         executorTime = System.currentTimeMillis();
                         executorQueued.set(false);
 
-                        long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
-                        CalculatedDesiredPoolSize calculatedDesiredPoolSize = calculateDesiredPoolSize(currentPoolSize);
-                        long desiredPoolSize = calculatedDesiredPoolSize.size;
-                        boolean stable = calculatedDesiredPoolSize.stable;
-                        
-                        // TODO Alex says: I think we should change even if not stable ... worst case we'll shrink later
-                        // otherwise if we're at 100 nodes and the num required keeps shifting from 10 to 11 to 8 to 13
-                        // we'll always have 100 ... or worse if we have 10 and num required keeps shifting 100 to 101 to 98...
-                        if (!stable) {
-                            // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
-                            // even if no additional events have been received
-                            if (LOG.isTraceEnabled()) LOG.trace("{} re-scheduling resize check, as desired size not stable; continuing with resize...", 
-                                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
-                            scheduleResize();
-                        }
-                        if (currentPoolSize == desiredPoolSize) {
-                            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} to {}", 
-                                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
-                            return;
-                        }
-                        
-                        if (LOG.isDebugEnabled()) LOG.debug("{} requesting resize to {}; current {}, min {}, max {}", 
-                                new Object[] {this, desiredPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
-                        
-                        // TODO Should we use int throughout, rather than casting here?
-                        getResizeOperator().resize(poolEntity, (int) desiredPoolSize);
+                        resizeNow();
+                        notifyMaxReachedIfRequiredNow();
                         
                     } catch (Exception e) {
                         if (isRunning()) {
@@ -641,7 +674,96 @@ public class AutoScalerPolicy extends AbstractPolicy {
                 TimeUnit.MILLISECONDS);
         }
     }
+
+    private void notifyMaxReachedIfRequiredNow() {
+        Function<? super MaxPoolSizeReachedEvent, Void> listener = getMaxReachedListener();
+        if (listener == null) {
+            return;
+        }
+        
+        long timeWindowSize = getMaxReachedNotificationDelay();
+        long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
+        int maxAllowedPoolSize = getMaxPoolSize();
+        CalculatedUnboundedPoolSize calculated = calculateUnboundedPoolSize();
+        long unboundedMaxPoolSize = calculated.min;
+        long unboundedCurrentPoolSize = calculated.latest;
+
+        if (maxReachedLastNotifiedTime > 0) {
+            // already notified the listener; don't do it again
+            // TODO Could have max period for notifications, or a step increment to warn when exceeded by ever bigger amounts
+            
+        } else if (calculated.min > maxAllowedPoolSize) {
+            // We have consistently wanted to be bigger than the max allowed; tell the listener
+            if (LOG.isDebugEnabled()) LOG.debug("{} notifying listener of max pool size reached; current {}, max {}, unbounded current {}, unbounded max {}", 
+                    new Object[] {this, currentPoolSize, maxAllowedPoolSize, unboundedCurrentPoolSize, unboundedMaxPoolSize});
+            
+            maxReachedLastNotifiedTime = System.currentTimeMillis();
+            listener.apply(MaxPoolSizeReachedEvent.builder().currentPoolSize(currentPoolSize).maxAllowed(maxAllowedPoolSize).currentUnbounded(unboundedCurrentPoolSize).maxUnbounded(unboundedMaxPoolSize).timeWindow(timeWindowSize).build());
+            
+        } else if (calculated.max > maxAllowedPoolSize) {
+            // We temporarily wanted to be bigger than the max allowed; check back later to see if consistent
+            // TODO Could check if there has been anything bigger than "min" since min happened (would be more efficient)
+            if (LOG.isTraceEnabled()) LOG.trace("{} re-scheduling max-reached check for {}, as unbounded size not stable (min {}, max {}, latest {})", 
+                    new Object[] {this, poolEntity, calculated.min, calculated.max, calculated.latest});
+            scheduleResize();
+            
+        } else {
+            // nothing to write home about; continually below maxAllowed
+        }
+    }
+
+    private void resizeNow() {
+        long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
+        CalculatedDesiredPoolSize calculatedDesiredPoolSize = calculateDesiredPoolSize(currentPoolSize);
+        long desiredPoolSize = calculatedDesiredPoolSize.size;
+        boolean stable = calculatedDesiredPoolSize.stable;
+        
+        if (!stable) {
+            // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
+            // even if no additional events have been received
+            // (note we continue now with as "good" a resize as we can given the instability)
+            if (LOG.isTraceEnabled()) LOG.trace("{} re-scheduling resize check for {}, as desired size not stable (current {}, desired {}); continuing with resize...", 
+                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
+            scheduleResize();
+        }
+        if (currentPoolSize == desiredPoolSize) {
+            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} to {}", 
+                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
+            return;
+        }
+        
+        if (LOG.isDebugEnabled()) LOG.debug("{} requesting resize to {}; current {}, min {}, max {}", 
+                new Object[] {this, desiredPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
+        
+        // TODO Should we use int throughout, rather than casting here?
+        getResizeOperator().resize(poolEntity, (int) desiredPoolSize);
+    }
     
+    /**
+     * Looks at the values for "unbounded pool size" (i.e. ignoring caps of minSize and maxSize) to report what
+     * those values have been within a time window. The time window used is the "maxReachedNotificationDelay",
+     * which determines how many milliseconds after being consistently above the max-size will it take before
+     * we notify the listener (if any).
+     * 
+     * @return tuple of desired pool size, and whether this is "stable" (i.e. if we receive no more events 
+     *         will this continue to be the desired pool size)
+     */
+    private CalculatedUnboundedPoolSize calculateUnboundedPoolSize() {
+        long now = System.currentTimeMillis();
+        List<TimestampedValue<Number>> unboundedWindowVals = recentUnboundedResizes.getValues(now);
+        // these are the size extremes that have been requested in the "stable-for-notifications" period:
+        long minUnboundedPoolSize = minInWindow(unboundedWindowVals, getMaxReachedNotificationDelay()).longValue();
+        long maxUnboundedPoolSize = maxInWindow(unboundedWindowVals, getMaxReachedNotificationDelay()).longValue();
+        Number latestUnboundedPoolSizeObj = latestInWindow(unboundedWindowVals);
+        long latestUnboundedPoolSize = (latestUnboundedPoolSizeObj == null) ? -1: latestUnboundedPoolSizeObj.longValue();
+        
+        if (LOG.isTraceEnabled()) LOG.trace("{} calculated unbounded hypothetical pool size: min {}, max {}; latest {}; " +
+                "now {}; history {}", 
+                new Object[] {this, minUnboundedPoolSize, maxUnboundedPoolSize, latestUnboundedPoolSize, now, unboundedWindowVals});
+        
+        return new CalculatedUnboundedPoolSize(latestUnboundedPoolSize, minUnboundedPoolSize, maxUnboundedPoolSize);
+    }
+
     /**
      * Complicated logic for stabilization-delay...
      * Only grow if we have consistently been asked to grow for the resizeUpStabilizationDelay period;
@@ -687,6 +809,18 @@ public class AutoScalerPolicy extends AbstractPolicy {
                 new Object[] {this, currentPoolSize, desiredPoolSize, minDesiredPoolSize, maxDesiredPoolSize, stable, now, downsizeWindowVals, upsizeWindowVals});
         
         return new CalculatedDesiredPoolSize(desiredPoolSize, stable);
+    }
+    
+    private static class CalculatedUnboundedPoolSize {
+        final long latest;
+        final long min;
+        final long max;
+        
+        CalculatedUnboundedPoolSize(long latest, long min, long max) {
+            this.latest = latest;
+            this.min = min;
+            this.max = max;
+        }
     }
     
     private static class CalculatedDesiredPoolSize {
@@ -745,7 +879,14 @@ public class AutoScalerPolicy extends AbstractPolicy {
         }
         return (T) (result != null ? result : Integer.MIN_VALUE);
     }
-    
+
+    /**
+     * @return null if empty, or the most recent value
+     */
+    private <T extends Number> T latestInWindow(List<TimestampedValue<T>> vals) {
+        return vals.isEmpty() ? null : vals.get(vals.size()-1).getValue();
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + (truth(name) ? "("+name+")" : "");

@@ -3,8 +3,11 @@ package brooklyn.policy.autoscaling;
 import static brooklyn.policy.autoscaling.AutoScalerPolicyTest.currentSizeAsserter;
 import static brooklyn.test.TestUtils.assertSucceedsContinually;
 import static brooklyn.test.TestUtils.executeUntilSucceeds;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+
+import java.util.List;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -16,11 +19,13 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.test.entity.TestEntity;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 public class AutoScalerPolicyMetricTest {
     
-    private static long TIMEOUT_MS = 10000;
+    private static long TIMEOUT_MS = 1000;//10000;
     private static long SHORT_WAIT_MS = 250;
     
     private static final BasicAttributeSensor<Integer> MY_ATTRIBUTE = new BasicAttributeSensor<Integer>(Integer.class, "autoscaler.test.intAttrib");
@@ -114,6 +119,48 @@ public class AutoScalerPolicyMetricTest {
         // Increases to max-size only
         tc.setAttribute(MY_ATTRIBUTE, 100000);
         executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
+    }
+    
+    @Test
+    public void warnsWhenMaxCapReached() {
+        final List<MaxPoolSizeReachedEvent> maxReachedEvents = Lists.newCopyOnWriteArrayList();
+        tc.resize(1);
+        
+        AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE)
+                .metricLowerBound(50).metricUpperBound(100)
+                .maxPoolSize(6)
+                .maxReachedListener(new Function<MaxPoolSizeReachedEvent,Void>() {
+                    public Void apply(MaxPoolSizeReachedEvent input) {
+                        maxReachedEvents.add(input);
+                        return null;
+                    }
+                })
+                .build();
+        tc.addPolicy(policy);
+
+        // workload can be handled by 6 servers, so no need to notify: 6 <= (100*6)/50
+        tc.setAttribute(MY_ATTRIBUTE, 600);
+        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
+        assertTrue(maxReachedEvents.isEmpty());
+        
+        // Increases to above max capacity: would require (100000*6)/100 = 6000
+        tc.setAttribute(MY_ATTRIBUTE, 100000);
+        
+        // Assert our listener gets notified (once)
+        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+            public void run() {
+                assertEquals(maxReachedEvents.size(), 1);
+                assertEquals(maxReachedEvents.get(0).getMaxAllowed(), 6);
+                assertEquals(maxReachedEvents.get(0).getCurrentPoolSize(), 6);
+                assertEquals(maxReachedEvents.get(0).getCurrentUnbounded(), 6000);
+                assertEquals(maxReachedEvents.get(0).getMaxUnbounded(), 6000);
+                assertEquals(maxReachedEvents.get(0).getTimeWindow(), 0);
+            }});
+        assertSucceedsContinually(new Runnable() {
+                @Override public void run() {
+                    assertEquals(maxReachedEvents.size(), 1);
+                }});
+        currentSizeAsserter(tc, 6).run();
     }
     
     @Test
