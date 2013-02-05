@@ -39,8 +39,13 @@ public abstract class ConfigSummary {
     this.name = config.getName();
     this.type = config.getTypeName();
     this.description = config.getDescription();
-    this.defaultValue = config.getDefaultValue();
     this.reconfigurable = config.isReconfigurable();
+    
+    /* Use String, to guarantee it is serializable; otherwise get:
+     *   No serializer found for class brooklyn.policy.autoscaling.AutoScalerPolicy$3 and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS) ) (through reference chain: java.util.ArrayList[9]->brooklyn.rest.domain.PolicyConfigSummary["defaultValue"])
+     *   at org.codehaus.jackson.map.ser.impl.UnknownSerializer.failForEmpty(UnknownSerializer.java:52)
+     */
+    this.defaultValue = (config.getDefaultValue() == null) ? null : config.getDefaultValue().toString();
   }
   
   public String getName() {
