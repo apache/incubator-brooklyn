@@ -5,17 +5,36 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "model/policy-summary",
-    "text!tpl/apps/policy.html", "text!tpl/apps/policy-row.html", "bootstrap"
-], function (_, $, Backbone, PolicySummary, PolicyHtml, PolicyRowHtml) {
+            "underscore",
+            "jquery",
+            "backbone",
+            "model/policy-summary",
+            "model/policy-config-summary",
+            "text!tpl/apps/policy.html",
+            "text!tpl/apps/policy-row.html",
+            "text!tpl/apps/policy-config-row.html",
+    "bootstrap"
+], function (
+                _,
+                $,
+                Backbone,
+                PolicySummary,
+                PolicyConfigSummary,
+                PolicyHtml,
+                PolicyRowHtml,
+                PolicyConfigRowHtml
+        ) {
 
     var EntityPoliciesView = Backbone.View.extend({
         template:_.template(PolicyHtml),
         policyRow:_.template(PolicyRowHtml),
+        policyConfigRow:_.template(PolicyConfigRowHtml),
         events:{
+            "click #policies-table tr":"rowClick",
             "click .policy-start":"callStart",
             "click .policy-stop":"callStop",
             "click .policy-destroy":"callDestroy",
+//            "click .policy-config-edit":"policyConfigEdit",
         },
         initialize:function () {
             this.$el.html(this.template({}))
@@ -23,7 +42,9 @@ define([
             this._policies = new PolicySummary.Collection()
             // fetch the list of policies and create a view for each one
             this._policies.url = this.model.getLinkByName("policies")
-            this.callPeriodically("entity-policies", function() { that.refresh() }, 3000)
+            this.callPeriodically("entity-policies", function() {
+                that.refresh()
+            }, 3000)
             this.refresh()
         },
         refresh: function() {
@@ -33,21 +54,74 @@ define([
             }})
         },
         render:function () {
-            var that = this
-            var $tableBody = this.$('#policies-table tbody').empty()
+            var that = this,
+                $tbody = this.$('#policies-table tbody').empty()
             if (this._policies.length==0) {
                 this.$(".has-no-policies").show();
-            } else {                
+                this.$("#policy-config").hide()
+                this.$("#policy-config-none-selected").hide()
+            } else {
                 this.$(".has-no-policies").hide();
                 this._policies.each(function (policy) {
-                    $tableBody.append(that.policyRow({ 
-                        name: policy.get("name"),
-                        state: policy.get("state"),
-                        summary: policy
+                    $tbody.append(that.policyRow({
+                        cid:policy.get("id"),
+                        name:policy.get("name"),
+                        state:policy.get("state"),
+                        summary:policy
                     }))
-                })
+                if (that.activePolicy) {
+                    $("#policies-table tr[id='"+that.activePolicy+"']").addClass("selected")
+                    that.showPolicyConfig(that.activePolicy)
+                } else {
+                    this.$("#policy-config").hide()
+                    this.$("#policy-config-none-selected").show()
+                }
+            })
             }
             return this
+        },
+        rowClick: function(evt) {
+            var row = $(evt.currentTarget).closest("tr")
+            var id = row.attr("id")
+            $("#policies-table tr").removeClass("selected")
+            if (this.activePolicy == id) {
+                // deselected
+                this.activePolicy = null
+                this.$("#policy-config").hide(100)
+                this.$("#policy-config-none-selected").show(100)
+            } else {
+                row.addClass("selected")
+                this.activePolicy = id
+                // fetch the list of policy config entries
+                var policy = this._policies.get(id)
+                this._config = new PolicyConfigSummary.Collection()
+                this._config.url = policy.getLinkByName("config")
+                this._config.fetch({success:function () {
+                	this.showPolicyConfig(id)
+                }})
+            }
+        },
+        showPolicyConfig:function (id) {
+            this.$("#policy-config-none-selected").hide(100)
+            var $tc = this.$('#policy-config-table tbody').empty()
+            if (this._config.length==0) {
+                this.$(".has-no-policy-config").show();
+            } else {
+                this.$(".has-no-policy-config").hide();
+                var policyConfigRow = _.template(PolicyConfigRowHtml)
+                this._config.each(function (config) {
+                    $tc.append(policyConfigRow({
+                        name:config.get("name"),
+                        description:config.get("description"),
+                        defaultValue:config.get("defaultValue"),
+                        reconfigurable:config.get("reconfigurable"),
+                    }))
+                    // TODO tooltip doesn't work on 'i' elements in table (bottom left toolbar)
+                    $tc.find('*[rel="tooltip"]').tooltip()
+                })
+            }
+            this.$("#policy-config").show(100)
+            this.$("#policy-config-table").show(100)
         },
         callStart: function(event) { this.doPost(event, "start") },
         callStop: function(event) { this.doPost(event, "stop") },
@@ -64,5 +138,6 @@ define([
                 }})
         }
     })
+
     return EntityPoliciesView
 })

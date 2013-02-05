@@ -12,6 +12,7 @@ define([
                 state:"",
                 links:{
                     self:"",
+                    config:"",
                     start:"",
                     stop:"",
                     destroy:"",
@@ -22,6 +23,9 @@ define([
         },
         getLinkByName:function (name) {
             if (name) return this.get("links")[name]
+        },
+        getPolicyConfigUpdateUrl:function () {
+            return this.getLinkByName("self") + "/config/current-state"
         }
     })
 
