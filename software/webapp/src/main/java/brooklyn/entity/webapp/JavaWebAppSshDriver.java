@@ -137,13 +137,13 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         // TODO allow s3://bucket/file URIs for AWS S3 resources
         // TODO use PAX-URL style URIs for maven artifacts
         if (url.toLowerCase().matches("^https?://.*")) {
-            // try resolving http resources remotely using wget
+            // try resolving http resources remotely using curl
             result = getMachine().execCommands("download",
                     ImmutableList.of(
-                            CommonCommands.INSTALL_WGET,
-                            String.format("wget --no-check-certificate %s -O %s > /dev/null 2>&1", url, dest)));
+                            CommonCommands.INSTALL_CURL,
+                            String.format("curl --silent --insecure %s -o %s", url, dest)));
         }
-        // if unsuccessful, retrieve locally and copy across
+        // if not downloaded yet, retrieve locally and copy across
         if (result != 0) {
 	        result = getMachine().copyTo(getResource(url), dest);
         }
