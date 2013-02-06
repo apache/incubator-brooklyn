@@ -5,6 +5,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -17,6 +18,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
@@ -33,6 +35,8 @@ import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.CapitalizePolicy;
+import brooklyn.rest.testing.mocks.RestMockApp;
+import brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 
 import com.google.common.base.Predicate;
@@ -98,19 +102,77 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     waitForApplicationToBeRunning(response.getLocation());
   }
 
+  @Test(dependsOnMethods = {"testDeployApplication", "testLocatedLocation"})
+  public void testDeployApplicationImpl() throws Exception {
+    ApplicationSpec spec = ApplicationSpec.builder()
+            .type(RestMockApp.class.getCanonicalName())
+            .name("simple-app-impl")
+            .locations(ImmutableSet.of("localhost"))
+            .build();
+      
+    ClientResponse response = client().resource("/v1/applications")
+        .post(ClientResponse.class, spec);
+
+    // Expect app to be running
+    URI appUri = response.getLocation();
+    waitForApplicationToBeRunning(response.getLocation());
+    assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-impl");
+  }
+
+  @Test(dependsOnMethods = {"testDeployApplication", "testLocatedLocation"})
+  public void testDeployApplicationFromInterface() throws Exception {
+    ApplicationSpec spec = ApplicationSpec.builder()
+            .type(BasicApplication.class.getCanonicalName())
+            .name("simple-app-interface")
+            .locations(ImmutableSet.of("localhost"))
+            .build();
+      
+    ClientResponse response = client().resource("/v1/applications")
+        .post(ClientResponse.class, spec);
+
+    // Expect app to be running
+    URI appUri = response.getLocation();
+    waitForApplicationToBeRunning(response.getLocation());
+    assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-interface");
+  }
+
+  @Test(dependsOnMethods = {"testDeployApplication", "testLocatedLocation"})
+  public void testDeployApplicationFromBuilder() throws Exception {
+    ApplicationSpec spec = ApplicationSpec.builder()
+            .type(RestMockAppBuilder.class.getCanonicalName())
+            .name("simple-app-builder")
+            .locations(ImmutableSet.of("localhost"))
+            .build();
+      
+    ClientResponse response = client().resource("/v1/applications")
+        .post(ClientResponse.class, spec);
+
+    // Expect app to be running
+    URI appUri = response.getLocation();
+    waitForApplicationToBeRunning(response.getLocation());
+    assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-builder");
+    
+    // Expect app to have the child-entity
+    Set<EntitySummary> entities = client().resource(appUri.toString() + "/entities")
+            .get(new GenericType<Set<EntitySummary>>() {});
+    assertEquals(entities.size(), 1);
+    assertEquals(Iterables.getOnlyElement(entities).getName(), "child1");
+    assertEquals(Iterables.getOnlyElement(entities).getType(), RestMockSimpleEntity.class.getCanonicalName());
+  }
+
   @Test
   public void testDeployWithInvalidEntityType() {
     try {
       client().resource("/v1/applications").post(
           ApplicationSpec.builder().name("invalid-app").
               entities(ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity"))).
-              locations(ImmutableSet.<String>of("/v1/locations/0")).
+              locations(ImmutableSet.of("localhost")).
               build()
       );
 
     } catch (UniformInterfaceException e) {
       ApiError error = e.getResponse().getEntity(ApiError.class);
-      assertEquals(error.getMessage(), "Undefined entity type 'not.existing.entity'");
+      assertEquals(error.getMessage(), "Undefined type 'not.existing.entity'");
     }
   }
 

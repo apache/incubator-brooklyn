@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.dom4j.Entity;
 
 import brooklyn.entity.Application;
 import brooklyn.location.Location;
@@ -45,6 +46,11 @@ public class ApplicationSpec {
       this.name = name;
       return this;
     }
+
+    public Builder type(Class<? extends Entity> type) {
+        this.type = type.getCanonicalName();
+        return this;
+      }
 
     public Builder type(String type) {
       this.type = type;

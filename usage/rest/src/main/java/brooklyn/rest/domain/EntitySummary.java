@@ -36,7 +36,7 @@ public class EntitySummary {
   }
   
   protected EntitySummary(Entity entity) {
-    this.type = entity.getClass().getName();
+    this.type = entity.getEntityType().getName();
     this.id = entity.getId();
     this.name = entity.getDisplayName();
 
