@@ -11,6 +11,7 @@ define([
                 type:"",
                 description:"",
                 defaultValue:"",
+                value:"",
                 reconfigurable:"",
                 links:{
                     self:"",

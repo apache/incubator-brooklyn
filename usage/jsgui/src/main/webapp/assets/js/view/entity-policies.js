@@ -5,21 +5,19 @@
  * @type {*}
  */
 define([
-            "underscore",
-            "jquery",
-            "backbone",
+            "underscore", "jquery", "backbone",
             "model/policy-summary",
             "model/policy-config-summary",
+            "view/policy-config-invoke",
             "text!tpl/apps/policy.html",
             "text!tpl/apps/policy-row.html",
             "text!tpl/apps/policy-config-row.html",
-    "bootstrap"
+            "bootstrap"
 ], function (
-                _,
-                $,
-                Backbone,
+                _, $, Backbone,
                 PolicySummary,
                 PolicyConfigSummary,
+                PolicyConfigInvokeView,
                 PolicyHtml,
                 PolicyRowHtml,
                 PolicyConfigRowHtml
@@ -28,13 +26,12 @@ define([
     var EntityPoliciesView = Backbone.View.extend({
         template:_.template(PolicyHtml),
         policyRow:_.template(PolicyRowHtml),
-        policyConfigRow:_.template(PolicyConfigRowHtml),
         events:{
             "click #policies-table tr":"rowClick",
             "click .policy-start":"callStart",
             "click .policy-stop":"callStop",
             "click .policy-destroy":"callDestroy",
-//            "click .policy-config-edit":"policyConfigEdit",
+            "click .show-policy-config-modal":"showPolicyConfigModal",
         },
         initialize:function () {
             this.$el.html(this.template({}))
@@ -42,9 +39,6 @@ define([
             this._policies = new PolicySummary.Collection()
             // fetch the list of policies and create a view for each one
             this._policies.url = this.model.getLinkByName("policies")
-            this.callPeriodically("entity-policies", function() {
-                that.refresh()
-            }, 3000)
             this.refresh()
         },
         refresh: function() {
@@ -91,17 +85,19 @@ define([
                 this.$("#policy-config-none-selected").show(100)
             } else {
                 row.addClass("selected")
+                var that = this
                 this.activePolicy = id
                 // fetch the list of policy config entries
                 var policy = this._policies.get(id)
                 this._config = new PolicyConfigSummary.Collection()
                 this._config.url = policy.getLinkByName("config")
                 this._config.fetch({success:function () {
-                	this.showPolicyConfig(id)
+                    that.showPolicyConfig()
                 }})
             }
         },
-        showPolicyConfig:function (id) {
+        showPolicyConfig:function () {
+            var that = this
             this.$("#policy-config-none-selected").hide(100)
             var $tc = this.$('#policy-config-table tbody').empty()
             if (this._config.length==0) {
@@ -111,22 +107,57 @@ define([
                 var policyConfigRow = _.template(PolicyConfigRowHtml)
                 this._config.each(function (config) {
                     $tc.append(policyConfigRow({
+                        cid:config.cid,
                         name:config.get("name"),
                         description:config.get("description"),
-                        defaultValue:config.get("defaultValue"),
+                        type:config.get("type"),
                         reconfigurable:config.get("reconfigurable"),
+                        link:config.getLinkByName('self'),
+                        value:"" // config.get("defaultValue"), /* will be re-set later */
                     }))
                     // TODO tooltip doesn't work on 'i' elements in table (bottom left toolbar)
                     $tc.find('*[rel="tooltip"]').tooltip()
                 })
             }
             this.$("#policy-config").show(100)
-            this.$("#policy-config-table").show(100)
+            this.$("#policy-config-table").dataTable().show(100)
+            var currentStateUrl = this._policies.get(that.activePolicy).getLinkByName("config") + "/current-state"
+            that.refreshPolicyConfig(currentStateUrl)
+            this.callPeriodically("entity-policy-config", function() {
+                that.refreshPolicyConfig(currentStateUrl)
+            }, 3000)
         },
-        callStart: function(event) { this.doPost(event, "start") },
-        callStop: function(event) { this.doPost(event, "stop") },
-        callDestroy: function(event) { this.doPost(event, "destroy") },
-        doPost: function(event, linkname) {
+        refreshPolicyConfig:function (currentStateUrl) {
+            var that = this,
+                $table = that.$('#policy-config-table'),
+                $rows = that.$("tr.policy-config-row")
+            $.get(currentStateUrl, function (data) {
+                    // iterate over the sensors table and update each sensor
+                    $rows.each(function (index, row) {
+                        var key = $(this).find(".policy-config-name").text()
+                        var v = data[key]
+                        if (v === undefined) v = ""
+                        $table.dataTable().fnUpdate(_.escape(v), row, 1)
+                        that._config.at(index).set("value", v)
+                    })
+                })
+        },
+        showPolicyConfigModal:function (evt) {
+            // get the model that we need to show, create its view and show it
+            var cid = $(evt.currentTarget).attr("id")
+            this._modal = new PolicyConfigInvokeView({
+                el:"#policy-config-modal",
+                model:this._config.getByCid(cid),
+                policy:this.model,
+            })
+            var a = this._modal.render()
+            a.$el.show()
+            a.$el.modal('show')
+        },
+        callStart:function(event) { this.doPost(event, "start") },
+        callStop:function(event) { this.doPost(event, "stop") },
+        callDestroy:function(event) { this.doPost(event, "destroy") },
+        doPost:function(event, linkname) {
             var that = this
             var url = $(event.currentTarget).attr("link");
             // trigger the event by ajax with attached parameters

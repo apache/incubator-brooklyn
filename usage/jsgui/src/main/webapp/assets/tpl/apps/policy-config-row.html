@@ -2,10 +2,10 @@
     <td><span class="policy-config-name" 
         rel="tooltip" title="<b><%= description %></b><br/>(<%= type %>)" data-placement="left"
         ><%= name %></span></td>
-    <td class="policy-config-defautValue"><%= (defaultValue === undefined ? "" : defaultValue) %></td>
+    <td class="policy-config-value" style="word-wrap:break-word;"><%= value %></td>
     <td class="policy-config-action">
         <% if (reconfigurable) { %>
-        <button class="btn btn-info btn-mini policy-config-edit" link="<%= config.getLinkByName('edit') %>">Edit</button>
+        <button class="btn btn-info btn-mini show-policy-config-modal" id="<%= cid %>">Edit</button>
         <% } %> 
     </td>
 </tr>
