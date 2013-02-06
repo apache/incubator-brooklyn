@@ -3,6 +3,7 @@ package brooklyn.entity.nosql.redis;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
@@ -21,6 +22,7 @@ import com.google.common.collect.Maps;
  *
  * TODO add sensors with aggregated Redis statistics from cluster
  */
+@Catalog(name="Redis Cluster", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.jpeg")
 public class RedisCluster extends AbstractEntity implements Startable {
     Map redisProperties = Maps.newLinkedHashMap();
     RedisCluster master;

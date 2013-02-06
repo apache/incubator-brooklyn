@@ -3,6 +3,7 @@ package brooklyn.entity.osgi.karaf;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Description;
@@ -22,6 +23,7 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * This sets up a Karaf OSGi container
  */
+@Catalog(name="Karaf", description="Apache Karaf is a small OSGi based runtime which provides a lightweight container onto which various components and applications can be deployed.", iconUrl="classpath:///karaf-logo.png")
 @ImplementedBy(KarafContainerImpl.class)
 public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
     
