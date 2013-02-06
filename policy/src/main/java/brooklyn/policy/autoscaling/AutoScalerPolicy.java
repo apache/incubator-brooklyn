@@ -588,7 +588,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         
         // Alex comments: yes, for scale out
         
-        if (isRunning() && executorQueued.compareAndSet(false, true) && isEntityUp()) {
+        if (isRunning() && isEntityUp() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();
             long delay = Math.max(0, (executorTime + getMinPeriodBetweenExecs()) - now);
             if (LOG.isTraceEnabled()) LOG.trace("{} scheduling resize in {}ms", this, delay);
