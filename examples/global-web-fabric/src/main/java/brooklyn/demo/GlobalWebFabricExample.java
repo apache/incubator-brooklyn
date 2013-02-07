@@ -31,7 +31,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-class GlobalWebFabricExample extends ApplicationBuilder {
+public class GlobalWebFabricExample extends ApplicationBuilder {
 
     public static final Logger log = LoggerFactory.getLogger(GlobalWebFabricExample.class);
     
