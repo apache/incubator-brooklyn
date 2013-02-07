@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -85,7 +84,7 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
     }
 
     /** convenience, to be called by the host */
-    public SensorPropagatingEnricher addToEntityAndEmitAll(AbstractEntity host) {
+    public SensorPropagatingEnricher addToEntityAndEmitAll(Entity host) {
         host.addEnricher(this);
         emitAllAttributes();
         return this;

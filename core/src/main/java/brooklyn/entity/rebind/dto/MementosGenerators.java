@@ -9,7 +9,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.MementoTransformer;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
@@ -72,7 +72,7 @@ public class MementosGenerators {
         builder.type = entity.getClass().getName();
         builder.isTopLevelApp = (entity instanceof Application && entity.getParent() == null);
         
-        Map<ConfigKey<?>, Object> localConfig = ((AbstractEntity)entity).getConfigMap().getLocalConfig();
+        Map<ConfigKey<?>, Object> localConfig = ((EntityInternal)entity).getConfigMap().getLocalConfig();
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
             ConfigKey<?> key = checkNotNull(entry.getKey(), localConfig);
             Object value = entry.getValue();
@@ -88,7 +88,7 @@ public class MementosGenerators {
             builder.config.put(key, transformedValue); 
         }
         
-        Map<AttributeSensor, Object> allAttributes = ((AbstractEntity)entity).getAllAttributes();
+        Map<AttributeSensor, Object> allAttributes = ((EntityInternal)entity).getAllAttributes();
         for (Map.Entry<AttributeSensor, Object> entry : allAttributes.entrySet()) {
             AttributeSensor<?> key = checkNotNull(entry.getKey(), allAttributes);
             Object value = entry.getValue();

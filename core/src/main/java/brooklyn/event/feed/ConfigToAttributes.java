@@ -1,6 +1,5 @@
 package brooklyn.event.feed;
 
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
@@ -21,7 +20,7 @@ public class ConfigToAttributes {
     //for selectively applying once (e.g. sub-classes of DynamicWebAppCluster that don't want to set HTTP_PORT etc!)
     public static void apply(EntityLocal entity, AttributeSensorAndConfigKey<?,?> key) {
         if (entity.getAttribute(key)==null) {
-            ((AbstractEntity)entity).setAttribute((AttributeSensorAndConfigKey<?,?>)key);
+            ((EntityLocal)entity).setAttribute((AttributeSensorAndConfigKey<?,?>)key);
         }
     }
 }

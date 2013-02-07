@@ -9,6 +9,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.SubscriptionContext;
 import brooklyn.management.internal.EntityManagementSupport;
 
 import com.google.common.annotations.Beta;
@@ -37,6 +38,9 @@ public interface EntityInternal extends Entity {
      */
     @Beta
     Map<ConfigKey<?>,Object> getAllConfig();
+
+    @Beta
+    public Map<AttributeSensor, Object> getAllAttributes();
 
     @Beta
     public void refreshInheritedConfig();
@@ -71,4 +75,6 @@ public interface EntityInternal extends Entity {
      * @deprecated since 0.5 access via getManagementSupport
      */    
     ExecutionContext getExecutionContext();
+    
+    SubscriptionContext getSubscriptionContext();
 }
