@@ -23,6 +23,10 @@ public interface MovableElasticWebAppCluster extends Entity, Startable, MovableE
     @SetFromFlag("war")
     public static final BasicConfigKey<String> ROOT_WAR = JavaWebAppService.ROOT_WAR;
     
+    @SetFromFlag("ttl")
+    public static final BasicConfigKey<Long> TIME_TO_LIVE_SECONDS = new BasicConfigKey<Long>(
+            Long.class, "movable.time.to.live", "Time to keep demoted cluster alive (should exceed GeoDNS TTL; default 0)", 0L);
+
     public static final BasicAttributeSensor<String> PRIMARY_SVC_ENTITY_ID = new BasicAttributeSensor<String>(
             String.class, "movable.primary.id", "Entity ID of primary web-app service");
     
