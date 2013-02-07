@@ -73,7 +73,7 @@ public abstract class ApplicationBuilder {
 
     public static class Builder<T extends Application> {
         protected volatile boolean managed = false;
-        private BasicEntitySpec<? extends T, ?> appSpec;
+        private BasicEntitySpec<T, ?> appSpec;
         private List<EntitySpec<?>> childSpecs = Lists.newArrayList();
         
         // Use static builder methods
@@ -87,9 +87,15 @@ public abstract class ApplicationBuilder {
         }
         
         // Use static builder methods
-        protected Builder<T> app(Class<? extends T> type) {
+        protected Builder<T> app(Class<T> type) {
             checkNotManaged();
             this.appSpec = BasicEntitySpec.newInstance(type); 
+            return this;
+        }
+        
+        public Builder<T> appImpl(Class<? extends T> val) {
+            checkNotManaged();
+            appSpec.impl(val);
             return this;
         }
         
