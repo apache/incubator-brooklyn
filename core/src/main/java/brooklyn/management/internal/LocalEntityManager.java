@@ -15,6 +15,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.BasicEntityTypeRegistry;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.proxying.EntitySpec;
@@ -79,6 +80,11 @@ public class LocalEntityManager implements EntityManager {
             log.warn("Failed to create entity using spec "+spec+" (rethrowing)", e);
             throw Exceptions.propagate(e);
         }
+    }
+
+    @Override
+    public <T extends Entity> T createEntity(Map<?,?> config, Class<T> type) {
+        return createEntity(BasicEntitySpec.newInstance(type).configure(config));
     }
 
     @Override

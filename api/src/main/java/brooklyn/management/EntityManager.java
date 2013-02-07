@@ -1,6 +1,7 @@
 package brooklyn.management;
 
 import java.util.Collection;
+import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
@@ -27,6 +28,14 @@ public interface EntityManager {
      */
     <T extends Entity> T createEntity(EntitySpec<T> spec);
     
+    /**
+     * Convenience (particularly for groovy code) to create an entity.
+     * Equivalent to {@code createEntity(BasicEntitySpec.newInstance(type).configure(config))}
+     * 
+     * @see createEntity(EntitySpec)
+     */
+    <T extends Entity> T createEntity(Map<?,?> config, Class<T> type);
+
     /**
      * All entities under control of this management plane
      */
