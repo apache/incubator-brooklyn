@@ -23,6 +23,10 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     @SetFromFlag("version")
     BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "1.2.0");
 
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            SoftwareProcess.DOWNLOAD_URL, "${driver.mirrorUrl}/${version}/apache-cassandra-${version}-bin.tar.gz");
+
     /** download mirror, if desired */
     @SetFromFlag("mirrorUrl")
     ConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "cassandra.install.mirror.url", "URL of mirror", "http://www.mirrorservice.org/sites/ftp.apache.org/cassandra");

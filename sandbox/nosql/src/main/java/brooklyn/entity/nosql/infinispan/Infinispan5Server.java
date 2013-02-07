@@ -34,6 +34,11 @@ public class Infinispan5Server extends SoftwareProcessImpl implements UsesJmx {
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
             new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "5.0.0.CR8");
 
+    // Default filename is "infinispan-${version}-all.zip"
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            SoftwareProcess.DOWNLOAD_URL, "http://sourceforge.net/projects/infinispan/files/infinispan/${version}/infinispan-${version}-all.zip/download");
+
     public Infinispan5Server() {
         this(MutableMap.of(), null);
     }

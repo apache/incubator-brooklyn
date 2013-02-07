@@ -1,10 +1,13 @@
 package brooklyn.entity.messaging.activemq;
 
+import static java.lang.String.format;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -13,6 +16,8 @@ import brooklyn.util.NetworkUtils;
 import com.google.common.collect.ImmutableMap;
 
 public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements ActiveMQDriver {
+
+    private String expandedInstallDir;
 
     public ActiveMQSshDriver(ActiveMQBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -27,17 +32,25 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
     public Integer getOpenWirePort() { 
         return entity.getAttribute(ActiveMQBroker.OPEN_WIRE_PORT);
     }
+
+    public String getMirrorUrl() {
+        return entity.getConfig(ActiveMQBroker.MIRROR_URL);
+    }
+    
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
     
     @Override
     public void install() {
-        String url = entity.getConfig(ActiveMQBroker.TGZ_URL);
-        if (url == null || url.isEmpty()) {
-            url = entity.getConfig(ActiveMQBroker.MIRROR_URL)+String.format("/%s/apache-activemq-%s-bin.tar.gz", getVersion(), getVersion());
-        }
-        String saveAs  = String.format("apache-activemq-%s-bin.tar.gz", getVersion());
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("apache-activemq-%s", getVersion()));
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs));
+        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
 
@@ -51,7 +64,7 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
         NetworkUtils.checkPortsValid(ImmutableMap.of("jmxPort", getJmxPort(), "openWirePort", getOpenWirePort()));
         newScript(CUSTOMIZING).
                 body.append(
-                String.format("cp -R %s/apache-activemq-%s/{bin,conf,data,lib,webapps} .", getInstallDir(), getVersion()),
+                String.format("cp -R %s/{bin,conf,data,lib,webapps} .", getExpandedInstallDir()),
                 "sed -i.bk 's/\\[-z \"$JAVA_HOME\"]/\\[ -z \"$JAVA_HOME\" ]/g' bin/activemq",
                 "sed -i.bk 's/broker /broker useJmx=\"true\" /g' conf/activemq.xml",
                 String.format("sed -i.bk 's/managementContext createConnector=\"false\"/managementContext connectorPort=\"%s\"/g' conf/activemq.xml", getJmxPort()),

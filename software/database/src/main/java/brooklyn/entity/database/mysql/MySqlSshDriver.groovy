@@ -3,17 +3,21 @@ package brooklyn.entity.database.mysql
 import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs
 import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage
 import static brooklyn.entity.basic.lifecycle.CommonCommands.ok
+import static java.lang.String.format
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver
 import brooklyn.entity.basic.lifecycle.CommonCommands
+import brooklyn.entity.drivers.downloads.DownloadResolver
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
 import brooklyn.util.ResourceUtils
 import brooklyn.util.text.Identifiers
+
+import com.google.common.collect.ImmutableMap
 
 /**
  * The SSH implementation of the {@link MySlDriver}.
@@ -21,7 +25,9 @@ import brooklyn.util.text.Identifiers
 public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements MySqlDriver{
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
-    
+
+    private String _expandedInstallDir;
+        
     public MySqlSshDriver(MySqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -50,26 +56,34 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 	
 	public String getMirrorUrl() {
         entity.getConfig(MySqlNode.MIRROR_URL);
-//		"http://mysql.mirrors.pair.com/"
-//		"http://gd.tuwien.ac.at/db/mysql/"
 	}
     
-	public String getBasename() { "mysql-${version}-${osTag}" }
-    
-	//http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-osx10.6-x86_64.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
-	//http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-linux2.6-i686.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
-	public String getUrl() { "http://dev.mysql.com/get/Downloads/MySQL-5.5/${basename}.tar.gz/from/${mirrorUrl}" }
-    
-    public String getBasedir() { installDir+"/"+basename }
+    public String getBasedir() { return getExpandedInstallDir(); }
 	
     public String getDatadir() {
         String result = entity.getConfig(MySqlNode.DATA_DIR);
         return (result == null) ? "." : result;
     }
+
+    public String getInstallFilename() {
+        return String.format("mysql-%s-%s.tar.gz", getVersion(), getOsTag());
+    }
+    
+    private String getExpandedInstallDir() {
+        if (_expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return _expandedInstallDir;
+    }
     
     @Override
     public void install() {
-        String saveAs  = "${basename}.tar.gz"
+        //mysql-${version}-${driver.osTag}.tar.gz
+        
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(
+                this, ImmutableMap.of("filename", getInstallFilename()));
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        _expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("mysql-%s-%s", getVersion(), getOsTag()));
+        
         List<String> commands = new LinkedList<String>();
         commands.add(CommonCommands.INSTALL_TAR);
         commands.add("echo installing extra packages")
@@ -78,7 +92,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // these deps are needed on some OS versions but others don't need them so ignore failures (ok(...))
         commands.add(ok(installPackage(yum: "libaio", apt: "ia32-libs", null)));
         commands.add("echo finished installing extra packages")
-        commands.addAll(downloadUrlAs(url, getEntityVersionLabel('/'), saveAs));
+        commands.addAll(downloadUrlAs(urls, saveAs));
         commands.add("tar xfvz ${saveAs}");
 
         newScript(INSTALLING).

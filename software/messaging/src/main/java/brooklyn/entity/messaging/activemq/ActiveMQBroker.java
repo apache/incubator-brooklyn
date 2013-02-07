@@ -20,13 +20,14 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "5.7.0");
 
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            Attributes.DOWNLOAD_URL, "${driver.mirrorUrl}/${version}/apache-activemq-${version}-bin.tar.gz");
+
     /** download mirror, if desired */
     @SetFromFlag("mirrorUrl")
     public static final BasicConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "activemq.install.mirror.url", "URL of mirror",
         "http://www.mirrorservice.org/sites/ftp.apache.org/activemq/apache-activemq");
-
-    @SetFromFlag("tgzUrl")
-    public static final BasicConfigKey<String> TGZ_URL = new BasicConfigKey<String>(String.class, "activemq.install.tgzUrl", "URL of TGZ download file", null);
 
     @SetFromFlag("openWirePort")
 	public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = new PortAttributeSensorAndConfigKey("openwire.port", "OpenWire port", "61616+");

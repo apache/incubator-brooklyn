@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -25,6 +26,8 @@ import com.google.common.collect.ImmutableMap;
 public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements RabbitDriver {
 
     private static final Logger log = LoggerFactory.getLogger(RabbitSshDriver.class);
+    
+    private String expandedInstallDir;
 
     public RabbitSshDriver(RabbitBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -43,18 +46,25 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         return (RabbitBrokerImpl) super.getEntity();
     }
     
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+    
     @Override
     public void install() {
-        String url = "http://www.rabbitmq.com/releases/rabbitmq-server/v"+getVersion()+"/rabbitmq-server-generic-unix-"+getVersion()+".tar.gz";
-        String saveAs = "rabbitmq-server-generic-unix-"+getVersion()+".tar.gz";
-
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("rabbitmq_server-%s", getVersion()));
+        
         List<String> commands = ImmutableList.<String>builder()
                 .add(installPackage(// NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
                         ImmutableMap.of(
                                 "apt", "erlang-nox erlang-dev",
                                 "port", "erlang@"+getErlangVersion()+"+ssl"),
                         "erlang"))
-                .addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
+                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
                 .add(CommonCommands.installExecutable("tar"))
                 .add(format("tar xvzf %s",saveAs))
                 .build();
@@ -69,7 +79,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         NetworkUtils.checkPortsValid(MutableMap.of("amqpPort", getAmqpPort()));
         newScript(CUSTOMIZING)
                 .body.append(
-                    "cp -R "+getInstallDir()+"/rabbitmq_server-"+getVersion()+"/* ."
+                    format("cp -R %s/* .", getExpandedInstallDir())
                 )
                 .execute();
     }

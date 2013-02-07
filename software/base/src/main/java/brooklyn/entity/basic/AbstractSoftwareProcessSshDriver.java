@@ -21,6 +21,7 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.ScriptRunner;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
@@ -79,10 +80,32 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return elvis(getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION), getDefaultVersion());
     }
 
+    /**
+     * Name to be used in the local repo, when looking for the download file.
+     * If null, will 
+     */
+    public String getDownloadFilename() {
+        return getEntity().getEntityType().getSimpleName().toLowerCase() + "-"+getVersion() + ".tar.gz";
+    }
+
+    /**
+     * Suffix to use when looking up the file in the local repo.
+     * Ignored if {@link getDownloadFilename()} returns non-null.
+     */
+    public String getDownloadFileSuffix() {
+        return "tar.gz";
+    }
+    
+    /**
+     * @deprecated since 0.5.0; instead rely on {@link DownloadResolverRegistry} to include local-repo
+     */
     protected String getEntityVersionLabel() {
         return getEntityVersionLabel("_");
     }
     
+    /**
+     * @deprecated since 0.5.0; instead rely on {@link DownloadResolverRegistry} to include local-repo
+     */
     protected String getEntityVersionLabel(String separator) {
         return elvis(entity.getEntityType().getSimpleName(),  
                 entity.getClass().getName())+(!NO_VERSION_INFO.equals(getVersion()) ? separator+getVersion() : "");

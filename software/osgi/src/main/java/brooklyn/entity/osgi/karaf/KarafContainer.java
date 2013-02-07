@@ -40,6 +40,14 @@ public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
     public static final Effector<Void> INSTALL_FEATURE = new MethodEffector<Void>(KarafContainer.class, "installFeature");
     public static final Effector<Void> UPDATE_SERVICE_PROPERTIES = new MethodEffector<Void>(KarafContainer.class, "updateServiceProperties");
 
+    @SetFromFlag("version")
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(
+            SoftwareProcess.SUGGESTED_VERSION, "2.3.0");
+
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            SoftwareProcess.DOWNLOAD_URL, "http://apache.mirror.anlx.net/karaf/${version}/apache-karaf-${version}.tar.gz");
+
     @SetFromFlag("karafName")
     public static final BasicAttributeSensorAndConfigKey<String> KARAF_NAME = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "karaf.name", "Karaf instance name", "root");
@@ -70,10 +78,6 @@ public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
     public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = new BasicAttributeSensorAndConfigKey<String>(
             UsesJmx.JMX_CONTEXT, "karaf-"+KARAF_NAME.getConfigKey().getDefaultValue());
 
-    @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(
-            SoftwareProcess.SUGGESTED_VERSION, "2.3.0");
-    
     public static final BasicAttributeSensor<Map> KARAF_INSTANCES = new BasicAttributeSensor<Map>(
             Map.class, "karaf.admin.instances", "Karaf admin instances");
     public static final BasicAttributeSensor<Boolean> KARAF_ROOT = new BasicAttributeSensor<Boolean>(
