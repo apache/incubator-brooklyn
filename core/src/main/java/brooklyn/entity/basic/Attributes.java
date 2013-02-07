@@ -26,6 +26,9 @@ public interface Attributes {
      */
     BasicAttributeSensor<String> VERSION = new BasicAttributeSensor<String>(String.class, "version", "Version information");
 
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "download.url", "URL pattern for downloading the installer (will substitute things like ${version} automatically)");
+
     /*
      * JMX attributes.
      */
