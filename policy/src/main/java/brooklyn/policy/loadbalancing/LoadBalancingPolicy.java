@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -234,8 +234,8 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {}", this, newContainer);
         // Low and high thresholds for the metric we're interested in are assumed to be present
         // in the container's configuration.
-        Number lowThreshold = (Number) findConfigValue((AbstractEntity) newContainer, lowThresholdConfigKeyName);
-        Number highThreshold = (Number) findConfigValue((AbstractEntity) newContainer, highThresholdConfigKeyName);
+        Number lowThreshold = (Number) findConfigValue(newContainer, lowThresholdConfigKeyName);
+        Number highThreshold = (Number) findConfigValue(newContainer, highThresholdConfigKeyName);
         if (lowThreshold == null || highThreshold == null) {
             LOG.warn(
                 "Balanceable container '"+newContainer+"' does not define low- and high- threshold configuration keys: '"+
@@ -251,8 +251,8 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
         if (rebalanceNow) scheduleRebalance();
     }
     
-    private static Object findConfigValue(AbstractEntity entity, String configKeyName) {
-        Map<ConfigKey<?>, Object> config = entity.getAllConfig();
+    private static Object findConfigValue(Entity entity, String configKeyName) {
+        Map<ConfigKey<?>, Object> config = ((EntityInternal)entity).getAllConfig();
         for (Entry<ConfigKey<?>, Object> entry : config.entrySet()) {
             if (configKeyName.equals(entry.getKey().getName()))
                 return entry.getValue();

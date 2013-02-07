@@ -2,7 +2,6 @@ package brooklyn.event.basic;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -51,7 +50,7 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
      * <p>
      * <b>(for this reason this method should generally not be invoked by callers except in tests and by the framework,
      * and similarly should not be overridden; implement convertConfigToSensor instead for single-execution calls.
-     * the framework calls this from {@link AbstractEntity#setAttribute(AttributeSensorAndConfigKey)} 
+     * the framework calls this from {@link EntityLocal#setAttribute(AttributeSensorAndConfigKey)} 
      * typically via {@link ConfigToAttributes#apply(EntityLocal)} e.g. from SoftwareProcess.preStart.)
      * </b> 
      */

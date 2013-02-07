@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
@@ -38,7 +38,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 /** Conveniences for making tasks which run in entity {@link ExecutionContext}s, subscribing to attributes from other entities, possibly transforming those;
- * these {@link Task} instances are typically passed in {@link AbstractEntity#setConfig(ConfigKey, Object)}.
+ * these {@link Task} instances are typically passed in {@link EntityLocal#setConfig(ConfigKey, Object)}.
  * <p>
  * If using a lot it may be useful to:
  * <pre>
@@ -118,16 +118,16 @@ public class DependentConfiguration {
         T value = source.getAttribute(sensor);
         if (ready==null) ready = GroovyJavaMethods.truthPredicate();
         if (ready.apply(value)) return value;
-        BasicTask current = (BasicTask) BasicExecutionContext.getCurrentExecutionContext().getCurrentTask();
+        BasicTask current = (BasicTask) Tasks.current();
         if (current == null) throw new IllegalStateException("Should only be invoked in a running task");
-        AbstractEntity entity = Iterables.find(current.getTags(), Predicates.instanceOf(AbstractEntity.class));
+        Entity entity = Iterables.find(current.getTags(), Predicates.instanceOf(Entity.class));
         if (entity == null) throw new IllegalStateException("Should only be invoked in a running task with an entity tag; "+
                 current+" has no entity tag ("+current.getStatusDetail(false)+")");
         final AtomicReference<T> data = new AtomicReference<T>();
         final Semaphore semaphore = new Semaphore(0); // could use Exchanger
         SubscriptionHandle subscription = null;
         try {
-            subscription = ((AbstractEntity)entity).getSubscriptionContext().subscribe(source, sensor, new SensorEventListener<T>() {
+            subscription = ((EntityInternal)entity).getSubscriptionContext().subscribe(source, sensor, new SensorEventListener<T>() {
                 public void onEvent(SensorEvent<T> event) {
                     data.set(event.getValue());
                     semaphore.release();
@@ -146,7 +146,7 @@ public class DependentConfiguration {
             throw Throwables.propagate(e);
         } finally {
             if (subscription != null) {
-                ((AbstractEntity)entity).getSubscriptionContext().unsubscribe(subscription);
+                ((EntityInternal)entity).getSubscriptionContext().unsubscribe(subscription);
             }
         }
     }

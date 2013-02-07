@@ -301,7 +301,7 @@ public class EntityManagementSupport {
             Entity e=entity;
             if (e.getParent()!=null && ((EntityInternal)e.getParent()).getManagementSupport().isDeployed()) { 
                 log.warn("Autodeployment in parent's management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
-                ((AbstractEntity)e.getParent()).getManagementSupport().getManagementContext(false).getEntityManager().manage(entity);
+                ((EntityInternal)e.getParent()).getManagementSupport().getManagementContext(false).getEntityManager().manage(entity);
                 return;
             }
         }
