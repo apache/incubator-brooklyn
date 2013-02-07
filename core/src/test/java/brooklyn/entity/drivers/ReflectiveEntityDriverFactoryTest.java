@@ -53,5 +53,10 @@ public class ReflectiveEntityDriverFactoryTest {
         public Location getLocation() {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public Entity getEntity() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

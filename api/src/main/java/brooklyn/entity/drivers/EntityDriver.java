@@ -1,5 +1,6 @@
 package brooklyn.entity.drivers;
 
+import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 
 /**
@@ -14,6 +15,11 @@ import brooklyn.location.Location;
  * @see EntityDriverFactory
  */
 public interface EntityDriver {
+
+    /**
+     * The entity instance that this is a driver for.
+     */
+    Entity getEntity();
 
     /**
      * The location the entity is running in.

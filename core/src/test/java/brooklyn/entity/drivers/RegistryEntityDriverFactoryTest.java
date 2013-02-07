@@ -48,6 +48,11 @@ public class RegistryEntityDriverFactoryTest {
         }
 
         @Override
+        public Entity getEntity() {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
         public Location getLocation() {
             throw new UnsupportedOperationException();
         }
