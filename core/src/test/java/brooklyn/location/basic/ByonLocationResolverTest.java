@@ -53,13 +53,13 @@ public class ByonLocationResolverTest {
                 ImmutableSet.of("1.1.1.1","1.1.1.2","1.1.2.1","1.1.2.2"), null);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testNiceError() throws Exception {
         TestUtils.assertFailsWith(new Runnable() {
             public void run() {
                 FixedListMachineProvisioningLocation<SshMachineLocation> x = 
                         resolve("byon:(hosts=\"1.1.1.{1,2}}\")");
-                log.info("got "+x+" but should have failed");
+                log.error("got "+x+" but should have failed (your DNS is giving an IP for hostname '1.1.1.1}' (with the extra '}')");
             }
         }, new Predicate<Throwable>() {
             @Override

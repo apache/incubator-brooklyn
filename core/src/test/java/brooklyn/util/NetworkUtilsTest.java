@@ -37,8 +37,11 @@ public class NetworkUtilsTest {
         
     }
     
-    @Test(expectedExceptions=UnknownHostException.class)
+    @Test(expectedExceptions=UnknownHostException.class, groups="Integration")
     public void testGetInetAddressWithFixedNameButInvalidIpThrowsException() throws Exception {
+        // as with ByonLocationResolverTest.testNiceError
+        // some DNS servers give an IP for this "hostname"
+        // so test is marked as integration now
         NetworkUtils.getInetAddressWithFixedName("1.2.3.400");
     }
     
