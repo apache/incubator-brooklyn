@@ -11,7 +11,6 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
-
 public interface UsesJmx extends UsesJava {
 
     public static final int DEFAULT_JMX_PORT = 1099;   // RMI port?
