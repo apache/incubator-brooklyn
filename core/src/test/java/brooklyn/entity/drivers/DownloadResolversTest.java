@@ -3,6 +3,8 @@ package brooklyn.entity.drivers;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import java.util.List;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -19,6 +21,7 @@ import brooklyn.test.entity.TestEntityImpl;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class DownloadResolversTest {
@@ -73,23 +76,25 @@ public class DownloadResolversTest {
     public void testSubstitutesAttributeValue() throws Exception {
         entity.setAttribute(Attributes.VERSION, "myversion");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "version=${version},type=${type},simpletype=${simpletype}");
-        String result = DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL).apply(driver);
-        assertEquals(result, String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntityImpl.class.getName(), TestEntityImpl.class.getSimpleName()));
+        List<String> result = DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL).apply(driver);
+        String expected = String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntityImpl.class.getName(), TestEntityImpl.class.getSimpleName());
+        assertEquals(result, ImmutableList.of(expected));
     }
     
     @Test
     public void testDefaultResolverSubstitutesDownloadUrl() throws Exception {
         entity.setAttribute(Attributes.VERSION, "myversion");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "version=${version},type=${type},simpletype=${simpletype}");
-        String result = app.getManagementContext().getEntityDownloadsRegistry().resolve(driver);
-        assertEquals(result, String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntityImpl.class.getName(), TestEntityImpl.class.getSimpleName()));
+        List<String> result = app.getManagementContext().getEntityDownloadsRegistry().resolve(driver);
+        String expected = String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntityImpl.class.getName(), TestEntityImpl.class.getSimpleName());
+        assertEquals(result, ImmutableList.of(expected));
     }
     
     @Test
     public void testDefaultResolverSubstitutesDownloadUrlFailsIfVersionMissing() throws Exception {
         entity.setAttribute(Attributes.DOWNLOAD_URL, "version=${version}");
         try {
-            String result = app.getManagementContext().getEntityDownloadsRegistry().resolve(driver);
+            List<String> result = app.getManagementContext().getEntityDownloadsRegistry().resolve(driver);
             fail("Should have failed, but got "+result);
         } catch (IllegalArgumentException e) {
             if (!e.toString().contains("${version}")) throw e;

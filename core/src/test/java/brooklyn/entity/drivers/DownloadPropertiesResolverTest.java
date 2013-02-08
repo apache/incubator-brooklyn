@@ -18,6 +18,8 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
+import com.google.common.collect.ImmutableList;
+
 public class DownloadPropertiesResolverTest {
 
     // FIXME Needs to work with TestEntity instead of TestEntityImpl
@@ -53,14 +55,41 @@ public class DownloadPropertiesResolverTest {
     @Test
     public void testReturnsGlobalUrl() throws Exception {
         config.put("brooklyn.downloads.all.url", "myurl");
-        assertEquals(resolver.apply(driver), "myurl");
+        assertResolves("myurl");
+    }
+    
+    @Test
+    public void testReturnsGlobalUrlsSplitOnSemicolon() throws Exception {
+        config.put("brooklyn.downloads.all.url", "myurl; myurl2");
+        assertResolves("myurl", "myurl2");
+    }
+    
+    @Test
+    public void testReturnsGlobalFallbackUrl() throws Exception {
+        config.put("brooklyn.downloads.all.fallbackurl", "myurl");
+        assertResolves("myurl");
+    }
+
+    @Test
+    public void testSubstitutionsAppliedToFallbackUrl() throws Exception {
+        config.put("brooklyn.downloads.all.fallbackurl", "foo=${foo},version=${version}");
+        config.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
+        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
+        assertResolves("foo=myfoo,version=myversion");
+    }
+
+    @Test
+    public void testReturnsGlobalFallbackUrlAsLast() throws Exception {
+        config.put("brooklyn.downloads.all.url", "myurl");
+        config.put("brooklyn.downloads.all.fallbackurl", "myurl2");
+        assertResolves("myurl", "myurl2");
     }
     
     @Test
     public void testReturnsGlobalUrlWithEntitySubstituions() throws Exception {
         config.put("brooklyn.downloads.all.url", "version=${version}");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertEquals(resolver.apply(driver), "version=myversion");
+        assertResolves("version=myversion");
     }
     
     @Test
@@ -68,7 +97,7 @@ public class DownloadPropertiesResolverTest {
         config.put("brooklyn.downloads.all.url", "foo=${foo},version=${version}");
         config.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertEquals(resolver.apply(driver), "foo=myfoo,version=myversion");
+        assertResolves("foo=myfoo,version=myversion");
     }
     
     @Test
@@ -76,7 +105,7 @@ public class DownloadPropertiesResolverTest {
         config.put("brooklyn.downloads.all.url", "version=${version}");
         config.put("brooklyn.downloads.all.substitutions.version", "myoverriddenversion");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertEquals(resolver.apply(driver), "version=myoverriddenversion");
+        assertResolves("version=myoverriddenversion");
     }
     
     @Test
@@ -84,7 +113,7 @@ public class DownloadPropertiesResolverTest {
         config.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "foo=${foo},version=${version}");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertEquals(resolver.apply(driver), "foo=myfoo,version=myversion");
+        assertResolves("foo=myfoo,version=myversion");
     }
     
     @Test
@@ -92,7 +121,7 @@ public class DownloadPropertiesResolverTest {
         config.put("brooklyn.downloads.all.url", "version=${version}");
         config.put("brooklyn.downloads.entity.TestEntityImpl.url", "overridden,version=${version}");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertEquals(resolver.apply(driver), "overridden,version=myversion");
+        assertResolves("overridden,version=myversion");
     }
     
     @Test
@@ -100,6 +129,10 @@ public class DownloadPropertiesResolverTest {
         config.put("brooklyn.downloads.entity.TestEntityImpl.url", "version=${version}");
         config.put("brooklyn.downloads.entity.TestEntityImpl.substitutions.version", "myoverriddenversion");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertEquals(resolver.apply(driver), "version=myoverriddenversion");
+        assertResolves("version=myoverriddenversion");
+    }
+    
+    private void assertResolves(String... expected) {
+        assertEquals(resolver.apply(driver), ImmutableList.copyOf(expected));
     }
 }

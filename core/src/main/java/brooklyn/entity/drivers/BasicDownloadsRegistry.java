@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 
 public class BasicDownloadsRegistry implements DownloadsRegistry {
 
-    private final List<Function<? super EntityDriver, String>> resolvers = Lists.newCopyOnWriteArrayList();
+    private final List<Function<? super EntityDriver, List<String>>> resolvers = Lists.newCopyOnWriteArrayList();
     
     public static BasicDownloadsRegistry newDefault(StringConfigMap config) {
         BasicDownloadsRegistry result = new BasicDownloadsRegistry();
@@ -26,22 +26,22 @@ public class BasicDownloadsRegistry implements DownloadsRegistry {
     }
     
     @Override
-    public void registerPrimaryResolver(Function<? super EntityDriver, String> resolver) {
+    public void registerPrimaryResolver(Function<? super EntityDriver, List<String>> resolver) {
         resolvers.add(0, checkNotNull(resolver, "resolver"));
     }
 
     @Override
-    public void registerResolver(Function<? super EntityDriver, String> resolver) {
+    public void registerResolver(Function<? super EntityDriver, List<String>> resolver) {
         resolvers.add(checkNotNull(resolver, "resolver"));
     }
 
     @Override
-    public String resolve(EntityDriver driver) {
+    public List<String> resolve(EntityDriver driver) {
         checkNotNull(driver, "driver");
         
-        for (Function<? super EntityDriver, String> resolver : resolvers) {
-            String result = resolver.apply(driver);
-            if (result != null) {
+        for (Function<? super EntityDriver, List<String>> resolver : resolvers) {
+            List<String> result = resolver.apply(driver);
+            if (result != null && !result.isEmpty()) {
                 return result;
             }
         }
