@@ -70,12 +70,14 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     
     protected volatile BrooklynGarbageCollector gc;
 
-    private final EntityDriverFactory entityDriverFactory = new BasicEntityDriverFactory();
+    private final EntityDriverFactory entityDriverFactory;
     
-    private final DownloadsRegistry downloadsRegistry = BasicDownloadsRegistry.newDefault();
+    private final DownloadsRegistry downloadsRegistry;
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
+       this.entityDriverFactory = new BasicEntityDriverFactory();
+       this.downloadsRegistry = BasicDownloadsRegistry.newDefault(configMap);
     }
     
     static {

@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.Attributes;
 
 import com.google.common.base.Function;
@@ -13,9 +14,10 @@ public class BasicDownloadsRegistry implements DownloadsRegistry {
 
     private final List<Function<? super EntityDriver, String>> resolvers = Lists.newCopyOnWriteArrayList();
     
-    public static BasicDownloadsRegistry newDefault() {
+    public static BasicDownloadsRegistry newDefault(StringConfigMap config) {
         BasicDownloadsRegistry result = new BasicDownloadsRegistry();
         result.registerResolver(DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL));
+        result.registerResolver(new DownloadPropertiesResolver(config));
         return result;
     }
     
