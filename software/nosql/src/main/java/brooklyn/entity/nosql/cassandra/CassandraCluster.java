@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
@@ -19,6 +20,7 @@ import brooklyn.util.flags.SetFromFlag;
  *
  * TODO add sensors with aggregated Cassandra statistics from cluster
  */
+@Catalog(name="Apache Cassandra Database Cluster", description="Cassandra is a highly scalable, eventually consistent, distributed, structured key-value store which provides a ColumnFamily-based data model richer than typical key/value systems", iconUrl="classpath:///cassandra-logo.jpeg")
 @ImplementedBy(CassandraClusterImpl.class)
 public interface CassandraCluster extends DynamicCluster {
 
