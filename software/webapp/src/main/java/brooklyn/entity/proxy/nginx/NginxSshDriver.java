@@ -66,7 +66,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         String stickyModuleUrl = "http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-1.0.tar.gz";
         String stickyModuleSaveAs = "nginx-sticky-module-1.0.tar.gz";
         boolean sticky = ((NginxController) entity).isSticky();
-
+        boolean isMac = getMachine().getOsDetails().isMac();
         ScriptHelper script = newScript(INSTALLING);
         script.body.append(CommonCommands.INSTALL_TAR);
         MutableMap<String, String> installPackageFlags = MutableMap.of(
@@ -75,6 +75,21 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 "port", null);
         script.body.append(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
         script.body.append(CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel("/"), nginxSaveAs));
+        if (isMac) {
+            String pcreVersion = "8.32";
+            String pcreUrl = format("ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-%s.tar.gz", pcreVersion);
+            String pcreSaveAs = format("pcre-8.32.tar.gz", pcreVersion);
+            script.body.append(CommonCommands.downloadUrlAs(pcreUrl, getEntityVersionLabel("/"), pcreSaveAs));
+            // Install PCRE
+            script.body.append(format("mkdir -p %s/pcre-dist", getInstallDir()));
+            script.body.append(format("tar xvzf pcre-%s.tar.gz", pcreVersion));
+            script.body.append(format("cd pcre-%s", pcreVersion));
+            script.body.append(format("./configure --prefix=%s/pcre-dist", getInstallDir()));
+            script.body.append("make");
+            script.body.append("make install");
+            script.body.append("cd ..");
+        }
+        
         script.body.append(format("tar xvzf %s", nginxSaveAs));
         script.body.append(format("cd %s/nginx-%s", getInstallDir(), getVersion()));
 
@@ -89,8 +104,9 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 "mkdir -p dist",
                 "./configure"+
                     format(" --prefix=%s/nginx-%s/dist", getInstallDir(), getVersion()) +
-                    " --with-http_ssl_module"+
-                    (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : ""),
+                    " --with-http_ssl_module" +
+                    (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : "") +
+                    (isMac ? format(" --with-ld-opt=\"-L %s/pcre-dist/lib\"", getInstallDir(), getVersion()) : "") ,
                 "make install");
 
         script.header.prepend("set -x");
