@@ -20,7 +20,7 @@ public class WrappingEntitySpec<T extends Entity> extends BasicEntitySpec<T, Wra
     }
 
     public WrappingEntitySpec(EntitySpec<? extends T> delegate) {
-        super(delegate.getType());
+        super((Class<T>)delegate.getType());
         this.delegate = delegate;
     }
     

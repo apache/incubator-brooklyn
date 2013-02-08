@@ -78,9 +78,12 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
     void clearParent();
     
     /** 
-     * Add a child {@link Entity}, and set this entity as its parent.
+     * Add a child {@link Entity}, and set this entity as its parent,
+     * returning the added child.
      */
     Entity addChild(Entity child);
+    // would be nice to use the following signature, but it breaks groovy AE subclasses, sometimes
+//    <T extends Entity> T addChild(T child);
     
     /** 
      * Removes the specified child {@link Entity}; its parent will be set to null.

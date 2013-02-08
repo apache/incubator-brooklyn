@@ -35,6 +35,10 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
         return new ConcreteEntitySpec<T>(type);
     }
 
+    public static <T extends Entity, U extends T> BasicEntitySpec<T, ?> newInstance(Class<T> type, Class<U> implType) {
+        return new ConcreteEntitySpec<T>(type).impl(implType);
+    }
+
     private final Class<T> type;
     private String displayName;
     private Class<? extends T> impl;
@@ -43,8 +47,8 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final List<Policy> policies = Lists.newArrayList();
     
-    public BasicEntitySpec(Class<? extends T> type) {
-        this.type = (Class<T>) type;
+    public BasicEntitySpec(Class<T> type) {
+        this.type = type;
     }
     
     @SuppressWarnings("unchecked")
