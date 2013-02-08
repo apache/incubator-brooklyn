@@ -11,7 +11,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
@@ -24,6 +23,12 @@ import com.google.common.annotations.Beta;
 /** 
  * Extended Entity interface for use in places where the caller should have certain privileges,
  * such as setting attribute values, adding policies, etc.
+ * 
+ * FIXME Moved from core project to api project because of bug in groovy's covariant return types.
+ * EntityDriver needs to return EntityLocal rather than Entity, to avoid changing a whole load
+ * of sub-types.
+ * FIXME Add {@link setAttribute(AttributeSensorAndConfigKey<?,T>)} back in if/when move it back,
+ * or if we extract an interface for AttributeSensorAndConfigKey.
  */
 public interface EntityLocal extends Entity, Configurable {
     
@@ -54,20 +59,20 @@ public interface EntityLocal extends Entity, Configurable {
      */
     <T> T setAttribute(AttributeSensor<T> sensor, T val);
 
-    /** sets the value of the given attribute sensor from the config key value herein,
-     * if the config key resolves to a non-null value as a sensor
-     * 
-     * @deprecated since 0.5; use {@link #setAttribute(AttributeSensor, Object)}, such as 
-     * <pre>
-     * T val = getConfig(KEY.getConfigKey());
-     * if (val != null) {
-     *     setAttribute(KEY, val)
-     * }
-     * </pre>
-     * 
-     * @return old value
-     */
-    <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor);
+//    /** sets the value of the given attribute sensor from the config key value herein,
+//     * if the config key resolves to a non-null value as a sensor
+//     * 
+//     * @deprecated since 0.5; use {@link #setAttribute(AttributeSensor, Object)}, such as 
+//     * <pre>
+//     * T val = getConfig(KEY.getConfigKey());
+//     * if (val != null) {
+//     *     setAttribute(KEY, val)
+//     * }
+//     * </pre>
+//     * 
+//     * @return old value
+//     */
+//    <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor);
 
     /**
      * @deprecated in 0.5; use {@link #getConfig(ConfigKey)}

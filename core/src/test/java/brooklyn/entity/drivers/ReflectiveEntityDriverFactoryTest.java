@@ -7,6 +7,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -55,7 +56,7 @@ public class ReflectiveEntityDriverFactoryTest {
         }
 
         @Override
-        public Entity getEntity() {
+        public EntityLocal getEntity() {
             throw new UnsupportedOperationException();
         }
     }

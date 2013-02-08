@@ -1,6 +1,7 @@
 package brooklyn.entity.drivers;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 
 class MyEntityDriver implements EntityDriver {
@@ -12,8 +13,8 @@ class MyEntityDriver implements EntityDriver {
         this.location = location;
     }
     @Override
-    public Entity getEntity() {
-        return entity;
+    public EntityLocal getEntity() {
+        return (EntityLocal) entity;
     }
 
     @Override

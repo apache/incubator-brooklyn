@@ -7,6 +7,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriver;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriverDependentEntity;
 import brooklyn.location.Location;
@@ -48,7 +49,7 @@ public class RegistryEntityDriverFactoryTest {
         }
 
         @Override
-        public Entity getEntity() {
+        public EntityLocal getEntity() {
             throw new UnsupportedOperationException();
         }
         
