@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.internal.AbstractManagementContext;
@@ -20,7 +19,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
-public abstract class AbstractApplication extends AbstractEntity implements Startable, Application {
+public abstract class AbstractApplication extends AbstractEntity implements StartableApplication {
     public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
     
     @SetFromFlag("mgmt")

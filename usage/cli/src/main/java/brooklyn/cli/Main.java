@@ -24,9 +24,12 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -286,21 +289,36 @@ public class Main {
         Object loadApplicationFromClasspathOrParse(ResourceUtils utils, GroovyClassLoader loader, String app) 
                 throws SecurityException, NoSuchMethodException, IllegalArgumentException, InstantiationException, 
                 IllegalAccessException, InvocationTargetException {
-            Class<?> clazz;
+            
+            // Load the app class
+            Class<?> tempclazz;
             try {
                 log.debug("Trying to load application as class on classpath: {}", app);
-                clazz = loader.loadClass(app, true, false);
+                tempclazz = loader.loadClass(app, true, false);
             } catch (ClassNotFoundException cnfe) { // Not a class on the classpath
                 log.debug("Loading \"{}\" as class on classpath failed, now trying as .groovy source file", app);
                 String content = utils.getResourceAsString(app);
-                clazz = loader.parseClass(content);
+                tempclazz = loader.parseClass(content);
             }
+            final Class<?> clazz = tempclazz;
+
+            // Intantiate the app class (or app builder)
             if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
                 Constructor<?> constructor = clazz.getConstructor();
                 return (ApplicationBuilder) constructor.newInstance();
             } else if (AbstractApplication.class.isAssignableFrom(clazz)) {
                 Constructor<?> constructor = clazz.getConstructor();
                 return (AbstractApplication) constructor.newInstance();
+            } else if (AbstractEntity.class.isAssignableFrom(clazz)) {
+                return new ApplicationBuilder() {
+                    @Override protected void doBuild() {
+                        createChild(BasicEntitySpec.newInstance(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
+                    }};
+            } else if (Entity.class.isAssignableFrom(clazz)) {
+                return new ApplicationBuilder() {
+                    @Override protected void doBuild() {
+                        createChild(BasicEntitySpec.newInstance((Class<? extends Entity>)clazz));
+                    }};
             } else {
                 throw new IllegalArgumentException("Application class "+clazz+" must extend one of ApplicationBuilder or AbstractApplication");
             }

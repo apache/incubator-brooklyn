@@ -1,5 +1,6 @@
 package brooklyn.rest.resources;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
@@ -45,7 +46,6 @@ import com.wordnik.swagger.core.ApiParam;
 @Produces(MediaType.APPLICATION_JSON)
 public class ApplicationResource extends AbstractBrooklynRestResource {
 
-  @SuppressWarnings("unused")
   private static final Logger log = LoggerFactory.getLogger(ApplicationResource.class);
   
   private final ObjectMapper mapper = new ObjectMapper();
@@ -152,21 +152,34 @@ public class ApplicationResource extends AbstractBrooklynRestResource {
   }
 
   private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {
-    if (applicationSpec.getType()!=null) {
-        if (brooklyn().getCatalog().getCatalogItem(applicationSpec.getType())==null) {
-            throw WebResourceUtils.notFound("Undefined application type '%s'", applicationSpec.getType());
-        }
-        if (applicationSpec.getEntities()!=null) {
-            throw WebResourceUtils.preconditionFailed("Application given explicit type '%s' must not define entities", applicationSpec.getType());
-        }
-        return;
-    }
-    for (EntitySpec entitySpec : applicationSpec.getEntities()) {
-      if (brooklyn().getCatalog().getCatalogItem(entitySpec.getType())==null) {
-        throw WebResourceUtils.notFound("Undefined entity type '%s'", entitySpec.getType());
+      String appType = applicationSpec.getType();
+      if (appType != null) {
+          checkEntityTypeIsValid(appType);
+
+          if (applicationSpec.getEntities() != null) {
+              throw WebResourceUtils.preconditionFailed("Application given explicit type '%s' must not define entities", appType);
+          }
+          return;
       }
-    }
+        
+      for (EntitySpec entitySpec : applicationSpec.getEntities()) {
+          String entityType = entitySpec.getType();
+          checkEntityTypeIsValid(checkNotNull(entityType, "entityType"));
+      }
   }
+
+    private void checkEntityTypeIsValid(String type) {
+        if (brooklyn().getCatalog().getCatalogItem(type) == null) {
+            try {
+                brooklyn().getCatalog().getRootClassLoader().loadClass(type);
+            } catch (ClassNotFoundException e) {
+                log.debug("Class not found for type '" + type + "'; reporting 404", e);
+                throw WebResourceUtils.notFound("Undefined type '%s'", type);
+            }
+            log.info("Entity type '{}' not defined in catalog but is on classpath; continuing", type);
+        }
+    }
+
   @SuppressWarnings("deprecation")
   private void checkLocationsAreValid(ApplicationSpec applicationSpec) {
     for (String locationId : applicationSpec.getLocations()) {

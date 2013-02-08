@@ -5,11 +5,11 @@ import static com.google.common.collect.Iterables.transform;
 import groovy.lang.GroovyClassLoader;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
@@ -20,11 +20,14 @@ import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.ApplicationBuilder.Builder;
+import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
@@ -35,11 +38,12 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -140,34 +144,77 @@ public class BrooklynRestResourceUtils {
         return null;
     }
 
-    @SuppressWarnings("serial")
     public Application create(ApplicationSpec spec) {
         log.debug("REST creating application instance for {}", spec);
-
+        
+        String type = spec.getType();
+        String name = spec.getName();
+        Map<String,String> configO = spec.getConfig();
+        Set<EntitySpec> entities = (spec.getEntities() == null) ? ImmutableSet.<EntitySpec>of() : spec.getEntities();
+        
         final Application instance;
+
+        // Load the class; first try to use the appropriate catalog item; but then allow anything that is on the classpath
+        final Class<? extends Entity> clazz;
+        if (Strings.isEmpty(type)) {
+            clazz = BasicApplication.class;
+        } else {
+            Class<? extends Entity> tempclazz;
+            try {
+                tempclazz = getCatalog().loadClassByType(type, Entity.class);
+            } catch (NoSuchElementException e) {
+                try {
+                    tempclazz = (Class<? extends Entity>) getCatalog().getRootClassLoader().loadClass(type);
+                    log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
+                } catch (ClassNotFoundException e2) {
+                    log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
+                    throw e;
+                }
+            }
+            clazz = tempclazz;
+        }
         
         try {
-            if (spec.getType()!=null) {
-                instance = (Application) newEntityInstance(spec.getType(), null, spec.getConfig());
+            if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
+                Constructor<?> constructor = clazz.getConstructor();
+                ApplicationBuilder appBuilder = (ApplicationBuilder) constructor.newInstance();
+                if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
+                if (entities.size() > 0) log.warn("Cannot supply additional entities when using an ApplicationBuilder; ignoring in spec {}", spec);
+                
+                log.info("REST placing '{}' under management", spec.getName());
+                instance = appBuilder.manage(mgmt);
+                
+            } else if (Application.class.isAssignableFrom(clazz)) {
+                brooklyn.entity.proxying.EntitySpec<? extends Application> coreSpec = 
+                        (brooklyn.entity.proxying.EntitySpec<? extends Application>) toCoreEntitySpec(clazz, name, configO);
+                Builder<? extends Application> builder = ApplicationBuilder.builder(coreSpec);
+                for (EntitySpec entitySpec : entities) {
+                    log.info("REST creating instance for entity {}", entitySpec.getType());
+                    builder.child(toCoreEntitySpec(entitySpec));
+                }
+                
+                log.info("REST placing '{}' under management", spec.getName());
+                instance = builder.manage(mgmt);
+                
+            } else if (Entity.class.isAssignableFrom(clazz)) {
+                final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
+                Builder<? extends Application> builder = ApplicationBuilder.builder()
+                        .child(toCoreEntitySpec(eclazz, spec.getName(), spec.getConfig()));
+                if (entities.size() > 0) log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
+                
+                log.info("REST placing '{}' under management", spec.getName());
+                instance = builder.manage(mgmt);
+                    
             } else {
-                instance = new AbstractApplication() {};
+                throw new IllegalArgumentException("Class "+clazz+" must extend one of ApplicationBuilder, Application or Entity");
             }
-            if (spec.getName()!=null && !spec.getName().isEmpty()) ((EntityLocal)instance).setDisplayName(spec.getName());
-
-            if (spec.getEntities()!=null) for (EntitySpec entitySpec : spec.getEntities()) {
-                log.info("REST creating instance for entity {}", entitySpec.getType());
-                EntityLocal entity = newEntityInstance(entitySpec.getType(), instance, entitySpec.getConfig());
-                if (entitySpec.getName()!=null && !spec.getName().isEmpty()) entity.setDisplayName(entitySpec.getName());
-            }
+            
+            return instance;
+            
         } catch (Exception e) {
             log.error("REST failed to create application: "+e, e);
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
-
-        log.info("REST placing '{}' under management as {}", spec.getName(), instance);
-        Entities.startManagement(instance, mgmt);
-        
-        return instance;
     }
     
     public Task<?> start(Application app, ApplicationSpec spec) {
@@ -185,49 +232,38 @@ public class BrooklynRestResourceUtils {
                 MutableMap.of("locations", locations));
     }
 
-    private EntityLocal newEntityInstance(String type, Entity parent, Map<String, String> configO) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        Class<? extends Entity> clazz = getCatalog().loadClassByType(type, Entity.class);
-        Map<String, String> config = Maps.newHashMap(configO);
-        Constructor<?>[] constructors = clazz.getConstructors();
-        EntityLocal result = null;
-        if (parent==null) {
-            result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
-            if (result!=null) return result;
+    private brooklyn.entity.proxying.EntitySpec<? extends Entity> toCoreEntitySpec(brooklyn.rest.domain.EntitySpec spec) {
+        String type = spec.getType();
+        String name = spec.getName();
+        Map<String, String> config = (spec.getConfig() == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(spec.getConfig());
+        
+        final Class<? extends Entity> clazz = getCatalog().loadClassByType(type, Entity.class);
+        BasicEntitySpec<? extends Entity, ?> result;
+        if (clazz.isInterface()) {
+            result = BasicEntitySpec.newInstance(clazz);
+        } else {
+            result = BasicEntitySpec.newInstance(Entity.class).impl(clazz);
         }
-        result = tryInstantiateEntity(constructors, new Class[] { Map.class, Entity.class }, new Object[] { config, parent });
-        if (result!=null) return result;
-
-        result = tryInstantiateEntity(constructors, new Class[] { Map.class }, new Object[] { config });
-        if (result!=null) {
-            if (parent!=null) result.setParent(parent);
-            return result;
-        }
-
-        result = tryInstantiateEntity(constructors, new Class[] { Entity.class }, new Object[] { parent });
-        if (result!=null) {
-            ((EntityInternal)result).configure(config);
-            return result;
-        }
-
-        result = tryInstantiateEntity(constructors, new Class[] {}, new Object[] {});
-        if (result!=null) {
-            if (parent!=null) result.setParent(parent);
-            ((EntityInternal)result).configure(config);
-            return result;
-        }
-
-        throw new IllegalStateException("No suitable constructor for instantiating entity "+type);
+        if (!Strings.isEmpty(name)) result.displayName(name);
+        result.configure(config);
+        return result;
     }
-
-    private EntityLocal tryInstantiateEntity(Constructor<?>[] constructors, Class<?>[] classes, Object[] objects) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        for (Constructor<?> c: constructors) {
-            if (Arrays.equals(c.getParameterTypes(), classes)) {
-                return (EntityLocal) c.newInstance(objects);
-            }
+    
+    private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO) {
+        Map<String, String> config = (configO == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
+        
+        BasicEntitySpec<?, ?> result;
+        if (clazz.isInterface()) {
+            result = BasicEntitySpec.newInstance(clazz);
+        } else {
+            Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
+            result = BasicEntitySpec.newInstance(interfaceclazz).impl(clazz);
         }
-        return null;
+        if (!Strings.isEmpty(name)) result.displayName(name);
+        result.configure(config);
+        return result;
     }
-
+    
     public Task<?> destroy(final Application application) {
         return mgmt.getExecutionManager().submit(new Runnable() {
             @Override
