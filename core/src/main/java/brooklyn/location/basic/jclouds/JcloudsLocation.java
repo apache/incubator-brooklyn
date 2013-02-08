@@ -179,6 +179,18 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
     public String getProvider() {
         return (String) getConf().get("provider");
     }
+
+    public String getIdentity() {
+        return (String) getConf().get("identity");
+    }
+    
+    public String getCredential() {
+        return (String) getConf().get("credential");
+    }
+    
+    public String getEndpoint() {
+        return (String) getConf().get(Constants.PROPERTY_ENDPOINT);
+    }
     
     public Map getConf() { return leftoverProperties; }
     
@@ -424,6 +436,10 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             if (v instanceof CharSequence) return Boolean.parseBoolean(((CharSequence)v).toString());
             throw new IllegalArgumentException("dontCreateUser does not accept value '"+v+"' of type "+v.getClass());
         }
+        
+        public String getUser() {
+            return user;
+        }
     }
     
     public static final Set<String> getAllSupportedProperties() {
@@ -555,67 +571,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
             
             // Wait for the VM to be reachable over SSH
             if (setup.get("waitForSshable") != null ? truth(setup.get("waitForSshable")) : true) {
-                String vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
-                final NodeMetadata nodeRef = node;
-                final LoginCredentials expectedCredentialsRef = expectedCredentials;
-                
-                long delayMs = -1;
-                try {
-                    delayMs = Time.parseTimeString(""+setup.get("waitForSshable"));
-                } catch (Exception e) {}
-                if (delayMs<=0) delayMs = START_SSHABLE_TIMEOUT;
-                
-                LOG.info("Started VM in {} for {}; waiting for it to be sshable on {}@{}",
-                        new Object[] {
-                                elvis(setup.get("providerLocationId"), setup.get("provider")),
-                                setup.getCallerContext(), 
-                                setup.user, 
-                                vmIp
-                        });
-                boolean reachable = new Repeater()
-                    .repeat()
-                    .every(1,SECONDS)
-                    .until(new Callable<Boolean>() {
-                        public Boolean call() {
-                            Statement statement = Statements.newStatementList(exec("hostname"));
-                            // NB this assumes passwordless sudo !
-                            ExecResponse response = computeService.runScriptOnNode(nodeRef.getId(), statement, 
-                                    overrideLoginCredentials(expectedCredentialsRef));
-                            return response.getExitStatus() == 0;
-                        }})
-                    .limitTimeTo(delayMs, MILLISECONDS)
-                    .run();
-
-                if (!reachable) {
-                    throw new IllegalStateException("SSH failed for "+
-                            setup.user+"@"+vmIp+" (for "+setup.getCallerContext()+") after waiting "+
-                            Time.makeTimeString(delayMs));
-                }
+                waitForReachable(computeService, node, expectedCredentials, setup);
             }
             
-            String vmHostname = getPublicHostname(node, setup);
-            
-            Map sshConfig = generateSshConfig(setup, node);
-
-            if (LOG.isDebugEnabled())
-                LOG.debug("creating JcloudsSshMachineLocation for {}@{} for {} with {}", 
-                        new Object[] {
-                                setup.user, 
-                                vmHostname, 
-                                setup.getCallerContext(), 
-                                Entities.sanitize(sshConfig)
-                        });
-            JcloudsSshMachineLocation sshLocByHostname = new JcloudsSshMachineLocation(
-                    MutableMap.builder()
-                            .put("address", vmHostname) 
-                            .put("displayName", vmHostname)
-                            .put("user", setup.user)
-                            .put("config", sshConfig)
-                            .put("localTempDir", localTempDir)
-                            .build(),
-                    this, 
-                    node);
-                        
+            JcloudsSshMachineLocation sshLocByHostname = createJcloudsSshMachineLocation(node, setup);
+                                    
             sshLocByHostname.setParentLocation(this);
             vmInstanceIds.put(sshLocByHostname, node.getId());
             
@@ -640,6 +600,70 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
 //            computeService.getContext().close();
         }
 
+    }
+
+    protected void waitForReachable(final ComputeService computeService, NodeMetadata node, LoginCredentials expectedCredentials,
+            BrooklynJcloudsSetupHolder setup) {
+        String vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
+        final NodeMetadata nodeRef = node;
+        final LoginCredentials expectedCredentialsRef = expectedCredentials;
+        
+        long delayMs = -1;
+        try {
+            delayMs = Time.parseTimeString(""+setup.get("waitForSshable"));
+        } catch (Exception e) {}
+        if (delayMs<=0) delayMs = START_SSHABLE_TIMEOUT;
+        
+        LOG.info("Started VM in {} for {}; waiting for it to be sshable on {}@{}",
+                new Object[] {
+                        elvis(setup.get("providerLocationId"), setup.get("provider")),
+                        setup.getCallerContext(), 
+                        setup.user, 
+                        vmIp
+                });
+        boolean reachable = new Repeater()
+            .repeat()
+            .every(1,SECONDS)
+            .until(new Callable<Boolean>() {
+                public Boolean call() {
+                    Statement statement = Statements.newStatementList(exec("hostname"));
+                    // NB this assumes passwordless sudo !
+                    ExecResponse response = computeService.runScriptOnNode(nodeRef.getId(), statement, 
+                            overrideLoginCredentials(expectedCredentialsRef));
+                    return response.getExitStatus() == 0;
+                }})
+            .limitTimeTo(delayMs, MILLISECONDS)
+            .run();
+
+        if (!reachable) {
+            throw new IllegalStateException("SSH failed for "+
+                    setup.user+"@"+vmIp+" (for "+setup.getCallerContext()+") after waiting "+
+                    Time.makeTimeString(delayMs));
+        }
+    }
+
+    protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, BrooklynJcloudsSetupHolder setup) throws IOException {
+        String vmHostname = getPublicHostname(node, setup);
+
+        Map sshConfig = generateSshConfig(setup, node);
+        if (LOG.isDebugEnabled())
+            LOG.debug("creating JcloudsSshMachineLocation for {}@{} for {} with {}", 
+                    new Object[] {
+                            setup.user, 
+                            vmHostname, 
+                            setup.getCallerContext(), 
+                            Entities.sanitize(sshConfig)
+                    });
+        return new JcloudsSshMachineLocation(
+                MutableMap.builder()
+                        .put("address", vmHostname) 
+                        .put("displayName", vmHostname)
+                        .put("user", setup.user)
+                        .put("config", sshConfig)
+                        .put("localTempDir", localTempDir)
+                        .build(),
+                this, 
+                node);
     }
 
     public JcloudsSshMachineLocation rebindMachine(NodeMetadata metadata) throws NoMachinesAvailableException {
@@ -749,7 +773,7 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
         }
     }
 
-    private Map generateSshConfig(BrooklynJcloudsSetupHolder setup, NodeMetadata node) throws IOException {
+    protected Map generateSshConfig(BrooklynJcloudsSetupHolder setup, NodeMetadata node) throws IOException {
         Map sshConfig = Maps.newLinkedHashMap();
         
         if (setup.password != null) {

@@ -61,8 +61,9 @@ public class PortableTemplateBuilder<T extends PortableTemplateBuilder<?>> exten
     }
     
     protected TemplateOptions computeAggregatedOptions(boolean includeOptional) {
-        TemplateOptions result = new TemplateOptions();
-        if (getOptions()!=null) result = addTemplateOptions(result, getOptions());
+        TemplateOptions result;
+        if (getOptions()!=null) result = getOptions().clone();
+        else result = new TemplateOptions();
         if (includeOptional)
             for (TemplateOptions moreOptions: getAdditionalOptionalOptions()) result = addTemplateOptions(result, moreOptions);
         for (TemplateOptions moreOptions: getAdditionalOptions()) result = addTemplateOptions(result, moreOptions);

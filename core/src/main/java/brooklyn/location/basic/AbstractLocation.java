@@ -16,6 +16,7 @@ import brooklyn.location.Location;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
@@ -50,6 +51,9 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     protected String name;
     
     protected HostGeoInfo hostGeoInfo;
+
+    final protected ConfigBag configBag = new ConfigBag();
+
 
     /**
      * Construct a new instance of an AbstractLocation.
@@ -96,6 +100,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
         configure(Maps.newLinkedHashMap());
     }
     protected void configure(Map properties) {
+        configBag.putAll(properties);
         leftoverProperties.putAll(FlagUtils.setFieldsFromFlags(properties, this));
         //replace properties _contents_ with leftovers so subclasses see leftovers only
         properties.clear();
@@ -123,6 +128,10 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
 
+    public ConfigBag getConfigBag() {
+        return configBag;
+    }
+    
     public void setName(String name) {
         this.name = name;
     }
