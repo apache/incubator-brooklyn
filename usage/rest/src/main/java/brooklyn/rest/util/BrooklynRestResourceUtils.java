@@ -22,7 +22,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
@@ -165,10 +164,8 @@ public class BrooklynRestResourceUtils {
             throw Throwables.propagate(e);
         }
 
-        if (!Entities.isManaged(instance)) {
-            log.info("REST placing '{}' under management as {}", spec.getName(), instance);
-            Entities.startManagement(instance, mgmt);
-        }
+        log.info("REST placing '{}' under management as {}", spec.getName(), instance);
+        Entities.startManagement(instance, mgmt);
         
         return instance;
     }
@@ -225,10 +222,7 @@ public class BrooklynRestResourceUtils {
     private EntityLocal tryInstantiateEntity(Constructor<?>[] constructors, Class<?>[] classes, Object[] objects) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
         for (Constructor<?> c: constructors) {
             if (Arrays.equals(c.getParameterTypes(), classes)) {
-                Object o = c.newInstance(objects);
-                if (o instanceof EntityLocal) return (EntityLocal)o;
-                if (o instanceof ApplicationBuilder) 
-                    return (EntityLocal) ((ApplicationBuilder)o).manage(mgmt);
+                return (EntityLocal) c.newInstance(objects);
             }
         }
         return null;
