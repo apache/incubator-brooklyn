@@ -24,9 +24,9 @@ public class ConfigBag {
         for (Object eo: flags.entrySet()) {
             Map.Entry e = (Map.Entry)eo;
             boolean isNew = !config.containsKey(e.getKey());
-            boolean isUsed = !isNew && unusedConfig.containsKey(e.getKey());
+            boolean isUsed = !isNew && !unusedConfig.containsKey(e.getKey());
             config.put(e.getKey(), e.getValue());
-            if (isNew || !isUsed) 
+            if (!isUsed) 
                 unusedConfig.put(e.getKey(), e.getValue());
             //if (!isNew && !isUsed) log.debug("updating config value which has already been used");
         }
