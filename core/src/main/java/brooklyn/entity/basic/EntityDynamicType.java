@@ -202,9 +202,10 @@ public class EntityDynamicType {
                     Effector<?> eff = (Effector<?>) f.get(optionalEntity);
                     Effector<?> overwritten = result.put(eff.getName(), eff);
                     Field source = sources.put(eff.getName(), f);
-                    if (overwritten!=null && overwritten != eff) 
+                    if (overwritten!=null && overwritten!=eff) {
                         LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
-                                eff.getName(), optionalEntity!=null ? optionalEntity : clazz, eff, f, overwritten, source});
+                            eff.getName(), optionalEntity!=null ? optionalEntity : clazz, eff, f, overwritten, source});
+                    }
                 }
             }
             

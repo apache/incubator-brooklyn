@@ -100,11 +100,11 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     public void bind(Map flags) {
         if (flags.containsKey("serverPool")) {
-            setConfig(SERVER_POOL, (Group) flags.get("serverPool"));
-            
+            setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
         } else if (flags.containsKey("cluster")) {
+            // @deprecated since 0.5.0
             LOG.warn("Deprecated use of AbstractController.cluster: entity {}; value {}", this, flags.get("cluster"));
-            setConfig(SERVER_POOL, (Group) flags.get("cluster"));
+            setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("cluster"));
         }
     }
 

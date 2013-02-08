@@ -47,6 +47,7 @@ import org.jclouds.domain.Credentials;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
+import org.jclouds.rest.AuthorizationException;
 import org.jclouds.scriptbuilder.domain.InterpretableStatement;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
@@ -1045,6 +1046,9 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                     }
                 }
             }
+        } catch (AuthorizationException e) {
+            LOG.warn("Error resolving template: not authorized (rethrowing: "+e+")");
+            throw new IllegalStateException("Not authorized to access cloud "+this+" to resolve "+templateBuilder, e);
         } catch (Exception e) {
             try {
                 synchronized (this) {
@@ -1065,10 +1069,11 @@ public class JcloudsLocation extends AbstractLocation implements MachineProvisio
                         }
                     }
                 }
+                throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+". See list of images in log.", e);
             } catch (Exception e2) {
                 LOG.warn("Error loading available images to report (following original error matching template which will be rethrown): "+e2, e2);
+                throw new IllegalStateException("Unable to access cloud "+this+" to resolve "+templateBuilder, e);
             }
-            throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+". See list of images in log.", e);
         }
         TemplateOptions options = template.getOptions();
         

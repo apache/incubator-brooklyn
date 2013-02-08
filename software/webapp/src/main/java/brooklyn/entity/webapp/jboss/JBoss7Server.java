@@ -33,14 +33,14 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
             new PortAttributeSensorAndConfigKey("webapp.jboss.managementHttpPort", "Management port", "9990+");
 
     /**
-     * @deprecated since 1.5; use MANAGEMENT_HTTP_PORT instead
+     * @deprecated since 0.5.0; use MANAGEMENT_HTTP_PORT instead
      */
-    @SetFromFlag("managementPort")
+    @Deprecated @SetFromFlag("managementPort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT = MANAGEMENT_HTTP_PORT;
 
     @SetFromFlag("managementHttpsPort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_HTTPS_PORT =
-            new PortAttributeSensorAndConfigKey("webapp.jboss.managementHttpPort", "Management port", "9443+");
+            new PortAttributeSensorAndConfigKey("webapp.jboss.managementHttpsPort", "Management port", "9443+");
 
     @SetFromFlag("managementNativePort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_NATIVE_PORT =
