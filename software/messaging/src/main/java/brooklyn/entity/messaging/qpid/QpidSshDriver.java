@@ -66,30 +66,12 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
                     "mkdir lib/opt"
                 )
                 .execute();
-        
-        Map<?,?> rtf = entity.getConfig(QpidBroker.RUNTIME_FILES);
-        if (rtf != null && rtf.size() > 0) {
-            log.info("Customising {} with runtime files {}", entity, rtf);
-            
-            for (Map.Entry entry : rtf.entrySet()) {
-                String dest = (String) entry.getKey();
-                Object source = entry.getValue();
-                String absoluteDest = getRunDir()+"/"+dest;
-                int result;
-                if (source instanceof File) {
-                    result = getMachine().copyTo((File)source, absoluteDest);
-                } else if (source instanceof URL) {
-                    try {
-                        result = getMachine().copyTo(((URL)source).openStream(), absoluteDest);
-                    } catch (IOException e) {
-                        throw Exceptions.propagate(e);
-                    }
-                } else {
-                    result = getMachine().copyTo(new ResourceUtils(entity).getResourceFromUrl(""+source), absoluteDest);
-                }
-                log.debug("copied runtime file for {}: {} to {}/{} - result {}", new Object[] {entity, source, getRunDir(), dest, result});
-            }
-        }
+
+        Map runtimeFiles = entity.getConfig(QpidBroker.RUNTIME_FILES);
+        copyResourceMap(runtimeFiles);
+
+        Map runtimeTemplates = entity.getConfig(QpidBroker.RUNTIME_TEMPLATES);
+        copyTemplateMap(runtimeTemplates);
     }
 
     @Override

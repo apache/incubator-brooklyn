@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -114,6 +115,10 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     
     public String getResourceAsString(String url) {
         return new ResourceUtils(entity).getResourceAsString(url);
+    }
+
+    public String processTemplate(File templateConfigFile) {
+        return processTemplate(templateConfigFile.toURI().toASCIIString());
     }
 
     public String processTemplate(String templateConfigUrl) {
