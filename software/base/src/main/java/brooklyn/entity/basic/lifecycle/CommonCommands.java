@@ -1,7 +1,5 @@
 package brooklyn.entity.basic.lifecycle;
 
-import brooklyn.util.MutableMap;
-
 import static java.lang.String.format;
 
 import java.util.Arrays;
@@ -15,7 +13,6 @@ import java.util.Map;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class CommonCommands {
 
@@ -183,35 +180,110 @@ public class CommonCommands {
     public static final String INSTALL_ZIP = installExecutable("zip");
 
     /**
+     * @deprecated Use {@link downloadEntityUrlAs(List<String>, String, String)}
+     */
+    public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
+        return downloadEntityUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
+    }
+
+    /**
+     * @deprecated Use {@link downloadEntityUrlAs(Map, String, String, String)}
+     */
+    @Deprecated
+    public static List<String> downloadUrlAs(Map flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
+        return downloadEntityUrlAs(flags, url, entityVersionPath, pathlessFilenameToSaveAs);
+    }
+    
+    /**
+     * @see {@link downloadEntityUrlAs(Map, List, entityVersionPath, pathlessFilenameToSaveAs)}
+     */
+    public static List<String> downloadEntityUrlAs(List<String> urls, String entityVersionPath, String pathlessFilenameToSaveAs) {
+        return downloadEntityUrlAs(new HashMap(), urls, entityVersionPath, pathlessFilenameToSaveAs);
+    }
+
+    /**
+     * @see downloadEntityUrlAs(Map, List, String, String)
+     */
+    public static List<String> downloadEntityUrlAs(Map flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
+        return downloadEntityUrlAs(flags, ImmutableList.of(url), entityVersionPath, pathlessFilenameToSaveAs);
+    }
+
+    /**
      * Returns command for downloading from a url and saving to a file;
      * currently using {@code curl}.
      * <p/>
      * Will read from a local repository, if files have been copied there
-     * ({@code cp -r /tmp/brooklyn/installs/ ~/.brooklyn/repository/})
-     * unless <em>skipLocalrepo</em> is {@literal true}.
+     * ({@code cp -r /tmp/brooklyn/installs/ ~/.brooklyn/repository/<entityVersionPath>/<pathlessFilenameToSaveAs>})
+     * unless <em>skipLocalRepo</em> is {@literal true}.
+     * <p/>
+     * Will try each URL in turn until until one works.
      * <p/>
      * Ideally use a blobstore staging area.
      */
-    public static List<String> downloadUrlAs(Map flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
+    public static List<String> downloadEntityUrlAs(Map flags, List<String> url, String entityVersionPath, String pathlessFilenameToSaveAs) {
+        String localRepoFilePath = format("$HOME/.brooklyn/repository/%s/%s", entityVersionPath, pathlessFilenameToSaveAs);
+        return downloadUrlAs(flags, localRepoFilePath, url, "./"+pathlessFilenameToSaveAs);
+    }
+    
+    /**
+     * Returns command for downloading from a url and saving to a file;
+     * currently using {@code curl}.
+     * <p/>
+     * Will first attempt to retrieve the file from {@code localRepoFilePath}, (unless flags 
+     * contains <em>skipLocalRepo</em> set to {@literal true}), and otherwise download the
+     * file trying each of the URLs in turn until one works.
+     */
+    public static List<String> downloadUrlAs(Map flags, String localRepoFilePath, List<String> urls, String saveAs) {
         Boolean skipLocalRepo = (Boolean) flags.get("skipLocalRepo");
         boolean useLocalRepo =  skipLocalRepo!=null?!skipLocalRepo:true;
 
-        String command = format("curl -L \"%s\" -o %s", url, pathlessFilenameToSaveAs);
-        if (useLocalRepo) {
-            String file = format("$HOME/.brooklyn/repository/%s/%s", entityVersionPath, pathlessFilenameToSaveAs);
-            command = format("if [ -f %s ]; then cp %s ./%s; else %s ; fi", file, file, pathlessFilenameToSaveAs, command);
+        StringBuilder curlCmd = new StringBuilder("");
+        if (urls.isEmpty()) {
+            curlCmd.append("echo \"No URLs supplied for "+saveAs+"\"; exit 1");
+        } else {
+            curlCmd.append(downloadUrlAs(urls, saveAs));
         }
-        command = command + " || exit 9";
-        return Arrays.asList(INSTALL_CURL, command);
+        
+        String command;
+        if (useLocalRepo && localRepoFilePath != null) {
+            command = format("if [ -f \"%s\" ]; then cp %s %s; else %s ; fi", localRepoFilePath, localRepoFilePath, saveAs, curlCmd);
+        } else {
+            command = curlCmd.toString();
+        }
+        command += " || exit 9";
+        
+        return Arrays.asList(INSTALL_CURL, command.toString());
     }
 
+    /**
+     * Returns command to download the URL, saving as the given file. Will try each URL in turn until one is successful
+     * (see `curl -f` documentation).
+     * 
+     * This does not install curl, and does not exit on failure.
+     */
+    public static String downloadUrlAs(List<String> urls, String saveAs) {
+        if (urls.isEmpty()) throw new IllegalArgumentException("No URLs supplied to download "+saveAs);
+        
+        StringBuilder command = new StringBuilder("");
+        boolean firsturl = true;
+        for (String url : urls) {
+            if (!firsturl) command.append(" || ");
+            firsturl = false;
+            command.append(format("curl -f -L \"%s\" -o %s", url, saveAs));
+        }
+        
+        return command.toString();
+    }
+
+    // FIXME Experimental; not used! Delete or figure out if useful
+    public static String getLocalRepoFilePath(String entityType, String version, String fileName) {
+        String entitySimpleType = entityType.substring(entityType.lastIndexOf(".")+1);
+        return format("$HOME/.brooklyn/repository/%s/%s/%s", entitySimpleType, version, fileName);
+    }
+    
     private static Object getFlag(Map flags, String flagName, Object defaultValue) {
         Object found = flags.get(flagName);
         return found == null ? defaultValue : found;
-    }
-
-    public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
-        return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
     }
 
     /**
