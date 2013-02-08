@@ -1,5 +1,6 @@
 package brooklyn.entity.database.mysql;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -10,6 +11,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
+@Catalog(name="MySql Node", description="MySql is an open source relational database management system (RDBMS)", iconUrl="classpath:///mysql-logo-110x57.png")
 @ImplementedBy(MySqlNodeImpl.class)
 public interface MySqlNode extends SoftwareProcess {
 

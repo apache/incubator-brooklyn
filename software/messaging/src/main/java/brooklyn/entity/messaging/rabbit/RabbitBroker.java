@@ -2,6 +2,7 @@ package brooklyn.entity.messaging.rabbit;
 
 import java.util.Map;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpServer;
@@ -16,6 +17,7 @@ import com.google.common.annotations.Beta;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
  */
+@Catalog(name="RabbitMQ Broker", description="RabbitMQ is an open source message broker software (i.e. message-oriented middleware) that implements the Advanced Message Queuing Protocol (AMQP) standard", iconUrl="classpath:///RabbitMQLogo.png")
 @ImplementedBy(RabbitBrokerImpl.class)
 public interface RabbitBroker extends SoftwareProcess, MessageBroker, AmqpServer {
 

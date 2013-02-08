@@ -2,6 +2,7 @@ package brooklyn.entity.webapp.jboss;
 
 import java.util.Map;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -12,6 +13,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
+@Catalog(name="JBoss Application Server 6", description="AS6: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.jpeg")
 @ImplementedBy(JBoss6ServerImpl.class)
 public interface JBoss6Server extends JavaWebAppSoftwareProcess, JavaWebAppService, UsesJmx {
 

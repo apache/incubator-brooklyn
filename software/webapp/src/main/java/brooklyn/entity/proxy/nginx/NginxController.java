@@ -1,5 +1,6 @@
 package brooklyn.entity.proxy.nginx;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -27,6 +28,7 @@ import brooklyn.util.flags.SetFromFlag;
  * or different ports if that is supported.
  * see more info on Ssl in {@link ProxySslConfig}.
  */
+@Catalog(name="nginx server", description="A single nginx server: an HTTP and reverse proxy server", iconUrl="classpath:///nginx-logo.jpeg")
 @ImplementedBy(NginxControllerImpl.class)
 public interface NginxController extends AbstractController {
 

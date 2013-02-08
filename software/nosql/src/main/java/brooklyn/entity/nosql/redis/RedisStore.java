@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -28,6 +29,7 @@ import brooklyn.util.flags.SetFromFlag;
  *
  * TODO add sensors with Redis statistics using INFO command
  */
+@Catalog(name="Redis Server", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.jpeg")
 public class RedisStore extends SoftwareProcessImpl implements DataStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class);
 

@@ -1,5 +1,6 @@
 package brooklyn.entity.messaging.activemq;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
@@ -12,6 +13,7 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
  */
+@Catalog(name="ActiveMQ Broker", description="ActiveMQ is an open source message broker which fully implements the Java Message Service 1.1 (JMS)", iconUrl="classpath:///activemq-logo.png")
 @ImplementedBy(ActiveMQBrokerImpl.class)
 public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx {
 

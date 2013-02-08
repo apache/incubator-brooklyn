@@ -2,6 +2,7 @@ package brooklyn.entity.messaging.qpid;
 
 import java.util.Map;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
@@ -16,6 +17,7 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
  */
+@Catalog(name="RabbitMQ Broker", description="Apache Qpid is an open-source messaging system, implementing the Advanced Message Queuing Protocol (AMQP)", iconUrl="classpath:///qpid-logo.jpeg")
 @ImplementedBy(QpidBrokerImpl.class)
 public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, AmqpServer {
 

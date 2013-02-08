@@ -1,5 +1,6 @@
 package brooklyn.entity.database.postgresql;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
@@ -9,6 +10,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
+@Catalog(name="PostgreSQL Node", description="PostgreSQL is an object-relational database management system (ORDBMS)", iconUrl="classpath:///postgresql-logo.jpeg")
 @ImplementedBy(PostgreSqlNodeImpl.class)
 public interface PostgreSqlNode extends SoftwareProcess {
     public static final AttributeSensor<String> DB_URL = new BasicAttributeSensor<String>(String.class, "database.url",
