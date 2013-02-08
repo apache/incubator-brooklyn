@@ -14,12 +14,14 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.test.entity.TestEntity;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -126,15 +128,18 @@ public class AutoScalerPolicyMetricTest {
         final List<MaxPoolSizeReachedEvent> maxReachedEvents = Lists.newCopyOnWriteArrayList();
         tc.resize(1);
         
+        BasicNotificationSensor<MaxPoolSizeReachedEvent> maxSizeReachedSensor = new BasicNotificationSensor<MaxPoolSizeReachedEvent>(
+                MaxPoolSizeReachedEvent.class, "test.maxPoolSizeReached", "");
+        
+        app.subscribe(tc, maxSizeReachedSensor, new SensorEventListener<MaxPoolSizeReachedEvent>() {
+                @Override public void onEvent(SensorEvent<MaxPoolSizeReachedEvent> event) {
+                    maxReachedEvents.add(event.getValue());
+                }});
+        
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE)
                 .metricLowerBound(50).metricUpperBound(100)
                 .maxPoolSize(6)
-                .maxReachedListener(new Function<MaxPoolSizeReachedEvent,Void>() {
-                    public Void apply(MaxPoolSizeReachedEvent input) {
-                        maxReachedEvents.add(input);
-                        return null;
-                    }
-                })
+                .maxSizeReachedSensor(maxSizeReachedSensor)
                 .build();
         tc.addPolicy(policy);
 

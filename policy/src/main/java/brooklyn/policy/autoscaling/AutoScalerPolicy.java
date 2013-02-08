@@ -71,7 +71,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         private BasicNotificationSensor<?> poolHotSensor;
         private BasicNotificationSensor<?> poolColdSensor;
         private BasicNotificationSensor<?> poolOkSensor;
-        private Function<? super MaxPoolSizeReachedEvent, Void> maxReachedListener;
+        private BasicNotificationSensor<? super MaxPoolSizeReachedEvent> maxSizeReachedSensor;
         private long maxReachedNotificationDelay;
         
         public Builder id(String val) {
@@ -132,8 +132,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
         public Builder poolOkSensor(BasicNotificationSensor<?> val) {
             this.poolOkSensor = val; return this;
         }
-        public Builder maxReachedListener(Function<? super MaxPoolSizeReachedEvent, Void> val) {
-            this.maxReachedListener = val; return this;
+        public Builder maxSizeReachedSensor(BasicNotificationSensor<? super MaxPoolSizeReachedEvent> val) {
+            this.maxSizeReachedSensor = val; return this;
         }
         public Builder maxReachedNotificationDelay(long val) {
             this.maxReachedNotificationDelay = val; return this;
@@ -159,7 +159,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     .putIfNotNull("poolHotSensor", poolHotSensor)
                     .putIfNotNull("poolColdSensor", poolColdSensor)
                     .putIfNotNull("poolOkSensor", poolOkSensor)
-                    .putIfNotNull("maxReachedListener", maxReachedListener)
+                    .putIfNotNull("maxSizeReachedSensor", maxSizeReachedSensor)
                     .putIfNotNull("maxReachedNotificationDelay", maxReachedNotificationDelay)
                     .build();
         }
@@ -285,16 +285,16 @@ public class AutoScalerPolicy extends AbstractPolicy {
             .defaultValue(DEFAULT_POOL_OK_SENSOR)
             .build();
 
-    @SetFromFlag("maxReachedListener")
-    public static final ConfigKey<Function<? super MaxPoolSizeReachedEvent, Void>> MAX_REACHED_LISTENER = BasicConfigKey.builder(new TypeToken<Function<? super MaxPoolSizeReachedEvent, Void>>() {})
-            .name("autoscaler.maxReachedListener")
-            .description("Listener to be notified when we consistently wanted to resize the pool above the max allowed size, for maxReachedNotificationDelay milliseconds")
+    @SetFromFlag("maxSizeReachedSensor")
+    public static final ConfigKey<BasicNotificationSensor<? super MaxPoolSizeReachedEvent>> MAX_SIZE_REACHED_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? super MaxPoolSizeReachedEvent>>() {})
+            .name("autoscaler.maxSizeReachedSensor")
+            .description("Sensor for which a notification will be emitted (on the associated entity) when we consistently wanted to resize the pool above the max allowed size, for maxReachedNotificationDelay milliseconds")
             .build();
     
     @SetFromFlag("maxReachedNotificationDelay")
     public static final ConfigKey<Long> MAX_REACHED_NOTIFICATION_DELAY = BasicConfigKey.builder(Long.class)
             .name("autoscaler.maxReachedNotificationDelay")
-            .description("Time (milliseconds) that the we consistently wanted to go above the maxPoolSize for, after which the maxReachedListener (if any) will be notified")
+            .description("Time (milliseconds) that the we consistently wanted to go above the maxPoolSize for, after which the maxSizeReachedSensor (if any) will be emitted")
             .defaultValue(0l)
             .build();
     
@@ -442,8 +442,8 @@ public class AutoScalerPolicy extends AbstractPolicy {
         return getConfig(POOL_OK_SENSOR);
     }
     
-    private Function<? super MaxPoolSizeReachedEvent, Void> getMaxReachedListener() {
-        return getConfig(MAX_REACHED_LISTENER);
+    private BasicNotificationSensor<? super MaxPoolSizeReachedEvent> getMaxSizeReachedSensor() {
+        return getConfig(MAX_SIZE_REACHED_SENSOR);
     }
     
     private long getMaxReachedNotificationDelay() {
@@ -649,7 +649,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
      * needs to be called.
      */
     private void onNewUnboundedPoolSize(final int val) {
-        if (getMaxReachedListener() != null) {
+        if (getMaxSizeReachedSensor() != null) {
             recentUnboundedResizes.add(val);
             scheduleResize();
         }
@@ -709,11 +709,11 @@ public class AutoScalerPolicy extends AbstractPolicy {
      * Looks at the values for "unbounded pool size" (i.e. if we ignore caps of minSize and maxSize) to report what
      * those values have been within a time window. The time window used is the "maxReachedNotificationDelay",
      * which determines how many milliseconds after being consistently above the max-size will it take before
-     * we notify the listener (if any).
+     * we emit the sensor event (if any).
      */
     private void notifyMaxReachedIfRequiredNow() {
-        Function<? super MaxPoolSizeReachedEvent, Void> listener = getMaxReachedListener();
-        if (listener == null) {
+        BasicNotificationSensor<? super MaxPoolSizeReachedEvent> maxSizeReachedSensor = getMaxSizeReachedSensor();
+        if (maxSizeReachedSensor == null) {
             return;
         }
         
@@ -734,7 +734,14 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     new Object[] {this, currentPoolSize, maxAllowedPoolSize, unboundedCurrentPoolSize, unboundedSustainedMaxPoolSize});
             
             maxReachedLastNotifiedTime = System.currentTimeMillis();
-            listener.apply(MaxPoolSizeReachedEvent.builder().currentPoolSize(currentPoolSize).maxAllowed(maxAllowedPoolSize).currentUnbounded(unboundedCurrentPoolSize).maxUnbounded(unboundedSustainedMaxPoolSize).timeWindow(timeWindowSize).build());
+            MaxPoolSizeReachedEvent event = MaxPoolSizeReachedEvent.builder()
+                    .currentPoolSize(currentPoolSize)
+                    .maxAllowed(maxAllowedPoolSize)
+                    .currentUnbounded(unboundedCurrentPoolSize)
+                    .maxUnbounded(unboundedSustainedMaxPoolSize)
+                    .timeWindow(timeWindowSize)
+                    .build();
+            entity.emit(maxSizeReachedSensor, event);
             
         } else if (valsSummary.max > maxAllowedPoolSize) {
             // We temporarily wanted to be bigger than the max allowed; check back later to see if consistent
