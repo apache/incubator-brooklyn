@@ -12,6 +12,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.Description;
@@ -76,6 +77,15 @@ public class NginxController extends AbstractController {
     public static final BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
 
+    @SetFromFlag("stickyVersion")
+    public static final ConfigKey<String> STICKY_VERSION =
+        new BasicConfigKey<String>(String.class, "nginx.sticky.version", 
+                "Version of ngnix-sticky-module to be installed, if required", "1.0");
+    
+    @SetFromFlag("pcreVersion")
+    public static final ConfigKey<String> PCRE_VERSION =
+        new BasicConfigKey<String>(String.class, "pcre.version", "Version of PCRE to be installed, if required", "8.32");
+    
     @SetFromFlag("httpPollPeriod")
     public static final BasicConfigKey<Long> HTTP_POLL_PERIOD =
         new BasicConfigKey<Long>(Long.class, "nginx.sensorpoll.http", "poll period (in milliseconds)", 1000L);
