@@ -14,10 +14,19 @@ public class BasicDownloadsRegistry implements DownloadsRegistry {
 
     private final List<Function<? super EntityDriver, List<String>>> resolvers = Lists.newCopyOnWriteArrayList();
     
+    /**
+     * The default is (in-order) to:
+     * <ol>
+     *   <li>Use brooklyn properties for any download overrides defined there (see {@link DownloadPropertiesResolver}
+     *   <li>Use the entity's Attributes.DOWNLOAD_URL
+     * </ol>
+     * @param config
+     * @return
+     */
     public static BasicDownloadsRegistry newDefault(StringConfigMap config) {
         BasicDownloadsRegistry result = new BasicDownloadsRegistry();
-        result.registerResolver(DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL));
         result.registerResolver(new DownloadPropertiesResolver(config));
+        result.registerResolver(DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL));
         return result;
     }
     

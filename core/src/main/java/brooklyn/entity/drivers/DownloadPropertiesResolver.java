@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.StringConfigMap;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.util.MutableMap;
 import brooklyn.util.text.Strings;
@@ -19,26 +20,70 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * FIXME Write proper javadoc!
+ * Based on the contents of brooklyn properties, sets up rules for resolving where to
+ * download artifacts from, for installing entities. 
  * 
- * Supports things like:
+ * By default, these rules override the DOWNLOAD_URL defined on the entities in code.
+ * Global properties can be specified that apply to all entities. Entity-specific properties
+ * can also be specified (which override the global properties for that entity type).
  * 
-//Applies to all downloads URLs (unless there is a more specific thing defined for a particular entity)
-//The "driver.downloadSuffix" means to reflectively call driver.getDownloadSuffix()
-brooklyn.downloads.all.url=http://repo.acme.com/${simpletype}-${version}.${driver.downloadSuffix}
-
-//This gives a specific URL for download AS7
-brooklyn.downloads.entity.JBoss7Server.url=http://repo.acme.com/as7/jboss-as-${version}.tar.gz
-
-//This is the default MySqlNode url (so if didn't define "all.url" above, could miss out this first line)
-//This replaces a specific substitution: ${driver.mirrorUrl} will get this value instead of calling driver.getMirrorUrl()
-brooklyn.downloads.entity.MySqlNode.url=http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-${version}-${driver.osTag}.tar.gz/from/${driver.mirrorUrl}
-brooklyn.downloads.entity.MySqlNode.substitutions.driver.mirrorUrl=http://www.mirrorservice.org/sites/ftp.mysql.com/
-
- * @param config
- * @return
+ * Below is an example of global properties that can be specified. The semicolon-separated list
+ * of URLs will be tried in-order until one succeeds. The fallback url says to use that if all
+ * other URLs fail (or no others are specified). The "substitutions" are available when processing 
+ * the URL (see the "template" description below). 
+ * <pre>
+ * {@code
+ * brooklyn.downloads.all.url=http://myurl1; http://myurl2
+ * brooklyn.downloads.all.fallbackurl=http://myurl3
+ * brooklyn.downloads.all.substitutions.mykey1=myval1
+ * }
+ * </pre>
+ * 
+ * Similarly, entity-specific properties can be defined. All "global properties" will also apply
+ * to this entity type, unless explicitly overridden.
+ * <pre>
+ * {@code
+ * brooklyn.downloads.entity.TomcatServer.url=http://mytomcaturl1
+ * brooklyn.downloads.entity.TomcatServer.fallbackurl=http://myurl3
+ * brooklyn.downloads.entity.TomcatServer.substitutions.mykey2=myval2
+ * }
+ * </pre>
+ * 
+ * If no explicit URLs are supplied, then by default it will use the DOWNLOAD_URL attribute
+ * of the entity  (if supplied), followed by the fallbackurl if that fails. 
+ * 
+ * A URL can be a "template", where things of the form ${mykey1} will be substituted for the value
+ * of mykey1 provided for that entity. The freemarker template engine is used to convert URLs 
+ * (see {@link http://freemarker.org}). For example, one could use the URL:
+ * <pre>
+ * {@code
+ * http://repo.acme.com/${simpletype}-${version}.${driver.downloadSuffix!tar.gz}
+ * }
+ * </pre>
+ * As well as additional substitutions defined in the properties, the following are available 
+ * automatically for a template:
+ * <ul>
+ *   <li>entity: the {@link Entity} instance
+ *   <li>driver: the {@link EntityDriver} instance being used for the Entity
+ *   <li>simpletype: the unqualified name of the entity type
+ *   <li>type: the fully qualified name of the entity type
+ *   <li>version: the version number of the entity to be installed
+ * </ul>
  */
 public class DownloadPropertiesResolver implements Function<EntityDriver, List<String>> {
+    
+    /* TODO: I thought about adding the following (but it's currently not true):
+     * If an empty URL is supplied (e.g. {@code brooklyn.downloads.all.url=}) then it disables use 
+     * of the entity's DOWNLOAD_URL attribute, going straight to the fallbackurl or entity-specific
+     * overrides. For example, an enterprise may use this to ensure that entities never go to the
+     * public internet during installation.
+     * 
+     * The problem is that the DownloadPropertiesResolver will return an empty list of URLs if all.url 
+     * is empty, so it will automatically go on to the next resolver. We could instead encourage use of
+     * something like:
+     *   brooklyn.downloads.all.url=DISABLED
+     * so that everything failed, trying to download a resource at the url"DISABLED"
+     */
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(DownloadPropertiesResolver.class);
