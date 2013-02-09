@@ -1,7 +1,6 @@
 package brooklyn.location.basic.jclouds.templates;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -18,6 +17,7 @@ import org.jclouds.compute.options.TemplateOptions;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Ints;
 
 
 public class PortableTemplateBuilder<T extends PortableTemplateBuilder<?>> extends AbstractPortableTemplateBuilder<T> {
@@ -55,6 +55,7 @@ public class PortableTemplateBuilder<T extends PortableTemplateBuilder<?>> exten
     /** Adds template options which are used for building, but not for matching/filtering. 
      * (eg tags added here will be set on any machine created by this template,
      * but will not be required when matching this template to existing machines) */
+    @SuppressWarnings("unchecked")
     public T addOptionalOptions(TemplateOptions options) {
         additionalOptionalOptions.add(options);
         return (T)this;
@@ -105,7 +106,7 @@ public class PortableTemplateBuilder<T extends PortableTemplateBuilder<?>> exten
     protected String makeNonTrivialArgumentsString() {
         String s = super.makeNonTrivialArgumentsString();
         TemplateOptions aggr = computeAggregatedOptions(false);
-        if (aggr.getInboundPorts().length>0) s = "ports="+Arrays.asList(aggr.getInboundPorts())+(s!=null && s.length()>0 ? ", "+s : "");
+        if (aggr.getInboundPorts().length>0) s = "ports="+Ints.asList(aggr.getInboundPorts())+(s!=null && s.length()>0 ? ", "+s : "");
         if (!aggr.getUserMetadata().isEmpty()) s = "metadata="+aggr.getUserMetadata()+(s!=null && s.length()>0 ? ", "+s : "");
         if (!aggr.getTags().isEmpty()) s = "tags="+aggr.getTags()+(s!=null && s.length()>0 ? ", "+s : "");
         return s;

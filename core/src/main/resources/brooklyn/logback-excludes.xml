@@ -9,7 +9,10 @@
     <logger name="org.eclipse.jetty" level="WARN"/>
     
     <!-- quite noisy at INFO, but poss interesting; put to file only -->
-    <logger name="org.apache.whirr.service.ComputeCache" level="DEBUG" additivity="false">
+    <logger name="org.apache.whirr.service.ComputeCache" additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="jclouds.ssh" additivity="false">
         <appender-ref ref="FILE" />
     </logger>
 
