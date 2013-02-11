@@ -16,7 +16,7 @@ import brooklyn.location.basic.jclouds.JcloudsLocation
  * The MySqlLiveTest installs MySQL on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
  * MySQL works like expected on these Operating Systems.
  */
-public class MySqlLiveTest extends MySqlIntegrationTest {
+public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
     @Test(groups = ["Live"])
     public void test_Debian_6() {
         test("Debian 6");

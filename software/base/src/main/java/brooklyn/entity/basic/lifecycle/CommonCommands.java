@@ -147,7 +147,7 @@ public class CommonCommands {
     public static String installPackage(Map flags, String packageDefaultName) {
         List<String> commands = new LinkedList<String>();
         commands.add(exists("apt-get", sudo("apt-get update"),
-                sudo(formatIfNotNull("apt-get install -y %s", getFlag(flags, "apt", packageDefaultName)))));
+                sudo(formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName)))));
         commands.add(exists("yum", sudo(formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName)))));
         commands.add(exists("brew", formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName))));
         commands.add(exists("port", sudo(formatIfNotNull("port install %s", getFlag(flags, "port", packageDefaultName)))));
