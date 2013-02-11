@@ -111,7 +111,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 "./configure"+
                     format(" --prefix=%s/nginx-%s/dist", getInstallDir(), getVersion()) +
                     " --with-http_ssl_module" +
-                    (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-1.0 ", getInstallDir(), getVersion()) : "") +
+                    (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-%s ", getInstallDir(), getVersion(), stickyVersion) : "") +
                     (isMac ? format(" --with-ld-opt=\"-L %s/pcre-dist/lib\"", getInstallDir()) : "") ,
                 "make install");
 
