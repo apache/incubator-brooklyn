@@ -26,6 +26,11 @@ import com.google.common.base.Throwables;
  */
 public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements NginxDriver {
 
+    // TODO An alternative way of installing nginx is described at:
+    //   http://sjp.co.nz/posts/building-nginx-for-debian-systems/
+    // It's use of `apt-get source nginx` and `apt-get build-dep nginx` makes
+    // it look higher level and therefore more appealing.
+    
     public static final Logger log = LoggerFactory.getLogger(NginxSshDriver.class);
     private static final String NGINX_PID_FILE = "logs/nginx.pid";
 
@@ -73,12 +78,25 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         String stickyModuleSaveAs = format("nginx-sticky-module-%s.tar.gz", stickyVersion);
         boolean sticky = ((NginxController) entity).isSticky();
         boolean isMac = getMachine().getOsDetails().isMac();
+        
         ScriptHelper script = newScript(INSTALLING);
         script.body.append(CommonCommands.INSTALL_TAR);
-        MutableMap<String, String> installPackageFlags = MutableMap.of(
-                "yum", "gcc make openssl-devel pcre-devel", 
-                "apt", "gcc make libssl-dev zlib1g-dev libpcre3-dev",
+        MutableMap<String, String> installGccPackageFlags = MutableMap.of(
+                "onlyifmissing", "gcc",
+                "yum", "gcc", 
+                "apt", "gcc",
                 "port", null);
+        MutableMap<String, String> installMakePackageFlags = MutableMap.of(
+                "onlyifmissing", "make",
+                "yum", "make", 
+                "apt", "make",
+                "port", null);
+        MutableMap<String, String> installPackageFlags = MutableMap.of(
+                "yum", "openssl-devel pcre-devel", 
+                "apt", "libssl-dev zlib1g-dev libpcre3-dev",
+                "port", null);
+        script.body.append(CommonCommands.installPackage(installGccPackageFlags, "nginx-prerequisites-gcc"));
+        script.body.append(CommonCommands.installPackage(installMakePackageFlags, "nginx-prerequisites-make"));
         script.body.append(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
         script.body.append(CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel("/"), nginxSaveAs));
         if (isMac) {
