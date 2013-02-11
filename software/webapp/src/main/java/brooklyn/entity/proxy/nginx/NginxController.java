@@ -1,6 +1,7 @@
 package brooklyn.entity.proxy.nginx;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -43,6 +44,15 @@ public interface NginxController extends AbstractController {
     public static final BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
 
+    @SetFromFlag("stickyVersion")
+    public static final ConfigKey<String> STICKY_VERSION =
+        new BasicConfigKey<String>(String.class, "nginx.sticky.version", 
+                "Version of ngnix-sticky-module to be installed, if required", "1.0");
+    
+    @SetFromFlag("pcreVersion")
+    public static final ConfigKey<String> PCRE_VERSION =
+        new BasicConfigKey<String>(String.class, "pcre.version", "Version of PCRE to be installed, if required", "8.32");
+    
     @SetFromFlag("httpPollPeriod")
     public static final BasicConfigKey<Long> HTTP_POLL_PERIOD =
         new BasicConfigKey<Long>(Long.class, "nginx.sensorpoll.http", "poll period (in milliseconds)", 1000L);
