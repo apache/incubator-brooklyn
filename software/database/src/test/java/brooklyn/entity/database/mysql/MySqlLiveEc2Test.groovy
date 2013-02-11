@@ -6,8 +6,9 @@ import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation;
-import org.testng.annotations.Test;
+import brooklyn.location.basic.jclouds.JcloudsLocation
+import org.junit.Ignore
+import org.testng.annotations.Test
 
 import static java.util.Arrays.asList;
 
@@ -18,6 +19,10 @@ public class MySqlLiveEc2Test extends MySqlIntegrationTest {
         test(".*squeeze*.*64.*");
     }
 
+    @Test
+    @Ignore//this is already tested in the mysqlintegrationt test, no reason to repeat it.
+    public void test_localhost() throws Exception {
+    }
 //    @Test(groups = ["Live"])
 //    public void test_Ubuntu_10_0() {
 //        test("Ubuntu 10.0");

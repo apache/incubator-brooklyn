@@ -146,8 +146,10 @@ public class CommonCommands {
      */
     public static String installPackage(Map flags, String packageDefaultName) {
         List<String> commands = new LinkedList<String>();
-        commands.add("export DEBIAN_FRONTEND=noninteractive");
-        commands.add(exists("apt-get", sudo("apt-get update"),
+        commands.add(exists("apt-get",
+                "echo apt-get exists, doing update",
+                "export DEBIAN_FRONTEND=noninteractive",
+                sudo("apt-get update"),
                 sudo(formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName)))));
         commands.add(exists("yum", sudo(formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName)))));
         commands.add(exists("brew", formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName))));
