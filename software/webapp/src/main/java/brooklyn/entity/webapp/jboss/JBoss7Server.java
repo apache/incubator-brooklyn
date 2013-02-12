@@ -11,7 +11,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
-@Catalog(name="JBoss Application Server 7", description="AS7: an open source Java application server from JBoss", iconUrl="classpath:///as7-logo.jpeg")
+@Catalog(name="JBoss Application Server 7", description="AS7: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.png")
 @ImplementedBy(JBoss7ServerImpl.class)
 public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppService {
 

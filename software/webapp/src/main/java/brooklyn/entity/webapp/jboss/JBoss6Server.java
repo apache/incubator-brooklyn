@@ -13,7 +13,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
-@Catalog(name="JBoss Application Server 6", description="AS6: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.jpeg")
+@Catalog(name="JBoss Application Server 6", description="AS6: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.png")
 @ImplementedBy(JBoss6ServerImpl.class)
 public interface JBoss6Server extends JavaWebAppSoftwareProcess, JavaWebAppService, UsesJmx {
 
