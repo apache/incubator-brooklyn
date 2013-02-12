@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
@@ -76,9 +77,9 @@ public class DownloadResolversTest {
     public void testSubstitutesAttributeValue() throws Exception {
         entity.setAttribute(Attributes.VERSION, "myversion");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "version=${version},type=${type},simpletype=${simpletype}");
-        List<String> result = DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL).apply(driver);
+        DownloadTargets result = DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL).apply(driver);
         String expected = String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntityImpl.class.getName(), TestEntityImpl.class.getSimpleName());
-        assertEquals(result, ImmutableList.of(expected));
+        assertEquals(result.getPrimaryLocations(), ImmutableList.of(expected));
     }
     
     @Test

@@ -2,7 +2,6 @@ package brooklyn.entity.drivers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -13,15 +12,15 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.drivers.BasicDownloadTargets.Builder;
+import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import freemarker.template.TemplateException;
 
@@ -69,23 +68,23 @@ public class DownloadResolvers {
         }
     }
 
-    public static Function<EntityDriver, List<String>> attributeListSubstituter(AttributeSensor<? extends Iterable<String>> attribute) {
+    public static Function<EntityDriver, DownloadTargets> attributeListSubstituter(AttributeSensor<? extends Iterable<String>> attribute) {
         return attributeListSubstituter(attribute, Functions.constant(ImmutableMap.<String,String>of()));
     }
     
-    public static Function<EntityDriver, List<String>> attributeListSubstituter(AttributeSensor<? extends Iterable<String>> attribute, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
+    public static Function<EntityDriver, DownloadTargets> attributeListSubstituter(AttributeSensor<? extends Iterable<String>> attribute, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
         return new AttributeListValueSubstituter(attribute, additionalSubs);
     }
     
-    public static Function<EntityDriver, List<String>> attributeSubstituter(AttributeSensor<String> attribute) {
+    public static Function<EntityDriver, DownloadTargets> attributeSubstituter(AttributeSensor<String> attribute) {
         return attributeSubstituter(attribute, Functions.constant(ImmutableMap.<String,String>of()));
     }
     
-    public static Function<EntityDriver, List<String>> attributeSubstituter(AttributeSensor<String> attribute, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
+    public static Function<EntityDriver, DownloadTargets> attributeSubstituter(AttributeSensor<String> attribute, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
         return new AttributeValueSubstituter(attribute, additionalSubs);
     }
     
-    private static class AttributeValueSubstituter implements Function<EntityDriver, List<String>> {
+    private static class AttributeValueSubstituter implements Function<EntityDriver, DownloadTargets> {
         private final AttributeSensor<String> attribute;
         private final Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs;
         
@@ -95,9 +94,11 @@ public class DownloadResolvers {
         }
         
         @Override
-        public List<String> apply(@Nullable EntityDriver input) {
+        public DownloadTargets apply(@Nullable EntityDriver input) {
+            Builder result = BasicDownloadTargets.builder();
             String pattern = input.getEntity().getAttribute(attribute);
-            return (pattern == null) ? null : ImmutableList.of(DownloadResolvers.substitute(input, pattern, additionalSubs));
+            if (pattern != null) result.addPrimary(DownloadResolvers.substitute(input, pattern, additionalSubs));
+            return result.build();
         }
         
         @Override public boolean equals(@Nullable Object obj) {
@@ -117,7 +118,7 @@ public class DownloadResolvers {
         }
     }
     
-    private static class AttributeListValueSubstituter implements Function<EntityDriver, List<String>> {
+    private static class AttributeListValueSubstituter implements Function<EntityDriver, DownloadTargets> {
         private final AttributeSensor<? extends Iterable<String>> attribute;
         private final Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs;
         
@@ -127,16 +128,16 @@ public class DownloadResolvers {
         }
         
         @Override
-        public List<String> apply(@Nullable EntityDriver input) {
+        public DownloadTargets apply(@Nullable EntityDriver input) {
             Iterable<String> patterns = input.getEntity().getAttribute(attribute);
             if (patterns == null) {
-                return null;
+                return BasicDownloadTargets.empty();
             } else {
-                List<String> result = Lists.newArrayList();
+                BasicDownloadTargets.Builder result = BasicDownloadTargets.builder();
                 for (Object pattern : patterns) {
-                    result.add(DownloadResolvers.substitute(input, pattern.toString(), additionalSubs));
+                    result.addPrimary(DownloadResolvers.substitute(input, pattern.toString(), additionalSubs));
                 }
-                return result;
+                return result.build();
             }
         }
         

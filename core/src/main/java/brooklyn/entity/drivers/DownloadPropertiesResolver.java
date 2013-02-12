@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
 import brooklyn.util.MutableMap;
 import brooklyn.util.text.Strings;
 
@@ -70,7 +71,7 @@ import com.google.common.collect.Maps;
  *   <li>version: the version number of the entity to be installed
  * </ul>
  */
-public class DownloadPropertiesResolver implements Function<EntityDriver, List<String>> {
+public class DownloadPropertiesResolver implements Function<EntityDriver, DownloadTargets> {
     
     /* TODO: I thought about adding the following (but it's currently not true):
      * If an empty URL is supplied (e.g. {@code brooklyn.downloads.all.url=}) then it disables use 
@@ -96,16 +97,16 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, List<S
         this.config = config;
     }
     
-    public List<String> apply(EntityDriver driver) {
+    public DownloadTargets apply(EntityDriver driver) {
         List<Rule> rules = generateRules();
+        BasicDownloadTargets.Builder result = BasicDownloadTargets.builder();
         for (Rule rule : rules) {
             if (rule.matches(driver)) {
-                List<String> result = rule.resolve(driver);
-                if (result != null && !result.isEmpty()) return result;
+                result.addAll(rule.resolve(driver));
             }
         }
         
-        return null;
+        return result.build();
     }
     
     /**
@@ -219,29 +220,33 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, List<S
         
         abstract boolean matches(EntityDriver driver);
         
-        List<String> resolve(EntityDriver driver) {
-            List<String> result = Lists.newArrayList();
-            List<String> baseurls = Lists.newArrayList();
+        DownloadTargets resolve(EntityDriver driver) {
+            List<String> primaries = Lists.newArrayList();
+            List<String> fallbacks = Lists.newArrayList();
             if (Strings.isEmpty(url)) {
                 String defaulturl = driver.getEntity().getAttribute(Attributes.DOWNLOAD_URL);
-                if (defaulturl != null) baseurls.add(defaulturl);
+                if (defaulturl != null) primaries.add(defaulturl);
             } else {
                 String[] parts = url.split(";");
                 for (String part : parts) {
-                    if (!part.isEmpty()) baseurls.add(part.trim());
+                    if (!part.isEmpty()) primaries.add(part.trim());
                 }
             }
             if (fallbackUrl != null) {
                 String[] parts = fallbackUrl.split(";");
                 for (String part : parts) {
-                    if (!part.isEmpty()) baseurls.add(part.trim());
+                    if (!part.isEmpty()) fallbacks.add(part.trim());
                 }
             }
 
-            for (String baseurl : baseurls) {
-                result.add(DownloadResolvers.substitute(driver, baseurl, Functions.constant(additionalSubs)));
+            BasicDownloadTargets.Builder result = BasicDownloadTargets.builder();
+            for (String baseurl : primaries) {
+                result.addPrimary(DownloadResolvers.substitute(driver, baseurl, Functions.constant(additionalSubs)));
             }
-            return result;
+            for (String baseurl : fallbacks) {
+                result.addFallback(DownloadResolvers.substitute(driver, baseurl, Functions.constant(additionalSubs)));
+            }
+            return result.build();
         }
     }
 

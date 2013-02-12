@@ -3,16 +3,19 @@ package brooklyn.entity.drivers;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
+import java.util.Set;
 
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.Attributes;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class BasicDownloadsRegistry implements DownloadsRegistry {
 
-    private final List<Function<? super EntityDriver, List<String>>> resolvers = Lists.newCopyOnWriteArrayList();
+    private final List<Function<? super EntityDriver, ? extends DownloadTargets>> resolvers = Lists.newCopyOnWriteArrayList();
     
     /**
      * The default is (in-order) to:
@@ -35,12 +38,12 @@ public class BasicDownloadsRegistry implements DownloadsRegistry {
     }
     
     @Override
-    public void registerPrimaryResolver(Function<? super EntityDriver, List<String>> resolver) {
+    public void registerPrimaryResolver(Function<? super EntityDriver, ? extends DownloadTargets> resolver) {
         resolvers.add(0, checkNotNull(resolver, "resolver"));
     }
 
     @Override
-    public void registerResolver(Function<? super EntityDriver, List<String>> resolver) {
+    public void registerResolver(Function<? super EntityDriver, ? extends DownloadTargets> resolver) {
         resolvers.add(checkNotNull(resolver, "resolver"));
     }
 
@@ -48,13 +51,25 @@ public class BasicDownloadsRegistry implements DownloadsRegistry {
     public List<String> resolve(EntityDriver driver) {
         checkNotNull(driver, "driver");
         
-        for (Function<? super EntityDriver, List<String>> resolver : resolvers) {
-            List<String> result = resolver.apply(driver);
-            if (result != null && !result.isEmpty()) {
-                return result;
+        List<String> primaries = Lists.newArrayList();
+        List<String> fallbacks = Lists.newArrayList();
+        for (Function<? super EntityDriver, ? extends DownloadTargets> resolver : resolvers) {
+            DownloadTargets vals = resolver.apply(driver);
+            primaries.addAll(vals.getPrimaryLocations());
+            fallbacks.addAll(vals.getFallbackLocations());
+            if (!vals.canContinueResolving()) {
+                break;
             }
         }
         
-        throw new IllegalArgumentException("No download resolver matched for driver "+driver);
+        Set<String> result = Sets.newLinkedHashSet();
+        result.addAll(primaries);
+        result.addAll(fallbacks);
+
+        if (result.isEmpty()) {
+            throw new IllegalArgumentException("No download resolver matched for driver "+driver);
+        } else {
+            return ImmutableList.copyOf(result);
+        }
     }
 }
