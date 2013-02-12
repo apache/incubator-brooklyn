@@ -8,6 +8,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.entity.TestApplication
+import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.EntityTestUtils
 
 import org.testng.annotations.AfterMethod;
