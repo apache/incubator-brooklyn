@@ -188,6 +188,14 @@ public class AutoScalerPolicy extends AbstractPolicy {
     public static BasicNotificationSensor<Map> DEFAULT_POOL_OK_SENSOR = new BasicNotificationSensor<Map>(
         Map.class, "resizablepool.cold", "Pool utilization is ok; the available resources are fine for the current workload");
 
+    /**
+     * A convenience for policies that want to register a {@code builder.maxSizeReachedSensor(sensor)}.
+     * Note that this "default" is not set automatically; the default is for no sensor to be used (so
+     * no events emitted).
+     */
+    public static BasicNotificationSensor<MaxPoolSizeReachedEvent> DEFAULT_MAX_SIZE_REACHED_SENSOR = new BasicNotificationSensor<MaxPoolSizeReachedEvent>(
+            MaxPoolSizeReachedEvent.class, "resizablepool.maxSizeReached", "Consistently wanted to resize the pool above the max allowed size");
+
     public static final String POOL_CURRENT_SIZE_KEY = "pool.current.size";
     public static final String POOL_HIGH_THRESHOLD_KEY = "pool.high.threshold";
     public static final String POOL_LOW_THRESHOLD_KEY = "pool.low.threshold";

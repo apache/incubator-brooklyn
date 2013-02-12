@@ -105,7 +105,7 @@ public class AutoScalerPolicyMetricTest {
     }
     
     @Test
-    public void obeysMinAndMaxSize() {
+    public void testObeysMinAndMaxSize() {
         tc.resize(4);
         
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE)
@@ -124,12 +124,11 @@ public class AutoScalerPolicyMetricTest {
     }
     
     @Test
-    public void warnsWhenMaxCapReached() {
+    public void testWarnsWhenMaxCapReached() {
         final List<MaxPoolSizeReachedEvent> maxReachedEvents = Lists.newCopyOnWriteArrayList();
         tc.resize(1);
         
-        BasicNotificationSensor<MaxPoolSizeReachedEvent> maxSizeReachedSensor = new BasicNotificationSensor<MaxPoolSizeReachedEvent>(
-                MaxPoolSizeReachedEvent.class, "test.maxPoolSizeReached", "");
+        BasicNotificationSensor<MaxPoolSizeReachedEvent> maxSizeReachedSensor = AutoScalerPolicy.DEFAULT_MAX_SIZE_REACHED_SENSOR;
         
         app.subscribe(tc, maxSizeReachedSensor, new SensorEventListener<MaxPoolSizeReachedEvent>() {
                 @Override public void onEvent(SensorEvent<MaxPoolSizeReachedEvent> event) {

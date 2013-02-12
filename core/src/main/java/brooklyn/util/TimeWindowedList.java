@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableList;
  * It also guarantees to keep the given minimum number of values in the list (even if old),
  * and to keep the given number of out-of-date values.
  * 
- * For example, if we want to 
+ * For example, this is useful if we want to determine if a metric has been consistently high.
  * 
  * @author aled
  */

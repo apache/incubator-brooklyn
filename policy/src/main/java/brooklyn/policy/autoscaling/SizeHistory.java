@@ -8,13 +8,28 @@ import brooklyn.util.TimestampedValue;
 
 import com.google.common.base.Objects;
 
+/**
+ * Using a {@link TimeWindowedList}, tracks the recent history of values to allow a summary of 
+ * those values to be obtained. 
+ *   
+ * @author aled
+ */
 public class SizeHistory {
 
     public static class WindowSummary {
+        /** The most recent value (or -1 if there has been no value) */
         public final long latest;
+        
+        /** The minimum vaule within the given time period */
         public final long min;
+        
+        /** The maximum vaule within the given time period */
         public final long max;
+        
+        /** true if, since that max value, there have not been any higher values */
         public final boolean stableForGrowth;
+        
+        /** true if, since that low value, there have not been any lower values */
         public final boolean stableForShrinking;
         
         public WindowSummary(long latest, long min, long max, boolean stableForGrowth, boolean stableForShrinking) {
@@ -64,6 +79,9 @@ public class SizeHistory {
         long latest = (latestObj == null) ? -1: latestObj.longValue();
         long max = maxInWindow(windowVals, windowSize).longValue();
         long min = minInWindow(windowVals, windowSize).longValue();
+        
+        // TODO Could do more sophisticated "stable" check; this is the easiest code - correct but not most efficient
+        // in terms of the caller having to schedule additional stability checks.
         boolean stable = (min == max);
         
         return new WindowSummary(latest, min, max, stable, stable);
