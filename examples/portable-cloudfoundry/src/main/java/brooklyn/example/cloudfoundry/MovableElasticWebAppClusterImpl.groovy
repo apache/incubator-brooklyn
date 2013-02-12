@@ -13,6 +13,7 @@ import brooklyn.entity.trait.StartableMethods
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
+import brooklyn.util.task.Tasks
 
 import com.google.common.collect.Iterables
 
@@ -110,6 +111,9 @@ public class MovableElasticWebAppClusterImpl extends AbstractEntity implements M
     public String move(String location) {
         String newPrimary = createSecondaryInLocation(location);
         String oldPrimary = promoteSecondary(newPrimary);
+        long ttl = getConfig(TIME_TO_LIVE_SECONDS);
+        if (ttl>0)
+            Tasks.withBlockingDetails("waiting for TTL to destroy old primary") { Thread.sleep(ttl*1000); }
         destroySecondary(oldPrimary);
         return newPrimary;
     }

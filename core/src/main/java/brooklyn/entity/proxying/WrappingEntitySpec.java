@@ -13,13 +13,13 @@ import com.google.common.collect.ImmutableList;
 
 public class WrappingEntitySpec<T extends Entity> extends BasicEntitySpec<T, WrappingEntitySpec<T>> {
 
-    private final EntitySpec<T> delegate;
+    private final EntitySpec<? extends T> delegate;
 
-    public static <T extends Entity> WrappingEntitySpec<T> newInstance(EntitySpec<T> delegate) {
+    public static <T extends Entity> WrappingEntitySpec<T> newInstance(EntitySpec<? extends T> delegate) {
         return new WrappingEntitySpec<T>(delegate);
     }
 
-    public WrappingEntitySpec(EntitySpec<T> delegate) {
+    public WrappingEntitySpec(EntitySpec<? extends T> delegate) {
         super(delegate.getType());
         this.delegate = delegate;
     }

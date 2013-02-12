@@ -43,8 +43,8 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final List<Policy> policies = Lists.newArrayList();
     
-    public BasicEntitySpec(Class<T> type) {
-        this.type = type;
+    public BasicEntitySpec(Class<? extends T> type) {
+        this.type = (Class<T>) type;
     }
     
     @SuppressWarnings("unchecked")
