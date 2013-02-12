@@ -11,30 +11,40 @@ import com.google.common.collect.ImmutableList;
  * It also guarantees to keep the given minimum number of values in the list (even if old),
  * and to keep the given number of out-of-date values.
  * 
- * For example, if we want to 
+ * For example, this is useful if we want to determine if a metric has been consistently high.
  * 
  * @author aled
  */
 public class TimeWindowedList<T> {
     private final LinkedList<TimestampedValue<T>> values = new LinkedList<TimestampedValue<T>>();
-    private long timePeriod;
-    private int minVals = 0;
-    private int minExpiredVals = 0;
+    private volatile long timePeriod;
+    private final int minVals;
+    private final int minExpiredVals;
     
     public TimeWindowedList(long timePeriod) {
         this.timePeriod = timePeriod;
+        minVals = 0;
+        minExpiredVals = 0;
     }
-    
+
     public TimeWindowedList(Map<String,?> flags) {
         if (!flags.containsKey("timePeriod")) throw new IllegalArgumentException("Must define timePeriod");
         timePeriod = ((Number)flags.get("timePeriod")).longValue();
         
         if (flags.containsKey("minVals")) {
             minVals = ((Number)flags.get("minVals")).intValue();
+        } else {
+            minVals = 0;
         }
         if (flags.containsKey("minExpiredVals")) {
             minExpiredVals = ((Number)flags.get("minExpiredVals")).intValue();
+        } else {
+            minExpiredVals = 0;
         }
+    }
+    
+    public void setTimePeriod(long newTimePeriod) {
+        timePeriod = newTimePeriod;
     }
     
     public synchronized T getLatestValue() {

@@ -112,7 +112,7 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     }
     
     protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
     }
     
     @Override
