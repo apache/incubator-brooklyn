@@ -6,6 +6,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
@@ -106,7 +107,7 @@ public class CliIntegrationTest {
         ProcessBuilder pb = new ProcessBuilder();
         pb.environment().remove("BROOKLYN_HOME");
         pb.environment().put("BROOKLYN_CLASSPATH", BROOKLYN_CLASSPATH);
-        pb.command(BROOKLYN_BIN_PATH, "--verbose", "launch", "--app", "brooklyn.cli.CliTest$ExampleApp", "--location", "localhost", "--noConsole");
+        pb.command(BROOKLYN_BIN_PATH, "--verbose", "launch", "--stopOnKeyPress", "--app", "brooklyn.cli.CliTest$ExampleApp", "--location", "localhost", "--noConsole");
         final Process brooklyn = pb.start();
  
         Callable<Void> cli = new Callable<Void>() {
@@ -120,7 +121,7 @@ public class CliIntegrationTest {
                 assertTrue(consoleOutput.contains("Launching Brooklyn web console management"), "Launch message not output");
                 assertFalse(consoleOutput.contains("Initiating Jersey application"), "Web console started");
                 assertTrue(consoleOutput.contains("Started application ExampleApp"), "ExampleApp not started");
-                assertTrue(consoleOutput.contains("Launched Brooklyn; now blocking to wait for cntrl-c or kill"), "Blocking message not output");
+                assertTrue(consoleOutput.contains("Server started. Press return to stop."), "Server started message not output");
                 assertTrue(consoleError.isEmpty());
 
                 return null;
@@ -130,11 +131,15 @@ public class CliIntegrationTest {
         try {
             Future<Void> future = executor.submit(cli);
 
-            // Wait 15s for console output, then kill
+            // Wait 15s for console output, then send CR to stop
             Thread.sleep(15000L);
-            brooklyn.destroy();
-
+            OutputStream out = brooklyn.getOutputStream();
+            out.write('\n');
+            out.flush();
             future.get(10, TimeUnit.SECONDS);
+
+            // Check error code from process is 0
+            assertEquals(brooklyn.exitValue(), 0, "Command terminated with error status");
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
