@@ -33,7 +33,8 @@ public class EntityDynamicType {
 
     private final Class<? extends Entity> entityClass;
     private final AbstractEntity entity;
-
+    private volatile String name;
+    
     /** 
      * Effectors on this entity.
      * TODO support overloading; requires not using a map keyed off method name.
@@ -62,6 +63,7 @@ public class EntityDynamicType {
     private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
         this.entityClass = clazz;
         this.entity = entity;
+        this.name = clazz.getCanonicalName();
         String id = entity==null ? clazz.getName() : entity.getId();
         
         effectors.putAll(findEffectors(clazz, entity));
@@ -77,6 +79,11 @@ public class EntityDynamicType {
             LOG.trace("Entity {} config keys: {}", id, Joiner.on(", ").join(configKeys.keySet()));
 
         refreshSnapshot();
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+        snapshotValid.set(false);
     }
     
     public synchronized EntityType getSnapshot() {
@@ -179,8 +186,7 @@ public class EntityDynamicType {
     
     private EntityTypeSnapshot refreshSnapshot() {
         if (snapshotValid.compareAndSet(false, true)) {
-            snapshot = new EntityTypeSnapshot(entityClass.getCanonicalName(), configKeys, 
-                    sensors, effectors.values());
+            snapshot = new EntityTypeSnapshot(name, configKeys, sensors, effectors.values());
         }
         return snapshot;
     }

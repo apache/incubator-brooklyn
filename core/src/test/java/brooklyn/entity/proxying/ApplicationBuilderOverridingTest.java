@@ -13,12 +13,11 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicApplicationImpl;
+import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableSet;
@@ -40,7 +39,7 @@ public class ApplicationBuilderOverridingTest {
             @Override public void doBuild() {}
         }.manage();
         
-        assertEquals(app.getEntityType().getName(), BasicApplicationImpl.class.getCanonicalName());
+        assertEquals(app.getEntityType().getName(), BasicApplication.class.getCanonicalName());
         assertIsProxy(app);
     }
     
@@ -50,7 +49,7 @@ public class ApplicationBuilderOverridingTest {
             @Override public void doBuild() {}
         }.manage();
         
-        assertEquals(app.getEntityType().getName(), TestApplicationImpl.class.getName());
+        assertEquals(app.getEntityType().getName(), TestApplication.class.getName());
     }
 
     @Test

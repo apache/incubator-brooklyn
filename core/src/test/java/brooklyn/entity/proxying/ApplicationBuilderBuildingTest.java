@@ -11,13 +11,12 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicApplicationImpl;
+import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.injava.ExampleJavaPolicy;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
@@ -37,7 +36,7 @@ public class ApplicationBuilderBuildingTest {
     public void testUsesDefaultBasicApplicationClass() {
         app = ApplicationBuilder.builder().manage();
         
-        assertEquals(app.getEntityType().getName(), BasicApplicationImpl.class.getCanonicalName());
+        assertEquals(app.getEntityType().getName(), BasicApplication.class.getCanonicalName());
         assertIsProxy(app);
     }
     
@@ -45,7 +44,7 @@ public class ApplicationBuilderBuildingTest {
     public void testUsesSuppliedApplicationClass() {
         app = ApplicationBuilder.builder(BasicEntitySpec.newInstance(TestApplication.class)).manage();
         
-        assertEquals(app.getEntityType().getName(), TestApplicationImpl.class.getName());
+        assertEquals(app.getEntityType().getName(), TestApplication.class.getName());
     }
 
     @Test

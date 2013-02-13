@@ -334,8 +334,24 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     public void setManagementContext(ManagementContext managementContext) {
         getManagementSupport().setManagementContext(managementContext);
+        entityType.setName(getEntityTypeName());
     }
 
+    /**
+     * Gets the entity type name, to be returned by {@code getEntityType().getName()}.
+     * To be called by brooklyn internals only.
+     * Can be overridden to customize the name.
+     */
+    protected String getEntityTypeName() {
+        try {
+            Class<?> typeClazz = getManagementSupport().getManagementContext(true).getEntityManager().getEntityTypeRegistry().getEntityTypeOf(getClass());
+            return typeClazz.getCanonicalName();
+        } catch (IllegalArgumentException e) {
+            LOG.warn("Entity type interface not found for entity "+this+"; instead using "+getClass().getCanonicalName());
+            return getClass().getCanonicalName();
+        }
+    }
+    
     /**
      * Called by framework (in new-style entities) after configuring, setting parent, etc,
      * but before a reference to this entity is shared with other entities.
@@ -971,7 +987,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * Invoked by {@link EntityManagementSupport} when this entity is becoming managed (i.e. it has a working
      * management context, but before the entity is visible to other entities).
      */
-    public void onManagementStarting() {}
+    public void onManagementStarting() {
+        if (isLegacyConstruction()) entityType.setName(getEntityTypeName());
+    }
     
     /**
      * Invoked by {@link EntityManagementSupport} when this entity is fully managed and visible to other entities
