@@ -104,6 +104,12 @@ public class TypeCoercionsTest {
         Assert.assertEquals(x.value, 3);
     }
 
+    @Test
+    public void testCoerceStringToNumber() {
+        assertEquals(TypeCoercions.coerce("1", Number.class), (Number) Double.valueOf(1));
+        assertEquals(TypeCoercions.coerce("1.0", Number.class), (Number) Double.valueOf(1.0));
+    }
+
     public static class WithAs {
         String value;
         public WithAs(Object x) { value = ""+x; }

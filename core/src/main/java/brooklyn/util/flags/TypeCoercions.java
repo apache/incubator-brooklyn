@@ -431,5 +431,12 @@ public class TypeCoercions {
                 return new AtomicInteger(Integer.parseInt(input));
             }
         });
+        /** This actually produce a {@link Double} for any input, cast to a {@link Number}. */
+        registerAdapter(String.class, Number.class, new Function<String,Number>() {
+            @Override
+            public Number apply(String input) {
+                return Double.valueOf(input);
+            }
+        });
     }
 }
