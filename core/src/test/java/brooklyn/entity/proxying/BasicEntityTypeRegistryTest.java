@@ -19,18 +19,35 @@ public class BasicEntityTypeRegistryTest {
     }
     
     @Test
-    public void testGetImplementedByLooksUpAnnotations() {
-        assertEquals(registry.getImplementedBy(MyEntity.class), MyEntityImpl.class);
-    }
-
-    @Test
-    public void testGetImplementedUsesRegistryFirst() {
+    public void testRegisterAllowsOverridingKey() {
+        registry.registerImplementation(MyEntity.class, MyEntityImpl.class);
         registry.registerImplementation(MyEntity.class, MyEntityImpl2.class);
         assertEquals(registry.getImplementedBy(MyEntity.class), MyEntityImpl2.class);
     }
 
     @Test
-    public void testGetImplementedThrowsIfNoRegistryOrAnnotation() {
+    public void testRegisterForbidsDuplicateValues() {
+        registry.registerImplementation(MyEntity.class, MyEntityImpl2.class);
+        try {
+            registry.registerImplementation(MyEntity2.class, MyEntityImpl2.class);
+        } catch (IllegalArgumentException e) {
+            if (!e.toString().contains("already registered against type")) throw e;
+        }
+    }
+
+    @Test
+    public void testGetImplementionLooksUpAnnotations() {
+        assertEquals(registry.getImplementedBy(MyEntity.class), MyEntityImpl.class);
+    }
+
+    @Test
+    public void testGetImplementionUsesRegistryFirst() {
+        registry.registerImplementation(MyEntity.class, MyEntityImpl2.class);
+        assertEquals(registry.getImplementedBy(MyEntity.class), MyEntityImpl2.class);
+    }
+
+    @Test
+    public void testGetImplementionThrowsIfNoRegistryOrAnnotation() {
         try {
             Class<?> result = registry.getImplementedBy(MyEntityWithoutAnnotation.class);
             fail("result="+result);
@@ -72,10 +89,13 @@ public class BasicEntityTypeRegistryTest {
     public interface MyEntity extends Entity {
     }
 
+    public interface MyEntity2 extends Entity {
+    }
+
     public static class MyEntityImpl extends AbstractEntity implements MyEntity {
     }
     
-    public static class MyEntityImpl2 extends AbstractEntity implements MyEntity {
+    public static class MyEntityImpl2 extends AbstractEntity implements MyEntity, MyEntity2 {
     }
     
     @ImplementedBy(MyIndirectEntityImpl.class)

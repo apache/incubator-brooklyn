@@ -8,6 +8,8 @@ import brooklyn.location.Location;
 /**
  * A registry for entity implementations to use when an entity needs to be created
  * of a given type.
+ * 
+ * A given implementation can only be associated with one entity type interface.
  */
 public interface EntityTypeRegistry {
 
@@ -36,6 +38,9 @@ public interface EntityTypeRegistry {
      * 
      * The implementation must be a non-abstract class implementing the given type, and must 
      * have a no-argument constructor.
+     * 
+     * @throws IllegalArgumentException If this implementation has already been registered for a different type
+     * @throws IllegalStateException If the implClazz is not a concrete class, or does not implement type
      */
     <T extends Entity> EntityTypeRegistry registerImplementation(Class<T> type, Class<? extends T> implClazz);
 }
