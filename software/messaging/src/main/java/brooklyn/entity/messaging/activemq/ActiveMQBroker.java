@@ -37,4 +37,9 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx 
     
     @SetFromFlag("jmxPassword")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(Attributes.JMX_PASSWORD, "admin");
+    
+    @SetFromFlag("templateConfigurationUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "activemq.templateConfigurationUrl", "Template file (in freemarker format) for the conf/activemq.xml file", 
+            "classpath://brooklyn/entity/messaging/activemq/activemq.xml");
 }

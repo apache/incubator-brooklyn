@@ -2,6 +2,7 @@ package brooklyn.entity.messaging.activemq;
 
 import static java.lang.String.format;
 
+import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -59,19 +60,29 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
                 body.append(commands).execute();
     }
 
+    protected String getTemplateConfigurationUrl() {
+        return entity.getAttribute(ActiveMQBroker.TEMPLATE_CONFIGURATION_URL);
+    }
+
     @Override
     public void customize() {
         NetworkUtils.checkPortsValid(ImmutableMap.of("jmxPort", getJmxPort(), "openWirePort", getOpenWirePort()));
         newScript(CUSTOMIZING).
                 body.append(
                 String.format("cp -R %s/{bin,conf,data,lib,webapps} .", getExpandedInstallDir()),
-                "sed -i.bk 's/\\[-z \"$JAVA_HOME\"]/\\[ -z \"$JAVA_HOME\" ]/g' bin/activemq",
-                "sed -i.bk 's/broker /broker useJmx=\"true\" /g' conf/activemq.xml",
-                String.format("sed -i.bk 's/managementContext createConnector=\"false\"/managementContext connectorPort=\"%s\"/g' conf/activemq.xml", getJmxPort()),
-                String.format("sed -i.bk 's/tcp:\\/\\/0.0.0.0:61616\"/tcp:\\/\\/0.0.0.0:%s\"/g' conf/activemq.xml", getOpenWirePort())
-                //disable persistence (this should be a flag -- but it seems to have no effect, despite ):
-//                "sed -i.bk 's/broker /broker persistent=\"false\" /g' conf/activemq.xml",
+                
+                // Required in version 5.5.1 (at least), but not in version 5.7.0
+                "sed -i.bk 's/\\[-z \"$JAVA_HOME\"]/\\[ -z \"$JAVA_HOME\" ]/g' bin/activemq"
+                
                 ).execute();
+        
+        // TODO disable persistence (this should be a flag -- but it seems to have no effect, despite ):
+        // "sed -i.bk 's/broker /broker persistent=\"false\" /g' conf/activemq.xml",
+
+        // Copy the configuration file across
+        String configFileContents = processTemplate(getTemplateConfigurationUrl());
+        String destinationConfigFile = format("%s/conf/activemq.xml", getRunDir());
+        getMachine().copyTo(new ByteArrayInputStream(configFileContents.getBytes()), destinationConfigFile);
     }
 
     @Override
