@@ -69,7 +69,7 @@ public class CliTest {
         StartableApplication app = ((ApplicationBuilder)appBuilder).manage();
         Collection<Entity> entities = app.getChildren();
         assertEquals(entities.size(), 1, "entities="+entities);
-        assertEquals(Iterables.getOnlyElement(entities).getEntityType().getName(), ExampleEntityImpl.class.getCanonicalName(), "entities="+entities);
+        assertEquals(Iterables.getOnlyElement(entities).getEntityType().getName(), ExampleEntity.class.getCanonicalName(), "entities="+entities);
         assertTrue(Iterables.getOnlyElement(entities) instanceof EntityProxy, "entities="+entities);
     }
 

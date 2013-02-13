@@ -18,8 +18,18 @@ public interface EntityTypeRegistry {
      * @param location the {@link Location} where the {@link DriverDependentEntity} is running.
      * @param <D>
      * @return the creates EntityDriver.
+     * @throws IllegalArgumentException If no implementation registered, and the given interface is not annotated with {@link ImplementedBy}
+     * @throws IllegalStateException If the given type is not an interface, or if the implementation class is not a concrete class implementing it
      */
     <T extends Entity> Class<? extends T> getImplementedBy(Class<T> type);
+
+    /**
+     * Returns the interface of this entity implementation.
+     * E.g. for use as the fully qualified name in {@code entity.getEntityType().getName()}.
+     * 
+     * @throws IllegalArgumentException If no interface is registered against this implementation, and no super-type of the class is annotated with {@link ImplementedBy} to point at the given class
+     */
+    <T extends Entity> Class<? super T> getEntityTypeOf(Class<T> type);
 
     /**
      * Registers the implementation to use for a given entity type.

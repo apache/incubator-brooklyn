@@ -10,12 +10,15 @@ import static org.testng.Assert.assertTrue
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.AttributeSensor
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicSensorEvent
 import brooklyn.test.TestUtils
+import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestApplicationImpl
+import brooklyn.test.entity.TestEntity;
 
 import com.google.common.base.Predicates
 import com.google.common.base.Suppliers
@@ -24,22 +27,27 @@ import com.google.common.collect.ImmutableSet
 
 public class EntityTypeTest {
     private static final AttributeSensor<String> TEST_SENSOR = new BasicAttributeSensor<String>(String.class, "test.sensor");
-    private TestApplicationImpl app;
+    private TestApplication app;
     private AbstractEntity entity;
     private EntitySubscriptionTest.RecordingSensorEventListener listener;
     
     @BeforeMethod
     public void setUpTestEntity() throws Exception{
-        app = new TestApplicationImpl();
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = new AbstractEntity(app) {};
+        Entities.startManagement(entity);
         
         listener = new EntitySubscriptionTest.RecordingSensorEventListener();
         app.getSubscriptionContext().subscribe(entity, SENSOR_ADDED, listener);
         app.getSubscriptionContext().subscribe(entity, SENSOR_REMOVED, listener);
-        
-        app.startManagement();
     }
 
+    @Test
+    public void testGetName() throws Exception {
+        TestEntity entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        assertEquals(entity2.getEntityType().getName(), TestEntity.class.getCanonicalName());
+    }
+    
     @Test
     public void testGetSensors() throws Exception{
         assertEquals(entity.getEntityType().getSensors(), 

@@ -3,16 +3,23 @@ package brooklyn.entity.proxying;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import brooklyn.entity.Entity;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.collect.Sets;
+
 public class BasicEntityTypeRegistry implements EntityTypeRegistry {
 
     private final Map<Class<?>, Class<?>> registry = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final Map<Class<?>, Class<?>> cache = new ConcurrentHashMap<Class<?>, Class<?>>();
+    private final Map<Class<?>, Class<?>> reverseCache = new ConcurrentHashMap<Class<?>, Class<?>>();
     
     @Override
     public <T extends Entity> EntityTypeRegistry registerImplementation(Class<T> type, Class<? extends T> implClazz) {
@@ -23,6 +30,7 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
         
         registry.put(type, implClazz);
         cache.remove(type);
+        reverseCache.remove(implClazz);
         return this;
     }
     
@@ -41,12 +49,56 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
         return (Class<? extends T>) result;
     }
 
+    @Override
+    public <T extends Entity> Class<? super T> getEntityTypeOf(Class<T> implClazz) {
+        Class<?> result = reverseCache.get(implClazz);
+        if (result != null) {
+            return (Class<? super T>) result;
+        }
+
+        for (Map.Entry<Class<?>, Class<?>> entry : registry.entrySet()) {
+            if (implClazz.equals(entry.getValue())) {
+                result = entry.getKey();
+                break;
+            }
+        }
+        if (result == null) {
+            result = getInterfaceWithAnnotationMatching(implClazz);
+        }
+        reverseCache.put(implClazz, result);
+        return (Class<? super T>) result;
+    }
+
     private <T extends Entity> Class<? extends T> getFromAnnotation(Class<T> type) {
         ImplementedBy annotation = type.getAnnotation(brooklyn.entity.proxying.ImplementedBy.class);
         if (annotation == null) throw new IllegalArgumentException("Interface "+type+" is not annotated with @"+ImplementedBy.class.getSimpleName()+", and no implementation is registered");
         Class<? extends Entity> value = annotation.value();
         checkIsImplementation(type, value);
         return (Class<? extends T>) value;
+    }
+
+    private <T extends Entity> Class<? super T> getInterfaceWithAnnotationMatching(Class<T> implClazz) {
+        // getInterfaces() only looks at one level of interfaces (i.e. not interfaces declared on supertypes)
+        // so if an impl indirectly extends the interface we need to look deeper.
+        Set<Class<?>> visited = Sets.newLinkedHashSet();
+        Deque<Class<?>> tovisit = new LinkedList<Class<?>>();
+        tovisit.add(implClazz);
+        
+        while (!tovisit.isEmpty()) {
+            Class<?> contender = tovisit.pop();
+            if (contender == null || visited.contains(contender)) continue;
+            visited.add(contender);
+            
+            if (contender.isInterface()) {
+                ImplementedBy annotation = contender.getAnnotation(brooklyn.entity.proxying.ImplementedBy.class);
+                Class<? extends Entity> value = (annotation == null) ? null : annotation.value();
+                if (implClazz.equals(value)) return (Class<? super T>) contender;
+            }
+            
+            tovisit.addAll(Arrays.asList(contender.getInterfaces()));
+            tovisit.add(contender.getSuperclass());
+        }
+        throw new IllegalArgumentException("Interfaces of "+implClazz+" not annotated with @"+ImplementedBy.class.getSimpleName()+" matching this class");
     }
     
     private void checkIsImplementation(Class<?> type, Class<?> implClazz) {
