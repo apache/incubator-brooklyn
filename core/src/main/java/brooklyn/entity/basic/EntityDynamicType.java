@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -34,6 +36,7 @@ public class EntityDynamicType {
     private final Class<? extends Entity> entityClass;
     private final AbstractEntity entity;
     private volatile String name;
+    private volatile String simpleName;
     
     /** 
      * Effectors on this entity.
@@ -63,7 +66,8 @@ public class EntityDynamicType {
     private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
         this.entityClass = clazz;
         this.entity = entity;
-        this.name = clazz.getCanonicalName();
+        this.name = (clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName();
+        this.simpleName = name.substring(name.lastIndexOf(".")+1);
         String id = entity==null ? clazz.getName() : entity.getId();
         
         effectors.putAll(findEffectors(clazz, entity));
@@ -82,7 +86,8 @@ public class EntityDynamicType {
     }
     
     public void setName(String name) {
-        this.name = name;
+        this.name = checkNotNull(name, "name");
+        this.simpleName = name.substring(name.lastIndexOf(".")+1);
         snapshotValid.set(false);
     }
     
@@ -186,7 +191,7 @@ public class EntityDynamicType {
     
     private EntityTypeSnapshot refreshSnapshot() {
         if (snapshotValid.compareAndSet(false, true)) {
-            snapshot = new EntityTypeSnapshot(name, configKeys, sensors, effectors.values());
+            snapshot = new EntityTypeSnapshot(name, simpleName, configKeys, sensors, effectors.values());
         }
         return snapshot;
     }

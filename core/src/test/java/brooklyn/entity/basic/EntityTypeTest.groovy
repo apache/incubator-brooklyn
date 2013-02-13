@@ -49,6 +49,12 @@ public class EntityTypeTest {
     }
     
     @Test
+    public void testGetSimpleName() throws Exception {
+        TestEntity entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        assertEquals(entity2.getEntityType().getSimpleName(), TestEntity.class.getSimpleName());
+    }
+    
+    @Test
     public void testGetSensors() throws Exception{
         assertEquals(entity.getEntityType().getSensors(), 
                 ImmutableSet.of(SENSOR_ADDED, SENSOR_REMOVED));
