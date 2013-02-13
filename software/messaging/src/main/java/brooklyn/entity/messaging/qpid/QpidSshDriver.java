@@ -68,10 +68,10 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
                 .execute();
 
         Map runtimeFiles = entity.getConfig(QpidBroker.RUNTIME_FILES);
-        copyResourceMap(runtimeFiles);
+        copyResources(runtimeFiles);
 
         Map runtimeTemplates = entity.getConfig(QpidBroker.RUNTIME_TEMPLATES);
-        copyTemplateMap(runtimeTemplates);
+        copyTemplates(runtimeTemplates);
     }
 
     @Override

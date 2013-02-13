@@ -171,14 +171,19 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return Maps.newLinkedHashMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT, Collections.emptyMap()));
     }
 
+    /** @deprecated since 0.5.0, should use {@link copyResource(File, String)}. */
+    @Deprecated
     public void copyFile(File src, String destination) {
         copyFile(MutableMap.of(), src, destination);
     }
-    /** @deprecated since 0.5.  destination should be a string not a File */
+    /** @deprecated since 0.5.0, destination should be a string not a File */
+    @Deprecated
     public void copyFile(File src, File destination) {
         getMachine().copyTo(src, destination);
     }
-    
+    /** @deprecated since 0.5.0, should use {@link copyResource(Map, String, String)}. */
+    @Deprecated
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void copyFile(Map flags2, File src, String destination) {
         Map flags = new LinkedHashMap();
         if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
@@ -205,7 +210,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return result;
     }
 
-    public void copyTemplateMap(Map<String, String> templates) {
+    public void copyTemplates(Map<String, String> templates) {
         if (templates != null && templates.size() > 0) {
             log.info("Customising {} with templates: {}", entity, templates);
 
@@ -217,7 +222,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
     }
 
-    public void copyResourceMap(Map<String, String> resources) {
+    public void copyResources(Map<String, String> resources) {
         if (resources != null && resources.size() > 0) {
             log.info("Customising {} with resources: {}", entity, resources);
 
@@ -233,6 +238,15 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return copyResource(file.toURI().toASCIIString(), target);
     }
     public int copyResource(String resource, String target) {
+        return copyResource(MutableMap.of(), resource, target);
+    }
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public int copyResource(Map flags2, String resource, String target) {
+        Map flags = Maps.newLinkedHashMap();
+        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+            flags.putAll(getSshFlags());
+        flags.putAll(flags2);
+
         // prefix with runDir if relative target
         String dest = target;
         if (!new File(target).isAbsolute()) {
@@ -244,14 +258,14 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         // TODO use PAX-URL style URIs for maven artifacts
         if (resource.toLowerCase().matches("^https?://.*")) {
             // try resolving http resources remotely using curl
-            result = getMachine().execCommands("download",
+            result = getMachine().execCommands(flags, "download-resource",
                     ImmutableList.of(
                             CommonCommands.INSTALL_CURL,
-                            String.format("curl --silent --insecure %s -o %s", resource, dest)));
+                            String.format("curl -f --silent --insecure %s -o %s", resource, dest)));
         }
         // if not downloaded yet, retrieve locally and copy across
         if (result != 0) {
-            result = getMachine().copyTo(getResource(resource), dest);
+            result = getMachine().copyTo(flags, getResource(resource), dest);
         }
         if (log.isDebugEnabled())
             log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, resource, dest, result });
