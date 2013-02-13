@@ -6,11 +6,8 @@ import java.io.File;
 import java.util.List;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-
-import com.google.common.collect.ImmutableList;
 
 public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver implements JavaWebAppDriver {
 
@@ -115,7 +112,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         if (targetName == null) {
             targetName = f.getName();
         }
-        deploy("file://"+f.getAbsolutePath(), targetName);
+        deploy(f.toURI().toASCIIString(), targetName);
     }
 
     /**
@@ -133,20 +130,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         log.info("{} deploying {} to {}:{}", new Object[]{entity, url, getHostname(), dest});
         // create a backup
         getMachine().run(String.format("mv -f %s %s.bak > /dev/null 2>&1", dest, dest)); //back up old file/directory
-        int result = -1;
-        // TODO allow s3://bucket/file URIs for AWS S3 resources
-        // TODO use PAX-URL style URIs for maven artifacts
-        if (url.toLowerCase().matches("^https?://.*")) {
-            // try resolving http resources remotely using curl
-            result = getMachine().execCommands("download",
-                    ImmutableList.of(
-                            CommonCommands.INSTALL_CURL,
-                            String.format("curl --silent --insecure %s -o %s", url, dest)));
-        }
-        // if not downloaded yet, retrieve locally and copy across
-        if (result != 0) {
-	        result = getMachine().copyTo(getResource(url), dest);
-        }
+        int result = copyResource(url, dest);
         log.debug("{} deployed {} to {}:{}: result {}", new Object[]{entity, url, getHostname(), dest, result});
         if (result!=0) log.warn("Problem deploying {} to {}:{} for {}: result {}", new Object[]{url, getHostname(), dest, entity, result}); 
         return getFilenameContextMapper().convertDeploymentTargetNameToContext(canonicalTargetName);

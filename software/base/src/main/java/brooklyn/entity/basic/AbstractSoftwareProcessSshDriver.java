@@ -4,6 +4,7 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.File;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,14 +18,15 @@ import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.config.StringConfigMap;
+import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.ScriptRunner;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -169,14 +171,19 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return Maps.newLinkedHashMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT, Collections.emptyMap()));
     }
 
+    /** @deprecated since 0.5.0, should use {@link copyResource(File, String)}. */
+    @Deprecated
     public void copyFile(File src, String destination) {
         copyFile(MutableMap.of(), src, destination);
     }
-    /** @deprecated since 0.5.  destination should be a string not a File */
+    /** @deprecated since 0.5.0, destination should be a string not a File */
+    @Deprecated
     public void copyFile(File src, File destination) {
         getMachine().copyTo(src, destination);
     }
-    
+    /** @deprecated since 0.5.0, should use {@link copyResource(Map, String, String)}. */
+    @Deprecated
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void copyFile(Map flags2, File src, String destination) {
         Map flags = new LinkedHashMap();
         if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
@@ -184,6 +191,85 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         flags.putAll(flags2);
         
         getMachine().copyTo(flags, src, destination);
+    }
+
+    public int copyTemplate(File template, String target) {
+        return copyTemplate(template.toURI().toASCIIString(), target);
+    }
+    public int copyTemplate(String template, String target) {
+        // prefix with runDir if relative target
+        String dest = target;
+        if (!new File(target).isAbsolute()) {
+            dest = getRunDir() + "/" + target;
+        }
+
+        String data = processTemplate(template);
+        int result = getMachine().copyTo(new StringReader(data), dest);
+        if (log.isDebugEnabled())
+            log.debug("Copied filtered template for {}: {} to {} - result {}", new Object[] { entity, template, dest, result });
+        return result;
+    }
+
+    public void copyTemplates(Map<String, String> templates) {
+        if (templates != null && templates.size() > 0) {
+            log.info("Customising {} with templates: {}", entity, templates);
+
+            for (Map.Entry<String, String> entry : templates.entrySet()) {
+                String source = entry.getValue();
+                String dest = entry.getKey();
+                copyTemplate(source, dest);
+            }
+        }
+    }
+
+    public void copyResources(Map<String, String> resources) {
+        if (resources != null && resources.size() > 0) {
+            log.info("Customising {} with resources: {}", entity, resources);
+
+            for (Map.Entry<String, String> entry : resources.entrySet()) {
+                String source = entry.getValue();
+                String dest = entry.getKey();
+                copyResource(source, dest);
+            }
+        }
+    }
+
+    public int copyResource(File file, String target) {
+        return copyResource(file.toURI().toASCIIString(), target);
+    }
+    public int copyResource(String resource, String target) {
+        return copyResource(MutableMap.of(), resource, target);
+    }
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public int copyResource(Map flags2, String resource, String target) {
+        Map flags = Maps.newLinkedHashMap();
+        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+            flags.putAll(getSshFlags());
+        flags.putAll(flags2);
+
+        // prefix with runDir if relative target
+        String dest = target;
+        if (!new File(target).isAbsolute()) {
+            dest = getRunDir() + "/" + target;
+        }
+
+        int result = -1;
+        // TODO allow s3://bucket/file URIs for AWS S3 resources
+        // TODO use PAX-URL style URIs for maven artifacts
+        if (resource.toLowerCase().matches("^https?://.*")) {
+            // try resolving http resources remotely using curl
+            result = getMachine().execCommands(flags, "download-resource",
+                    ImmutableList.of(
+                            CommonCommands.INSTALL_CURL,
+                            String.format("curl -f --silent --insecure %s -o %s", resource, dest)));
+        }
+        // if not downloaded yet, retrieve locally and copy across
+        if (result != 0) {
+            result = getMachine().copyTo(flags, getResource(resource), dest);
+        }
+        if (log.isDebugEnabled())
+            log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, resource, dest, result });
+        return result;
     }
 
     protected final static String INSTALLING = "installing";
