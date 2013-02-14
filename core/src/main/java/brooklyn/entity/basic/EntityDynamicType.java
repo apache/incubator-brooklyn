@@ -1,7 +1,5 @@
 package brooklyn.entity.basic;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -19,6 +17,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
@@ -66,8 +65,7 @@ public class EntityDynamicType {
     private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
         this.entityClass = clazz;
         this.entity = entity;
-        this.name = (clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName();
-        this.simpleName = name.substring(name.lastIndexOf(".")+1);
+        setName((clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName());
         String id = entity==null ? clazz.getName() : entity.getId();
         
         effectors.putAll(findEffectors(clazz, entity));
@@ -86,9 +84,18 @@ public class EntityDynamicType {
     }
     
     public void setName(String name) {
-        this.name = checkNotNull(name, "name");
-        this.simpleName = name.substring(name.lastIndexOf(".")+1);
+        if (Strings.isBlank(name)) {
+            throw new IllegalArgumentException("Invalid name "+(name == null ? "null" : "'"+name+"'")+"; name must be non-empty and not just white space");
+        }
+        this.name = name;
+        this.simpleName = toSimpleName(name);
         snapshotValid.set(false);
+    }
+    
+    private String toSimpleName(String name) {
+        String simpleName = name.substring(name.lastIndexOf(".")+1);
+        if (Strings.isBlank(simpleName)) simpleName = name.trim();
+        return Strings.makeValidFilename(simpleName);
     }
     
     public synchronized EntityType getSnapshot() {
