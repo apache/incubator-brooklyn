@@ -12,16 +12,17 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class DownloadLocalRepoResolverTest {
 
@@ -55,7 +56,7 @@ public class DownloadLocalRepoResolverTest {
 
     @Test
     public void testReturnsEmptyWhenDisabled() throws Exception {
-        brooklynProperties.put(DownloadLocalRepoResolver.LOCAL_REPO_ENABLED_PROPERTY, "false");
+        brooklynProperties.put(DownloadLocalRepoResolver.LOCAL_REPO_ENABLED, false);
         assertResolves(ImmutableList.<String>of(), ImmutableList.<String>of());
     }
     
@@ -70,23 +71,24 @@ public class DownloadLocalRepoResolverTest {
     
     @Test
     public void testReturnsFilenameFromDriver() throws Exception {
-        // uses ${driver.downloadFilename}
         String entityVersion = "myversion";
-        String downloadFilename = "my.file.name";
+        String filename = "my.file.name";
         entity.setAttribute(Attributes.VERSION, entityVersion);
-        driver.setFlag("downloadFilename", downloadFilename);
-        assertResolves(String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", entitySimpleType, entityVersion, downloadFilename));
+        
+        BasicDownloadRequirement req = new BasicDownloadRequirement(driver, ImmutableMap.of("filename", filename));
+        assertResolves(req, String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", entitySimpleType, entityVersion, filename));
     }
     
     @Test
-    public void testReturnsFileSuffixFromDriver() throws Exception {
+    public void testReturnsFileSuffixFromRequirements() throws Exception {
         // uses ${driver.downloadFileSuffix}
         String entityVersion = "myversion";
-        String downloadFileSuffix = "mysuffix";
-        String downloadFilename = (entitySimpleType+"-"+entityVersion+"."+downloadFileSuffix).toLowerCase();
+        String fileSuffix = "mysuffix";
+        String expectedFilename = (entitySimpleType+"-"+entityVersion+"."+fileSuffix).toLowerCase();
         entity.setAttribute(Attributes.VERSION, entityVersion);
-        driver.setFlag("downloadFileSuffix", downloadFileSuffix);
-        assertResolves(String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", entitySimpleType, entityVersion, downloadFilename));
+        
+        BasicDownloadRequirement req = new BasicDownloadRequirement(driver, ImmutableMap.of("fileSuffix", fileSuffix));
+        assertResolves(req, String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", entitySimpleType, entityVersion, expectedFilename));
     }
     
     private void assertResolves(String... expected) {
@@ -94,7 +96,15 @@ public class DownloadLocalRepoResolverTest {
     }
     
     private void assertResolves(List<String> expectedPrimaries, List<String> expectedFallbacks) {
-        DownloadTargets actual = resolver.apply(driver);
+        assertResolves(new BasicDownloadRequirement(driver), expectedPrimaries, expectedFallbacks);
+    }
+    
+    private void assertResolves(DownloadRequirement req, String... expected) {
+        assertResolves(req, ImmutableList.copyOf(expected), ImmutableList.<String>of());
+    }
+
+    private void assertResolves(DownloadRequirement req, List<String> expectedPrimaries, List<String> expectedFallbacks) {
+        DownloadTargets actual = resolver.apply(req);
         assertEquals(actual.getPrimaryLocations(), expectedPrimaries);
         assertEquals(actual.getFallbackLocations(), expectedFallbacks);
     }

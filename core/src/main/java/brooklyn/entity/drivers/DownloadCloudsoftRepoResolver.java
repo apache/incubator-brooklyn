@@ -13,24 +13,24 @@ import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.Function;
 
-public class DownloadLocalRepoResolver implements Function<DownloadRequirement, DownloadTargets> {
+public class DownloadCloudsoftRepoResolver implements Function<DownloadRequirement, DownloadTargets> {
     
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(DownloadLocalRepoResolver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DownloadCloudsoftRepoResolver.class);
 
-    public static final ConfigKey<String> LOCAL_REPO_PATH = BasicConfigKey.builder(String.class)
-            .name(DownloadPropertiesResolver.DOWNLOAD_CONF_PREFIX+"repo.local.path")
-            .description("Fully qualified path of the local repo")
-            .defaultValue("$HOME/.brooklyn/repository")
+    public static final ConfigKey<String> CLOUDSOFT_REPO_URL = BasicConfigKey.builder(String.class)
+            .name(DownloadPropertiesResolver.DOWNLOAD_CONF_PREFIX+"repo.cloudsoft.url")
+            .description("Whether to use the cloudsoft repo for downloading entities, during installs")
+            .defaultValue("http://downloads.cloudsoftcorp.com/brooklyn/repository")
             .build();
 
-    public static final ConfigKey<Boolean> LOCAL_REPO_ENABLED = BasicConfigKey.builder(Boolean.class)
-            .name(DownloadPropertiesResolver.DOWNLOAD_CONF_PREFIX+"repo.local.enabled")
-            .description("Whether to use the local repo for downloading entities, during installs")
+    public static final ConfigKey<Boolean> CLOUDSOFT_REPO_ENABLED = BasicConfigKey.builder(Boolean.class)
+            .name(DownloadPropertiesResolver.DOWNLOAD_CONF_PREFIX+"repo.cloudsoft.enabled")
+            .description("Whether to use the cloudsoft repo for downloading entities, during installs")
             .defaultValue(true)
             .build();
-
-    public static final String LOCAL_REPO_URL_PATTERN = "file://%s/"+
+    
+    public static final String CLOUDSOFT_REPO_URL_PATTERN = "%s/"+
             "${simpletype}/${version}/"+
             "<#if filename??>"+
                 "${filename}" +
@@ -45,14 +45,14 @@ public class DownloadLocalRepoResolver implements Function<DownloadRequirement, 
 
     private final StringConfigMap config;
 
-    public DownloadLocalRepoResolver(StringConfigMap config) {
+    public DownloadCloudsoftRepoResolver(StringConfigMap config) {
         this.config = config;
     }
     
     public DownloadTargets apply(DownloadRequirement req) {
-        Boolean enabled = config.getConfig(LOCAL_REPO_ENABLED);
-        String path = config.getConfig(LOCAL_REPO_PATH);
-        String url = String.format(LOCAL_REPO_URL_PATTERN, path);
+        Boolean enabled = config.getConfig(CLOUDSOFT_REPO_ENABLED);
+        String baseUrl = config.getConfig(CLOUDSOFT_REPO_URL);
+        String url = String.format(CLOUDSOFT_REPO_URL_PATTERN, baseUrl);
         
         if (enabled) {
             Map<String, ?> subs = DownloadResolvers.getBasicSubscriptions(req);

@@ -33,6 +33,9 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("downloadUrl")
     public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = Attributes.DOWNLOAD_URL;
 
+    @SetFromFlag("downloadAddonUrls")
+    BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = Attributes.DOWNLOAD_ADDON_URLS;
+
     @SetFromFlag("installDir")
     public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = ConfigKeys.SUGGESTED_INSTALL_DIR;
     

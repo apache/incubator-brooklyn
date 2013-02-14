@@ -12,7 +12,7 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.drivers.DownloadsRegistry;
+import brooklyn.entity.drivers.DownloadResolverRegistry;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
@@ -130,7 +130,7 @@ public class NonDeploymentManagementContext implements ManagementContext {
     }
 
     @Override
-    public DownloadsRegistry getEntityDownloadsRegistry() {
+    public DownloadResolverRegistry getEntityDownloadsRegistry() {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
     }
 

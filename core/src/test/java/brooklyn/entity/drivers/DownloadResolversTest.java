@@ -3,48 +3,37 @@ package brooklyn.entity.drivers;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-import java.util.List;
+import java.util.Map;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class DownloadResolversTest {
 
-    private BrooklynProperties brooklynProperties;
-    private LocalManagementContext managementContext;
     private Location loc;
     private TestApplication app;
     private TestEntity entity;
     private MyEntityDriver driver;
-    private final Function<Object, ImmutableMap<String, String>> emptyAdditionalSubs = Functions.constant(ImmutableMap.<String,String>of());
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        // Disable local-repo; as that is not part of this test
-        brooklynProperties = BrooklynProperties.Factory.newEmpty();
-        brooklynProperties.put(DownloadLocalRepoResolver.LOCAL_REPO_ENABLED_PROPERTY, "false");
-        managementContext = new LocalManagementContext(brooklynProperties);
-        
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         driver = new MyEntityDriver(entity, loc);
     }
@@ -57,40 +46,62 @@ public class DownloadResolversTest {
     @Test
     public void testSimpleSubstitution() throws Exception {
         entity.setAttribute(Attributes.VERSION, "myversion");
+        String pattern = "mykey1=${mykey1},mykey2=${mykey2}";
+        String result = DownloadResolvers.substitute(pattern, ImmutableMap.of("mykey1", "myval1", "mykey2", "myval2"));
+        assertEquals(result, "mykey1=myval1,mykey2=myval2");
+    }
+
+    @Test
+    public void testSubstitutionIncludesDefaultSubs() throws Exception {
+        entity.setAttribute(Attributes.VERSION, "myversion");
         String pattern = "version=${version},type=${type},simpletype=${simpletype}";
-        String result = DownloadResolvers.substitute(driver, pattern, emptyAdditionalSubs);
+        BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
+        String result = DownloadResolvers.substitute(req, pattern);
         assertEquals(result, String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntity.class.getName(), TestEntity.class.getSimpleName()));
     }
 
     @Test
-    public void testSimpleSubstitutionUsesEntityBean() throws Exception {
+    public void testSubstitutionDoesMultipleMatches() throws Exception {
+        String simpleType = TestEntity.class.getSimpleName();
+        String pattern = "simpletype=${simpletype},simpletype=${simpletype}";
+        BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
+        String result = DownloadResolvers.substitute(req, pattern);
+        assertEquals(result, String.format("simpletype=%s,simpletype=%s", simpleType, simpleType));
+    }
+
+    @Test
+    public void testSubstitutionUsesEntityBean() throws Exception {
         String entityid = entity.getId();
         String pattern = "id=${entity.id}";
-        String result = DownloadResolvers.substitute(driver, pattern, emptyAdditionalSubs);
+        BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
+        String result = DownloadResolvers.substitute(req, pattern);
         assertEquals(result, String.format("id=%s", entityid));
     }
 
     @Test
-    public void testSimpleSubstitutionUsesDriverBean() throws Exception {
+    public void testSubstitutionUsesDriverBean() throws Exception {
         String entityid = entity.getId();
         String pattern = "id=${driver.entity.id}";
-        String result = DownloadResolvers.substitute(driver, pattern, emptyAdditionalSubs);
+        BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
+        String result = DownloadResolvers.substitute(req, pattern);
         assertEquals(result, String.format("id=%s", entityid));
     }
 
     @Test
-    public void testSimpleSubstitutionDoesMultipleMatches() throws Exception {
-        String pattern = "simpletype=${simpletype},simpletype=${simpletype}";
-        String result = DownloadResolvers.substitute(driver, pattern, emptyAdditionalSubs);
-        assertEquals(result, String.format("simpletype=%s,simpletype=%s", TestEntity.class.getSimpleName(), TestEntity.class.getSimpleName()));
+    public void testSubstitutionUsesOverrides() throws Exception {
+        entity.setAttribute(Attributes.VERSION, "myversion");
+        String pattern = "version=${version},mykey1=${mykey1}";
+        BasicDownloadRequirement req = new BasicDownloadRequirement(driver, ImmutableMap.of("version", "overriddenversion", "mykey1", "myval1"));
+        String result = DownloadResolvers.substitute(req, pattern);
+        assertEquals(result, "version=overriddenversion,mykey1=myval1");
     }
 
     @Test
     public void testThrowsIfUnmatchedSubstitutions() throws Exception {
-        entity.setAttribute(Attributes.VERSION, "myversion");
         String pattern = "nothere=${nothere}";
+        BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
         try {
-            String result = DownloadResolvers.substitute(driver, pattern, emptyAdditionalSubs);
+            String result = DownloadResolvers.substitute(req, pattern);
             fail("Should have failed, but got "+result);
         } catch (IllegalArgumentException e) {
             if (!e.toString().contains("${nothere}")) throw e;
@@ -98,31 +109,12 @@ public class DownloadResolversTest {
     }
 
     @Test
-    public void testSubstitutesAttributeValue() throws Exception {
+    public void testSubstituter() throws Exception {
         entity.setAttribute(Attributes.VERSION, "myversion");
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "version=${version},type=${type},simpletype=${simpletype}");
-        DownloadTargets result = DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL).apply(driver);
+        String baseurl = "version=${version},type=${type},simpletype=${simpletype}";
+        Map<String,Object> subs = DownloadResolvers.getBasicEntitySubstitutions(driver);
+        DownloadTargets result = DownloadResolvers.substituter(Functions.constant(baseurl), Functions.constant(subs)).apply(new BasicDownloadRequirement(driver));
         String expected = String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntity.class.getName(), TestEntity.class.getSimpleName());
         assertEquals(result.getPrimaryLocations(), ImmutableList.of(expected));
-    }
-    
-    @Test
-    public void testDefaultResolverSubstitutesDownloadUrl() throws Exception {
-        entity.setAttribute(Attributes.VERSION, "myversion");
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "version=${version},type=${type},simpletype=${simpletype}");
-        List<String> result = app.getManagementContext().getEntityDownloadsRegistry().resolve(driver);
-        String expected = String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntity.class.getName(), TestEntity.class.getSimpleName());
-        assertEquals(result, ImmutableList.of(expected));
-    }
-    
-    @Test
-    public void testDefaultResolverSubstitutesDownloadUrlFailsIfVersionMissing() throws Exception {
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "version=${version}");
-        try {
-            List<String> result = app.getManagementContext().getEntityDownloadsRegistry().resolve(driver);
-            fail("Should have failed, but got "+result);
-        } catch (IllegalArgumentException e) {
-            if (!e.toString().contains("${version}")) throw e;
-        }
     }
 }

@@ -10,10 +10,10 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
@@ -22,6 +22,7 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class DownloadPropertiesResolverTest {
 
@@ -36,7 +37,7 @@ public class DownloadPropertiesResolverTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         brooklynProperties = BrooklynProperties.Factory.newEmpty();
-        brooklynProperties.put(DownloadLocalRepoResolver.LOCAL_REPO_ENABLED_PROPERTY, "false");
+        brooklynProperties.put(DownloadLocalRepoResolver.LOCAL_REPO_ENABLED, false);
         managementContext = new LocalManagementContext(brooklynProperties);
         
         loc = new SimulatedLocation();
@@ -77,10 +78,9 @@ public class DownloadPropertiesResolverTest {
 
     @Test
     public void testSubstitutionsAppliedToFallbackUrl() throws Exception {
-        brooklynProperties.put("brooklyn.downloads.all.fallbackurl", "foo=${foo},version=${version}");
-        brooklynProperties.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
+        brooklynProperties.put("brooklyn.downloads.all.fallbackurl", "version=${version}");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertResolves(ImmutableList.<String>of(), ImmutableList.of("foo=myfoo,version=myversion"));
+        assertResolves(ImmutableList.<String>of(), ImmutableList.of("version=myversion"));
     }
 
     @Test
@@ -98,30 +98,6 @@ public class DownloadPropertiesResolverTest {
     }
     
     @Test
-    public void testGlobalSubstitutionsAppliedToGlobalUrl() throws Exception {
-        brooklynProperties.put("brooklyn.downloads.all.url", "foo=${foo},version=${version}");
-        brooklynProperties.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
-        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertResolves("foo=myfoo,version=myversion");
-    }
-    
-    @Test
-    public void testGlobalSubstitutionsOverrideDefaults() throws Exception {
-        brooklynProperties.put("brooklyn.downloads.all.url", "version=${version}");
-        brooklynProperties.put("brooklyn.downloads.all.substitutions.version", "myoverriddenversion");
-        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertResolves("version=myoverriddenversion");
-    }
-    
-    @Test
-    public void testGlobalSubstitutionsAppliedToDefaultUrl() throws Exception {
-        brooklynProperties.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "foo=${foo},version=${version}");
-        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertResolves("foo=myfoo,version=myversion");
-    }
-    
-    @Test
     public void testEntitySpecificUrlOverridesGlobalUrl() throws Exception {
         brooklynProperties.put("brooklyn.downloads.all.url", "version=${version}");
         brooklynProperties.put("brooklyn.downloads.entity.TestEntity.url", "overridden,version=${version}");
@@ -130,20 +106,37 @@ public class DownloadPropertiesResolverTest {
     }
     
     @Test
-    public void testEntitySpecificSubstitutionsOverridesDefaults() throws Exception {
-        brooklynProperties.put("brooklyn.downloads.entity.TestEntity.url", "version=${version}");
-        brooklynProperties.put("brooklyn.downloads.entity.TestEntity.substitutions.version", "myoverriddenversion");
-        entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
-        assertResolves("version=myoverriddenversion");
-    }
+    public void testEntitySpecificAddonUsesGlobalUrl() throws Exception {
+        brooklynProperties.put("brooklyn.downloads.all.url", "version=${version}");
 
+        DownloadRequirement req = new BasicDownloadRequirement(driver, "myaddon", ImmutableMap.of("version", "myversion"));
+        assertResolves(req, ImmutableList.of("version=myversion"), ImmutableList.<String>of());
+    }
+    
+    @Test
+    public void testEntitySpecificAddonOverridesGlobalUrl() throws Exception {
+        brooklynProperties.put("brooklyn.downloads.all.url", "${addon}-${version}");
+        brooklynProperties.put("brooklyn.downloads.entity.TestEntity.addon.myaddon.url", "overridden,${addon}-${version}");
+
+        DownloadRequirement req = new BasicDownloadRequirement(driver, "myaddon", ImmutableMap.of("version", "myversion"));
+        assertResolves(req, ImmutableList.of("overridden,myaddon-myversion", "myaddon-myversion"), ImmutableList.<String>of());
+    }
+    
     private void assertResolves(String... expected) {
         assertResolves(ImmutableList.copyOf(expected), ImmutableList.<String>of());
     }
     
     private void assertResolves(List<String> expectedPrimaries, List<String> expectedFallbacks) {
-        DownloadTargets actual = resolver.apply(driver);
-        assertEquals(actual.getPrimaryLocations(), expectedPrimaries);
-        assertEquals(actual.getFallbackLocations(), expectedFallbacks);
+        assertResolves(new BasicDownloadRequirement(driver), expectedPrimaries, expectedFallbacks);
+    }
+    
+    private void assertResolves(DownloadRequirement req, String... expected) {
+        assertResolves(req, ImmutableList.copyOf(expected), ImmutableList.<String>of());
+    }
+
+    private void assertResolves(DownloadRequirement req, List<String> expectedPrimaries, List<String> expectedFallbacks) {
+        DownloadTargets actual = resolver.apply(req);
+        assertEquals(actual.getPrimaryLocations(), expectedPrimaries, "actual="+actual);
+        assertEquals(actual.getFallbackLocations(), expectedFallbacks, "actual="+actual);
     }
 }

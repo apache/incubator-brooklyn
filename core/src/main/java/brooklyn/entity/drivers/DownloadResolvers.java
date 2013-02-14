@@ -4,23 +4,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.drivers.BasicDownloadTargets.Builder;
-import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
-import brooklyn.event.AttributeSensor;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableMap;
 
 import freemarker.template.TemplateException;
 
@@ -32,129 +27,97 @@ public class DownloadResolvers {
     private DownloadResolvers() {}
     
     /**
-     * Converts the basevalue by substituting things in the form ${key} or ${KEY} for values specific
+     * Converts the basevalue by substituting things in the form ${key} for values specific
      * to a given entity driver. The keys used are:
      * <ul>
      *   <li>driver: the driver instance (e.g. can do freemarker.org stuff like ${driver.osTag} to call {@code driver.getOsTag()})
      *   <li>entity: the entity instance
      *   <li>type: the fully qualified type name of the entity
      *   <li>simpletype: the unqualified type name of the entity
-     *   <li>version: the version for this entity, or not included if null
+     *   <li>addon: the name of the add-on, or null if for the entity's main artifact
+     *   <li>version: the version for this entity (or of the add-on), or not included if null
      * </ul>
      * 
-     * Additional substitution keys (and values) can be defined using additionalSubstitutions parameter; these
+     * Additional substitution keys (and values) can be defined using {@link DownloadRequirement.getProperties()}; these
      * override the default substitutions listed above.
      */
-    public static String substitute(EntityDriver driver, String basevalue, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
+    public static String substitute(DownloadRequirement req, String basevalue) {
+        return substitute(basevalue, getBasicSubscriptions(req));
+    }
+
+    public static Map<String,Object> getBasicSubscriptions(DownloadRequirement req) {
+        EntityDriver driver = req.getEntityDriver();
+        String addon = req.getAddonName();
+        Map<String, ?> props = req.getProperties();
+        
+        if (addon == null) {
+            return MutableMap.<String,Object>builder()
+                    .putAll(DownloadResolvers.getBasicEntitySubstitutions(driver))
+                    .putAll(props)
+                    .build();
+        } else {
+            return MutableMap.<String,Object>builder()
+                    .putAll(DownloadResolvers.getBasicAddonSubstitutions(driver, addon))
+                    .putAll(props)
+                    .build();
+        }
+    }
+    
+    public static Map<String,Object> getBasicEntitySubstitutions(EntityDriver driver) {
         Entity entity = driver.getEntity();
         String type = entity.getEntityType().getName();
         String simpleType = type.substring(type.lastIndexOf(".")+1);
         String version = entity.getAttribute(Attributes.VERSION);
         if (version == null) version = entity.getConfig(ConfigKeys.SUGGESTED_VERSION);
         
-        Map<String,?> subs = MutableMap.<String,Object>builder()
+        return MutableMap.<String,Object>builder()
                 .put("entity", entity)
                 .put("driver", driver)
                 .put("type", type)
                 .put("simpletype", simpleType)
                 .putIfNotNull("version", version)
-                .putAll(additionalSubs.apply(driver))
                 .build();
-        
+    }
+
+    public static Map<String,Object> getBasicAddonSubstitutions(EntityDriver driver, String addon) {
+        return MutableMap.<String,Object>builder()
+                .putAll(getBasicEntitySubstitutions(driver))
+                .put("addon", addon)
+                .build();
+    }
+
+    public static String substitute(String basevalue, Map<String,?> subs) {
         try {
             return new Templater().processTemplate(basevalue, subs);
         } catch (TemplateException e) {
-            throw new IllegalArgumentException("Failed to process driver download '"+basevalue+"' for driver of "+entity, e);
+            throw new IllegalArgumentException("Failed to process driver download '"+basevalue+"'", e);
         }
     }
 
-    public static Function<EntityDriver, DownloadTargets> attributeListSubstituter(AttributeSensor<? extends Iterable<String>> attribute) {
-        return attributeListSubstituter(attribute, Functions.constant(ImmutableMap.<String,String>of()));
+    public static Function<DownloadRequirement, DownloadTargets> substituter(Function<? super DownloadRequirement, String> basevalueProducer, Function<? super DownloadRequirement, ? extends Map<String,?>> subsProducer) {
+        // FIXME Also need default subs (entity, driver, simpletype, etc)
+        return new Substituter(basevalueProducer, subsProducer);
     }
-    
-    public static Function<EntityDriver, DownloadTargets> attributeListSubstituter(AttributeSensor<? extends Iterable<String>> attribute, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
-        return new AttributeListValueSubstituter(attribute, additionalSubs);
-    }
-    
-    public static Function<EntityDriver, DownloadTargets> attributeSubstituter(AttributeSensor<String> attribute) {
-        return attributeSubstituter(attribute, Functions.constant(ImmutableMap.<String,String>of()));
-    }
-    
-    public static Function<EntityDriver, DownloadTargets> attributeSubstituter(AttributeSensor<String> attribute, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
-        return new AttributeValueSubstituter(attribute, additionalSubs);
-    }
-    
-    private static class AttributeValueSubstituter implements Function<EntityDriver, DownloadTargets> {
-        private final AttributeSensor<String> attribute;
-        private final Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs;
+
+    protected static class Substituter implements Function<DownloadRequirement, DownloadTargets> {
+        private final Function<? super DownloadRequirement, String> basevalueProducer;
+        private final Function<? super DownloadRequirement, ? extends Map<String,?>> subsProducer;
         
-        AttributeValueSubstituter(AttributeSensor<String> attribute, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
-            this.attribute = checkNotNull(attribute, "attribute");
-            this.additionalSubs = checkNotNull(additionalSubs, "additionalSubs");
+        Substituter(Function<? super DownloadRequirement, String> baseValueProducer, Function<? super DownloadRequirement, ? extends Map<String,?>> subsProducer) {
+            this.basevalueProducer = checkNotNull(baseValueProducer, "basevalueProducer");
+            this.subsProducer = checkNotNull(subsProducer, "subsProducer");
         }
         
         @Override
-        public DownloadTargets apply(@Nullable EntityDriver input) {
-            Builder result = BasicDownloadTargets.builder();
-            String pattern = input.getEntity().getAttribute(attribute);
-            if (pattern != null) result.addPrimary(DownloadResolvers.substitute(input, pattern, additionalSubs));
-            return result.build();
+        public DownloadTargets apply(DownloadRequirement input) {
+            String basevalue = basevalueProducer.apply(input);
+            Map<String, ?> subs = subsProducer.apply(input);
+            String result = (basevalue != null) ? substitute(basevalue, subs) : null;
+            return (result != null) ? BasicDownloadTargets.builder().addPrimary(result).build() : BasicDownloadTargets.empty();
         }
         
-        @Override public boolean equals(@Nullable Object obj) {
-            if (obj instanceof AttributeValueSubstituter) {
-                AttributeValueSubstituter o = (AttributeValueSubstituter) obj;
-                return Objects.equal(attribute, o.attribute) && Objects.equal(additionalSubs, o.additionalSubs);
-            }
-            return false;
-        }
-
-        @Override public int hashCode() {
-            return Objects.hashCode(attribute, additionalSubs);
-        }
-
         @Override public String toString() {
-            return Objects.toStringHelper(this).add("attribute", attribute).add("additionalSubs", additionalSubs).toString();
-        }
-    }
-    
-    private static class AttributeListValueSubstituter implements Function<EntityDriver, DownloadTargets> {
-        private final AttributeSensor<? extends Iterable<String>> attribute;
-        private final Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs;
-        
-        AttributeListValueSubstituter(AttributeSensor<? extends Iterable<String>> attribute, Function<? super EntityDriver, ? extends Map<String,String>> additionalSubs) {
-            this.attribute = checkNotNull(attribute, "attribute");
-            this.additionalSubs = checkNotNull(additionalSubs, "additionalSubs");
-        }
-        
-        @Override
-        public DownloadTargets apply(@Nullable EntityDriver input) {
-            Iterable<String> patterns = input.getEntity().getAttribute(attribute);
-            if (patterns == null) {
-                return BasicDownloadTargets.empty();
-            } else {
-                BasicDownloadTargets.Builder result = BasicDownloadTargets.builder();
-                for (Object pattern : patterns) {
-                    result.addPrimary(DownloadResolvers.substitute(input, pattern.toString(), additionalSubs));
-                }
-                return result.build();
-            }
-        }
-        
-        @Override public boolean equals(@Nullable Object obj) {
-            if (obj instanceof AttributeValueSubstituter) {
-                AttributeValueSubstituter o = (AttributeValueSubstituter) obj;
-                return Objects.equal(attribute, o.attribute) && Objects.equal(additionalSubs, o.additionalSubs);
-            }
-            return false;
-        }
-
-        @Override public int hashCode() {
-            return Objects.hashCode(attribute, additionalSubs);
-        }
-
-        @Override public String toString() {
-            return Objects.toStringHelper(this).add("attribute", attribute).add("additionalSubs", additionalSubs).toString();
+            return Objects.toStringHelper(this).add("basevalue", basevalueProducer).add("subs", subsProducer).toString();
         }
     }
 }

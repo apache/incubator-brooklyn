@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.drivers.DownloadsRegistry;
+import brooklyn.entity.drivers.DownloadResolverRegistry;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableList;
@@ -182,7 +182,7 @@ public class CommonCommands {
 
     /** 
      * @see downloadUrlAs(Map, String, String, String)
-     * @deprecated Use {@link downloadUrlAs(List<String>, String)}, and rely on {@link DownloadsRegistry} to include the local-repo
+     * @deprecated Use {@link downloadUrlAs(List<String>, String)}, and rely on {@link DownloadResolverRegistry} to include the local-repo
      */
     public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
         return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
@@ -199,7 +199,7 @@ public class CommonCommands {
      * <p/>
      * Ideally use a blobstore staging area.
      * 
-     * @deprecated Use {@link downloadUrlAs(List, String)}, and rely on {@link DownloadsRegistry} to include the local-repo
+     * @deprecated Use {@link downloadUrlAs(List, String)}, and rely on {@link DownloadResolverRegistry} to include the local-repo
      */
     @Deprecated
     public static List<String> downloadUrlAs(Map flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {

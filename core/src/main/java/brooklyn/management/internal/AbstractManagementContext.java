@@ -26,7 +26,7 @@ import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicDownloadsRegistry;
 import brooklyn.entity.drivers.BasicEntityDriverFactory;
-import brooklyn.entity.drivers.DownloadsRegistry;
+import brooklyn.entity.drivers.DownloadResolverRegistry;
 import brooklyn.entity.drivers.EntityDriverFactory;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
@@ -72,7 +72,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     private final EntityDriverFactory entityDriverFactory;
     
-    private final DownloadsRegistry downloadsRegistry;
+    private final DownloadResolverRegistry downloadsRegistry;
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
@@ -135,7 +135,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     }
 
     @Override
-    public DownloadsRegistry getEntityDownloadsRegistry() {
+    public DownloadResolverRegistry getEntityDownloadsRegistry() {
         return downloadsRegistry;
     }
     

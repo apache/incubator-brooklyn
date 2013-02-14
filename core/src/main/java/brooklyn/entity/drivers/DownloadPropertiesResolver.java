@@ -11,12 +11,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
-import brooklyn.util.MutableMap;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -28,15 +27,24 @@ import com.google.common.collect.Maps;
  * Global properties can be specified that apply to all entities. Entity-specific properties
  * can also be specified (which override the global properties for that entity type).
  * 
- * Below is an example of global properties that can be specified. The semicolon-separated list
- * of URLs will be tried in-order until one succeeds. The fallback url says to use that if all
- * other URLs fail (or no others are specified). The "substitutions" are available when processing 
- * the URL (see the "template" description below). 
+ * Below is an example of realistic configuration for an enterprise who have an in-house 
+ * repository that must be used for everything, rather than going out to the public internet. 
  * <pre>
  * {@code
- * brooklyn.downloads.all.url=http://myurl1; http://myurl2
- * brooklyn.downloads.all.fallbackurl=http://myurl3
- * brooklyn.downloads.all.substitutions.mykey1=myval1
+ * // FIXME Check format for including addonname- only if addonname is non-null?
+ * // FIXME Use this in a testng test case
+ * brooklyn.downloads.all.url=http://downloads.acme.com/brookyn/repository/${simpletype}/${simpletype}-${addon?? addon-}${version}.${fileSuffix!.tar.gz}
+ * }
+ * </pre>
+ * 
+ * To illustrate the features and variations one can use, below is an example of global 
+ * properties that can be specified. The semicolon-separated list of URLs will be tried  in-order
+ * until one succeeds. The fallback url says to use that if all other URLs fail (or no others are
+ * specified). 
+ * <pre>
+ * {@code
+ * brooklyn.downloads.all.url=http://myurl1/${simpletype}-${version}.tar.gz; http://myurl2/${simpletype}-${version}.tar.gz
+ * brooklyn.downloads.all.fallbackurl=http://myurl3/${simpletype}-${version}.tar.gz
  * }
  * </pre>
  * 
@@ -44,36 +52,44 @@ import com.google.common.collect.Maps;
  * to this entity type, unless explicitly overridden.
  * <pre>
  * {@code
- * brooklyn.downloads.entity.TomcatServer.url=http://mytomcaturl1
- * brooklyn.downloads.entity.TomcatServer.fallbackurl=http://myurl3
- * brooklyn.downloads.entity.TomcatServer.substitutions.mykey2=myval2
+ * brooklyn.downloads.entity.tomcatserver.url=http://mytomcaturl1/tomcat-${version}.tar.gz
+ * brooklyn.downloads.entity.tomcatserver.fallbackurl=http://myurl2/tomcat-${version}.tar.gz
+ * }
+ * </pre>
+ * 
+ * Downloads for entity-specific add-ons can also be defined. All "global properties" will also apply
+ * to this entity type, unless explicitly overridden.
+ * <pre>
+ * {@code
+ * brooklyn.downloads.entity.nginxcontroller.addon.stickymodule.url=http://myurl1/nginx-stickymodule-${version}.tar.gz
+ * brooklyn.downloads.entity.nginxcontroller.addon.stickymodule.fallbackurl=http://myurl2/nginx-stickymodule-${version}.tar.gz
  * }
  * </pre>
  * 
  * If no explicit URLs are supplied, then by default it will use the DOWNLOAD_URL attribute
  * of the entity  (if supplied), followed by the fallbackurl if that fails. 
  * 
- * A URL can be a "template", where things of the form ${mykey1} will be substituted for the value
- * of mykey1 provided for that entity. The freemarker template engine is used to convert URLs 
+ * A URL can be a "template", where things of the form ${version} will be substituted for the value
+ * of "version" provided for that entity. The freemarker template engine is used to convert URLs 
  * (see {@link http://freemarker.org}). For example, one could use the URL:
  * <pre>
  * {@code
- * http://repo.acme.com/${simpletype}-${version}.${driver.downloadSuffix!tar.gz}
+ * http://repo.acme.com/${simpletype}-${version}.${fileSuffix!tar.gz}
  * }
  * </pre>
- * As well as additional substitutions defined in the properties, the following are available 
- * automatically for a template:
+ * The following substitutions are available automatically for a template:
  * <ul>
  *   <li>entity: the {@link Entity} instance
  *   <li>driver: the {@link EntityDriver} instance being used for the Entity
  *   <li>simpletype: the unqualified name of the entity type
  *   <li>type: the fully qualified name of the entity type
- *   <li>version: the version number of the entity to be installed
+ *   <li>addon: the name of the entity add-on, or null if it's the core entity artifact
+ *   <li>version: the version number of the entity to be installed (or of the add-on)
  * </ul>
  */
-public class DownloadPropertiesResolver implements Function<EntityDriver, DownloadTargets> {
+public class DownloadPropertiesResolver implements Function<DownloadRequirement, DownloadTargets> {
     
-    /* TODO: expose config for canContinueResolving.
+    /* FIXME: expose config for canContinueResolving.
      * ... then it uses only the overrides in the properties file. This, in combination with
      * setting something like {@code brooklyn.downloads.all.url=http://acme.com/repo/${simpletype}/${simpletype}-${version}.tar.gz},
      * allows an enterprise to ensure that entities never go to the public internet during installation.
@@ -92,12 +108,12 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, Downlo
         this.config = config;
     }
     
-    public DownloadTargets apply(EntityDriver driver) {
+    public DownloadTargets apply(DownloadRequirement downloadRequirement) {
         List<Rule> rules = generateRules();
         BasicDownloadTargets.Builder result = BasicDownloadTargets.builder();
         for (Rule rule : rules) {
-            if (rule.matches(driver)) {
-                result.addAll(rule.resolve(driver));
+            if (rule.matches(downloadRequirement.getEntityDriver(), downloadRequirement.getAddonName())) {
+                result.addAll(rule.resolve(downloadRequirement));
             }
         }
         
@@ -115,16 +131,13 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, Downlo
         // If exists, use things like:
         //   brooklyn.downloads.all.fallbackurl=...
         //   brooklyn.downloads.all.url=...
-        //   brooklyn.downloads.all.substitutions.foo=...
         // But only if not overridden by more entity-specify value
         Map<String, String> forall = filterAndStripPrefix(subconfig, "all.");
         String fallbackUrlForAll = forall.get("fallbackurl");
         String urlForAll = forall.get("url");
-        Map<String,String> substitutionsForAll = filterAndStripPrefix(forall, "substitutions.");
         
         // If exists, use things like:
         //   brooklyn.downloads.entity.JBoss7Server.url=...
-        //   brooklyn.downloads.JBoss7Server.substitutions.foo=...
         Map<String, String> forSpecificEntities = filterAndStripPrefix(subconfig, "entity.");
         Map<String, Map<String,String>> splitBySpecificEntity = splitByPrefix(forSpecificEntities);
         for (Map.Entry<String, Map<String,String>> entry : splitBySpecificEntity.entrySet()) {
@@ -134,16 +147,27 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, Downlo
             if (urlForEntity == null) urlForEntity = urlForAll;
             String fallbackUrlForEntity = forentity.get("fallbackurl");
             if (fallbackUrlForEntity == null) fallbackUrlForEntity = fallbackUrlForAll;
-            Map<String,String> substitutionsForEntity = MutableMap.<String, String>builder()
-                    .putAll(substitutionsForAll)
-                    .putAll(filterAndStripPrefix(forentity, "substitutions."))
-                    .build();
             
-            result.add(new EntitySpecificRule(entityType, urlForEntity, fallbackUrlForEntity, substitutionsForEntity));
+            result.add(new EntitySpecificRule(entityType, urlForEntity, fallbackUrlForEntity));
+            
+            // If exists, use things like:
+            //   brooklyn.downloads.entity.nginxcontroller.addon.stickymodule.url=...
+            Map<String, String> forSpecificAddons = filterAndStripPrefix(forentity, "addon.");
+            Map<String, Map<String,String>> splitBySpecificAddon = splitByPrefix(forSpecificAddons);
+            for (Map.Entry<String, Map<String,String>> entry2 : splitBySpecificAddon.entrySet()) {
+                String addonName = entry2.getKey();
+                Map<String, String> foraddon = entry2.getValue();
+                String urlForAddon = foraddon.get("url");
+                if (urlForAddon == null) urlForAddon = urlForEntity;
+                String fallbackUrlForAddon = foraddon.get("fallbackurl");
+                if (fallbackUrlForEntity == null) fallbackUrlForAddon = fallbackUrlForEntity;
+                
+                result.add(new EntityAddonSpecificRule(entityType, addonName, urlForAddon, fallbackUrlForAddon));
+            }
         }
 
         if (!forall.isEmpty()) {
-            result.add(new UniversalRule(urlForAll, fallbackUrlForAll, substitutionsForAll));
+            result.add(new UniversalRule(urlForAll, fallbackUrlForAll));
         }
         
         return result;
@@ -205,17 +229,17 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, Downlo
     private static abstract class Rule {
         private final String url;
         private final String fallbackUrl;
-        private final Map<String,String> additionalSubs;
         
-        Rule(String url, String fallbackUrl, Map<String,String> additionalSubs) {
+        Rule(String url, String fallbackUrl) {
             this.url = url;
             this.fallbackUrl = fallbackUrl;
-            this.additionalSubs = checkNotNull(additionalSubs, "additionalSubs");
         }
         
-        abstract boolean matches(EntityDriver driver);
+        abstract boolean matches(EntityDriver driver, String addon);
         
-        DownloadTargets resolve(EntityDriver driver) {
+        DownloadTargets resolve(DownloadRequirement req) {
+            EntityDriver driver = req.getEntityDriver();
+            
             List<String> primaries = Lists.newArrayList();
             List<String> fallbacks = Lists.newArrayList();
             if (Strings.isEmpty(url)) {
@@ -236,10 +260,10 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, Downlo
 
             BasicDownloadTargets.Builder result = BasicDownloadTargets.builder();
             for (String baseurl : primaries) {
-                result.addPrimary(DownloadResolvers.substitute(driver, baseurl, Functions.constant(additionalSubs)));
+                result.addPrimary(DownloadResolvers.substitute(req, baseurl));
             }
             for (String baseurl : fallbacks) {
-                result.addFallback(DownloadResolvers.substitute(driver, baseurl, Functions.constant(additionalSubs)));
+                result.addFallback(DownloadResolvers.substitute(req, baseurl));
             }
             return result.build();
         }
@@ -250,11 +274,12 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, Downlo
      * did not exist or failed to find a match.
      */
     private static class UniversalRule extends Rule {
-        UniversalRule(String url, String fallbackUrl, Map<String,String> additionalSubs) {
-            super(url, fallbackUrl, additionalSubs);
+        UniversalRule(String url, String fallbackUrl) {
+            super(url, fallbackUrl);
         }
         
-        boolean matches(EntityDriver driver) {
+        @Override
+        boolean matches(EntityDriver driver, String addon) {
             return true;
         }
     }
@@ -265,15 +290,37 @@ public class DownloadPropertiesResolver implements Function<EntityDriver, Downlo
     private static class EntitySpecificRule extends Rule {
         private final String entityType;
 
-        EntitySpecificRule(String entityType, String url, String fallbackUrl, Map<String,String> additionalSubs) {
-            super(url, fallbackUrl, additionalSubs);
+        EntitySpecificRule(String entityType, String url, String fallbackUrl) {
+            super(url, fallbackUrl);
             this.entityType = checkNotNull(entityType, "entityType");
         }
         
-        boolean matches(EntityDriver driver) {
+        @Override
+        boolean matches(EntityDriver driver, String addon) {
             String actualType = driver.getEntity().getEntityType().getName();
             String actualSimpleType = actualType.substring(actualType.lastIndexOf(".")+1);
-            return entityType.equalsIgnoreCase(actualSimpleType);
+            return addon == null && entityType.equalsIgnoreCase(actualSimpleType);
+        }
+    }
+    
+    /**
+     * Rule for generating URLs that applies to only the entity of the given type.
+     */
+    private static class EntityAddonSpecificRule extends Rule {
+        private final String entityType;
+        private final String addonName;
+
+        EntityAddonSpecificRule(String entityType, String addonName, String url, String fallbackUrl) {
+            super(url, fallbackUrl);
+            this.entityType = checkNotNull(entityType, "entityType");
+            this.addonName = checkNotNull(addonName, "addonName");
+        }
+        
+        @Override
+        boolean matches(EntityDriver driver, String addon) {
+            String actualType = driver.getEntity().getEntityType().getName();
+            String actualSimpleType = actualType.substring(actualType.lastIndexOf(".")+1);
+            return addonName.equals(addon) && entityType.equalsIgnoreCase(actualSimpleType);
         }
     }
 }
