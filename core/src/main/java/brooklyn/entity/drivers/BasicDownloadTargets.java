@@ -13,8 +13,10 @@ import com.google.common.collect.Lists;
 
 public class BasicDownloadTargets implements DownloadTargets {
 
+    private static final DownloadTargets EMPTY = builder().build();
+    
     public static DownloadTargets empty() {
-        return builder().build();
+        return EMPTY;
     }
     
     public static Builder builder() {

@@ -1,7 +1,6 @@
 package brooklyn.entity.drivers;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
 
 import java.util.List;
 
@@ -18,6 +17,7 @@ import brooklyn.entity.drivers.DownloadsRegistry.DownloadTargets;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -25,24 +25,26 @@ import com.google.common.collect.ImmutableList;
 
 public class DownloadPropertiesResolverTest {
 
-    // FIXME Needs to work with TestEntity instead of TestEntityImpl
-    
+    private BrooklynProperties brooklynProperties;
+    private LocalManagementContext managementContext;
     private Location loc;
     private TestApplication app;
     private TestEntity entity;
     private MyEntityDriver driver;
-    private BrooklynProperties config;
-    DownloadPropertiesResolver resolver;
+    private DownloadPropertiesResolver resolver;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        brooklynProperties = BrooklynProperties.Factory.newEmpty();
+        brooklynProperties.put(DownloadLocalRepoResolver.LOCAL_REPO_ENABLED_PROPERTY, "false");
+        managementContext = new LocalManagementContext(brooklynProperties);
+        
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         driver = new MyEntityDriver(entity, loc);
         
-        config = BrooklynProperties.Factory.newEmpty();
-        resolver = new DownloadPropertiesResolver(config);
+        resolver = new DownloadPropertiesResolver(brooklynProperties);
     }
     
     @AfterMethod(alwaysRun=true)
@@ -57,63 +59,63 @@ public class DownloadPropertiesResolverTest {
     
     @Test
     public void testReturnsGlobalUrl() throws Exception {
-        config.put("brooklyn.downloads.all.url", "myurl");
+        brooklynProperties.put("brooklyn.downloads.all.url", "myurl");
         assertResolves("myurl");
     }
     
     @Test
     public void testReturnsGlobalUrlsSplitOnSemicolon() throws Exception {
-        config.put("brooklyn.downloads.all.url", "myurl; myurl2");
+        brooklynProperties.put("brooklyn.downloads.all.url", "myurl; myurl2");
         assertResolves("myurl", "myurl2");
     }
     
     @Test
     public void testReturnsGlobalFallbackUrl() throws Exception {
-        config.put("brooklyn.downloads.all.fallbackurl", "myurl");
+        brooklynProperties.put("brooklyn.downloads.all.fallbackurl", "myurl");
         assertResolves(ImmutableList.<String>of(), ImmutableList.of("myurl"));
     }
 
     @Test
     public void testSubstitutionsAppliedToFallbackUrl() throws Exception {
-        config.put("brooklyn.downloads.all.fallbackurl", "foo=${foo},version=${version}");
-        config.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
+        brooklynProperties.put("brooklyn.downloads.all.fallbackurl", "foo=${foo},version=${version}");
+        brooklynProperties.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves(ImmutableList.<String>of(), ImmutableList.of("foo=myfoo,version=myversion"));
     }
 
     @Test
     public void testReturnsGlobalFallbackUrlAsLast() throws Exception {
-        config.put("brooklyn.downloads.all.url", "myurl");
-        config.put("brooklyn.downloads.all.fallbackurl", "myurl2");
+        brooklynProperties.put("brooklyn.downloads.all.url", "myurl");
+        brooklynProperties.put("brooklyn.downloads.all.fallbackurl", "myurl2");
         assertResolves(ImmutableList.of("myurl"), ImmutableList.of("myurl2"));
     }
     
     @Test
     public void testReturnsGlobalUrlWithEntitySubstituions() throws Exception {
-        config.put("brooklyn.downloads.all.url", "version=${version}");
+        brooklynProperties.put("brooklyn.downloads.all.url", "version=${version}");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves("version=myversion");
     }
     
     @Test
     public void testGlobalSubstitutionsAppliedToGlobalUrl() throws Exception {
-        config.put("brooklyn.downloads.all.url", "foo=${foo},version=${version}");
-        config.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
+        brooklynProperties.put("brooklyn.downloads.all.url", "foo=${foo},version=${version}");
+        brooklynProperties.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves("foo=myfoo,version=myversion");
     }
     
     @Test
     public void testGlobalSubstitutionsOverrideDefaults() throws Exception {
-        config.put("brooklyn.downloads.all.url", "version=${version}");
-        config.put("brooklyn.downloads.all.substitutions.version", "myoverriddenversion");
+        brooklynProperties.put("brooklyn.downloads.all.url", "version=${version}");
+        brooklynProperties.put("brooklyn.downloads.all.substitutions.version", "myoverriddenversion");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves("version=myoverriddenversion");
     }
     
     @Test
     public void testGlobalSubstitutionsAppliedToDefaultUrl() throws Exception {
-        config.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
+        brooklynProperties.put("brooklyn.downloads.all.substitutions.foo", "myfoo");
         entity.setAttribute(Attributes.DOWNLOAD_URL, "foo=${foo},version=${version}");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves("foo=myfoo,version=myversion");
@@ -121,16 +123,16 @@ public class DownloadPropertiesResolverTest {
     
     @Test
     public void testEntitySpecificUrlOverridesGlobalUrl() throws Exception {
-        config.put("brooklyn.downloads.all.url", "version=${version}");
-        config.put("brooklyn.downloads.entity.TestEntityImpl.url", "overridden,version=${version}");
+        brooklynProperties.put("brooklyn.downloads.all.url", "version=${version}");
+        brooklynProperties.put("brooklyn.downloads.entity.TestEntity.url", "overridden,version=${version}");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves("overridden,version=myversion", "version=myversion");
     }
     
     @Test
     public void testEntitySpecificSubstitutionsOverridesDefaults() throws Exception {
-        config.put("brooklyn.downloads.entity.TestEntityImpl.url", "version=${version}");
-        config.put("brooklyn.downloads.entity.TestEntityImpl.substitutions.version", "myoverriddenversion");
+        brooklynProperties.put("brooklyn.downloads.entity.TestEntity.url", "version=${version}");
+        brooklynProperties.put("brooklyn.downloads.entity.TestEntity.substitutions.version", "myoverriddenversion");
         entity.setConfig(ConfigKeys.SUGGESTED_VERSION, "myversion");
         assertResolves("version=myoverriddenversion");
     }

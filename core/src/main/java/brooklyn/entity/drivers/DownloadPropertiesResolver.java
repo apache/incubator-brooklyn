@@ -73,17 +73,12 @@ import com.google.common.collect.Maps;
  */
 public class DownloadPropertiesResolver implements Function<EntityDriver, DownloadTargets> {
     
-    /* TODO: I thought about adding the following (but it's currently not true):
-     * If an empty URL is supplied (e.g. {@code brooklyn.downloads.all.url=}) then it disables use 
-     * of the entity's DOWNLOAD_URL attribute, going straight to the fallbackurl or entity-specific
-     * overrides. For example, an enterprise may use this to ensure that entities never go to the
-     * public internet during installation.
+    /* TODO: expose config for canContinueResolving.
+     * ... then it uses only the overrides in the properties file. This, in combination with
+     * setting something like {@code brooklyn.downloads.all.url=http://acme.com/repo/${simpletype}/${simpletype}-${version}.tar.gz},
+     * allows an enterprise to ensure that entities never go to the public internet during installation.
      * 
-     * The problem is that the DownloadPropertiesResolver will return an empty list of URLs if all.url 
-     * is empty, so it will automatically go on to the next resolver. We could instead encourage use of
-     * something like:
-     *   brooklyn.downloads.all.url=DISABLED
-     * so that everything failed, trying to download a resource at the url"DISABLED"
+     * But also need to override things like nginx downlaod url for the stick module and pcre.
      */
 
     @SuppressWarnings("unused")

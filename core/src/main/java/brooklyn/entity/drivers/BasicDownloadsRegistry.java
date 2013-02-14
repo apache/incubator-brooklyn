@@ -28,6 +28,7 @@ public class BasicDownloadsRegistry implements DownloadsRegistry {
      */
     public static BasicDownloadsRegistry newDefault(StringConfigMap config) {
         BasicDownloadsRegistry result = new BasicDownloadsRegistry();
+        result.registerResolver(new DownloadLocalRepoResolver(config));
         result.registerResolver(new DownloadPropertiesResolver(config));
         result.registerResolver(DownloadResolvers.attributeSubstituter(Attributes.DOWNLOAD_URL));
         return result;

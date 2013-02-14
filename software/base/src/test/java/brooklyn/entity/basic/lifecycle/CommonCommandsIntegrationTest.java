@@ -3,6 +3,7 @@ package brooklyn.entity.basic.lifecycle;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
+import static java.lang.String.format;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -14,6 +15,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -31,6 +33,12 @@ public class CommonCommandsIntegrationTest {
     private String sourceFileUrl2;
     private SshMachineLocation loc;
 
+    private String localRepoFilename = "localrepofile.txt";
+    private File localRepoBasePath;
+    private File localRepoEntityBasePath;
+    private String localRepoEntityVersionPath;
+    private File localRepoEntityFile;
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         destFile = java.io.File.createTempFile("commoncommands-test-dest", "txt");
@@ -40,11 +48,18 @@ public class CommonCommandsIntegrationTest {
         
         sourceFile1 = java.io.File.createTempFile("commoncommands-test", "txt");
         sourceFileUrl1 = sourceFile1.toURI().toString();
-        Files.write("abc".getBytes(), sourceFile1);
+        Files.write("mysource1".getBytes(), sourceFile1);
         
         sourceFile2 = java.io.File.createTempFile("commoncommands-test2", "txt");
         sourceFileUrl2 = sourceFile2.toURI().toString();
-        Files.write("def".getBytes(), sourceFile2);
+        Files.write("mysource2".getBytes(), sourceFile2);
+
+        localRepoEntityVersionPath = "commondcommands-test-dest-"+Identifiers.makeRandomId(8);
+        localRepoBasePath = new File(format("%s/.brooklyn/repository", System.getProperty("user.home")));
+        localRepoEntityBasePath = new File(localRepoBasePath, localRepoEntityVersionPath);
+        localRepoEntityFile = new File(localRepoEntityBasePath, localRepoFilename);
+        localRepoEntityBasePath.mkdirs();
+        Files.write("mylocal1".getBytes(), localRepoEntityFile);
         
         loc = new LocalhostMachineProvisioningLocation().obtain();
     }
@@ -54,6 +69,8 @@ public class CommonCommandsIntegrationTest {
         if (sourceFile1 != null) sourceFile1.delete();
         if (sourceFile2 != null) sourceFile2.delete();
         if (destFile != null) destFile.delete();
+        if (localRepoEntityFile != null) localRepoEntityFile.delete();
+        if (localRepoEntityBasePath != null) localRepoBasePath.delete();
         if (loc != null) loc.close();
     }
     
@@ -71,74 +88,97 @@ public class CommonCommandsIntegrationTest {
     }
     
     public void testDownloadUrl() throws Exception {
-        String cmd = CommonCommands.downloadUrlAs(
+        List<String> cmds = CommonCommands.downloadUrlAs(
                 ImmutableList.of(sourceFileUrl1), 
                 destFile.getAbsolutePath());
-        int exitcode = loc.execCommands("test", ImmutableList.of(cmd));
+        int exitcode = loc.execCommands("test", cmds);
         
         assertEquals(0, exitcode);
-        assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of("abc"));
+        assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of("mysource1"));
     }
     
     @Test(groups="Integration")
     public void testDownloadFirstSuccessfulFile() throws Exception {
-        String cmd = CommonCommands.downloadUrlAs(
+        List<String> cmds = CommonCommands.downloadUrlAs(
                 ImmutableList.of(sourceNonExistantFileUrl, sourceFileUrl1, sourceFileUrl2), 
                 destFile.getAbsolutePath());
-        int exitcode = loc.execCommands("test", ImmutableList.of(cmd));
-        
-        assertEquals(0, exitcode);
-        assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of("abc"));
-    }
-    
-    @Test(groups="Integration")
-    public void testDownloadUrlUsesLocalRepo() throws Exception {
-        List<String> cmds = CommonCommands.downloadUrlAs(
-                ImmutableMap.of(),
-                sourceFile1.getAbsolutePath(),
-                ImmutableList.of(sourceFileUrl2), 
-                destFile.getAbsolutePath());
         int exitcode = loc.execCommands("test", cmds);
         
         assertEquals(0, exitcode);
-        assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of("abc"));
+        assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of("mysource1"));
     }
     
     @Test(groups="Integration")
-    public void testDownloadUrlSkipsLocalRepo() throws Exception {
-        List<String> cmds = CommonCommands.downloadUrlAs(
-                ImmutableMap.of("skipLocalRepo", true),
-                sourceFile1.getAbsolutePath(),
-                ImmutableList.of(sourceFileUrl2), 
-                destFile.getAbsolutePath());
-        int exitcode = loc.execCommands("test", cmds);
-        
-        assertEquals(0, exitcode);
-        assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of("def"));
+    public void testDownloadEntityUrlUsesLocalRepo() throws Exception {
+        File destEntityFile = new File(destFile.getParentFile(), localRepoFilename);
+        try {
+            List<String> cmds = ImmutableList.<String>builder()
+                    .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
+                    .addAll(CommonCommands.downloadUrlAs(
+                            ImmutableMap.of(),
+                            sourceFileUrl1, 
+                            localRepoEntityVersionPath,
+                            localRepoFilename))
+                    .build();
+            int exitcode = loc.execCommands("test", cmds);
+            
+            assertEquals(0, exitcode);
+            assertEquals(Files.readLines(destEntityFile, Charsets.UTF_8), ImmutableList.of("mylocal1"));
+        } finally {
+            destEntityFile.delete();
+        }
+    }
+    
+    @Test(groups="Integration")
+    public void testDownloadEntityUrlSkipsLocalRepo() throws Exception {
+        File destEntityFile = new File(destFile.getParentFile(), localRepoFilename);
+        try {
+            List<String> cmds = ImmutableList.<String>builder()
+                    .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
+                    .addAll(CommonCommands.downloadUrlAs(
+                            ImmutableMap.of("skipLocalRepo", true),
+                            sourceFileUrl1, 
+                            localRepoEntityVersionPath,
+                            localRepoFilename))
+                    .build();
+            int exitcode = loc.execCommands("test", cmds);
+            
+            assertEquals(0, exitcode);
+            assertEquals(Files.readLines(destEntityFile, Charsets.UTF_8), ImmutableList.of("mysource1"));
+        } finally {
+            destEntityFile.delete();
+        }
     }
     
     @Test(groups="Integration")
     public void testDownloadEntityUrl() throws Exception {
-        List<String> cmds = ImmutableList.<String>builder()
-                .add("cd "+destFile.getParentFile().getAbsolutePath())
-                .addAll(CommonCommands.downloadEntityUrlAs(
-                        ImmutableList.of(sourceFileUrl1), 
-                        sourceNonExistantFile.getParentFile().getAbsolutePath(),
-                        destFile.getName()))
-                .build();
-        int exitcode = loc.execCommands("test", cmds);
-        
-        assertEquals(0, exitcode);
-        assertEquals(Files.readLines(destFile, Charsets.UTF_8), ImmutableList.of("abc"));
+        File destEntityFile = new File(destFile.getParentFile(), localRepoFilename);
+        try {
+            List<String> cmds = ImmutableList.<String>builder()
+                    .add("cd "+destEntityFile.getParentFile().getAbsolutePath())
+                    .addAll(CommonCommands.downloadUrlAs(
+                            ImmutableMap.of(),
+                            sourceFileUrl1, 
+                            "localnotthere",
+                            localRepoFilename))
+                    .build();
+            int exitcode = loc.execCommands("test", cmds);
+            
+            assertEquals(0, exitcode);
+            assertEquals(Files.readLines(destEntityFile, Charsets.UTF_8), ImmutableList.of("mysource1"));
+        } finally {
+            destEntityFile.delete();
+        }
     }
     
     @Test(groups="Integration")
     public void testDownloadEntityUrlWhenNoneSupplied() throws Exception {
         List<String> cmds = ImmutableList.<String>builder()
                 .add("cd "+destFile.getParentFile().getAbsolutePath())
-                .addAll(CommonCommands.downloadEntityUrlAs(
-                        ImmutableList.of(sourceNonExistantFileUrl), 
-                        sourceNonExistantFile.getParentFile().getAbsolutePath(),
+                .addAll(CommonCommands.downloadUrlAs(
+                        ImmutableMap.of(),
+                        "localnotthere",
+                        sourceNonExistantFileUrl,
                         destFile.getName()))
                 .build();
         int exitcode = loc.execCommands("test", cmds);
