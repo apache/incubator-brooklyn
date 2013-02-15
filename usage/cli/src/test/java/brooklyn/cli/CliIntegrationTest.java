@@ -71,13 +71,14 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected for the help command
-                assertTrue(consoleOutput.contains("usage: brooklyn"), "Usage info not present");
-                assertTrue(consoleOutput.contains("The most commonly used brooklyn commands are:"), "List of common commands not present");
+                assertTrue(consoleOutput.contains("usage: brooklyn"), "Usage info not present; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("The most commonly used brooklyn commands are:"), "List of common commands not present; output=" + consoleOutput);
                 assertTrue(consoleOutput.contains("help     Display help for available commands")
                         && consoleOutput.contains("info     Display information about brooklyn")
-                        && consoleOutput.contains("launch   Starts a brooklyn application"), "List of common commands present");
-                assertTrue(consoleOutput.contains("See 'brooklyn help <command>' for more information on a specific command."), "Implemented commands not listed");
-                assertTrue(consoleError.isEmpty());
+                        && consoleOutput.contains("launch   Starts a brooklyn application"), "List of common commands present; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("See 'brooklyn help <command>' for more information on a specific command."),
+                        "Implemented commands not listed; output=" + consoleOutput);
+                assertTrue(consoleError.isEmpty(), "Output present; error=" + consoleError);
 
                 return null;
             }
@@ -118,11 +119,11 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected for the launch command
-                assertTrue(consoleOutput.contains("Launching Brooklyn web console management"), "Launch message not output");
-                assertFalse(consoleOutput.contains("Initiating Jersey application"), "Web console started");
-                assertTrue(consoleOutput.contains("Started application ExampleApp"), "ExampleApp not started");
-                assertTrue(consoleOutput.contains("Server started. Press return to stop."), "Server started message not output");
-                assertTrue(consoleError.isEmpty());
+                assertTrue(consoleOutput.contains("Launching Brooklyn web console management"), "Launch message not output; output=" + consoleOutput);
+                assertFalse(consoleOutput.contains("Initiating Jersey application"), "Web console started; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("Started application ExampleApp"), "ExampleApp not started; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("Server started. Press return to stop."), "Server started message not output; output=" + consoleOutput);
+                assertTrue(consoleError.isEmpty(), "Output present; error=" + consoleError);
 
                 return null;
             }
@@ -169,12 +170,12 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected
-                assertTrue(consoleError.contains("Parse error: Required values for option 'application class or file' not provided"), "Parse error not reported");
+                assertTrue(consoleError.contains("Parse error: Required values for option 'application class or file' not provided"), "Parse error not reported; error=" + consoleError);
                 assertTrue(consoleError.contains("NAME")
                         && consoleError.contains("SYNOPSIS")
                         && consoleError.contains("OPTIONS")
-                        && consoleError.contains("COMMANDS"), "Usage info not printed");
-                assertTrue(consoleOutput.isEmpty());
+                        && consoleError.contains("COMMANDS"), "Usage info not printed; error=" + consoleError);
+                assertTrue(consoleOutput.isEmpty(), "Output present; output=" + consoleOutput);
 
                 return null;
             }
@@ -215,12 +216,12 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected
-                assertTrue(consoleError.contains("Parse error: No command specified"), "Parse error not reported");
+                assertTrue(consoleError.contains("Parse error: No command specified"), "Parse error not reported; error=" + consoleError);
                 assertTrue(consoleError.contains("NAME")
                         && consoleError.contains("SYNOPSIS")
                         && consoleError.contains("OPTIONS")
-                        && consoleError.contains("COMMANDS"), "Usage info not printed");
-                assertTrue(consoleOutput.isEmpty());
+                        && consoleError.contains("COMMANDS"), "Usage info not printed; error=" + consoleError);
+                assertTrue(consoleOutput.isEmpty(), "Output present; output=" + consoleOutput);
 
                 return null;
             }
@@ -261,8 +262,8 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected
-                assertTrue(consoleOutput.contains("ERROR Execution error: brooklyn.util.ResourceUtils.getResourceFromUrl"), "Execution error not logged");
-                assertTrue(consoleError.contains("Execution error: Error getting resource for LaunchCommand"), "Execution error not reported");
+                assertTrue(consoleOutput.contains("ERROR Execution error: brooklyn.util.ResourceUtils.getResourceFromUrl"), "Execution error not logged; output=" + consoleOutput);
+                assertTrue(consoleError.contains("Execution error: Error getting resource for LaunchCommand"), "Execution error not reported; error=" + consoleError);
 
                 return null;
             }
