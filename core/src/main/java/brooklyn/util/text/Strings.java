@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Cloudsoft Corporation Ltd. All rights reserved.
- * Supplied under license http://www.cloudsoftcorp.com/license/montereyDeveloperEdition
- * or such subsequent license agreed between Cloudsoft Corporation Ltd and the licensee.
+ * Copyright (c) 2009-2013 Cloudsoft Corporation Ltd.
  */
 package brooklyn.util.text;
 
@@ -9,7 +7,13 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import brooklyn.util.Time;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 
 public class Strings {
 
@@ -18,15 +22,56 @@ public class Strings {
      * Useful for pre-String.isEmpty.  And useful for StringBuilder etc.
      *
      * @param s the String to check
-     * @return  true if empty or null, false otherwise.
+     * @return true if empty or null, false otherwise.
+     *
+     * @see #isNonEmpty(CharSequence)
+     * @see #isBlank(CharSequence)
+     * @see #isNonBlank(CharSequence)
      */
     public static boolean isEmpty(CharSequence s) {
         return s == null || s.length()==0;
     }
 
-    /** ! {@link #isEmpty(CharSequence)} */
+    /**
+     * Checks if the given string is empty or only consists of whitespace.
+     *
+     * @param s the String to check
+     * @return true if blank, empty or null, false otherwise.
+     *
+     * @see #isEmpty(CharSequence)
+     * @see #isNonEmpty(CharSequence)
+     * @see #isNonBlank(CharSequence)
+     */
+    public static boolean isBlank(CharSequence s) {
+        return isEmpty(s) || CharMatcher.WHITESPACE.matchesAllOf(s);
+    }
+
+    /**
+     * The inverse of {@link #isEmpty(CharSequence)}.
+     *
+     * @param s the String to check
+     * @return true if non empty, false otherwise.
+     *
+     * @see #isEmpty(CharSequence)
+     * @see #isBlank(CharSequence)
+     * @see #isNonBlank(CharSequence)
+     */
     public static boolean isNonEmpty(CharSequence s) {
         return !isEmpty(s);
+    }
+
+    /**
+     * The inverse of {@link #isBlank(CharSequence)}.
+     *
+     * @param s the String to check
+     * @return true if non blank, false otherwise.
+     *
+     * @see #isEmpty(CharSequence)
+     * @see #isNonEmpty(CharSequence)
+     * @see #isBlank(CharSequence)
+     */
+    public static boolean isNonBlank(CharSequence s) {
+        return !isBlank(s);
     }
 
     /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */
@@ -93,8 +138,8 @@ public class Strings {
         return string;
     }
 
-	/** given a list containing e.g. "a", "b", with separator "," produces "a,b" */
-	public static String join(Iterable<? extends Object> list, String seperator) {
+	/** @deprecated use {@link com.google.common.base.Joiner} */
+	@Deprecated public static String join(Iterable<? extends Object> list, String seperator) {
 		boolean app = false;
 		StringBuilder out = new StringBuilder();
 		for (Object s: list) {
@@ -104,8 +149,8 @@ public class Strings {
 		}
 		return out.toString();
 	}
-	/** given an array containing e.g. "a", "b", with separator "," produces "a,b" */
-	public static String join(Object[] list, String seperator) {
+	/** @deprecated use {@link com.google.common.base.Joiner} */
+	@Deprecated public static String join(Object[] list, String seperator) {
 		boolean app = false;
 		StringBuilder out = new StringBuilder();
 		for (Object s: list) {
@@ -155,105 +200,77 @@ public class Strings {
         return source.replaceAll(pattern, replacement);
     }
 
-	public static final String VALID_NON_ALPHANUM_FILE_CHARS = " -_.";
+    /** Valid non alphanumeric characters for filenames. */
+    public static final String VALID_NON_ALPHANUM_FILE_CHARS = "-_.";
 
-	/** returns a valid filename based on 's'; throws exception if no valid filename can be formed;
-	 *  valid filename looks to start with first alphanum char, then include all alphanum char plus
-	 *  those in VALID_NON_ALPHANUM_FILE_CHARS */
-	public static String makeValidFilename(String s) {
-		if (s==null) throw new NullPointerException("Cannot make valid filename from null string");
-		StringBuilder sb = new StringBuilder();
-		char c[] = s.toCharArray();
-		int i=0;
-		while (i<c.length && !Character.isLetterOrDigit(c[i])) i++;
-		if (i>=c.length) throw new IllegalArgumentException("Cannot make valid filename from string '"+s+"'");
-		while (i<c.length) {
-			if (Character.isLetterOrDigit(c[i])) sb.append(c[i]);
-			else if (VALID_NON_ALPHANUM_FILE_CHARS.indexOf(c[i])>=0) sb.append(c[i]);
-			i++;
-		}
-		return sb.toString();
-	}
+    /** 
+     * Returns a valid filename based on the input. 
+     *
+     * A valid filename starts with the first alphanumeric character, then include
+     * all alphanumeric characters plus those in {@link #VALID_NON_ALPHANUM_FILE_CHARS},
+     * with any runs of invalid characters being replaced by {@literal _}.
+     * 
+     * @throws NullPointerException if the input string is null.
+     * @throws IllegalArgumentException if the input string is blank.
+     */
+    public static String makeValidFilename(String s) {
+        Preconditions.checkNotNull(s, "Cannot make valid filename from null string");
+        Preconditions.checkArgument(isNonBlank(s), "Cannot make valid filename from blank string");
+        return CharMatcher.anyOf(VALID_NON_ALPHANUM_FILE_CHARS).or(CharMatcher.JAVA_LETTER_OR_DIGIT)
+                .negate()
+                .trimAndCollapseFrom(s, '_');
+    }
 
-	/** returns a valid java type name based on the given string;
-	 * removes certain chars (like apostrophe), replaces 1+ non-java chars by _,
-	 * and prepends _ if the first char is only valid as an identifier part (not start);
-	 * if all chars are invalid, returns "__hash"+s.hashCode()
-	 * <p>
-	 * means result is usually unique to s, though this isn't guaranteed */
-	public static String makeValidJavaName(String s) {
-		if (s==null) return "__null";
-		if (s.length()==0) return "_";
-		StringBuilder sb = new StringBuilder();
-		boolean lastWas_ = false;
-		for (char c : s.toCharArray()) {
-			if (sb.length()==0) {
-				if (Character.isJavaIdentifierStart(c)) sb.append(c);
-				else if (Character.isJavaIdentifierPart(c)) {
-					sb.append('_');
-					sb.append(c);
-				} else {
-					sb.append('_');
-					lastWas_ = true;
-				}
-			} else {
-				if (Character.isJavaIdentifierPart(c)) {
-					sb.append(c);
-					lastWas_ = false;
-				} else if (c=='\'') ;
-				else {
-					if (!lastWas_) sb.append('_');
-					lastWas_ = true;
-				}
-			}
-		}
-		if (sb.toString().equals("_")) return "__hash"+s.hashCode();
-		return sb.toString();
-	}
+    /**
+     * A {@link CharMatcher} that matches valid Java identifier characters.
+     *
+     * @see Character#isJavaIdentifierPart(char)
+     */
+    public static final CharMatcher IS_JAVA_IDENTIFIER_PART = CharMatcher.forPredicate(new Predicate<Character>() {
+        @Override
+        public boolean apply(@Nullable Character input) {
+            return input != null && Character.isJavaIdentifierPart(input);
+        }
+    });
 
-	/** returns a valid java type name based on the given string,
-	 * translated as per makeValidJavaName, but with hashcode appended
-	 * where necessary to guarantee uniqueness (for all but simple strings)
-	 **/
-	public static String makeValidUniqueJavaName(String s) {
-		if (s==null) return "__null";
-		if (s.length()==0) return "__empty";
-		StringBuilder sb = new StringBuilder();
-		boolean lastWas_ = false;
-		boolean needsHashCode = false;
-		for (char c : s.toCharArray()) {
-			if (sb.length()==0) {
-				if (Character.isJavaIdentifierStart(c)) sb.append(c);
-				else if (Character.isJavaIdentifierPart(c)) {
-					needsHashCode = true;
-					sb.append('_');
-					sb.append(c);
-				} else {
-					needsHashCode = true;
-					sb.append('_');
-					lastWas_ = true;
-				}
-			} else {
-				if (Character.isJavaIdentifierPart(c)) {
-					sb.append(c);
-					lastWas_ = false;
-				} else if (c=='\'') {
-					needsHashCode = true;
-				} else {
-					if (!lastWas_) {
-						if (c!=' ') needsHashCode = true;
-						sb.append('_');
-						lastWas_ = true;
-					} else {
-						needsHashCode = true;
-					}
-				}
-			}
-		}
-		return sb.toString()+(needsHashCode ? "_"+s.hashCode() : "");
-	}
+    /**
+     * Returns a valid Java identifier name based on the input.
+     * 
+     * Removes certain characterss (like apostrophe), replaces one or more invalid
+     * characterss with {@literal _}, and prepends {@literal _} if the first character
+     * is only valid as an identifier part (not start).
+     * <p>
+     * The result is usually unique to s, though this isn't guaranteed, for example if
+     * all characters are invalid. For a unique identifier use {@link #makeValidUniqueJavaName(String)}.
+     *
+     * @see #makeValidUniqueJavaName(String)
+     */
+    public static String makeValidJavaName(String s) {
+        if (s==null) return "__null";
+        if (s.length()==0) return "__empty";
+        String name = IS_JAVA_IDENTIFIER_PART.negate().collapseFrom(CharMatcher.is('\'').removeFrom(s), '_');
+        if (!Character.isJavaIdentifierStart(s.charAt(0))) return "_" + name;
+        return name;
+    }
 
-	/** provided for convenience, see {@link Identifiers#makeRandomId(int) }*/
+    /**
+     * Returns a unique valid java identifier name based on the input.
+     * 
+     * Translated as per {@link #makeValidJavaName(String)} but with {@link String#hashCode()}
+     * appended where necessary to guarantee uniqueness.
+     *
+     * @see #makeValidJavaName(String)
+     */
+    public static String makeValidUniqueJavaName(String s) {
+        String name = makeValidJavaName(s);
+        if (isEmpty(s) || IS_JAVA_IDENTIFIER_PART.matchesAllOf(s) || CharMatcher.is('\'').matchesNoneOf(s)) {
+            return name;
+        } else {
+            return name + "_" + s.hashCode();
+        }
+    }
+
+    /** @see {@link Identifiers#makeRandomId(int)} */
 	public static String makeRandomId(int l) {
 	    return Identifiers.makeRandomId(l);
 	}
