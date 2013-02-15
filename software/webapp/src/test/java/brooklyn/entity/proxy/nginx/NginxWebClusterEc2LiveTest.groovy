@@ -30,8 +30,8 @@ import com.google.common.collect.ImmutableMap
  * This test is a proof-of-concept for the Brooklyn demo application, with each
  * service running on a separate Amazon EC2 instance.
  */
-public class NginxAmazonTest {
-    private static final Logger LOG = LoggerFactory.getLogger(NginxAmazonTest.class)
+public class NginxWebClusterEc2LiveTest {
+    private static final Logger LOG = LoggerFactory.getLogger(NginxWebClusterEc2LiveTest.class)
     
     private TestApplication app
     private NginxController nginx

@@ -12,6 +12,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.util.MutableMap;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 public class CommonCommands {
 
     /**
@@ -56,7 +61,7 @@ public class CommonCommands {
      */
     public static String sudo(String command) {
         if (command==null) return null;
-        return format("(test $UID -eq 0 && ( %s ) || sudo -E -n -s -- %s )", command, command);
+        return format("( if test \"$UID\" -eq 0; then ( %s ); else sudo -E -n -s -- %s; fi )", command, command);
     }
 
     /** some machines require a tty for sudo; brooklyn by default does not use a tty
@@ -145,15 +150,24 @@ public class CommonCommands {
      * </pre>
      */
     public static String installPackage(Map flags, String packageDefaultName) {
+        String ifmissing = (String) flags.get("onlyifmissing");
+        
+        String aptInstall = formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName));
+        String yumInstall = formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName));
+        String brewInstall = formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName));
+        String portInstall = formatIfNotNull("port install %s", getFlag(flags, "port", packageDefaultName));
+        
         List<String> commands = new LinkedList<String>();
+        if (ifmissing != null) commands.add(format("which %s", ifmissing));
         commands.add(exists("apt-get",
                 "echo apt-get exists, doing update",
                 "export DEBIAN_FRONTEND=noninteractive",
-                sudo("apt-get update"),
-                sudo(formatIfNotNull("apt-get install -y --allow-unauthenticated %s", getFlag(flags, "apt", packageDefaultName)))));
-        commands.add(exists("yum", sudo(formatIfNotNull("yum -y --nogpgcheck install %s", getFlag(flags, "yum", packageDefaultName)))));
-        commands.add(exists("brew", formatIfNotNull("brew install %s", getFlag(flags, "brew", packageDefaultName))));
-        commands.add(exists("port", sudo(formatIfNotNull("port install %s", getFlag(flags, "port", packageDefaultName)))));
+                sudo("apt-get update"), 
+                sudo(aptInstall)));
+        commands.add(exists("yum", sudo(yumInstall)));
+        commands.add(exists("brew", brewInstall));
+        commands.add(exists("port", sudo(portInstall)));
+        
         String failure = format("(echo \"WARNING: no known/successful package manager to install %s, may fail subsequently\")",
                 packageDefaultName!=null ? packageDefaultName : flags.toString());
         return alternatives(commands, failure);
