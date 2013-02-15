@@ -57,7 +57,7 @@ public class LocationSummary extends LocationSpec {
               ld.getId(),
               ld.getName(), 
               ld.getSpec(), 
-              copyConfigsExceptSensitiveKeys(ll.getLocationProperties().entrySet()),
+              copyConfigsExceptSensitiveKeys(ll.getAllConfig().entrySet()),
               ImmutableMap.of("self", URI.create("/v1/locations/" + ld.getId())) );
   }
 

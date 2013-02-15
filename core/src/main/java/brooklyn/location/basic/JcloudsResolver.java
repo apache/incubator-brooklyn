@@ -185,10 +185,11 @@ public class JcloudsResolver implements RegistryLocationResolver {
         } else {
             // other "providers" are APIs so take an _endpoint_ (but not a location)
             jcloudsProperties.put(Constants.PROPERTY_ENDPOINT, details.parameter);
+            jcloudsProperties.put(JcloudsLocation.ENDPOINT, details.parameter);
             l = new JcloudsLocationFactory(jcloudsProperties).newLocation(null);          
         }
         // location flags trump other properties
-        l.getConf().putAll(locationFlags);
+        l.getConfigBag().putAll(locationFlags);
         return l;
     }
     

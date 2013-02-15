@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.Repeater;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
@@ -57,10 +58,11 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.inject.Module;
 
-public class JcloudsUtil {
+public class JcloudsUtil implements JcloudsLocationConfig {
     
     // TODO Review what utility methods are needed, and what is now supported in jclouds 1.1
     
@@ -158,48 +160,58 @@ public class JcloudsUtil {
     }
 
     static Map<Properties,ComputeService> cachedComputeServices = new ConcurrentHashMap<Properties,ComputeService> ();
-     
+    
+    /** @deprecated since 0.5.0 pass ConfigBag instead */
     public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf) {
         return buildComputeService(conf, MutableMap.of(), true);
     }
+    /** @deprecated since 0.5.0 pass ConfigBag instead */
     public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf, Map unusedConf) {
         return buildComputeService(conf, unusedConf, true);
     }
-    
+    /** @deprecated since 0.5.0 pass ConfigBag instead */
     public static ComputeService buildComputeService(Map<String,? extends Object> conf) {
         return buildComputeService(conf, MutableMap.of());
     }
+    /** @deprecated since 0.5.0 pass ConfigBag instead */
     public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf) {
         return buildComputeService(conf, unusedConf, false);
     }
+    /** @deprecated since 0.5.0 pass ConfigBag instead */
     public static ComputeService buildComputeService(Map<String,? extends Object> conf, Map unusedConf, boolean allowReuse) {
+        ConfigBag confBag = new ConfigBag().putAll(conf).markAll(Sets.difference(conf.keySet(), unusedConf.keySet()));
+        return findComputeService(confBag, allowReuse);
+    }
+    public static ComputeService findComputeService(ConfigBag conf) {
+        return findComputeService(conf, true);
+    }
+    public static ComputeService findComputeService(ConfigBag conf, boolean allowReuse) {
         Properties properties = new Properties();
-        String provider = (String)conf.get("provider"); unusedConf.remove("provider");
-        String identity = (String)conf.get("identity"); unusedConf.remove("identity");
-        String credential = (String)conf.get("credential"); unusedConf.remove("credential");
+        String provider = conf.get(PROVIDER);
+        String identity = conf.get(ACCESS_IDENTITY);
+        String credential = conf.get(ACCESS_CREDENTIAL);
         
-        properties.setProperty(Constants.PROPERTY_PROVIDER, (String)conf.get("provider")); unusedConf.remove("provider");
-        properties.setProperty(Constants.PROPERTY_IDENTITY, (String)conf.get("identity")); unusedConf.remove("identity");
-        properties.setProperty(Constants.PROPERTY_CREDENTIAL, (String)conf.get("credential")); unusedConf.remove("credential");
+        properties.setProperty(Constants.PROPERTY_PROVIDER, provider);
+        properties.setProperty(Constants.PROPERTY_IDENTITY, identity);
+        properties.setProperty(Constants.PROPERTY_CREDENTIAL, credential);
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true));
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true));
                 
         // Enable aws-ec2 lazy image fetching, if given a specific imageId; otherwise customize for specific owners; or all as a last resort
         // See https://issues.apache.org/jira/browse/WHIRR-416
         if ("aws-ec2".equals(provider)) {
-            if (truth(conf.get("imageId"))) {
+            // TODO convert AWS-only flags to config keys
+            if (truth(conf.get(IMAGE_ID))) {
                 properties.setProperty(PROPERTY_EC2_AMI_QUERY, "");
                 properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "");
-            } else if (truth(conf.get("imageOwner"))) {
-                unusedConf.remove("imageOwner");
-                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.get("imageOwner")+";state=available;image-type=machine");
-            } else if (truth(conf.get("anyOwner"))) {
+            } else if (truth(conf.getStringKey("imageOwner"))) {
+                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.getStringKey("imageOwner")+";state=available;image-type=machine");
+            } else if (truth(conf.getStringKey("anyOwner"))) {
                 // set `anyOwner: true` to override the default query (which is restricted to certain owners as per below), 
                 // allowing the AMI query to bind to any machine
                 // (note however, we sometimes pick defaults in JcloudsLocationFactory);
                 // (and be careful, this can give a LOT of data back, taking several minutes,
                 // and requiring extra memory allocated on the command-line)
-                unusedConf.remove("anyOwner");
                 properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine");
                 /*
                  * by default the following filters are applied:
@@ -213,7 +225,8 @@ public class JcloudsUtil {
             }
         }
 
-        String endpoint = (String) conf.get(Constants.PROPERTY_ENDPOINT); unusedConf.remove(Constants.PROPERTY_ENDPOINT);
+        String endpoint = (String) conf.get(ENDPOINT);
+        if (!truth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
         if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
         if (allowReuse) {
@@ -254,7 +267,16 @@ public class JcloudsUtil {
         return computeService;
      }
      
-     // Do this so that if there's a problem with our USERNAME's ssh key, we can still get in to check
+     protected static String getDeprecatedProperty(ConfigBag conf, String key) {
+        if (conf.containsKey(key)) {
+            LOG.warn("Jclouds using deprecated brooklyn-jclouds property "+key+": "+Entities.sanitize(conf.getAllConfig()));
+            return (String) conf.getStringKey(key);
+        } else {
+            return null;
+        }
+    }
+
+    // Do this so that if there's a problem with our USERNAME's ssh key, we can still get in to check
      // TODO Once we're really confident there are not going to be regular problems, then delete this
      public static Statement addAuthorizedKeysToRoot(File publicKeyFile) throws IOException {
          String publicKey = Files.toString(publicKeyFile, Charsets.UTF_8);
@@ -276,6 +298,8 @@ public class JcloudsUtil {
         //   [12/02/2013 12:22:25] Andrea Turli: and here https://issues.apache.org/jira/browse/WHIRR-420
         //   jclouds.ssh.max-retries
         //   jclouds.ssh.retry-auth
+        // ^^^ that looks fixed now. BUT do we need this method (as when we call it, we connect just afterwards)
+        // and TODO this method doesn't do what the name suggests; there is no iterating through addresses to see what is reachable
         final SshClient client = context.utils().sshForNode().apply(node);
         final AtomicReference<String> result = new AtomicReference<String>();
         new Repeater()

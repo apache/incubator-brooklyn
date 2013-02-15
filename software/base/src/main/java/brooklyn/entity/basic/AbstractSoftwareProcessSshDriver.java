@@ -60,6 +60,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     
     public AbstractSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
+        // FIXME this assumes we own the location!!!
         machine.addConfig(getSshFlags());
     }
 

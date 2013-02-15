@@ -10,6 +10,7 @@ import brooklyn.location.AddressableLocation;
 import brooklyn.location.Location
 import brooklyn.location.LocationResolver
 import brooklyn.location.basic.AbstractLocation
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Preconditions
 
@@ -17,26 +18,28 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
 
     public OpenshiftLocation(Map properties = [:]) {
         super(properties);
-        setProperties(leftoverProperties);
+    }
+
+    public String getHostname() {
+        return getConfigBag().getStringKey("hostname") ?: "openshift.redhat.com";
     }
     
-    String hostname = "openshift.redhat.com";
-    String url = "https://${hostname}/broker";
-    String username, password;
+    public String getUrl() {
+        return getConfigBag().getStringKey("url") ?: "https://${hostname}/broker";
+    }
     
-    protected void setProperties(Map properties) {
-        if (properties.url) {
-            Preconditions.checkArgument properties.url instanceof String, "'url' property should be a string"
-            url = properties.remove("url")
-        }
-        if (properties.username) {
-            Preconditions.checkArgument properties.username instanceof String, "'username' property should be a string"
-            username = properties.remove("username")
-        }
-        if (properties.password) {
-            Preconditions.checkArgument properties.password instanceof String, "'password' property should be a string"
-            password = properties.remove("password")
-        }
+    public String getUser() {
+        return Preconditions.checkNotNull(
+            getConfigBag().getStringKey("user") ?: getConfigBag().getStringKey("username") ?: null);
+    }
+
+    public String getUsername() {
+        return getUser();
+    }
+        
+    public String getPassword() {
+        return Preconditions.checkNotNull(
+            getConfigBag().getStringKey("password") ?: null);
     }
     
     public static class Resolver implements LocationResolver {

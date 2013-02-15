@@ -6,6 +6,7 @@ import java.util.Set;
 
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.TreeNode;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -24,48 +25,62 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
     }
 
     public static class Builder extends AbstractTreeNodeMemento.Builder<Builder> {
-        protected Map<String,Object> locationProperties = Maps.newLinkedHashMap();
-        protected Map<String,Object> flags = Maps.newLinkedHashMap();
-        protected Set<String> locationReferenceFlags = Sets.newLinkedHashSet();
+        protected Map<String,Object> locationConfig = Maps.newLinkedHashMap();
+        protected Set<String> locationConfigUnused = Sets.newLinkedHashSet();
+        protected String locationConfigDescription;
+        protected Set<String> locationConfigReferenceKeys = Sets.newLinkedHashSet();
         
         public Builder from(LocationMemento other) {
             super.from((TreeNode)other);
             displayName = other.getDisplayName();
-            locationProperties.putAll(other.getLocationProperties());
-            flags.putAll(other.getFlags());
-            locationReferenceFlags.addAll(other.getLocationReferenceFlags());
+            locationConfig.putAll(other.getLocationConfig());
+            locationConfigUnused.addAll(other.getLocationConfigUnused());
+            locationConfigDescription = other.getLocationConfigDescription();
+            locationConfigReferenceKeys.addAll(other.getLocationConfigReferenceKeys());
             fields.putAll(other.getCustomFields());
             return self();
         }
         public LocationMemento build() {
             return new BasicLocationMemento(this);
         }
+        public void copyConfig(ConfigBag config) {
+            locationConfig.putAll(config.getAllConfig());
+            locationConfigUnused.addAll(config.getUnusedConfig().keySet());
+            locationConfigDescription = config.getDescription();
+        }
     }
     
-    private Map<String,Object> locationProperties;
-	private Map<String,Object> flags;
-	private Set<String> locationReferenceFlags;
+    private Map<String,Object> locationConfig;
+	private Set<String> locationConfigUnused;
+	private String locationConfigDescription;
+	private Set<String> locationConfigReferenceKeys;
 
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicLocationMemento(Builder builder) {
 	    super(builder);
-	    locationProperties = toPersistedMap(builder.locationProperties);
-	    flags = toPersistedMap(builder.flags);
-	    locationReferenceFlags = toPersistedSet(builder.locationReferenceFlags);
+	    locationConfig = toPersistedMap(builder.locationConfig);
+	    locationConfigUnused = toPersistedSet(builder.locationConfigUnused);
+	    locationConfigDescription = builder.locationConfigDescription;
+	    locationConfigReferenceKeys = toPersistedSet(builder.locationConfigReferenceKeys);
 	}
 	
     @Override
-    public Map<String,Object> getLocationProperties() {
-		return fromPersistedMap(locationProperties);
+    public Map<String,Object> getLocationConfig() {
+		return fromPersistedMap(locationConfig);
 	}
 	
     @Override
-    public Map<String, Object> getFlags() {
-		return fromPersistedMap(flags);
+    public Set<String> getLocationConfigUnused() {
+		return fromPersistedSet(locationConfigUnused);
 	}
     
     @Override
-    public Set<String> getLocationReferenceFlags() {
-    	return fromPersistedSet(locationReferenceFlags);
+    public String getLocationConfigDescription() {
+        return locationConfigDescription;
+    }
+    
+    @Override
+    public Set<String> getLocationConfigReferenceKeys() {
+    	return fromPersistedSet(locationConfigReferenceKeys);
     }
 }

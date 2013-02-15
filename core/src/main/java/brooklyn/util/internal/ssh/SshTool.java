@@ -8,18 +8,30 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.util.stream.KnownSizeInputStream;
 
 /**
- * 
+ * Defines the methods available on the various different implementations of SSH,
+ * and configuration options which are also generally available.
+ * <p>
+ * The config keys in this class can be supplied (or their string equivalents, where the flags/props take Map<String,?>)
+ * to influence configuration, either for the tool/session itself or for individual commands.
+ * <p>
+ * To specify some of these properties on a global basis, use the variants of the keys here
+ * contained in {@link ConfigKeys}
+ * (which are generally {@value #BROOKLYN_CONFIG_KEY_PREFIX} prefixed to the names of keys here).
  */
 public interface SshTool {
 
-    /* config which can be supplied by user to configure the ssh connection.
-     * NB: public-facing values are including in ConfigKeys */
+//    /** Intermediate config keys for Brooklyn are defined where they are used, e.g. in {@link SshMachineLocation} 
+//     * and have this prefix pre-prended to the config keys in this class. */
+//    public static final String LOCATION_CONFIG_KEY_PREFIX = "ssh.config.";
     
-    /** Public-facing config keys are defined in ConfigKeys, and have this prefix pre-prended to the keys below. */
+    /** Public-facing global config keys for Brooklyn are defined in ConfigKeys, 
+     * and have this prefix pre-prended to the config keys in this class. */
     public static final String BROOKLYN_CONFIG_KEY_PREFIX = "brooklyn.ssh.config.";
     
     public static final ConfigKey<String> PROP_TOOL_CLASS = new StringConfigKey("tool.class", "SshTool implementation to use", null);
@@ -160,6 +172,7 @@ public interface SshTool {
 
     /**
      * Closes the given input stream before returning.
+     * Consider using {@link KnownSizeInputStream} for efficiency when the size of the stream is known.
      * 
      * @see copyToServer(Map, File, String)
      */

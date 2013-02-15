@@ -1,7 +1,6 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
-import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -15,7 +14,6 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.net.InetAddress;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigUtils;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.event.basic.MapConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
@@ -37,6 +41,7 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ReaderInputStream;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.StreamGobbler;
@@ -47,9 +52,10 @@ import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.pool.BasicPool;
 import brooklyn.util.pool.Pool;
+import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
-import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -58,7 +64,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 
@@ -80,17 +86,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         public int exec(SshTool ssh, Map<String,?> flags, List<String> cmds, Map<String,?> env);
     }
     
-    @SetFromFlag("user")
+    @SetFromFlag
     String user;
 
-    @SetFromFlag("privateKeyData")
+    @SetFromFlag
     String privateKeyData;
 
     @SetFromFlag(nullable = false)
     InetAddress address;
-
-    @SetFromFlag
-    Map config;
 
     @SetFromFlag
     transient WithMutexes mutexSupport;
@@ -98,32 +101,55 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag
     private Set<Integer> usedPorts;
 
-    @SetFromFlag
-    private File localTempDir;
-    
     /** any property that should be passed as ssh config (connection-time) 
      *  can be prefixed with this and . and will be passed through (with the prefix removed),
-     *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" */
+     *  e.g. (SSHCONFIG_PREFIX+"."+"StrictHostKeyChecking"):"yes" 
+     *  @deprecated use {@link SshTool#BROOKLYN_CONFIG_KEY_PREFIX} */
+    @Deprecated
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     
-    /** properties which are passed to ssh */
-    public static final Collection<String> SSH_PROPS = ImmutableSet.of(
-            "noStdoutLogging", "noStderrLogging", "logPrefix", "out", "err", "scriptDir",  
-            "password", "permissions", "sshTries", "env", "allocatePTY",
-            "privateKeyPassphrase", "privateKeyFile", "privateKeyData", 
-            // deprecated in 0.4.0 -- prefer privateKeyData/privateKeyFile 
-            // (confusion about whether other holds a file or data; and public not useful here)
-            // they generate a warning where used 
-            "keyFiles", "publicKey", "privateKey",
-            "sshExecutable", "scpExecutable");
+    public static final ConfigKey<String> SSH_EXECUTABLE = new StringConfigKey("sshExecutable", "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
+    public static final ConfigKey<String> SCP_EXECUTABLE = new StringConfigKey("scpExecutable", "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
     
-    //TODO remove once everything is prefixed SSHCONFIG_PREFIX or included above
-    public static final Collection<String> NON_SSH_PROPS = ImmutableSet.of("latitude", "longitude", "backup", 
-            "sshPublicKeyData", "sshPrivateKeyData", "user", "address", "usedPorts", "mutexSupport", "localTempDir",
-            "scriptHeader", "tool.class");
+    // TODO remove
+    public static final ConfigKey<String> PASSWORD = SshTool.PROP_PASSWORD;
+    public static final ConfigKey<String> PRIVATE_KEY_FILE = SshTool.PROP_PRIVATE_KEY_FILE;
+    public static final ConfigKey<String> PRIVATE_KEY_DATA = SshTool.PROP_PRIVATE_KEY_DATA;
+    public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = SshTool.PROP_PRIVATE_KEY_PASSPHRASE;
+    
+    public static final ConfigKey<String> SCRIPT_DIR = new StringConfigKey("scriptDir", "directory where scripts should be placed and executed on the SSH target machine", null);
+    public static final ConfigKey<Map<String,Object>> SSH_ENV_MAP = new MapConfigKey<Object>(Object.class, "env", "environment variables to pass to the remote SSH shell session", null);
+    
+    public static final ConfigKey<Boolean> ALLOCATE_PTY = SshTool.PROP_ALLOCATE_PTY;
+    // TODO remove
+//            new BasicConfigKey<Boolean>(Boolean.class, "allocatePTY", "whether pseudo-terminal emulation should be turned on; " +
+//            "this causes stderr to be redirected to stdout, but it may be required for some commands (such as `sudo` when requiretty is set)", false);
+    
+    public static final ConfigKey<OutputStream> STDOUT = new BasicConfigKey<OutputStream>(OutputStream.class, "out");
+    public static final ConfigKey<OutputStream> STDERR = new BasicConfigKey<OutputStream>(OutputStream.class, "err");
+    public static final ConfigKey<Boolean> NO_STDOUT_LOGGING = new BasicConfigKey<Boolean>(Boolean.class, "noStdoutLogging", "whether to disable logging of stdout from SSH commands (e.g. for verbose commands)", false);
+    public static final ConfigKey<Boolean> NO_STDERR_LOGGING = new BasicConfigKey<Boolean>(Boolean.class, "noStderrLogging", "whether to disable logging of stderr from SSH commands (e.g. for verbose commands)", false);
+    public static final ConfigKey<String> LOG_PREFIX = new StringConfigKey("logPrefix");
+    
+    public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
 
-    public static final Set<String> REUSABLE_SSH_PROPS = ImmutableSet.of("out", "err", "scriptDir");
+    /** specifies config keys where a change in the value does not require a new SshTool instance,
+     * i.e. these can be specified per command on the tool */ 
+    public static final Set<ConfigKey<?>> REUSABLE_SSH_PROPS = ImmutableSet.of(STDOUT, STDERR, SCRIPT_DIR);
 
+    public static final Set<HasConfigKey<?>> ALL_SSH_CONFIG_KEYS = 
+            ImmutableSet.<HasConfigKey<?>>builder().
+                    addAll(ConfigUtils.getStaticKeysOnClass(SshMachineLocation.class)).
+                    addAll(ConfigUtils.getStaticKeysOnClass(SshTool.class)).
+                    build();
+    public static final Set<String> ALL_SSH_CONFIG_KEY_NAMES =
+            ImmutableSet.copyOf(Iterables.transform(ALL_SSH_CONFIG_KEYS, new Function<HasConfigKey<?>,String>() {
+                @Override
+                public String apply(HasConfigKey<?> input) {
+                    return input.getConfigKey().getName();
+                }
+            }));
+            
     private transient  Pool<SshTool> vanillaSshToolPool;
     
     public SshMachineLocation() {
@@ -132,10 +158,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
      public SshMachineLocation(Map properties) {
         super(properties);
-        
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
-        localTempDir = (localTempDir != null) ? new File(localTempDir, "tmpssh") : new File(System.getProperty("java.io.tmpdir"), "tmpssh");
-        
         vanillaSshToolPool = buildVanillaPool();
     }
 
@@ -162,13 +185,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 .build();
     }
 
-    public void configure() {
-        configure(MutableMap.of());
-    }
-    
     public void configure(Map properties) {
-        if (config==null) config = Maps.newLinkedHashMap();
-
         super.configure(properties);
 
         // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields
@@ -199,12 +216,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    // Once have reference to ManagementContext, then delete this?!
-    @Beta
+    /** @deprecated temporary Beta method introduced in 0.5.0 */ 
     public void addConfig(Map<String, Object> vals) {
-        config.putAll(checkNotNull(vals, "vals"));
+//        configure(vals);
+        getConfigBag().putAll(vals);
     }
-
+    
     @Override
     public void close() throws IOException {
         vanillaSshToolPool.close();
@@ -221,10 +238,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public String getUser() {
         return user;
-    }
-    
-    public Map getConfig() {
-        return config;
     }
     
     public int run(String command) {
@@ -281,29 +294,31 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     protected SshTool connectSsh(Map props) {
         try {
             if (!truth(user)) user = System.getProperty("user.name");
-            Map<?,?> allprops = MutableMap.builder().putAll(config).putAll(leftoverProperties).putAll(props).build();
-            Map<String,Object> args = MutableMap.<String,Object>of("user", user, "host", address.getHostName());
-            for (Map.Entry<?, ?> entry : allprops.entrySet()) {
-                String k = ""+entry.getKey();
-                Object v = entry.getValue();
-                if (SSH_PROPS.contains(k)) {
-                    args.put(k, v);
-                } else if (k.startsWith(SSHCONFIG_PREFIX+".")) {
-                    args.put(k.substring(SSHCONFIG_PREFIX.length()+1), v);
+            
+            ConfigBag args = new ConfigBag().
+                configure(SshTool.PROP_USER, user).
+                configure(SshTool.PROP_HOST, address.getHostName());
+
+            for (Map.Entry<String,Object> entry: getConfigBag().getAllConfig().entrySet()) {
+                String key = entry.getKey();
+                if (ALL_SSH_CONFIG_KEY_NAMES.contains(entry.getKey())) {
+                    //key is fine, no change
+                } else if (key.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
+                    key = Strings.removeFromStart(key, SshTool.BROOKLYN_CONFIG_KEY_PREFIX);
+                } else if (key.startsWith(SSHCONFIG_PREFIX)) {
+                    key = Strings.removeFromStart(key, SSHCONFIG_PREFIX);
                 } else {
-                    // TODO remove once everything is included above and we no longer see these warnings
-                    if (!NON_SSH_PROPS.contains(k)) {
-                        LOG.warn("including legacy SSH config property "+k+" for "+this+"; either prefix with sshconfig or add to NON_SSH_PROPS");
-                        args.put(k, v);
-                    }
+                    // it's not config that applies to the connection
+                    continue;
                 }
+                args.putStringKey(key, entry.getValue());
             }
             if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
             
             // look up tool class
-            String sshToolClass = (String)allprops.get(SshTool.PROP_TOOL_CLASS.getName());
+            String sshToolClass = args.get(SshTool.PROP_TOOL_CLASS);
             if (sshToolClass==null) sshToolClass = SshjTool.class.getName();
-            SshTool ssh = (SshTool) Class.forName(sshToolClass).getConstructor(Map.class).newInstance(args);
+            SshTool ssh = (SshTool) Class.forName(sshToolClass).getConstructor(Map.class).newInstance(args.getAllConfig());
             
             if (LOG.isTraceEnabled()) LOG.trace("using ssh-tool {} (of type {}); props ", ssh, sshToolClass);
             
@@ -420,6 +435,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 }});
     }
     
+    @SuppressWarnings("resource")
     protected int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands, final Map<String,?> env, final ExecRunner execCommand) {
         if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {}: {}", new Object[] {summaryForLogging, this, commands});
         
@@ -428,51 +444,51 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             logSsh.debug("{} on machine {} ending: no commands to run", summaryForLogging, this);
             return 0;
         }
-        // TODO
-        final Map<String,Object> execFlags = MutableMap.copyOf(props);
-        final Map<String,Object> sshFlags = MutableMap.<String,Object>builder().putAll(props).removeAll("logPrefix", "out", "err").build();
+        
+        final ConfigBag execFlags = new ConfigBag().putAll(props);
+        // some props get overridden in execFlags, so remove them from the ssh flags
+        final ConfigBag sshFlags = new ConfigBag().putAll(props).removeAll(LOG_PREFIX, STDOUT, STDERR);
         
         PipedOutputStream outO = null;
         PipedOutputStream outE = null;
         StreamGobbler gO=null, gE=null;
         try {
-        	String logPrefix;
-        	if (execFlags.get("logPrefix") != null) {
-        		logPrefix = ""+execFlags.get("logPrefix"); 
-        	} else {
+        	String logPrefix = execFlags.get(LOG_PREFIX);
+        	if (logPrefix == null) {
         		String hostname = getAddress().getHostName();
-        		Object port = config.get("sshconfig.port");
-        		if (port == null) port = leftoverProperties.get("sshconfig.port");
+        		Integer port = execFlags.peek(SshTool.PROP_PORT); 
+        		if (port == null) port = getConfigBag().get(ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT));
+        		if (port == null) port = getConfigBag().get(ConfigUtils.prefixedKey(SSHCONFIG_PREFIX, SshTool.PROP_PORT));
         		logPrefix = (user != null ? user+"@" : "") + hostname + (port != null ? ":"+port : "");
         	}
         	
-            if (!truth(execFlags.get("noStdoutLogging"))) {
+            if (!execFlags.get(NO_STDOUT_LOGGING)) {
                 PipedInputStream insO = new PipedInputStream();
                 outO = new PipedOutputStream(insO);
             
                 String stdoutLogPrefix = "["+(logPrefix != null ? logPrefix+":stdout" : "stdout")+"] ";
-                gO = new StreamGobbler(insO, (OutputStream) execFlags.get("out"), logSsh).setLogPrefix(stdoutLogPrefix);
+                gO = new StreamGobbler(insO, execFlags.get(STDOUT), logSsh).setLogPrefix(stdoutLogPrefix);
                 gO.start();
                 
-                execFlags.put("out", outO);
+                execFlags.put(STDOUT, outO);
             }
             
-            if (!truth(execFlags.get("noStdoutLogging"))) {
+            if (!execFlags.get(NO_STDERR_LOGGING)) {
                 PipedInputStream insE = new PipedInputStream();
                 outE = new PipedOutputStream(insE);
             
                 String stderrLogPrefix = "["+(logPrefix != null ? logPrefix+":stderr" : "stderr")+"] ";
-                gE = new StreamGobbler(insE, (OutputStream) execFlags.get("err"), logSsh).setLogPrefix(stderrLogPrefix);
+                gE = new StreamGobbler(insE, execFlags.get(STDERR), logSsh).setLogPrefix(stderrLogPrefix);
                 gE.start();
                 
-                execFlags.put("err", outE);
+                execFlags.put(STDERR, outE);
             }
             
             Tasks.setBlockingDetails("SSH executing, "+summaryForLogging);
             try {
-                return execSsh(sshFlags, new Function<SshTool, Integer>() {
+                return execSsh(MutableMap.copyOf(sshFlags.getAllConfig()), new Function<SshTool, Integer>() {
                     public Integer apply(SshTool ssh) {
-                        int result = execCommand.exec(ssh, execFlags, commands, env);
+                        int result = execCommand.exec(ssh, MutableMap.copyOf(execFlags.getAllConfig()), commands, env);
                         if (logSsh.isDebugEnabled()) logSsh.debug("{} on machine {} completed: return status {}", new Object[] {summaryForLogging, this, result});
                         return result;
                     }});
@@ -540,7 +556,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         } else {
             return execSsh(props, new Function<SshTool,Integer>() {
                 public Integer apply(SshTool ssh) {
-                    return ssh.createFile(props, destination, src, filesize);
+                    return ssh.copyToServer(props, new KnownSizeInputStream(src, filesize), destination);
+//                    return ssh.createFile(props, destination, src, filesize);
                 }});
         }
     }

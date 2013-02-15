@@ -76,7 +76,7 @@ public class JcloudsLocationResolverTest {
 
     private void assertJcloudsEquals(JcloudsLocation loc, String expectedProvider, String expectedRegion) {
         assertEquals(loc.getProvider(), expectedProvider);
-        assertEquals(loc.getJcloudsProviderLocationId(), expectedRegion);
+        assertEquals(loc.getRegion(), expectedRegion);
     }
 
     private void assertThrows(String val, Class<?> expectedExceptionType) throws Exception {

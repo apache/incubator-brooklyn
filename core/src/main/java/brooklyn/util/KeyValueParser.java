@@ -64,6 +64,8 @@ public class KeyValueParser {
         return parseMap(line);
     }
     
+    /** takes a string of the form "key=value,key2=value2" and returns a map;
+     * values can be quoted (but not keys) */
     public static Map<String,String> parseMap(String line) {
         Map<String,String> result = new LinkedHashMap<String,String>();
         

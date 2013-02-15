@@ -21,6 +21,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.location.Location;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -225,11 +226,12 @@ public class RebindManagerImpl implements RebindManager {
 
         Map<String, Object> flags = MutableMap.<String, Object>builder()
         		.put("id", locationId)
-        		.putAll(memento.getFlags())
-        		.removeAll(memento.getLocationReferenceFlags())
+        		.putAll(memento.getLocationConfig())
+        		.removeAll(memento.getLocationConfigReferenceKeys())
         		.build();
 
         return (Location) invokeConstructor(reflections, locationClazz, new Object[] {flags});
+        // 'used' config keys get marked in BasicLocationRebindSupport
     }
 
     /**

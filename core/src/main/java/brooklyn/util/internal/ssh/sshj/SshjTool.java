@@ -4,7 +4,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Throwables.getCausalChain;
 import static com.google.common.collect.Iterables.any;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,19 +30,16 @@ import net.schmizz.sshj.xfer.InMemorySourceFile;
 import org.apache.commons.io.input.ProxyInputStream;
 import org.bouncycastle.util.Strings;
 import org.jclouds.io.InputSuppliers;
-import org.jclouds.io.Payload;
-import org.jclouds.io.Payloads;
-import org.jclouds.io.payloads.ByteArrayPayload;
-import org.jclouds.io.payloads.FilePayload;
-import org.jclouds.io.payloads.InputStreamPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.Time;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.StreamGobbler;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -49,9 +49,10 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-import com.google.common.io.LimitInputStream;
 import com.google.common.net.HostAndPort;
+import com.google.common.primitives.Ints;
 
 /**
  * For ssh and scp-style commands, using the sshj library.
@@ -190,29 +191,19 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     
     @Override
     public int copyToServer(java.util.Map<String,?> props, byte[] contents, String pathAndFileOnRemoteServer) {
-        return copyToServer(props, toPayload(contents), pathAndFileOnRemoteServer);
+        return copyToServer(props, new ByteArrayInputStream(contents), contents.length, pathAndFileOnRemoteServer);
     }
     
     @Override
-    public int copyToServer(java.util.Map<String,?> props, InputStream contents, String pathAndFileOnRemoteServer) {
-        /*
-         * TODO sshj needs to know the length of the InputStream to copy the file:
-         *   java.lang.NullPointerException
-         *     at brooklyn.util.internal.ssh.SshjTool$PutFileAction$1.getLength(SshjTool.java:574)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer$Uploader.upload(SFTPFileTransfer.java:174)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer$Uploader.access$100(SFTPFileTransfer.java:162)
-         *     at net.schmizz.sshj.sftp.SFTPFileTransfer.upload(SFTPFileTransfer.java:61)
-         *     at net.schmizz.sshj.sftp.SFTPClient.put(SFTPClient.java:248)
-         *     at brooklyn.util.internal.ssh.SshjTool$PutFileAction.create(SshjTool.java:569)
-         * 
-         * Unfortunately that requires consuming the input stream to find out! We can't just do:
-         *   new InputStreamPayload(input)
-         * 
-         * This is nasty: we have to either write it to a temp file, or hold the entire contents in-memory.
-         * It's worth a look at changing sshj to not need the length, if possible.
-         * 
-         * TODO Could have a switch where we hold it in memory if less than some max size, but write it to the file if
-         * too big.
+    public int copyToServer(Map<String,?> props, InputStream contents, String pathAndFileOnRemoteServer) {
+        if (contents instanceof KnownSizeInputStream)
+            return copyToServer(props, contents, ((KnownSizeInputStream)contents).length(), pathAndFileOnRemoteServer);
+        
+        /* sshj needs to know the length of the InputStream to copy the file to perform copy;
+         * for now, write it to a file if we come here with something other than a KnownSizeInputStream.
+         * (we could have a switch where we hold it in memory if less than some max size,
+         * but most the routines should supply a string or byte array or similar,
+         * so we probably don't come here too often.)
          */
         File tempFile = writeTempFile(contents);
         try {
@@ -223,8 +214,12 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     }
     
     @Override
-    public int copyToServer(java.util.Map<String,?> props, File localFile, String pathAndFileOnRemoteServer) {
-        return copyToServer(props, toPayload(localFile), pathAndFileOnRemoteServer);
+    public int copyToServer(Map<String,?> props, File localFile, String pathAndFileOnRemoteServer) {
+        try {
+            return copyToServer(props, new FileInputStream(localFile), (int)localFile.length(), pathAndFileOnRemoteServer);
+        } catch (FileNotFoundException e) {
+            throw Exceptions.propagate(e);
+        }
     }
     
     @Override
@@ -234,7 +229,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     
     @Override
     public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, InputStream input, long size) {
-        return copyToServer(props, toPayload(input, size), pathAndFileOnRemoteServer);
+        return copyToServer(props, input, (int)size, pathAndFileOnRemoteServer);
     }
 
     @Override
@@ -247,8 +242,8 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         return copyToServer(props, contents, pathAndFileOnRemoteServer);
     }
 
-    private int copyToServer(Map<String,?> props, Payload contents, String pathAndFileOnRemoteServer) {
-        acquire(new PutFileAction(props, pathAndFileOnRemoteServer, contents));
+    private int copyToServer(Map<String,?> props, InputStream contents, long length, String pathAndFileOnRemoteServer) {
+        acquire(new PutFileAction(props, pathAndFileOnRemoteServer, contents, length));
         return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
     }
 
@@ -259,9 +254,9 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     
     @Override
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
-        Payload payload = acquire(new GetFileAction(pathAndFileOnRemoteServer));
+        InputStream contents = acquire(new GetFileAction(pathAndFileOnRemoteServer));
         try {
-            Files.copy(InputSuppliers.of(payload.getInput()), localFile);
+            Files.copy(InputSuppliers.of(contents), localFile);
             return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
         } catch (IOException e) {
             throw Throwables.propagate(e);
@@ -446,7 +441,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     };
 
-    private class GetFileAction implements SshAction<Payload> {
+    private class GetFileAction implements SshAction<InputStream> {
         private final String path;
         private SFTPClient sftp;
 
@@ -461,10 +456,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
 
         @Override
-        public Payload create() throws Exception {
+        public InputStream create() throws Exception {
             sftp = acquire(sftpConnection);
-            return Payloads.newInputStreamPayload(new CloseFtpChannelOnCloseInputStream(
-                    sftp.getSFTPEngine().open(path).getInputStream(), sftp));
+            return new CloseFtpChannelOnCloseInputStream(
+                    sftp.getSFTPEngine().open(path).getInputStream(), sftp);
         }
 
         @Override
@@ -478,13 +473,14 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         // TODO support backup as a property?
         
         private final String path;
-        private final Payload contents;
         private SFTPClient sftp;
         private int permissionsMask;
         private long lastModificationDate;
         private long lastAccessDate;
+        private InputStream contents;
+        private Integer length;
         
-        PutFileAction(Map<String,?> props, String path, Payload contents) {
+        PutFileAction(Map<String,?> props, String path, InputStream contents, long length) {
             String permissions = getOptionalVal(props, PROP_PERMISSIONS, "0644");
             permissionsMask = Integer.parseInt(permissions, 8);
             lastModificationDate = getOptionalVal(props, PROP_LAST_MODIFICATION_DATE, 0L);
@@ -495,6 +491,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             }
             this.path = checkNotNull(path, "path");
             this.contents = checkNotNull(contents, "contents");
+            this.length = Ints.checkedCast(checkNotNull((long)length, "size"));
         }
 
         @Override
@@ -512,10 +509,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                         return path;
                     }
                     @Override public long getLength() {
-                        return contents.getContentMetadata().getContentLength();
+                        return length;
                     }
                     @Override public InputStream getInputStream() throws IOException {
-                        return checkNotNull(contents.getInput(), "inputstream for path %s", path);
+                        return contents;
                     }
                 }, path);
                 sftp.chmod(path, permissionsMask);
@@ -525,14 +522,14 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                             .build());
                 }
             } finally {
-                contents.release();
+                Closeables.closeQuietly(contents);
             }
             return null;
         }
 
         @Override
         public String toString() {
-            return "Put(path=[" + path + "])";
+            return "Put(path=[" + path + " "+length+"])";
         }
     };
 
@@ -775,17 +772,17 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     }
 
-    protected Payload toPayload(byte[] input) {
-        return new ByteArrayPayload(input);
-    }
-    
-    protected Payload toPayload(File input) {
-        return new FilePayload(input);
-    }
-    
-    protected Payload toPayload(InputStream input, long length) {
-        InputStreamPayload payload = new InputStreamPayload(new LimitInputStream(input, length));
-        payload.getContentMetadata().setContentLength(length);
-        return payload;
-    }
+//    protected Payload toPayload(byte[] input) {
+//        return new ByteArrayPayload(input);
+//    }
+//    
+//    protected Payload toPayload(File input) {
+//        return new FilePayload(input);
+//    }
+//    
+//    protected Payload toPayload(InputStream input, long length) {
+//        InputStreamPayload payload = new InputStreamPayload(new LimitInputStream(input, length));
+//        payload.getContentMetadata().setContentLength(length);
+//        return payload;
+//    }
 }

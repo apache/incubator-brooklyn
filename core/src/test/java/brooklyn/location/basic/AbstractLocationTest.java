@@ -87,35 +87,31 @@ public class AbstractLocationTest {
     }
 
     @Test
-    public void queryingParentLocationReturnsLocationGivenInConstructor() {
+    public void constructorParentLocationReturnsExpectedLocation() {
         AbstractLocation parent = new ConcreteLocation(MutableMap.of("name", "Middle Earth"));
         AbstractLocation child = new ConcreteLocation(MutableMap.of("name", "The Shire", "parentLocation", parent));
         assertEquals(child.getParentLocation(), parent);
-    }
-
-    @Test
-    public void queryingChildrenOfParentReturnsExpectedLocation() {
-        AbstractLocation parent = new ConcreteLocation(MutableMap.of("name", "Middle Earth"));
-        AbstractLocation child = new ConcreteLocation(MutableMap.of("name", "The Shire", "parentLocation", parent));
         assertEquals(ImmutableList.copyOf(parent.getChildLocations()), ImmutableList.of(child));
     }
 
     @Test
-    public void queryParentLocationAfterSetParentLocationReturnsExpectedLocation() {
+    public void setParentLocationReturnsExpectedLocation() {
         AbstractLocation parent = new ConcreteLocation(MutableMap.of("name", "Middle Earth"));
         AbstractLocation child = new ConcreteLocation(MutableMap.of("name", "The Shire"));
         child.setParentLocation(parent);
         assertEquals(child.getParentLocation(), parent);
-    }
-
-    @Test
-    public void queryingChildrenOfParentAfterSetParentLocationReturnsExpectedLocation() {
-        AbstractLocation parent = new ConcreteLocation(MutableMap.of("name", "Middle Earth"));
-        AbstractLocation child = new ConcreteLocation(MutableMap.of("name", "The Shire"));
-        child.setParentLocation(parent);
         assertEquals(ImmutableList.copyOf(parent.getChildLocations()), ImmutableList.of(child));
     }
-	
+    
+    @Test
+    public void testAddChildToParentLocationReturnsExpectedLocation() {
+        AbstractLocation parent = new ConcreteLocation(MutableMap.of("id", "1"));
+        AbstractLocation child = new ConcreteLocation(MutableMap.of("id", "2"));
+        parent.addChildLocation(child);
+        assertEquals(child.getParentLocation(), parent);
+        assertEquals(ImmutableList.copyOf(parent.getChildLocations()), ImmutableList.of(child));
+    }
+
     @Test
     public void testFieldSetFromFlag() {
     	ConcreteLocation loc = new ConcreteLocation(MutableMap.of("myfield", "myval"));
@@ -127,11 +123,5 @@ public class AbstractLocationTest {
         ConcreteLocation loc = new ConcreteLocation();
         assertEquals(loc.myfield, "mydefault");
     }
-	
-//	@Test
-//	public void testAddChild() {
-//		AbstractLocation parent = new ConcreteLocation(id: "1");
-//		AbstractLocation child = new ConcreteLocation(id: "2");
-//		parent.addChildLocation(child);
-//	}
+    
 }

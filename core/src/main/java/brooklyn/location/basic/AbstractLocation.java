@@ -10,8 +10,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.entity.trait.Configurable;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
@@ -37,16 +40,21 @@ import com.google.common.io.Closeables;
  * 
  * Override {@link #configure(Map)} to add special initialization logic.
  */
-public abstract class AbstractLocation implements Location, HasHostGeoInfo {
+public abstract class AbstractLocation implements Location, HasHostGeoInfo, Configurable {
+    
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
 
+    public static final ConfigKey<Location> PARENT_LOCATION = new BasicConfigKey<Location>(Location.class, "parentLocation");
+    
     @SetFromFlag
     String id;
-    
+
+    // _not_ set from flag; configured explicitly in configure, because we also need to update the parent's list of children
     private Location parentLocation;
+    
     private final Collection<Location> childLocations = Lists.newArrayList();
     private final Collection<Location> childLocationsReadOnly = Collections.unmodifiableCollection(childLocations);
-    protected Map leftoverProperties = Maps.newLinkedHashMap();
+    
     @SetFromFlag
     protected String name;
     
@@ -88,6 +96,11 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
         }
     }
 
+    /** @deprecated in 0.5.0, not used or exposed; use configure(Map) */
+    public final void configure() {
+        configure(Maps.newLinkedHashMap());
+    }
+    
     /** will set fields from flags, and put the remaining ones into the 'leftovers' map.
      * can be subclassed for custom initialization but note the following. 
      * <p>
@@ -96,30 +109,27 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
      * rely on field initializers because they may not run until *after* this method
      * (this method is invoked by the constructor in this class, so initializers
      * in subclasses will not have run when this overridden method is invoked.) */ 
-    protected void configure() {
-        configure(Maps.newLinkedHashMap());
-    }
     protected void configure(Map properties) {
+        boolean firstTime = (id==null);
+        if (firstTime) {
+            // pick a random ID if one not set
+            id = properties.containsKey("id") ? (String)properties.get("id") : Identifiers.makeRandomId(8);
+        }
         configBag.putAll(properties);
-        leftoverProperties.putAll(FlagUtils.setFieldsFromFlags(properties, this));
-        //replace properties _contents_ with leftovers so subclasses see leftovers only
-        properties.clear();
-        properties.putAll(leftoverProperties);
-        leftoverProperties = properties;
         
-        if (id==null) id = Identifiers.makeRandomId(8);
+        if (properties.containsKey(PARENT_LOCATION.getName())) {
+            // need to ensure parent's list of children is also updated
+            setParentLocation(configBag.get(PARENT_LOCATION));
+        }
+
+        // NB: flag-setting done here must also be done in BasicLocationRebindSupport 
+        FlagUtils.setFieldsFromFlagsWithBag(this, properties, configBag, firstTime);
         
         if (!truth(name) && truth(properties.get("displayName"))) {
             //'displayName' is a legacy way to refer to a location's name
             //FIXME could this be a GString?
             Preconditions.checkArgument(properties.get("displayName") instanceof String, "'displayName' property should be a string");
             name = (String) properties.remove("displayName");
-        }
-
-        if (truth(properties.get("parentLocation"))) {
-            Preconditions.checkArgument(properties.get("parentLocation") == null || properties.get("parentLocation") instanceof Location,
-                "'parentLocation' property should be a Location instance");
-            setParentLocation((Location)properties.remove("parentLocation"));
         }
     }
     
@@ -128,8 +138,27 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     public Location getParentLocation() { return parentLocation; }
     public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
 
+    @Override
+    public <T> T getConfig(ConfigKey<T> key) {
+        if (hasConfig(key)) return getConfigBag().get(key);
+        if (getParentLocation()!=null) return getParentLocation().getConfig(key);
+        return key.getDefaultValue();
+    }
+    @Override
+    public boolean hasConfig(ConfigKey<?> key) {
+        return getConfigBag().containsKey(key);
+    }
+    @Override
+    public Map<String,Object> getAllConfig() {
+        return getConfigBag().getAllConfig();
+    }
+    
     public ConfigBag getConfigBag() {
         return configBag;
+    }
+    
+    public <T> T setConfig(ConfigKey<T> key, T value) {
+        return configBag.put(key, value);
     }
     
     public void setName(String name) {
@@ -208,22 +237,25 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     }
     
     @Override
-    public boolean hasLocationProperty(String key) { return leftoverProperties.containsKey(key); }
+    @Deprecated
+    public boolean hasLocationProperty(String key) { return configBag.containsKey(key); }
     
     @Override
-    public Object getLocationProperty(String key) { return leftoverProperties.get(key); }
+    @Deprecated
+    public Object getLocationProperty(String key) { return configBag.getStringKey(key); }
     
     @Override
+    @Deprecated
     public Object findLocationProperty(String key) {
         if (hasLocationProperty(key)) return getLocationProperty(key);
         if (parentLocation != null) return parentLocation.findLocationProperty(key);
         return null;
     }
     
-    @Override
-    public Map<String,?> getLocationProperties() {
-    	return Collections.<String,Object>unmodifiableMap(leftoverProperties);
-    }
+//    @Override
+//    public Map<String,?> getLocationProperties() {
+//    	return Collections.<String,Object>unmodifiableMap(leftoverProperties);
+//    }
 
     /** Default String representation is simplified name of class, together with selected fields. */
     @Override
@@ -240,20 +272,12 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo {
     public void setHostGeoInfo(HostGeoInfo hostGeoInfo) {
         if (hostGeoInfo!=null) { 
             this.hostGeoInfo = hostGeoInfo;
-            if (!truth(getLocationProperty("latitude"))) leftoverProperties.put("latitude", hostGeoInfo.latitude); 
-            if (!truth(getLocationProperty("longitude"))) leftoverProperties.put("longitude", hostGeoInfo.longitude);
+            setConfig(LocationConfigKeys.LATITUDE, hostGeoInfo.latitude); 
+            setConfig(LocationConfigKeys.LONGITUDE, hostGeoInfo.longitude); 
         } 
     }
-    
-    /**
-     * Exposed only for rebind; do not call otherwise!
-     */
-    // TODO Would like to use a nicer pattern than this
-	public void addLeftoverProperties(Map<String, ?> locationProperties) {
-		leftoverProperties.putAll(locationProperties);
-	}
-	
-	@Override
+
+    @Override
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this);
     }

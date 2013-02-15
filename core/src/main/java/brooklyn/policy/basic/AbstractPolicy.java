@@ -18,6 +18,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicyType;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
 import com.google.common.base.Objects;
@@ -65,7 +66,11 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         configure(Collections.emptyMap());
     }
     
+    @SuppressWarnings("unchecked")
     protected void configure(Map flags) {
+        // TODO only set on first time through
+        boolean isFirstTime = true;
+        
         // allow config keys, and fields, to be set from these flags if they have a SetFromFlag annotation
         // or if the value is a config key
         for (Iterator<Map.Entry> iter = flags.entrySet().iterator(); iter.hasNext();) {
@@ -80,9 +85,12 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
                 }
             }
         }
-        flags = FlagUtils.setConfigKeysFromFlags(flags, this);
-        flags = FlagUtils.setFieldsFromFlags(flags, this);
-        leftoverProperties.putAll(flags);
+
+        // TODO use ConfigBag
+        ConfigBag bag = new ConfigBag().putAll(flags);
+        FlagUtils.setFieldsFromFlags(this, bag, isFirstTime);
+        FlagUtils.setAllConfigKeys(this, bag);
+        leftoverProperties.putAll(bag.getUnusedConfig());
 
         //replace properties _contents_ with leftovers so subclasses see leftovers only
         flags.clear();

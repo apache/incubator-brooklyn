@@ -20,7 +20,7 @@ import brooklyn.test.entity.TestEntityImpl
 @Deprecated // Class under test is deprecated
 public class SshSensorAdapterTest {
 
-    final static LocalhostMachineProvisioningLocation location = [ count:1 ]
+    final static LocalhostMachineProvisioningLocation location = [count:1]
     final static SshMachineLocation machine = location.obtain()
 
 	final static BasicAttributeSensor SENSOR_STRING = [ String.class, "name.string", "String" ]

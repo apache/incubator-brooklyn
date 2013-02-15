@@ -6,6 +6,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
+import brooklyn.config.ConfigKey
+import brooklyn.entity.trait.Configurable
+import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.BasicConfigKey.StringConfigKey
+import brooklyn.util.config.ConfigBag
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 
@@ -144,6 +149,36 @@ public class FlagUtilsTest {
         assertEquals exceptions, 1
     }
 
+    @Test
+    public void testSetConfigKeys() {
+        FooCK f = []
+        def unused = FlagUtils.setFieldsFromFlags(f, f1: 9, ck1:"do-set", ck2:"dont-set");
+        assertEquals(f.bag.get(FooCK.CK1), "do-set")
+        assertEquals(f.f1, 9)
+        assertEquals(f.bag.containsKey(FooCK.CK2), false)
+        if (unused.size()!=1 || !unused.ck2) fail("Wrong unused contents: "+unused);
+    }
+    
+    @Test
+    public void testSetAllConfigKeys() {
+        FooCK f = []
+        def unused = FlagUtils.setAllConfigKeys(f1: 9, ck1:"do-set", ck2:"do-set-2", f);
+        assertEquals(f.bag.get(FooCK.CK1), "do-set")
+        assertEquals(f.bag.containsKey(FooCK.CK2), true)
+        assertEquals(f.bag.get(FooCK.CK2), "do-set-2")
+        if (unused.size()!=1 || !unused.f1) fail("Wrong unused contents: "+unused);
+    }
+
+    @Test
+    public void testSetFromConfigKeys() {
+        FooCK f = []
+        def unused = FlagUtils.setFieldsFromFlags(f, (new BasicConfigKey<Integer>(Integer.class, "f1")): 9, ck1:"do-set", ck2:"dont-set");
+        assertEquals(f.bag.get(FooCK.CK1), "do-set")
+        assertEquals(f.f1, 9)
+        assertEquals(f.bag.containsKey(FooCK.CK2), false)
+        if (unused.size()!=1 || !unused.ck2) fail("Wrong unused contents: "+unused);
+    }
+
 }
 
 class Foo {
@@ -175,4 +210,19 @@ class WithImmutableNonNullableObject {
 class WithSpecialFieldTypes {
     @SetFromFlag Set set;
     @SetFromFlag InetAddress inet;
+}
+
+class FooCK implements Configurable {
+    @SetFromFlag
+    public static ConfigKey<String> CK1 = new StringConfigKey("ck1");
+    
+    public static ConfigKey<String> CK2 = new StringConfigKey("ck2");
+
+    @SetFromFlag
+    int f1;
+    
+    ConfigBag bag = [];
+    public <T> T setConfig(ConfigKey<T> key, T val) {
+        bag.put(key, val);
+    }
 }

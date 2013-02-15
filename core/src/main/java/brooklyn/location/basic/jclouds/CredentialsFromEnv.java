@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigKey;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableList;
@@ -70,9 +71,9 @@ public class CredentialsFromEnv {
         this.sysProps = sysProps;
         props.put("provider", provider);
         
-        for (String it : JcloudsLocation.getAllSupportedProperties()) {
-            String v = getProviderSpecificValue(convertFromCamelToProperty(it));
-            if (v!=null) props.put(it, v);
+        for (ConfigKey<?> it : JcloudsLocation.getAllSupportedProperties()) {
+            String v = getProviderSpecificValue(convertFromCamelToProperty(it.getName()));
+            if (v!=null) props.put(it.getName(), v);
         }
         
         //these override the above
@@ -192,7 +193,8 @@ public class CredentialsFromEnv {
         f2.putAll(flags);
         
         //for all annotated fields, map to brooklyn.jclouds.$provider namespace
-        for (String n : JcloudsLocation.getAllSupportedProperties()) {
+        for (ConfigKey<?> nck : JcloudsLocation.getAllSupportedProperties()) {
+            String n = nck.getName();
             Object fv = f2.remove(n);
             if (fv!=null) {
                 f2.put("brooklyn.jclouds."+provider+"."+n, fv);

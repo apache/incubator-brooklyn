@@ -27,16 +27,16 @@ public class AwsJcloudsMinRamTest {
         l.release(m1);
     }
 
-    @Test(groups="Live")
-    public void testJcloudsCreateNamedJungleBig() throws Exception {
-        @SuppressWarnings("unchecked")
-        MachineProvisioningLocation<SshMachineLocation> l = (MachineProvisioningLocation<SshMachineLocation>) new LocationRegistry().resolve("named:jungle-big");
-        
-        SshMachineLocation m1 = l.obtain(MutableMap.<String,String>of());
-
-        log.info("GOT "+m1);
-        
-        l.release(m1);
-    }
+//    @Test(groups="Live")
+//    public void testJcloudsCreateNamedJungleBig() throws Exception {
+//        @SuppressWarnings("unchecked")
+//        MachineProvisioningLocation<SshMachineLocation> l = (MachineProvisioningLocation<SshMachineLocation>) new LocationRegistry().resolve("named:jungle-big");
+//        
+//        SshMachineLocation m1 = l.obtain(MutableMap.<String,String>of());
+//
+//        log.info("GOT "+m1);
+//        
+//        l.release(m1);
+//    }
 
 }

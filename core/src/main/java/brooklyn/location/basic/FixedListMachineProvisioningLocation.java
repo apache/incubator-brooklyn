@@ -1,6 +1,5 @@
 package brooklyn.location.basic;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.Closeable;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.location.CoordinatesProvider;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
@@ -35,8 +33,7 @@ import com.google.common.io.Closeables;
  * This can be extended to have a mechanism to make more machines to be available
  * (override provisionMore and canProvisionMore).
  */
-//TODO combine with jclouds BYON
-public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, CoordinatesProvider, Closeable {
+public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, Closeable {
 
     // TODO Synchronization looks very wrong for accessing machines/inUse 
     // e.g. removeChildLocation doesn't synchronize when doing machines.remove(...),
@@ -53,9 +50,6 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
 
     @SetFromFlag
     protected Set<T> pendingRemoval;
-    
-    @SetFromFlag
-    protected File localTempDir;
     
     public FixedListMachineProvisioningLocation() {
         this(Maps.newLinkedHashMap());
@@ -125,14 +119,6 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         return inUse;
     }
     
-    public double getLatitude() {
-        return (Double) elvis(leftoverProperties.get("latitude"), 0);
-    }
-    
-    public double getLongitude() {
-        return (Double) elvis(leftoverProperties.get("longitude"), 0);
-    }
-
     public Set<T> getAvailable() {
         Set<T> a = Sets.newLinkedHashSet(machines);
         a.removeAll(inUse);
@@ -301,12 +287,12 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         }
         public FixedListMachineProvisioningLocation build() {
             return new FixedListMachineProvisioningLocation(MutableMap.builder()
-                    .put("machines", machines)
-                    .put("user", user)
-                    .put("privateKeyPassphrase", privateKeyPassphrase)
-                    .put("privateKeyFile", privateKeyFile)
-                    .put("privateKeyData", privateKeyData)
-                    .put("localTempDir", localTempDir)
+                    .putIfNotNull("machines", machines)
+                    .putIfNotNull("user", user)
+                    .putIfNotNull("privateKeyPassphrase", privateKeyPassphrase)
+                    .putIfNotNull("privateKeyFile", privateKeyFile)
+                    .putIfNotNull("privateKeyData", privateKeyData)
+                    .putIfNotNull("localTempDir", localTempDir)
                     .build());
         }        
     }
