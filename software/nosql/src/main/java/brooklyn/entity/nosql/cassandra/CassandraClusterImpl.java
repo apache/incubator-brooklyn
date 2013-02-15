@@ -53,6 +53,11 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     }
     public CassandraClusterImpl(Map<?, ?> properties, Entity parent) {
         super(properties, parent);
+    }
+
+    @Override
+    public void postConstruct() {
+        super.postConstruct();
 
         // This DeferredSupplier will return a comma separated list of all available
         // hostnames in the cluster or if none are available yet then a Task for the first

@@ -24,7 +24,13 @@
             <artifactId>brooklyn-software-base</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-webapp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
+        <!-- for redis testing -->
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
@@ -38,7 +44,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!--  for cassandra -->
+        <!-- for cassandra testing -->
         <dependency>
             <groupId>com.netflix.astyanax</groupId>
             <artifactId>astyanax</artifactId>
@@ -49,6 +55,10 @@
                     <artifactId>slf4j-log4j12</artifactId>
                     <groupId>org.slf4j</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>log4j</artifactId>
+                    <groupId>log4j</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -56,6 +66,28 @@
             <artifactId>rackspace-cloudservers-uk</artifactId>
             <version>${jclouds.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- for couchdb testing -->
+        <dependency>
+            <groupId>com.google.code.jcouchdb</groupId>
+            <artifactId>jcouchdb</artifactId>
+            <version>0.11.0-1</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>log4j</artifactId>
+                    <groupId>log4j</groupId>
+                </exclusion>
+                <exclusion>
+                	<artifactId>httpcore</artifactId>
+                	<groupId>org.apache.httpcomponents</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
