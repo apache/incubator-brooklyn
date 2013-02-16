@@ -17,6 +17,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import brooklyn.entity.basic.AbstractApplication;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -27,7 +29,7 @@ import org.testng.annotations.Test;
 public class CliIntegrationTest {
 
     // FIXME this should not be hardcoded; needed to use the local code for Main
-    private static final String BROOKLYN_BIN_PATH = "../dist/target/brooklyn-dist/bin/brooklyn";
+    private static final String BROOKLYN_BIN_PATH = "./target/brooklyn-dist/bin/brooklyn";
     private static final String BROOKLYN_CLASSPATH = "./target/test-classes/:./target/classes/";
 
     private ExecutorService executor;
@@ -93,7 +95,9 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
@@ -108,7 +112,7 @@ public class CliIntegrationTest {
         ProcessBuilder pb = new ProcessBuilder();
         pb.environment().remove("BROOKLYN_HOME");
         pb.environment().put("BROOKLYN_CLASSPATH", BROOKLYN_CLASSPATH);
-        pb.command(BROOKLYN_BIN_PATH, "--verbose", "launch", "--stopOnKeyPress", "--app", "brooklyn.cli.CliTest$ExampleApp", "--location", "localhost", "--noConsole");
+        pb.command(BROOKLYN_BIN_PATH, "--verbose", "launch", "--stopOnKeyPress", "--app", "brooklyn.cli.CliIntegrationTest$TestApplication", "--location", "localhost", "--noConsole");
         final Process brooklyn = pb.start();
  
         Callable<Void> cli = new Callable<Void>() {
@@ -121,7 +125,7 @@ public class CliIntegrationTest {
                 // Check if the output looks as expected for the launch command
                 assertTrue(consoleOutput.contains("Launching Brooklyn web console management"), "Launch message not output; output=" + consoleOutput);
                 assertFalse(consoleOutput.contains("Initiating Jersey application"), "Web console started; output=" + consoleOutput);
-                assertTrue(consoleOutput.contains("Started application ExampleApp"), "ExampleApp not started; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("Started application TestApplication"), "Application not started; output=" + consoleOutput);
                 assertTrue(consoleOutput.contains("Server started. Press return to stop."), "Server started message not output; output=" + consoleOutput);
                 assertTrue(consoleError.isEmpty(), "Output present; error=" + consoleError);
 
@@ -137,6 +141,7 @@ public class CliIntegrationTest {
             OutputStream out = brooklyn.getOutputStream();
             out.write('\n');
             out.flush();
+
             future.get(10, TimeUnit.SECONDS);
 
             // Check error code from process is 0
@@ -144,7 +149,9 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
@@ -190,7 +197,9 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
@@ -236,7 +245,9 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
@@ -278,9 +289,20 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
     }
+
+    /** An empty {@link Application} for testing. */
+    @SuppressWarnings("serial")
+    public static class TestApplication extends AbstractApplication {
+        public TestApplication() {
+            // Empty, for testing
+        }
+    }
+
 }
