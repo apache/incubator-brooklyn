@@ -75,7 +75,7 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
         tapp.start([location]);
         log.info("MySQL started");
 
-        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", "localhost", mysql.getAttribute(MySqlNode.MYSQL_PORT));
+        new VogellaExampleAccess("com.mysql.jdbc.Driver", "mysql", "localhost", mysql.getAttribute(MySqlNode.MYSQL_PORT)).readModifyAndRevertDataBase();
 
         log.info("Ran vogella MySQL example -- SUCCESS");
 

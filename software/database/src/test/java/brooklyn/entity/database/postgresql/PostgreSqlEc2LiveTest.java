@@ -20,7 +20,7 @@ public class PostgreSqlEc2LiveTest extends AbstractEc2LiveTest {
 
         String host = psql.getAttribute(PostgreSqlNode.HOSTNAME);
         int port = psql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT);
-        new VogellaExampleAccess().readDataBase("org.postgresql.Driver", "postgresql", host, port);
+        new VogellaExampleAccess("org.postgresql.Driver", "postgresql", host, port).readModifyAndRevertDataBase();
     }
     
     @Test(enabled=false)

@@ -1,10 +1,8 @@
-package brooklyn.entity.database.postgresql;
-
+package brooklyn.entity.database.postgresql
 
 import brooklyn.config.BrooklynProperties
-import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.database.mysql.MySqlNode
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation
@@ -82,6 +80,6 @@ public class PostgreSqlRackspaceLiveTest extends PostgreSqlIntegrationTest {
 
         String host = psql.getAttribute(PostgreSqlNode.HOSTNAME);
         int port = psql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT);
-        new VogellaExampleAccess().readDataBase("org.postgresql.Driver", "postgresql", host, port);
+        new VogellaExampleAccess("org.postgresql.Driver", "postgresql", host, port).readModifyAndRevertDataBase();
     }
 }

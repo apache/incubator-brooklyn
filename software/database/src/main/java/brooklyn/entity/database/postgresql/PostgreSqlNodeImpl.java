@@ -1,5 +1,8 @@
 package brooklyn.entity.database.postgresql;
 
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
@@ -33,5 +36,12 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
 
     public int getPort() {
         return getAttribute(POSTGRESQL_PORT);
+    }
+
+    @Override
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Collection<Integer> result = super.getRequiredOpenPorts();
+        if (groovyTruth(getAttribute(POSTGRESQL_PORT))) result.add(getAttribute(POSTGRESQL_PORT));
+        return result;
     }
 }
