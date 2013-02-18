@@ -2,26 +2,23 @@ package brooklyn.entity.database.rubyrep;
 
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.database.mysql.MySqlIntegrationTest;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.database.mysql.MySqlNodeImpl;
+import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import brooklyn.entity.database.postgresql.PostgreSqlNode;
-import brooklyn.entity.database.postgresql.PostgreSqlNodeImpl;
-import brooklyn.location.Location;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation;
-import brooklyn.util.MutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.testng.annotations.Test;
 
 import static java.util.Arrays.asList;
 
 /**
- * The PostgreSqlLiveTest installs Postgresql on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
- * PostgreSql works like expected on these Operating Systems.
+ * The RubyRepRackspaceLiveTest installs RubyRep on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
+ * RubyRep and PostgreSql works like expected on these Operating Systems.
  */
-public class RubyRepLiveTest extends RubyRepIntegrationTest {
+public class RubyRepRackspaceLiveTest extends RubyRepIntegrationTest {
+    
     @Test(groups = "Live")
     public void test_Debian_6() throws Exception {
         test("Debian 6");
@@ -63,19 +60,27 @@ public class RubyRepLiveTest extends RubyRepIntegrationTest {
     }
 
     public void test(String osRegex) throws Exception {
-        MySqlNode db1 = new MySqlNodeImpl(MutableMap.of("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT,
-                "port", "9111"), tapp);
-        PostgreSqlNode db2 = new PostgreSqlNodeImpl(MutableMap.of("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT,
-                "port", "9112"), tapp);
-        super.testInLocation(db1, db2, getLocation(osRegex));
-    }
-    
-    protected Location getLocation(String osRegex) {
+        PostgreSqlNode db1 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+                .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
+                .configure("port", 9111));
+        PostgreSqlNode db2 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+                .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
+                .configure("port", 9111));
+
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
         brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
-        brooklynProperties.put("inboundPorts", new int[] {22, 5432});
+        brooklynProperties.put("inboundPorts", new int[] {22, 9111});
         LocationRegistry locationRegistry = new LocationRegistry(brooklynProperties);
-        return locationRegistry.resolve("cloudservers-uk");
+        
+        startInLocation(tapp, db1, db2, locationRegistry.resolve("cloudservers-uk"));
+
+        //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
+        for (DatabaseNode node : ImmutableSet.of(db1, db2)) {
+            SshMachineLocation l = (SshMachineLocation) node.getLocations().iterator().next();
+            l.exec(asList("iptables -I INPUT -p tcp --dport 9111 -j ACCEPT"));
+        }
+        
+        testReplication(db1, db2);
     }
 }

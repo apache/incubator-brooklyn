@@ -11,8 +11,8 @@ import org.testng.annotations.Test
 import static java.util.Arrays.asList
 
 /**
- * The PostgreSqlLiveTest installs Postgresql on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
- * PostgreSql works like expected on these Operating Systems.
+ * The PostgreSqlRackspaceLiveTest installs Postgresql on various operating systems like Ubuntu, CentOS, Red Hat etc. To
+ * make sure that PostgreSql works like expected on these Operating Systems.
  */
 public class PostgreSqlRackspaceLiveTest extends PostgreSqlIntegrationTest {
     @Test(groups = ["Live"])

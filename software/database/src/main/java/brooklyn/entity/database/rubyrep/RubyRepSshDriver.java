@@ -66,7 +66,7 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
         log.info("Copying creation script " + getEntity().toString());
 
         String configScriptUrl = entity.getConfig(RubyRepNode.CONFIGURATION_SCRIPT_URL);
-        Reader configContents = null;
+        Reader configContents;
         if (configScriptUrl != null) {
             // If set accept as-is
             configContents = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(configScriptUrl));
@@ -77,7 +77,7 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
                 String left = entity.getConfig(RubyRepNode.LEFT_DATABASE_URL);
                 String leftDb = entity.getConfig(RubyRepNode.LEFT_DATABASE);
                 String right = entity.getConfig(RubyRepNode.RIGHT_DATABASE_URL);
-                String rightDb = entity.getConfig(RubyRepNode.LEFT_DATABASE);
+                String rightDb = entity.getConfig(RubyRepNode.RIGHT_DATABASE);
                 String leftUser = entity.getConfig(RubyRepNode.LEFT_USERNAME);
                 String rightUser = entity.getConfig(RubyRepNode.RIGHT_USERNAME);
                 String leftPass = entity.getConfig(RubyRepNode.LEFT_PASSWORD);
@@ -111,7 +111,6 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
 
         log.info("Sending " + configContents);
         getMachine().copyTo(configContents, getRunDir() + "/myrubyrep.conf");
-
     }
 
     private String toConfig(String url, String db, String user, String pass) throws ExecutionException, InterruptedException, URISyntaxException {

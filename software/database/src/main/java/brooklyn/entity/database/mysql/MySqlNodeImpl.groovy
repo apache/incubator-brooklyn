@@ -32,6 +32,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     protected void connectSensors() {
         super.connectSensors();
         setAttribute(DB_URL, "mysql://" + localHostname + ":" + port + "/")
+        setAttribute(MYSQL_URL, "mysql://" + localHostname + ":" + port + "/")
         setAttribute(SERVICE_UP, true)  // TODO poll for status, and activity
     }
 
