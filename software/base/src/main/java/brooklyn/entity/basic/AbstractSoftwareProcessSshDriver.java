@@ -84,7 +84,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
     
     protected String getEntityVersionLabel(String separator) {
-        return elvis(entity.getClass().getSimpleName(),  
+        return elvis(entity.getEntityType().getSimpleName(),  
                 entity.getClass().getName())+(!NO_VERSION_INFO.equals(getVersion()) ? separator+getVersion() : "");
     }
     

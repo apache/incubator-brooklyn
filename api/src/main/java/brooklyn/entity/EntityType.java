@@ -22,6 +22,11 @@ public interface EntityType extends Serializable {
     String getName();
     
     /**
+     * The simple type name of this entity (normally the unqualified class name).
+     */
+    String getSimpleName();
+
+    /**
      * ConfigKeys available on this entity.
      */
     Set<ConfigKey<?>> getConfigKeys();

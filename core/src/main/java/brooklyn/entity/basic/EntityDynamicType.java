@@ -17,6 +17,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
@@ -34,6 +35,7 @@ public class EntityDynamicType {
     private final Class<? extends Entity> entityClass;
     private final AbstractEntity entity;
     private volatile String name;
+    private volatile String simpleName;
     
     /** 
      * Effectors on this entity.
@@ -63,7 +65,7 @@ public class EntityDynamicType {
     private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
         this.entityClass = clazz;
         this.entity = entity;
-        this.name = clazz.getCanonicalName();
+        setName((clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName());
         String id = entity==null ? clazz.getName() : entity.getId();
         
         effectors.putAll(findEffectors(clazz, entity));
@@ -82,8 +84,18 @@ public class EntityDynamicType {
     }
     
     public void setName(String name) {
+        if (Strings.isBlank(name)) {
+            throw new IllegalArgumentException("Invalid name "+(name == null ? "null" : "'"+name+"'")+"; name must be non-empty and not just white space");
+        }
         this.name = name;
+        this.simpleName = toSimpleName(name);
         snapshotValid.set(false);
+    }
+    
+    private String toSimpleName(String name) {
+        String simpleName = name.substring(name.lastIndexOf(".")+1);
+        if (Strings.isBlank(simpleName)) simpleName = name.trim();
+        return Strings.makeValidFilename(simpleName);
     }
     
     public synchronized EntityType getSnapshot() {
@@ -186,7 +198,7 @@ public class EntityDynamicType {
     
     private EntityTypeSnapshot refreshSnapshot() {
         if (snapshotValid.compareAndSet(false, true)) {
-            snapshot = new EntityTypeSnapshot(name, configKeys, sensors, effectors.values());
+            snapshot = new EntityTypeSnapshot(name, simpleName, configKeys, sensors, effectors.values());
         }
         return snapshot;
     }

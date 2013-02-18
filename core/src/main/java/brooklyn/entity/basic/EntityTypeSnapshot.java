@@ -17,14 +17,16 @@ public class EntityTypeSnapshot implements EntityType {
     private static final long serialVersionUID = 4670930188951106009L;
     
     private final String name;
+    private final String simpleName;
     private final Map<String, ConfigKey<?>> configKeys;
     private final Map<String, Sensor<?>> sensors;
     private final Set<Effector<?>> effectors;
     private final Set<ConfigKey<?>> configKeysSet;
     private final Set<Sensor<?>> sensorsSet;
 
-    EntityTypeSnapshot(String name, Map<String, ConfigKey<?>> configKeys, Map<String, Sensor<?>> sensors, Collection<Effector<?>> effectors) {
+    EntityTypeSnapshot(String name, String simpleName, Map<String, ConfigKey<?>> configKeys, Map<String, Sensor<?>> sensors, Collection<Effector<?>> effectors) {
         this.name = name;
+        this.simpleName = simpleName;
         this.configKeys = ImmutableMap.copyOf(configKeys);
         this.sensors = ImmutableMap.copyOf(sensors);
         this.effectors = ImmutableSet.copyOf(effectors);
@@ -35,6 +37,11 @@ public class EntityTypeSnapshot implements EntityType {
     @Override
     public String getName() {
         return name;
+    }
+    
+    @Override
+    public String getSimpleName() {
+        return simpleName;
     }
     
     @Override
