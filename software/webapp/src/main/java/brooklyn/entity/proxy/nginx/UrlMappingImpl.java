@@ -95,6 +95,8 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
 
     @Override
     public void onManagementStarting() {
+        super.onManagementStarting();
+        
         if (getConfig(TARGET_PARENT) != null) {
             recompute();
             // following line could be more efficient (just modify the addresses set, not clearing it each time; 
