@@ -39,7 +39,7 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx {
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.34");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.37");
 
     /**
      * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down.
