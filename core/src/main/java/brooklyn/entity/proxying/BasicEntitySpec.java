@@ -162,7 +162,7 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
         if (Modifier.isAbstract(val.getModifiers())) throw new IllegalStateException("Implementation "+val+" is abstract, but must be a non-abstract class");
     }
 
-    // TODO Duplicates method in BasicEntityTypeRegistry
+    // TODO Duplicates method in BasicEntityTypeRegistry, and InternalEntityFactory.isNewStyleEntity
     private void checkIsNewStyleImplementation(Class<?> implClazz) {
         try {
             implClazz.getConstructor(new Class[0]);
