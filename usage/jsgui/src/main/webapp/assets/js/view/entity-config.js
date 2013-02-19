@@ -4,8 +4,9 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "view/viewutils", "model/config-summary", "text!tpl/apps/config.html",
-    "text!tpl/apps/config-row.html", "tablesorter"
+    "underscore", "jquery", "backbone",
+    "view/viewutils", "model/config-summary", "text!tpl/apps/config.html", "text!tpl/apps/config-row.html",
+    "jquery-datatables", "datatables-fnstandingredraw"
 ], function (_, $, Backbone, ViewUtils, ConfigSummary, ConfigHtml, ConfigRowHtml) {
 
     var EntityConfigView = Backbone.View.extend({
@@ -16,33 +17,34 @@ define([
             'click .filterEmpty':'toggleFilterEmpty'
         },
         initialize:function () {
-            this.$el.html(this.template({}));
+        	this.$el.html(this.template({ }));
+            $.ajaxSetup({ async:false });
             var that = this,
                 configCollection = new ConfigSummary.Collection,
-                $table = $('#config-table'),
-                $tableBody = $('tbody').empty();
-            ViewUtils.myDataTable($table);
-            configCollection.url = this.model.getLinkByName('config');
-            var success = function () {
+                $table = this.$('#config-table'),
+                $tbody = this.$('tbody').empty();
+            configCollection.url = that.model.getLinkByName('config');
+            configCollection.fetch({ success:function () {
                 configCollection.each(function (config) {
-                    $tableBody.append(that.configTemplate({
+                    $tbody.append(that.configTemplate({
                         name:config.get("name"),
                         description:config.get("description"),
-                        value:'',
+                        value:'', // will be set later
                         type:config.get("type")
                     }));
                 });
-                that.updateConfigPeriodically();
-                // TODO tooltip doesn't work on 'i' elements in table (bottom left toolbar)
-                $table.find('*[rel="tooltip"]').tooltip();
-            };
-            configCollection.fetch({ async:false, success:success });
-            this.toggleFilterEmpty();
+                $tbody.find('*[rel="tooltip"]').tooltip();
+                that.updateConfigPeriodically(that);
+                ViewUtils.myDataTable($table);
+                $table.dataTable().fnAdjustColumnSizing();
+            }});
+            that.toggleFilterEmpty();
         },
         render:function () {
-            return this
+            this.updateConfigNow(this);
+            return this;
         },
-        toggleFilterEmpty: function() {
+        toggleFilterEmpty:function () {
             ViewUtils.toggleFilterEmpty(this.$('#config-table'), 1);
         },
         refreshConfig:function () {
@@ -51,24 +53,27 @@ define([
         // register a callback to update the sensors
         updateConfigPeriodically:function (that) {
             var self = this;
-            that.updateConfigNow(that)
-            that.callPeriodically("entity-config", function() { self.updateConfigNow(that) }, 3000)
+            that.updateConfigNow(that);
+            that.callPeriodically("entity-config", function() {
+                self.updateConfigNow(that);
+            }, 3000);
         },
         updateConfigNow:function (that) {
             // NB: this won't add new dynamic config
-            var $table = this.$('#config-table');
             var url = that.model.getConfigUpdateUrl(),
-            $rows = that.$("tr.config-row")
-                $.get(url, function (data) {
-                    // iterate over the config table and update each value
-                    $rows.each(function (index,row) {
-                        var key = $(this).find(".config-name").text()
-                        var v = data[key]
-                        if (v === undefined) v = ''
-                        $table.dataTable().fnUpdate(_.escape(v), row, 1)
-                    })
-                })
-            }
-        })
-    return EntityConfigView
-})
+                $table = that.$('#config-table'),
+                $rows = that.$("tr.config-row");
+            $.get(url, function (data) {
+                // iterate over the config table and update each value
+                $rows.each(function (index, row) {
+                    var key = $(this).find(".config-name").text();
+                    var v = data[key];
+                    if (v === undefined) v = '';
+                    $table.dataTable().fnUpdate(_.escape(v), row, 1, false);
+                });
+            });
+            $table.dataTable().fnStandingRedraw();
+        }
+    });
+    return EntityConfigView;
+});

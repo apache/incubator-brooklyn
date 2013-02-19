@@ -1,32 +1,36 @@
+
+    /* Libraries */
     paths:{
-        // libraries
         "jquery":"js/libs/jquery",
         "underscore":"js/libs/underscore",
         "backbone":"js/libs/backbone",
         "bootstrap":"js/libs/bootstrap",
         "formatJson":"js/libs/json-formatter",
         "jquery-form":"js/libs/jquery.form",
-        "tablesorter":"js/libs/jquery.dataTables",
+        "jquery-datatables":"js/libs/jquery.dataTables",
         "jquery-slideto":"js/libs/jquery.slideto.min",
         "jquery-wiggle":"js/libs/jquery.wiggle.min",
         "jquery-ba-bbq":"js/libs/jquery.ba-bbq.min",
         "handlebars":"js/libs/handlebars-1.0.rc.1",
         "brooklyn-utils":"js/libs/brooklyn-utils",
+        "datatables-fnstandingredraw":"js/libs/dataTables.fnStandingRedraw",
         "text":"js/libs/text",
         "model":"js/model",
         "view":"js/view",
         "router":"js/router"
     },
-
     shim:{
-        underscore:{
+        "underscore":{
             exports:"_"
         },
-        formatJson:{
+        "formatJson":{
             exports:"FormatJSON"
         },
-        backbone:{
-            deps:[ "underscore", "jquery"],
+        "backbone":{
+            deps:[ "underscore", "jquery" ],
             exports:"Backbone"
+        },
+        "datatables-fnstandingredraw":{
+            deps:[ "jquery", "jquery-datatables" ]
         }
     }

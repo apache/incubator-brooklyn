@@ -4,8 +4,9 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "view/viewutils", "model/sensor-summary", "text!tpl/apps/sensors.html",
-    "text!tpl/apps/sensor-row.html", "tablesorter", "brooklyn-utils"
+    "underscore", "jquery", "backbone",
+    "view/viewutils", "model/sensor-summary", "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-row.html",
+    "jquery-datatables", "datatables-fnstandingredraw"
 ], function (_, $, Backbone, ViewUtils, SensorSummary, SensorsHtml, SensorRowHtml) {
 
     var EntitySensorsView = Backbone.View.extend({
@@ -17,13 +18,13 @@ define([
         },
         initialize:function () {
             this.$el.html(this.template({ }));
+            $.ajaxSetup({ async:false });
             var that = this,
                 sensorsCollection = new SensorSummary.Collection,
-                $table = $('#sensors-table'),
-                $tableBody = $('tbody').empty();
-            ViewUtils.myDataTable($table);
+                $table = this.$('#sensors-table'),
+                $tbody = this.$('tbody').empty();
             sensorsCollection.url = that.model.getLinkByName('sensors');
-            var success = function () {
+            sensorsCollection.fetch({ success:function () {
                 sensorsCollection.each(function (sensor) {
                     var actions = {};
                     _.each(sensor.get("links"), function(v,k) {
@@ -31,52 +32,54 @@ define([
                             actions[k.slice(7)] = v;
                         }
                     });
-                    $tableBody.append(that.sensorTemplate({
+                    $tbody.append(that.sensorTemplate({
                         name:sensor.get("name"),
                         description:sensor.get("description"),
                         actions:actions,
                         type:sensor.get("type"),
-                        value:'' /* will be set later */
+                        value:'' // will be set later
                     }));
                 });
+                $tbody.find('*[rel="tooltip"]').tooltip();
                 that.updateSensorsPeriodically(that);
-                // TODO tooltip doesn't work on 'i' elements in table (bottom left toolbar)
-                $table.find('*[rel="tooltip"]').tooltip();
-            };
-            sensorsCollection.fetch({ async:false, success:success });
-            this.toggleFilterEmpty();
+                ViewUtils.myDataTable($table);
+                $table.dataTable().fnAdjustColumnSizing();
+            }});
+            that.toggleFilterEmpty();
         },
         render:function () {
+            this.updateSensorsNow(this);
             return this;
         },
-        toggleFilterEmpty:function() {
-            ViewUtils.toggleFilterEmpty($('#sensors-table'), 2);
+        toggleFilterEmpty:function () {
+            ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 2);
         },
         refreshSensors:function () {
             this.updateSensorsNow(this);  
         },
         // register a callback to update the sensors
         updateSensorsPeriodically:function (that) {
-            var that = this;
+            var self = this;
             that.updateSensorsNow(that);
             that.callPeriodically("entity-sensors", function() {
-                that.updateSensorsNow(that);
+                self.updateSensorsNow(that);
             }, 3000);
         },
         updateSensorsNow:function (that) {
             // NB: this won't add new dynamic sensors
-            var $table = this.$('#sensors-table');
             var url = that.model.getSensorUpdateUrl(),
-                $rows = that.$("tr.sensor-row")
+                $table = that.$('#sensors-table'),
+                $rows = that.$("tr.sensor-row");
             $.get(url, function (data) {
-                    // iterate over the sensors table and update each sensor
-                    $rows.each(function (index,row) {
-                        var key = $(this).find(".sensor-name").text()
-                        var v = data[key]
-                        if (v === undefined) v = ''
-                        $table.dataTable().fnUpdate(_.escape(v), row, 2)
-                    })
-                })
+                // iterate over the sensors table and update each sensor
+                $rows.each(function (index, row) {
+                    var key = $(this).find(".sensor-name").text();
+                    var v = data[key];
+                    if (v === undefined) v = '';
+                    $table.dataTable().fnUpdate(_.escape(v), row, 2, false);
+                });
+            });
+            $table.dataTable().fnStandingRedraw();
         }
     });
     return EntitySensorsView;
