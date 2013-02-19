@@ -553,7 +553,7 @@ public class RebindEntityTest {
         }
     }
 
-    @ImplementedBy(MyEntity2.class)
+    @ImplementedBy(MyEntity2Impl.class)
     public interface MyEntity2 extends Entity {
         @SetFromFlag("myconfig")
         public static final ConfigKey<String> MY_CONFIG = new BasicConfigKey<String>(
