@@ -1,4 +1,4 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import java.util.Map;
 
@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadRequirement;
-import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.Function;

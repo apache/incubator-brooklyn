@@ -1,6 +1,8 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import java.util.Map;
+
+import brooklyn.entity.drivers.EntityDriver;
 
 /**
  * Used by an {@link EntityDriver} to obtain the download locations when installing an entity.

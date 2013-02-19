@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.drivers.DownloadResolverRegistry;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableList;

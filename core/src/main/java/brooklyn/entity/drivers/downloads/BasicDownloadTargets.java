@@ -1,10 +1,10 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
-import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.util.MutableList;
 
 import com.google.common.base.Objects;

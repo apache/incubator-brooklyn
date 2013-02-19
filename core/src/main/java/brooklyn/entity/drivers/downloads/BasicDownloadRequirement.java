@@ -1,10 +1,11 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.EntityDriver;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Objects;

@@ -1,4 +1,4 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;

@@ -1,7 +1,9 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import java.util.List;
 import java.util.Map;
+
+import brooklyn.entity.drivers.EntityDriver;
 
 import com.google.common.base.Function;
 

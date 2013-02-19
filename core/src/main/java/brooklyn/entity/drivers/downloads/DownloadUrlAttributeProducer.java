@@ -1,10 +1,10 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import java.util.Map;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadRequirement;
-import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadTargets;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

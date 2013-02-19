@@ -1,7 +1,8 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.location.Location;
 
 public class MyEntityDriver implements EntityDriver {

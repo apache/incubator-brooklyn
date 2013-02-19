@@ -1,4 +1,4 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

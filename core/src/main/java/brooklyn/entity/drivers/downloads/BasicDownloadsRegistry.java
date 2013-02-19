@@ -1,4 +1,4 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.config.StringConfigMap;
+import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;

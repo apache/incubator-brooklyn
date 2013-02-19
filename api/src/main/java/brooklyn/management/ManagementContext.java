@@ -6,8 +6,8 @@ import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.drivers.DownloadResolverRegistry;
 import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
 

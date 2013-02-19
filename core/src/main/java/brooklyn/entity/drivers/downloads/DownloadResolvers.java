@@ -1,4 +1,4 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -10,8 +10,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadRequirement;
-import brooklyn.entity.drivers.DownloadResolverRegistry.DownloadTargets;
+import brooklyn.entity.drivers.EntityDriver;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;

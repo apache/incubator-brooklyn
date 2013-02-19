@@ -1,4 +1,4 @@
-package brooklyn.entity.drivers;
+package brooklyn.entity.drivers.downloads;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
