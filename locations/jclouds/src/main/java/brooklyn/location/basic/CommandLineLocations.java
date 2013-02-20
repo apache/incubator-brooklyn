@@ -12,6 +12,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+/** @deprecated in 0.5.0 use resolver */
 public class CommandLineLocations {
     
     public static final String LOCALHOST = "localhost";

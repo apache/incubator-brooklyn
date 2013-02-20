@@ -580,6 +580,13 @@
             </modules>
         </profile>
         <profile>
+            <id>Locations</id>
+            <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
+            <modules>
+                <module>locations/jclouds</module>
+            </modules>
+        </profile>
+        <profile>
             <id>Entities</id>
             <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>

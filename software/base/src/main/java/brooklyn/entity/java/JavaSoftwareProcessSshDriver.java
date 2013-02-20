@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jclouds.compute.domain.ExecResponse;
-import org.jclouds.scriptbuilder.statements.java.InstallJDK;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +19,9 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
@@ -277,25 +273,30 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                 log.debug("java detected at " + entity + " @ " + getLocation());
             } else {
                 log.debug("java not detected at " + entity + " @ " + getLocation() + ", installing");
-                if (getLocation() instanceof JcloudsSshMachineLocation) {
-                    ExecResponse result2 = ((JcloudsSshMachineLocation) getLocation()).submitRunScript(InstallJDK.fromOpenJDK()).get();
-                    if (result2.getExitStatus() != 0)
-                        log.warn("invalid result code " + result2.getExitStatus() + " installing java at " + entity + " @ "
-                                + getLocation() + ":\n" + result2.getOutput() + "\n" + result2.getError());
-                } else {
-                    result = newScript("INSTALL_OPENJDK").body.append(
-                            CommonCommands.installJava6()
-                            // TODO the following complains about yum-install not defined
-                            // even though it is set as an alias (at the start of the first file)
-//                            new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
-//                            new ResourceUtils(this).getResourceAsString("classpath:///functions/installOpenJDK.sh"),
-//                            "installOpenJDK"
-                            ).execute();
-                    if (result!=0)
-                        log.warn("Unable to install Java at " + getLocation() + " for " + entity +
-                                " (and Java not detected); invalid result "+result+". " + 
-                                "Processes may fail to start.");
-                }
+                // TODO support script-builder access?
+//                if (getLocation() instanceof JcloudsSshMachineLocation) {
+//                    log.debug("installing java at " + entity + " @ " + getLocation() + ", using jclouds");
+//                    ExecResponse result2 = ((JcloudsSshMachineLocation) getLocation()).submitRunScript(InstallJDK.fromOpenJDK()).get();
+//                    if (result2.getExitStatus() == 0)
+//                        return;
+//                    log.debug("invalid result code " + result2.getExitStatus() + " installing java using Jclouds routines, at " + entity + " @ "
+//                            + getLocation() + ":\n" + result2.getOutput() + "\n" + result2.getError());
+//                }
+                
+                log.debug("installing java at " + entity + " @ " + getLocation() + ", using CommonCommands.installJava6");
+                result = newScript("INSTALL_OPENJDK").body.append(
+                        CommonCommands.installJava6()
+                        // TODO the following complains about yum-install not defined
+                        // even though it is set as an alias (at the start of the first file)
+                        //                            new ResourceUtils(this).getResourceAsString("classpath:///functions/setupPublicCurl.sh"),
+                        //                            new ResourceUtils(this).getResourceAsString("classpath:///functions/installOpenJDK.sh"),
+                        //                            "installOpenJDK"
+                        ).execute();
+                if (result==0)
+                    return;
+                log.warn("Unable to install Java at " + getLocation() + " for " + entity +
+                        " (and Java not detected); invalid result "+result+". " + 
+                        "Processes may fail to start.");
             }
         } catch (Exception e) {
             Throwables.propagate(e);

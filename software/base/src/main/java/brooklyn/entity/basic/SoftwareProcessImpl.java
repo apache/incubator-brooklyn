@@ -23,9 +23,9 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
+import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
 import brooklyn.util.Time;
@@ -321,8 +321,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public String getLocalHostname() {
         Location where = Iterables.getFirst(getLocations(), null);
 	    String hostname = null;
-        if (where instanceof JcloudsSshMachineLocation) {
-            hostname = ((JcloudsSshMachineLocation) where).getSubnetHostname();
+        if (where instanceof HasSubnetHostname) {
+            hostname = ((HasSubnetHostname) where).getSubnetHostname();
         }
         if (hostname == null && where instanceof MachineLocation) {
             InetAddress addr = ((MachineLocation) where).getAddress();

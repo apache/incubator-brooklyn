@@ -18,12 +18,13 @@ import org.jclouds.scriptbuilder.domain.Statement;
 
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails;
+import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
 
-public class JcloudsSshMachineLocation extends SshMachineLocation {
+public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
     final JcloudsLocation parent;
     final NodeMetadata node;
     private final RunScriptOnNode.Factory runScriptFactory;

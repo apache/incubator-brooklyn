@@ -74,6 +74,13 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+        <!-- bring in jclouds for testing -->
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-locations-jclouds</artifactId>
+            <version>${brooklyn.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

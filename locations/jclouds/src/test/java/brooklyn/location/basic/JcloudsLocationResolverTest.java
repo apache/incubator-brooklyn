@@ -3,10 +3,14 @@ package brooklyn.location.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -15,6 +19,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -38,6 +43,29 @@ public class JcloudsLocationResolverTest {
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.credential", "cloudservers-uk-cred");
     }
     
+    public static final Map AWS_PROPS = MutableMap.of("brooklyn.jclouds.aws-ec2.identity", "x",
+                                             "brooklyn.jclouds.aws-ec2.credential", "x");
+
+    @Test
+    public void testJcloudsLoads() {
+        Assert.assertTrue(LocationResolverTest.resolve(AWS_PROPS, "jclouds:aws-ec2") instanceof JcloudsLocation);
+    }
+
+    @Test
+    public void testJcloudsImplicitLoads() {
+        Assert.assertTrue(LocationResolverTest.resolve(AWS_PROPS, "aws-ec2") instanceof JcloudsLocation);
+    }
+
+    @Test
+    public void testJcloudsLocationLoads() {
+        Assert.assertTrue(LocationResolverTest.resolve(AWS_PROPS, "aws-ec2:eu-west-1") instanceof JcloudsLocation);
+    }
+
+    @Test
+    public void testJcloudsRegionOnlyLoads() {
+        Assert.assertTrue(LocationResolverTest.resolve(AWS_PROPS, "eu-west-1") instanceof JcloudsLocation);
+    }
+
     @Test
     public void testThrowsOnInvalid() throws Exception {
         // Tries to treat "wrongprefix" as a cloud provider
@@ -92,4 +120,24 @@ public class JcloudsLocationResolverTest {
     private JcloudsLocation resolve(String spec) {
         return new JcloudsResolver().newLocationFromString(ImmutableMap.of(), spec, registry);
     }
+    
+    @Test(expectedExceptions={ NoSuchElementException.class, IllegalArgumentException.class },
+            expectedExceptionsMessageRegExp=".*insufficient.*")
+    public void testJcloudsOnlyFails() {
+        LocationResolverTest.resolve("jclouds");
+    }
+
+    @Test
+    public void testLegacyCommandLineAcceptsList() {
+        CommandLineLocations.getLocationsById(Arrays.asList("localhost"));
+    }
+
+    @Test
+    public void testLegacyCommandLineAcceptsListOLists() {
+        //if inner list has a single item it automatically gets coerced correctly to string
+        //preserve for compatibility (since 0.4.0)
+        CommandLineLocations.getLocationsById((List)Arrays.asList(Arrays.asList("localhost")));
+    }
+
+
 }
