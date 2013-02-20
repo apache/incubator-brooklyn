@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import static brooklyn.entity.basic.AbstractEntity.POLICY_ADDED;
+import static brooklyn.entity.basic.AbstractEntity.POLICY_REMOVED;
 import static brooklyn.entity.basic.AbstractEntity.SENSOR_ADDED;
 import static brooklyn.entity.basic.AbstractEntity.SENSOR_REMOVED;
 import static org.testng.Assert.assertEquals;
@@ -83,14 +85,14 @@ public class EntityTypeTest {
     @Test
     public void testGetSensors() throws Exception{
         assertEquals(entity.getEntityType().getSensors(), 
-                ImmutableSet.of(SENSOR_ADDED, SENSOR_REMOVED));
+                ImmutableSet.of(SENSOR_ADDED, SENSOR_REMOVED, POLICY_ADDED, POLICY_REMOVED));
     }
 
     @Test
     public void testAddSensors() throws Exception{
         entity.getMutableEntityType().addSensor(TEST_SENSOR);
         assertEquals(entity.getEntityType().getSensors(), 
-                ImmutableSet.of(TEST_SENSOR, SENSOR_ADDED, SENSOR_REMOVED));
+                ImmutableSet.of(TEST_SENSOR, SENSOR_ADDED, SENSOR_REMOVED, POLICY_ADDED, POLICY_REMOVED));
         
         TestUtils.assertEventually(
                 Suppliers.ofInstance(listener.events), 
@@ -101,7 +103,7 @@ public class EntityTypeTest {
     public void testAddSensorValueThroughEntity() throws Exception{
         entity.setAttribute(TEST_SENSOR, "abc");
         assertEquals(entity.getEntityType().getSensors(), 
-                ImmutableSet.of(TEST_SENSOR, SENSOR_ADDED, SENSOR_REMOVED));
+                ImmutableSet.of(TEST_SENSOR, SENSOR_ADDED, SENSOR_REMOVED, POLICY_ADDED, POLICY_REMOVED));
         
         TestUtils.assertEventually(
                 Suppliers.ofInstance(listener.events), 
@@ -125,7 +127,7 @@ public class EntityTypeTest {
     @Test
     public void testRemoveSensor() throws Exception {
         entity.getMutableEntityType().removeSensor(SENSOR_ADDED);
-        assertEquals(entity.getEntityType().getSensors(), ImmutableSet.of(SENSOR_REMOVED));
+        assertEquals(entity.getEntityType().getSensors(), ImmutableSet.of(SENSOR_REMOVED, POLICY_ADDED, POLICY_REMOVED));
         
         TestUtils.assertEventually(
                 Suppliers.ofInstance(listener.events), 
@@ -135,7 +137,7 @@ public class EntityTypeTest {
     @Test
     public void testRemoveSensors() throws Exception {
         entity.getMutableEntityType().removeSensor(SENSOR_ADDED.getName());
-        assertEquals(entity.getEntityType().getSensors(), ImmutableSet.of(SENSOR_REMOVED));
+        assertEquals(entity.getEntityType().getSensors(), ImmutableSet.of(SENSOR_REMOVED, POLICY_ADDED, POLICY_REMOVED));
         
         TestUtils.assertEventually(
                 Suppliers.ofInstance(listener.events), 
