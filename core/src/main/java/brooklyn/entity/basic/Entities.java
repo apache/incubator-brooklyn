@@ -143,6 +143,12 @@ public class Entities {
         }
         return result;
     }
+
+    public static void dumpInfo(Iterable<? extends Entity> entities) {
+        for (Entity e : entities) {
+            dumpInfo(e);
+        }
+    }
     
     public static void dumpInfo(Entity e) {
         try {

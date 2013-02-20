@@ -12,7 +12,6 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
@@ -20,10 +19,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocationRegistry;
+import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.CommandLineUtil;
 
@@ -77,19 +73,12 @@ public class GlobalWebFabricExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String locations = CommandLineUtil.getCommandLineOption(args, "--locations", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+                .application(new GlobalWebFabricExample().appDisplayName("Brooklyn Global Web Fabric Example"))
                 .webconsolePort(port)
-                .launch();
-
-        // TODO instead use server.getManagementContext().getLocationRegistry().resolve(location)
-        List<Location> locs = new LocationRegistry().getLocationsById(Arrays.asList(locations));
-
-        StartableApplication app = new GlobalWebFabricExample()
-                .appDisplayName("Brooklyn Global Web Fabric Example")
-                .manage(server.getManagementContext());
-        
-        app.start(locs);
-        
-        Entities.dumpInfo(app);
+                .locations(Arrays.asList(locations))
+                .start();
+         
+        Entities.dumpInfo(launcher.getApplications());
     }
 }

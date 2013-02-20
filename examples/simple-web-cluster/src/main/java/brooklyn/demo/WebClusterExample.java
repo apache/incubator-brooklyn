@@ -8,19 +8,15 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
+import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
@@ -69,19 +65,13 @@ public class WebClusterExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
-                .webconsolePort(port)
-                .launch();
-
         // TODO Want to parse, to handle multiple locations
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = new WebClusterExample()
-                .appDisplayName("Brooklyn WebApp Cluster example")
-                .manage(server.getManagementContext());
-
-        app.start(ImmutableList.of(loc));
-        
-        Entities.dumpInfo(app);
+        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+                .application(new WebClusterExample().appDisplayName("Brooklyn WebApp Cluster example"))
+                .webconsolePort(port)
+                .location(location)
+                .start();
+         
+        Entities.dumpInfo(launcher.getApplications());
     }
 }

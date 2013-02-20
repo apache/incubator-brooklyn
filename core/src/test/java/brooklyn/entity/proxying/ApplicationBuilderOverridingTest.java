@@ -78,7 +78,6 @@ public class ApplicationBuilderOverridingTest {
 
     @Test
     public void testAppHierarchyIsManaged() {
-        final AtomicReference<TestEntity> expectedChild = new AtomicReference<TestEntity>();
         app = new ApplicationBuilder() {
             @Override public void doBuild() {
                 Entity entity = createChild(TestEntity.Spec.newInstance());

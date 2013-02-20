@@ -4,14 +4,10 @@ import java.util.List;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.BasicEntitySpec;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
+import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.util.CommandLineUtil;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
@@ -30,18 +26,12 @@ public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+                .application(new MovableCloudFoundryClusterExample().appDisplayName("Movable Web Cluster"))
                 .webconsolePort(port)
-                .launch();
-
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = new MovableCloudFoundryClusterExample()
-                .appDisplayName("Movable Web Cluster")
-                .manage(server.getManagementContext());
-        
-        app.start(ImmutableList.of(loc));
-        
-        Entities.dumpInfo(app);
+                .location(location)
+                .start();
+         
+        Entities.dumpInfo(launcher.getApplications());
     }
 }

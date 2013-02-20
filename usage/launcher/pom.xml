@@ -35,9 +35,17 @@
             <!-- optional so that this project has logging; dependencies may redeclare or supply their own -->
             <optional>true</optional>
         </dependency>
+        
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
 

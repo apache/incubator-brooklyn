@@ -11,12 +11,9 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.extras.whirr.core.WhirrCluster;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
+import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.util.CommandLineUtil;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class WhirrHadoopExample extends ApplicationBuilder {
@@ -38,17 +35,13 @@ public class WhirrHadoopExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+                .application(new WhirrHadoopExample())
                 .webconsolePort(port)
-                .launch();
-
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = new WhirrHadoopExample()
-                .manage(server.getManagementContext());
-        
-        app.start(ImmutableList.of(loc));
-        
+                .location(location)
+                .start();
+         
+        StartableApplication app = (StartableApplication) launcher.getApplications().get(0);
         Entities.dumpInfo(app);
         
         LOG.info("Press return to shut down the cluster");

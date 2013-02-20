@@ -15,6 +15,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.injava.ExampleJavaPolicy;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
@@ -96,8 +97,28 @@ public class ApplicationBuilderBuildingTest {
         assertTrue(app instanceof EntityProxy);
         assertTrue(app instanceof MyInterface);
         assertFalse(app instanceof MyApplicationImpl);
+        assertEquals(app.getEntityType().getName(), MyApplicationImpl.class.getCanonicalName());
     }
 
+    @Test
+    public void testCreateAppSpecUsingInterface() {
+        BasicEntitySpec<StartableApplication, ?> spec = ApplicationBuilder.newAppSpec(TestApplication.class);
+        app = ApplicationBuilder.builder(spec).manage();
+        
+        assertEquals(app.getEntityType().getName(), TestApplication.class.getCanonicalName());
+    }
+    
+    @Test
+    public void testCreatesAppSpecUsingImplClass() {
+        BasicEntitySpec<StartableApplication, ?> spec = ApplicationBuilder.newAppSpec(MyApplicationImpl.class);
+        app = ApplicationBuilder.builder(spec).manage();
+        
+        assertTrue(app instanceof EntityProxy);
+        assertTrue(app instanceof MyInterface);
+        assertFalse(app instanceof MyApplicationImpl);
+        assertEquals(app.getEntityType().getName(), MyApplicationImpl.class.getCanonicalName());
+    }
+    
     private void assertIsProxy(Entity e) {
         assertFalse(e instanceof AbstractEntity, "e="+e+";e.class="+e.getClass());
         assertTrue(e instanceof EntityProxy, "e="+e+";e.class="+e.getClass());
