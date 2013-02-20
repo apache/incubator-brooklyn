@@ -23,7 +23,7 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class DownloadResolversTest {
+public class DownloadSubstitutersTest {
 
     private Location loc;
     private TestApplication app;
@@ -47,7 +47,7 @@ public class DownloadResolversTest {
     public void testSimpleSubstitution() throws Exception {
         entity.setAttribute(Attributes.VERSION, "myversion");
         String pattern = "mykey1=${mykey1},mykey2=${mykey2}";
-        String result = DownloadResolvers.substitute(pattern, ImmutableMap.of("mykey1", "myval1", "mykey2", "myval2"));
+        String result = DownloadSubstituters.substitute(pattern, ImmutableMap.of("mykey1", "myval1", "mykey2", "myval2"));
         assertEquals(result, "mykey1=myval1,mykey2=myval2");
     }
 
@@ -56,7 +56,7 @@ public class DownloadResolversTest {
         entity.setAttribute(Attributes.VERSION, "myversion");
         String pattern = "version=${version},type=${type},simpletype=${simpletype}";
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
-        String result = DownloadResolvers.substitute(req, pattern);
+        String result = DownloadSubstituters.substitute(req, pattern);
         assertEquals(result, String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntity.class.getName(), TestEntity.class.getSimpleName()));
     }
 
@@ -65,7 +65,7 @@ public class DownloadResolversTest {
         String simpleType = TestEntity.class.getSimpleName();
         String pattern = "simpletype=${simpletype},simpletype=${simpletype}";
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
-        String result = DownloadResolvers.substitute(req, pattern);
+        String result = DownloadSubstituters.substitute(req, pattern);
         assertEquals(result, String.format("simpletype=%s,simpletype=%s", simpleType, simpleType));
     }
 
@@ -74,7 +74,7 @@ public class DownloadResolversTest {
         String entityid = entity.getId();
         String pattern = "id=${entity.id}";
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
-        String result = DownloadResolvers.substitute(req, pattern);
+        String result = DownloadSubstituters.substitute(req, pattern);
         assertEquals(result, String.format("id=%s", entityid));
     }
 
@@ -83,7 +83,7 @@ public class DownloadResolversTest {
         String entityid = entity.getId();
         String pattern = "id=${driver.entity.id}";
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
-        String result = DownloadResolvers.substitute(req, pattern);
+        String result = DownloadSubstituters.substitute(req, pattern);
         assertEquals(result, String.format("id=%s", entityid));
     }
 
@@ -92,7 +92,7 @@ public class DownloadResolversTest {
         entity.setAttribute(Attributes.VERSION, "myversion");
         String pattern = "version=${version},mykey1=${mykey1}";
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver, ImmutableMap.of("version", "overriddenversion", "mykey1", "myval1"));
-        String result = DownloadResolvers.substitute(req, pattern);
+        String result = DownloadSubstituters.substitute(req, pattern);
         assertEquals(result, "version=overriddenversion,mykey1=myval1");
     }
 
@@ -101,7 +101,7 @@ public class DownloadResolversTest {
         String pattern = "nothere=${nothere}";
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
         try {
-            String result = DownloadResolvers.substitute(req, pattern);
+            String result = DownloadSubstituters.substitute(req, pattern);
             fail("Should have failed, but got "+result);
         } catch (IllegalArgumentException e) {
             if (!e.toString().contains("${nothere}")) throw e;
@@ -112,8 +112,8 @@ public class DownloadResolversTest {
     public void testSubstituter() throws Exception {
         entity.setAttribute(Attributes.VERSION, "myversion");
         String baseurl = "version=${version},type=${type},simpletype=${simpletype}";
-        Map<String,Object> subs = DownloadResolvers.getBasicEntitySubstitutions(driver);
-        DownloadTargets result = DownloadResolvers.substituter(Functions.constant(baseurl), Functions.constant(subs)).apply(new BasicDownloadRequirement(driver));
+        Map<String,Object> subs = DownloadSubstituters.getBasicEntitySubstitutions(driver);
+        DownloadTargets result = DownloadSubstituters.substituter(Functions.constant(baseurl), Functions.constant(subs)).apply(new BasicDownloadRequirement(driver));
         String expected = String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntity.class.getName(), TestEntity.class.getSimpleName());
         assertEquals(result.getPrimaryLocations(), ImmutableList.of(expected));
     }

@@ -88,7 +88,7 @@ import com.google.common.collect.Maps;
  *   <li>version: the version number of the entity to be installed (or of the add-on)
  * </ul>
  */
-public class DownloadPropertiesResolver implements Function<DownloadRequirement, DownloadTargets> {
+public class DownloadProducerFromProperties implements Function<DownloadRequirement, DownloadTargets> {
     
     /* FIXME: expose config for canContinueResolving.
      * ... then it uses only the overrides in the properties file. This, in combination with
@@ -99,13 +99,13 @@ public class DownloadPropertiesResolver implements Function<DownloadRequirement,
      */
 
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(DownloadPropertiesResolver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DownloadProducerFromProperties.class);
 
     public static final String DOWNLOAD_CONF_PREFIX = "brooklyn.downloads.";
 
     private final StringConfigMap config;
 
-    public DownloadPropertiesResolver(StringConfigMap config) {
+    public DownloadProducerFromProperties(StringConfigMap config) {
         this.config = config;
     }
     
@@ -261,10 +261,10 @@ public class DownloadPropertiesResolver implements Function<DownloadRequirement,
 
             BasicDownloadTargets.Builder result = BasicDownloadTargets.builder();
             for (String baseurl : primaries) {
-                result.addPrimary(DownloadResolvers.substitute(req, baseurl));
+                result.addPrimary(DownloadSubstituters.substitute(req, baseurl));
             }
             for (String baseurl : fallbacks) {
-                result.addFallback(DownloadResolvers.substitute(req, baseurl));
+                result.addFallback(DownloadSubstituters.substitute(req, baseurl));
             }
             return result.build();
         }

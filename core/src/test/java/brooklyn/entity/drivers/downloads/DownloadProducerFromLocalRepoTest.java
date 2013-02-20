@@ -24,7 +24,7 @@ import brooklyn.test.entity.TestEntity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class DownloadLocalRepoResolverTest {
+public class DownloadProducerFromLocalRepoTest {
 
     private BrooklynProperties brooklynProperties;
     private LocalManagementContext managementContext;
@@ -33,7 +33,7 @@ public class DownloadLocalRepoResolverTest {
     private TestEntity entity;
     private MyEntityDriver driver;
     private String entitySimpleType;
-    private DownloadLocalRepoResolver resolver;
+    private DownloadProducerFromLocalRepo resolver;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -46,7 +46,7 @@ public class DownloadLocalRepoResolverTest {
         driver = new MyEntityDriver(entity, loc);
         entitySimpleType = TestEntity.class.getSimpleName();
         
-        resolver = new DownloadLocalRepoResolver(brooklynProperties);
+        resolver = new DownloadProducerFromLocalRepo(brooklynProperties);
     }
     
     @AfterMethod(alwaysRun=true)
@@ -56,7 +56,7 @@ public class DownloadLocalRepoResolverTest {
 
     @Test
     public void testReturnsEmptyWhenDisabled() throws Exception {
-        brooklynProperties.put(DownloadLocalRepoResolver.LOCAL_REPO_ENABLED, false);
+        brooklynProperties.put(DownloadProducerFromLocalRepo.LOCAL_REPO_ENABLED, false);
         assertResolves(ImmutableList.<String>of(), ImmutableList.<String>of());
     }
     

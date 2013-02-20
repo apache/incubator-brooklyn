@@ -24,7 +24,7 @@ import brooklyn.test.entity.TestEntity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class DownloadPropertiesResolverTest {
+public class DownloadProducerFromPropertiesTest {
 
     private BrooklynProperties brooklynProperties;
     private LocalManagementContext managementContext;
@@ -32,12 +32,12 @@ public class DownloadPropertiesResolverTest {
     private TestApplication app;
     private TestEntity entity;
     private MyEntityDriver driver;
-    private DownloadPropertiesResolver resolver;
+    private DownloadProducerFromProperties resolver;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         brooklynProperties = BrooklynProperties.Factory.newEmpty();
-        brooklynProperties.put(DownloadLocalRepoResolver.LOCAL_REPO_ENABLED, false);
+        brooklynProperties.put(DownloadProducerFromLocalRepo.LOCAL_REPO_ENABLED, false);
         managementContext = new LocalManagementContext(brooklynProperties);
         
         loc = new SimulatedLocation();
@@ -45,7 +45,7 @@ public class DownloadPropertiesResolverTest {
         entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         driver = new MyEntityDriver(entity, loc);
         
-        resolver = new DownloadPropertiesResolver(brooklynProperties);
+        resolver = new DownloadProducerFromProperties(brooklynProperties);
     }
     
     @AfterMethod(alwaysRun=true)

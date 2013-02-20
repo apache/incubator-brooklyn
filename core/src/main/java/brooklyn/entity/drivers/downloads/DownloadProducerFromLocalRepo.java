@@ -13,19 +13,19 @@ import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.Function;
 
-public class DownloadLocalRepoResolver implements Function<DownloadRequirement, DownloadTargets> {
+public class DownloadProducerFromLocalRepo implements Function<DownloadRequirement, DownloadTargets> {
     
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(DownloadLocalRepoResolver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DownloadProducerFromLocalRepo.class);
 
     public static final ConfigKey<String> LOCAL_REPO_PATH = BasicConfigKey.builder(String.class)
-            .name(DownloadPropertiesResolver.DOWNLOAD_CONF_PREFIX+"repo.local.path")
+            .name(DownloadProducerFromProperties.DOWNLOAD_CONF_PREFIX+"repo.local.path")
             .description("Fully qualified path of the local repo")
             .defaultValue("$HOME/.brooklyn/repository")
             .build();
 
     public static final ConfigKey<Boolean> LOCAL_REPO_ENABLED = BasicConfigKey.builder(Boolean.class)
-            .name(DownloadPropertiesResolver.DOWNLOAD_CONF_PREFIX+"repo.local.enabled")
+            .name(DownloadProducerFromProperties.DOWNLOAD_CONF_PREFIX+"repo.local.enabled")
             .description("Whether to use the local repo for downloading entities, during installs")
             .defaultValue(true)
             .build();
@@ -45,7 +45,7 @@ public class DownloadLocalRepoResolver implements Function<DownloadRequirement, 
 
     private final StringConfigMap config;
 
-    public DownloadLocalRepoResolver(StringConfigMap config) {
+    public DownloadProducerFromLocalRepo(StringConfigMap config) {
         this.config = config;
     }
     
@@ -55,8 +55,8 @@ public class DownloadLocalRepoResolver implements Function<DownloadRequirement, 
         String url = String.format(LOCAL_REPO_URL_PATTERN, path);
         
         if (enabled) {
-            Map<String, ?> subs = DownloadResolvers.getBasicSubscriptions(req);
-            String result = DownloadResolvers.substitute(url, subs);
+            Map<String, ?> subs = DownloadSubstituters.getBasicSubscriptions(req);
+            String result = DownloadSubstituters.substitute(url, subs);
             return BasicDownloadTargets.builder().addPrimary(result).build();
             
         } else {

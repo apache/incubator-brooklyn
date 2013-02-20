@@ -2,6 +2,10 @@ package brooklyn.entity.drivers.downloads;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -14,18 +18,22 @@ import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
 import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadTargets;
 import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
+import freemarker.cache.StringTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
-public class DownloadResolvers {
+public class DownloadSubstituters {
 
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(DownloadResolvers.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DownloadSubstituters.class);
 
-    private DownloadResolvers() {}
+    private DownloadSubstituters() {}
     
     /**
      * Converts the basevalue by substituting things in the form ${key} for values specific
@@ -53,12 +61,12 @@ public class DownloadResolvers {
         
         if (addon == null) {
             return MutableMap.<String,Object>builder()
-                    .putAll(DownloadResolvers.getBasicEntitySubstitutions(driver))
+                    .putAll(getBasicEntitySubstitutions(driver))
                     .putAll(props)
                     .build();
         } else {
             return MutableMap.<String,Object>builder()
-                    .putAll(DownloadResolvers.getBasicAddonSubstitutions(driver, addon))
+                    .putAll(getBasicAddonSubstitutions(driver, addon))
                     .putAll(props)
                     .build();
         }
@@ -87,9 +95,23 @@ public class DownloadResolvers {
                 .build();
     }
 
-    public static String substitute(String basevalue, Map<String,?> subs) {
+    public static String substitute(String basevalue, Map<String,?> substitutions) {
         try {
-            return new Templater().processTemplate(basevalue, subs);
+            Configuration cfg = new Configuration();
+            StringTemplateLoader templateLoader = new StringTemplateLoader();
+            templateLoader.putTemplate("config", basevalue);
+            cfg.setTemplateLoader(templateLoader);
+            Template template = cfg.getTemplate("config");
+            
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Writer out = new OutputStreamWriter(baos);
+            template.process(substitutions, out);
+            out.flush();
+            
+            return new String(baos.toByteArray());
+        } catch (IOException e) {
+            LOG.warn("Error processing template '"+basevalue+"'", e);
+            throw Exceptions.propagate(e);
         } catch (TemplateException e) {
             throw new IllegalArgumentException("Failed to process driver download '"+basevalue+"'", e);
         }

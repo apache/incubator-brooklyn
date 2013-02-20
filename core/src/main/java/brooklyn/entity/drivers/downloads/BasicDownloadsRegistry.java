@@ -37,10 +37,10 @@ public class BasicDownloadsRegistry implements DownloadResolverRegistry {
         
         // In-order, will look up: local repo, overrides defined in the properties, and then 
         // the entity's attribute to get the download URL
-        DownloadLocalRepoResolver localRepoProducer = new DownloadLocalRepoResolver(config);
-        DownloadPropertiesResolver propertiesProducer = new DownloadPropertiesResolver(config);
-        DownloadUrlAttributeProducer attributeProducer = new DownloadUrlAttributeProducer();
-        DownloadCloudsoftRepoResolver cloudsoftRepoProducer = new DownloadCloudsoftRepoResolver(config);
+        DownloadProducerFromLocalRepo localRepoProducer = new DownloadProducerFromLocalRepo(config);
+        DownloadProducerFromProperties propertiesProducer = new DownloadProducerFromProperties(config);
+        DownloadProducerFromUrlAttribute attributeProducer = new DownloadProducerFromUrlAttribute();
+        DownloadProducerFromCloudsoftRepo cloudsoftRepoProducer = new DownloadProducerFromCloudsoftRepo(config);
         
         result.registerProducer(localRepoProducer);
         result.registerProducer(propertiesProducer);

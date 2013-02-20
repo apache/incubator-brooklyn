@@ -15,8 +15,8 @@ import com.google.common.collect.Maps;
  * 
  * @author aled
  */
-public class DownloadUrlAttributeProducer extends DownloadResolvers.Substituter implements Function<DownloadRequirement, DownloadTargets> {
-    public DownloadUrlAttributeProducer() {
+public class DownloadProducerFromUrlAttribute extends DownloadSubstituters.Substituter implements Function<DownloadRequirement, DownloadTargets> {
+    public DownloadProducerFromUrlAttribute() {
         super(
             new Function<DownloadRequirement, String>() {
                 @Override public String apply(DownloadRequirement input) {
@@ -33,9 +33,9 @@ public class DownloadUrlAttributeProducer extends DownloadResolvers.Substituter 
                 @Override public Map<String,?> apply(DownloadRequirement input) {
                     Map<String,Object> result = Maps.newLinkedHashMap();
                     if (input.getAddonName() == null) {
-                        result.putAll(DownloadResolvers.getBasicEntitySubstitutions(input.getEntityDriver()));
+                        result.putAll(DownloadSubstituters.getBasicEntitySubstitutions(input.getEntityDriver()));
                     } else {
-                        result.putAll(DownloadResolvers.getBasicAddonSubstitutions(input.getEntityDriver(), input.getAddonName()));
+                        result.putAll(DownloadSubstituters.getBasicAddonSubstitutions(input.getEntityDriver(), input.getAddonName()));
                     }
                     result.putAll(input.getProperties());
                     return result;
