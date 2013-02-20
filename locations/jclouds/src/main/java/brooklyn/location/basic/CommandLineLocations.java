@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.List;
 
 import brooklyn.location.Location;
-import brooklyn.location.basic.jclouds.CredentialsFromEnv;
-import brooklyn.location.basic.jclouds.JcloudsLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocationFactory;
+import brooklyn.location.jclouds.CredentialsFromEnv;
+import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.location.jclouds.JcloudsLocationFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

@@ -1,13 +1,12 @@
 package brooklyn.entity.database.postgresql;
 
-
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.location.jclouds.JcloudsLocation
 import org.testng.annotations.Test
 
 import static java.util.Arrays.asList

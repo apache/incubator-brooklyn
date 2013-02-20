@@ -16,7 +16,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
-import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.location.jclouds.JcloudsLocation
 import brooklyn.util.MutableMap
 import brooklyn.util.text.Strings
 
