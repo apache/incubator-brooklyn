@@ -17,9 +17,17 @@ public interface MachineProvisioningLocation<T extends MachineLocation> extends 
      * @return a machine that is a child of this location.
      * @throws NoMachinesAvailableException if there are no machines available in this location (or impls may return null, but that is discouraged)
      */
-    // TODO Document dictionary of flag keys
-    T obtain(Map<String,? extends Object> flags) throws NoMachinesAvailableException;
+    T obtain(Map<?,?> flags) throws NoMachinesAvailableException;
 
+    /**
+     * Creates a new location of the same type, but with additional creation instructions in the form of flags,
+     * e.g. for specifying subnets, security groups, etc
+     * <p>
+     * Implementers who wish to subclass this provisioning location for additional functionality
+     * in a specific cloud can use the relevant implementation of this method as a guide. 
+     */
+    MachineProvisioningLocation<T> newSubLocation(Map<?,?> newFlags);
+    
     /**
      * Release a previously-obtained machine.
      *

@@ -12,6 +12,7 @@ import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.util.MutableMap;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -44,7 +45,12 @@ public class SimulatedLocation extends AbstractLocation implements MachineProvis
         super(flags);
     }
     
-    public MachineLocation obtain(Map<String,? extends Object> flags) {
+    @Override
+    public SimulatedLocation newSubLocation(Map<?,?> newFlags) {
+        return LocationCreationUtils.newSubLocation(newFlags, this);
+    }
+
+    public MachineLocation obtain(Map<?,?> flags) {
         return this;
     }
 

@@ -52,6 +52,7 @@ import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigUtils;
+import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
@@ -102,7 +103,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         
     public static final String ROOT_USERNAME = "root";
     /** these userNames are known to be the preferred/required logins in some common/default images 
-     *  where root@ is not allowed to log in */  
+     *  where root@ is not allowed to log in */
     public static final List<String> ROOT_ALIASES = ImmutableList.of("ubuntu", "ec2-user");
     public static final List<String> NON_ADDABLE_USERS = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).build();
     
@@ -110,7 +111,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
 
     /** typically wants at least ACCESS_IDENTITY and ACCESS_CREDENTIAL */
-    public JcloudsLocation(Map conf) {
+    public JcloudsLocation(Map<?,?> conf) {
         super(conf);
     }
 
@@ -139,6 +140,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         setCreationString(getConfigBag());
     }
     
+    public JcloudsLocation newSubLocation(Map<?,?> newFlags) {
+        return LocationCreationUtils.newSubLocation(newFlags, this);
+    }
+
     @Override
     public String toString() {
         Object identity = getIdentity();
@@ -253,7 +258,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public ComputeService getComputeService() {
         return getComputeService(MutableMap.of());
     }
-    public ComputeService getComputeService(Map flags) {
+    public ComputeService getComputeService(Map<?,?> flags) {
         return JcloudsUtil.findComputeService((flags==null || flags.isEmpty()) ? getConfigBag() :
             ConfigBag.newInstanceExtending(getConfigBag(), flags));
     }
@@ -261,7 +266,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public Set<? extends ComputeMetadata> listNodes() {
         return listNodes(MutableMap.of());
     }
-    public Set<? extends ComputeMetadata> listNodes(Map flags) {
+    public Set<? extends ComputeMetadata> listNodes(Map<?,?> flags) {
         return getComputeService(flags).listNodes();
     }
 
@@ -282,7 +287,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public JcloudsSshMachineLocation obtain(TemplateBuilder tb) throws NoMachinesAvailableException {
         return obtain(MutableMap.of(), tb);
     }
-    public JcloudsSshMachineLocation obtain(Map flags, TemplateBuilder tb) throws NoMachinesAvailableException {
+    public JcloudsSshMachineLocation obtain(Map<?,?> flags, TemplateBuilder tb) throws NoMachinesAvailableException {
         return obtain(MutableMap.builder().putAll(flags).put(TEMPLATE_BUILDER, tb).build());
     }
     /** core method for obtaining a VM using jclouds;
@@ -290,7 +295,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * as well as ACCESS_IDENTITY and ACCESS_CREDENTIAL,
      * plus any further properties to specify e.g. images, hardware profiles, accessing user
      * (for initial login, and a user potentially to create for subsequent ie normal access) */
-    public JcloudsSshMachineLocation obtain(Map flags) throws NoMachinesAvailableException {
+    public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(getConfigBag(), flags);
         setCreationString(setup);
         
@@ -335,11 +340,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (e.getNodeErrors().size() > 0) {
                 node = Iterables.get(e.getNodeErrors().keySet(), 0);
             }
-            LOG.error("Failed to start VM: {}", e.getMessage());
+            LOG.error("Failed to start VM for {}: {}", setup.getDescription(), e.getMessage());
             throw Throwables.propagate(e);
         } catch (Exception e) {
-            LOG.error("Failed to start VM: {}", e.getMessage());
-            LOG.info(Throwables.getStackTraceAsString(e));
+            LOG.error("Failed to start VM for {}: {}", setup.getDescription(), e.getMessage());
+            LOG.debug(Throwables.getStackTraceAsString(e));
             throw Throwables.propagate(e);
         } finally {
             //leave it open for reuse

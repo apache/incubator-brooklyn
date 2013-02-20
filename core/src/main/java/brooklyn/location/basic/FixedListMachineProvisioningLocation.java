@@ -14,7 +14,10 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.util.MutableMap;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
@@ -33,7 +36,8 @@ import com.google.common.io.Closeables;
  * This can be extended to have a mechanism to make more machines to be available
  * (override provisionMore and canProvisionMore).
  */
-public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T>, Closeable {
+public class FixedListMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation 
+implements MachineProvisioningLocation<T>, Closeable {
 
     // TODO Synchronization looks very wrong for accessing machines/inUse 
     // e.g. removeChildLocation doesn't synchronize when doing machines.remove(...),
@@ -77,6 +81,10 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
         super.configure(properties);
     }
     
+    public FixedListMachineProvisioningLocation<T> newSubLocation(Map<?,?> newFlags) {
+        return LocationCreationUtils.newSubLocation(newFlags, this);
+    }
+
     @Override
     public void close() {
         for (T machine : machines) {
@@ -152,7 +160,7 @@ public class FixedListMachineProvisioningLocation<T extends MachineLocation> ext
     }
     
     @Override
-    public T obtain(Map<String,? extends Object> flags) throws NoMachinesAvailableException {
+    public T obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         T machine;
         T desiredMachine = (T) flags.get("desiredMachine");
         

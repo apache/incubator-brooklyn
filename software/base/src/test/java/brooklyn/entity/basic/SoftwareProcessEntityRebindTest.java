@@ -82,6 +82,11 @@ public class SoftwareProcessEntityRebindTest {
         }
 
         @Override
+        public MachineProvisioningLocation<SshMachineLocation> newSubLocation(Map<?, ?> newFlags) {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
         public SshMachineLocation obtain(Map flags) throws NoMachinesAvailableException {
             inUseCount.incrementAndGet();
             return new SshMachineLocation(MutableMap.of("address","localhost"));

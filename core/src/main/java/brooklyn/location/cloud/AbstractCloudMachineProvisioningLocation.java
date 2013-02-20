@@ -8,9 +8,11 @@ import org.jclouds.compute.domain.NodeMetadata;
 
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshTool;
 
 public abstract class AbstractCloudMachineProvisioningLocation extends AbstractLocation 
@@ -18,8 +20,15 @@ implements MachineProvisioningLocation<SshMachineLocation>, CloudLocationConfig
 {
 
     /** typically wants at least ACCESS_IDENTITY and ACCESS_CREDENTIAL */
-    public AbstractCloudMachineProvisioningLocation(Map conf) {
+    public AbstractCloudMachineProvisioningLocation(Map<?,?> conf) {
         super(conf);
+    }
+
+    /** uses reflection to create an object of the same type, assuming a Map constructor;
+     * subclasses can extend and downcast the result */
+    @Override
+    public AbstractCloudMachineProvisioningLocation newSubLocation(Map<?,?> newFlags) {
+        return LocationCreationUtils.newSubLocation(newFlags, this);
     }
 
     @Override

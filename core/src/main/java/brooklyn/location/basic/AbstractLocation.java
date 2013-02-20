@@ -60,7 +60,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     
     protected HostGeoInfo hostGeoInfo;
 
-    final protected ConfigBag configBag = new ConfigBag();
+    final private ConfigBag configBag = new ConfigBag();
 
 
     /**
