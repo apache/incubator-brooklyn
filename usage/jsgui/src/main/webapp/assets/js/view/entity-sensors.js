@@ -1,5 +1,6 @@
 /**
  * Render entity sensors tab.
+ *
  * @type {*}
  */
 define([
@@ -15,50 +16,52 @@ define([
             'click .filterEmpty':'toggleFilterEmpty'
         },
         initialize:function () {
-            this.$el.html(this.template({}))
-            var sensorsCollection = new SensorSummary.Collection,
-                $table = this.$('#sensors-table'),
-                $tableBody = this.$('tbody').empty(),
-                that = this
-            sensorsCollection.url = this.model.getLinkByName('sensors')
+            this.$el.html(this.template({ }));
+            var that = this,
+                sensorsCollection = new SensorSummary.Collection,
+                $table = $('#sensors-table'),
+                $tableBody = $('tbody').empty();
+            ViewUtils.myDataTable($table);
+            sensorsCollection.url = that.model.getLinkByName('sensors');
             var success = function () {
                 sensorsCollection.each(function (sensor) {
                     var actions = {};
                     _.each(sensor.get("links"), function(v,k) {
                         if (k.slice(0, 7) == "action:") {
-                            actions[k.slice(7)] = v
+                            actions[k.slice(7)] = v;
                         }
-                    })
+                    });
                     $tableBody.append(that.sensorTemplate({
                         name:sensor.get("name"),
                         description:sensor.get("description"),
                         actions:actions,
                         type:sensor.get("type"),
                         value:'' /* will be set later */
-                    }))
-                })
-                that.updateSensorsPeriodically(that)
-                ViewUtils.myDataTable($table)
+                    }));
+                });
+                that.updateSensorsPeriodically(that);
                 // TODO tooltip doesn't work on 'i' elements in table (bottom left toolbar)
-                $table.find('*[rel="tooltip"]').tooltip()
-            }
-            sensorsCollection.fetch({async:false, success:success})
-            this.toggleFilterEmpty()
+                $table.find('*[rel="tooltip"]').tooltip();
+            };
+            sensorsCollection.fetch({ async:false, success:success });
+            this.toggleFilterEmpty();
         },
         render:function () {
-            return this
+            return this;
         },
-        toggleFilterEmpty: function() {
-            ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 2)
+        toggleFilterEmpty:function() {
+            ViewUtils.toggleFilterEmpty($('#sensors-table'), 2);
         },
         refreshSensors:function () {
             this.updateSensorsNow(this);  
         },
         // register a callback to update the sensors
         updateSensorsPeriodically:function (that) {
-            var self = this;
-            that.updateSensorsNow(that)
-            that.callPeriodically("entity-sensors", function() { self.updateSensorsNow(that) }, 3000)
+            var that = this;
+            that.updateSensorsNow(that);
+            that.callPeriodically("entity-sensors", function() {
+                that.updateSensorsNow(that);
+            }, 3000);
         },
         updateSensorsNow:function (that) {
             // NB: this won't add new dynamic sensors
@@ -75,6 +78,6 @@ define([
                     })
                 })
         }
-    })
-    return EntitySensorsView
-})
+    });
+    return EntitySensorsView;
+});

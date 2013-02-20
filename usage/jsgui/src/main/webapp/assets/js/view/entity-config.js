@@ -1,5 +1,6 @@
 /**
  * Render entity config tab.
+ *
  * @type {*}
  */
 define([
@@ -15,12 +16,13 @@ define([
             'click .filterEmpty':'toggleFilterEmpty'
         },
         initialize:function () {
-            this.$el.html(this.template({}))
-            var configCollection = new ConfigSummary.Collection,
-                $table = this.$('#config-table'),
-                $tableBody = this.$('tbody').empty(),
-                that = this
-            configCollection.url = this.model.getLinkByName('config')
+            this.$el.html(this.template({}));
+            var that = this,
+                configCollection = new ConfigSummary.Collection,
+                $table = $('#config-table'),
+                $tableBody = $('tbody').empty();
+            ViewUtils.myDataTable($table);
+            configCollection.url = this.model.getLinkByName('config');
             var success = function () {
                 configCollection.each(function (config) {
                     $tableBody.append(that.configTemplate({
@@ -28,21 +30,20 @@ define([
                         description:config.get("description"),
                         value:'',
                         type:config.get("type")
-                    }))
-                })
-                that.updateConfigPeriodically(that)
-                ViewUtils.myDataTable($table)
+                    }));
+                });
+                that.updateConfigPeriodically();
                 // TODO tooltip doesn't work on 'i' elements in table (bottom left toolbar)
-                $table.find('*[rel="tooltip"]').tooltip()
-            }
-            configCollection.fetch({async:false, success:success})
-            this.toggleFilterEmpty()
+                $table.find('*[rel="tooltip"]').tooltip();
+            };
+            configCollection.fetch({ async:false, success:success });
+            this.toggleFilterEmpty();
         },
         render:function () {
             return this
         },
         toggleFilterEmpty: function() {
-            ViewUtils.toggleFilterEmpty(this.$('#config-table'), 1)
+            ViewUtils.toggleFilterEmpty(this.$('#config-table'), 1);
         },
         refreshConfig:function () {
             this.updateConfigNow(this);  
