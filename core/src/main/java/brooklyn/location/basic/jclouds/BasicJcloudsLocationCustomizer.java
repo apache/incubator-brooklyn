@@ -6,7 +6,6 @@ import org.jclouds.compute.options.TemplateOptions;
 
 import com.google.common.annotations.Beta;
 
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
 
 /**
  * A default no-op implementation, which can be extended to override the appropriate methods.

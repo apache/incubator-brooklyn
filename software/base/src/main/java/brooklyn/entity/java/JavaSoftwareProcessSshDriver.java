@@ -21,7 +21,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
+import brooklyn.location.basic.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;

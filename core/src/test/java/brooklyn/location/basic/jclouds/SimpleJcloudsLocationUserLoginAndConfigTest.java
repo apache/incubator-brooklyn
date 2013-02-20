@@ -14,7 +14,6 @@ import org.testng.annotations.Test;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.JcloudsResolver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
 import brooklyn.test.TestUtils;
 import brooklyn.util.MutableMap;
 import brooklyn.util.text.Identifiers;

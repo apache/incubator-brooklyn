@@ -8,7 +8,6 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.JcloudsResolver;
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
 import brooklyn.util.MutableMap;
 
 public class AwsJcloudsMinRamTest {

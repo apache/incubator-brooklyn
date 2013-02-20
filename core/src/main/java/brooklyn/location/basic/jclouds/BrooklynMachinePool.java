@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
 import brooklyn.location.basic.jclouds.pool.MachinePool;
 import brooklyn.location.basic.jclouds.pool.MachineSet;
 import brooklyn.location.basic.jclouds.pool.ReusableMachineTemplate;

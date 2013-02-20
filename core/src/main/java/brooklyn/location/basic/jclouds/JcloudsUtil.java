@@ -187,7 +187,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     }
     public static ComputeService findComputeService(ConfigBag conf, boolean allowReuse) {
         Properties properties = new Properties();
-        String provider = conf.get(PROVIDER);
+        String provider = conf.get(CLOUD_PROVIDER);
         String identity = conf.get(ACCESS_IDENTITY);
         String credential = conf.get(ACCESS_CREDENTIAL);
         
@@ -225,7 +225,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             }
         }
 
-        String endpoint = (String) conf.get(ENDPOINT);
+        String endpoint = (String) conf.get(CLOUD_ENDPOINT);
         if (!truth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
         if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 

@@ -15,7 +15,6 @@ import com.google.common.collect.Iterables
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.util.MutableMap
 
 /**

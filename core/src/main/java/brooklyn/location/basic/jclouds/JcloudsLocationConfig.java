@@ -11,22 +11,12 @@ import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.util.flags.SetFromFlag;
+import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.internal.ssh.SshTool;
 
-public interface JcloudsLocationConfig {
+public interface JcloudsLocationConfig extends CloudLocationConfig {
 
-    // TODO prefix with CLOUD_
-    // and TODO make CLOUD_REGION_ID
-    
-    public static final ConfigKey<String> PROVIDER = new StringConfigKey("provider");
-    public static final ConfigKey<String> ENDPOINT = new StringConfigKey("endpoint");
-    public static final ConfigKey<String> REGION = new StringConfigKey("region");
-        
-    @SetFromFlag("identity")
-    public static final ConfigKey<String> ACCESS_IDENTITY = LocationConfigKeys.ACCESS_IDENTITY;
-    @SetFromFlag("credential")
-    public static final ConfigKey<String> ACCESS_CREDENTIAL = LocationConfigKeys.ACCESS_CREDENTIAL;
+    public static final ConfigKey<String> CLOUD_PROVIDER = LocationConfigKeys.CLOUD_PROVIDER;
 
     public static final ConfigKey<Boolean> RUN_AS_ROOT = new BasicConfigKey<Boolean>(Boolean.class, "runAsRoot", 
             "Whether to run initial setup as root (default true)", null);
@@ -46,16 +36,6 @@ public interface JcloudsLocationConfig {
     
     public static final ConfigKey<Boolean> DONT_CREATE_USER = new BasicConfigKey<Boolean>(Boolean.class, "dontCreateUser", 
             "Whether to skip creation of 'user' when provisioning machines (default false)", false);
-
-    @SetFromFlag("user")
-    public static final ConfigKey<String> USER = LocationConfigKeys.USER;
-    
-    public static final ConfigKey<String> PASSWORD = LocationConfigKeys.PASSWORD;
-    public static final ConfigKey<String> PUBLIC_KEY_FILE = LocationConfigKeys.PUBLIC_KEY_FILE;
-    public static final ConfigKey<String> PUBLIC_KEY_DATA = LocationConfigKeys.PUBLIC_KEY_DATA;
-    public static final ConfigKey<String> PRIVATE_KEY_FILE = LocationConfigKeys.PRIVATE_KEY_FILE;
-    public static final ConfigKey<String> PRIVATE_KEY_DATA = LocationConfigKeys.PRIVATE_KEY_DATA;
-    public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = LocationConfigKeys.PRIVATE_KEY_PASSPHRASE;
 
     public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class, 
             "customCredentials", "Custom jclouds LoginCredentials object to be used to connect to the VM", null);

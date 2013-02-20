@@ -25,7 +25,7 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
+import brooklyn.location.basic.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
 import brooklyn.util.Time;

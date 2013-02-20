@@ -21,7 +21,7 @@ public class JcloudsLocationFactory {
 
     // Northern California (approx))
     private final static Map<String, Object> GoGrid_us_west = MutableMap.of(
-            JcloudsLocationConfig.REGION.getName(), "1",
+            JcloudsLocationConfig.CLOUD_REGION_ID.getName(), "1",
             "displayName", "GoGrid us-west",
             "streetAddress", "California",
             "latitude", 40.0d,
@@ -30,7 +30,7 @@ public class JcloudsLocationFactory {
 
     // Northern California (approx)
     private final static Map<String, Object> aws_ec2_us_west_1 = MutableMap.of(
-            JcloudsLocationConfig.REGION.getName(), "us-west-1",
+            JcloudsLocationConfig.CLOUD_REGION_ID.getName(), "us-west-1",
             "displayName", "AWS us-west",
             "streetAddress", "California",
             "latitude", 40.0d, "longitude", -120.0d,
@@ -40,7 +40,7 @@ public class JcloudsLocationFactory {
 
     // Northern Virginia (approx)
     private final static Map<String, Object> aws_ec2_us_east_1 = MutableMap.of(
-            JcloudsLocationConfig.REGION.getName(), "us-east-1",
+            JcloudsLocationConfig.CLOUD_REGION_ID.getName(), "us-east-1",
             "displayName", "AWS us-east",
             "streetAddress", "Virginia",
             "latitude", 38.0d, "longitude", -76.0d,
@@ -50,7 +50,7 @@ public class JcloudsLocationFactory {
 
     // Dublin, Ireland
     private final static Map<String, Object> aws_ec2_eu_west_1 = MutableMap.of(
-            JcloudsLocationConfig.REGION.getName(), "eu-west-1",
+            JcloudsLocationConfig.CLOUD_REGION_ID.getName(), "eu-west-1",
             "displayName", "AWS eu-west",
             "streetAddress", "Dublin, Ireland",
             "latitude", 53.34778d, "longitude", -6.25972d,
@@ -59,7 +59,7 @@ public class JcloudsLocationFactory {
     );
 
     private final static Map<String, Object> aws_ec2_ap_southeast_1 = MutableMap.of(
-            JcloudsLocationConfig.REGION.getName(), "ap-southeast-1",
+            JcloudsLocationConfig.CLOUD_REGION_ID.getName(), "ap-southeast-1",
             "displayName", "AWS ap-southeast",
             "streetAddress", "Singapore",
             "latitude", 0d, "longitude", 0d,
@@ -68,7 +68,7 @@ public class JcloudsLocationFactory {
     );
 
     private final static Map<String, Object> aws_ec2_ap_northeast_1 = MutableMap.of(
-            JcloudsLocationConfig.REGION.getName(), "ap-northeast-1",
+            JcloudsLocationConfig.CLOUD_REGION_ID.getName(), "ap-northeast-1",
             "streetAddress", "Tokyo, Japan",
             "displayName", "AWS ap-northeast",
             "latitude", 0d, "longitude", 0d,
@@ -128,7 +128,7 @@ public class JcloudsLocationFactory {
         Map allconf = new LinkedHashMap();
         allconf.putAll(conf);
         if (locationId != null)
-            allconf.put(JcloudsLocationConfig.REGION.getName(), locationId);
+            allconf.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), locationId);
         allconf.putAll(locSpecifics);
         return new JcloudsLocation(allconf);
     }

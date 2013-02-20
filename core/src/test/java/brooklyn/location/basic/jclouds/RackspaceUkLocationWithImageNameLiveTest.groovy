@@ -7,7 +7,6 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.Entities
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.management.ManagementContext
 
 import com.google.common.collect.ImmutableMap

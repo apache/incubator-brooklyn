@@ -15,6 +15,10 @@ public class LocationConfigKeys {
     public static final ConfigKey<Double> LATITUDE = new BasicConfigKey<Double>(Double.class, "latitude"); 
     public static final ConfigKey<Double> LONGITUDE = new BasicConfigKey<Double>(Double.class, "longitude"); 
 
+    public static final ConfigKey<String> CLOUD_PROVIDER = new StringConfigKey("provider");
+    public static final ConfigKey<String> CLOUD_ENDPOINT = new StringConfigKey("endpoint");
+    public static final ConfigKey<String> CLOUD_REGION_ID = new StringConfigKey("region");
+
     public static final ConfigKey<String> USER = new StringConfigKey("user", 
             "user account for normal access to the remote machine, defaulting to local user", System.getProperty("user.name"));
     

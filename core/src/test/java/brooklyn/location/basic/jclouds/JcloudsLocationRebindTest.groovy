@@ -10,7 +10,6 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.Entities
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation
 import brooklyn.management.ManagementContext
 
 import com.google.common.collect.ImmutableMap
