@@ -680,7 +680,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     // -------------- create the SshMachineLocation instance, and connect to it etc ------------------------
 
     protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, ConfigBag setup) throws IOException {
-        Map sshConfig = extractSshConfig(setup, node);
+        Map<?,?> sshConfig = extractSshConfig(setup, node);
         
         if (LOG.isDebugEnabled())
             LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} for {} with {}", 
@@ -706,6 +706,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // -------------- give back the machines------------------
     
+    protected Map<?,?> extractSshConfig(ConfigBag setup, NodeMetadata node) {
+        ConfigBag nodeConfig = new ConfigBag();
+        if (node!=null) {
+            nodeConfig.putIfNotNull(PASSWORD, node.getCredentials().getPassword());
+            nodeConfig.putIfNotNull(PRIVATE_KEY_DATA, node.getCredentials().getPrivateKey());
+        }
+        return extractSshConfig(setup, nodeConfig).getAllConfig();
+    }
+
     public void release(SshMachineLocation machine) {
         String instanceId = vmInstanceIds.remove(machine);
         if (!truth(instanceId)) {
@@ -933,10 +942,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private String getPublicHostnameAws(String ip, ConfigBag setup) {
         SshMachineLocation sshLocByIp = null;
         try {
-            Map sshConfig = extractSshConfig(setup, null);
+            ConfigBag sshConfig = extractSshConfig(setup, new ConfigBag());
             
             // TODO messy way to get an SSH session 
-            sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", getUser(setup), "config", sshConfig));
+            sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", getUser(setup), 
+                    "config", sshConfig.getAllConfig()));
             
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
@@ -949,8 +959,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 if (line.startsWith("ec2-")) return line.trim();
             }
             throw new IllegalStateException("Could not obtain hostname for vm "+ip+"; exitcode="+exitcode+"; stdout="+outString+"; stderr="+new String(errStream.toByteArray()));
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
         } finally {
             Closeables.closeQuietly(sshLocByIp);
         }
@@ -983,9 +991,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected static int[] toIntArray(Object v) {
         int[] result;
         if (v instanceof Iterable) {
-            result = new int[Iterables.size((Iterable)v)];
+            result = new int[Iterables.size((Iterable<?>)v)];
             int i = 0;
-            for (Object o : (Iterable)v) {
+            for (Object o : (Iterable<?>)v) {
                 result[i++] = (Integer) o;
             }
         } else if (v instanceof int[]) {
@@ -1006,8 +1014,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected static String[] toStringArray(Object v) {
         Collection<String> result = Lists.newArrayList();
         if (v instanceof Iterable) {
-            int i = 0;
-            for (Object o : (Iterable)v) {
+            for (Object o : (Iterable<?>)v) {
                 result.add(o.toString());
             }
         } else if (v instanceof Object[]) {

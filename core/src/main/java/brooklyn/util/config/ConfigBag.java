@@ -78,6 +78,10 @@ public class ConfigBag {
     public <T> T put(ConfigKey<T> key, T value) {
         return (T) putStringKey(key.getName(), value);
     }
+    
+    public <T> void putIfNotNull(ConfigKey<T> key, T value) {
+        if (value!=null) put(key, value);
+    }
 
     /** as {@link #put(ConfigKey, Object)} but returning this ConfigBag for fluent-style coding */
     public <T> ConfigBag configure(ConfigKey<T> key, T value) {
@@ -219,5 +223,5 @@ public class ConfigBag {
     public boolean isUnused(ConfigKey<?> key) {
         return unusedConfig.containsKey(key.getName());
     }
-    
+
 }

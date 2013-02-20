@@ -4,15 +4,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
-import org.jclouds.compute.domain.NodeMetadata;
-
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshTool;
 
 public abstract class AbstractCloudMachineProvisioningLocation extends AbstractLocation 
@@ -41,21 +38,21 @@ implements MachineProvisioningLocation<SshMachineLocation>, CloudLocationConfig
 
     // ---------------- utilities --------------------
     
-    protected Map extractSshConfig(ConfigBag setup, NodeMetadata node) throws IOException {
+    protected ConfigBag extractSshConfig(ConfigBag setup, ConfigBag alt) {
         ConfigBag sshConfig = new ConfigBag();
         
-        if (setup.get(PASSWORD) != null) {
+        if (setup.containsKey(PASSWORD)) {
             sshConfig.put(SshTool.PROP_PASSWORD, setup.get(PASSWORD));
-        } else if (node!=null && node.getCredentials().getPassword() != null) {
-            sshConfig.put(SshTool.PROP_PASSWORD, node.getCredentials().getPassword());
+        } else if (alt.containsKey(PASSWORD)) {
+            sshConfig.put(SshTool.PROP_PASSWORD, alt.get(PASSWORD));
         }
         
         if (setup.containsKey(PRIVATE_KEY_DATA)) {
             sshConfig.put(SshTool.PROP_PRIVATE_KEY_DATA, setup.get(PRIVATE_KEY_DATA));
         } else if (setup.containsKey(PRIVATE_KEY_FILE)) {
             sshConfig.put(SshTool.PROP_PRIVATE_KEY_FILE, setup.get(PRIVATE_KEY_FILE));
-        } else if (node!=null && node.getCredentials().getPrivateKey() != null) {
-            sshConfig.put(SshTool.PROP_PRIVATE_KEY_DATA, node.getCredentials().getPrivateKey());
+        } else if (alt.containsKey(PRIVATE_KEY_DATA)) {
+            sshConfig.put(SshTool.PROP_PRIVATE_KEY_DATA, alt.get(PRIVATE_KEY_DATA));
         }
         
         if (setup.containsKey(PRIVATE_KEY_PASSPHRASE)) {
@@ -65,8 +62,7 @@ implements MachineProvisioningLocation<SshMachineLocation>, CloudLocationConfig
 
         // TODO extract other SshTool properties ?
         
-        // TODO could return the config bag ?
-        return sshConfig.getAllConfig();
+        return sshConfig;
     }
 
 }

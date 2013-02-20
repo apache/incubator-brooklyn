@@ -4,7 +4,6 @@ import static org.testng.Assert.*
 
 import java.util.concurrent.Callable
 
-import org.jclouds.util.Throwables2
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -16,6 +15,7 @@ import brooklyn.event.basic.MapConfigKey.MapModifications
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList
 
@@ -62,7 +62,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
             entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), v1)
             fail();
         } catch (Exception e) {
-            ClassCastException cce = Throwables2.getFirstThrowableOfType(e, ClassCastException.class);
+            ClassCastException cce = Exceptions.getFirstThrowableOfType(e, ClassCastException.class);
             if (cce == null) throw e;
             if (!cce.getMessage().contains("Cannot coerce type")) throw e;
         }

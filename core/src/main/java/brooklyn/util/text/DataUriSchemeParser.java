@@ -8,11 +8,13 @@ import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.bouncycastle.util.encoders.Base64;
+
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.sun.jersey.core.util.Base64;
+//import com.sun.jersey.core.util.Base64;
 
 /** implementation (currently hokey) of RFC-2397 data: URI scheme.
  * see: http://stackoverflow.com/questions/12353552/any-rfc-2397-data-uri-parser-for-java */

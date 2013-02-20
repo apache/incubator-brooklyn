@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +41,7 @@ import brooklyn.util.MutableMap;
 import brooklyn.util.ReaderInputStream;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.StreamGobbler;
@@ -665,7 +665,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             if (LOG.isDebugEnabled()) LOG.debug("Exception checking if "+this+" is reachable; assuming not", e);
             return false;
         } catch (RuntimeException e) {
-            if (Throwables2.getFirstThrowableOfType(e, IOException.class) != null) {
+            if (Exceptions.getFirstThrowableOfType(e, IOException.class) != null) {
                 if (LOG.isDebugEnabled()) LOG.debug("Exception checking if "+this+" is reachable; assuming not", e);
                 return false;
             } else {

@@ -10,7 +10,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-import org.jclouds.util.Throwables2
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -27,6 +26,7 @@ import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.TimeExtras
 
 import com.google.common.base.Predicates
@@ -64,7 +64,7 @@ class DynamicClusterTest {
             new DynamicClusterImpl(factory:"error", app)
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
         }
     }
 
@@ -80,7 +80,7 @@ class DynamicClusterTest {
                     .configure("factory", "error"));
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
         }
     }
 
@@ -91,7 +91,7 @@ class DynamicClusterTest {
             c.start([loc]);
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
     }
 
@@ -103,7 +103,7 @@ class DynamicClusterTest {
             cluster.start(null)
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
     }
 
@@ -115,7 +115,7 @@ class DynamicClusterTest {
             cluster.start([])
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
     }
 
@@ -127,7 +127,7 @@ class DynamicClusterTest {
             cluster.start([ loc, loc2 ])
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
     }
 
@@ -531,8 +531,8 @@ class DynamicClusterTest {
             cluster.replaceMember("wrong.id");
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, NoSuchElementException.class) == null) throw e;
-            if (!Throwables2.getFirstThrowableOfType(e, NoSuchElementException.class).getMessage().contains("entity wrong.id cannot be resolved")) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class) == null) throw e;
+            if (!Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class).getMessage().contains("entity wrong.id cannot be resolved")) throw e;
         }
         
         assertEquals(cluster.members as Set, ImmutableSet.of(member));
@@ -551,8 +551,8 @@ class DynamicClusterTest {
             cluster.replaceMember(app.getId());
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, NoSuchElementException.class) == null) throw e;
-            if (!Throwables2.getFirstThrowableOfType(e, NoSuchElementException.class).getMessage().contains("is not a member")) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class) == null) throw e;
+            if (!Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class).getMessage().contains("is not a member")) throw e;
         }
         
         assertEquals(cluster.members as Set, ImmutableSet.of(member));
@@ -576,7 +576,7 @@ class DynamicClusterTest {
             fail();
         } catch (Exception e) {
             if (!e.toString().contains("failed to grow")) throw e;
-            if (Throwables2.getFirstThrowableOfType(e, NoSuchElementException.class) != null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, NoSuchElementException.class) != null) throw e;
         }
         assertEquals(cluster.members as Set, ImmutableSet.of(member));
     }
@@ -600,7 +600,7 @@ class DynamicClusterTest {
             fail();
         } catch (Exception e) {
             if (!e.toString().contains("Simulating entity stop failure")) throw e;
-            if (Throwables2.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
         assertFalse(Entities.isManaged(member));
         assertEquals(cluster.members.size(), 1);

@@ -29,7 +29,6 @@ import net.schmizz.sshj.xfer.InMemorySourceFile;
 
 import org.apache.commons.io.input.ProxyInputStream;
 import org.bouncycastle.util.Strings;
-import org.jclouds.io.InputSuppliers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +38,7 @@ import brooklyn.util.internal.StreamGobbler;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.stream.InputStreamSupplier;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.text.Identifiers;
 
@@ -256,7 +256,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
         InputStream contents = acquire(new GetFileAction(pathAndFileOnRemoteServer));
         try {
-            Files.copy(InputSuppliers.of(contents), localFile);
+            Files.copy(new InputStreamSupplier(contents), localFile);
             return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
         } catch (IOException e) {
             throw Throwables.propagate(e);

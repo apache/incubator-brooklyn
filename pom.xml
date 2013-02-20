@@ -87,6 +87,7 @@
         <jackson.version>1.9.10</jackson.version>
         <jansi.version>1.2.1</jansi.version>
         <guava.version>13.0.1</guava.version>
+        <gson.version>2.2.2</gson.version>
         <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
         <jclouds.version>1.5.4</jclouds.version>
