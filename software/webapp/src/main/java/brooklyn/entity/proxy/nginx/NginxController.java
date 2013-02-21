@@ -1,5 +1,7 @@
 package brooklyn.entity.proxy.nginx;
 
+import java.util.Map;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Description;
@@ -8,8 +10,11 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * An entity that represents an Nginx proxy (e.g. for routing requests to servers in a cluster).
@@ -40,10 +45,6 @@ public interface NginxController extends AbstractController {
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
         new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "1.3.7");
 
-    @SetFromFlag("sticky")
-    public static final BasicConfigKey<Boolean> STICKY =
-        new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
-
     @SetFromFlag("stickyVersion")
     public static final ConfigKey<String> STICKY_VERSION =
         new BasicConfigKey<String>(String.class, "nginx.sticky.version", 
@@ -53,6 +54,20 @@ public interface NginxController extends AbstractController {
     public static final ConfigKey<String> PCRE_VERSION =
         new BasicConfigKey<String>(String.class, "pcre.version", "Version of PCRE to be installed, if required", "8.32");
     
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            SoftwareProcess.DOWNLOAD_URL, "http://nginx.org/download/nginx-${version}.tar.gz");
+
+    @SetFromFlag("downloadAddonUrls")
+    public static final BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = new BasicAttributeSensorAndConfigKey<Map<String,String>>(
+            SoftwareProcess.DOWNLOAD_ADDON_URLS, ImmutableMap.of(
+                    "stickymodule", "http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-${addonversion}.tar.gz",
+                    "pcre", "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${addonversion}.tar.gz"));
+
+    @SetFromFlag("sticky")
+    public static final BasicConfigKey<Boolean> STICKY =
+        new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
+
     @SetFromFlag("httpPollPeriod")
     public static final BasicConfigKey<Long> HTTP_POLL_PERIOD =
         new BasicConfigKey<Long>(Long.class, "nginx.sensorpoll.http", "poll period (in milliseconds)", 1000L);

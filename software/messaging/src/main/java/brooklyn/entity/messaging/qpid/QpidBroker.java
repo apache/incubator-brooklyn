@@ -30,6 +30,10 @@ public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, Amq
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "0.20");
     
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            Attributes.DOWNLOAD_URL, "http://download.nextag.com/apache/qpid/${version}/qpid-java-broker-${version}.tar.gz");
+
     @SetFromFlag("amqpPort")
     public static final PortAttributeSensorAndConfigKey AMQP_PORT = AmqpServer.AMQP_PORT;
 

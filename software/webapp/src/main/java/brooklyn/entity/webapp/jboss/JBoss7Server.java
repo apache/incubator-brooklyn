@@ -22,6 +22,10 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
     // see https://community.jboss.org/thread/197780
     // 7.2.0.Final should be out during Q3 2012
 
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            SoftwareProcess.DOWNLOAD_URL, "http://download.jboss.org/jbossas/7.1/jboss-as-${version}/jboss-as-${version}.tar.gz");
+
     @SetFromFlag("bindAddress")
     public static final BasicAttributeSensorAndConfigKey<String> BIND_ADDRESS =
             new BasicAttributeSensorAndConfigKey<String>(String.class, "jboss.bind.address", 

@@ -1,7 +1,5 @@
 package brooklyn.entity.basic.lifecycle;
 
-import brooklyn.util.MutableMap;
-
 import static java.lang.String.format;
 
 import java.util.Arrays;
@@ -12,10 +10,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class CommonCommands {
 
@@ -182,36 +180,69 @@ public class CommonCommands {
     public static final String INSTALL_WGET = installExecutable("wget");
     public static final String INSTALL_ZIP = installExecutable("zip");
 
+    /** 
+     * @see downloadUrlAs(Map, String, String, String)
+     * @deprecated Use {@link downloadUrlAs(List<String>, String)}, and rely on {@link DownloadResolverRegistry} to include the local-repo
+     */
+    public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
+        return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
+    }
+
+    /**
     /**
      * Returns command for downloading from a url and saving to a file;
      * currently using {@code curl}.
      * <p/>
      * Will read from a local repository, if files have been copied there
-     * ({@code cp -r /tmp/brooklyn/installs/ ~/.brooklyn/repository/})
-     * unless <em>skipLocalrepo</em> is {@literal true}.
+     * ({@code cp -r /tmp/brooklyn/installs/ ~/.brooklyn/repository/<entityVersionPath>/<pathlessFilenameToSaveAs>})
+     * unless <em>skipLocalRepo</em> is {@literal true}.
      * <p/>
      * Ideally use a blobstore staging area.
+     * 
+     * @deprecated Use {@link downloadUrlAs(List, String)}, and rely on {@link DownloadResolverRegistry} to include the local-repo
      */
+    @Deprecated
     public static List<String> downloadUrlAs(Map flags, String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
         Boolean skipLocalRepo = (Boolean) flags.get("skipLocalRepo");
         boolean useLocalRepo =  skipLocalRepo!=null?!skipLocalRepo:true;
-
-        String command = format("curl -L \"%s\" -o %s", url, pathlessFilenameToSaveAs);
+        List<String> urls;
         if (useLocalRepo) {
-            String file = format("$HOME/.brooklyn/repository/%s/%s", entityVersionPath, pathlessFilenameToSaveAs);
-            command = format("if [ -f %s ]; then cp %s ./%s; else %s ; fi", file, file, pathlessFilenameToSaveAs, command);
+            String localRepoFileUrl = format("file://$HOME/.brooklyn/repository/%s/%s", entityVersionPath, pathlessFilenameToSaveAs);
+            urls = ImmutableList.of(localRepoFileUrl, url);
+        } else {
+            urls = ImmutableList.of(url);
         }
-        command = command + " || exit 9";
-        return Arrays.asList(INSTALL_CURL, command);
+        return downloadUrlAs(urls, "./"+pathlessFilenameToSaveAs);
+    }
+    
+    /**
+     * Returns command to download the URL, saving as the given file. Will try each URL in turn until one is successful
+     * (see `curl -f` documentation).
+     */
+    public static List<String> downloadUrlAs(List<String> urls, String saveAs) {
+        return Arrays.asList(INSTALL_CURL, simpleDownloadUrlAs(urls, saveAs) + " || exit 9");
+    }
+
+    /**
+     * Same as {@link downloadUrlAs(List, String)}, except does not install curl, and does not exit on failure.
+     */
+    public static String simpleDownloadUrlAs(List<String> urls, String saveAs) {
+        if (urls.isEmpty()) throw new IllegalArgumentException("No URLs supplied to download "+saveAs);
+        
+        StringBuilder command = new StringBuilder("");
+        boolean firsturl = true;
+        for (String url : urls) {
+            if (!firsturl) command.append(" || ");
+            firsturl = false;
+            command.append(format("curl -f -L \"%s\" -o %s", url, saveAs));
+        }
+        
+        return command.toString();
     }
 
     private static Object getFlag(Map flags, String flagName, Object defaultValue) {
         Object found = flags.get(flagName);
         return found == null ? defaultValue : found;
-    }
-
-    public static List<String> downloadUrlAs(String url, String entityVersionPath, String pathlessFilenameToSaveAs) {
-        return downloadUrlAs(new HashMap(), url, entityVersionPath, pathlessFilenameToSaveAs);
     }
 
     /**

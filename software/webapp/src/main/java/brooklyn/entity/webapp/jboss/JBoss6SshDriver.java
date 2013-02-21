@@ -11,6 +11,7 @@ import java.util.Map;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
@@ -20,6 +21,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
     public static final String SERVER_TYPE = "standard";
     public static final int DEFAULT_HTTP_PORT = 8080;
     private static final String PORT_GROUP_NAME = "ports-brooklyn";
+    private String expandedInstallDir;
 
     public JBoss6SshDriver(JBoss6ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -46,6 +48,11 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         return entity.getAttribute(JBoss6Server.CLUSTER_NAME);
     }
 
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+
     @Override
     public void postLaunch() {
        entity.setAttribute(JBoss6Server.HTTP_PORT, DEFAULT_HTTP_PORT + getPortIncrement());
@@ -54,15 +61,17 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
 
     @Override
     public void install() {
-        String url = "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-"+getVersion()+"/jboss-as-distribution-"+getVersion()+".zip?" +
-                "r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F"+getVersion()+"%2F&ts=1307104229&use_mirror=kent";
-        String saveAs = format("jboss-as-distribution-%s.tar.gz", getVersion());
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/" + resolver.getUnpackedDirectorName("jboss-"+getVersion());
+        
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to
         // overwrite interrupts the installer.
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs));
+        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.installExecutable("unzip"));
         commands.add(format("unzip -o %s",saveAs));
 
@@ -77,7 +86,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
                 body.append(
                 format("mkdir -p %s/server", getRunDir()),
                 format("cd %s/server", getRunDir()),
-                format("cp -r %s/jboss-%s/server/%s %s", getInstallDir(), getVersion(), SERVER_TYPE, SERVER_TYPE),
+                format("cp -r %s/server/%s %s", getExpandedInstallDir(), SERVER_TYPE, SERVER_TYPE),
                 format("cd %s/conf/bindingservice.beans/META-INF/",SERVER_TYPE),
                 "BJB=\"bindings-jboss-beans.xml\"",
                 format("sed -i.bk 's/ports-03/%s/' $BJB",PORT_GROUP_NAME),
@@ -103,8 +112,8 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
 
         newScript(flags, LAUNCHING).
             body.append(
-                format("export JBOSS_CLASSPATH=%s/jboss-%s/lib/jboss-logmanager.jar",getInstallDir(),getVersion()),
-                format("%s/jboss-%s/bin/run.sh -Djboss.service.binding.set=%s -Djboss.server.base.dir=$RUN_DIR/server ",getInstallDir(),getVersion(),PORT_GROUP_NAME) +
+                format("export JBOSS_CLASSPATH=%s/lib/jboss-logmanager.jar",getExpandedInstallDir()),
+                format("%s/bin/run.sh -Djboss.service.binding.set=%s -Djboss.server.base.dir=$RUN_DIR/server ",getExpandedInstallDir(),PORT_GROUP_NAME) +
                 format("-Djboss.server.base.url=file://$RUN_DIR/server -Djboss.messaging.ServerPeerID=%s ",entity.getId())+
                 format("-Djboss.boot.server.log.dir=%s/server/%s/log ",getRunDir(),SERVER_TYPE) +
                 format("-b 0.0.0.0 %s -c %s ",clusterArg,SERVER_TYPE) +
@@ -119,8 +128,8 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
 
         List<String> checkRunningScript = new LinkedList<String>();
         checkRunningScript.add(
-                format("%s/jboss-%s/bin/twiddle.sh --host %s --port %s get \"jboss.system:type=Server\" Started | grep true || exit 1",
-                        getInstallDir(), getVersion(), host, port));
+                format("%s/bin/twiddle.sh --host %s --port %s get \"jboss.system:type=Server\" Started | grep true || exit 1",
+                        getExpandedInstallDir(), host, port));
 
         //have to override the CLI/JMX options
 
@@ -138,7 +147,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         String host = entity.getAttribute(Attributes.HOSTNAME);
         Integer port = entity.getAttribute(Attributes.JMX_PORT);
         List<String> shutdownScript = new LinkedList<String>();
-        shutdownScript.add(format("%s/jboss-%s/bin/shutdown.sh --host %s --port %s -S", getInstallDir(), getVersion(), host, port));
+        shutdownScript.add(format("%s/bin/shutdown.sh --host %s --port %s -S", getExpandedInstallDir(), host, port));
 
         //again, messy copy of parent; but new driver scheme could allow script-helper to customise parameters
         log.debug("invoking shutdown script for {}: {}", entity, shutdownScript);

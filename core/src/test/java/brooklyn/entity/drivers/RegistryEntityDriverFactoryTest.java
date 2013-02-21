@@ -7,6 +7,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriver;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriverDependentEntity;
 import brooklyn.location.Location;
@@ -47,6 +48,11 @@ public class RegistryEntityDriverFactoryTest {
         public MyOtherSshDriver(Entity entity, Location machine) {
         }
 
+        @Override
+        public EntityLocal getEntity() {
+            throw new UnsupportedOperationException();
+        }
+        
         @Override
         public Location getLocation() {
             throw new UnsupportedOperationException();

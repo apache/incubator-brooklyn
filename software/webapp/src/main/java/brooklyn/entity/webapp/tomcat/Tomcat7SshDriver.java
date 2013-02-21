@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -15,6 +16,8 @@ import brooklyn.util.NetworkUtils;
 
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
+
+    private String expandedInstallDir;
 
     public Tomcat7SshDriver(TomcatServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -32,19 +35,20 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         return entity.getAttribute(TomcatServerImpl.SHUTDOWN_PORT);
     }
 
-    //@Override
-    //public void postLaunch() {
-    //    entity.setAttribute(TomcatServerImpl.SHUTDOWN_PORT, getShutdownPort());
-    //    super.postLaunch();
-    //}
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
 
     @Override
     public void install() {
-        String url = "http://download.nextag.com/apache/tomcat/tomcat-7/v"+getVersion()+"/bin/apache-tomcat-"+getVersion()+".tar.gz";
-        String saveAs = "apache-tomcat-"+getVersion()+".tar.gz";
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName("apache-tomcat-"+getVersion());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs));
+        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.installExecutable("tar"));
         commands.add(format("tar xvzf %s",saveAs));
 
@@ -60,7 +64,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
                 format("mkdir -p %s",getRunDir()),
                 format("cd %s",getRunDir()),
                 "mkdir conf logs webapps temp",
-                format("cp %s/apache-tomcat-%s/conf/{server,web}.xml conf/",getInstallDir(),getVersion()),
+                format("cp %s/conf/{server,web}.xml conf/",getExpandedInstallDir()),
                 format("sed -i.bk s/8080/%s/g conf/server.xml",getHttpPort()),
                 format("sed -i.bk s/8005/%s/g conf/server.xml",getShutdownPort()),
                 "sed -i.bk /8009/D conf/server.xml"
@@ -78,7 +82,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
         newScript(flags, LAUNCHING).
         body.append(
-                format("%s/apache-tomcat-%s/bin/startup.sh >>$RUN/console 2>&1 </dev/null",getInstallDir(),getVersion())
+                format("%s/bin/startup.sh >>$RUN/console 2>&1 </dev/null",getExpandedInstallDir())
         ).execute();
     }
 

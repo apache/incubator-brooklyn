@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -25,6 +26,8 @@ import com.google.common.collect.ImmutableMap;
 public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidDriver{
 
     private static final Logger log = LoggerFactory.getLogger(QpidSshDriver.class);
+    
+    private String expandedInstallDir;
 
     public QpidSshDriver(QpidBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -41,15 +44,22 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
 
     public Integer getHttpManagementPort() { return entity.getAttribute(QpidBroker.HTTP_MANAGEMENT_PORT); }
     
-    protected String getInstallFilename() { return "qpid-java-broker-"+getVersion()+".tar.gz"; }
-    protected String getInstallUrl() { return "http://download.nextag.com/apache/qpid/"+getVersion()+"/"+getInstallFilename(); }
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
     
     @Override
     public void install() {
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("qpid-broker-%s", getVersion()));
+        
         List<String> commands = new LinkedList<String>();
-        commands.addAll( CommonCommands.downloadUrlAs(getInstallUrl(), getEntityVersionLabel("/"), getInstallFilename()));
+        commands.addAll( CommonCommands.downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.INSTALL_TAR);
-        commands.add("tar xzfv "+getInstallFilename());
+        commands.add("tar xzfv "+saveAs);
 
         newScript(INSTALLING)
                 .failOnNonZeroResultCode()
@@ -62,7 +72,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
         NetworkUtils.checkPortsValid(MutableMap.of("jmxPort", getJmxPort(), "amqpPort", getAmqpPort()));
         newScript(CUSTOMIZING)
                 .body.append(
-                    format("cp -R %s/qpid-broker-%s/{bin,etc,lib} .", getInstallDir(), getVersion()),
+                    format("cp -R %s/{bin,etc,lib} .", getExpandedInstallDir()),
                     "mkdir lib/opt"
                 )
                 .execute();
