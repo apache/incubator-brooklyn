@@ -16,9 +16,9 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Attributes
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
@@ -32,6 +32,7 @@ import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 
 import com.google.common.base.Joiner
+import com.google.common.collect.ImmutableSet
 
 class DynamicFabricTest {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabricTest)
@@ -69,6 +70,9 @@ class DynamicFabricTest {
         app.start(locs)
         
         assertEquals(fabric.children.size(), locs.size(), Joiner.on(",").join(fabric.children))
+        assertEquals(fabric.getMembers().size(), locs.size(), "members="+fabric.getMembers())
+        assertEquals(ImmutableSet.copyOf(fabric.getMembers()), ImmutableSet.copyOf(fabric.getChildren()), "members="+fabric.getMembers()+"; children="+fabric.getChildren());
+        
         fabric.children.each {
             TestEntity child = it
             assertEquals(child.counter.get(), 1)
@@ -80,20 +84,23 @@ class DynamicFabricTest {
     
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenSingleLocation() {
-        runWithLocations([loc1])
+        runWithFactoryWithLocations([loc1])
     }
 
     @Test
     public void testDynamicFabricCreatesAndStartsEntityWhenGivenManyLocations() {
-        runWithLocations([loc1,loc2,loc3])
+        runWithFactoryWithLocations([loc1,loc2,loc3])
     }
     
-    private void runWithLocations(Collection<Location> locs) {
+    private void runWithFactoryWithLocations(Collection<Location> locs) {
         DynamicFabric fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
             .configure("factory", { properties -> return new TestEntityImpl(properties) }));
         app.start(locs)
         
         assertEquals(fabric.children.size(), locs.size(), Joiner.on(",").join(fabric.children))
+        assertEquals(fabric.getMembers().size(), locs.size(), "members="+fabric.getMembers())
+        assertEquals(ImmutableSet.copyOf(fabric.getMembers()), ImmutableSet.copyOf(fabric.getChildren()), "members="+fabric.getMembers()+"; children="+fabric.getChildren());
+        
         fabric.children.each {
             TestEntity child = it
             assertEquals(child.counter.get(), 1)

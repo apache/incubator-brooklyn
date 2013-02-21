@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
@@ -38,7 +38,7 @@ import com.google.common.collect.Maps;
  * When a dynamic fabric is started, it starts an entity in each of its locations. 
  * This entity will be the parent of each of the started entities. 
  */
-public class DynamicFabricImpl extends AbstractEntity implements DynamicFabric {
+public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabric {
     private static final Logger logger = LoggerFactory.getLogger(DynamicFabricImpl.class);
 
     private CustomAggregatingEnricher fabricSizeEnricher;
@@ -93,10 +93,12 @@ public class DynamicFabricImpl extends AbstractEntity implements DynamicFabric {
         return getConfig(DISPLAY_NAME_SUFFIX);
     }
     
+    @Override
     public void setMemberSpec(EntitySpec<?> memberSpec) {
         setConfigEvenIfOwned(MEMBER_SPEC, memberSpec);
     }
     
+    @Override
     public void setFactory(EntityFactory<?> factory) {
         setConfigEvenIfOwned(FACTORY, factory);
     }
@@ -138,6 +140,7 @@ public class DynamicFabricImpl extends AbstractEntity implements DynamicFabric {
         }
     }
     
+    @Override
     public void stop() {
         Iterable<Entity> stoppableChildren = Iterables.filter(getChildren(), Predicates.instanceOf(Startable.class));
         Task invoke = Entities.invokeEffectorList(this, stoppableChildren, Startable.STOP);
@@ -153,10 +156,20 @@ public class DynamicFabricImpl extends AbstractEntity implements DynamicFabric {
         setAttribute(SERVICE_UP, false);
     }
 
+    @Override
     public void restart() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public boolean removeChild(Entity child) {
+        boolean changed = super.removeChild(child);
+        if (changed) {
+            removeMember(child);
+        }
+        return changed;
+    }
+    
     protected Map getCustomChildFlags() {
         Map result = getConfig(CUSTOM_CHILD_FLAGS);
         return (result == null) ? ImmutableMap.of() : result;
@@ -173,7 +186,7 @@ public class DynamicFabricImpl extends AbstractEntity implements DynamicFabric {
         logger.info("Creating and adding an entity to fabric {} in {} with properties {}", new Object[] {this, location, creation});
 
         Entity entity = createCluster(location, creation);
-                
+        
         if (locationName != null) {
             if (entity.getDisplayName()==null)
                 ((EntityLocal)entity).setDisplayName(entity.getClass().getSimpleName() +" ("+locationName+")");
@@ -182,6 +195,7 @@ public class DynamicFabricImpl extends AbstractEntity implements DynamicFabric {
         }
         if (entity.getParent()==null) entity.setParent(this);
         Entities.manage(entity);
+        addMember(entity);
         
         fabricSizeEnricher.addProducer(entity);
 

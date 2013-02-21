@@ -3,7 +3,7 @@ package brooklyn.entity.group;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableMap;
  * This entity will be the parent of each of the started entities. 
  */
 @ImplementedBy(DynamicFabricImpl.class)
-public interface DynamicFabric extends Entity, Startable, Fabric {
+public interface DynamicFabric extends AbstractGroup, Startable, Fabric {
 
     public static final BasicAttributeSensor<Integer> FABRIC_SIZE = new BasicAttributeSensor<Integer>(Integer.class, "fabric.size", "Fabric size");
     
