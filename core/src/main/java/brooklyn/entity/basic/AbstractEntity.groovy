@@ -440,6 +440,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     @Override
     public Entity addChild(Entity child) {
+    // see comment in interface:
+//    public <T extends Entity> T addChild(T child) {
         synchronized (children) {
             if (child == null) throw new NullPointerException("child must not be null (for entity "+this+")")
             if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child $child to $this; it is already an ancestor")
@@ -450,7 +452,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
         return child
     }
-
+    
     @Override
     @Deprecated // see addChild(Entity)
     public Entity addOwnedChild(Entity child) {
@@ -564,7 +566,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return entityType.getSnapshot();
     }
 
-    protected EntityDynamicType getMutableEntityType() {
+    /** returns the dynamic type corresponding to the type of this entity instance */
+    public EntityDynamicType getMutableEntityType() {
         return entityType;
     }
     

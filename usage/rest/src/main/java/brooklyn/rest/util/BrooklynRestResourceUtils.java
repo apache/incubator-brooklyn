@@ -7,6 +7,7 @@ import groovy.lang.GroovyClassLoader;
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -27,6 +29,7 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -144,6 +147,7 @@ public class BrooklynRestResourceUtils {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public Application create(ApplicationSpec spec) {
         log.debug("REST creating application instance for {}", spec);
         
@@ -182,6 +186,7 @@ public class BrooklynRestResourceUtils {
                 if (entities.size() > 0) log.warn("Cannot supply additional entities when using an ApplicationBuilder; ignoring in spec {}", spec);
                 
                 log.info("REST placing '{}' under management", spec.getName());
+                appBuilder.configure( convertFlagsToKeys(appBuilder.getType(), configO) );
                 instance = appBuilder.manage(mgmt);
                 
             } else if (Application.class.isAssignableFrom(clazz)) {
@@ -199,6 +204,7 @@ public class BrooklynRestResourceUtils {
             } else if (Entity.class.isAssignableFrom(clazz)) {
                 final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
                 Builder<? extends Application> builder = ApplicationBuilder.builder()
+                        .configure(configO)
                         .child(toCoreEntitySpec(eclazz, spec.getName(), spec.getConfig()));
                 if (entities.size() > 0) log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
                 
@@ -245,22 +251,41 @@ public class BrooklynRestResourceUtils {
             result = BasicEntitySpec.newInstance(Entity.class).impl(clazz);
         }
         if (!Strings.isEmpty(name)) result.displayName(name);
-        result.configure(config);
+        result.configure( convertFlagsToKeys(result.getType(), config) );
         return result;
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO) {
         Map<String, String> config = (configO == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
-        BasicEntitySpec<?, ?> result;
+        BasicEntitySpec result;
         if (clazz.isInterface()) {
             result = BasicEntitySpec.newInstance(clazz);
         } else {
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
             result = BasicEntitySpec.newInstance(interfaceclazz).impl(clazz);
         }
+        
         if (!Strings.isEmpty(name)) result.displayName(name);
-        result.configure(config);
+        result.configure( convertFlagsToKeys(result.getImplementation(), config) );
+        return result;
+    }
+
+    private Map<?,?> convertFlagsToKeys(Class<? extends Entity> javaType, Map<?, ?> config) {
+        if (config==null || config.isEmpty() || javaType==null) return config;
+        
+        Map<String, ConfigKey<?>> configKeys = EntityTypes.getDefinedConfigKeys(javaType);
+        Map<Object,Object> result = new LinkedHashMap<Object,Object>();
+        for (Map.Entry<?,?> entry: config.entrySet()) {
+            log.debug("Setting key {} to {} for REST creation of {}", new Object[] { entry.getKey(), entry.getValue(), javaType});
+            Object key = configKeys.get(entry.getKey());
+            if (key==null) {
+                log.warn("Unrecognised config key {} passed to {}; will be treated as flag (and likely ignored)", entry.getKey(), javaType);
+                key = entry.getKey();
+            }
+            result.put(key, entry.getValue());
+        }
         return result;
     }
     

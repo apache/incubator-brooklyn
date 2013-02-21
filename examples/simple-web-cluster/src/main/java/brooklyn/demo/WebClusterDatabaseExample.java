@@ -21,7 +21,6 @@ import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -62,7 +61,7 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
                 .configure(javaSysProp("brooklyn.example.db.url"), 
                         formatString("jdbc:%s%s?user=%s\\&password=%s", 
                                 attributeWhenReady(mysql, MySqlNode.MYSQL_URL), 
-                                DB_TABLE, DB_USERNAME, DB_PASSWORD)));
+                                DB_TABLE, DB_USERNAME, DB_PASSWORD)) );
         
         // simple scaling policy
         web.getCluster().addPolicy(AutoScalerPolicy.builder().

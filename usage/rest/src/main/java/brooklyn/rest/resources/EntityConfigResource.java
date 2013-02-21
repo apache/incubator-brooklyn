@@ -4,6 +4,7 @@ import static com.google.common.collect.Iterables.transform;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -11,6 +12,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
@@ -50,7 +52,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource {
         new Function<ConfigKey<?>, EntityConfigSummary>() {
           @Override
           public EntityConfigSummary apply(ConfigKey<?> config) {
-            return new EntityConfigSummary(entity, config);
+            return EntityConfigSummary.fromEntity(entity, config);
           }
         }));
   }
@@ -70,9 +72,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource {
     Map<ConfigKey<?>, Object> source = ((EntityInternal)entity).getAllConfig();
     Map<String, Object> result = Maps.newLinkedHashMap();
     for (Map.Entry<ConfigKey<?>, Object> ek: source.entrySet()) {
-        Object value = ek.getValue();
-        // TODO support use raw types as parameter, here and everywhere
-        result.put(ek.getKey().getName(), (value != null) ? value.toString() : null);
+        result.put(ek.getKey().getName(), getValueForDisplay(entity, ek.getValue()));
     }
     return result;
   }
@@ -94,7 +94,20 @@ public class EntityConfigResource extends AbstractBrooklynRestResource {
     EntityLocal entity = brooklyn().getEntity(application, entityToken);
     ConfigKey<?> ck = entity.getEntityType().getConfigKey(configKeyName);
     if (ck==null) ck = new BasicConfigKey<Object>(Object.class, configKeyName);
-    Object value = entity.getConfig(ck);
+    return getValueForDisplay(entity, ((AbstractEntity)entity).getConfigMap().getRawConfig(ck));
+  }
+
+  private String getValueForDisplay(EntityLocal entity, Object value) {
+    // currently everything converted to string, expanded if it is a "done" future
+    if (value instanceof Future) {
+        if (((Future)value).isDone()) {
+            try {
+                value = ((Future)value).get();
+            } catch (Exception e) {
+                value = ""+value+" (error evaluating: "+e+")";
+            }
+        }
+    }
     return (value != null) ? value.toString() : null;
   }
 
