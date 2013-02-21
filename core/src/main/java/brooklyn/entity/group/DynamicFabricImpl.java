@@ -24,6 +24,7 @@ import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
+import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Preconditions;
@@ -161,6 +162,15 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Integer getFabricSize() {
+        int result = 0;
+        for (Entity child : getChildren()) {
+            result  += GroovyJavaMethods.<Integer>elvis(child.getAttribute(Changeable.GROUP_SIZE), 0);
+        }
+        return result;
+    }
+    
     @Override
     public boolean removeChild(Entity child) {
         boolean changed = super.removeChild(child);

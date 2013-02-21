@@ -46,4 +46,6 @@ public interface DynamicFabric extends AbstractGroup, Startable, Fabric {
     public void setMemberSpec(EntitySpec<?> memberSpec);
     
     public void setFactory(EntityFactory<?> factory);
+    
+    public Integer getFabricSize();
 }

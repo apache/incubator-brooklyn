@@ -148,6 +148,7 @@ class DynamicFabricTest {
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
             assertEquals(fabric.getAttribute(DynamicFabric.FABRIC_SIZE), total)
+            assertEquals(fabric.getFabricSize(), total);
         }
     }
     
