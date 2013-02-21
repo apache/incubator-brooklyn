@@ -712,7 +712,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             nodeConfig.putIfNotNull(PASSWORD, node.getCredentials().getPassword());
             nodeConfig.putIfNotNull(PRIVATE_KEY_DATA, node.getCredentials().getPrivateKey());
         }
-        return extractSshConfig(setup, nodeConfig).getAllConfig();
+        return extractSshConfig(setup, nodeConfig).getAllConfigRaw();
     }
 
     public void release(SshMachineLocation machine) {
@@ -806,7 +806,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected void waitForReachable(final ComputeService computeService, NodeMetadata node, LoginCredentials expectedCredentials, ConfigBag setup) {
         String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
-        if (!truth(waitForSshable)) {
+        if (waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable)) {
             LOG.debug("Skipping ssh check for {} ({}) due to config waitForSshable=false", node, setup.getDescription());
             return;
         }
