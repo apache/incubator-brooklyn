@@ -69,7 +69,7 @@ public abstract class ConfigSummary {
   }
   
   public Object getDefaultValue() {
-    // TODO toString ?
+    // note constructor has converted to string, so this is safe for clients to use
     return defaultValue;
   }
   

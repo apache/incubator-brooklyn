@@ -68,7 +68,7 @@ public abstract class ApplicationBuilder {
         return new Builder<T>().app(appSpec);
     }
 
-    /** smart builder factory method which takes an interface type _or_ and implementation type */
+    /** smart builder factory method which takes an interface type _or_ an implementation type */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static <T extends Application,U extends T> Builder<T> builder(Class<? extends T> type) {
         if (type.isInterface() || ((type.getModifiers() & Modifier.ABSTRACT)!=0))

@@ -96,12 +96,12 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
         String sqlUrl = getConfig(DB_SETUP_SQL_URL);
         if ("".equals(sqlUrl)) sqlUrl = null;
         MySqlNode mysql = (MySqlNode) addChild(
-                getManagementSupport().getManagementContext(true).getEntityManager().createEntity(
+                getEntityManager().createEntity(
                         BasicEntitySpec.newInstance(MySqlNode.class)
                         .configure("creationScriptUrl", sqlUrl)) );
 
         ControlledDynamicWebAppCluster web = (ControlledDynamicWebAppCluster) addChild(
-                getManagementSupport().getManagementContext(true).getEntityManager().createEntity(
+                getEntityManager().createEntity(
                         BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
                         .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                         .configure(JavaWebAppService.ROOT_WAR, getConfig(WAR_PATH))
