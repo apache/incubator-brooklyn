@@ -17,6 +17,9 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
@@ -195,15 +198,21 @@ public class RebindManagerImpl implements RebindManager {
         String entityId = memento.getId();
         String entityType = checkNotNull(memento.getType(), "entityType of "+entityId);
         Class<?> entityClazz = reflections.loadClass(entityType);
-
+        
         Map<String,Object> flags = Maps.newLinkedHashMap();
         flags.put("id", entityId);
         if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
-        
-        // There are several possibilities for the constructor; find one that works.
-        // Prefer passing in the flags because required for Application to set the management context
-        // TODO Feels very hacky!
-        return (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
+  
+        if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
+            Class<?> entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
+            EntitySpec<?> entitySpec = BasicEntitySpec.newInstance((Class)entityInterface).impl((Class)entityClazz).configure("id", entityId);
+            return managementContext.getEntityManager().createEntity(entitySpec);
+        } else {
+            // There are several possibilities for the constructor; find one that works.
+            // Prefer passing in the flags because required for Application to set the management context
+            // TODO Feels very hacky!
+            return (Entity) invokeConstructor(reflections, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
+        }
     }
     
     /**

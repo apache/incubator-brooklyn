@@ -8,6 +8,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
@@ -39,7 +40,11 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx {
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.34");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.37");
+
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            SoftwareProcess.DOWNLOAD_URL, "http://download.nextag.com/apache/tomcat/tomcat-7/v${version}/bin/apache-tomcat-${version}.tar.gz");
 
     /**
      * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down.

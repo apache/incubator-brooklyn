@@ -6,6 +6,7 @@ import java.util.List;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -16,6 +17,8 @@ import com.google.common.collect.ImmutableList;
  * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
  */
 public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implements RedisStoreDriver {
+
+    private String expandedInstallDir;
 
     public RedisStoreSshDriver(RedisStore entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -30,10 +33,17 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         return getEntity().getAttribute(RedisStore.REDIS_PORT);
     }
 
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+    
     @Override
     public void install() {
-        String url = format("http://redis.googlecode.com/files/redis-%s.tar.gz", getVersion());
-        String saveAs = format("redis-%s.tar.gz", getVersion());
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("redis-%s", getVersion()));
 
         /*
          * FIXME On jenkins releng3 box, needed to explicitly install jemalloc:
@@ -52,7 +62,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
          */
 
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
+                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
                 .add(CommonCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))
@@ -71,7 +81,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         newScript(MutableMap.of("usePidFile", false), CUSTOMIZING)
                 .failOnNonZeroResultCode()
                 .body.append(
-                        format("cd %s/redis-%s", getInstallDir(), getVersion()),
+                        format("cd %s", getExpandedInstallDir()),
                         "make install PREFIX="+getRunDir())
                 .execute();
         

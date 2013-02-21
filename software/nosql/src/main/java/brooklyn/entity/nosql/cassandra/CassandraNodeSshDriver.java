@@ -3,6 +3,8 @@
  */
 package brooklyn.entity.nosql.cassandra;
 
+import static java.lang.String.format;
+
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
@@ -20,7 +23,6 @@ import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
-import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +34,7 @@ import com.google.common.collect.Sets;
 public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver implements CassandraNodeDriver {
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeSshDriver.class);
+    private String expandedInstallDir;
 
     public CassandraNodeSshDriver(CassandraNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -58,16 +61,23 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public String getCassandraConfigFileName() { return entity.getAttribute(CassandraNode.CASSANDRA_CONFIG_FILE_NAME); }
 
+    public String getMirrorUrl() { return entity.getConfig(CassandraNode.MIRROR_URL); }
+    
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+    
     @Override
     public void install() {
         log.info("Installing {}", entity);
-        String url = entity.getConfig(CassandraNode.TGZ_URL);
-        if (Strings.isEmpty(url)) {
-            url = entity.getConfig(CassandraNode.MIRROR_URL) + String.format("/%1$s/apache-cassandra-%1$s-bin.tar.gz", getVersion());
-        }
-        String saveAs = String.format("apache-cassandra-%s-bin.tar.gz", getVersion());
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("apache-cassandra-%s", getVersion()));
+        
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
+                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
                 .add(CommonCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();
@@ -102,7 +112,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
 
         ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
-                .add(String.format("cp -R %s/apache-cassandra-%s/{bin,conf,lib,interface,pylib,tools} .", getInstallDir(), getVersion()))
+                .add(String.format("cp -R %s/{bin,conf,lib,interface,pylib,tools} .", getExpandedInstallDir()))
                 .add("mkdir data")
                 .add(String.format("sed -i.bk 's/log4j.appender.R.File=.*/log4j.appender.R.File=%s/g' %s/conf/log4j-server.properties", logFileEscaped, getRunDir()))
                 .add(String.format("sed -i.bk '/JMX_PORT/d' %s/conf/cassandra-env.sh", getRunDir()))

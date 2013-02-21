@@ -1,6 +1,9 @@
 package brooklyn.entity.drivers;
 
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
+
+import com.google.common.annotations.Beta;
 
 /**
  * The EntityDriver provides an abstraction between the Entity and the environment (the {@link Location} it is running
@@ -14,6 +17,17 @@ import brooklyn.location.Location;
  * @see EntityDriverFactory
  */
 public interface EntityDriver {
+
+    /**
+     * The entity instance that this is a driver for.
+     * 
+     * FIXME The signature of this will change to return Entity instead of EntityLocal.
+     * This is a temporary workaround for groovy not supporting covariant return types,
+     * see http://jira.codehaus.org/browse/GROOVY-5418. It is fixed in groovy 2.0.4 so
+     * we will need to upgrade from 1.8.6 first.
+     */
+    @Beta
+    EntityLocal getEntity();
 
     /**
      * The location the entity is running in.

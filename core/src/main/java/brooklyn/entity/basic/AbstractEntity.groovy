@@ -345,10 +345,14 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     protected String getEntityTypeName() {
         try {
             Class<?> typeClazz = getManagementSupport().getManagementContext(true).getEntityManager().getEntityTypeRegistry().getEntityTypeOf(getClass());
-            return typeClazz.getCanonicalName();
+            String typeName = typeClazz.getCanonicalName();
+            if (typeName == null) typeName = typeClazz.getName();
+            return typeName;
         } catch (IllegalArgumentException e) {
-            LOG.warn("Entity type interface not found for entity "+this+"; instead using "+getClass().getCanonicalName());
-            return getClass().getCanonicalName();
+            String typeName = getClass().getCanonicalName();
+            if (typeName == null) typeName = getClass().getName();
+            LOG.warn("Entity type interface not found for entity "+this+"; instead using "+typeName);
+            return typeName;
         }
     }
     

@@ -2,6 +2,7 @@ package brooklyn.entity.proxy.nginx;
 
 import static java.lang.String.format;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -13,6 +14,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -20,16 +22,25 @@ import brooklyn.util.NetworkUtils;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 /**
  * Start a {@link NginxController} in a {@link brooklyn.location.Location} accessible over ssh.
  */
 public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements NginxDriver {
 
+    // TODO An alternative way of installing nginx is described at:
+    //   http://sjp.co.nz/posts/building-nginx-for-debian-systems/
+    // It's use of `apt-get source nginx` and `apt-get build-dep nginx` makes
+    // it look higher level and therefore more appealing.
+    
     public static final Logger log = LoggerFactory.getLogger(NginxSshDriver.class);
     private static final String NGINX_PID_FILE = "logs/nginx.pid";
 
     protected boolean customizationCompleted = false;
+    private String expandedInstallDir;
 
     public NginxSshDriver(NginxControllerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -48,6 +59,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return entity.getAttribute(NginxController.PROXY_HTTP_PORT);
     }
 
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+    
     @Override
     public void rebind() {
         customizationCompleted = true;
@@ -65,59 +81,90 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             setFlag("allocatePTY", true).
             body.append(CommonCommands.dontRequireTtyForSudo()).
             execute();
-        
-        String nginxUrl = format("http://nginx.org/download/nginx-%s.tar.gz", getVersion());
-        String nginxSaveAs = format("nginx-%s.tar.gz", getVersion());
-        String stickyVersion = entity.getConfig(NginxController.STICKY_VERSION);
-        String stickyModuleUrl = format("http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-%s.tar.gz", stickyVersion);
-        String stickyModuleSaveAs = format("nginx-sticky-module-%s.tar.gz", stickyVersion);
+
+        DownloadResolver nginxResolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> nginxUrls = nginxResolver.getTargets();
+        String nginxSaveAs = nginxResolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/" + nginxResolver.getUnpackedDirectorName(format("nginx-%s", getVersion()));
+
         boolean sticky = ((NginxController) entity).isSticky();
         boolean isMac = getMachine().getOsDetails().isMac();
-        ScriptHelper script = newScript(INSTALLING);
-        script.body.append(CommonCommands.INSTALL_TAR);
-        MutableMap<String, String> installPackageFlags = MutableMap.of(
-                "yum", "gcc make openssl-devel pcre-devel", 
-                "apt", "gcc make libssl-dev zlib1g-dev libpcre3-dev",
+
+        MutableMap<String, String> installGccPackageFlags = MutableMap.of(
+                "onlyifmissing", "gcc",
+                "yum", "gcc", 
+                "apt", "gcc",
                 "port", null);
-        script.body.append(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
-        script.body.append(CommonCommands.downloadUrlAs(nginxUrl, getEntityVersionLabel("/"), nginxSaveAs));
+        MutableMap<String, String> installMakePackageFlags = MutableMap.of(
+                "onlyifmissing", "make",
+                "yum", "make", 
+                "apt", "make",
+                "port", null);
+        MutableMap<String, String> installPackageFlags = MutableMap.of(
+                "yum", "openssl-devel pcre-devel", 
+                "apt", "libssl-dev zlib1g-dev libpcre3-dev",
+                "port", null);
+
+        String stickyModuleVersion = entity.getConfig(NginxController.STICKY_VERSION);
+        DownloadResolver stickyModuleResolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(
+                this, "stickymodule", ImmutableMap.of("addonversion", stickyModuleVersion));
+        List<String> stickyModuleUrls = stickyModuleResolver.getTargets();
+        String stickyModuleSaveAs = stickyModuleResolver.getFilename();
+        String stickyModuleExpandedInstallDir = String.format("%s/src/%s", expandedInstallDir, 
+                stickyModuleResolver.getUnpackedDirectorName("nginx-sticky-module-"+stickyModuleVersion));
+        
+        List<String> cmds = Lists.newArrayList();
+        
+        cmds.add(CommonCommands.INSTALL_TAR);
+        cmds.add(CommonCommands.installPackage(installGccPackageFlags, "nginx-prerequisites-gcc"));
+        cmds.add(CommonCommands.installPackage(installMakePackageFlags, "nginx-prerequisites-make"));
+        cmds.add(CommonCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
+        cmds.addAll(CommonCommands.downloadUrlAs(nginxUrls, nginxSaveAs));
+        
         if (isMac) {
             String pcreVersion = entity.getConfig(NginxController.PCRE_VERSION);
-            String pcreUrl = format("ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-%s.tar.gz", pcreVersion);
-            String pcreSaveAs = format("pcre-%s.tar.gz", pcreVersion);
-            script.body.append(CommonCommands.downloadUrlAs(pcreUrl, getEntityVersionLabel("/"), pcreSaveAs));
+            DownloadResolver pcreResolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(
+                    this, "pcre", ImmutableMap.of("addonversion", pcreVersion));
+            List<String> pcreUrls = pcreResolver.getTargets();
+            String pcreSaveAs = pcreResolver.getFilename();
+            String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectorName("pcre-"+pcreVersion);
+
             // Install PCRE
-            script.body.append(format("mkdir -p %s/pcre-dist", getInstallDir()));
-            script.body.append(format("tar xvzf pcre-%s.tar.gz", pcreVersion));
-            script.body.append(format("cd pcre-%s", pcreVersion));
-            script.body.append(format("./configure --prefix=%s/pcre-dist", getInstallDir()));
-            script.body.append("make");
-            script.body.append("make install");
-            script.body.append("cd ..");
+            cmds.addAll(CommonCommands.downloadUrlAs(pcreUrls, pcreSaveAs));
+            cmds.add(format("mkdir -p %s/pcre-dist", getInstallDir()));
+            cmds.add(format("tar xvzf %s", pcreSaveAs));
+            cmds.add(format("cd %s", pcreExpandedInstallDirname));
+            cmds.add(format("./configure --prefix=%s/pcre-dist", getInstallDir()));
+            cmds.add("make");
+            cmds.add("make install");
+            cmds.add("cd ..");
         }
         
-        script.body.append(format("tar xvzf %s", nginxSaveAs));
-        script.body.append(format("cd %s/nginx-%s", getInstallDir(), getVersion()));
+        cmds.add(format("tar xvzf %s", nginxSaveAs));
+        cmds.add(format("cd %s", getExpandedInstallDir()));
 
         if (sticky) {
-            script.body.append("cd src");
-            script.body.append(CommonCommands.downloadUrlAs(stickyModuleUrl, getEntityVersionLabel("/"), stickyModuleSaveAs));
-            script.body.append(format("tar xvzf %s", stickyModuleSaveAs));
-            script.body.append("cd ..");
+            cmds.add("cd src");
+            cmds.addAll(CommonCommands.downloadUrlAs(stickyModuleUrls, stickyModuleSaveAs));
+            cmds.add(format("tar xvzf %s", stickyModuleSaveAs));
+            cmds.add("cd ..");
         }
 
-        script.body.append(
+        cmds.addAll(ImmutableList.<String>of(
                 "mkdir -p dist",
                 "./configure"+
-                    format(" --prefix=%s/nginx-%s/dist", getInstallDir(), getVersion()) +
+                    format(" --prefix=%s/dist", getExpandedInstallDir()) +
                     " --with-http_ssl_module" +
-                    (sticky ? format(" --add-module=%s/nginx-%s/src/nginx-sticky-module-%s ", getInstallDir(), getVersion(), stickyVersion) : "") +
+                    (sticky ? format(" --add-module=%s ", stickyModuleExpandedInstallDir) : "") +
                     (isMac ? format(" --with-ld-opt=\"-L %s/pcre-dist/lib\"", getInstallDir()) : "") ,
-                "make install");
+                "make install"));
 
-        script.header.prepend("set -x");
-        script.gatherOutput();
-        script.failOnNonZeroResultCode(false);
+        ScriptHelper script = newScript(INSTALLING)
+                .body.append(cmds)
+                .header.prepend("set -x")
+                .gatherOutput()
+                .failOnNonZeroResultCode(false);
+        
         int result = script.execute();
         
         if (result != 0) {
@@ -160,7 +207,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(CUSTOMIZING).
             body.append(
                 format("mkdir -p %s", getRunDir()),
-                format("cp -R %s/nginx-%s/dist/{conf,html,logs,sbin} %s", getInstallDir(), getVersion(), getRunDir())
+                format("cp -R %s/dist/{conf,html,logs,sbin} %s", getExpandedInstallDir(), getRunDir())
         ).execute();
         
         customizationCompleted = true;

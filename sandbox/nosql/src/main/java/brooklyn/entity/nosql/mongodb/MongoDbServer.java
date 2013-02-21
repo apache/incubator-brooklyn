@@ -1,5 +1,13 @@
 package brooklyn.entity.nosql.mongodb;
 
+import java.net.UnknownHostException;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import org.bson.BasicBSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessImpl;
@@ -7,32 +15,35 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
-import org.bson.BasicBSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.net.UnknownHostException;
-import java.util.Map;
-import java.util.concurrent.Callable;
 
 public class MongoDbServer extends SoftwareProcessImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDbServer.class);
 
+    public static final BasicConfigKey<String> VERSION = new BasicConfigKey<String>(String.class,
+            "mongodb.version", "Required version of Mongo", "2.2.2");
+
+    // e.g. http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.2.tgz,
+    // http://fastdl.mongodb.org/osx/mongodb-osx-x86_64-2.2.2.tgz
+    // http://downloads.mongodb.org/win32/mongodb-win32-x86_64-1.8.5.zip
+    // Note Windows download is a zip.
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            SoftwareProcess.DOWNLOAD_URL, "http://fastdl.mongodb.org/${driver.osDir}/${driver.osTag}-${version}.tgz");
+
     @SetFromFlag("port")
     public static final PortAttributeSensorAndConfigKey PORT =
             new PortAttributeSensorAndConfigKey("mongodb.server.port", "Server port", "27017+");
-
-    public static final BasicConfigKey<String> VERSION = new BasicConfigKey<String>(String.class,
-            "mongodb.version", "Required version of Mongo", "2.2.2");
 
     public static final BasicConfigKey<String> CONFIG_URL = new BasicConfigKey<String>(String.class,
             "mongodb.config.url", "URL where a Mongo configuration file can be found", "classpath://default-mongodb.conf");

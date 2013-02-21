@@ -6,6 +6,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
@@ -15,6 +16,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import brooklyn.entity.basic.AbstractApplication;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -26,7 +29,7 @@ import org.testng.annotations.Test;
 public class CliIntegrationTest {
 
     // FIXME this should not be hardcoded; needed to use the local code for Main
-    private static final String BROOKLYN_BIN_PATH = "../dist/target/brooklyn-dist/bin/brooklyn";
+    private static final String BROOKLYN_BIN_PATH = "./target/brooklyn-dist/bin/brooklyn";
     private static final String BROOKLYN_CLASSPATH = "./target/test-classes/:./target/classes/";
 
     private ExecutorService executor;
@@ -70,13 +73,14 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected for the help command
-                assertTrue(consoleOutput.contains("usage: brooklyn"), "Usage info not present");
-                assertTrue(consoleOutput.contains("The most commonly used brooklyn commands are:"), "List of common commands not present");
+                assertTrue(consoleOutput.contains("usage: brooklyn"), "Usage info not present; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("The most commonly used brooklyn commands are:"), "List of common commands not present; output=" + consoleOutput);
                 assertTrue(consoleOutput.contains("help     Display help for available commands")
                         && consoleOutput.contains("info     Display information about brooklyn")
-                        && consoleOutput.contains("launch   Starts a brooklyn application"), "List of common commands present");
-                assertTrue(consoleOutput.contains("See 'brooklyn help <command>' for more information on a specific command."), "Implemented commands not listed");
-                assertTrue(consoleError.isEmpty());
+                        && consoleOutput.contains("launch   Starts a brooklyn application"), "List of common commands present; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("See 'brooklyn help <command>' for more information on a specific command."),
+                        "Implemented commands not listed; output=" + consoleOutput);
+                assertTrue(consoleError.isEmpty(), "Output present; error=" + consoleError);
 
                 return null;
             }
@@ -91,7 +95,9 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
@@ -106,7 +112,7 @@ public class CliIntegrationTest {
         ProcessBuilder pb = new ProcessBuilder();
         pb.environment().remove("BROOKLYN_HOME");
         pb.environment().put("BROOKLYN_CLASSPATH", BROOKLYN_CLASSPATH);
-        pb.command(BROOKLYN_BIN_PATH, "--verbose", "launch", "--app", "brooklyn.cli.CliTest$ExampleApp", "--location", "localhost", "--noConsole");
+        pb.command(BROOKLYN_BIN_PATH, "--verbose", "launch", "--stopOnKeyPress", "--app", "brooklyn.cli.CliIntegrationTest$TestApplication", "--location", "localhost", "--noConsole");
         final Process brooklyn = pb.start();
  
         Callable<Void> cli = new Callable<Void>() {
@@ -117,11 +123,11 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected for the launch command
-                assertTrue(consoleOutput.contains("Launching Brooklyn web console management"), "Launch message not output");
-                assertFalse(consoleOutput.contains("Initiating Jersey application"), "Web console started");
-                assertTrue(consoleOutput.contains("Started application ExampleApp"), "ExampleApp not started");
-                assertTrue(consoleOutput.contains("Launched Brooklyn; now blocking to wait for cntrl-c or kill"), "Blocking message not output");
-                assertTrue(consoleError.isEmpty());
+                assertTrue(consoleOutput.contains("Launching Brooklyn web console management"), "Launch message not output; output=" + consoleOutput);
+                assertFalse(consoleOutput.contains("Initiating Jersey application"), "Web console started; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("Started application TestApplication"), "Application not started; output=" + consoleOutput);
+                assertTrue(consoleOutput.contains("Server started. Press return to stop."), "Server started message not output; output=" + consoleOutput);
+                assertTrue(consoleError.isEmpty(), "Output present; error=" + consoleError);
 
                 return null;
             }
@@ -130,15 +136,22 @@ public class CliIntegrationTest {
         try {
             Future<Void> future = executor.submit(cli);
 
-            // Wait 15s for console output, then kill
+            // Wait 15s for console output, then send CR to stop
             Thread.sleep(15000L);
-            brooklyn.destroy();
+            OutputStream out = brooklyn.getOutputStream();
+            out.write('\n');
+            out.flush();
 
             future.get(10, TimeUnit.SECONDS);
+
+            // Check error code from process is 0
+            assertEquals(brooklyn.exitValue(), 0, "Command terminated with error status");
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
@@ -164,12 +177,12 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected
-                assertTrue(consoleError.contains("Parse error: Required values for option 'application class or file' not provided"), "Parse error not reported");
+                assertTrue(consoleError.contains("Parse error: Required values for option 'application class or file' not provided"), "Parse error not reported; error=" + consoleError);
                 assertTrue(consoleError.contains("NAME")
                         && consoleError.contains("SYNOPSIS")
                         && consoleError.contains("OPTIONS")
-                        && consoleError.contains("COMMANDS"), "Usage info not printed");
-                assertTrue(consoleOutput.isEmpty());
+                        && consoleError.contains("COMMANDS"), "Usage info not printed; error=" + consoleError);
+                assertTrue(consoleOutput.isEmpty(), "Output present; output=" + consoleOutput);
 
                 return null;
             }
@@ -184,7 +197,9 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
@@ -210,12 +225,12 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected
-                assertTrue(consoleError.contains("Parse error: No command specified"), "Parse error not reported");
+                assertTrue(consoleError.contains("Parse error: No command specified"), "Parse error not reported; error=" + consoleError);
                 assertTrue(consoleError.contains("NAME")
                         && consoleError.contains("SYNOPSIS")
                         && consoleError.contains("OPTIONS")
-                        && consoleError.contains("COMMANDS"), "Usage info not printed");
-                assertTrue(consoleOutput.isEmpty());
+                        && consoleError.contains("COMMANDS"), "Usage info not printed; error=" + consoleError);
+                assertTrue(consoleOutput.isEmpty(), "Output present; output=" + consoleOutput);
 
                 return null;
             }
@@ -230,7 +245,9 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
@@ -256,8 +273,8 @@ public class CliIntegrationTest {
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
                 // Check if the output looks as expected
-                assertTrue(consoleOutput.contains("ERROR Execution error: brooklyn.util.ResourceUtils.getResourceFromUrl"), "Execution error not logged");
-                assertTrue(consoleError.contains("Execution error: Error getting resource for LaunchCommand"), "Execution error not reported");
+                assertTrue(consoleOutput.contains("ERROR Execution error: brooklyn.util.ResourceUtils.getResourceFromUrl"), "Execution error not logged; output=" + consoleOutput);
+                assertTrue(consoleError.contains("Execution error: Error getting resource for LaunchCommand"), "Execution error not reported; error=" + consoleError);
 
                 return null;
             }
@@ -272,9 +289,20 @@ public class CliIntegrationTest {
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
-            throw ee.getCause();
+            if (ee.getCause() instanceof AssertionError) {
+                throw ee.getCause();
+            } else throw ee;
         } finally {
             brooklyn.destroy();
         }
     }
+
+    /** An empty {@link Application} for testing. */
+    @SuppressWarnings("serial")
+    public static class TestApplication extends AbstractApplication {
+        public TestApplication() {
+            // Empty, for testing
+        }
+    }
+
 }

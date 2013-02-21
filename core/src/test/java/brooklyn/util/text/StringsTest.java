@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Cloudsoft Corporation Ltd. All rights reserved.
- * Supplied under license http://www.cloudsoftcorp.com/license/montereyDeveloperEdition
- * or such subsequent license agreed between Cloudsoft Corporation Ltd and the licensee.
+ * Copyright (c) 2009-2013 Cloudsoft Corporation Ltd.
  */
 package brooklyn.util.text;
 
@@ -11,6 +9,67 @@ import brooklyn.util.MutableMap;
 
 @Test
 public class StringsTest {
+
+    public void isBlankOrEmpty() {
+        assertTrue(Strings.isEmpty(null));
+        assertTrue(Strings.isEmpty(""));
+        assertFalse(Strings.isEmpty("   \t   "));
+        assertFalse(Strings.isEmpty("abc"));
+        assertFalse(Strings.isEmpty("   abc   "));
+
+        assertFalse(Strings.isNonEmpty(null));
+        assertFalse(Strings.isNonEmpty(""));
+        assertTrue(Strings.isNonEmpty("   \t   "));
+        assertTrue(Strings.isNonEmpty("abc"));
+        assertTrue(Strings.isNonEmpty("   abc   "));
+
+        assertTrue(Strings.isBlank(null));
+        assertTrue(Strings.isBlank(""));
+        assertTrue(Strings.isBlank("   \t   "));
+        assertFalse(Strings.isBlank("abc"));
+        assertFalse(Strings.isBlank("   abc   "));
+
+        assertFalse(Strings.isNonBlank(null));
+        assertFalse(Strings.isNonBlank(""));
+        assertFalse(Strings.isNonBlank("   \t   "));
+        assertTrue(Strings.isNonBlank("abc"));
+        assertTrue(Strings.isNonBlank("   abc   "));
+    }
+
+    public void testMakeValidFilename() {
+        assertEquals("abcdef", Strings.makeValidFilename("abcdef"));
+        assertEquals("abc_def", Strings.makeValidFilename("abc$$$def"));
+        assertEquals("abc_def", Strings.makeValidFilename("$$$abc$$$def$$$"));
+        assertEquals("a_b_c", Strings.makeValidFilename("a b c"));
+        assertEquals("a.b.c", Strings.makeValidFilename("a.b.c"));
+    }
+    @Test(expectedExceptions = { NullPointerException.class })
+    public void testMakeValidFilenameNull() {
+        Strings.makeValidFilename(null);
+    }
+    @Test(expectedExceptions = { IllegalArgumentException.class })
+    public void testMakeValidFilenameEmpty() {
+        Strings.makeValidFilename("");
+    }
+    @Test(expectedExceptions = { IllegalArgumentException.class })
+    public void testMakeValidFilenameBlank() {
+        Strings.makeValidFilename("    \t    ");
+    }
+
+    public void makeValidJavaName() {
+        assertEquals("__null", Strings.makeValidJavaName(null));
+        assertEquals("__empty", Strings.makeValidJavaName(""));
+        assertEquals("abcdef", Strings.makeValidJavaName("abcdef"));
+        assertEquals("abcdef", Strings.makeValidJavaName("a'b'c'd'e'f"));
+        assertEquals("_12345", Strings.makeValidJavaName("12345"));
+    }
+
+    public void makeValidUniqueJavaName() {
+        assertEquals("__null", Strings.makeValidUniqueJavaName(null));
+        assertEquals("__empty", Strings.makeValidUniqueJavaName(""));
+        assertEquals("abcdef", Strings.makeValidUniqueJavaName("abcdef"));
+        assertEquals("_12345", Strings.makeValidUniqueJavaName("12345"));
+    }
 
     public void testRemoveFromEnd() {
         assertEquals("", Strings.removeFromEnd("", "bar"));

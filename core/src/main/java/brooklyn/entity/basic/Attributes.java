@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
 import java.util.List;
+import java.util.Map;
 
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -25,6 +26,12 @@ public interface Attributes {
      * @see SoftwareProcessEntities.SUGGESTED_VERSION
      */
     BasicAttributeSensor<String> VERSION = new BasicAttributeSensor<String>(String.class, "version", "Version information");
+
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "download.url", "URL pattern for downloading the installer (will substitute things like ${version} automatically)");
+
+    BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = new BasicAttributeSensorAndConfigKey(
+            Map.class, "download.addon.urls", "URL patterns for downloading named add-ons (will substitute things like ${version} automatically)");
 
     /*
      * JMX attributes.

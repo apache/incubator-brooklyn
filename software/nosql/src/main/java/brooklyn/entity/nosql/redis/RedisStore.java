@@ -17,6 +17,7 @@ import brooklyn.entity.nosql.DataStore;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.MachineLocation;
@@ -36,6 +37,10 @@ public class RedisStore extends SoftwareProcessImpl implements DataStore {
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
             new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.6.7");
+
+    @SetFromFlag("downloadUrl")
+    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+            SoftwareProcess.DOWNLOAD_URL, "http://redis.googlecode.com/files/redis-${version}.tar.gz");
 
     public static final PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", 6379);
     public static final ConfigKey<String> REDIS_CONFIG_FILE = new BasicConfigKey<String>(String.class, "redis.config.file", "Redis user configuration file");

@@ -56,7 +56,34 @@ public class InternalEntityFactory {
             constructing.set(Boolean.TRUE);
         }
     }
+
+    /**
+     * Returns true if this is a "new-style" entity (i.e. where not expected to call the constructor to instantiate it).
+     * That means it is an entity with a no-arg constructor, and where there is a mapped for an entity type interface.
+     * @param managementContext
+     * @param clazz
+     * @return
+     */
+    public static boolean isNewStyleEntity(ManagementContext managementContext, Class<?> clazz) {
+        try {
+            return isNewStyleEntity(clazz) && managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)clazz) != null;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
     
+    public static boolean isNewStyleEntity(Class<?> clazz) {
+        if (!Entity.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Class "+clazz+" is not an entity");
+        }
+        
+        try {
+            clazz.getConstructor(new Class[0]);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
     
     public InternalEntityFactory(ManagementContext managementContext, EntityTypeRegistry entityTypeRegistry) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
@@ -125,15 +152,6 @@ public class InternalEntityFactory {
             return spec.getImplementation();
         } else {
             return entityTypeRegistry.getImplementedBy(spec.getType());
-        }
-    }
-    
-    private boolean isNewStyleEntity(Class<? extends Entity> clazz) {
-        try {
-            clazz.getConstructor(new Class[0]);
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
         }
     }
     

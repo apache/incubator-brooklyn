@@ -53,22 +53,22 @@ public abstract class JMSBroker<Q extends JMSDestination & Queue, T extends JMSD
     }
 
     @VisibleForTesting
-    Collection<String> getQueueNames() {
+    public Collection<String> getQueueNames() {
         return queueNames;
     }
     
     @VisibleForTesting
-    Collection<String> getTopicNames() {
+    public Collection<String> getTopicNames() {
         return topicNames;
     }
 
     @VisibleForTesting
-    Map<String, Q> getQueues() {
+    public Map<String, Q> getQueues() {
         return queues;
     }
     
     @VisibleForTesting
-    Map<String, T> getTopics() {
+    public Map<String, T> getTopics() {
         return topics;
     }
     

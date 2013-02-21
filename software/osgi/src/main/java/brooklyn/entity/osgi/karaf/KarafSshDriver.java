@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
@@ -15,6 +16,8 @@ import brooklyn.util.NetworkUtils;
 import com.google.common.collect.ImmutableList;
 
 public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements KarafDriver {
+
+    private String expandedInstallDir;
 
     // TODO getJmxJavaSystemProperties(), don't set via JAVA_OPTS; set ourselves manually
     // (karaf reads from props files)
@@ -34,17 +37,20 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         return format("{%s}/data/karaf.out", getRunDir());
     }
 
-    protected String getUntarredDirName() {
-        return format("apache-karaf-%s", getVersion());
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
     }
-
+    
     @Override
     public void install() {
-        String url = format("http://apache.mirror.anlx.net/karaf/%s/apache-karaf-%s.tar.gz",getVersion(),getVersion());
-        String saveAs = format("apache-karaf-%s.tar.gz",getVersion());
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("apache-karaf-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
+                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
                 .add(CommonCommands.INSTALL_TAR)
                 .add("tar xzfv " + saveAs)
                 .build();
@@ -65,7 +71,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         newScript(CUSTOMIZING).
                 body.append(
                 format("cd %s", getRunDir()),
-                format("cp -R %s/%s/{bin,etc,lib,system,deploy} . || exit $!", getInstallDir(), getUntarredDirName()),
+                format("cp -R %s/{bin,etc,lib,system,deploy} . || exit $!", getExpandedInstallDir()),
                 format("sed -i.bk 's/rmiRegistryPort = 1099/rmiRegistryPort = %s/g' etc/org.apache.karaf.management.cfg", getJmxPort()),
                 format("sed -i.bk 's/rmiServerPort = 44444/rmiServerPort = %s/g' etc/org.apache.karaf.management.cfg", getRmiServerPort())
         ).execute();

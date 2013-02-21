@@ -153,6 +153,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     @Override 
     public void onManagementStarting() {
+        super.onManagementStarting();
+        
         Lifecycle state = getAttribute(SERVICE_STATE);
         if (state == Lifecycle.RUNNING) {
             rebind();
@@ -167,6 +169,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	
     @Override 
     public void onManagementStarted() {
+        super.onManagementStarted();
+        
         Lifecycle state = getAttribute(SERVICE_STATE);
         if (state != null && state != Lifecycle.CREATED) {
             postRebind();
