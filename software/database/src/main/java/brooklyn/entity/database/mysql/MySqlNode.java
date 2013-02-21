@@ -53,6 +53,5 @@ public interface MySqlNode extends DatabaseNode {
     
     public static final ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
     
-    public static final BasicAttributeSensor<String> MYSQL_URL = new BasicAttributeSensor<String>(String.class, "mysql.url", "URL to access mysql (e.g. mysql://localhost:3306/)");
-
+    public static final BasicAttributeSensor<String> MYSQL_URL = DB_URL;
 }

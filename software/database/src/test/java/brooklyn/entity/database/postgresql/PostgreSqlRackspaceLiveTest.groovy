@@ -78,8 +78,7 @@ public class PostgreSqlRackspaceLiveTest extends PostgreSqlIntegrationTest {
         //hack to get the port for postgresql open; is the inbounds property not respected on rackspace??
         l.exec(asList("iptables -I INPUT -p tcp --dport 5432 -j ACCEPT"))
 
-        String host = psql.getAttribute(PostgreSqlNode.HOSTNAME);
-        int port = psql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT);
-        new VogellaExampleAccess("org.postgresql.Driver", "postgresql", host, port).readModifyAndRevertDataBase();
+        String url = psql.getAttribute(PostgreSqlNode.DB_URL);
+        new VogellaExampleAccess("org.postgresql.Driver", url).readModifyAndRevertDataBase();
     }
 }

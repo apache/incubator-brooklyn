@@ -1,18 +1,11 @@
 package brooklyn.entity.database;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.List;
-
+import com.beust.jcommander.internal.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.beust.jcommander.internal.Lists;
+import java.sql.*;
+import java.util.List;
 
 /**
  * Basic JDBC Access test Class, based on the Vogella MySQL tutorial
@@ -23,16 +16,12 @@ public class VogellaExampleAccess {
 
     private Connection connect = null;
     private Statement statement = null;
-    private final String type;
-    private final String host;
-    private final int port;
+    private final String url;
 
-    public VogellaExampleAccess(String driverClass, String type, String host, int port) throws ClassNotFoundException {
+    public VogellaExampleAccess(String driverClass, String url) throws ClassNotFoundException {
         // This will load the JDBC driver, each DB has its own driver
         Class.forName(driverClass);
-        this.type = type;
-        this.host = host;
-        this.port = port;
+        this.url = url;
     }
 
     public void readModifyAndRevertDataBase() throws Exception {
@@ -46,9 +35,9 @@ public class VogellaExampleAccess {
     public void connect() throws Exception {
         try {
             // Setup the connection with the DB
-            String url = "jdbc:" + type + "://" + host + ":" + port + "/feedback?" + "user=sqluser&password=sqluserpw";
-            log.info("Connecting to " + url);
-            connect = DriverManager.getConnection(url);
+            String jdbcUrl = "jdbc:" + url + "feedback?" + "user=sqluser&password=sqluserpw";
+            log.info("Connecting to " + jdbcUrl);
+            connect = DriverManager.getConnection(jdbcUrl);
 
             // Statements allow to issue SQL queries to the database
             statement = connect.createStatement();

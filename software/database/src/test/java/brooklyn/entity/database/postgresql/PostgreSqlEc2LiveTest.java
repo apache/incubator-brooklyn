@@ -18,9 +18,7 @@ public class PostgreSqlEc2LiveTest extends AbstractEc2LiveTest {
 
         app.start(ImmutableList.of(loc));
 
-        String host = psql.getAttribute(PostgreSqlNode.HOSTNAME);
-        int port = psql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT);
-        new VogellaExampleAccess("org.postgresql.Driver", "postgresql", host, port).readModifyAndRevertDataBase();
+        new VogellaExampleAccess("org.postgresql.Driver", psql.getAttribute(PostgreSqlNode.DB_URL)).readModifyAndRevertDataBase();
     }
     
     @Test(enabled=false)

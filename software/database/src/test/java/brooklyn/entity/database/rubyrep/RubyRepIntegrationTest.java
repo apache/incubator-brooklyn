@@ -18,7 +18,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -89,15 +88,15 @@ public class RubyRepIntegrationTest {
      * Configures rubyrep to connect to the two databases and starts the app
      */
     public static void startInLocation(TestApplication tapp, DatabaseNode db1, DatabaseNode db2, Location... locations) throws Exception {
-        tapp.createAndManageChild(BasicEntitySpec.newInstance(RubyRep.class)
-                .configure("left", db1)
-                .configure("right", db2)
+        tapp.createAndManageChild(BasicEntitySpec.newInstance(RubyRepNode.class)
+                .configure("leftDatabase", db1)
+                .configure("rightDatabase", db2)
                 .configure("leftUsername", "sqluser")
                 .configure("rightUsername", "sqluser")
                 .configure("rightPassword", "sqluserpw")
                 .configure("leftPassword", "sqluserpw")
-                .configure("leftDatabase", "feedback")
-                .configure("rightDatabase", "feedback")
+                .configure("leftDatabaseName", "feedback")
+                .configure("rightDatabaseName", "feedback")
                 .configure("replicationInterval", 1)
         );
 
@@ -108,15 +107,15 @@ public class RubyRepIntegrationTest {
      * Tests replication between the two databases by altering the first and checking the change is applied to the second
      */
     public static void testReplication(DatabaseNode db1, DatabaseNode db2) throws Exception {
-        URI db1Url = URI.create(db1.getAttribute(DatabaseNode.DB_URL));
-        URI db2Url = URI.create(db2.getAttribute(DatabaseNode.DB_URL));
+        String db1Url = db1.getAttribute(DatabaseNode.DB_URL);
+        String db2Url = db2.getAttribute(DatabaseNode.DB_URL);
 
         log.info("Testing replication between " + db1Url + " and " + db2Url);
 
         VogellaExampleAccess vea1 = new VogellaExampleAccess(db1 instanceof MySqlNode ? "com.mysql.jdbc.Driver" : "org.postgresql.Driver",
-                db1Url.getScheme(), db1Url.getHost(), db1Url.getPort());
+                db1Url);
         VogellaExampleAccess vea2 = new VogellaExampleAccess(db2 instanceof MySqlNode ? "com.mysql.jdbc.Driver" : "org.postgresql.Driver",
-                db2Url.getScheme(), db1Url.getHost(), db2Url.getPort());
+                db2Url);
 
         try {
             vea1.connect();

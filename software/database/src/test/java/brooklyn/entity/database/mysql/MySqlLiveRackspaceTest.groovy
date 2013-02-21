@@ -78,9 +78,7 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
         //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
         l.exec(asList("iptables -I INPUT -p tcp --dport 3306 -j ACCEPT"))
 
-        String host = mysql.getAttribute(MySqlNode.HOSTNAME);
-        int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
-        new VogellaExampleAccess("com.mysql.jdbc.Driver", "mysql", host, port).readModifyAndRevertDataBase();
+        new VogellaExampleAccess("com.mysql.jdbc.Driver", mysql.getAttribute(MySqlNode.DB_URL)).readModifyAndRevertDataBase();
        
     } 
 }

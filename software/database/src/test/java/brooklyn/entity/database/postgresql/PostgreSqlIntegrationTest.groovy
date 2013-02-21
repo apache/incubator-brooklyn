@@ -1,6 +1,5 @@
 package brooklyn.entity.database.postgresql
 
-import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -63,11 +62,12 @@ INSERT INTO COMMENTS values (1, 'lars', 'myemail@gmail.com','http://www.vogella.
     @Test(groups = ["Integration"])
     public void test_localhost() throws Exception {
         PostgreSqlNode pgsql = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
-                .configure(ImmutableMap.of("creationScriptContents", CREATION_SCRIPT, "port", "9111")));
-            
+                .configure("creationScriptContents", CREATION_SCRIPT)
+                .configure("port", "9111"));
+
         tapp.start([new LocalhostMachineProvisioningLocation()]);
         log.info("PostgreSql started");
-        new VogellaExampleAccess("org.postgresql.Driver", "postgresql", "localhost", pgsql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT)).readModifyAndRevertDataBase();
+        new VogellaExampleAccess("org.postgresql.Driver", pgsql.getAttribute(PostgreSqlNode.DB_URL)).readModifyAndRevertDataBase();
         log.info("Ran vogella PostgreSql example -- SUCCESS");
     }
 }

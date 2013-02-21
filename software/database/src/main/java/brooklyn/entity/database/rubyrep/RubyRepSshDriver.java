@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,7 +52,7 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
     @Override
     public void customize() {
         newScript(CUSTOMIZING).failOnNonZeroResultCode()
-                .body.append(format("cp -r %s/rubyrep-%s . || exit $!", getInstallDir(), getVersion())
+                .body.append(format("cp -r %s/rubyrep-%s .", getInstallDir(), getVersion())
         ).execute();
         try {
             customizeConfiguration();
@@ -71,64 +70,18 @@ public class RubyRepSshDriver extends JavaSoftwareProcessSshDriver implements Ru
             // If set accept as-is
             configContents = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(configScriptUrl));
         } else {
-            String configScriptContents = entity.getConfig(RubyRepNode.CONFIGURATION_CONTENTS);
-            // If user has set config script leave as-is
-            if (configScriptContents == null) {
-                String left = entity.getConfig(RubyRepNode.LEFT_DATABASE_URL);
-                String leftDb = entity.getConfig(RubyRepNode.LEFT_DATABASE);
-                String right = entity.getConfig(RubyRepNode.RIGHT_DATABASE_URL);
-                String rightDb = entity.getConfig(RubyRepNode.RIGHT_DATABASE);
-                String leftUser = entity.getConfig(RubyRepNode.LEFT_USERNAME);
-                String rightUser = entity.getConfig(RubyRepNode.RIGHT_USERNAME);
-                String leftPass = entity.getConfig(RubyRepNode.LEFT_PASSWORD);
-                String rightPass = entity.getConfig(RubyRepNode.RIGHT_PASSWORD);
-                int replicationInterval = entity.getConfig(RubyRepNode.REPLICATION_INTERVAL);
-
-                if (left == null || right == null) {
-                    throw new UnsupportedOperationException("Please either set ruby rep configuration or left and right database");
-                }
-
-                String tables = entity.getConfig(RubyRepNode.TABLE_REGEXP);
-
-                // TODO config.options
-                configScriptContents =
-                        "RR::Initializer::run do |config|\n" +
-                                "config.left = " + toConfig(left, leftDb, leftUser, leftPass) +
-                                " \n" +
-                                "config.right =" + toConfig(right, rightDb, rightUser, rightPass) +
-                                " \n" +
-                                "config.include_tables /" + tables + "/\n" +
-                                "config.options[:replication_interval] = " + replicationInterval + "\n" +
-                                "config.options[:logged_replication_events] = [\n" +
-                                ":all_changes, \n" +
-                                ":all_conflicts\n" +
-                                "]" +
-                                "end";
-            }
-
+            String configScriptContents = processTemplate(entity.getAttribute(RubyRepNode.TEMPLATE_CONFIGURATION_URL));
             configContents = new StringReader(configScriptContents);
         }
 
         log.info("Sending " + configContents);
-        getMachine().copyTo(configContents, getRunDir() + "/myrubyrep.conf");
-    }
-
-    private String toConfig(String url, String db, String user, String pass) throws ExecutionException, InterruptedException, URISyntaxException {
-        URI uri = new URI(url);
-        return "{\n" +
-                ":adapter  => '" + uri.getScheme() + "', \n" +
-                ":database => '" + db + "',\n" +
-                ":username => '" + user + "',\n" +
-                ":password => '" + pass + "',\n" +
-                ":host     => '" + uri.getHost() + "',\n" +
-                ":port     => " + uri.getPort() + "\n" +
-                "}\n";
+        getMachine().copyTo(configContents, getRunDir() + "/rubyrep.conf");
     }
 
     @Override
     public void launch() {
         newScript(MutableMap.of("usePidFile", true), LAUNCHING)
-                .body.append(format("nohup rubyrep-%s/jruby/bin/jruby rubyrep-%s/bin/rubyrep replicate -c myrubyrep.conf > ./console 2>&1 &", getVersion(), getVersion())
+                .body.append(format("nohup rubyrep-%s/jruby/bin/jruby rubyrep-%s/bin/rubyrep replicate -c rubyrep.conf > ./console 2>&1 &", getVersion(), getVersion())
         ).execute();
     }
 
