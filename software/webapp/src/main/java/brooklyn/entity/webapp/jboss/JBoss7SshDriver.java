@@ -3,29 +3,21 @@ package brooklyn.entity.webapp.jboss;
 import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-
-import freemarker.cache.StringTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 
 public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
 
@@ -39,6 +31,8 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     public static final String SERVER_TYPE = "standalone";
     private static final String CONFIG_FILE = "standalone-brooklyn.xml";
     private static final String KEYSTORE_FILE = ".keystore";
+    
+    private String expandedInstallDir;
     
     public JBoss7SshDriver(JBoss7ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -93,12 +87,19 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         return entity.getAttribute(JBoss7Server.DEPLOYMENT_TIMEOUT);
     }
 
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+    
     public void install() {
-        String url = format("http://download.jboss.org/jbossas/7.1/jboss-as-%s/jboss-as-%s.tar.gz", getVersion(), getVersion());
-        String saveAs = format("jboss-as-distribution-%s.tar.gz", getVersion());
-
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("jboss-as-%s", getVersion()));
+        
         List<String> commands = new LinkedList<String>();
-        commands.addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs));
+        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
 
@@ -142,7 +143,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         
         // Copy the install files to the run-dir
         newScript(CUSTOMIZING)
-                .body.append(format("cp -r %s/jboss-as-%s/%s . || exit $!", getInstallDir(), getVersion(), SERVER_TYPE))
+                .body.append(format("cp -r %s/%s . || exit $!", getExpandedInstallDir(), SERVER_TYPE))
                 .execute();
 
         // Copy the keystore across, if there is one
@@ -171,9 +172,9 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         newScript(flags, LAUNCHING).
                 body.append(
                 "export LAUNCH_JBOSS_IN_BACKGROUND=true",
-                format("export JBOSS_HOME=%s/jboss-as-%s", getInstallDir(), getVersion()),
+                format("export JBOSS_HOME=%s", getExpandedInstallDir()),
                 format("export JBOSS_PIDFILE=%s/%s", getRunDir(), PID_FILENAME),
-                format("%s/jboss-as-%s/bin/%s.sh ", getInstallDir(), getVersion(), SERVER_TYPE) +
+                format("%s/bin/%s.sh ", getExpandedInstallDir(), SERVER_TYPE) +
                         format("--server-config %s ", CONFIG_FILE) +
                         format("-Djboss.server.base.dir=%s/%s ", getRunDir(), SERVER_TYPE) +
                         format("\"-Djboss.server.base.url=file://%s/%s\" ", getRunDir(), SERVER_TYPE) +

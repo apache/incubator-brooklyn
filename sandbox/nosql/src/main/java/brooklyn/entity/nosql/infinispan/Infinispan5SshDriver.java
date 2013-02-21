@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
@@ -19,6 +20,8 @@ import com.google.common.collect.ImmutableList;
  * Start a {@link TomcatServer} in a {@link Location} accessible over ssh.
  */
 public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implements Infinispan5Driver {
+
+    private String expandedInstallDir;
 
     public Infinispan5SshDriver(Infinispan5Server entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -37,12 +40,21 @@ public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implement
         return entity.getAttribute(Infinispan5Server.PORT);
     }
 
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+    
+    @Override
     public void install() {
-        String url = format("http://sourceforge.net/projects/infinispan/files/infinispan/%s/infinispan-%s-all.zip/download", getVersion(), getVersion());
-        String saveAs = format("infinispan-%s-all.zip", getVersion());
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        // FIXME will saveAs be "infinispan-${version}-all.zip"?
+        expandedInstallDir = getInstallDir(); // unpacks to current directory, rather than sub-directory
 
         List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(url, getEntityVersionLabel("/"), saveAs))
+                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
                 .add(CommonCommands.INSTALL_ZIP)
                 .add("unzip " + saveAs)
                 .build();
@@ -70,7 +82,7 @@ public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implement
                 body.append(
                         format("%s/bin/startServer.sh --protocol %s "
                                 +(getPort() != null ? " --port %s" : "")+" &", 
-                                getInstallDir(), getProtocol(), getPort()))
+                                getExpandedInstallDir(), getProtocol(), getPort()))
                 .execute();
     }
 

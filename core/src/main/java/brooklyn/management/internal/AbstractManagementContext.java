@@ -26,6 +26,8 @@ import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverFactory;
 import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.drivers.downloads.BasicDownloadsRegistry;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
@@ -67,9 +69,15 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     private final RebindManager rebindManager = new RebindManagerImpl(this);
     
     protected volatile BrooklynGarbageCollector gc;
+
+    private final EntityDriverFactory entityDriverFactory;
     
+    private final DownloadResolverRegistry downloadsRegistry;
+
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
+       this.entityDriverFactory = new BasicEntityDriverFactory();
+       this.downloadsRegistry = BasicDownloadsRegistry.newDefault(configMap);
     }
     
     static {
@@ -121,13 +129,16 @@ public abstract class AbstractManagementContext implements ManagementContext  {
         return new BasicSubscriptionContext(getSubscriptionManager(), e);
     }
 
-    private final EntityDriverFactory entityDriverFactory = new BasicEntityDriverFactory();
-
     @Override
     public EntityDriverFactory getEntityDriverFactory() {
         return entityDriverFactory;
     }
 
+    @Override
+    public DownloadResolverRegistry getEntityDownloadsRegistry() {
+        return downloadsRegistry;
+    }
+    
     @Deprecated
     @Override
     public boolean isManaged(Entity e) {

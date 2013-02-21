@@ -1,19 +1,6 @@
 package brooklyn.entity.nosql.mongodb;
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
-import brooklyn.location.OsDetails;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
-import brooklyn.util.ResourceUtils;
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -22,23 +9,48 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.location.OsDetails;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.NetworkUtils;
+import brooklyn.util.ResourceUtils;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implements MongoDbDriver {
 
     public static final Logger log = LoggerFactory.getLogger(MongoDbSshDriver.class);
 
-    private static final String DOWNLOAD_ROOT = "http://fastdl.mongodb.org/";
+    private String expandedInstallDir;
 
     public MongoDbSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
+    private String getExpandedInstallDir() {
+        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
+        return expandedInstallDir;
+    }
+    
     @Override
     public void install() {
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(getBaseName());
+        
         List<String> commands = new LinkedList<String>();
-        String saveAs = "mongo.tar.gz";
-        commands.addAll(downloadUrlAs(getUrl(), getEntityVersionLabel("/"), saveAs));
+        commands.addAll(downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
 
@@ -79,7 +91,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
                 "--port", port,
                 "--bind_ip", bindIpAddress,
                 "--fork"));
-        String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getMongoInstallDir(), args);
+        String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
         commands.add(command);
         log.info(command);
         newScript(LAUNCHING)
@@ -101,17 +113,12 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
 
-    protected String getUrl() {
-        // e.g. http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.2.tgz,
-        // http://fastdl.mongodb.org/osx/mongodb-osx-x86_64-2.2.2.tgz
-        // http://downloads.mongodb.org/win32/mongodb-win32-x86_64-1.8.5.zip
-        // Note Windows download is a zip.
-        String osDir = (getLocation().getOsDetails().isMac()) ? "osx/" : "linux/";
-        return DOWNLOAD_ROOT + osDir + getBaseName() + ".tgz";
-    }
-
     protected String getBaseName() {
         return getOsTag() + "-" + entity.getConfig(MongoDbServer.VERSION);
+    }
+
+    public String getOsDir() {
+        return (getLocation().getOsDetails().isMac()) ? "osx/" : "linux/";
     }
 
     protected String getOsTag() {
@@ -138,10 +145,6 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     protected String getPidFile() {
         return getRunDir() + "/pid";
-    }
-
-    protected String getMongoInstallDir() {
-        return getInstallDir() + "/" + getBaseName();
     }
 
     protected Integer getServerPort() {

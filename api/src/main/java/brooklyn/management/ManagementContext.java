@@ -7,6 +7,7 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
 
@@ -43,6 +44,17 @@ public interface ManagementContext {
      */
     EntityDriverFactory getEntityDriverFactory();
 
+    /**
+     * Returns the {@link DownloadResolverRegistry} for resolving things like which URL to download an installer from.
+     * 
+     * The default DownloadsRegistry will retrieve {@code entity.getAttribute(Attributes.DOWNLOAD_URL)},
+     * and substitute things like "${version}" etc.
+     * 
+     * However, additional resolvers can be registered to customize this behaviour (e.g. to always go to an 
+     * enterprise's repository).
+     */
+    DownloadResolverRegistry getEntityDownloadsRegistry();
+    
     /**
      * Returns the {@link SubscriptionManager} instance for entities and users of this management realm
      * to subscribe to sensor events (and, in the case of entities, to emit sensor events) 
