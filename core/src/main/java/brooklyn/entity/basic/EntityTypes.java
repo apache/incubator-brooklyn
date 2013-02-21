@@ -5,7 +5,6 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;
 import brooklyn.util.exceptions.Exceptions;
 

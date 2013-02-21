@@ -17,6 +17,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
@@ -52,6 +53,7 @@ public class EntityDynamicType {
      * Map of config keys on this entity by name.
      */
     private final ConcurrentMap<String,ConfigKey<?>> configKeys = new ConcurrentHashMap<String, ConfigKey<?>>();
+    private final ConcurrentMap<String,Field> configKeyFields = new ConcurrentHashMap<String, Field>();
 
     private volatile EntityTypeSnapshot snapshot;
     private final AtomicBoolean snapshotValid = new AtomicBoolean(false);
@@ -76,7 +78,7 @@ public class EntityDynamicType {
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} sensors: {}", id, Joiner.on(", ").join(sensors.keySet()));
         
-        configKeys.putAll(findConfigKeys(clazz, entity));
+        buildConfigKeys(clazz, entity, configKeys, configKeyFields);
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} config keys: {}", id, Joiner.on(", ").join(configKeys.keySet()));
 
@@ -195,7 +197,12 @@ public class EntityDynamicType {
     public ConfigKey<?> getConfigKey(String keyName) { 
         return configKeys.get(keyName); 
     }
-    
+
+    /** field where a config key is defined, for use getting annotations. note annotations are not inherited. */
+    public Field getConfigKeyField(String keyName) { 
+        return configKeyFields.get(keyName); 
+    }
+
     private EntityTypeSnapshot refreshSnapshot() {
         if (snapshotValid.compareAndSet(false, true)) {
             snapshot = new EntityTypeSnapshot(name, simpleName, configKeys, sensors, effectors.values());
@@ -272,10 +279,9 @@ public class EntityDynamicType {
     /**
      * Finds the config keys defined on the entity's class, statics and optionally any non-static (discouraged).
      */
-    protected static Map<String,ConfigKey<?>> findConfigKeys(Class<? extends Entity> clazz, Entity optionalEntity) {
+    protected static void buildConfigKeys(Class<? extends Entity> clazz, AbstractEntity optionalEntity, 
+            Map<String, ConfigKey<?>> configKeys, Map<String, Field> configKeyFields) {
         try {
-            Map<String,ConfigKey<?>> result = Maps.newLinkedHashMap();
-            Map<String,Field> configFields = Maps.newLinkedHashMap();
             for (Field f : clazz.getFields()) {
                 boolean isConfigKey = ConfigKey.class.isAssignableFrom(f.getType());
                 if (!isConfigKey) {
@@ -291,32 +297,33 @@ public class EntityDynamicType {
                 }
                 ConfigKey<?> k = isConfigKey ? (ConfigKey<?>) f.get(optionalEntity) : 
                     ((HasConfigKey<?>)f.get(optionalEntity)).getConfigKey();
-
-                Field alternativeField = configFields.get(k.getName());
-                // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
-                Field definitiveField = alternativeField != null ? inferSubbestField(alternativeField, f) : f;
-                boolean skip = false;
-                if (definitiveField != f) {
-                    // If they refer to the _same_ instance, just keep the one we already have
-                    if (alternativeField.get(optionalEntity) == f.get(optionalEntity)) skip = true;
-                }
-                if (skip) {
-                    //nothing
-                } else if (definitiveField == f) {
-                    result.put(k.getName(), k);
-                    configFields.put(k.getName(), f);
-                } else if (definitiveField != null) {
-                    if (LOG.isDebugEnabled()) LOG.debug("multiple definitions for config key {} on {}; preferring that in sub-class: {} to {}", new Object[] {
-                            k.getName(), optionalEntity!=null ? optionalEntity : clazz, alternativeField, f});
-                } else if (definitiveField == null) {
-                    LOG.warn("multiple definitions for config key {} on {}; preferring {} to {}", new Object[] {
-                            k.getName(), optionalEntity!=null ? optionalEntity : clazz, alternativeField, f});
+                if (k==null) {
+                    LOG.warn("no value defined for config key field (skipping): "+f);
+                } else {
+                    Field alternativeField = configKeyFields.get(k.getName());
+                    // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
+                    Field definitiveField = alternativeField != null ? inferSubbestField(alternativeField, f) : f;
+                    boolean skip = false;
+                    if (definitiveField != f) {
+                        // If they refer to the _same_ instance, just keep the one we already have
+                        if (alternativeField.get(optionalEntity) == f.get(optionalEntity)) skip = true;
+                    }
+                    if (skip) {
+                        //nothing
+                    } else if (definitiveField == f) {
+                        configKeys.put(k.getName(), k);
+                        configKeyFields.put(k.getName(), f);
+                    } else if (definitiveField != null) {
+                        if (LOG.isDebugEnabled()) LOG.debug("multiple definitions for config key {} on {}; preferring that in sub-class: {} to {}", new Object[] {
+                                k.getName(), optionalEntity!=null ? optionalEntity : clazz, alternativeField, f});
+                    } else if (definitiveField == null) {
+                        LOG.warn("multiple definitions for config key {} on {}; preferring {} to {}", new Object[] {
+                                k.getName(), optionalEntity!=null ? optionalEntity : clazz, alternativeField, f});
+                    }
                 }
             }
-            
-            return result;
         } catch (IllegalAccessException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
     

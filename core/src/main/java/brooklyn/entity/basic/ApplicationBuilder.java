@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
@@ -67,8 +68,23 @@ public abstract class ApplicationBuilder {
         return new Builder<T>().app(appSpec);
     }
 
-    public static <T extends Application> Builder<T> builder(Class<T> type) {
-        return new Builder<T>().app(type);
+    /** smart builder factory method which takes an interface type _or_ an implementation type */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static <T extends Application,U extends T> Builder<T> builder(Class<? extends T> type) {
+        if (type.isInterface() || ((type.getModifiers() & Modifier.ABSTRACT)!=0))
+            // is interface or abstract
+            return new Builder<T>().app(type);
+        else {
+            // is implementation
+            Class interfaceType = Application.class;
+            if (StartableApplication.class.isAssignableFrom(type))
+                interfaceType = StartableApplication.class;
+            return new Builder<T>().app(BasicEntitySpec.newInstance((Class<T>)interfaceType, (Class<U>)type));
+        }
+    }
+
+    public static <T extends Application> Builder<T> builder(Class<T> interfaceType, Class<T> implType) {
+        return new Builder<T>().app(BasicEntitySpec.newInstance(interfaceType, implType));
     }
 
     public static class Builder<T extends Application> {
@@ -87,9 +103,10 @@ public abstract class ApplicationBuilder {
         }
         
         // Use static builder methods
-        protected Builder<T> app(Class<T> type) {
+        @SuppressWarnings("unchecked")
+        protected Builder<T> app(Class<? extends T> type) {
             checkNotManaged();
-            this.appSpec = BasicEntitySpec.newInstance(type); 
+            this.appSpec = BasicEntitySpec.newInstance((Class<T>)type); 
             return this;
         }
         
@@ -105,6 +122,11 @@ public abstract class ApplicationBuilder {
             return this;
         }
         
+        public final Builder<T> configure(Map<?,?> config) {
+            appSpec.configure(config);
+            return this;
+        }
+
         public Builder<T> child(EntitySpec<?> val) {
             checkNotManaged();
             childSpecs.add(val);
@@ -160,6 +182,15 @@ public abstract class ApplicationBuilder {
         checkNotManaged();
         app.addChild(entity);
         return entity;
+    }
+
+    public final Class<? extends StartableApplication> getType() {
+        return appSpec.getType();
+    }
+    
+    public final ApplicationBuilder configure(Map<?,?> config) {
+        appSpec.configure(config);
+        return this;
     }
     
     protected final <T extends Entity> T createChild(EntitySpec<T> spec) {

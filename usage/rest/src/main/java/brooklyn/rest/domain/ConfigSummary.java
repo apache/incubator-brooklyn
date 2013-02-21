@@ -19,6 +19,8 @@ public abstract class ConfigSummary {
   private final String description;
   @JsonSerialize
   private final boolean reconfigurable;
+  @JsonSerialize(include=Inclusion.NON_NULL)
+  private final String label;
 
   protected ConfigSummary(
       @JsonProperty("name") String name,
@@ -26,13 +28,14 @@ public abstract class ConfigSummary {
       @JsonProperty("description") String description,
       @JsonProperty("defaultValue") Object defaultValue,
       @JsonProperty("reconfigurable") boolean reconfigurable,
-      @JsonProperty("links") Map<String, URI> links
+      @JsonProperty("label") String label
   ) {
     this.name = name;
     this.type = type;
     this.description = description;
     this.defaultValue = defaultValue;
     this.reconfigurable = reconfigurable;
+    this.label = label;
   }
 
   protected ConfigSummary(ConfigKey<?> config) {
@@ -46,6 +49,7 @@ public abstract class ConfigSummary {
      *   at org.codehaus.jackson.map.ser.impl.UnknownSerializer.failForEmpty(UnknownSerializer.java:52)
      */
     this.defaultValue = (config.getDefaultValue() == null) ? null : config.getDefaultValue().toString();
+    this.label = null;
   }
   
   public String getName() {
@@ -65,10 +69,14 @@ public abstract class ConfigSummary {
   }
   
   public Object getDefaultValue() {
-      // TODO toString ?
-      return defaultValue;
-    }
-    
+    // note constructor has converted to string, so this is safe for clients to use
+    return defaultValue;
+  }
+  
+  public String getLabel() {
+    return label;
+  }
+  
   public abstract Map<String, URI> getLinks();
 
   @Override

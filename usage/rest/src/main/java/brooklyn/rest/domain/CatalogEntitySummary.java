@@ -11,6 +11,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
+import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.EntityTypes;
 import brooklyn.event.Sensor;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
@@ -41,13 +42,15 @@ public class CatalogEntitySummary extends CatalogItemSummary {
     }
 
     public static CatalogEntitySummary from(BrooklynRestResourceUtils b, CatalogItem<? extends Entity> item) {
-        EntityType type = EntityTypes.getDefinedEntityType(b.getCatalog().loadClass(item)).getSnapshot();
+        Class<? extends Entity> clazz = b.getCatalog().loadClass(item);
+        EntityDynamicType typeMap = EntityTypes.getDefinedEntityType(clazz);
+        EntityType type = typeMap.getSnapshot();
         
         Set<EntityConfigSummary> config = Sets.newLinkedHashSet();
         Set<SensorSummary> sensors = Sets.newLinkedHashSet();
         Set<EffectorSummary> effectors = Sets.newLinkedHashSet();
         
-        for (ConfigKey<?> x: type.getConfigKeys()) config.add(EntityConfigSummary.forCatalog(x));
+        for (ConfigKey<?> x: type.getConfigKeys()) config.add(EntityConfigSummary.forCatalog(x, typeMap.getConfigKeyField(x.getName())));
         for (Sensor<?> x: type.getSensors()) sensors.add(SensorSummary.forCatalog(x));
         for (Effector<?> x: type.getEffectors()) effectors.add(EffectorSummary.forCatalog(x));
 

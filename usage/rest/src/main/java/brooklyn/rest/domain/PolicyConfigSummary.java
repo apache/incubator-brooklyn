@@ -26,7 +26,7 @@ public class PolicyConfigSummary extends ConfigSummary {
       @JsonProperty("reconfigurable") boolean reconfigurable,
       @JsonProperty("links") Map<String, URI> links
   ) {
-    super(name, type, description, defaultValue, reconfigurable, links);
+    super(name, type, description, defaultValue, reconfigurable, null);
     this.links = links!=null ? ImmutableMap.copyOf(links) : null;
   }
 

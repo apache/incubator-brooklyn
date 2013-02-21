@@ -102,7 +102,8 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource {
     return getValueForDisplay(policy, policy.getConfig(ck));
   }
 
-  @POST
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+@POST
   @Path("/{config}/set")
   @ApiOperation(value = "Sets the given config on this policy")
   @ApiErrors(value = {
@@ -133,9 +134,9 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource {
   private String getValueForDisplay(Policy policy, Object value) {
     // currently everything converted to string, expanded if it is a "done" future
     if (value instanceof Future) {
-        if (((Future)value).isDone()) {
+        if (((Future<?>)value).isDone()) {
             try {
-                value = ((Future)value).get();
+                value = ((Future<?>)value).get();
             } catch (Exception e) {
                 value = ""+value+" (error evaluating: "+e+")";
             }

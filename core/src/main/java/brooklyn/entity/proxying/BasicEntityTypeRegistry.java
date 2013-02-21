@@ -49,8 +49,14 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
             if (result != null) {
                 return (Class<? extends T>) result;
             }
-            
             result = getFromAnnotation(type);
+            if (result == null) {
+                //might be nice to do intelligent detection here (but now we do it earlier in the process)
+//                if (!type.isInterface() && ((type.getModifiers() & Modifier.ABSTRACT)==0))
+//                    result = type;
+//                else
+                throw new IllegalArgumentException("Interface "+type+" is not annotated with @"+ImplementedBy.class.getSimpleName()+", and no implementation is registered");
+            }
             cache.put(type, result);
             return (Class<? extends T>) result;
         }
@@ -72,7 +78,8 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
 
     private <T extends Entity> Class<? extends T> getFromAnnotation(Class<T> type) {
         ImplementedBy annotation = type.getAnnotation(brooklyn.entity.proxying.ImplementedBy.class);
-        if (annotation == null) throw new IllegalArgumentException("Interface "+type+" is not annotated with @"+ImplementedBy.class.getSimpleName()+", and no implementation is registered");
+        if (annotation == null) 
+            return null;
         Class<? extends Entity> value = annotation.value();
         checkIsImplementation(type, value);
         return (Class<? extends T>) value;
