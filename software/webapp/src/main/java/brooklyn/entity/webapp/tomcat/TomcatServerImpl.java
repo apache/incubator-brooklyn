@@ -11,18 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.location.basic.PortRanges;
-import brooklyn.util.flags.SetFromFlag;
-
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
@@ -31,27 +23,8 @@ import com.google.common.base.Predicates;
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
 public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements TomcatServer {
+
     private static final Logger log = LoggerFactory.getLogger(TomcatServerImpl.class);
-
-    @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.34");
-
-    /**
-     * Tomcat insists on having a port you can connect to for the sole purpose of shutting it down.
-     * Don't see an easy way to disable it; causes collisions in its out-of-the-box location of 8005,
-     * so override default here to a high-numbered port.
-     */
-    @SetFromFlag("shutdownPort")
-    public static final PortAttributeSensorAndConfigKey SHUTDOWN_PORT =
-            new PortAttributeSensorAndConfigKey("tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+"));
-
-    public static final BasicAttributeSensor<String> CONNECTOR_STATUS =
-            new BasicAttributeSensor<String>(String.class, "webapp.tomcat.connectorStatus", "Catalina connector state name");
-
-    public static final BasicAttributeSensor<String> JMX_SERVICE_URL = Attributes.JMX_SERVICE_URL;
-    
-    private volatile JmxFeed jmxFeed;
 
     public TomcatServerImpl() {
         super();
@@ -68,6 +41,8 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     public TomcatServerImpl(Map flags, Entity parent) {
         super(flags, parent);
     }
+    
+    private volatile JmxFeed jmxFeed;
 
     @Override
     public void connectSensors() {
