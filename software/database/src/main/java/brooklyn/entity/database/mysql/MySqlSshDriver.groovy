@@ -20,7 +20,7 @@ import brooklyn.util.text.Identifiers
 import com.google.common.collect.ImmutableMap
 
 /**
- * The SSH implementation of the {@link MySlDriver}.
+ * The SSH implementation of the {@link MySqlDriver}.
  */
 public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements MySqlDriver{
 

@@ -13,7 +13,7 @@ import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.text.Strings;
+import brooklyn.util.text.Strings
 
 /**
  * Runs a slightly modified version of the popular Vogella MySQL tutorial,
@@ -75,7 +75,7 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
         tapp.start([location]);
         log.info("MySQL started");
 
-        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", "localhost", mysql.getAttribute(MySqlNode.MYSQL_PORT));
+        new VogellaExampleAccess("com.mysql.jdbc.Driver", mysql.getAttribute(MySqlNode.DB_URL)).readModifyAndRevertDataBase();
 
         log.info("Ran vogella MySQL example -- SUCCESS");
 

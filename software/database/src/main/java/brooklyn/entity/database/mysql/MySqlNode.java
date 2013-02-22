@@ -4,6 +4,7 @@ import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -15,7 +16,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MySql Node", description="MySql is an open source relational database management system (RDBMS)", iconUrl="classpath:///mysql-logo-110x57.png")
 @ImplementedBy(MySqlNodeImpl.class)
-public interface MySqlNode extends SoftwareProcess {
+public interface MySqlNode extends DatabaseNode {
 
     // NOTE MySQL changes the minor version number of their GA release frequently, check for latest version if install fails
     @SetFromFlag("version")
@@ -52,5 +53,5 @@ public interface MySqlNode extends SoftwareProcess {
     
     public static final ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
     
-    public static final BasicAttributeSensor<String> MYSQL_URL = new BasicAttributeSensor<String>(String.class, "mysql.url", "URL to access mysql (e.g. mysql://localhost:3306/)");
+    public static final BasicAttributeSensor<String> MYSQL_URL = DB_URL;
 }

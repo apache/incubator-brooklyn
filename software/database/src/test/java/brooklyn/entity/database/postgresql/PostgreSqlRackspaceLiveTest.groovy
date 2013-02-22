@@ -1,9 +1,8 @@
-package brooklyn.entity.database.postgresql;
+package brooklyn.entity.database.postgresql
 
 import brooklyn.config.BrooklynProperties
-import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.database.mysql.MySqlNode
+import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.jclouds.JcloudsLocation
@@ -12,8 +11,8 @@ import org.testng.annotations.Test
 import static java.util.Arrays.asList
 
 /**
- * The PostgreSqlLiveTest installs Postgresql on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
- * PostgreSql works like expected on these Operating Systems.
+ * The PostgreSqlRackspaceLiveTest installs Postgresql on various operating systems like Ubuntu, CentOS, Red Hat etc. To
+ * make sure that PostgreSql works like expected on these Operating Systems.
  */
 public class PostgreSqlRackspaceLiveTest extends PostgreSqlIntegrationTest {
     @Test(groups = ["Live"])
@@ -79,8 +78,7 @@ public class PostgreSqlRackspaceLiveTest extends PostgreSqlIntegrationTest {
         //hack to get the port for postgresql open; is the inbounds property not respected on rackspace??
         l.exec(asList("iptables -I INPUT -p tcp --dport 5432 -j ACCEPT"))
 
-        String host = psql.getAttribute(PostgreSqlNode.HOSTNAME);
-        int port = psql.getAttribute(PostgreSqlNode.POSTGRESQL_PORT);
-        new VogellaExampleAccess().readDataBase("org.postgresql.Driver", "postgresql", host, port);
+        String url = psql.getAttribute(PostgreSqlNode.DB_URL);
+        new VogellaExampleAccess("org.postgresql.Driver", url).readModifyAndRevertDataBase();
     }
 }

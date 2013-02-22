@@ -6,9 +6,8 @@ import brooklyn.entity.basic.SoftwareProcessImpl
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
 
     public MySqlNodeImpl() {
-        super();
     }
-    
+
     public MySqlNodeImpl(Entity parent) {
         this([:], parent);
     }
@@ -29,7 +28,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(MYSQL_URL, "mysql://${localHostname}:${port}/")
+        setAttribute(DB_URL, "mysql://" + localHostname + ":" + port + "/")
         setAttribute(SERVICE_UP, true)  // TODO poll for status, and activity
     }
 

@@ -18,9 +18,7 @@ public class MySqlLiveEc2Test extends AbstractEc2LiveTest {
 
         app.start(ImmutableList.of(loc));
 
-        String host = mysql.getAttribute(MySqlNode.HOSTNAME);
-        int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
-        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", host, port);
+        new VogellaExampleAccess("com.mysql.jdbc.Driver", mysql.getAttribute(MySqlNode.DB_URL)).readModifyAndRevertDataBase();
     }
     
     @Test(enabled=false)
