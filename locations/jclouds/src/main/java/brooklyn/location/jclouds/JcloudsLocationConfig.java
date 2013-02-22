@@ -105,7 +105,9 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
 
-    // TODO - other keys, perhaps    
+    // TODO
+    
 //  "noDefaultSshKeys" - hints that local ssh keys should not be read as defaults
+    // this would be useful when we need to indicate a password
 
 }

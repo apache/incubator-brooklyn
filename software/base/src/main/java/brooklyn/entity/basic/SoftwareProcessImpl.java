@@ -345,8 +345,10 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         ConfigToAttributes.apply(this);
         
-		setAttribute(HOSTNAME, machine.getAddress().getCanonicalHostName());
-		setAttribute(ADDRESS, machine.getAddress().getHostAddress());
+        if (getAttribute(HOSTNAME)==null)
+            setAttribute(HOSTNAME, machine.getAddress().getCanonicalHostName());
+        if (getAttribute(ADDRESS)==null)
+            setAttribute(ADDRESS, machine.getAddress().getHostAddress());
 
         // Opportunity to block startup until other dependent components are available
         Object val = getConfig(START_LATCH);
@@ -427,6 +429,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 		if (machine != null) {
 			stopInLocation(machine);
 		}
+		setAttribute(HOSTNAME, null);
+		setAttribute(ADDRESS, null);
         setAttribute(SERVICE_UP, false);
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+this);

@@ -6,7 +6,7 @@ import java.util.Set;
 
 public interface LocationMemento extends TreeNode, Memento {
 
-	Map<String, Object> getLocationConfig();
+    Map<String, Object> getLocationConfig();
     Set<String> getLocationConfigUnused();
     String getLocationConfigDescription();
 

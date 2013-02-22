@@ -754,7 +754,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         // TODO smarter length-aware system
         String user = System.getProperty("user.name");
         String rand = Identifiers.makeRandomId(6);
-        String result = "brooklyn-" + user + "-" + rand;
+        String result = "brooklyn-" + ("brooklyn".equals(user) ? "" : user+"-") + rand;
         if ("vcloud".equals(provider)) {
             rand = Identifiers.makeRandomId(2);
             result = "br-" + Strings.maxlen(user, 4) + "-" + rand;
