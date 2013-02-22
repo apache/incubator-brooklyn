@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Modifier;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
@@ -21,7 +22,10 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
+
+import com.google.common.collect.Sets;
 
 public class MementosGenerators {
 
@@ -147,12 +151,18 @@ public class MementosGenerators {
     
     public static BasicLocationMemento.Builder newLocationMementoBuilder(Location location) {
         BasicLocationMemento.Builder builder = BasicLocationMemento.builder();
-        
+
+        Set<String> nonPersistableFlagNames = Sets.union(
+                FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.TRANSIENT).keySet(),
+                FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.STATIC).keySet());
+        Map<String, Object> persistableFlags = FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT);
+        ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getConfigBag() ).removeAll(nonPersistableFlagNames);
+
         builder.type = location.getClass().getName();
         builder.id = location.getId();
         builder.displayName = location.getName();
-        builder.copyConfig( ((AbstractLocation)location).getConfigBag() );
-        builder.locationConfig.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT));
+        builder.copyConfig(persistableConfig);
+        builder.locationConfig.putAll(persistableFlags);
 
         for (Map.Entry<String, Object> entry : builder.locationConfig.entrySet()) {
             String key = entry.getKey();

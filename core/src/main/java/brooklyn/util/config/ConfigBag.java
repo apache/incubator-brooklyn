@@ -183,6 +183,16 @@ public class ConfigBag {
         unusedConfig.remove(key.getName());
     }
 
+    public ConfigBag removeAll(Iterable<String> keys) {
+        for (String key: keys) remove(key);
+        return this;
+    }
+
+    public void remove(String key) {
+        config.remove(key);
+        unusedConfig.remove(key);
+    }
+
     public ConfigBag copy(ConfigBag other) {
         putAll(other.getAllConfig());
         markAll(Sets.difference(other.getAllConfig().keySet(), other.getUnusedConfig().keySet()));
@@ -223,5 +233,4 @@ public class ConfigBag {
     public boolean isUnused(ConfigKey<?> key) {
         return unusedConfig.containsKey(key.getName());
     }
-
 }
