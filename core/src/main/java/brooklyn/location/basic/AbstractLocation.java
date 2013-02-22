@@ -101,8 +101,9 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         configure(Maps.newLinkedHashMap());
     }
     
-    /** will set fields from flags, and put the remaining ones into the 'leftovers' map.
-     * can be subclassed for custom initialization but note the following. 
+    /** will set fields from flags. The unused configuration can be found via the 
+     * {@linkplain ConfigBag#getUnusedConfig()}.
+     * This can be overridden for custom initialization but note the following. 
      * <p>
      * if you require fields to be initialized you must do that in this method,
      * with a guard (as in FixedListMachineProvisioningLocation).  you must *not*
@@ -120,6 +121,9 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         if (properties.containsKey(PARENT_LOCATION.getName())) {
             // need to ensure parent's list of children is also updated
             setParentLocation(configBag.get(PARENT_LOCATION));
+            
+            // don't include parentLocation in configBag, as breaks rebind
+            configBag.remove(PARENT_LOCATION);
         }
 
         // NB: flag-setting done here must also be done in BasicLocationRebindSupport 

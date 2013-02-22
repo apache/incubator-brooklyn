@@ -107,9 +107,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void provisionMore(int size) {
         for (int i=0; i<size; i++) {
-            Map flags = MutableMap.of(
-                    "parentLocation", this, 
-                    "address", elvis(address, lookupLocalHost()));
+            Map flags = MutableMap.of("address", elvis(address, lookupLocalHost()));
             // TODO is this necessary? since they are inherited anyway? 
             // (probably, since inheritance is only respected for a small subset) 
             for (String k: SshMachineLocation.ALL_SSH_CONFIG_KEY_NAMES) {
