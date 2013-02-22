@@ -1,9 +1,4 @@
-package brooklyn.entity.database.mysql;
-
-
-import static java.util.Arrays.asList
-
-import org.testng.annotations.Test
+package brooklyn.entity.database.mysql
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.database.VogellaExampleAccess
@@ -11,6 +6,9 @@ import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.basic.jclouds.JcloudsLocation
+import org.testng.annotations.Test
+
+import static java.util.Arrays.asList
 
 /**
  * The MySqlLiveTest installs MySQL on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
@@ -80,9 +78,7 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
         //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
         l.exec(asList("iptables -I INPUT -p tcp --dport 3306 -j ACCEPT"))
 
-        String host = mysql.getAttribute(MySqlNode.HOSTNAME);
-        int port = mysql.getAttribute(MySqlNode.MYSQL_PORT);
-        new VogellaExampleAccess().readDataBase("com.mysql.jdbc.Driver", "mysql", host, port);
+        new VogellaExampleAccess("com.mysql.jdbc.Driver", mysql.getAttribute(MySqlNode.DB_URL)).readModifyAndRevertDataBase();
        
     } 
 }

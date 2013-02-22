@@ -98,6 +98,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
                 sudo("chown postgres:postgres " + getLogFile()),
                 sudoAsUser("postgres", getInstallDir() + "/bin/initdb -D " + getDataDir()),
                 sudoAsUserAppendCommandOutputToFile("postgres", "echo \"listen_addresses = '*'\"", getDataDir() + "/postgresql.conf"),
+                sudoAsUserAppendCommandOutputToFile("postgres", "echo \"port = " + getEntity().getAttribute(PostgreSqlNode.POSTGRESQL_PORT) +  "\"", getDataDir() + "/postgresql.conf"),
                 // TODO give users control which hosts can connect and the authentication mechanism
                 sudoAsUserAppendCommandOutputToFile("postgres", "echo \"host    all         all         0.0.0.0/0             md5\"", getDataDir() + "/pg_hba.conf")
         ).failOnNonZeroResultCode().execute();
@@ -121,7 +122,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
         getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
 
         newScript(CUSTOMIZING).body.append(callPgctl("start", true),
-                sudoAsUser("postgres", getInstallDir() + "/bin/psql --file " + getRunDir() + "/creation-script.sql"),
+                sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + " --file " + getRunDir() + "/creation-script.sql"),
                 callPgctl("stop", true)).
                 failOnNonZeroResultCode().execute();
     }

@@ -1,18 +1,14 @@
 package brooklyn.entity.database;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.beust.jcommander.internal.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.*;
+import java.util.List;
+
 /**
- * Slightly altered version of the popular Vogella MySQL tutorial
+ * Basic JDBC Access test Class, based on the Vogella MySQL tutorial
  * http://www.vogella.de/articles/MySQLJava/article.html
  */
 public class VogellaExampleAccess {
@@ -20,62 +16,87 @@ public class VogellaExampleAccess {
 
     private Connection connect = null;
     private Statement statement = null;
-    private PreparedStatement preparedStatement = null;
-    private ResultSet resultSet = null;
+    private final String url;
 
-    public void readDataBase(String driverClass, String type, String host, int port) throws Exception {
+    public VogellaExampleAccess(String driverClass, String url) throws ClassNotFoundException {
+        // This will load the JDBC driver, each DB has its own driver
+        Class.forName(driverClass);
+        this.url = url;
+    }
+
+    public void readModifyAndRevertDataBase() throws Exception {
+        connect();
+        readDataBase();
+        modifyDataBase();
+        revertDatabase();
+        close();
+    }
+
+    public void connect() throws Exception {
         try {
-            // This will load the MySQL driver, each DB has its own driver
-            Class.forName(driverClass);
             // Setup the connection with the DB
-            connect = DriverManager.getConnection(
-                    "jdbc:" + type + "://" + host + ":" + port + "/feedback?"
-                            + "user=sqluser&password=sqluserpw");
+            String jdbcUrl = "jdbc:" + url + "feedback?" + "user=sqluser&password=sqluserpw";
+            log.info("Connecting to " + jdbcUrl);
+            connect = DriverManager.getConnection(jdbcUrl);
 
             // Statements allow to issue SQL queries to the database
             statement = connect.createStatement();
-            // Result set get the result of the SQL query
-            resultSet = statement.executeQuery("select * from COMMENTS");
-            writeResultSet(resultSet);
-
-            // PreparedStatements can use variables and are more efficient
-            preparedStatement = connect.prepareStatement("insert into  COMMENTS values (?, ?, ?, ?, ? , ?, ?)");
-            // "myuser, webpage, datum, summary, COMMENTS from FEEDBACK.COMMENTS");
-            // Parameters start with 1
-            preparedStatement.setInt(1, 2);
-            preparedStatement.setString(2, "Test");
-            preparedStatement.setString(3, "TestEmail");
-            preparedStatement.setString(4, "TestWebpage");
-            preparedStatement.setDate(5, new java.sql.Date(2009, 12, 11));
-            preparedStatement.setString(6, "TestSummary");
-            preparedStatement.setString(7, "TestComment");
-            preparedStatement.executeUpdate();
-
-            preparedStatement = connect.prepareStatement("SELECT myuser, webpage, datum, summary, COMMENTS from COMMENTS");
-            resultSet = preparedStatement.executeQuery();
-            writeResultSet(resultSet);
-
-            // Remove again the insert comment
-            preparedStatement = connect
-                    .prepareStatement("delete from COMMENTS where myuser= ? ; ");
-            preparedStatement.setString(1, "Test");
-            preparedStatement.executeUpdate();
-
-            resultSet = statement.executeQuery("select * from COMMENTS");
-            writeMetaData(resultSet);
-
-        } catch (Exception e) {
-            throw e;
-        } finally {
+        } catch (Exception ex) {
             close();
+            throw ex;
         }
+    }
 
+    public List<List<String>> readDataBase() throws Exception {
+        List<List<String>> results = Lists.newArrayList();
+        // Result set get the result of the SQL query
+        ResultSet resultSet = statement.executeQuery("SELECT myuser, webpage, datum, summary, COMMENTS from COMMENTS");
+        // ResultSet is initially before the first data set
+        while (resultSet.next()) {
+            List<String> row = Lists.newArrayList();
+            for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+                row.add(resultSet.getObject(i).toString());
+            }
+            results.add(row);
+        }
+        // Should close resultsets
+        resultSet.close();
+        writeResultSet(results);
+        return results;
+    }
+
+    public void modifyDataBase() throws Exception {
+        // PreparedStatements can use variables and are more efficient
+        PreparedStatement preparedStatement = connect.prepareStatement("insert into  COMMENTS values (?, ?, ?, ?, ? , ?, ?)");
+        // "myuser, webpage, datum, summary, COMMENTS from FEEDBACK.COMMENTS");
+        // Parameters start with 1
+        preparedStatement.setInt(1, 2);
+        preparedStatement.setString(2, "Test");
+        preparedStatement.setString(3, "TestEmail");
+        preparedStatement.setString(4, "TestWebpage");
+        preparedStatement.setDate(5, new Date(new java.util.Date().getTime()));
+        preparedStatement.setString(6, "TestSummary");
+        preparedStatement.setString(7, "TestComment");
+        preparedStatement.executeUpdate();
+
+        writeResultSet(readDataBase());
+    }
+
+    // Remove again the insert comment added by modifyDataBase()
+    public void revertDatabase() throws Exception {
+        PreparedStatement preparedStatement = connect
+                .prepareStatement("delete from COMMENTS where myuser= ? ; ");
+        preparedStatement.setString(1, "Test");
+        preparedStatement.executeUpdate();
+
+        ResultSet resultSet = statement.executeQuery("select * from COMMENTS");
+        writeMetaData(resultSet);
+        // Should close resultsets
+        resultSet.close();
     }
 
     private void writeMetaData(ResultSet resultSet) throws SQLException {
-        //  Now get some metadata from the database
-        // Result set get the result of the SQL query
-
+        // Get some metadata from the database
         log.info("The columns in the table are: ");
 
         log.info("Table: " + resultSet.getMetaData().getTableName(1));
@@ -84,18 +105,13 @@ public class VogellaExampleAccess {
         }
     }
 
-    private void writeResultSet(ResultSet resultSet) throws SQLException {
-        // ResultSet is initially before the first data set
-        while (resultSet.next()) {
-            // It is possible to get the columns via name
-            // also possible to get the columns via the column number
-            // which starts at 1
-            // e.g. resultSet.getSTring(2);
-            String user = resultSet.getString("myuser");
-            String website = resultSet.getString("webpage");
-            String summary = resultSet.getString("summary");
-            Date date = resultSet.getDate("datum");
-            String comment = resultSet.getString("comments");
+    private void writeResultSet(List<List<String>> resultSet) throws SQLException {
+        for (List<String> row : resultSet) {
+            String user = row.get(0);
+            String website = row.get(1);
+            String date = row.get(2);
+            String summary = row.get(3);
+            String comment = row.get(4);
             log.info("User: " + user);
             log.info("Website: " + website);
             log.info("Summary: " + summary);
@@ -104,22 +120,16 @@ public class VogellaExampleAccess {
         }
     }
 
-    // You need to close the resultSet
-    private void close() {
-        try {
-            if (resultSet != null) {
-                resultSet.close();
-            }
+    // You should always close the statement and connection
+    public void close() throws Exception {
+        if (statement != null) {
+            statement.close();
+            statement = null;
+        }
 
-            if (statement != null) {
-                statement.close();
-            }
-
-            if (connect != null) {
-                connect.close();
-            }
-        } catch (Exception e) {
-
+        if (connect != null) {
+            connect.close();
+            connect = null;
         }
     }
 }    
