@@ -54,8 +54,29 @@ public class RubyRepIntegrationTest {
         testReplication(db1, db2);
     }
 
+    /*
+     * TODO had to alter kern.sysv.shmmax, kern.sysv.semmns etc to get this to pass on OS X.
+     * See http://willbryant.net/software/mac_os_x/postgres_initdb_fatal_shared_memory_error_on_leopard
+     * 
+     * The error you'll get in the log (from stderr of PostgreSqlSshDriver.customize()) is:
+     *   DETAIL:  Failed system call was shmget(key=2, size=2138112, 03600).
+     *   HINT:  This error usually means that PostgreSQL's request for a shared memory segment exceeded available memory or swap space, or exceeded your kernel's SHMALL parameter.  
+     *          You can either reduce the request size or reconfigure the kernel with larger SHMALL.  
+     *          To reduce the request size (currently 2138112 bytes), reduce PostgreSQL's shared memory usage, perhaps by reducing shared_buffers or max_connections.
+     * 
+     * You may also get an error about not being able to allocate semaphores - this can be caused by kern.sysv.semmns being set too low,
+     * hence increasing this to 87381 (which is the default on OS X Snow Leopard).
+     * 
+     * Create a file /etc/sysctl.conf with the following content:
+     *   kern.sysv.shmmax=4194304
+     *   kern.sysv.shmmin=1
+     *   kern.sysv.shmmni=32
+     *   kern.sysv.shmseg=8
+     *   kern.sysv.shmall=65536
+     *   kern.sysv.shmmax=16777216
+     *   kern.sysv.semmns=87381
+     */
     @Test(groups = "Integration")
-    // TODO had to alter kern.sysv.shmmax, kern.sysv.semmns etc to get this to pass on OS X
     public void test_localhost_postgres() throws Exception {
         PostgreSqlNode db1 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
