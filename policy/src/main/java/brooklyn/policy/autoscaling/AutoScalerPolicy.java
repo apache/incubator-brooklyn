@@ -473,9 +473,17 @@ public class AutoScalerPolicy extends AbstractPolicy {
         } else if (key.equals(METRIC_UPPER_BOUND)) {
 
         } else if (key.equals(MIN_POOL_SIZE)) {
-
+            int newMin = (Integer) val;
+            if (newMin > getConfig(MAX_POOL_SIZE)) {
+                throw new IllegalArgumentException("Min pool size "+val+" must not be greater than max pool size "+getConfig(MAX_POOL_SIZE));
+            }
+            onPoolSizeLimitsChanged(newMin, getConfig(MAX_POOL_SIZE));
         } else if (key.equals(MAX_POOL_SIZE)) {
-            
+            int newMax = (Integer) val;
+            if (newMax < getConfig(MIN_POOL_SIZE)) {
+                throw new IllegalArgumentException("Min pool size "+val+" must not be greater than max pool size "+getConfig(MAX_POOL_SIZE));
+            }
+            onPoolSizeLimitsChanged(getConfig(MAX_POOL_SIZE), newMax);
         } else {
             throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
         }
@@ -516,7 +524,41 @@ public class AutoScalerPolicy extends AbstractPolicy {
                 .setNameFormat("brooklyn-autoscalerpolicy-%d")
                 .build();
     }
-    
+
+    /**
+     * Forces an immediate resize (without waiting for stabilization etc) if the current size is 
+     * not within the min and max limits. We schedule this so that all resize operations are done
+     * by the same thread.
+     */
+    private void onPoolSizeLimitsChanged(final int min, final int max) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} checking pool size on limits changed for {} (between {} and {})", new Object[] {this, poolEntity, min, max});
+        
+        if (isRunning() && isEntityUp()) {
+            executor.submit(new Runnable() {
+                @Override public void run() {
+                    try {
+                        int currentSize = getCurrentSizeOperator().apply(entity);
+                        int desiredSize = Math.min(max, Math.max(min, currentSize));
+
+                        if (currentSize != desiredSize) {
+                            if (LOG.isInfoEnabled()) LOG.info("{} resizing pool {} immediatley from {} to {} (due to new pool size limits)", new Object[] {this, poolEntity, currentSize, desiredSize});
+                            getResizeOperator().resize(poolEntity, desiredSize);
+                        }
+                        
+                    } catch (Exception e) {
+                        if (isRunning()) {
+                            LOG.error("Error resizing: "+e, e);
+                        } else {
+                            if (LOG.isDebugEnabled()) LOG.debug("Error resizing, but no longer running: "+e, e);
+                        }
+                    } catch (Throwable t) {
+                        LOG.error("Error resizing: "+t, t);
+                        throw Throwables.propagate(t);
+                    }
+                }});
+        }
+    }
+
     private void onMetricChanged(Number val) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-metric for {}: {}", new Object[] {this, poolEntity, val});
 
