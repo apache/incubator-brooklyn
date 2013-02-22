@@ -297,7 +297,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             
             ConfigBag args = new ConfigBag().
                 configure(SshTool.PROP_USER, user).
-                configure(SshTool.PROP_HOST, address.getHostName());
+                configure(SshTool.PROP_HOST, address.getHostName()).
+                putAll(props);
 
             for (Map.Entry<String,Object> entry: getConfigBag().getAllConfig().entrySet()) {
                 String key = entry.getKey();
