@@ -169,7 +169,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     
     @Override
     public String toString() {
-        return String.format("Config: %s (%s)", name, getTypeName());
+        return String.format("%s[ConfigKey:%s]", name, getTypeName());
     }
 
     /**

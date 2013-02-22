@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.mementos.LocationMemento;
 
@@ -55,18 +56,23 @@ public interface Location extends Serializable, Rebindable<LocationMemento> {
      * Answers true if this location equals or is an ancestor of the given location.
      */
     boolean containsLocation(Location potentialDescendent);
+
+    /** Returns configuration set at this location or inherited */
+    <T> T getConfig(ConfigKey<T> key);
     
-    /**
-     * TODO Return the ISO-3166 country code.
-     * TODO A location could be in multiple iso-3166-2 locations.
-     */
-//    String getCountryCode();
+    /** True iff the indication config key is set _at_ this location (not parents) */
+    boolean hasConfig(ConfigKey<?> key);
+
+    /** Returns all config set _at_ this location (not inherited) */
+    Map<String,Object> getAllConfig();
 
     /**
      * Returns {@code true} iff this location contains a property with the specified {@code key}. The
      * property's value can be obtained by calling {@link #getLocationProperty}. This method only interrogates the
      * immediate properties; the parent hierarchy is NOT searched in the event that the property is not found locally.
+     * @deprecated since 0.5.0, use hasConfig
      */
+    @Deprecated
     boolean hasLocationProperty(String key);
     
     /**
@@ -75,17 +81,24 @@ public interface Location extends Serializable, Rebindable<LocationMemento> {
      * 
      * NOTE: must not name this method 'getProperty' as this will clash with the 'magic' Groovy's method of the same
      *       name, at which point everything stops working!
+     * @deprecated since 0.5.0, use `if (hasConfig) { getConfig }` if you really need to preserve 
+     * "don't look at parents" behaviour
      */
+    @Deprecated
     Object getLocationProperty(String key);
     
-    /**
-     * Returns the loction properties of this immediate location (i.e. not including those from the parent hierarchy).
-     */
-    Map<String,?> getLocationProperties();
+//    /**
+//     * Returns the location properties of this immediate location (i.e. not including those from the parent hierarchy).
+//     * @deprecated since 0.5.0, use getAllConfig
+//     */
+//    @Deprecated
+//    Map<String,?> getLocationProperties();
     
     /**
      * Like {@link #getLocationProperty}, but if the property is not defined on this location, searches recursively up
      * the parent hierarchy until it is found, or the root is reached (when this method will return {@code null}).
+     * @deprecated since 0.5.0, use getConfig
      */
+    @Deprecated
     Object findLocationProperty(String key);
 }

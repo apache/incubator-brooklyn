@@ -9,6 +9,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
+
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
@@ -33,33 +35,36 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
         LocationMemento memento = MementosGenerators.newLocationMementoBuilder(location).customFields(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location {}({}): displayName={}; parent={}; children={}; "+
-    	        "locationProperties={}; flags={}; locationReferenceFlags={}; customProperties={}; ",
+    	        "locationConfig={}; locationConfigDescription={}; customProperties={}; ",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
-                memento.getChildren(), sanitize(memento.getLocationProperties()), sanitize(memento.getFlags()), 
-                memento.getLocationReferenceFlags(), sanitize(memento.getCustomFields())});
+                memento.getChildren(), sanitize(memento.getLocationConfig()), memento.getLocationConfigDescription(), 
+                sanitize(memento.getCustomFields())});
     	return memento;
     }
 
     @Override
     public void reconstruct(RebindContext rebindContext, LocationMemento memento) {
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location {}({}): displayName={}; parent={}; children={}; " +
-    			"locationProperties={}; flags={}; locationReferenceFlags={}; customProperties={}",
+    			"locationConfig={}; locationConfigDescription={}; customProperties={}",
     			new Object[] {memento.getType(), memento.getId(), memento.getDisplayName(), memento.getParent(), 
-    			memento.getChildren(), sanitize(memento.getLocationProperties()), 
-    			sanitize(memento.getFlags()), memento.getLocationReferenceFlags(), 
+    			memento.getChildren(), sanitize(memento.getLocationConfig()), memento.getLocationConfigDescription(), 
     			sanitize(memento.getCustomFields())});
 
     	// Note that the flags have been set in the constructor
         location.setName(memento.getDisplayName());
-        location.addLeftoverProperties(memento.getLocationProperties());
+        location.getConfigBag().putAll(memento.getLocationConfig()).markAll(
+                Sets.difference(memento.getLocationConfig().keySet(), memento.getLocationConfigUnused())).
+                setDescription(memento.getLocationConfigDescription());
         
-        // Do late-binding of flags that are references to other locations
-        for (String flagName : memento.getLocationReferenceFlags()) {
+        // Do late-binding of config that are references to other locations
+        for (String flagName : memento.getLocationConfigReferenceKeys()) {
             Field field = FlagUtils.findFieldForFlag(flagName, location);
             Class<?> fieldType = field.getType();
-            Object transformedValue = memento.getFlags().get(flagName);
+            Object transformedValue = memento.getLocationConfig().get(flagName);
             Object restoredValue = MementoTransformer.transformIdsToLocations(rebindContext, transformedValue, fieldType, true);
-            FlagUtils.setFieldFromFlag(flagName, restoredValue, location);
+            
+            location.getConfigBag().putStringKey(flagName, restoredValue);
+            FlagUtils.setFieldFromFlag(location, flagName, restoredValue);
         }
 
         setParent(rebindContext, memento);

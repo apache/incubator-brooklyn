@@ -73,6 +73,8 @@ public class PolicyConfigMapUsageTest {
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "aval");
         assertEquals(policy.getConfig(MyPolicy.INT_KEY), (Integer)2);
+        // this is set, because key name matches annotation on STR_KEY
+        assertEquals(policy.getConfig(MyPolicy.STR_KEY_WITH_DEFAULT), "aval");
     }
     
     @Test
@@ -97,6 +99,8 @@ public class PolicyConfigMapUsageTest {
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "aval");
         assertEquals(policy.getConfig(MyPolicy.INT_KEY), (Integer)2);
+        // this is not set (contrast with above)
+        assertEquals(policy.getConfig(MyPolicy.STR_KEY_WITH_DEFAULT), MyPolicy.STR_KEY_WITH_DEFAULT.getDefaultValue());
     }
     
     @Test

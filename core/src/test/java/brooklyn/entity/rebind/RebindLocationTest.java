@@ -117,31 +117,64 @@ public class RebindLocationTest {
         MyApplication newApp = (MyApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
+        // should get _modified_ value, not the one in the config map
         assertEquals(newLoc.myAtomicLong.get(), 124L);
     }
     
     @Test
-    public void testIgnoresTransientFields() throws Exception {
-    	MyLocation origLoc = new MyLocation(MutableMap.of("myTransientField", "myval"));
+    public void testIgnoresTransientFieldsNotSetFromFlag() throws Exception {
+        MyLocation origLoc = new MyLocation(MutableMap.of());
+        origLoc.myTransientFieldNotSetFromFlag = "myval";
+        origApp.start(ImmutableList.of(origLoc));
+
+        MyApplication newApp = (MyApplication) rebind();
+        MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
+
+        // transient fields normally not persisted
+        assertEquals(newLoc.myTransientFieldNotSetFromFlag, null);
+    }
+    
+    @Test
+    public void testTransientFieldsSetFromFlag() throws Exception {
+        MyLocation origLoc = new MyLocation(MutableMap.of("myTransientFieldSetFromFlag", "myval"));
         origApp.start(ImmutableList.of(origLoc));
 
         MyApplication newApp = (MyApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
-        assertEquals(newLoc.myTransientField, null);
+        // if transient field is set from a flag, however, it is persisted -- for now anyway
+        assertEquals(newLoc.myTransientFieldSetFromFlag, "myval");
     }
     
     @Test
-    public void testIgnoresStaticFields() throws Exception {
-    	MyLocation origLoc = new MyLocation(MutableMap.of("myStaticField", "myval"));
+    public void testIgnoresStaticFieldsNotSetFromFlag() throws Exception {
+        MyLocation origLoc = new MyLocation(MutableMap.of());
+        origLoc.myStaticFieldNotSetFromFlag = "myval";
         origApp.start(ImmutableList.of(origLoc));
 
         RebindTestUtils.waitForPersisted(origApp);
-        MyLocation.myStaticField = "mynewval"; // not auto-checkpointed
+        MyLocation.myStaticFieldNotSetFromFlag = "mynewval";
         MyApplication newApp = (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
-        assertEquals(newLoc.myStaticField, "mynewval");
+        // static fields normally not persisted (we see new value)
+        assertEquals(newLoc.myStaticFieldNotSetFromFlag, "mynewval");
+    }
+    
+    @Test
+    public void testIgnoresStaticFieldsSetFromFlag() throws Exception {
+        MyLocation origLoc = new MyLocation(MutableMap.of("myStaticFieldSetFromFlag", "myval"));
+        origApp.start(ImmutableList.of(origLoc));
+
+        RebindTestUtils.waitForPersisted(origApp);
+        MyLocation.myStaticFieldSetFromFlag = "mynewval"; // not auto-checkpointed
+        MyApplication newApp = (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
+        
+        // if static field is set from a flag, however, it is persisted -- for now anyway
+        // so we see original value restored
+        // (you'll get a warning on it, however!)
+        assertEquals(newLoc.myStaticFieldSetFromFlag, "myval");
     }
     
     @Test
@@ -180,10 +213,18 @@ public class RebindLocationTest {
         private final Object dummy = new Object(); // so not serializable
         
         @SetFromFlag
-        transient String myTransientField;
+        // possibly rebinded
+        transient String myTransientFieldSetFromFlag;
+        
+        // not rebinded
+        transient String myTransientFieldNotSetFromFlag;
         
         @SetFromFlag
-        static String myStaticField;
+        // possibly rebinded
+        static String myStaticFieldSetFromFlag;
+        
+        // not rebinded
+        static String myStaticFieldNotSetFromFlag;
         
         public MyLocation() {
         }

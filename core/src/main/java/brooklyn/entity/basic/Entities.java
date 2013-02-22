@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -237,8 +238,14 @@ public class Entities {
     public static void dumpInfo(Location loc, Writer out, String currentIndentation, String tab) throws IOException {
         out.append(currentIndentation+loc.toString()+"\n");
         
-        for (Map.Entry<String,?> entry : sortMap(loc.getLocationProperties()).entrySet()) {
-            String key = entry.getKey();
+        for (Object entryO : loc.getAllConfig().entrySet()) {
+            Map.Entry entry = (Map.Entry)entryO;
+            Object keyO = entry.getKey();
+            String key = 
+                    keyO instanceof HasConfigKey ? ((HasConfigKey)keyO).getConfigKey().getName() :
+                    keyO instanceof ConfigKey ? ((ConfigKey)keyO).getName() :
+                    keyO == null ? null :
+                    keyO.toString();
             Object val = entry.getValue();
             if (!isTrivial(val)) {
                 out.append(currentIndentation+tab+tab+key);

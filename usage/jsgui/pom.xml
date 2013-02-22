@@ -45,6 +45,12 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-locations-jclouds</artifactId>
+            <version>${brooklyn.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-webapp</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

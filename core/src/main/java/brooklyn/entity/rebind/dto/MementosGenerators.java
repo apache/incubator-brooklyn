@@ -14,6 +14,7 @@ import brooklyn.entity.rebind.MementoTransformer;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
@@ -150,16 +151,16 @@ public class MementosGenerators {
         builder.type = location.getClass().getName();
         builder.id = location.getId();
         builder.displayName = location.getName();
-        builder.locationProperties.putAll(location.getLocationProperties());
+        builder.copyConfig( ((AbstractLocation)location).getConfigBag() );
+        builder.locationConfig.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT));
 
-        builder.flags.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT));
-        for (Map.Entry<String, Object> entry : builder.flags.entrySet()) {
+        for (Map.Entry<String, Object> entry : builder.locationConfig.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             Object transformedValue = MementoTransformer.transformLocationsToIds(value);
             if (transformedValue != value) {
                 entry.setValue(transformedValue);
-                builder.locationReferenceFlags.add(key);
+                builder.locationConfigReferenceKeys.add(key);
             }
         }
         

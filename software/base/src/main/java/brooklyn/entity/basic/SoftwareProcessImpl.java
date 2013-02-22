@@ -23,9 +23,9 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
+import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation.JcloudsSshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
 import brooklyn.util.Time;
@@ -295,7 +295,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 		if (log.isDebugEnabled())
 		    log.debug("While starting {}, obtained new location instance {}", this, 
 		            (machine instanceof SshMachineLocation ? 
-		                    machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getConfig()) 
+		                    machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getAllConfig()) 
 		                    : machine));
         if (!(location instanceof LocalhostMachineProvisioningLocation))
             log.info("While starting {}, obtained a new location instance {}, now preparing process there", this, machine);
@@ -321,8 +321,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public String getLocalHostname() {
         Location where = Iterables.getFirst(getLocations(), null);
 	    String hostname = null;
-        if (where instanceof JcloudsSshMachineLocation) {
-            hostname = ((JcloudsSshMachineLocation) where).getSubnetHostname();
+        if (where instanceof HasSubnetHostname) {
+            hostname = ((HasSubnetHostname) where).getSubnetHostname();
         }
         if (hostname == null && where instanceof MachineLocation) {
             InetAddress addr = ((MachineLocation) where).getAddress();
@@ -345,8 +345,10 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         ConfigToAttributes.apply(this);
         
-		setAttribute(HOSTNAME, machine.getAddress().getCanonicalHostName());
-		setAttribute(ADDRESS, machine.getAddress().getHostAddress());
+        if (getAttribute(HOSTNAME)==null)
+            setAttribute(HOSTNAME, machine.getAddress().getHostName());
+        if (getAttribute(ADDRESS)==null)
+            setAttribute(ADDRESS, machine.getAddress().getHostAddress());
 
         // Opportunity to block startup until other dependent components are available
         Object val = getConfig(START_LATCH);
@@ -427,6 +429,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 		if (machine != null) {
 			stopInLocation(machine);
 		}
+		setAttribute(HOSTNAME, null);
+		setAttribute(ADDRESS, null);
         setAttribute(SERVICE_UP, false);
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+this);

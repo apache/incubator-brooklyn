@@ -519,9 +519,9 @@ public class Strings {
     }
 
     /** returns toString of the object if it is not null, otherwise null */
-    public static String toString(Object context) {
-        if (context==null) return null;
-        return context.toString();
+    public static String toString(Object o) {
+        if (o==null) return null;
+        return o.toString();
     }
 
     public static boolean containsLiteralIgnoreCase(CharSequence input, CharSequence fragment) {

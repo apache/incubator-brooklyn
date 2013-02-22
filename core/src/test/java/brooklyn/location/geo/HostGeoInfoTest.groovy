@@ -1,27 +1,12 @@
 package brooklyn.location.geo;
 
 import static org.testng.AssertJUnit.*
-import groovy.lang.MetaClass
 
-import java.util.Map
-import java.util.Set
-
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.testng.annotations.AfterMethod
-import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.Application
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.trait.Startable
-import brooklyn.location.CoordinatesProvider
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.test.entity.TestEntity
-import brooklyn.util.internal.TimeExtras
 
 public class HostGeoInfoTest {
     private static final String IP = "192.168.0.1";

@@ -28,21 +28,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
-            <artifactId>jclouds-slf4j</artifactId>
-            <version>${jclouds.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jclouds.driver</groupId>
-            <artifactId>jclouds-bouncycastle</artifactId>
-            <version>${jclouds.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jclouds.driver</groupId>
-            <artifactId>jclouds-sshj</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
         </dependency>
@@ -60,12 +45,17 @@
             <artifactId>jackson-mapper-asl</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>org.jclouds</groupId>
-            <artifactId>jclouds-allcompute</artifactId>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>

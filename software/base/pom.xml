@@ -48,6 +48,13 @@
             <artifactId>brooklyn-test-support</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- bring in jclouds for testing -->
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-locations-jclouds</artifactId>
+            <version>${brooklyn.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>

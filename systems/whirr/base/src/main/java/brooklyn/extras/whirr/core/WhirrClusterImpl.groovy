@@ -16,7 +16,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.location.jclouds.JcloudsLocation
 
 /**
  * Generic entity that can be used to deploy clusters that are

@@ -1,5 +1,11 @@
 package brooklyn.util.exceptions;
 
+import static com.google.common.base.Predicates.instanceOf;
+import static com.google.common.base.Throwables.getCausalChain;
+import static com.google.common.collect.Iterables.find;
+
+import java.util.NoSuchElementException;
+
 import com.google.common.base.Throwables;
 
 public class Exceptions {
@@ -20,6 +26,16 @@ public class Exceptions {
             throw new RuntimeInterruptedException((InterruptedException)throwable);
         if (throwable instanceof Error)
             throw (Error) throwable;
+    }
+
+    // based on jclouds Throwables2 (with guice removed)
+    @SuppressWarnings("unchecked")
+    public static <T extends Throwable> T getFirstThrowableOfType(Throwable from, Class<T> clazz) {
+       try {
+          return (T) find(getCausalChain(from), instanceOf(clazz));
+       } catch (NoSuchElementException e) {
+          return null;
+       }
     }
 
 }

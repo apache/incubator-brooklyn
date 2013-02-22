@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-import org.jclouds.util.Throwables2;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 
 import com.beust.jcommander.internal.Lists;
@@ -518,7 +518,7 @@ public abstract class SshToolIntegrationTest {
             localtool2.connect();
             fail();
         } catch (Exception e) {
-            SshException se = Throwables2.getFirstThrowableOfType(e, SshException.class);
+            SshException se = Exceptions.getFirstThrowableOfType(e, SshException.class);
             if (se == null) throw e;
         }
     }

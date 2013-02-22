@@ -64,7 +64,7 @@ public class SshMachineLocationTest {
 
     @Test(groups = "Integration", expectedExceptions=[IllegalStateException, SshException])
     public void testSshRunWithInvalidUserFails() throws Exception {
-        SshMachineLocation badHost = new SshMachineLocation(username:"doesnotexist", address: InetAddress.getLocalHost());
+        SshMachineLocation badHost = new SshMachineLocation(user:"doesnotexist", address: InetAddress.getLocalHost());
         badHost.run("whoami; exit");
     }
     

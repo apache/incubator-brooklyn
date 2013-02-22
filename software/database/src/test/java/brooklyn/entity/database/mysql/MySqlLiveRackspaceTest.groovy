@@ -1,11 +1,15 @@
 package brooklyn.entity.database.mysql
 
+import static java.util.Arrays.asList
+
+import org.testng.annotations.Test
+
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.proxying.BasicEntitySpec
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.basic.jclouds.JcloudsLocation
+import brooklyn.location.jclouds.JcloudsLocation
 import org.testng.annotations.Test
 
 import static java.util.Arrays.asList

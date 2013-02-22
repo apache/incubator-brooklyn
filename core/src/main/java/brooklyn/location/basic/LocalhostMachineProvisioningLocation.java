@@ -74,9 +74,6 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         this(MutableMap.of("name", name, "count", count));
     }
     
-    protected void configure() {
-        configure(Maps.newLinkedHashMap());
-    }    
     protected void configure(Map flags) {
         super.configure(flags);
         
@@ -112,9 +109,10 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         for (int i=0; i<size; i++) {
             Map flags = MutableMap.of(
                     "parentLocation", this, 
-                    "address", elvis(address, lookupLocalHost()),
-                    "localTempDir", localTempDir);
-            for (String k: SshMachineLocation.SSH_PROPS) {
+                    "address", elvis(address, lookupLocalHost()));
+            // TODO is this necessary? since they are inherited anyway? 
+            // (probably, since inheritance is only respected for a small subset) 
+            for (String k: SshMachineLocation.ALL_SSH_CONFIG_KEY_NAMES) {
                 Object v = findLocationProperty(k);
                 if (v!=null) flags.put(k, v);
             }

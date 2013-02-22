@@ -5,7 +5,6 @@ import static org.testng.Assert.*
 
 import java.util.Map
 
-import org.jclouds.util.Throwables2
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -21,6 +20,7 @@ import brooklyn.entity.trait.Resizable
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestApplicationImpl
+import brooklyn.util.exceptions.Exceptions;
 
 class BalanceableWorkerPoolTest {
 
@@ -62,7 +62,7 @@ class BalanceableWorkerPoolTest {
             pool.resize(1)
             fail();
         } catch (Exception e) {
-            if (Throwables2.getFirstThrowableOfType(e, UnsupportedOperationException.class) == null) throw e;
+            if (Exceptions.getFirstThrowableOfType(e, UnsupportedOperationException.class) == null) throw e;
         }
     }
     

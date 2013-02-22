@@ -41,6 +41,7 @@ import brooklyn.policy.Enricher
 import brooklyn.policy.Policy
 import brooklyn.policy.basic.AbstractPolicy
 import brooklyn.util.BrooklynLanguageExtensions
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.task.DeferredSupplier;
@@ -271,6 +272,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     public AbstractEntity configure(Map flags=[:]) {
         assertNotYetOwned()
+        // TODO use a config bag instead
+//        ConfigBag bag = new ConfigBag().putAll(flags);
         
         // FIXME Need to set parent with proxy, rather than `this`
         Entity suppliedParent = flags.remove('parent') ?: null
@@ -288,8 +291,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         displayName = flags.remove('displayName') ?: displayName;
 
         // allow config keys, and fields, to be set from these flags if they have a SetFromFlag annotation
-        flags = FlagUtils.setConfigKeysFromFlags(flags, this);
+        // TODO use the setDefaultVals variant
         flags = FlagUtils.setFieldsFromFlags(flags, this);
+        flags = FlagUtils.setAllConfigKeys(flags, this);
         
         if (displayName==null)
             displayName = flags.name ? flags.remove('name') : getClass().getSimpleName()+":"+id.substring(0, 4)

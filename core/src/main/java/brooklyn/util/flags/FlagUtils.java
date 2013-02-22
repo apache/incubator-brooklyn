@@ -7,6 +7,7 @@ import groovy.lang.Closure;
 import groovy.lang.GroovyObject;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -21,6 +22,8 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -39,20 +42,36 @@ public class FlagUtils {
     
     private FlagUtils() {}
     
-    /** 
-     * sets all public fields (local and inherited) on the given object from the given flags map, returning unknown elements
-     */
-    public static Map<String, ? extends Object> setPublicFieldsFromFlags(Map<String, ? extends Object> flags, Object o) {
-        return setFieldsFromFlagsInternal(flags, o, Arrays.asList(o.getClass().getFields()));
+    /** see {@link #setFieldsFromFlags(Object o, ConfigBag)} */
+    public static Map<?, ? extends Object> setPublicFieldsFromFlags(Map<?, ? extends Object> flags, Object o) {
+        return setFieldsFromFlagsInternal(o, Arrays.asList(o.getClass().getFields()), flags, null, true);
     }
-    
-    /** sets all fields (including private and static) on the given object and all supertypes, 
-     * from the given flags map, returning just those flag-value pairs passed in which do not correspond to SetFromFlags fields 
-     */
-    public static Map<String, ? extends Object> setFieldsFromFlags(Map<String, ? extends Object> flags, Object o) {
-        return setFieldsFromFlagsInternal(flags, o, getAllFields(o.getClass()));
+
+    /** see {@link #setFieldsFromFlags(Object o, ConfigBag)} */
+    public static Map<?, ? extends Object> setFieldsFromFlags(Map<?, ? extends Object> flags, Object o) {
+        return setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), flags, null, true);
     }
 	
+    /** sets all fields (including private and static, local and inherited) annotated {@link SetFromFlag} on the given object, 
+     * from the given flags map, returning just those flag-value pairs passed in which do not correspond to SetFromFlags fields 
+     * annotated ConfigKey and HasConfigKey fields are _configured_ (and we assume the object in that case is {@link Configurable});
+     * keys should be ConfigKey, HasConfigKey, or String;
+     * default values are also applied unless that is specified false on one of the variants of this method which takes such an argument
+     */
+    public static void setFieldsFromFlags(Object o, ConfigBag configBag) {
+        setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), configBag.getAllConfig(), configBag, true);
+    }
+
+    /** as {@link #setFieldsFromFlags(Object o, ConfigBag)} */
+    public static void setFieldsFromFlags(Object o, ConfigBag configBag, boolean setDefaultVals) {
+        setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), configBag.getAllConfig(), configBag, setDefaultVals);
+    }
+
+    /** as {@link #setFieldsFromFlags(Object o, ConfigBag)}, but specifying a subset of flags to use */
+    public static void setFieldsFromFlagsWithBag(Object o, Map<?,?> flags, ConfigBag configBag, boolean setDefaultVals) {
+        setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), flags, configBag, setDefaultVals);
+    }
+
     /**
      * Sets the field with the given flag (if it exists) to the given value.
      * Will attempt to coerce the value to the required type.
@@ -60,8 +79,8 @@ public class FlagUtils {
      * 
      * @throws IllegalArgumentException If fieldVal is null and the SetFromFlag annotation set nullable=false
      */
-    public static void setFieldFromFlag(String flagName, Object fieldVal, Object o) {
-        setFieldFromFlagInternal(checkNotNull(flagName, "flagName"), fieldVal, o, getAllFields(o.getClass()));
+    public static boolean setFieldFromFlag(Object o, String flagName, Object fieldVal) {
+        return setFieldFromFlagInternal(checkNotNull(flagName, "flagName"), fieldVal, o, getAllFields(o.getClass()));
     }
     
     /** get all fields (including private and static) on the given object and all supertypes, 
@@ -78,8 +97,8 @@ public class FlagUtils {
     	return findFieldForFlagInternal(flagName, o, getAllFields(o.getClass()));
     }
 
-    /** get all fields (including private and static) on the given object and all supertypes, 
-     * that are annotated with SetFromFlags. 
+    /** get all fields (including private and static) and their values on the given object and all supertypes, 
+     * where the field is annotated with SetFromFlags. 
      */
     public static Map<String, Object> getFieldsWithFlagsExcludingModifiers(Object o, int excludingModifiers) {
         List<Field> filteredFields = Lists.newArrayList();
@@ -91,8 +110,26 @@ public class FlagUtils {
 		return getFieldsWithFlagsInternal(o, filteredFields);
     }
     
+    /** @deprecated since 0.5.0 use setAllConfigKeys */
     public static Map<String, ? extends Object> setConfigKeysFromFlags(Map<String, ? extends Object> flags, Configurable instance) {
-        return setConfigKeysFromFlagsInternal(flags, instance, getAllFields(instance.getClass()));
+        return setAllConfigKeys(flags, instance);
+    }
+    /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
+     * using the indicated flags/config-bag */
+    public static Map<String, ? extends Object> setAllConfigKeys(Map<String, ? extends Object> flagsOrConfig, Configurable instance) {
+        ConfigBag bag = new ConfigBag().putAll(flagsOrConfig);
+        setAllConfigKeys(instance, bag);
+        return bag.getUnusedConfigRaw();
+    }
+    /** sets _all_ accessible _{@link ConfigKey}_ and {@link HasConfigKey} fields on the given object, 
+     * using the indicated flags/config-bag */
+    public static void setAllConfigKeys(Configurable o, ConfigBag bag) {
+        for (Field f: getAllFields(o.getClass())) {
+            ConfigKey<?> key = getFieldAsConfigKey(o, f);
+            if (key!=null && bag.containsKey(key)) {
+                setField(o, f, bag.get(key), null);
+            }
+        }
     }
 
 	/** returns all fields on the given class, superclasses, and interfaces thereof, in that order of preference,
@@ -176,82 +213,116 @@ public class FlagUtils {
         throw new NoSuchElementException("Field with flag "+flagName+" not found on "+o+" of type "+(o != null ? o.getClass() : null));
     }
 
-    private static void setFieldFromFlagInternal(String flagName, Object fieldVal, Object o, Collection<Field> fields) {
+    private static boolean setFieldFromFlagInternal(String flagName, Object fieldVal, Object o, Collection<Field> fields) {
         for (Field f: fields) {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
             if (cf != null && flagName.equals(elvis(cf.value(), f.getName()))) {
                 setField(o, f, fieldVal, cf);
-                break;
+                return true;
             }
+        }
+        return false;
+    }
+
+    private static Map<String, ? extends Object> setFieldsFromFlagsInternal(Object o, Collection<Field> fields, Map<?,? extends Object> flagsOrConfig, ConfigBag bag, boolean setDefaultVals) {
+        if (bag==null) bag = new ConfigBag().putAll(flagsOrConfig);
+        for (Field f: fields) {
+            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
+            if (cf!=null) setFieldFromConfig(o, f, bag, cf, setDefaultVals);
+        }
+        return bag.getUnusedConfigRaw();
+    }
+
+    private static void setFieldFromConfig(Object o, Field f, ConfigBag bag, SetFromFlag optionalAnnotation, boolean setDefaultVals) {
+        String flagName = optionalAnnotation==null ? null : (String)elvis(optionalAnnotation.value(), f.getName());
+        // prefer flag name, if present
+        if (truth(flagName) && bag.containsKey(flagName)) {
+            setField(o, f, bag.getStringKey(flagName), optionalAnnotation);
+            return;
+        }
+        // first check whether it is a key
+        ConfigKey<?> key = getFieldAsConfigKey(o, f);
+        if (key!=null && bag.containsKey(key)) {
+            setField(o, f, bag.get(key), optionalAnnotation);
+            return;
+        }
+        if (setDefaultVals && optionalAnnotation!=null && truth(optionalAnnotation.defaultVal())) {
+            Object oldValue;
+            try {
+                f.setAccessible(true);
+                oldValue = f.get(o);
+                if (oldValue==null || oldValue.equals(getDefaultValueForType(f.getType())))
+                    setField(o, f, optionalAnnotation.defaultVal(), optionalAnnotation);
+            } catch (Exception e) {
+                Exceptions.propagate(e);
+            }
+            return;
         }
     }
 
-    private static Map<String, ? extends Object> setFieldsFromFlagsInternal(Map<String,? extends Object> flags, Object o, Collection<Field> fields) {
-        Map<String, Object> remaining = Maps.newLinkedHashMap();
-		if (truth(flags)) remaining.putAll(flags);
-        for (Field f: fields) {
-            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
-            if (cf != null) {
-                String flagName = elvis(cf.value(), f.getName());
-                if (truth(flagName) && remaining.containsKey(flagName)) {
-                    setField(o, f, remaining.remove(flagName), cf);
-                } else if (truth(cf.defaultVal())) {
-                    setField(o, f, cf.defaultVal(), cf);
-                }
-            }
+    /** returns the given field as a config key, if it is an accessible config key, otherwise null */
+    private static ConfigKey<?> getFieldAsConfigKey(Object instance, Field f) {
+        if (instance==null) {
+            if ((f.getModifiers() & Modifier.STATIC)==0)
+                // non-static field on null instance, can't be set
+                return null;
         }
-        return remaining;
-    }
-
-    private static Map<String, ? extends Object> setConfigKeysFromFlagsInternal(Map<String,? extends Object> flags, Configurable instance, Collection<Field> fields) {
-        Map<String, Object> remaining = Maps.newLinkedHashMap();
-        if (truth(flags)) remaining.putAll(flags);
-        for (Field f: fields) {
-            SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
-            if (cf != null) {
-                ConfigKey key = null;
-                if (ConfigKey.class.isAssignableFrom(f.getType())) {
-                    key = (ConfigKey) getField(instance, f);
-                } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
-                    key = ((HasConfigKey)getField(instance, f)).getConfigKey();
-                } else {
-                    
-                }
-                if (key != null) {
-                    String flagName = elvis(cf.value(), key.getName());
-                    if (truth(flagName) && remaining.containsKey(flagName)) {
-                        Object v = remaining.remove(flagName);
-                        instance.setConfig(key, v);
-                    }
-                }
-            }
+        if (ConfigKey.class.isAssignableFrom(f.getType())) {
+            return (ConfigKey<?>) getField(instance, f);
+        } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
+            return ((HasConfigKey<?>)getField(instance, f)).getConfigKey();
         }
-        return remaining;
+        return null;
     }
 
     /** sets the field to the value, after checking whether the given value can be set 
      * respecting the constraints of the annotation 
      */
-    public static void setField(Object objectOfField, Field f, Object value, SetFromFlag annotation) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static void setField(Object objectOfField, Field f, Object value, SetFromFlag optionalAnnotation) {
         try {
+            ConfigKey<?> key = null;
+            if (ConfigKey.class.isAssignableFrom(f.getType())) {
+                key = (ConfigKey<?>) f.get(objectOfField);
+            } else if (HasConfigKey.class.isAssignableFrom(f.getType())) {
+                key = ((HasConfigKey<?>) f.get(objectOfField)).getConfigKey();
+            }
+            if (key!=null) {
+                if (objectOfField instanceof Configurable) {
+                    ((Configurable)objectOfField).setConfig((ConfigKey)key, value);
+                    return;
+                } else {
+                    if (optionalAnnotation==null) {
+                        log.warn("Cannot set key "+key.getName()+" on "+objectOfField+": containing class is not Configurable");
+                    } else if (!key.getName().equals(optionalAnnotation.value())) {
+                        log.warn("Cannot set key "+key.getName()+" on "+objectOfField+" from flag "+optionalAnnotation.value()+": containing class is not Configurable");
+                    } else {
+                        // if key and flag are the same, then it will probably happen automatically
+                        if (log.isDebugEnabled())
+                            log.debug("Cannot set key "+key.getName()+" on "+objectOfField+" from flag "+optionalAnnotation.value()+": containing class is not Configurable");
+                    }
+                    return;
+                }
+            }
+            
             if (!f.isAccessible()) f.setAccessible(true);
-            if (annotation.immutable()) {
+            if (optionalAnnotation!=null && optionalAnnotation.immutable()) {
                 Object oldValue = f.get(objectOfField);
                 if (!Objects.equal(oldValue, getDefaultValueForType(f.getType())) && oldValue != value) {
                     throw new IllegalStateException("Forbidden modification to immutable field "+
                         f+" in "+objectOfField+": attempting to change to "+value+" when was already "+oldValue);
                 }
             }
-            if (!annotation.nullable() && value==null) {
+            if (optionalAnnotation!=null && !optionalAnnotation.nullable() && value==null) {
                 throw new IllegalArgumentException("Forbidden null assignment to non-nullable field "+
                         f+" in "+objectOfField);
             }
+            if (optionalAnnotation!=null && (f.getModifiers() & Modifier.STATIC)==Modifier.STATIC)
+                log.warn("Setting static field "+f+" in "+objectOfField+" from flag "+optionalAnnotation.value()+": discouraged");
+
             Object newValue;
             try {
-                // TODO Should this code be pushed into TypeCoercions.coerce itself?
-                Class<?> fieldType = f.getType();
-                newValue = TypeCoercions.coerce(value, fieldType);
-                
+                newValue = TypeCoercions.coerce(value, f.getType());
             } catch (Exception e) {
                 throw new IllegalArgumentException("Cannot set "+f+" in "+objectOfField+" from type "+value.getClass()+" ("+value+"): "+e, e);
             }
@@ -346,4 +417,36 @@ public class FlagUtils {
             throw Throwables.propagate(e);
         }
     }
+
+//    /** sets all fields in target annotated with @SetFromFlag using the configuration in the given config bag */
+//    public static void setFieldsFromConfigFlags(Object target, ConfigBag configBag) {
+//        setFieldsFromConfigFlags(target, configBag.getAllConfig(), configBag);
+//    }
+//
+//    
+//    /** sets all fields in target annotated with @SetFromFlag using the configuration in the given configToUse,
+//     * marking used in the given configBag */
+//    public static void setFieldsFromConfigFlags(Object target, Map<?,?> configToUse, ConfigBag configBag) {
+//        for (Map.Entry<?,?> entry: configToUse.entrySet()) {
+//            setFieldFromConfigFlag(target, entry.getKey(), entry.getValue(), configBag);
+//        }
+//    }
+//
+//    public static void setFieldFromConfigFlag(Object target, Object key, Object value, ConfigBag optionalConfigBag) {
+//        String name = null;
+//        if (key instanceof String) name = (String)key;
+//        else if (key instanceof ConfigKey<?>) name = ((ConfigKey<?>)key).getName();
+//        else if (key instanceof HasConfigKey<?>) name = ((HasConfigKey<?>)key).getConfigKey().getName();
+//        else {
+//            if (key!=null) {
+//                log.warn("Invalid config type "+key.getClass().getCanonicalName()+" ("+key+") when configuring "+target+"; ignoring");
+//            }
+//            return;
+//        }
+//        if (setFieldFromFlag(name, value, target)) {
+//            if (optionalConfigBag!=null)
+//                optionalConfigBag.markUsed(name);
+//        }
+//    }
+    
 }

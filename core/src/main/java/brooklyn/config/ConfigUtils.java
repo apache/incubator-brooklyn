@@ -1,14 +1,24 @@
 package brooklyn.config;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 
 @SuppressWarnings({"unchecked"})
 public class ConfigUtils {
@@ -68,4 +78,23 @@ public class ConfigUtils {
         }
         return result;
     }
+
+    @SuppressWarnings("rawtypes")
+    public static Set<HasConfigKey<?>> getStaticKeysOnClass(Class<?> type) {
+        Set<HasConfigKey<?>> result = new LinkedHashSet<ConfigKey.HasConfigKey<?>>();
+        try {
+            for (Field f: type.getFields()) {
+                if ((f.getModifiers() & Modifier.STATIC)==0)
+                    continue;
+                if (ConfigKey.class.isAssignableFrom(f.getType()))
+                    result.add(new WrappedConfigKey((ConfigKey<?>) f.get(null)));
+                else if (HasConfigKey.class.isAssignableFrom(f.getType()))
+                    result.add((HasConfigKey<?>) f.get(null));
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+        return Collections.unmodifiableSet(result);
+    }
+
 }

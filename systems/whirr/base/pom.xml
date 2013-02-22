@@ -21,6 +21,11 @@
             <artifactId>brooklyn-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-locations-jclouds</artifactId>
+            <version>${brooklyn.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.whirr</groupId>
             <artifactId>whirr-core</artifactId>
             <version>${whirr.version}</version>
