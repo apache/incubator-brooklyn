@@ -346,7 +346,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         ConfigToAttributes.apply(this);
         
         if (getAttribute(HOSTNAME)==null)
-            setAttribute(HOSTNAME, machine.getAddress().getCanonicalHostName());
+            setAttribute(HOSTNAME, machine.getAddress().getHostName());
         if (getAttribute(ADDRESS)==null)
             setAttribute(ADDRESS, machine.getAddress().getHostAddress());
 
