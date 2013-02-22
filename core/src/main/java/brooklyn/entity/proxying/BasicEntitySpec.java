@@ -6,6 +6,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import brooklyn.util.exceptions.Exceptions;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> implements EntitySpec<T> {
 
@@ -46,6 +48,7 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final List<Policy> policies = Lists.newArrayList();
+    private final Set<Class<?>> additionalInterfaces = Sets.newLinkedHashSet();
     
     public BasicEntitySpec(Class<T> type) {
         this.type = type;
@@ -65,6 +68,18 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
         checkIsImplementation(checkNotNull(val, "impl"));
         checkIsNewStyleImplementation(val);
         impl = val;
+        return self();
+    }
+
+    public S additionalInterfaces(Class<?>... vals) {
+        for (Class<?> val : vals) {
+            additionalInterfaces.add(val);
+        }
+        return self();
+    }
+
+    public S additionalInterfaces(Iterable<Class<?>> val) {
+        additionalInterfaces.addAll(Sets.newLinkedHashSet(val));
         return self();
     }
 
@@ -134,6 +149,10 @@ public class BasicEntitySpec<T extends Entity, S extends BasicEntitySpec<T,S>> i
         return impl;
     }
     
+    public Set<Class<?>> getAdditionalInterfaces() {
+        return additionalInterfaces;
+    }
+
     @Override
     public Entity getParent() {
         return parent;

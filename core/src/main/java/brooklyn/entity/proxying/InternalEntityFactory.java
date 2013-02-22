@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -15,6 +16,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.MutableMap;
+import brooklyn.util.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 
@@ -91,12 +93,19 @@ public class InternalEntityFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Entity> T createEntityProxy(Class<T> type, T entity) {
+    public <T extends Entity> T createEntityProxy(EntitySpec<T> spec, T entity) {
         // TODO Don't want the proxy to have to implement EntityLocal, but required by how 
         // AbstractEntity.parent is used (e.g. parent.getAllConfig)
+        ClassLoader classloader = (spec.getImplementation() != null ? spec.getImplementation() : spec.getType()).getClassLoader();
+        Set<Class<?>> interfaces = MutableSet.<Class<?>>builder()
+                .addAll(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class)
+                .add(spec.getType())
+                .addAll(spec.getAdditionalInterfaces())
+                .build();
+        
         return (T) java.lang.reflect.Proxy.newProxyInstance(
-                type.getClassLoader(),
-                new Class[] { type, EntityProxy.class, EntityLocal.class, EntityInternal.class },
+                classloader,
+                interfaces.toArray(new Class[interfaces.size()]),
                 new EntityProxyImpl(entity));
     }
 
@@ -122,7 +131,7 @@ public class InternalEntityFactory {
             
             if (isNewStyleEntity(clazz)) {
                 ((AbstractEntity)entity).setManagementContext(managementContext);
-                ((AbstractEntity)entity).setProxy(createEntityProxy(spec.getType(), entity));
+                ((AbstractEntity)entity).setProxy(createEntityProxy(spec, entity));
                 ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
             }
             

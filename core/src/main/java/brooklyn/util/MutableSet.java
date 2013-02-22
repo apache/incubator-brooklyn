@@ -8,6 +8,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 
 public class MutableSet<V> extends LinkedHashSet<V> {
+    private static final long serialVersionUID = 2330133488446834595L;
 
     public static <V> MutableSet<V> of() {
         return new MutableSet<V>();
@@ -67,6 +68,11 @@ public class MutableSet<V> extends LinkedHashSet<V> {
             return this;
         }
 
+        public Builder<V> remove(V val) {
+            result.remove(val);
+            return this;
+        }
+        
         public Builder<V> addAll(Iterable<? extends V> iterable) {
             if (iterable instanceof Collection) {
                 result.addAll((Collection<? extends V>) iterable);
@@ -78,6 +84,31 @@ public class MutableSet<V> extends LinkedHashSet<V> {
             return this;
         }
 
+        public Builder<V> addAll(V... values) {
+            for (V v : values) {
+                result.add(v);
+            }
+            return this;
+        }
+
+        public Builder<V> removeAll(Iterable<? extends V> iterable) {
+            if (iterable instanceof Collection) {
+                result.removeAll((Collection<? extends V>) iterable);
+            } else {
+                for (V v : iterable) {
+                    result.remove(v);
+                }
+            }
+            return this;
+        }
+        
+        public Builder<V> removeAll(V... values) {
+            for (V v : values) {
+                result.remove(v);
+            }
+            return this;
+        }
+        
         public MutableSet<V> build() {
           return new MutableSet<V>(result);
         }

@@ -246,6 +246,15 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     System.out.println(("CONFIG: "+config));
   }
   
+  @Test(dependsOnMethods = "testListConfig")
+  public void testListConfig2() {
+    Set<EntityConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/config")
+        .get(new GenericType<Set<EntityConfigSummary>>() {
+        });
+    assertTrue(config.size() > 0);
+    System.out.println(("CONFIG: "+config));
+  }
+  
   @Test(dependsOnMethods = "testDeployApplication")
   public void testListEffectors() {
     Set<EffectorSummary> effectors = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors")

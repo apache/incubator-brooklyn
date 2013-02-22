@@ -263,8 +263,11 @@ public class BrooklynRestResourceUtils {
         if (clazz.isInterface()) {
             result = BasicEntitySpec.newInstance(clazz);
         } else {
+            // If this is a concrete class, particularly for an Application class, we want the proxy
+            // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
-            result = BasicEntitySpec.newInstance(interfaceclazz).impl(clazz);
+            Class<?>[] additionalInterfaceClazzes = clazz.getInterfaces();
+            result = BasicEntitySpec.newInstance(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         
         if (!Strings.isEmpty(name)) result.displayName(name);
