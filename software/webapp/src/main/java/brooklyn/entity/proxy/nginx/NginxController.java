@@ -38,47 +38,47 @@ import com.google.common.collect.ImmutableMap;
 @ImplementedBy(NginxControllerImpl.class)
 public interface NginxController extends AbstractController {
 
-    public static final MethodEffector<Void> GET_CURRENT_CONFIGURATION = 
+    MethodEffector<Void> GET_CURRENT_CONFIGURATION = 
             new MethodEffector<Void>(NginxController.class, "getCurrentConfiguration");
     
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
+    BasicConfigKey<String> SUGGESTED_VERSION =
         new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "1.3.7");
 
     @SetFromFlag("stickyVersion")
-    public static final ConfigKey<String> STICKY_VERSION =
+    ConfigKey<String> STICKY_VERSION =
         new BasicConfigKey<String>(String.class, "nginx.sticky.version", 
                 "Version of ngnix-sticky-module to be installed, if required", "1.0");
-    
+
     @SetFromFlag("pcreVersion")
-    public static final ConfigKey<String> PCRE_VERSION =
+    ConfigKey<String> PCRE_VERSION =
         new BasicConfigKey<String>(String.class, "pcre.version", "Version of PCRE to be installed, if required", "8.32");
-    
+
     @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "http://nginx.org/download/nginx-${version}.tar.gz");
 
     @SetFromFlag("downloadAddonUrls")
-    public static final BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = new BasicAttributeSensorAndConfigKey<Map<String,String>>(
+    BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = new BasicAttributeSensorAndConfigKey<Map<String,String>>(
             SoftwareProcess.DOWNLOAD_ADDON_URLS, ImmutableMap.of(
                     "stickymodule", "http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-${addonversion}.tar.gz",
                     "pcre", "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${addonversion}.tar.gz"));
 
     @SetFromFlag("sticky")
-    public static final BasicConfigKey<Boolean> STICKY =
+    BasicConfigKey<Boolean> STICKY =
         new BasicConfigKey<Boolean>(Boolean.class, "nginx.sticky", "whether to use sticky sessions", true);
 
     @SetFromFlag("httpPollPeriod")
-    public static final BasicConfigKey<Long> HTTP_POLL_PERIOD =
+    BasicConfigKey<Long> HTTP_POLL_PERIOD =
         new BasicConfigKey<Long>(Long.class, "nginx.sensorpoll.http", "poll period (in milliseconds)", 1000L);
 
-    public boolean isSticky();
-    
+    boolean isSticky();
+
     @Description("Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")
-    public String getCurrentConfiguration();
-    
-    public String getConfigFile();
-    
-    public boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl,
+    String getCurrentConfiguration();
+
+    String getConfigFile();
+
+    boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl,
             boolean sslBlock, boolean certificateBlock);
 }
