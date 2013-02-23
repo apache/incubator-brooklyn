@@ -110,6 +110,19 @@ public class FlagUtils {
 		return getFieldsWithFlagsInternal(o, filteredFields);
     }
     
+    /** get all fields with the given modifiers, and their values on the given object and all supertypes, 
+     * where the field is annotated with SetFromFlags. 
+     */
+    public static Map<String, Object> getFieldsWithFlagsWithModifiers(Object o, int requiredModifiers) {
+        List<Field> filteredFields = Lists.newArrayList();
+        for (Field contender : getAllFields(o.getClass())) {
+            if ((contender.getModifiers() & requiredModifiers) == requiredModifiers) {
+                filteredFields.add(contender);
+            }
+        }
+        return getFieldsWithFlagsInternal(o, filteredFields);
+    }
+    
     /** @deprecated since 0.5.0 use setAllConfigKeys */
     public static Map<String, ? extends Object> setConfigKeysFromFlags(Map<String, ? extends Object> flags, Configurable instance) {
         return setAllConfigKeys(flags, instance);

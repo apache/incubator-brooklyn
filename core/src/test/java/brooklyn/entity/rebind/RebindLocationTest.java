@@ -135,15 +135,14 @@ public class RebindLocationTest {
     }
     
     @Test
-    public void testTransientFieldsSetFromFlag() throws Exception {
+    public void testIgnoresTransientFieldsSetFromFlag() throws Exception {
         MyLocation origLoc = new MyLocation(MutableMap.of("myTransientFieldSetFromFlag", "myval"));
         origApp.start(ImmutableList.of(origLoc));
 
         MyApplication newApp = (MyApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
-        // if transient field is set from a flag, however, it is persisted -- for now anyway
-        assertEquals(newLoc.myTransientFieldSetFromFlag, "myval");
+        assertEquals(newLoc.myTransientFieldSetFromFlag, null);
     }
     
     @Test
@@ -171,10 +170,7 @@ public class RebindLocationTest {
         MyApplication newApp = (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
-        // if static field is set from a flag, however, it is persisted -- for now anyway
-        // so we see original value restored
-        // (you'll get a warning on it, however!)
-        assertEquals(newLoc.myStaticFieldSetFromFlag, "myval");
+        assertEquals(newLoc.myStaticFieldSetFromFlag, "mynewval");
     }
     
     @Test
@@ -213,17 +209,13 @@ public class RebindLocationTest {
         private final Object dummy = new Object(); // so not serializable
         
         @SetFromFlag
-        // possibly rebinded
         transient String myTransientFieldSetFromFlag;
         
-        // not rebinded
         transient String myTransientFieldNotSetFromFlag;
         
         @SetFromFlag
-        // possibly rebinded
         static String myStaticFieldSetFromFlag;
         
-        // not rebinded
         static String myStaticFieldNotSetFromFlag;
         
         public MyLocation() {
