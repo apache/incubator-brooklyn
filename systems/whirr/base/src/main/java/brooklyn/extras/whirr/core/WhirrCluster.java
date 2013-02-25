@@ -7,6 +7,7 @@ import org.apache.whirr.ClusterController;
 import org.apache.whirr.ClusterSpec;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
@@ -21,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
  * managed by Apache Whirr.
  *
  */
+@ImplementedBy(WhirrClusterImpl.class)
 public interface WhirrCluster extends Entity, Startable {
 
     @SetFromFlag("recipe")

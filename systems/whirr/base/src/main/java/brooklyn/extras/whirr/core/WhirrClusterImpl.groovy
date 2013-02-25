@@ -14,8 +14,10 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.jclouds.JcloudsLocation
 
 /**
@@ -119,19 +121,20 @@ public class WhirrClusterImpl extends AbstractEntity implements WhirrCluster {
         customizeClusterSpecConfiguration(location, config);        
 
         clusterSpec = new ClusterSpec(config)
-        clusterSpec.setProvider(location.getConf().provider)
-        clusterSpec.setIdentity(location.getConf().identity)
-        clusterSpec.setCredential(location.getConf().credential)
-        clusterSpec.setPrivateKey((File)location.getPrivateKeyFile());
-        clusterSpec.setPublicKey((File)location.getPublicKeyFile());
+        clusterSpec.setProvider(location.getProvider())
+        clusterSpec.setIdentity(location.getIdentity())
+        clusterSpec.setCredential(location.getCredential())
+        // TODO inherit key data?
+        clusterSpec.setPrivateKey(LocationConfigUtils.getPrivateKeyData(location.getConfigBag()));
+        clusterSpec.setPublicKey(LocationConfigUtils.getPublicKeyData(location.getConfigBag()));
         // TODO: also add security groups when supported in the Whirr trunk
 
         startWithClusterSpec(clusterSpec, config);
     }
 
     protected void customizeClusterSpecConfiguration(JcloudsLocation location, PropertiesConfiguration config) {
-        if (location.getConf().providerLocationId)
-            config.setProperty(ClusterSpec.Property.LOCATION_ID.getConfigName(), location.getConf().providerLocationId);
+        if (location.getRegion())
+            config.setProperty(ClusterSpec.Property.LOCATION_ID.getConfigName(), location.getRegion());
     }
     
     public synchronized ClusterController getController() {
@@ -150,10 +153,17 @@ public class WhirrClusterImpl extends AbstractEntity implements WhirrCluster {
 
         for (Cluster.Instance instance : cluster.getInstances()) {
             log.info("Creating group for instance " + instance.id)
-            def rolesGroup = new WhirrInstanceImpl(displayName: "Instance:" + instance.id, instance: instance, this);
+            def rolesGroup = 
+                addChild(getEntityManager().createEntity(BasicEntitySpec.newInstance(WhirrInstance.class).
+                    displayName("Instance:" + instance.id).
+                    configure("instance", instance)) );
+
             for (String role: instance.roles) {
                 log.info("Creating entity for '" + role + "' on instance " + instance.id)
-                rolesGroup.addChild(new WhirrRoleImpl(displayName: "Role:" + role, role: role, rolesGroup))
+                rolesGroup.addChild(
+                    getEntityManager().createEntity(BasicEntitySpec.newInstance(WhirrRole.class).
+                        displayName("Role:" + role).
+                        configure("role", role)) );
             }
             addGroup(rolesGroup)
         }

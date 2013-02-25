@@ -1,9 +1,11 @@
 package brooklyn.extras.whirr.core;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
+@ImplementedBy(WhirrRoleImpl.class)
 public interface WhirrRole extends Entity {
 
     @SetFromFlag("role")
