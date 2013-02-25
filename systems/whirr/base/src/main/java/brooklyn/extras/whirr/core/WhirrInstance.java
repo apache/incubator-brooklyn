@@ -4,10 +4,12 @@ import org.apache.whirr.Cluster;
 
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
+@ImplementedBy(WhirrInstanceImpl.class)
 public interface WhirrInstance extends AbstractGroup {
 
     @SetFromFlag("role")
