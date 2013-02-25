@@ -2,15 +2,13 @@ package brooklyn.entity.proxying;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.policy.Policy;
-
-import com.google.common.annotations.Beta;
 
 /**
  * Gives details of an entity to be created. It describes the entity's configuration, and is
@@ -43,6 +41,8 @@ public interface EntitySpec<T extends Entity> {
      */
     @Nullable
     public Class<? extends T> getImplementation();
+
+    public Set<Class<?>> getAdditionalInterfaces();
 
     /**
      * @return The entity's parent

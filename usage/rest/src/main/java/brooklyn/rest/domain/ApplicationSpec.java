@@ -12,9 +12,9 @@ import javax.annotation.Nullable;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.dom4j.Entity;
 
 import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 
 import com.google.common.base.Function;
@@ -48,7 +48,7 @@ public class ApplicationSpec {
     }
 
     public Builder type(Class<? extends Entity> type) {
-        this.type = type.getCanonicalName();
+        this.type = type.getName();
         return this;
       }
 

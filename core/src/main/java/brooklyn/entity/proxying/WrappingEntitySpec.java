@@ -3,11 +3,13 @@ package brooklyn.entity.proxying;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.policy.Policy;
 import brooklyn.util.MutableMap;
+import brooklyn.util.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 
@@ -27,6 +29,14 @@ public class WrappingEntitySpec<T extends Entity> extends BasicEntitySpec<T, Wra
     @Override
     public Class<? extends T> getImplementation() {
         return (super.getImplementation() == null) ? delegate.getImplementation() : super.getImplementation();
+    }
+    
+    @Override
+    public Set<Class<?>> getAdditionalInterfaces() {
+        return Collections.unmodifiableSet(MutableSet.<Class<?>>builder()
+                .addAll(super.getAdditionalInterfaces())
+                .addAll(delegate.getAdditionalInterfaces())
+                .build());
     }
     
     @Override

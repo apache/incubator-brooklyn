@@ -11,9 +11,9 @@ import com.google.common.base.Function;
 
 public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnricher {
 
-    private Function<T, U> transformation;
+    private Function<? super T, ? extends U> transformation;
 
-    public SensorTransformingEnricher(Entity producer, Sensor<T> source, Sensor<U> target, Function<T,U> transformation) {
+    public SensorTransformingEnricher(Entity producer, Sensor<T> source, Sensor<U> target, Function<? super T, ? extends U> transformation) {
         super(producer, source, target);
         this.transformation = transformation;
     }

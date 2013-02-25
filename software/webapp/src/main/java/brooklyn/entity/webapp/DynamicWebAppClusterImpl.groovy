@@ -2,7 +2,10 @@ package brooklyn.entity.webapp
 
 import brooklyn.enricher.CustomAggregatingEnricher
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.DynamicClusterImpl
+import brooklyn.event.SensorEvent
+import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
 
 /**
@@ -42,14 +45,34 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
             addEnricher(totaller)
             addEnricher(averager)
         }
+        
+        subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
+            @Override public void onEvent(SensorEvent<Boolean> event) {
+                setAttribute(SERVICE_UP, calculateServiceUp());
+            }
+        });
     }
-    
+
+        
     public synchronized boolean addMember(Entity member) {
-        return super.addMember(member)
+        boolean result = super.addMember(member)
+        setAttribute(SERVICE_UP, calculateServiceUp());
+        return result;
     }
     
     @Override
     public synchronized boolean removeMember(Entity member) {
-        return super.removeMember(member)
+        boolean result = super.removeMember(member)
+        setAttribute(SERVICE_UP, calculateServiceUp());
+        return result;
+    }
+
+    @Override    
+    protected boolean calculateServiceUp() {
+        boolean up = false;
+        for (Entity member : getMembers()) {
+            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) up = true;
+        }
+        return up;
     }
 }

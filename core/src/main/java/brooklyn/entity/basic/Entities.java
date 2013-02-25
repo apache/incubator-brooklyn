@@ -207,11 +207,9 @@ public class Entities {
     		out.append(currentIndentation+tab+tab+"Members: "+members.toString()+"\n");
 		}
 		
+		out.append(currentIndentation+tab+tab+"Policies:\n");
         for (Policy policy : e.getPolicies()) {
-            out.append(currentIndentation+tab+tab+"Policy: ");
-            out.append(policy.getId()+"; "+policy.getClass()+"; "+policy.getName()+"; ");
-            out.append(policy.isRunning() ? "running" : (policy.isDestroyed() ? "destroyed" : (policy.isSuspended() ? "suspended" : "state-unknown")));
-            out.append("\n");
+            dumpInfo(policy, out, currentIndentation+tab+tab+tab, tab);
         }
         
 		for (Entity it : e.getChildren()) {
@@ -271,6 +269,37 @@ public class Entities {
         
         for (Location it : loc.getChildLocations()) {
             dumpInfo(it, out, currentIndentation+tab, tab);
+        }
+        
+        out.flush();
+    }
+
+    public static void dumpInfo(Policy pol) {
+        try {
+            dumpInfo(pol, new PrintWriter(System.out), "", "  ");
+        } catch (IOException exc) {
+            // system.out throwing an exception is odd, so don't have IOException on signature
+            throw new RuntimeException(exc);
+        }
+    }
+    public static void dumpInfo(Policy pol, Writer out) throws IOException {
+        dumpInfo(pol, out, "", "  ");
+    }
+    public static void dumpInfo(Policy pol, String currentIndentation, String tab) throws IOException {
+        dumpInfo(pol, new PrintWriter(System.out), currentIndentation, tab);
+    }
+    public static void dumpInfo(Policy pol, Writer out, String currentIndentation, String tab) throws IOException {
+        out.append(currentIndentation+pol.toString()+"\n");
+        
+        for (ConfigKey<?> key : sortConfigKeys(pol.getPolicyType().getConfigKeys())) {
+            Object val = pol.getConfig(key);
+            if (!isTrivial(val)) {
+                out.append(currentIndentation+tab+tab+key);
+                out.append(" = ");
+                if (isSecret(key.getName())) out.append("xxxxxxxx");
+                else out.append(""+val);
+                out.append("\n");
+            }
         }
         
         out.flush();

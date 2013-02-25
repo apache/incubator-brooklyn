@@ -13,16 +13,24 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.trait.Startable
 import brooklyn.location.basic.SimulatedLocation
+import brooklyn.test.EntityTestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestJavaWebAppEntity
+import brooklyn.util.MutableMap
 import brooklyn.util.internal.TimeExtras
+
+import com.google.common.collect.Iterables
 
 /**
  * TODO clarify test purpose
  */
 public class DynamicWebAppClusterTest {
     private static final Logger log = LoggerFactory.getLogger(this)
+    
+    private static final int TIMEOUT_MS = 1*1000;
+    private static final int SHORT_WAIT_MS = 250;
     
     static { TimeExtras.init() }
 
@@ -56,6 +64,32 @@ public class DynamicWebAppClusterTest {
         executeUntilSucceeds(timeout: 3*SECONDS) {
             assertEquals 3d, cluster.getAttribute(DynamicWebAppCluster.AVERAGE_REQUEST_COUNT)
         }
+    }
+    
+    @Test
+    public void testSetsServiceUpIfMemberIsUp() throws Exception {
+        DynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicWebAppCluster.class)
+            .configure("initialSize", 1)
+            .configure("factory", { properties -> new TestJavaWebAppEntity(properties) }));
+    
+        app.start([new SimulatedLocation()])
+        
+        // Should initially be false (when child has no service_up value) 
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
+        
+        // When child is !service_up, should continue to report false
+        Iterables.get(cluster.getChildren(), 0).setAttribute(Startable.SERVICE_UP, false);
+        EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", SHORT_WAIT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
+        
+        cluster.resize(2);
+        
+        // When one of the two children is service_up, should report true
+        Iterables.get(cluster.getChildren(), 0).setAttribute(Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, true);
+
+        // And if that serviceUp child goes away, should again report false
+        Entities.unmanage(Iterables.get(cluster.getChildren(), 0));
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
     }
     
     // FIXME Fails because of the config-closure stuff; it now coerces closure every time 
