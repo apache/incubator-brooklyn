@@ -3,6 +3,7 @@ package brooklyn.entity.basic
 import static com.google.common.base.Preconditions.checkNotNull
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList
 
 import org.slf4j.Logger
@@ -104,7 +105,10 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     Map<String,Object> presentationAttributes = [:]
     Collection<AbstractPolicy> policies = [] as CopyOnWriteArrayList
     Collection<AbstractEnricher> enrichers = [] as CopyOnWriteArrayList
-    Collection<Location> locations = Collections.newSetFromMap(new ConcurrentHashMap<Location,Boolean>())
+    Collection<Location> locations =
+        new ConcurrentLinkedQueue<Location>();
+        // prefer above, because we want to preserve order?  FEB 2013
+        //Collections.newSetFromMap(new ConcurrentHashMap<Location,Boolean>())
 
     // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
     // orphaning (i.e. removing ownership). This flag notes if the entity has previously had a parent, and if an attempt is made to
