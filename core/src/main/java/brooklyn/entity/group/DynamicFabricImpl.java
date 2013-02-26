@@ -4,6 +4,7 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 import groovy.lang.Closure;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -17,6 +18,7 @@ import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.WrappingEntitySpec;
@@ -108,7 +110,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     public void start(Collection<? extends Location> locations) {
         Preconditions.checkNotNull(locations, "locations must be supplied");
         Preconditions.checkArgument(locations.size() >= 1, "One or more location must be supplied");
-        this.getLocations().addAll(locations);
+        addLocations(locations);
         
         Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
         for (Location it : locations) {
@@ -116,7 +118,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
             // FIXME: this is a quick workaround to ensure that the location is available to any membership change
             //        listeners (notably AbstractDeoDnsService). A more robust mechanism is required; see ENGR-????
             //        for ideas and discussion.
-            e.getLocations().add(it);
+            ((EntityInternal)e).addLocations(Arrays.asList(it));
             if (e instanceof Startable) {
                 Task task = e.invoke(Startable.START, ImmutableMap.of("locations", ImmutableList.of(it)));
                 tasks.put(e, task);

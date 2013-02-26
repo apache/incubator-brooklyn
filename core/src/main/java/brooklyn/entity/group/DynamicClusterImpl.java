@@ -150,7 +150,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         
         if (locs==null) throw new IllegalStateException("Null location supplied to start "+this);
         if (locs.size()!=1) throw new IllegalStateException("Wrong number of locations supplied to start "+this+": "+locs);
-        getLocations().addAll(locs);
+        addLocations(locs);
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         Integer initialSize = getConfig(INITIAL_SIZE);
         resize(initialSize);

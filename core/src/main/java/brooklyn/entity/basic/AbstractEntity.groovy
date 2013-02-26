@@ -51,6 +51,7 @@ import brooklyn.util.text.Identifiers
 import com.google.common.annotations.Beta
 import com.google.common.base.Objects
 import com.google.common.base.Objects.ToStringHelper
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import com.google.common.collect.Maps
@@ -107,7 +108,8 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     Collection<AbstractEnricher> enrichers = [] as CopyOnWriteArrayList
     Collection<Location> locations =
         new ConcurrentLinkedQueue<Location>();
-        // prefer above, because we want to preserve order?  FEB 2013
+        // prefer above, because we want to preserve order, FEB 2013
+        // with duplicates removed in addLocations
         //Collections.newSetFromMap(new ConcurrentHashMap<Location,Boolean>())
 
     // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
@@ -582,8 +584,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
 
     @Override
     public void addLocations(Collection<? extends Location> newLocations) {
-        locations.addAll(newLocations);
-        
+        synchronized (locations) {
+            Set newLocationsWithDuplicatesRemoved = new LinkedHashSet();
+            newLocationsWithDuplicatesRemoved.addAll(newLocations);
+            newLocationsWithDuplicatesRemoved.removeAll(locations);
+            locations.addAll(newLocationsWithDuplicatesRemoved);
+        }
         getManagementSupport().getEntityChangeListener().onLocationsChanged();
     }
 

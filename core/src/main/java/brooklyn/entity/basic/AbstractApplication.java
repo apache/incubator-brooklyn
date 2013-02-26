@@ -29,6 +29,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
     BrooklynProperties brooklynProperties = null;
 
+    private volatile Application application;
+    
     public AbstractApplication(){
         this(new LinkedHashMap());
         log.debug("Using the AbstractApplication no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
@@ -39,7 +41,6 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      * also (experimental) permits defining a brooklynProperties source */
     public AbstractApplication(Map properties) {
         super(properties);
-        setApplication(this);
 
         if (properties.containsKey("mgmt")) {
             mgmt = (AbstractManagementContext) properties.remove("mgmt");
@@ -97,6 +98,21 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         if (getApplication() == this) {
             setApplication((Application)getProxy());
         }
+    }
+    
+    @Override
+    public Application getApplication() {
+        if (getParent()==null) {
+            if (application!=null) return application;
+            return this;
+        }
+        return getParent().getApplication();
+    }
+    
+    @Override
+    protected synchronized void setApplication(Application app) {
+        application = app;
+        super.setApplication(app);
     }
     
     /**
