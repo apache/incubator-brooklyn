@@ -366,6 +366,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         Command result = acquire(new ExecAction(singlecmd, out, err));
         if (LOG.isTraceEnabled()) LOG.trace("Running command at {} completed: exit code {}", host, result.getExitStatus());
+        // FIXME this can NPE if no exit status is received (observed on kill `ps aux | grep thing-to-grep-for | awk {print $2}`
         return result.getExitStatus();
     }
 

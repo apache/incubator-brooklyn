@@ -227,12 +227,17 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(flags, LAUNCHING).
                 body.append(
                 format("cd %s", getRunDir()),
-                sudoIfPrivilegedPort(getHttpPort(), format("nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir()))
+                sudoBashCIfPrivilegedPort(getHttpPort(), format(
+                        "nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir()))
         ).execute();
     }
 
     public static String sudoIfPrivilegedPort(int port, String command) {
         return port < 1024 ? CommonCommands.sudo(command) : command;
+    }
+    
+    public static String sudoBashCIfPrivilegedPort(int port, String command) {
+        return port < 1024 ? CommonCommands.sudo("bash -c '"+command+"'") : command;
     }
     
     @Override
@@ -333,7 +338,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             body.append(
                 format("cd %s", getRunDir()),
                 format("export PID=`cat %s`", NGINX_PID_FILE),
-                "kill -HUP $PID"
+                sudoIfPrivilegedPort(getHttpPort(), "kill -HUP $PID")
         ).execute();
     }
     

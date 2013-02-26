@@ -19,6 +19,7 @@ import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.jclouds.JcloudsLocation
+import brooklyn.location.jclouds.JcloudsLocationConfig;
 
 /**
  * Generic entity that can be used to deploy clusters that are
@@ -135,6 +136,8 @@ public class WhirrClusterImpl extends AbstractEntity implements WhirrCluster {
     protected void customizeClusterSpecConfiguration(JcloudsLocation location, PropertiesConfiguration config) {
         if (location.getRegion())
             config.setProperty(ClusterSpec.Property.LOCATION_ID.getConfigName(), location.getRegion());
+        if (location.getConfig(JcloudsLocationConfig.IMAGE_ID))
+            config.setProperty(ClusterSpec.Property.IMAGE_ID.getConfigName(), location.getConfig(JcloudsLocationConfig.IMAGE_ID));
     }
     
     public synchronized ClusterController getController() {
