@@ -76,10 +76,11 @@ public abstract class ApplicationBuilder {
             return new Builder<T>().app(type);
         else {
             // is implementation
-            Class interfaceType = Application.class;
-            if (StartableApplication.class.isAssignableFrom(type))
-                interfaceType = StartableApplication.class;
-            return new Builder<T>().app(BasicEntitySpec.newInstance((Class<T>)interfaceType, (Class<U>)type));
+            Class interfaceType = (StartableApplication.class.isAssignableFrom(type)) ? StartableApplication.class : Application.class;
+            Class<?>[] additionalInterfaceClazzes = type.getInterfaces();
+            EntitySpec<T> spec = BasicEntitySpec.newInstance((Class<T>)interfaceType, (Class<U>)type)
+                    .additionalInterfaces(additionalInterfaceClazzes);
+            return new Builder<T>().app(spec);
         }
     }
 
