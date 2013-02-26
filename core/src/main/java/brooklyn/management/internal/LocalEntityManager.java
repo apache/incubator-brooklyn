@@ -276,7 +276,7 @@ public class LocalEntityManager implements EntityManager {
         } else {
             if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
             preManagedEntitiesById.remove(e.getId());
-            if (e instanceof Application) {
+            if ((e instanceof Application) && (e.getParent()==null)) {
                 applications.add((Application)proxyE);
             }
             entities.add(proxyE);

@@ -1,20 +1,24 @@
 package brooklyn.rest.domain;
 
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.EntitySpec;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
 import static org.testng.Assert.assertEquals;
-import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
+import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.TestApplicationImpl;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class ApplicationTest {
 
@@ -55,6 +59,16 @@ public class ApplicationTest {
   public void testTransitionToRunning() {
     ApplicationSummary running = application.transitionTo(ApplicationSummary.Status.RUNNING);
     assertEquals(running.getStatus(), ApplicationSummary.Status.RUNNING);
+  }
+
+  @Test
+  public void testAppInAppTest() throws IOException {
+      TestApplicationImpl app = new TestApplicationImpl();
+      ManagementContext mgmt = Entities.startManagement(app);
+      Entity e2 = app.addChild(new TestApplicationImpl());
+      Entities.manage(e2);
+      if (mgmt.getApplications().size()!=1)
+          Assert.fail("Apps in Apps should not be listed at top level: "+mgmt.getApplications());
   }
 
 }
