@@ -21,6 +21,7 @@ import brooklyn.policy.PolicyType;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -117,6 +118,13 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     
     public Map<ConfigKey<?>, Object> getAllConfig() {
         return configsInternal.getAllConfig();
+    }
+    
+    // TODO make immutable
+    /** for inspection only */
+    @Beta
+    public PolicyConfigMap getConfigMap() {
+        return configsInternal;
     }
     
     protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {

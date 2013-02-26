@@ -35,6 +35,7 @@ import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.Policy;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.FlagUtils;
@@ -163,7 +164,7 @@ public class Entities {
         out.append(currentIndentation+tab+tab+"locations = "+e.getLocations()+"\n");
 
 		for (ConfigKey<?> it : sortConfigKeys(e.getEntityType().getConfigKeys())) {
-            Object v = e.getConfig(it);
+            Object v = ((EntityInternal)e).getConfigMap().getRawConfig(it);
             if (!isTrivial(v)) {
                 out.append(currentIndentation+tab+tab+it.getName());
                 out.append(" = ");
@@ -292,7 +293,7 @@ public class Entities {
         out.append(currentIndentation+pol.toString()+"\n");
         
         for (ConfigKey<?> key : sortConfigKeys(pol.getPolicyType().getConfigKeys())) {
-            Object val = pol.getConfig(key);
+            Object val = ((AbstractPolicy)pol).getConfigMap().getRawConfig(key);
             if (!isTrivial(val)) {
                 out.append(currentIndentation+tab+tab+key);
                 out.append(" = ");
