@@ -1,6 +1,7 @@
 package brooklyn.entity.webapp;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 import java.util.List;
@@ -18,6 +19,7 @@ import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestJavaWebAppEntity;
@@ -31,6 +33,8 @@ import com.google.common.collect.Iterables;
  */
 public class ControlledDynamicWebAppClusterTest {
     private static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterTest.class);
+
+    private static final int TIMEOUT_MS = 10*1000;
     
     private URL warUrl;
     private TestApplication app;
@@ -75,4 +79,24 @@ public class ControlledDynamicWebAppClusterTest {
         Iterable<TestJavaWebAppEntity> webservers = Iterables.filter(cluster.getCluster().getMembers(), TestJavaWebAppEntity.class);
         assertEquals(Iterables.size(webservers), 2, "webservers="+webservers);
     }
+    
+    @Test(groups="Integration")
+    public void testSetsToplevelHostnameFromController() {
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 1)
+                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
+        app.start(locs);
+
+        String expectedHostname = cluster.getController().getAttribute(NginxController.HOSTNAME);
+        String expectedRootUrl = cluster.getController().getAttribute(NginxController.ROOT_URL);
+        boolean expectedServiceUp = true;
+        
+        assertNotNull(expectedHostname);
+        assertNotNull(expectedRootUrl);
+        
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, ControlledDynamicWebAppCluster.HOSTNAME, expectedHostname);
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, ControlledDynamicWebAppCluster.ROOT_URL, expectedRootUrl);
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, ControlledDynamicWebAppCluster.SERVICE_UP, expectedServiceUp);
+    }
+    
 }

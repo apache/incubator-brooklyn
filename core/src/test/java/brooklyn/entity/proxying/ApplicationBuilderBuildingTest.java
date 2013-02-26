@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
@@ -88,6 +89,15 @@ public class ApplicationBuilderBuildingTest {
         assertIsManaged(Iterables.getOnlyElement(app.getChildren()));
     }
 
+    @Test
+    public void testCreateAppFromImplClass() {
+        app = ApplicationBuilder.builder(MyApplicationImpl.class).manage();
+        
+        assertTrue(app instanceof EntityProxy);
+        assertTrue(app instanceof MyInterface);
+        assertFalse(app instanceof MyApplicationImpl);
+    }
+
     private void assertIsProxy(Entity e) {
         assertFalse(e instanceof AbstractEntity, "e="+e+";e.class="+e.getClass());
         assertTrue(e instanceof EntityProxy, "e="+e+";e.class="+e.getClass());
@@ -95,5 +105,12 @@ public class ApplicationBuilderBuildingTest {
     
     private void assertIsManaged(Entity e) {
         assertTrue(((EntityInternal)e).getManagementSupport().isDeployed(), "e="+e);
+    }
+    
+    public interface MyInterface {
+    }
+    
+    public static class MyApplicationImpl extends AbstractApplication implements MyInterface {
+        
     }
 }
