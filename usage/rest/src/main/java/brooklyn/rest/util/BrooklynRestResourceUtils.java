@@ -109,7 +109,7 @@ public class BrooklynRestResourceUtils {
         Application app = application!=null ? getApplication(application) : null;
         EntityLocal e = (EntityLocal) mgmt.getEntityManager().getEntity(entity);
         if (e!=null) {
-            if (app==null || app.equals(e.getApplication())) return e;
+            if (app==null || app.equals(findTopLevelApplication(e))) return e;
             throw WebResourceUtils.preconditionFailed("Application '%s' specified does not match application '%s' to which entity '%s' (%s) is associated", 
                     application, e.getApplication().getId(), entity, e);
         }
@@ -119,6 +119,19 @@ public class BrooklynRestResourceUtils {
         e = searchForEntityNamed(app, entity);
         if (e!=null) return e;
         throw WebResourceUtils.notFound("Cannot find entity '%s' in application '%s' (%s)", entity, application, app);
+    }
+    
+    private Application findTopLevelApplication(Entity e) {
+        // For nested apps, e.getApplication() can return its direct parent-app rather than the root app
+        // (particularly if e.getApplication() was called before the parent-app was wired up to its parent,
+        // because that call causes the application to be cached).
+        // Therefore we continue to walk the hierarchy until we find an "orphaned" application at the top.
+        
+        Application app = e.getApplication();
+        while (app != null && !app.equals(app.getApplication())) {
+            app = app.getApplication();
+        }
+        return app;
     }
 
     /** looks for the given application instance, first by ID then by name
