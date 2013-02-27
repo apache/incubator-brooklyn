@@ -691,8 +691,30 @@ div.for-empty-table {
     border-radius: 4px;
 }
 
+#app-locations select {
+	height: 22px;
+}
+#app-locations #selector-container {
+	margin-bottom: 4px;
+}
+div.application-name-label {
+	margin-bottom: 4px;
+}
+table.config-table {
+	margin-bottom: 6px;
+	margin-left: 2px;
+}
 .app-add-wizard-config-entry input {
     margin-bottom: 0px;	
+    height: 11px;
+}
+tr.app-add-wizard-config-entry:nth-child(odd) {
+	background-color: #f8f8f8;
+}
+tr.app-add-wizard-config-entry:nth-child(even) {
+}
+tr.app-add-wizard-config-entry {
+    height: 20px;
 }
 .app-add-wizard-config-entry {
 	margin-bottom: 9px;

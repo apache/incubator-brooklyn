@@ -1,14 +1,15 @@
 <tr class="controls app-add-wizard-config-entry">
-    <td><% if (label) { %><%= label %><% } else { %><%= name %><% } %>
-	<input id="key" type="text" class="input-medium" name="key" value="<%= name %>" style="display: none;">
+    <td><% if (data.label) { %><%= data.label %><% } else { %><%= data.name %><% } %>
+	<input id="key" type="text" class="input-medium" name="key" value="<%= data.name %>" style="display: none;">
     &nbsp;&nbsp;&nbsp;
     </td>
     <td> 
-    <% if (type==="java.lang.Boolean" || type==="boolean") { %>
+    <% if (data.type==="java.lang.Boolean" || data.type==="boolean") { %>
       <input id="checkboxValue" type="checkbox" class="input-medium" name="checkboxValue" 
-        <% if (defaultValue===true) { %> checked="checked" <% } %> >
+        <% if (data.defaultValue===true) { %> checked="checked" <% } %> >
     <% } else { %>
-	  <input id="value" type="text" class="input-medium" name="value" value="<%= defaultValue %>" style="width: 250px">
+	  <input id="value" type="text" class="input-medium" name="value" value="<% 
+        if (typeof data.defaultValue !== "undefined") { %><%= data.defaultValue %><% } %>" style="width: 250px">
     <% } %>
     </td>
     <td></td>
