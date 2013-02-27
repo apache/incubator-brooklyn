@@ -26,7 +26,6 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ComparableVersion;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
@@ -34,7 +33,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * The SSH implementation of the {@link MySqlDriver}.
  */
-public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements MySqlDriver{
+public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements MySqlDriver {
 
     public static final Logger log = LoggerFactory.getLogger(MySqlSshDriver.class);
 
@@ -113,12 +112,10 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
             body.append(commands).execute();
     }
 
-    final String socketUid = Identifiers.makeRandomId(6);
-    String secretPassword = Identifiers.makeRandomId(6);
-    public String getSocketUid() { return socketUid; }
-    public String getPassword() { return secretPassword; }
     public MySqlNodeImpl getEntity() { return (MySqlNodeImpl) super.getEntity(); }
     public int getPort() { return getEntity().getPort(); }
+    public String getSocketUid() { return getEntity().getSocketUid(); }
+    public String getPassword() { return getEntity().getPassword(); }
     
     @Override
     public void customize() {
@@ -133,6 +130,8 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         newScript(CUSTOMIZING).
             updateTaskAndFailOnNonZeroResultCode().
             body.append(
+                "touch mymysql.cnf",
+                "chmod 600 mymysql.cnf",
                 "cat > mymysql.cnf << END_MYSQL_CONF_"+entity.getId()+"\n"+
                         "[client]\n"+
                         "port            = "+getPort()+"\n"+
@@ -188,7 +187,9 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("usePidFile", true), CHECK_RUNNING).execute() == 0;
+        return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
+            .body.append(getStatusCmd())
+            .execute() == 0;
     }
 
     @Override
@@ -199,5 +200,13 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     @Override
     public void kill() {
         newScript(MutableMap.of("usePidFile", true), KILLING).execute();
+    }
+    
+    @Override
+    public String getStatusCmd() {
+        // TODO Is this very bad, to include the password in the command being executed 
+        // (so is in `ps` listing temporarily, and in .bash_history)
+        return format("%s/bin/mysqladmin --user=%s --password=%s --socket=/tmp/mysql.sock.%s.%s status", 
+                getExpandedInstallDir(), "root", getPassword(), getSocketUid(), getPort());
     }
 }

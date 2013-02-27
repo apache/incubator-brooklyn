@@ -53,5 +53,13 @@ public interface MySqlNode extends DatabaseNode {
     
     public static final ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
     
+    @SetFromFlag("password")
+    public static final BasicAttributeSensorAndConfigKey<String> PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "mysql.password", "Database admin password (or randomly generated if not set)", null);
+
+    @SetFromFlag("socketUid")
+    public static final BasicAttributeSensorAndConfigKey<String> SOCKET_UID = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "mysql.socketUid", "Socket uid, for use in file /tmp/mysql.sock.<uid>.3306 (or randomly generated if not set)", null);
+    
     public static final BasicAttributeSensor<String> MYSQL_URL = DB_URL;
 }
