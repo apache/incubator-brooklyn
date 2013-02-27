@@ -8,15 +8,24 @@ import java.util.Arrays;
 import com.google.common.base.Throwables;
 
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.text.Strings;
 
 /** represents a CIDR (classless inter-domain routing) token, i.e. 10.0.0.0/8 or 192.168.4.0/24 */
 public class Cidr {
 
+    public static final Cidr UNIVERSAL = new Cidr();
+    public static final Cidr _192_168 = new Cidr(192, 168);
+    public static final Cidr _10 = new Cidr(10);
+    public static final Cidr _172_16 = new Cidr("172.16.0.0/12");
+    
     final int[] subnetBytes = new int[] { 0, 0, 0, 0 };
     final int length;
     
     
     public Cidr(String cidr) {
+        if (Strings.isBlank(cidr))
+            // useful e.g. if user leaves it blank in gui
+            cidr = "0.0.0.0/0";
         int slash = cidr.indexOf('/');
         if (slash==-1) throw new IllegalArgumentException("CIDR should be of form 192.168.0.0/16 (missing slash)");
         String subnet = cidr.substring(0, slash);
@@ -151,4 +160,14 @@ public class Cidr {
             throw Throwables.propagate(e);
         }
     }
+
+    //TODO
+//  public boolean contains(Cidr target) {
+//}
+//
+//public static Cidr forRange(String startIP, String endIP) {
+//    
+//    return null;
+//}
+
 }

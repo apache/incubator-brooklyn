@@ -26,6 +26,7 @@ import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.event.basic.MapConfigKey;
@@ -108,6 +109,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Deprecated
     public static final String SSHCONFIG_PREFIX = "sshconfig";
     
+    public static final ConfigKey<String> SSH_HOST = ConfigKeys.SSH_CONFIG_HOST;
+    public static final ConfigKey<Integer> SSH_PORT = ConfigKeys.SSH_CONFIG_PORT;
+    
     public static final ConfigKey<String> SSH_EXECUTABLE = new StringConfigKey("sshExecutable", "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
     public static final ConfigKey<String> SCP_EXECUTABLE = new StringConfigKey("scpExecutable", "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
     
@@ -164,7 +168,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     private BasicPool<SshTool> buildVanillaPool() {
         return BasicPool.<SshTool>builder()
-                .name(name+":"+address+":"+System.identityHashCode(this))
+                .name(name+"@"+address+
+                        (hasConfig(SSH_HOST) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
+                        ":"+
+                        System.identityHashCode(this))
                 .supplier(new Supplier<SshTool>() {
                         @Override public SshTool get() {
                             return connectSsh(Collections.emptyMap());
@@ -297,17 +304,18 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             
             ConfigBag args = new ConfigBag().
                 configure(SshTool.PROP_USER, user).
+                // default value of host, overridden if SSH_HOST is supplied
                 configure(SshTool.PROP_HOST, address.getHostName()).
                 putAll(props);
 
             for (Map.Entry<String,Object> entry: getConfigBag().getAllConfig().entrySet()) {
                 String key = entry.getKey();
-                if (ALL_SSH_CONFIG_KEY_NAMES.contains(entry.getKey())) {
-                    //key is fine, no change
-                } else if (key.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
+                if (key.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                     key = Strings.removeFromStart(key, SshTool.BROOKLYN_CONFIG_KEY_PREFIX);
                 } else if (key.startsWith(SSHCONFIG_PREFIX)) {
                     key = Strings.removeFromStart(key, SSHCONFIG_PREFIX);
+                } else if (ALL_SSH_CONFIG_KEY_NAMES.contains(entry.getKey())) {
+                    //key is fine, no change
                 } else {
                     // it's not config that applies to the connection
                     continue;

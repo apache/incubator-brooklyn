@@ -21,7 +21,6 @@ import com.google.common.base.Predicate;
 
 /**
  * @author Shane Witbeck
- * @since 1/9/13
  */
 public class JcloudsLocationTest implements JcloudsLocationConfig {
 
@@ -33,7 +32,8 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         assertTrue(vcloudGroupId.startsWith("br-"));
 
         String fooGroupId = JcloudsLocation.generateGroupId("foo");
-        assertTrue(fooGroupId.startsWith("brooklyn-"+user));
+        if (!"brooklyn".equals(user))
+            assertTrue(fooGroupId.startsWith("brooklyn-"+user));
     }
     
     public static final RuntimeException BAIL_OUT_FOR_TESTING = 

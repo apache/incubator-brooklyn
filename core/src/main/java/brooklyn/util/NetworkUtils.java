@@ -13,6 +13,10 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Throwables;
+
+import brooklyn.location.geo.UtraceHostGeoLookup;
+import brooklyn.util.net.Cidr;
 import brooklyn.util.text.Identifiers;
 
 public class NetworkUtils {
@@ -173,6 +177,7 @@ public class NetworkUtils {
             if (name.length() > 0) name.append(".");
             name.append(part);
         }
+        // only if of illegal length; don't need checked exception!
         return InetAddress.getByAddress(name.toString(), ip);
     }
     
@@ -194,4 +199,48 @@ public class NetworkUtils {
             return InetAddress.getByName(hostnameOrIp);
         }
     }
+    
+    public static InetAddress getLocalHost() {
+        try {
+            return InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            InetAddress result = null;
+            try {
+                result = getInetAddressWithFixedName("127.0.0.1");
+            } catch (UnknownHostException e1) {
+                // shouldn't happen
+                throw Throwables.propagate(e1);
+            }
+            log.warn("Localhost is not resolvable; using "+result);
+            return result;
+        }
+    }
+
+    public static Cidr cidr(String cidr) {
+        return new Cidr(cidr);
+    }
+
+    public static Cidr getLargestPrivateSubnet(InetAddress address) {
+        return getLargestPrivateSubnet(address.getHostAddress());
+    }
+    
+    public static Cidr getLargestPrivateSubnet(String ip) {
+        Cidr me = new Cidr(ip+"/32");
+        if (ip.startsWith("192.168."))
+            return Cidr._192_168;
+        if (ip.startsWith("10."))
+            return Cidr._10;
+        if (me.getBytes()[0]==172 && ((me.getBytes()[1]&0xf0) == 0x10))
+            return Cidr._172_16;
+        return me;
+    }
+
+    public static Cidr getLargestLocalPrivateSubnet() {
+        return getLargestPrivateSubnet(NetworkUtils.getLocalHost());
+    }
+
+    public static String getLocalhostExternalIp() {
+        return UtraceHostGeoLookup.getLocalhostExternalIp();
+    }
+
 }

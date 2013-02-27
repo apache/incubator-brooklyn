@@ -16,6 +16,7 @@ import brooklyn.location.basic.BasicOsDetails.OsVersions
 import brooklyn.util.ComparableVersion
 import brooklyn.util.ResourceUtils
 import brooklyn.util.text.Identifiers
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap
 
@@ -111,8 +112,8 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 			body.append("echo copying creation script").
 			execute();  //create the directory
         Reader creationScript;
-        def url = entity.getConfig(MySqlNode.CREATION_SCRIPT_URL)
-        if (url) creationScript = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(url));
+        String url = entity.getConfig(MySqlNode.CREATION_SCRIPT_URL)
+        if (!Strings.isBlank(url)) creationScript = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(url));
         else creationScript = new StringReader(entity.getConfig(MySqlNode.CREATION_SCRIPT_CONTENTS)?:"")
 		machine.copyTo(creationScript, runDir+"/"+"creation-script.cnf");
         newScript(CUSTOMIZING).

@@ -27,6 +27,7 @@ import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.net.Cidr;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -343,6 +344,12 @@ public class TypeCoercions {
                 } catch (UnknownHostException e) {
                     throw Throwables.propagate(e);
                 }
+            }
+        });
+        registerAdapter(String.class, Cidr.class, new Function<String,Cidr>() {
+            @Override
+            public Cidr apply(String input) {
+                return new Cidr(input);
             }
         });
         registerAdapter(String.class, URL.class, new Function<String,URL>() {

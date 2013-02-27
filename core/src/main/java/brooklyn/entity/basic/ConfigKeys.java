@@ -43,6 +43,7 @@ public class ConfigKeys {
     /* selected properties from SshTool for external public access (e.g. putting on entities) */
     
     public static ConfigKey<String> SSH_TOOL_CLASS = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_TOOL_CLASS);
+    public static ConfigKey<String> SSH_CONFIG_HOST = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_HOST);
     public static ConfigKey<Integer> SSH_CONFIG_PORT = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT);
     public static ConfigKey<String> SSH_CONFIG_USER = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_USER);
     public static ConfigKey<String> SSH_CONFIG_PASSWORD = ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PASSWORD);

@@ -49,6 +49,7 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
             new PortAttributeSensorAndConfigKey("webapp.jboss.managementNativePort", "Management native port", "10999+");
 
     @SetFromFlag("portIncrement")
+    // FIXME this is confusing, can we get rid of it?  (why is it added to the MANAGEMENT_HTTP_PORT? just set that port correctly!)
     BasicAttributeSensorAndConfigKey<Integer> PORT_INCREMENT =
             new BasicAttributeSensorAndConfigKey<Integer>(Integer.class, "webapp.jboss.portIncrement", "Port increment, for all ports in config file", 0);
 

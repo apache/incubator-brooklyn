@@ -26,6 +26,7 @@ import brooklyn.event.adapter.ConfigSensorAdapter;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpPollValue;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.TimeExtras;
@@ -100,12 +101,13 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         super.connectSensors();
         
         ConfigSensorAdapter.apply(this);
+        String accessibleRootUrl = inferUrl(true);
 
         // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
         httpFeed = HttpFeed.builder()
                 .entity(this)
                 .period(getConfig(HTTP_POLL_PERIOD))
-                .baseUri(getAttribute(AbstractController.ROOT_URL))
+                .baseUri(accessibleRootUrl)
                 .baseUriVars(ImmutableMap.of("include-runtime","true"))
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                         .onSuccess(new Function<HttpPollValue, Boolean>() {
