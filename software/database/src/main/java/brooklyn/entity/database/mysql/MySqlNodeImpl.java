@@ -1,7 +1,10 @@
-package brooklyn.entity.database.mysql
+package brooklyn.entity.database.mysql;
 
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.SoftwareProcessImpl
+import java.util.Map;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.util.MutableMap;
 
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
 
@@ -9,7 +12,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     }
 
     public MySqlNodeImpl(Entity parent) {
-        this([:], parent);
+        this(MutableMap.of(), parent);
     }
 
     public MySqlNodeImpl(Map flags) {
@@ -28,11 +31,11 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(DB_URL, "mysql://" + localHostname + ":" + port + "/")
-        setAttribute(SERVICE_UP, true)  // TODO poll for status, and activity
+        setAttribute(DB_URL, String.format("mysql://%s:%s/", getLocalHostname(), getPort()));
+        setAttribute(SERVICE_UP, true);  // TODO poll for status, and activity
     }
 
     public int getPort() {
-        getAttribute(MYSQL_PORT)
+        return getAttribute(MYSQL_PORT);
     }
 }
