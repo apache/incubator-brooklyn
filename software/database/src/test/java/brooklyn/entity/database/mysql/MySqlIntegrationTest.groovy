@@ -39,17 +39,22 @@ public class MySqlIntegrationTest {
     }
 
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines
+    static String hostname = java.net.InetAddress.getLocalHost().getHostName()
 
     //from http://www.vogella.de/articles/MySQLJava/article.html
     public static final String CREATION_SCRIPT = """
-create database feedback;
-use feedback;
-CREATE USER sqluser@'localhost' IDENTIFIED BY 'sqluserpw';
-grant usage on *.* to sqluser@localhost identified by 'sqluserpw';
-grant all privileges on feedback.* to sqluser@localhost;
-CREATE USER sqluser@'%' IDENTIFIED BY 'sqluserpw';
-grant all privileges on feedback.* to 'sqluser'@'%' identified by 'sqluserpw';
+CREATE DATABASE feedback;
+CREATE USER 'sqluser'@'localhost' IDENTIFIED BY 'sqluserpw';
+GRANT USAGE ON *.* TO 'sqluser'@'localhost';
+GRANT ALL PRIVILEGES ON feedback.* TO 'sqluser'@'localhost';
+CREATE USER 'sqluser'@'%' IDENTIFIED BY 'sqluserpw';
+GRANT USAGE ON *.* TO 'sqluser'@'%';
+GRANT ALL PRIVILEGES ON feedback.* TO 'sqluser'@'%';
+CREATE USER 'sqluser'@'$hostname' IDENTIFIED BY 'sqluserpw';
+GRANT USAGE ON *.* TO 'sqluser'@'$hostname';
+GRANT ALL PRIVILEGES ON feedback.* TO 'sqluser'@'$hostname';
 FLUSH PRIVILEGES;
+USE feedback;
 CREATE TABLE COMMENTS (
         id INT NOT NULL AUTO_INCREMENT, 
         MYUSER VARCHAR(30) NOT NULL,
