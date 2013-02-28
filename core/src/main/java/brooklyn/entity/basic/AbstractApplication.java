@@ -86,24 +86,31 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         super(properties, parent);
     }
 
-    // Note that setProxy will be called by the framework immediately after constructing the
-    // entity, and before any reference to the entity is leaked. Therefore nothing should call
-    // getProxy before this is set.
-    // 
-    // Also note that for legacy-usage (i.e. where the constructor is called directly), then setProxy
-    // will never get called.
-    @Override
-    public void setProxy(Entity proxy) {
-        super.setProxy(proxy);
-        if (getApplication() == this) {
-            setApplication((Application)getProxy());
-        }
-    }
+    // don't set the application quite so early
+//    // Note that setProxy will be called by the framework immediately after constructing the
+//    // entity, and before any reference to the entity is leaked. Therefore nothing should call
+//    // getProxy before this is set.
+//    // 
+//    // Also note that for legacy-usage (i.e. where the constructor is called directly), then setProxy
+//    // will never get called.
+//    @Override
+//    public void setProxy(Entity proxy) {
+//        super.setProxy(proxy);
+//        if (getApplication() == this) {
+//            setApplication((Application)getProxy());
+//        }
+//    }
     
     @Override
     public Application getApplication() {
+        if (application!=null) {
+            if (application.getId().equals(getId())) {
+                if (getProxy()!=null) return (Application)getProxy();
+            }
+            return application;
+        }
         if (getParent()==null) {
-            if (application!=null) return application;
+            if (getProxy()!=null) return (Application)getProxy();
             return this;
         }
         return getParent().getApplication();
@@ -111,8 +118,22 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     
     @Override
     protected synchronized void setApplication(Application app) {
-        application = app;
+        if (app.getId().equals(getId())) {
+            application = getProxy()!=null ? (Application)getProxy() : app;
+        } else {
+            application = app;
+            if (getParent()==null) {
+                log.warn("Setting application of "+this+" to "+app+", but "+this+" is not parented");
+            } else if (getParent().getApplicationId().equals(app.getParent())) {
+                log.warn("Setting application of "+this+" to "+app+", but parent "+getParent()+" has different app "+getParent().getApplication());
+            }
+        }
         super.setApplication(app);
+    }
+    
+    public AbstractApplication setParent(Entity parent) {
+        super.setParent(parent);
+        return this;
     }
     
     /**

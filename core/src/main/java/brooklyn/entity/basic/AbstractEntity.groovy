@@ -536,7 +536,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         if (this.@application!=null) return this.@application;
         def app = getParent()?.getApplication()
         if (app) {
-            setApplication(app)
+            if (getManagementSupport().isFullyManaged())
+                // only do this once fully managed, in case root app becomes parented
+                setApplication(app)
         }
         app
     }
