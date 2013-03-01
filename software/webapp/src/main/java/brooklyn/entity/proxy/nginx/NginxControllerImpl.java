@@ -383,11 +383,20 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     }
 
     protected String getCodeForServerConfig() {
+        // See http://wiki.nginx.org/HttpProxyModule
         return ""+
             // this prevents nginx from reporting version number on error pages
             "    server_tokens off;\n"+
-            // this prevents nginx from using the internal proxy_pass codename as Host header passed upstream
-            "    proxy_set_header Host $http_host;\n";
+            
+            // this prevents nginx from using the internal proxy_pass codename as Host header passed upstream.
+            // Not using $host, as that causes integration test to fail with a "connection refused" testing
+            // url-mappings, at URL "http://localhost:${port}/atC0" (with a trailing slash it does work).
+            "    proxy_set_header Host $http_host;\n"+
+            
+            // following added, as recommended for wordpress in:
+            // http://zeroturnaround.com/labs/wordpress-protips-go-with-a-clustered-approach/#!/
+            "    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"+
+            "    proxy_set_header X-Real-IP $remote_addr;\n";
     }
     
     protected String getCodeFor404() {

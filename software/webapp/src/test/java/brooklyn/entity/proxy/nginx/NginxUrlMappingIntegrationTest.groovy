@@ -439,8 +439,8 @@ public class NginxUrlMappingIntegrationTest {
         // Do more than one request for each in-case just lucky with round-robin...
         executeUntilSucceeds {
             for (int i = 0; i < 2; i++) {
-                assertUrlHasText("http://localhost:${port}/atC0", "Hello");
                 assertUrlHasText("http://localhost:${port}/atC0/", "Hello");
+                assertUrlHasText("http://localhost:${port}/atC0", "Hello");
             }
         }
 
