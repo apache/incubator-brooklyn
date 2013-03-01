@@ -72,6 +72,14 @@ public interface NginxController extends AbstractController {
     BasicConfigKey<Long> HTTP_POLL_PERIOD =
         new BasicConfigKey<Long>(Long.class, "nginx.sensorpoll.http", "poll period (in milliseconds)", 1000L);
 
+    @SetFromFlag("withLdOpt")
+    ConfigKey<String> WITH_LD_OPT = new BasicConfigKey<String>(
+            String.class, "nginx.install.withLdOpt", "String to pass in with --with-ld-opt=\"<val>\" (and for OS X has pcre auto-appended to this)", "-L /usr/local/lib");
+
+    @SetFromFlag("withCcOpt")
+    ConfigKey<String> WITH_CC_OPT = new BasicConfigKey<String>(
+            String.class, "nginx.install.withCcOpt", "String to pass in with --with-cc-opt=\"<val>\"", "-I /usr/local/include");
+
     boolean isSticky();
 
     @Description("Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")

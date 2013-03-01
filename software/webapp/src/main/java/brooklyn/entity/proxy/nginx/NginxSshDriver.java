@@ -20,6 +20,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -150,13 +151,20 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             cmds.add("cd ..");
         }
 
+        // Note that for OS X, not including space after "-L" because broken in 10.6.8 (but fixed in 10.7.x)
+        //      see http://trac.nginx.org/nginx/ticket/227
+        String withLdOpt = entity.getConfig(NginxController.WITH_LD_OPT);
+        if (isMac) withLdOpt = format("-L%s/pcre-dist/lib", getInstallDir()) + (Strings.isBlank(withLdOpt) ? "" : " " + withLdOpt);
+        String withCcOpt = entity.getConfig(NginxController.WITH_CC_OPT);
+        
         cmds.addAll(ImmutableList.<String>of(
                 "mkdir -p dist",
                 "./configure"+
                     format(" --prefix=%s/dist", getExpandedInstallDir()) +
                     " --with-http_ssl_module" +
                     (sticky ? format(" --add-module=%s ", stickyModuleExpandedInstallDir) : "") +
-                    (isMac ? format(" --with-ld-opt=\"-L %s/pcre-dist/lib\"", getInstallDir()) : "") ,
+                    (!Strings.isBlank(withLdOpt) ? format(" --with-ld-opt=\"%s\"", withLdOpt) : "") +
+                    (!Strings.isBlank(withCcOpt) ? format(" --with-cc-opt=\"%s\"", withCcOpt) : "") ,
                 "make install"));
 
         ScriptHelper script = newScript(INSTALLING)
