@@ -21,7 +21,6 @@ import brooklyn.event.feed.Poller;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -31,23 +30,32 @@ import com.google.common.collect.Sets;
 /**
  * Provides a feed of attribute values, by polling over ssh.
  * 
- * Example usage is:
+ * Example usage (e.g. in an entity that extends SoftwareProcessImpl):
  * <pre>
  * {@code
- * feed = SshFeed.builder()
- *     .entity(this)
- *     .machine(mySshMachineLachine)
- *     .poll(new SshPollConfig<Boolean>(SERVICE_UP)
- *         .command("rabbitmqctl -q status")
- *         .onSuccess(new Function<SshPollValue, Boolean>() {
- *             public Boolean apply(SshPollValue input) {
+ * private SshFeed feed;
+ * 
+ * @Override
+ * protected void connectSensors() {
+ *   super.connectSensors();
+ *   
+ *   feed = SshFeed.builder()
+ *       .entity(this)
+ *       .machine(mySshMachineLachine)
+ *       .poll(new SshPollConfig<Boolean>(SERVICE_UP)
+ *           .command("rabbitmqctl -q status")
+ *           .onSuccess(new Function<SshPollValue, Boolean>() {
+ *               public Boolean apply(SshPollValue input) {
  *                 return (input.getExitStatus() == 0);
- *             }}))
- *     .build();
+ *               }}))
+ *       .build();
+ * }
  * 
- * // ...
- * 
- * if (feed != null) feed.stop();
+ * @Override
+ * protected void disconnectSensors() {
+ *   super.disconnectSensors();
+ *   if (feed != null) feed.stop();
+ * }
  * }
  * </pre>
  * 
