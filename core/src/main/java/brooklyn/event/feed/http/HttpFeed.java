@@ -53,7 +53,7 @@ import com.google.common.collect.Sets;
  * {@code
  * private HttpFeed feed;
  * 
- * @Override
+ * //@Override
  * protected void connectSensors() {
  *   super.connectSensors();
  *   
@@ -70,7 +70,7 @@ import com.google.common.collect.Sets;
  *       .build();
  * }
  * 
- * @Override
+ * {@literal @}Override
  * protected void disconnectSensors() {
  *   super.disconnectSensors();
  *   if (feed != null) feed.stop();
