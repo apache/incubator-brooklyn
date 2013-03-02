@@ -346,9 +346,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             }
         }
 
-        if (ImmutableSet.of(CUSTOMIZING).contains(phase))
-            s.skipIfBodyEmpty();
-        if (ImmutableSet.of(CHECK_RUNNING, LAUNCHING, STOPPING, KILLING, RESTARTING).contains(phase))
+        if (ImmutableSet.of(LAUNCHING, STOPPING, KILLING, RESTARTING).contains(phase))
             s.failIfBodyEmpty();
         if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase))
             s.updateTaskAndFailOnNonZeroResultCode();

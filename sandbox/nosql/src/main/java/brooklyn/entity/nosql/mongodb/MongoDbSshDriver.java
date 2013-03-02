@@ -81,7 +81,6 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     @Override
     public void launch() {
         List<String> commands = new LinkedList<String>();
-        String bindIpAddress = entity.getAttribute(SoftwareProcess.HOSTNAME);
         Integer port = entity.getAttribute(MongoDbServer.PORT);
         String args = Joiner.on(" ").join(ImmutableList.of(
                 "--config", getConfFile(),
@@ -89,7 +88,6 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
                 "--dbpath", getDataDir(),
                 "--logpath", getLogFile(),
                 "--port", port,
-                "--bind_ip", bindIpAddress,
                 "--fork"));
         String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
         commands.add(command);
@@ -114,14 +112,14 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
 
     protected String getBaseName() {
-        return getOsTag() + "-" + entity.getConfig(MongoDbServer.VERSION);
+        return getOsTag() + "-" + entity.getConfig(MongoDbServer.SUGGESTED_VERSION);
     }
 
     public String getOsDir() {
-        return (getLocation().getOsDetails().isMac()) ? "osx/" : "linux/";
+        return (getLocation().getOsDetails().isMac()) ? "osx" : "linux";
     }
 
-    protected String getOsTag() {
+    public String getOsTag() {
         OsDetails os = getLocation().getOsDetails();
         if (os == null) {
             // Default to generic linux

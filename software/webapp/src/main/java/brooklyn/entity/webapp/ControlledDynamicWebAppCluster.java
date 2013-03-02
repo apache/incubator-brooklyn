@@ -17,7 +17,6 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
-
 /**
  * This entity contains the sub-groups and entities that go in to a single location (e.g. datacenter)
  * to provide web-app cluster functionality, viz load-balancer (controller) and webapp software processes.
@@ -28,7 +27,7 @@ import brooklyn.util.flags.SetFromFlag;
  * <p>
  * The contents of this group entity are:
  * <ul>
- * <li>a {@link brooklyn.entity.group.DynamicCluster} of {@link JavaWebAppService}s (defaults to JBoss7Server)
+ * <li>a {@link brooklyn.entity.group.DynamicCluster} of {@link WebAppService}s (defaults to JBoss7Server)
  * <li>a cluster controller (defaulting to Nginx if none supplied)
  * <li>a {@link brooklyn.policy.Policy} to resize the DynamicCluster
  * </ul>

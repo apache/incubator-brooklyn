@@ -5,6 +5,10 @@ import java.util.Map;
 
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 
+/**
+ * @deprecated since 0.5; instead use new BasicConfigurableEntityFactory(JBoss6ServerImpl.class)
+ */
+@Deprecated
 public class JBoss6ServerFactory extends BasicConfigurableEntityFactory<JBoss6Server> {
     public JBoss6ServerFactory(){
         this(new LinkedHashMap());

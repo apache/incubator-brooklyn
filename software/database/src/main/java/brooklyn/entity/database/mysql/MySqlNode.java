@@ -20,7 +20,7 @@ public interface MySqlNode extends DatabaseNode {
 
     // NOTE MySQL changes the minor version number of their GA release frequently, check for latest version if install fails
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "5.5.29");
+    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "5.5.30");
 
     //http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-osx10.6-x86_64.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
     //http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-linux2.6-i686.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
@@ -52,6 +52,14 @@ public interface MySqlNode extends DatabaseNode {
     public static final MapConfigKey<Object> MYSQL_SERVER_CONF = new MapConfigKey<Object>(Object.class, "mysql.server.conf", "Configuration options for mysqld");
     
     public static final ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
+    
+    @SetFromFlag("password")
+    public static final BasicAttributeSensorAndConfigKey<String> PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "mysql.password", "Database admin password (or randomly generated if not set)", null);
+
+    @SetFromFlag("socketUid")
+    public static final BasicAttributeSensorAndConfigKey<String> SOCKET_UID = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "mysql.socketUid", "Socket uid, for use in file /tmp/mysql.sock.<uid>.3306 (or randomly generated if not set)", null);
     
     public static final BasicAttributeSensor<String> MYSQL_URL = DB_URL;
 }
