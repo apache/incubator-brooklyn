@@ -32,8 +32,12 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         assertTrue(vcloudGroupId.startsWith("br-"));
 
         String fooGroupId = JcloudsLocation.generateGroupId("foo");
-        if (!"brooklyn".equals(user))
+        if ("brooklyn".equals(user)) {
+            // skip check -- we don't write   brooklyn-brooklyn-  because that looks funny
+            // (and running as user brooklyn is common) 
+        } else {
             assertTrue(fooGroupId.startsWith("brooklyn-"+user));
+        }
     }
     
     public static final RuntimeException BAIL_OUT_FOR_TESTING = 

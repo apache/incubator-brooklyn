@@ -315,9 +315,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 } else if (key.startsWith(SSHCONFIG_PREFIX)) {
                     key = Strings.removeFromStart(key, SSHCONFIG_PREFIX);
                 } else if (ALL_SSH_CONFIG_KEY_NAMES.contains(entry.getKey())) {
-                    //key is fine, no change
+                    // key should be included, and does not need to be changed
+                    
+                    // TODO make this config-setting mechanism more universal
+                    // currently e.g. it will not admit a tool-specific property.
+                    // thinking either we know about the tool here,
+                    // or we don't allow unadorned keys to be set
+                    // (require use of BROOKLYN_CONFOG_KEY_PREFIX)
                 } else {
-                    // it's not config that applies to the connection
+                    // this key is not applicatble here; ignore it
                     continue;
                 }
                 args.putStringKey(key, entry.getValue());

@@ -86,33 +86,14 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         super(properties, parent);
     }
 
-    // don't set the application quite so early
-//    // Note that setProxy will be called by the framework immediately after constructing the
-//    // entity, and before any reference to the entity is leaked. Therefore nothing should call
-//    // getProxy before this is set.
-//    // 
-//    // Also note that for legacy-usage (i.e. where the constructor is called directly), then setProxy
-//    // will never get called.
-//    @Override
-//    public void setProxy(Entity proxy) {
-//        super.setProxy(proxy);
-//        if (getApplication() == this) {
-//            setApplication((Application)getProxy());
-//        }
-//    }
-    
     @Override
     public Application getApplication() {
         if (application!=null) {
-            if (application.getId().equals(getId())) {
-                if (getProxy()!=null) return (Application)getProxy();
-            }
+            if (application.getId().equals(getId()))
+                return (Application) getProxyIfAvailable();
             return application;
         }
-        if (getParent()==null) {
-            if (getProxy()!=null) return (Application)getProxy();
-            return this;
-        }
+        if (getParent()==null) return (Application)getProxyIfAvailable();
         return getParent().getApplication();
     }
     
@@ -122,6 +103,10 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             application = getProxy()!=null ? (Application)getProxy() : app;
         } else {
             application = app;
+
+            // Alex, Mar 2013: added some checks; 
+            // i *think* these conditions should not happen, 
+            // and so should throw but don't want to break things (yet)
             if (getParent()==null) {
                 log.warn("Setting application of "+this+" to "+app+", but "+this+" is not parented");
             } else if (getParent().getApplicationId().equals(app.getParent())) {

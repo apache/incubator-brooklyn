@@ -12,13 +12,28 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
 
+import com.google.common.annotations.Beta;
 import com.google.common.net.HostAndPort;
 
 /** Records port mappings against public IP addresses with given identifiers 
  * <p>
+ * To use, create a new instance shared among all communicating parties.
+ * One Location side (e.g. a software process in a VM) can request ({@link #acquirePublicPort(String, Location, int)})
+ * an unused port on a firewall / public IP address.
+ * He may then go on actually to talk to that firewall/IP to provision the forwarding rule.
+ * <p>
+ * Subseequently the other side can use this class {@link #lookup(Location, int)} if it knows the
+ * location and private port it wishes to talk to.
+ * <p>
+ * This class does not know anything about what the firewall/IP actually is; 
+ * it just handles a unique identifier for it.
+ * It is recommended, however, to {@link #recordPublicIpHostname(String, String)} an accessible hostname with the identifier 
+ * (this is required in order to use {@link #lookup(Location, int)}).
+ * <p>
  * This implementation is not very efficient, and currently has a cap of about 50000 rules.
  * (TODO improve the efficiency and scale)
- **/ 
+ **/
+@Beta
 public class PortForwardManager {
 
     private static final Logger log = LoggerFactory.getLogger(PortForwardManager.class);
@@ -37,9 +52,7 @@ public class PortForwardManager {
         // far too simple -- see javadoc above
         int port = portReserved.incrementAndGet();
         
-        PortMapping mapping = new PortMapping();
-        mapping.publicIpId = publicIpId;
-        mapping.publicPort = port;
+        PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
         
         mappings.put(makeKey(publicIpId, port), mapping);
         return port;
@@ -47,9 +60,7 @@ public class PortForwardManager {
 
     /** returns old mapping if it existed, null if it is new */
     public PortMapping acquirePublicPortExplicit(String publicIpId, int port) {
-        PortMapping mapping = new PortMapping();
-        mapping.publicIpId = publicIpId;
-        mapping.publicPort = port;
+        PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
         return mappings.put(makeKey(publicIpId, port), mapping);        
     }
 
@@ -84,19 +95,25 @@ public class PortForwardManager {
     /** records a public hostname or address to be associated with the given publicIpId for lookup purposes */
     // conceivably this may have to be access-location specific
     public void recordPublicIpHostname(String publicIpId, String hostnameOrPublicIpAddress) {
-        String old = publicIpIdToHostname.put(publicIpId, hostnameOrPublicIpAddress);
-        if (old!=null && !old.equals(hostnameOrPublicIpAddress))
-            log.warn("Changing hostname recorded against public IP "+publicIpId+"; from "+old+" to "+hostnameOrPublicIpAddress);
+        synchronized (publicIpIdToHostname) {
+            String old = publicIpIdToHostname.put(publicIpId, hostnameOrPublicIpAddress);
+            if (old!=null && !old.equals(hostnameOrPublicIpAddress))
+                log.warn("Changing hostname recorded against public IP "+publicIpId+"; from "+old+" to "+hostnameOrPublicIpAddress);
+        }
     }
 
     /** returns a recorded public hostname or address */
     public String getPublicIpHostname(String publicIpId) {
-        return publicIpIdToHostname.get(publicIpId);
+        synchronized (publicIpIdToHostname) {
+            return publicIpIdToHostname.get(publicIpId);
+        }
     }
     
     /** clears a previous call to {@link #recordPublicIpHostname(String, String)} */
     public boolean forgetPublicIpHostname(String publicIpId) {
-        return publicIpIdToHostname.remove(publicIpId) != null;
+        synchronized (publicIpIdToHostname) {
+            return publicIpIdToHostname.remove(publicIpId) != null;
+        }
     }
 
     /** returns the public host and port for use accessing the given mapping */
@@ -148,8 +165,8 @@ public class PortForwardManager {
         PortMapping mapping = getPortMappingWithPublicSide(publicIpId, publicPort);
         if (mapping==null)
             throw new IllegalStateException("No record of port mapping for "+publicIpId+":"+publicPort);
-        mapping.target = l;
-        mapping.privatePort = privatePort;
+        PortMapping mapping2 = new PortMapping(publicIpId, publicPort, l, privatePort);
+        mappings.put(makeKey(mapping.publicIpId, mapping.publicPort), mapping2);
     }
 
     /** returns the subset of port mappings associated with a given location */

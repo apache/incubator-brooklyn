@@ -5,11 +5,20 @@ import com.google.common.base.Objects;
 import brooklyn.location.Location;
 
 public class PortMapping {
-    String publicIpId;
-    int publicPort;
+    
+    public PortMapping(String publicIpId, int publicPort, Location target, int privatePort) {
+        super();
+        this.publicIpId = publicIpId;
+        this.publicPort = publicPort;
+        this.target = target;
+        this.privatePort = privatePort;
+    }
 
-    Location target;
-    int privatePort;
+    final String publicIpId;
+    final int publicPort;
+
+    final Location target;
+    final int privatePort;
     // CIDR's ?
 
     public int getPublicPort() {
@@ -26,6 +35,6 @@ public class PortMapping {
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("public=", publicPort).
-            add("private=", target+":"+privatePort).toString();
+            add("private", target+":"+privatePort).toString();
     }
 }
