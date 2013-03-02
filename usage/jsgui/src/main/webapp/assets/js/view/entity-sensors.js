@@ -75,7 +75,17 @@ define([
                 $rows.each(function (index, row) {
                     var key = $(this).find(".sensor-name").text();
                     var v = data[key];
-                    if (v === undefined) v = '';
+                    if (v === undefined || v === null) v = '';
+                    else if (typeof v === 'number') {
+                        if (Math.round(v)!=v) {
+                            // not an integer, check if it needs rounding
+                            var vk = v*1000; 
+                            if (Math.round(vk)!=vk) {
+                                // needs rounding
+                                v = Math.round(vk)/1000;
+                            }
+                        }
+                    }
                     $table.dataTable().fnUpdate(_.escape(v), row, 2, false);
                 });
             });
