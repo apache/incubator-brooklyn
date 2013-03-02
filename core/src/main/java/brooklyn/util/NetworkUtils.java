@@ -7,17 +7,18 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 import brooklyn.location.geo.UtraceHostGeoLookup;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.text.Identifiers;
+
+import com.google.common.base.Throwables;
 
 public class NetworkUtils {
 
@@ -171,14 +172,17 @@ public class NetworkUtils {
      * This is very useful if using the InetAddress for updating config files on remote machines, because then it will
      * not be pickup a hostname from the local /etc/hosts file, which might not be known on the remote machine.
      */
-    public static InetAddress getInetAddressWithFixedName(byte[] ip) throws UnknownHostException {
-        StringBuilder name = new StringBuilder();
-        for (byte part : ip) {
-            if (name.length() > 0) name.append(".");
-            name.append(part);
+    public static InetAddress getInetAddressWithFixedName(byte[] ip) {
+        try {
+            StringBuilder name = new StringBuilder();
+            for (byte part : ip) {
+                if (name.length() > 0) name.append(".");
+                name.append(part);
+            }
+            return InetAddress.getByAddress(name.toString(), ip);
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
         }
-        // only if of illegal length; don't need checked exception!
-        return InetAddress.getByAddress(name.toString(), ip);
     }
     
     /**
@@ -187,16 +191,20 @@ public class NetworkUtils {
      * in the returned InetAddress.
      */
     public static InetAddress getInetAddressWithFixedName(String hostnameOrIp) throws UnknownHostException {
-        if (VALID_IP_ADDRESS_PATTERN.matcher(hostnameOrIp).matches()) {
-            byte[] ip = new byte[4];
-            String[] parts = hostnameOrIp.split("\\.");
-            assert parts.length == 4 : "val="+hostnameOrIp+"; split="+Arrays.toString(parts)+"; length="+parts.length;
-            for (int i = 0; i < parts.length; i++) {
-                ip[i] = (byte)Integer.parseInt(parts[i]);
+        try {
+            if (VALID_IP_ADDRESS_PATTERN.matcher(hostnameOrIp).matches()) {
+                byte[] ip = new byte[4];
+                String[] parts = hostnameOrIp.split("\\.");
+                assert parts.length == 4 : "val="+hostnameOrIp+"; split="+Arrays.toString(parts)+"; length="+parts.length;
+                for (int i = 0; i < parts.length; i++) {
+                    ip[i] = (byte)Integer.parseInt(parts[i]);
+                }
+                return InetAddress.getByAddress(hostnameOrIp, ip);
+            } else {
+                return InetAddress.getByName(hostnameOrIp);
             }
-            return InetAddress.getByAddress(hostnameOrIp, ip);
-        } else {
-            return InetAddress.getByName(hostnameOrIp);
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
         }
     }
     
@@ -220,27 +228,32 @@ public class NetworkUtils {
         return new Cidr(cidr);
     }
 
-    public static Cidr getLargestPrivateSubnet(InetAddress address) {
-        return getLargestPrivateSubnet(address.getHostAddress());
-    }
+    public static List<Cidr> PRIVATE_NETWORKS = Cidr.PRIVATE_NETWORKS_RFC_1918;
     
-    public static Cidr getLargestPrivateSubnet(String ip) {
+    /** returns the private network which the given IP is in, or null if none */
+    public static Cidr getPrivateNetwork(String ip) {
         Cidr me = new Cidr(ip+"/32");
-        if (ip.startsWith("192.168."))
-            return Cidr._192_168;
-        if (ip.startsWith("10."))
-            return Cidr._10;
-        if (me.getBytes()[0]==172 && ((me.getBytes()[1]&0xf0) == 0x10))
-            return Cidr._172_16;
+        for (Cidr c: PRIVATE_NETWORKS)
+            if (c.contains(me)) 
+                return c;
         return me;
     }
 
-    public static Cidr getLargestLocalPrivateSubnet() {
-        return getLargestPrivateSubnet(NetworkUtils.getLocalHost());
+    public static Cidr getPrivateNetwork(InetAddress address) {
+        return getPrivateNetwork(address.getHostAddress());
     }
-
+    
+    public static boolean isPublicIp(String ipAddress) {
+        Cidr me = new Cidr(ipAddress+"/32");
+        for (Cidr c: Cidr.NON_PUBLIC_CIDRS)
+            if (c.contains(me)) return false;
+        return true;
+    }
+    
     public static String getLocalhostExternalIp() {
         return UtraceHostGeoLookup.getLocalhostExternalIp();
     }
+    
+    // TODO go through nic's, looking for public, private, etc, on localhost
 
 }
