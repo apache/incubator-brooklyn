@@ -13,26 +13,26 @@ define([
             "click #activities-table tr":"rowClick"
         },
         initialize:function () {
-            var that = this
-            this.$el.html(this.template({}))
-            this.collection.url = this.model.getLinkByName("activities")
-            this.collection.fetch()
-            this.collection.on("reset", this.render, this)
-            this.callPeriodically("entity-activities", function () {
-                that.collection.fetch()
-            }, 5000)
+            var that = this;
+            that.$el.html(that.template({}));
+            that.collection.url = that.model.getLinkByName("activities");
+            that.collection.fetch();
+            that.collection.on("reset", that.render, that);
+            that.callPeriodically("entity-activities", function () {
+                that.collection.fetch();
+            }, 5000);
         },
         beforeClose:function () {
-            this.collection.off("reset", this.render)
+            this.collection.off("reset", this.render);
         },
         render:function () {
             var that = this,
-                $tbody = this.$("#activities-table tbody").empty()
+                $tbody = $("#activities-table tbody").empty();
             if (this.collection.length==0) {
-                this.$(".has-no-activities").show();
-                this.$("#activity-details-none-selected").hide()
-            } else {                
-                this.$(".has-no-activities").hide();
+                $(".has-no-activities").show();
+                $("#activity-details-none-selected").hide();
+            } else {
+                $(".has-no-activities").hide();
                 this.collection.each(function (task) {
                     $tbody.append(that.taskRow({
                         cid:task.get("id"),
@@ -42,53 +42,52 @@ define([
                         endTimeUtc:task.get("endTimeUtc"),
                         currentStatus:task.get("currentStatus"),
                         entityDisplayName:task.get("entityDisplayName")
-                    }))
+                    }));
                 if (that.activeTask) {
-                    $("#activities-table tr[id='"+that.activeTask+"']").addClass("selected")
-                    that.showFullActivity(that.activeTask)
+                    $("#activities-table tr[id='"+that.activeTask+"']").addClass("selected");
+                    that.showFullActivity(that.activeTask);
                 } else {
-                    this.$("#activity-details-none-selected").show()                    
+                    $("#activity-details-none-selected").show();
                 }
-            })
+            });
             }
-            return this
+            return this;
         },
-        rowClick: function(evt) {
-            var row = $(evt.currentTarget).closest("tr")
-            var id = row.attr("id")
-            $("#activities-table tr").removeClass("selected")
+        rowClick:function(evt) {
+            var row = $(evt.currentTarget).closest("tr");
+            var id = row.attr("id");
+            $("#activities-table tr").removeClass("selected");
             if (this.activeTask == id) {
                 // deselected
-                this.showFullActivity(null)
+                this.showFullActivity(null);
             } else {
-                row.addClass("selected")
-                this.activeTask = id
-                this.showFullActivity(id)
+                row.addClass("selected");
+                this.activeTask = id;
+                this.showFullActivity(id);
             }
         },
         showFullActivity:function (id) {
-            this.$("#activity-details-none-selected").hide(100)
-            var task = this.collection.get(id)
+            $("#activity-details-none-selected").hide(100);
+            var task = this.collection.get(id);
             if (task==null) {
-                this.activeTask = null
-                this.$("#activity-details").hide(100)                
-                this.$("#activity-details-none-selected").show(100)
-                return
+                this.activeTask = null;
+                $("#activity-details").hide(100);
+                $("#activity-details-none-selected").show(100);
+                return;
             }
-            
-            var $ta = this.$("#activity-details textarea")
+            var $ta = this.$("#activity-details textarea");
             if ($ta.length) {
-                $ta.val(FormatJSON(task.toJSON()))
+                $ta.val(FormatJSON(task.toJSON()));
             } else {
                 var html = _.template(ActivityDetailsHtml, {
                     displayName:this.model.get("displayName"),
-                    description:FormatJSON(task.toJSON())                
-                })
-                this.$("#activity-details").html(html)
+                    description:FormatJSON(task.toJSON())
+                });
+                $("#activity-details").html(html);
             }
-            this.$("#activity-details").show(100)
+            $("#activity-details").show(100);
         }
-    })
+    });
 
     ActivitiesView.Details = Backbone.View.extend({
         tagName:"div",
@@ -98,10 +97,9 @@ define([
             this.$el.html(this.template({
                 displayName:this.model.get("displayName"),
                 description:FormatJSON(this.model.toJSON())
-            }))
-            return this
+            }));
+            return this;
         }
-    })
-
-    return ActivitiesView
-})
+    });
+    return ActivitiesView;
+});
