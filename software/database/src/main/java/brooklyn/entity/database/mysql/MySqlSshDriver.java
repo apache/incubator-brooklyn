@@ -7,7 +7,6 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 import static java.lang.String.format;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -15,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,20 +119,13 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public void customize() {
-        newScript(CUSTOMIZING).
-			body.append("echo copying creation script").
-			execute();  //create the directory
-
         copyDatabaseCreationScript();
+        copyDatabaseConfigScript();
 
         newScript(CUSTOMIZING).
             updateTaskAndFailOnNonZeroResultCode().
             body.append(
-                "touch mymysql.cnf",
                 "chmod 600 mymysql.cnf",
-                "cat > mymysql.cnf << END_MYSQL_CONF_"+entity.getId()+"\n"+
-                       getDatabaseConfigScript()+
-                        "\nEND_MYSQL_CONF_"+entity.getId()+"\n",
                 getBasedir()+"/scripts/mysql_install_db "+
                     "--basedir="+getBasedir()+" --datadir="+getDatadir()+" "+
                     "--defaults-file=mymysql.cnf",
@@ -152,31 +143,28 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     private void copyDatabaseCreationScript() {
+        newScript(CUSTOMIZING).
+                body.append("echo copying creation script").
+                execute();  //create the directory
+
         Reader creationScript;
         String url = entity.getConfig(MySqlNode.CREATION_SCRIPT_URL);
         if (!Strings.isBlank(url))
             creationScript = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(url));
         else creationScript =
-                new StringReader((String)elvis(entity.getConfig(MySqlNode.CREATION_SCRIPT_CONTENTS), ""));
-        getMachine().copyTo(creationScript, getRunDir()+"/"+"creation-script.cnf");
+                new StringReader((String) elvis(entity.getConfig(MySqlNode.CREATION_SCRIPT_CONTENTS), ""));
+        getMachine().copyTo(creationScript, getRunDir() + "/creation-script.cnf");
     }
 
-    private String getDatabaseConfigScript() {
-        String configScriptUrl = entity.getConfig(MySqlNode.CONFIGURATION_SCRIPT_URL);
+    private void copyDatabaseConfigScript() {
+        newScript(CUSTOMIZING).
+                body.append("echo copying config script").
+                execute();  //create the directory
 
-        Reader configContents;
-        if (configScriptUrl != null) {
-            // If set accept as-is
-            configContents = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(configScriptUrl));
-        } else {
-            String configScriptContents = processTemplate(entity.getAttribute(MySqlNode.TEMPLATE_CONFIGURATION_URL));
-            configContents = new StringReader(configScriptContents);
-        }
-        try {
-            return IOUtils.toString(configContents);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        String configScriptContents = processTemplate(entity.getAttribute(MySqlNode.TEMPLATE_CONFIGURATION_URL));
+        Reader configContents = new StringReader(configScriptContents);
+
+        getMachine().copyTo(configContents, getRunDir() + "/mymysql.cnf");
     }
 
     public String getMySqlServerOptionsString() {

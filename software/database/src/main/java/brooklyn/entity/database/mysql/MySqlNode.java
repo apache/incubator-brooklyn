@@ -65,11 +65,7 @@ public interface MySqlNode extends DatabaseNode {
     
     public static final BasicAttributeSensor<String> MYSQL_URL = DB_URL;
 
-    @SetFromFlag("configurationScriptUrl")
-    static final ConfigKey<String> CONFIGURATION_SCRIPT_URL = new BasicConfigKey<String>(String.class, "mysql.config.script.url",
-            "URL where MySQL configuration can be found - disables other configuration options (except version)");
-
-    @SetFromFlag("templateUrl")
+    @SetFromFlag("configurationTemplateUrl")
     static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "mysql.template.configuration.url", "Template file (in freemarker format) for the mysql.conf file",
             "classpath://brooklyn/entity/database/mysql/mysql.conf");
