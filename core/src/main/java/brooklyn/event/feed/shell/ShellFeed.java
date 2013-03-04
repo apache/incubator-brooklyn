@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +27,6 @@ import brooklyn.util.Time;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.StreamGobbler;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -40,25 +38,34 @@ import com.google.common.collect.Sets;
  * this instance of brooklyn is running). Useful e.g. for paas tools such as Cloud Foundry vmc 
  * which operate against a remote target.
  * 
- * Example usage is:
+ * Example usage (e.g. in an entity that extends SoftwareProcessImpl):
  * <pre>
  * {@code
- * feed = ShellFeed.builder()
- *     .entity(this)
- *     .machine(mySshMachineLachine)
- *     .poll(new ShellPollConfig<Long>(DISK_USAGE)
- *         .command("df -P | grep /dev")
- *         .failOnNonZeroResultCode(true)
- *         .onSuccess(new Function<SshPollValue, Long>() {
- *              public Long apply(SshPollValue input) {
+ * private ShellFeed feed;
+ * 
+ * //@Override
+ * protected void connectSensors() {
+ *   super.connectSensors();
+ *   
+ *   feed = ShellFeed.builder()
+ *       .entity(this)
+ *       .machine(mySshMachineLachine)
+ *       .poll(new ShellPollConfig<Long>(DISK_USAGE)
+ *           .command("df -P | grep /dev")
+ *           .failOnNonZeroResultCode(true)
+ *           .onSuccess(new Function<SshPollValue, Long>() {
+ *                public Long apply(SshPollValue input) {
  *                  String[] parts = input.getStdout().split("[ \\t]+");
  *                  return Long.parseLong(parts[2]);
- *              }}))
- *     .build();
+ *                }}))
+ *       .build();
+ * }
  * 
- * // ...
- * 
- * if (feed != null) feed.stop();
+ * {@literal @}Override
+ * protected void disconnectSensors() {
+ *   super.disconnectSensors();
+ *   if (feed != null) feed.stop();
+ * }
  * }
  * </pre>
  * 

@@ -36,7 +36,6 @@ import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.util.exceptions.Exceptions;
 
-import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultimap;
@@ -49,24 +48,33 @@ import com.google.common.collect.Sets;
 /**
  * Provides a feed of attribute values, by polling over http.
  * 
- * Example usage is:
+ * Example usage (e.g. in an entity that extends SoftwareProcessImpl):
  * <pre>
  * {@code
- * httpFeed = HttpFeed.builder()
- *     .entity(this)
- *     .period(200)
- *     .baseUri(String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource", host, port))
- *     .baseUriVars(ImmutableMap.of("include-runtime","true"))
- *     .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
- *         .onSuccess(HttpValueFunctions.responseCodeEquals(200))
- *         .onError(Functions.constant(false)))
- *     .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
- *         .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))
- *     .build();
- *    
- * // ...
+ * private HttpFeed feed;
+ * 
+ * //@Override
+ * protected void connectSensors() {
+ *   super.connectSensors();
  *   
- * if (httpFeed != null) httpFeed.stop();
+ *   feed = HttpFeed.builder()
+ *       .entity(this)
+ *       .period(200)
+ *       .baseUri(String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource", host, port))
+ *       .baseUriVars(ImmutableMap.of("include-runtime","true"))
+ *       .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
+ *           .onSuccess(HttpValueFunctions.responseCodeEquals(200))
+ *           .onError(Functions.constant(false)))
+ *       .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
+ *           .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))
+ *       .build();
+ * }
+ * 
+ * {@literal @}Override
+ * protected void disconnectSensors() {
+ *   super.disconnectSensors();
+ *   if (feed != null) feed.stop();
+ * }
  * }
  * </pre>
  * 

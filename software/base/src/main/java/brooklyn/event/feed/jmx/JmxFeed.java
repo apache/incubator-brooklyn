@@ -15,13 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
 
-import com.google.common.base.Functions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -32,24 +32,33 @@ import com.google.common.collect.Sets;
 /**
  * Provides a feed of attribute values, by polling or subscribing over jmx.
  * 
- * Example usage is:
+ * Example usage (e.g. in an entity that extends {@link SoftwareProcessImpl}):
  * <pre>
  * {@code
- * jmxFeed = JmxFeed.builder()
- *     .entity(this)
- *     .period(500, TimeUnit.MILLISECONDS)
- *     .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
- *         .objectName(requestProcessorMbeanName)
- *         .attributeName("errorCount"))
- *     .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
- *         .objectName(serverMbeanName)
- *         .attributeName("Started")
- *         .onError(Functions.constant(false)))
- *     .build();
- *    
- * // ...
+ * private JmxFeed feed;
+ * 
+ * //@Override
+ * protected void connectSensors() {
+ *   super.connectSensors();
  *   
- * if (jmxFeed != null) jmxFeed.stop();
+ *   feed = JmxFeed.builder()
+ *       .entity(this)
+ *       .period(500, TimeUnit.MILLISECONDS)
+ *       .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
+ *           .objectName(requestProcessorMbeanName)
+ *           .attributeName("errorCount"))
+ *       .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+ *           .objectName(serverMbeanName)
+ *           .attributeName("Started")
+ *           .onError(Functions.constant(false)))
+ *       .build();
+ * }
+ * 
+ * {@literal @}Override
+ * protected void disconnectSensors() {
+ *   super.disconnectSensors();
+ *   if (feed != null) feed.stop();
+ * }
  * }
  * </pre>
  * 

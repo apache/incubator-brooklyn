@@ -25,19 +25,33 @@ import com.google.common.collect.Sets;
 /**
  * Provides a feed of attribute values, by periodically invoking functions.
  * 
- * Example usage is:
+ * Example usage (e.g. in an entity that extends SoftwareProcessImpl):
  * <pre>
  * {@code
- * feed = FunctionFeed.builder()
- *     .poll(new FunctionPollConfig<Object, String>(SOME_STRING_ATTRIBUTE)
+ * private FunctionFeed feed;
+ * 
+ * //@Override
+ * protected void connectSensors() {
+ *   super.connectSensors();
+ *   
+ *   feed = FunctionFeed.builder()
+ *     .entity(this)
+ *     .poll(new FunctionPollConfig<Object, Boolean>(SERVICE_UP)
  *         .period(500, TimeUnit.MILLISECONDS)
- *         .callable(myCallable)
- *         .onError(Functions.constant("failed"))
+ *         .callable(new Callable<Boolean>() {
+ *             public Boolean call() throws Exception {
+ *               return getDriver().isRunning();
+ *             }
+ *         })
+ *         .onError(Functions.constant(Boolan.FALSE))
  *     .build();
+ * }
  * 
- * // ...
- * 
- * if (feed != null) feed.stop();
+ * {@literal @}Override
+ * protected void disconnectSensors() {
+ *   super.disconnectSensors();
+ *   if (feed != null) feed.stop();
+ * }
  * }
  * </pre>
  * 
