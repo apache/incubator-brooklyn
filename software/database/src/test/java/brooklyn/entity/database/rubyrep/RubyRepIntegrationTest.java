@@ -76,7 +76,7 @@ public class RubyRepIntegrationTest {
      *   kern.sysv.shmmax=16777216
      *   kern.sysv.semmns=87381
      */
-    @Test(groups = "Integration")
+    @Test(groups = {"Integration", "WIP"})
     public void test_localhost_postgres() throws Exception {
         PostgreSqlNode db1 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
