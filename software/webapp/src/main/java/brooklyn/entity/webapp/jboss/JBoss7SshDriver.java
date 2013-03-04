@@ -169,6 +169,11 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     @Override
     public void launch() {
         Map flags = MutableMap.of("usePidFile", false);
+        
+        // We wait for evidence of tomcat running because, using 
+        // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
+        // we saw the ssh session return before the tomcat process was fully running 
+        // so the process failed to start.
         newScript(flags, LAUNCHING).
                 body.append(
                 "export LAUNCH_JBOSS_IN_BACKGROUND=true",
@@ -180,7 +185,13 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
                         format("\"-Djboss.server.base.url=file://%s/%s\" ", getRunDir(), SERVER_TYPE) +
                         "-Djava.net.preferIPv4Stack=true " +
                         "-Djava.net.preferIPv6Addresses=false " +
-                        format(" >> %s/console 2>&1 </dev/null &", getRunDir())
+                        format(" >> %s/console 2>&1 </dev/null &", getRunDir()),
+                "for i in {1..10}\n" +
+                        "do\n" +
+                        "    grep -i 'starting' "+getRunDir()+"/console && exit\n" +
+                        "    sleep 1\n" +
+                        "done\n" +
+                        "echo \"Couldn't determine if process is running (console output does not contain 'starting'); continuing but may subsequently fail\""
         ).execute();
     }
 

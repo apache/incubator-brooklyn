@@ -224,11 +224,22 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         NetworkUtils.checkPortsValid(MutableMap.of("httpPort", getHttpPort()));
         Map flags = MutableMap.of("usePidFile", false);
 
+        // We wait for evidence of running because, using 
+        // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
+        // we saw the ssh session return before the tomcat process was fully running 
+        // so the process failed to start.
         newScript(flags, LAUNCHING).
                 body.append(
                 format("cd %s", getRunDir()),
                 sudoBashCIfPrivilegedPort(getHttpPort(), format(
-                        "nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir()))
+                        "nohup ./sbin/nginx -p %s/ -c conf/server.conf > ./console 2>&1 &", getRunDir())),
+                format("for i in {1..10}\n" +
+                        "do\n" +
+                        "    test -f %s && ps -p `cat %s` && exit\n" +
+                        "    sleep 1\n" +
+                        "done\n" +
+                        "echo \"Couldn't determine if process is running (pid not running); continuing but may subsequently fail\"",
+                        getRunDir()+"/"+NGINX_PID_FILE, getRunDir()+"/"+NGINX_PID_FILE)
         ).execute();
     }
 

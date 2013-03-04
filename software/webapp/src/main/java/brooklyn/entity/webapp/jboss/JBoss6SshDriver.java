@@ -110,14 +110,24 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         Map<String,Object> flags = new HashMap<String, Object>();
         flags.put("usePidFile",false);
 
+        // We wait for evidence of tomcat running because, using 
+        // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
+        // we saw the ssh session return before the tomcat process was fully running 
+        // so the process failed to start.
         newScript(flags, LAUNCHING).
             body.append(
                 format("export JBOSS_CLASSPATH=%s/lib/jboss-logmanager.jar",getExpandedInstallDir()),
                 format("%s/bin/run.sh -Djboss.service.binding.set=%s -Djboss.server.base.dir=$RUN_DIR/server ",getExpandedInstallDir(),PORT_GROUP_NAME) +
-                format("-Djboss.server.base.url=file://$RUN_DIR/server -Djboss.messaging.ServerPeerID=%s ",entity.getId())+
-                format("-Djboss.boot.server.log.dir=%s/server/%s/log ",getRunDir(),SERVER_TYPE) +
-                format("-b 0.0.0.0 %s -c %s ",clusterArg,SERVER_TYPE) +
-                ">>$RUN_DIR/console 2>&1 </dev/null &"
+                        format("-Djboss.server.base.url=file://$RUN_DIR/server -Djboss.messaging.ServerPeerID=%s ",entity.getId())+
+                        format("-Djboss.boot.server.log.dir=%s/server/%s/log ",getRunDir(),SERVER_TYPE) +
+                        format("-b 0.0.0.0 %s -c %s ",clusterArg,SERVER_TYPE) +
+                        ">>$RUN_DIR/console 2>&1 </dev/null &",
+                "for i in {1..10}\n" +
+                        "do\n" +
+                        "    grep -i 'starting' "+getRunDir()+"/console && exit\n" +
+                        "    sleep 1\n" +
+                        "done\n" +
+                        "echo \"Couldn't determine if process is running (console output does not contain 'starting'); continuing but may subsequently fail\""
         ).execute();
     }
 
