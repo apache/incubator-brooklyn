@@ -17,20 +17,11 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <mongo-java-driver.version>2.10.1</mongo-java-driver.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-base</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>${mongo-java-driver.version}</version>
         </dependency>
 
         <dependency>
