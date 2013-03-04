@@ -40,6 +40,10 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         return format("server/%s/deploy", SERVER_TYPE);
     } // FIXME what is this in as6?
 
+    protected String getBindAddress() {
+        return entity.getAttribute(JBoss6Server.BIND_ADDRESS);
+    }
+
     protected Integer getPortIncrement() {
         return entity.getAttribute(JBoss6Server.PORT_INCREMENT);
     }
@@ -120,7 +124,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
                 format("%s/bin/run.sh -Djboss.service.binding.set=%s -Djboss.server.base.dir=$RUN_DIR/server ",getExpandedInstallDir(),PORT_GROUP_NAME) +
                         format("-Djboss.server.base.url=file://$RUN_DIR/server -Djboss.messaging.ServerPeerID=%s ",entity.getId())+
                         format("-Djboss.boot.server.log.dir=%s/server/%s/log ",getRunDir(),SERVER_TYPE) +
-                        format("-b 0.0.0.0 %s -c %s ",clusterArg,SERVER_TYPE) +
+                        format("-b %s %s -c %s ", getBindAddress(), clusterArg,SERVER_TYPE) +
                         ">>$RUN_DIR/console 2>&1 </dev/null &",
                 "for i in {1..10}\n" +
                         "do\n" +
