@@ -1,5 +1,6 @@
 package brooklyn.entity.database.mysql
 
+import brooklyn.util.MutableMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.Assert;
@@ -73,6 +74,7 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
     public void test_localhost() throws Exception {
         String dataDir = "/tmp/mysql-data-" + Strings.makeRandomId(8);
         MySqlNode mysql = tapp.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+                .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.of("skip-name-resolve",""))
                 .configure("creationScriptContents", CREATION_SCRIPT)
                 .configure("dataDir", dataDir));
         LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();

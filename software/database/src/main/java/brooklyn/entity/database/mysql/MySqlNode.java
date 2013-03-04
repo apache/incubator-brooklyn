@@ -49,7 +49,9 @@ public interface MySqlNode extends DatabaseNode {
     public static final ConfigKey<String> DATA_DIR = new BasicConfigKey<String>(
             String.class, "mysql.datadir", "Directory for writing data files", null);
 
-    public static final MapConfigKey<Object> MYSQL_SERVER_CONF = new MapConfigKey<Object>(Object.class, "mysql.server.conf", "Configuration options for mysqld");
+    @SetFromFlag("serverConf")
+    public static final MapConfigKey<Object> MYSQL_SERVER_CONF = new MapConfigKey<Object>(
+            Object.class, "mysql.server.conf", "Configuration options for mysqld");
     
     public static final ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
     
@@ -62,4 +64,14 @@ public interface MySqlNode extends DatabaseNode {
             String.class, "mysql.socketUid", "Socket uid, for use in file /tmp/mysql.sock.<uid>.3306 (or randomly generated if not set)", null);
     
     public static final BasicAttributeSensor<String> MYSQL_URL = DB_URL;
+
+    @SetFromFlag("configurationScriptUrl")
+    static final ConfigKey<String> CONFIGURATION_SCRIPT_URL = new BasicConfigKey<String>(String.class, "mysql.config.script.url",
+            "URL where MySQL configuration can be found - disables other configuration options (except version)");
+
+    @SetFromFlag("templateUrl")
+    static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "mysql.template.configuration.url", "Template file (in freemarker format) for the mysql.conf file",
+            "classpath://brooklyn/entity/database/mysql/mysql.conf");
+
 }
