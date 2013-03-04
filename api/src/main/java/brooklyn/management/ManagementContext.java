@@ -6,7 +6,7 @@ import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.drivers.EntityDriverRegistry;
 import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
@@ -38,11 +38,11 @@ public interface ManagementContext {
     ExecutionManager getExecutionManager();
 
     /**
-     * Returns the {@link EntityDriverFactory} entities can use to create drivers.
+     * Returns the {@link EntityDriverRegistry} entities can use to create drivers.
      *
-      * @return the EntityDriverFactory to use.
+      * @return the EntityDriverRegistry to use.
      */
-    EntityDriverFactory getEntityDriverFactory();
+    EntityDriverRegistry getEntityDriverFactory();
 
     /**
      * Returns the {@link DownloadResolverRegistry} for resolving things like which URL to download an installer from.

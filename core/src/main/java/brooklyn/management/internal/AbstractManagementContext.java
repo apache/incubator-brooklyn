@@ -25,7 +25,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverFactory;
-import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.drivers.EntityDriverRegistry;
 import brooklyn.entity.drivers.downloads.BasicDownloadsRegistry;
 import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.entity.rebind.RebindManager;
@@ -70,13 +70,13 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     
     protected volatile BrooklynGarbageCollector gc;
 
-    private final EntityDriverFactory entityDriverFactory;
+    private final EntityDriverRegistry entityDriverRegistry;
     
     private final DownloadResolverRegistry downloadsRegistry;
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
-       this.entityDriverFactory = new BasicEntityDriverFactory();
+       this.entityDriverRegistry = new BasicEntityDriverFactory();
        this.downloadsRegistry = BasicDownloadsRegistry.newDefault(configMap);
     }
     
@@ -130,8 +130,8 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     }
 
     @Override
-    public EntityDriverFactory getEntityDriverFactory() {
-        return entityDriverFactory;
+    public EntityDriverRegistry getEntityDriverFactory() {
+        return entityDriverRegistry;
     }
 
     @Override

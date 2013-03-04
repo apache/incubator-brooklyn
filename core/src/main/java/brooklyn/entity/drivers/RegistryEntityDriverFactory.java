@@ -18,7 +18,7 @@ import com.google.common.base.Throwables;
  * 
  * @author Aled Sage
  */
-public class RegistryEntityDriverFactory implements EntityDriverFactory {
+public class RegistryEntityDriverFactory implements EntityDriverRegistry {
 
     private final Map<DriverLocationTuple, Class<? extends EntityDriver>> registry = new LinkedHashMap<DriverLocationTuple, Class<? extends EntityDriver>>();
 
