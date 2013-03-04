@@ -43,12 +43,6 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         super(entity, machine);
     }
     
-    @Override
-    protected String getVersion() {
-        // TODO Do we really need to override this? It looks same as super
-        return elvis(entity.getConfig(MySqlNode.SUGGESTED_VERSION), getDefaultVersion());
-    }
-
     public String getOsTag() {
 //      e.g. "osx10.6-x86_64"; see http://www.mysql.com/downloads/mysql/#downloads
         OsDetails os = getLocation().getOsDetails();

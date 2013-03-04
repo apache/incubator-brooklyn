@@ -22,3 +22,29 @@ function setVisibility(obj, visible) {
     if (visible) obj.show()
     else obj.hide()
 }
+
+/** preps data for output */
+function prep(s) {
+    if (s==null) return "";
+    return _.escape(s);
+}
+
+function roundIfNumberToNumDecimalPlaces(v, mantissa) {
+    if (typeof v !== 'number')
+        return v;
+    if (Math.round(v)==v)
+        return v;
+    
+    var vk = v;
+    for (i=0; i<mantissa; i++) {
+        vk *= 10;
+        log(vk)
+        if (Math.round(vk)==vk)
+            return vk;
+    }
+    // rounding needed
+    vk = Math.round(vk);
+    for (i=0; i<mantissa; i++)
+        vk /= 10;
+    return vk;
+}

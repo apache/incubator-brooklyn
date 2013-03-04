@@ -7,7 +7,7 @@
 define([
     "underscore", "jquery", "backbone",
     "model/policy-summary", "model/policy-config-summary", "view/viewutils", "view/policy-config-invoke", "text!tpl/apps/policy.html", "text!tpl/apps/policy-row.html", "text!tpl/apps/policy-config-row.html",
-    "jquery-datatables", "datatables-fnstandingredraw"
+    "jquery-datatables", "datatables-extensions"
 ], function (_, $, Backbone, PolicySummary, PolicyConfigSummary, ViewUtils, PolicyConfigInvokeView, PolicyHtml, PolicyRowHtml, PolicyConfigRowHtml) {
 
     var EntityPoliciesView = Backbone.View.extend({

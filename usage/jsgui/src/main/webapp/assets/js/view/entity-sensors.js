@@ -5,46 +5,86 @@
  */
 define([
     "underscore", "jquery", "backbone",
-    "view/viewutils", "model/sensor-summary", "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-row.html",
-    "jquery-datatables", "datatables-fnstandingredraw"
-], function (_, $, Backbone, ViewUtils, SensorSummary, SensorsHtml, SensorRowHtml) {
+    "view/viewutils", "model/sensor-summary", "text!tpl/apps/sensors.html", 
+    "jquery-datatables", "datatables-extensions", "brooklyn-utils"
+], function (_, $, Backbone, ViewUtils, SensorSummary, SensorsHtml) {
 
     var EntitySensorsView = Backbone.View.extend({
         template:_.template(SensorsHtml),
-        sensorTemplate:_.template(SensorRowHtml),
+        sensorMetadata:{},
+        refreshActive:true,
         events:{
             'click .refresh':'refreshSensors',
-            'click .filterEmpty':'toggleFilterEmpty'
+            'click .filterEmpty':'toggleFilterEmpty',
+            'click .toggleAutoRefresh':'toggleAutoRefresh'
         },
         initialize:function () {
             this.$el.html(this.template({ }));
             $.ajaxSetup({ async:false });
             var that = this,
-                sensorsCollection = new SensorSummary.Collection,
-                $table = this.$('#sensors-table'),
-                $tbody = this.$('tbody').empty();
-            sensorsCollection.url = that.model.getLinkByName('sensors');
-            sensorsCollection.fetch({ success:function () {
-                sensorsCollection.each(function (sensor) {
-                    var actions = {};
-                    _.each(sensor.get("links"), function(v,k) {
-                        if (k.slice(0, 7) == "action:") {
-                            actions[k.slice(7)] = v;
-                        }
-                    });
-                    $tbody.append(that.sensorTemplate({
-                        name:sensor.get("name"),
-                        description:sensor.get("description"),
-                        actions:actions,
-                        type:sensor.get("type"),
-                        value:'' // will be set later
-                    }));
-                });
-                $tbody.find('*[rel="tooltip"]').tooltip();
-                that.updateSensorsPeriodically(that);
-                ViewUtils.myDataTable($table);
-                $table.dataTable().fnAdjustColumnSizing();
-            }});
+                $table = this.$('#sensors-table');
+            that.table = ViewUtils.myDataTable($table, {
+                "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                    $(nRow).attr('id', aData[0])
+                    $('td',nRow).each(function(i,v){
+                        if (i==1) $(v).attr('class','sensor-actions');
+                        if (i==2) $(v).attr('class','sensor-value');
+                    })
+                    return nRow;
+                },
+                "aoColumnDefs": [
+                                 { // name (with tooltip)
+                                     "mRender": function ( data, type, row ) {
+                                         // name (column 1) should have tooltip title
+                                         return '<span class="sensor-name" '+ 
+                                             'rel="tooltip" title="<b>'+
+                                             prep(data['description'])+'</b><br/>('+
+                                             prep(data['type'])+')" data-placement="left">'+
+                                             prep(data['name'])+'</span>';
+                                     },
+                                     "aTargets": [ 1 ]
+                                 },
+                                 { // actions
+                                     "mRender": function ( actions, type, row ) {
+                                         var actionsText = ""
+                                         _.each(actions, function(v,k) {
+                                             var text=k
+                                             var icon=""
+                                             var title=""
+                                             if (k=="json") {
+                                                 icon="icon-file"
+                                                 title="JSON direct link"
+                                             }
+                                             if (k=="open") {
+                                                 icon="icon-home"
+                                                 title="Open URL"
+                                             }
+                                             if (icon!="") text=""
+                                             actionsText = actionsText +
+                                                 "<a href='"+prep(v)+"'"+
+                                         		" class='"+prep(icon)+"'"+
+                                         		" title='"+prep(title)+"'>"+
+                                         		prep(text)+"</a>\n";
+                                         })
+                                         return actionsText;
+                                     },
+                                     "aTargets": [ 2 ]
+                                 },
+                                 { // value
+                                     "mRender": function ( data, type, row ) {
+                                         return prep(roundIfNumberToNumDecimalPlaces(data, 4))
+                                     },
+                                     "aTargets": [ 3 ]
+                                 },
+                                 // ID in column 0 is standard (assumed in ViewUtils)
+                                 { "bVisible": false,  "aTargets": [ 0 ] },
+                             ]            
+            });
+            ViewUtils.addFilterEmptyButton(that.table);
+            ViewUtils.addAutoRefreshButton(that.table);
+            ViewUtils.addRefreshButton(that.table);
+            that.loadSensorMetadata(that);
+            that.updateSensorsPeriodically(that);
             that.toggleFilterEmpty();
         },
         render:function () {
@@ -52,44 +92,65 @@ define([
             return this;
         },
         toggleFilterEmpty:function () {
-            ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 2);
+            ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 3);
+        },
+        toggleAutoRefresh:function () {
+            ViewUtils.toggleAutoRefresh(this);
+        },
+        enableAutoRefresh: function(isEnabled) {
+            this.refreshActive = isEnabled
         },
         refreshSensors:function () {
             this.updateSensorsNow(this);  
         },
-        // register a callback to update the sensors
         updateSensorsPeriodically:function (that) {
             var self = this;
-            that.updateSensorsNow(that);
             that.callPeriodically("entity-sensors", function() {
-                self.updateSensorsNow(that);
+                if (self.refreshActive)
+                    self.updateSensorsNow(that);
             }, 3000);
         },
-        updateSensorsNow:function (that) {
-            // NB: this won't add new dynamic sensors
-            var url = that.model.getSensorUpdateUrl(),
-                $table = that.$('#sensors-table'),
-                $rows = that.$("tr.sensor-row");
+        loadSensorMetadata: function(that) {
+            var url =  that.model.getLinkByName('sensors');
             $.get(url, function (data) {
-                // iterate over the sensors table and update each sensor
-                $rows.each(function (index, row) {
-                    var key = $(this).find(".sensor-name").text();
-                    var v = data[key];
-                    if (v === undefined || v === null) v = '';
-                    else if (typeof v === 'number') {
-                        if (Math.round(v)!=v) {
-                            // not an integer, check if it needs rounding
-                            var vk = v*1000; 
-                            if (Math.round(vk)!=vk) {
-                                // needs rounding
-                                v = Math.round(vk)/1000;
-                            }
+                for (d in data) {
+                    var sensor = data[d];
+                    var actions = {};
+                    _.each(sensor["links"], function(v,k) {
+                        if (k.slice(0, 7) == "action:") {
+                            actions[k.slice(7)] = v;
                         }
+                    });
+                    that.sensorMetadata[sensor["name"]] = {
+                          name:sensor["name"],
+                          description:sensor["description"],
+                          actions:actions,
+                          type:sensor["type"]
                     }
-                    $table.dataTable().fnUpdate(_.escape(v), row, 2, false);
+                }
+                that.updateSensorsNow(that);
+                that.table.find('*[rel="tooltip"]').tooltip();
+            });
+        },
+        updateSensorsNow:function (that) {
+            var url = that.model.getSensorUpdateUrl(),
+                $table = that.$('#sensors-table');
+            $.get(url, function (data) {
+                ViewUtils.updateMyDataTable($table, data, function(value, name) {
+                    var metadata = that.sensorMetadata[name]
+                    if (metadata==null) {                        
+                        // TODO should reload metadata when this happens (new sensor for which no metadata known)
+                        // (currently if we have dynamic sensors, their metadata won't appear
+                        // until the page is refreshed; don't think that's a bit problem -- mainly tooltips
+                        // for now, we just return the partial value
+                        return [name, {'name':name}, {}, value]
+                    } 
+                    return [name, metadata,
+                        metadata["actions"],
+                        value
+                    ];
                 });
             });
-            $table.dataTable().fnStandingRedraw();
         }
     });
     return EntitySensorsView;

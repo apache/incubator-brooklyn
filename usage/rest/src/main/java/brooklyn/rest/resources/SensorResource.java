@@ -75,7 +75,6 @@ public class SensorResource extends AbstractBrooklynRestResource {
           @PathParam("entity") final String entityToken
       ) {
     final EntityLocal entity = brooklyn().getEntity(application, entityToken);
-    // TODO: add test
     Map<String, Object> sensorMap = Maps.newHashMap();
     List<Sensor<?>> sensors = Lists.newArrayList(filter(entity.getEntityType().getSensors(),
         new Predicate<Sensor<?>>() {

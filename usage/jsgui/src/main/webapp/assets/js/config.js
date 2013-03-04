@@ -19,7 +19,7 @@ require.config({
         "jquery-ba-bbq":"libs/jquery.ba-bbq.min",
         "handlebars":"libs/handlebars-1.0.rc.1",
         "brooklyn-utils":"libs/brooklyn-utils",
-        "datatables-fnstandingredraw":"libs/dataTables.fnStandingRedraw",
+        "datatables-extensions":"libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",
         "text":"libs/text",
         "tpl":"../tpl"
@@ -35,7 +35,7 @@ require.config({
             deps:[ "underscore", "jquery" ],
             exports:"Backbone"
         },
-        "datatables-fnstandingredraw":{
+        "datatables-extensions":{
             deps:[ "jquery", "jquery-datatables" ]
         }
     }

@@ -848,7 +848,9 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * Cannot be used in combination with overriding the deprecated toStringFieldsToInclude.
      */
     protected ToStringHelper toStringHelper() {
-        return Objects.toStringHelper(this).omitNullValues().add("id", getId()).add("name", getDisplayName());
+        return Objects.toStringHelper(this).omitNullValues().add("id", getId())
+//            make output more concise by suppressing display name
+//            .add("name", getDisplayName());
     }
     
     /**
