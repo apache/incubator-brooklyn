@@ -4,23 +4,19 @@ import groovy.lang.Closure;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.basic.AbstractAggregatingEnricher;
-import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Subscribes to events from producers with a sensor of type T, aggregates them with the 
@@ -94,35 +90,6 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         this(Collections.<String,Object>emptyMap(), source, target, aggregator, null);
     }
 
-    /**
-     * @deprecated will be deleted in 0.5. Use CustomAggregatingEnricher(source, target, aggregator, deafultValue, producers:producer)
-     */
-    @SuppressWarnings("unchecked")
-    public CustomAggregatingEnricher(List<Entity> producer, AttributeSensor<S> source, AttributeSensor<T> target, 
-            Closure<?> aggregator, S defaultValue) {
-        this(producer, source, target, GroovyJavaMethods.<Collection<S>, T>functionFromClosure((Closure<T>)aggregator), defaultValue);
-    }
-
-    @Deprecated
-    public CustomAggregatingEnricher(List<Entity> producer, AttributeSensor<S> source, AttributeSensor<T> target, Closure<?> aggregator) {
-        this(producer, source, target, aggregator, null);
-    }
-
-    /**
-     * @deprecated will be deleted in 0.5. Use CustomAggregatingEnricher(source, target, aggregator, deafultValue, producers:producer)
-     */
-    @Deprecated
-    public CustomAggregatingEnricher(List<Entity> producer, AttributeSensor<S> source, AttributeSensor<T> target,
-            Function<Collection<S>, T> aggregator, S defaultValue) {
-        super(producer, source, target, defaultValue);
-        this.aggregator = aggregator;
-    }
-
-    @Deprecated
-    public CustomAggregatingEnricher(List<Entity> producer, AttributeSensor<S> source, AttributeSensor<T> target, Function<Collection<S>, T> aggregator) {
-        this(producer, source, target, aggregator, (S) null);
-    }
-
     @Override
     public void onUpdated() {
         try {
@@ -192,15 +159,6 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         return newSummingEnricher(Collections.<String,Object>emptyMap(), source, target);
     }
 
-    /**
-     * @deprecated will be deleted in 0.5. Use newAveragingEnricher(source, target, producers:producer, allMembers:true)
-     */
-    @Deprecated
-    public static <N extends Number> CustomAggregatingEnricher<N,N> getSummingEnricher(
-            List<Entity> producer, AttributeSensor<N> source, AttributeSensor<N> target) {
-        return newSummingEnricher(ImmutableMap.of("producers", producer, "allMembers", true), source, target);
-    }
-
     /** creates an enricher which averages over all sensors, 
      * counting ZERO for sensors which have not yet published anything;
      * to have those sensors excluded, pass null as an additional argument (defaultValue)
@@ -229,15 +187,6 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         return newAveragingEnricher(Collections.<String,Object>emptyMap(), source, target);
     }
 
-    /**
-     * @deprecated will be deleted in 0.5. Use newAveragingEnricher(source, target, producers:producer, allMembers:true)
-     */
-    @Deprecated
-    public static <N extends Number> CustomAggregatingEnricher<Number,Double> getAveragingEnricher(
-            List<Entity> producer, AttributeSensor<N> source, AttributeSensor<Double> target) {
-        return newAveragingEnricher(MutableMap.of("producers", producer, "allMembers", true), source, target);
-    }
-    
     private static <N extends Number> double sum(Iterable<N> vals) {
         double result = 0d;
         if (vals!=null) for (Number val : vals) if (val!=null) result += val.doubleValue();

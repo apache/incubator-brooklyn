@@ -5,7 +5,8 @@ import brooklyn.config.ConfigKey
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractGroupImpl
-import brooklyn.entity.basic.EffectorInferredFromAnnotatedMethod
+import brooklyn.entity.basic.Description;
+import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.NamedParameter
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
@@ -32,8 +33,9 @@ public class HelloEntity extends AbstractGroupImpl {
     public static Sensor<Void> ITS_MY_BIRTHDAY = new BasicSensor<Void>(Void.TYPE, "my.birthday");
     
     /**  */
-    public static Effector<Void> SET_AGE = new EffectorInferredFromAnnotatedMethod<String>(HelloEntity.class, "setAge", "allows setting the age");
+    public static Effector<Void> SET_AGE = new MethodEffector<String>(HelloEntity.class, "setAge");
     
+    @Description("allows setting the age")
     public void setAge(@NamedParameter("age") Integer age) {
         setAttribute(AGE, age);
         emit(ITS_MY_BIRTHDAY, null);

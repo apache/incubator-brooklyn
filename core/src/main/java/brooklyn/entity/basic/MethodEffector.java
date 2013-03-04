@@ -9,9 +9,9 @@ import org.codehaus.groovy.runtime.MethodClosure;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
+import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.management.internal.EffectorUtils;
 
 import com.google.common.collect.Lists;
 
@@ -75,14 +75,6 @@ public class MethodEffector<T> extends AbstractEffector<T> {
         this(new AnnotationsOnMethod((Class)mc.getDelegate(), mc.getMethod()), null);
     }
 
-    /**
-     * @deprecated will be deleted in 0.5. Use description annotation
-     */
-    @Deprecated
-    public MethodEffector(Class<?> whereEffectorDefined, String methodName, String description) {
-        this(new AnnotationsOnMethod(whereEffectorDefined, methodName), description);
-    }
-    
     protected MethodEffector(AnnotationsOnMethod anns, String description) {
         super(anns.name, (Class<T>)anns.returnType, anns.parameters, GroovyJavaMethods.<String>elvis(description, anns.description));
     }

@@ -3,7 +3,7 @@ package brooklyn.event.adapter.legacy
 /**
  * TODO javadoc
  * 
- * @deprecated will be deleted in 0.5. Use new *SensorAdapter approach.
+ * @deprecated deprecated in 0.4. Use new *SensorAdapter approach.
  */
 @Deprecated
 public interface ValueProvider<T> {

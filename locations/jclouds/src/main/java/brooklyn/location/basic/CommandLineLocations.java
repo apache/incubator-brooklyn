@@ -1,16 +1,12 @@
 package brooklyn.location.basic;
 
 import java.util.Collection;
-import java.util.List;
 
-import brooklyn.location.Location;
 import brooklyn.location.jclouds.CredentialsFromEnv;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsLocationFactory;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 /** @deprecated in 0.5.0 use resolver */
 public class CommandLineLocations {
@@ -60,25 +56,5 @@ public class CommandLineLocations {
     
     public static LocalhostMachineProvisioningLocation newLocalhostLocation(int numberOfInstances) {
         return new LocalhostMachineProvisioningLocation();
-    }
-
-    /**
-     * @deprecated will be deleted in 0.5.  use new LocationRegistry().getLocationsById(Collection<String>)
-     */
-    @Deprecated
-   public static List<Location> getLocationsById(List<String> ids) {
-        if (ids.size() == 1 && ((List)ids).get(0) instanceof List) {
-            // TODO Horrible hack, dictated by LocationResolverTest.testLegacyCommandLineAcceptsListOLists
-            ids = (List<String>) ((List)ids).get(0);
-        }
-        Iterable<Location> result = Iterables.transform(ids, new Function<String,Location>() {
-                public Location apply(String id) {
-                    if (LOCALHOST.equals(id)) {
-                    return newLocalhostLocation();
-                } else {
-                    return newJcloudsLocation(id);
-                }
-            }});
-        return ImmutableList.copyOf(result);
     }
 }

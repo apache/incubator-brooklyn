@@ -61,11 +61,6 @@ public class EffectorSayHiTest {
 		assertEquals("says hello", e.SAY_HI_2.getDescription());
     }
 
-    // XXX parameter type annotations do NOT work on external Java interface effector definitions
-    //     that use EffectorInferredFromAnnotatedMethod.
-	// Alex% please provide more information or failing test case. they should work AFAICT. the fact that
-	//     the interface method gets implemented doesn't affect how the effector is defined, it is
-	//     built up with explicit reference to the interface class (as CanSayHi is an interface above)
     @Test
     public void testFindTraitEffectors() {
         assertEquals("locations", Startable.START.getParameters()[0].getName());

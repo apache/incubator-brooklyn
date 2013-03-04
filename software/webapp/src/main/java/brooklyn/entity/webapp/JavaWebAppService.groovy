@@ -10,7 +10,7 @@ interface JavaWebAppService extends WebAppService, UsesJava {
 	public static final BasicConfigKey<String> ROOT_WAR = [ String, "wars.root", "WAR file to deploy as the ROOT, as URL (supporting file: and classpath: prefixes)" ]
 
     /**
-     * @deprecated will be deleted in 0.5.
+     * @deprecated since 0.4; use {@link ROOT_WAR} instead; kept for compatibility
      */
     @Deprecated
 	public static final BasicConfigKey<String> WAR = ROOT_WAR;
@@ -25,7 +25,7 @@ interface JavaWebAppService extends WebAppService, UsesJava {
         "Map of context keys (path in user-facing URL, typically without slashes) to archives (e.g. WARs by URL) to deploy, supporting file: and classpath: prefixes)" ]
 
     /**
-     * @deprecated will be deleted in 0.5.  use flag 'wars' now; kept for compatibility
+     * @deprecated since 0.4; use {@link NAMED_WARS}; kept for compatibility
      */
     @Deprecated
     @SetFromFlag("deployments")

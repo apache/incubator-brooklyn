@@ -62,18 +62,6 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
         filter = flags.containsKey("filter") ? GroovyJavaMethods.<Entity>castToPredicate(flags.get("filter")) : Predicates.<Entity>alwaysTrue();
     }
 
-    /**
-     * @deprecated will be deleted in 0.5. Instead use AbstractAggregatingEnricher(source, target, defaultValue, producers:producers, allMembers:true)
-     */
-    @Deprecated 
-    public AbstractAggregatingEnricher(List<Entity> producers, AttributeSensor<S> source, AttributeSensor<T> target) {
-        this(producers, source, target, null);
-    }
-    @Deprecated 
-    public AbstractAggregatingEnricher(List<Entity> producers, AttributeSensor<S> source, AttributeSensor<T> target, S defaultValue) {
-        this(ImmutableMap.of("producers", producers, "allMembers", true), source, target, defaultValue);
-    }
-
     public void addProducer(Entity producer) {
         if (LOG.isDebugEnabled()) LOG.debug("{} linked ({}, {}) to {}", new Object[] {this, producer, source, target});
         subscribe(producer, source, this);

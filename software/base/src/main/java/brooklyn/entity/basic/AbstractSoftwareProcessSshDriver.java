@@ -66,8 +66,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     /**
-     * @deprecated will be deleted in 0.5. Set default on ConfigKey in entity? Rather than overriding it here and not
-     * telling the entity what value was chosen!
+     * @deprecated since 0.4. Set default on ConfigKey in entity, rather than overriding it here 
+     * and not telling the entity what value was chosen!
      */
     @Deprecated
     protected String getDefaultVersion() { return NO_VERSION_INFO; }
