@@ -39,11 +39,4 @@ public interface JBoss6Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME =
             new BasicAttributeSensorAndConfigKey<String>(String.class, "jboss6.clusterName", "Identifier used to group JBoss instances", "");
-
-    /** @deprecated will be deleted in 0.5. Unsupported in 0.4.0. */
-    @Deprecated
-    //TODO property copied from legacy JavaApp, but underlying implementation has not been
-    MapConfigKey<Map> PROPERTY_FILES =
-            new MapConfigKey<Map>(Map.class, "java.properties.environment", "Property files to be generated, referenced by an environment variable");
-
 }
