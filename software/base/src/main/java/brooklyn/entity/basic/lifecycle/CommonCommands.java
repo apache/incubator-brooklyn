@@ -72,7 +72,7 @@ public class CommonCommands {
      * (having a tty for sudo seems like another case of imaginary security which is just irritating.
      * like water restrictions at airport security.) */
     public static String dontRequireTtyForSudo() {
-        return sudo("bash -c 'sed -i s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers'");
+        return sudo("sed -i.brooklyn.bak s/.*requiretty.*/#brooklyn-removed-require-tty/ /etc/sudoers");
     }
 
     /**
