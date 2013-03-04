@@ -80,9 +80,19 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         NetworkUtils.checkPortsValid(ports);
         Map flags = MutableMap.of("usePidFile",false);
 
+        // We wait for evidence of tomcat running because, using 
+        // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
+        // we saw the ssh session return before the tomcat process was fully running 
+        // so the process failed to start.
         newScript(flags, LAUNCHING).
         body.append(
-                format("%s/bin/startup.sh >>$RUN/console 2>&1 </dev/null",getExpandedInstallDir())
+                format("%s/bin/startup.sh >>$RUN/console 2>&1 </dev/null",getExpandedInstallDir()),
+                "for i in {1..10}\n" +
+                "do\n" +
+                "    if [ -s "+getRunDir()+"/logs/catalina.out ]; then exit; fi\n" +
+                "    sleep 1\n" +
+                "done\n" +
+            "echo \"Couldn't determine if tomcat-server is running (logs/catalina.out is still empty); continuing but may subsequently fail\""
         ).execute();
     }
 

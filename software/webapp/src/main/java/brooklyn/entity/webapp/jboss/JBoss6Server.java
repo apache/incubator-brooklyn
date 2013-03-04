@@ -26,18 +26,17 @@ public interface JBoss6Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
             SoftwareProcess.DOWNLOAD_URL, "http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-${version}/jboss-as-distribution-${version}.zip?" +
             "r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fjboss%2Ffiles%2FJBoss%2F${version}%2F&ts=1307104229&use_mirror=kent");
 
+    @SetFromFlag("bindAddress")
+    BasicAttributeSensorAndConfigKey<String> BIND_ADDRESS =
+            new BasicAttributeSensorAndConfigKey<String>(String.class, "jboss6.bind.address", 
+                "Address of interface JBoss should listen on, defaulting 0.0.0.0 (but could set e.g. to attributeWhenReady(HOSTNAME)", 
+                "0.0.0.0");
+
     @SetFromFlag("portIncrement")
     BasicAttributeSensorAndConfigKey<Integer> PORT_INCREMENT =
-            new BasicAttributeSensorAndConfigKey<Integer>(Integer.class, "jboss.portincrement", "Increment to be used for all jboss ports", 0);
+            new BasicAttributeSensorAndConfigKey<Integer>(Integer.class, "jboss6.portincrement", "Increment to be used for all jboss ports", 0);
 
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME =
-            new BasicAttributeSensorAndConfigKey<String>(String.class, "jboss.clusterName", "Identifier used to group JBoss instances", "");
-
-    /** @deprecated will be deleted in 0.5. Unsupported in 0.4.0. */
-    @Deprecated
-    //TODO property copied from legacy JavaApp, but underlying implementation has not been
-    MapConfigKey<Map> PROPERTY_FILES =
-            new MapConfigKey<Map>(Map.class, "java.properties.environment", "Property files to be generated, referenced by an environment variable");
-
+            new BasicAttributeSensorAndConfigKey<String>(String.class, "jboss6.clusterName", "Identifier used to group JBoss instances", "");
 }

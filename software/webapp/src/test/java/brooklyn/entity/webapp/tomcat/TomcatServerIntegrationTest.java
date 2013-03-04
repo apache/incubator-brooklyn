@@ -27,13 +27,13 @@ import com.google.common.collect.ImmutableList;
  * FIXME this test is largely superseded by WebApp*IntegrationTest which tests inter alia Tomcat
  */
 public class TomcatServerIntegrationTest {
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(TomcatServerIntegrationTest.class);
     
     /** don't use 8080 since that is commonly used by testing software */
     static int DEFAULT_HTTP_PORT = 7880;
 
     static boolean httpPortLeftOpen = false;
-    private int oldHttpPort = -1;
     
     private TestApplication app;
     private TomcatServer tc;
@@ -55,7 +55,7 @@ public class TomcatServerIntegrationTest {
     public void detectFailureIfTomcatCantBindToPort() throws Exception {
         ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
         try {
-            app = (TestApplication) ApplicationBuilder.builder(TestApplication.class).manage();
+            app = ApplicationBuilder.builder(TestApplication.class).manage();
             tc = app.createAndManageChild(BasicEntitySpec.newInstance(TomcatServer.class).configure("httpPort",DEFAULT_HTTP_PORT));
             
             try {
@@ -73,56 +73,4 @@ public class TomcatServerIntegrationTest {
             listener.close();
         }
     }
-
-	//TODO should define a generic mechanism for doing this    
-////    @Test(groups = [ "Integration" ])
-//    public void createsPropertiesFilesWithEnvironmentVariables() {
-//        app = new TestApplicationImpl();
-//        tc = new TomcatServer(parent:app, httpPort:DEFAULT_HTTP_PORT);
-//        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR1"),[akey:"aval",bkey:"bval"])
-//        tc.setConfig(TomcatServer.PROPERTY_FILES.subKey("MYVAR2"),[ckey:"cval",dkey:"dval"])
-//        tc.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
-//        
-//        try {
-//            SshMachineLocation machine = tc.locations.first()
-//            String var1file = getEnvironmentVariable(tc, "MYVAR1")
-//            String var2file = getEnvironmentVariable(tc, "MYVAR2")
-//            File tmpFile1 = File.createTempFile("one", "tmp", new File("/tmp"))
-//            File tmpFile2 = File.createTempFile("two", "tmp", new File("/tmp"))
-//            tmpFile1.deleteOnExit()
-//            tmpFile2.deleteOnExit()
-//            machine.copyFrom var1file, tmpFile1.absolutePath
-//            machine.copyFrom var2file, tmpFile2.absolutePath
-//            
-//            Properties var1props = new Properties()
-//            var1props.load(new FileInputStream(tmpFile1))
-//            
-//            Properties var2props = new Properties()
-//            var2props.load(new FileInputStream(tmpFile2))
-//            
-//            assertPropertiesEquals(var1props, [akey:"aval",bkey:"bval"])
-//            assertPropertiesEquals(var2props, [ckey:"cval",dkey:"dval"])
-//        } finally {
-//            tc.stop()
-//        }
-//    }
-//    
-//    private String getEnvironmentVariable(TomcatServerImpl tomcat, String var) {
-//        ByteArrayOutputStream outstream = new ByteArrayOutputStream();
-//        int result = tomcat.driver.machine.run(out:outstream, ["env"], tomcat.driver.runEnvironment);
-//        String outstr = new String(outstream.toByteArray());
-//        String[] outLines = outstr.split("\n");
-//        for (String line : outLines) {
-//            String[] envVariable = line.trim().split("=");
-//            if (envVariable != null && envVariable[0] == var) return envVariable[1];
-//        }
-//        throw new IllegalStateException("environment variable '$var' not found in $outstr")
-//    }
-//    
-//    private void assertPropertiesEquals(Properties props, Map expected) {
-//        assertEquals(props.stringPropertyNames(), expected.keySet());
-//        for (String key : props.stringPropertyNames()) {
-//            assertEquals(props.getProperty(key), expected.get(key));
-//        }
-//    }
 }
