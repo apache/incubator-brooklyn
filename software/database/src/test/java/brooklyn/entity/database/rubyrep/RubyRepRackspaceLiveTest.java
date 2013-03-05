@@ -1,6 +1,10 @@
 package brooklyn.entity.database.rubyrep;
 
 
+import static java.util.Arrays.asList;
+
+import org.testng.annotations.Test;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
@@ -8,10 +12,8 @@ import brooklyn.entity.database.postgresql.PostgreSqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.SshMachineLocation;
-import com.google.common.collect.ImmutableSet;
-import org.testng.annotations.Test;
 
-import static java.util.Arrays.asList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * The RubyRepRackspaceLiveTest installs RubyRep on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
@@ -82,5 +84,23 @@ public class RubyRepRackspaceLiveTest extends RubyRepIntegrationTest {
         }
         
         testReplication(db1, db2);
+    }
+    
+    // disable inherited non-live tests
+    @Test(enabled = false, groups = "Integration")
+    public void test_localhost_mysql() throws Exception {
+        super.test_localhost_mysql();
+    }
+
+    // disable inherited non-live tests
+    @Test(enabled = false, groups = "Integration")
+    public void test_localhost_postgres() throws Exception {
+        super.test_localhost_postgres();
+    }
+
+    // disable inherited non-live tests
+    @Test(enabled = false, groups = "Integration")
+    public void test_localhost_postgres_mysql() throws Exception {
+        super.test_localhost_postgres_mysql();
     }
 }
