@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.jms.JMSBroker;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
@@ -41,6 +42,18 @@ public class ActiveMQBrokerImpl extends JMSBroker<ActiveMQQueue, ActiveMQTopic> 
 		setAttribute(BROKER_URL, String.format("tcp://%s:%d", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)));
 	}
 	
+    public Integer getJmxPort() {
+        return !isJmxEnabled() ? Integer.valueOf(-1) : getAttribute(UsesJmx.JMX_PORT);
+    }
+    
+    public Integer getOpenWirePort() {
+        return getAttribute(OPEN_WIRE_PORT);
+    }
+    
+    public boolean isJmxEnabled() {
+        return Boolean.TRUE.equals(getConfig(USE_JMX));
+    }
+
 	public ActiveMQQueue createQueue(Map properties) {
 		ActiveMQQueue result = new ActiveMQQueue(properties);
         Entities.manage(result);
