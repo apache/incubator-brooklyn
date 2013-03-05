@@ -33,6 +33,8 @@ public class NetworkUtils {
         VALID_IP_ADDRESS_PATTERN = Pattern.compile(VALID_IP_ADDRESS_REGEX);
     }
 
+    public static final List<Cidr> PRIVATE_NETWORKS = Cidr.PRIVATE_NETWORKS_RFC_1918;
+    
     private static boolean loggedLocalhostNotAvailable = false;
     public static boolean isPortAvailable(int port) {
         try {
@@ -190,7 +192,7 @@ public class NetworkUtils {
      * to {@link getInetAddressWithFixedName(byte[])}. If it is a hostname, then this hostname will be used
      * in the returned InetAddress.
      */
-    public static InetAddress getInetAddressWithFixedName(String hostnameOrIp) throws UnknownHostException {
+    public static InetAddress getInetAddressWithFixedName(String hostnameOrIp) {
         try {
             if (VALID_IP_ADDRESS_PATTERN.matcher(hostnameOrIp).matches()) {
                 byte[] ip = new byte[4];
@@ -213,12 +215,7 @@ public class NetworkUtils {
             return InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             InetAddress result = null;
-            try {
-                result = getInetAddressWithFixedName("127.0.0.1");
-            } catch (UnknownHostException e1) {
-                // shouldn't happen
-                throw Throwables.propagate(e1);
-            }
+            result = getInetAddressWithFixedName("127.0.0.1");
             log.warn("Localhost is not resolvable; using "+result);
             return result;
         }
@@ -228,9 +225,7 @@ public class NetworkUtils {
         return new Cidr(cidr);
     }
 
-    public static List<Cidr> PRIVATE_NETWORKS = Cidr.PRIVATE_NETWORKS_RFC_1918;
-    
-    /** returns the private network which the given IP is in, or null if none */
+    /** returns the private network which the given IP is in, or the /32 of local address if none */
     public static Cidr getPrivateNetwork(String ip) {
         Cidr me = new Cidr(ip+"/32");
         for (Cidr c: PRIVATE_NETWORKS)

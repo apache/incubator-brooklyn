@@ -25,7 +25,7 @@ public class Cidr {
     public static final Cidr CLASS_B = _172_16;
     public static final Cidr CLASS_C = _192_168;
     
-    public static List<Cidr> PRIVATE_NETWORKS_RFC_1918 = ImmutableList.<Cidr>of(_192_168, _172_16, _10);
+    public static final List<Cidr> PRIVATE_NETWORKS_RFC_1918 = ImmutableList.<Cidr>of(_192_168, _172_16, _10);
     
     public static final Cidr _169_254 = new Cidr("169.254.0.0/16");
     public static final Cidr LINK_LOCAL = _169_254;
@@ -33,7 +33,7 @@ public class Cidr {
     public static final Cidr _127 = new Cidr("127.0.0.0/8");
     public static final Cidr LOOPBACK = _127;
 
-    public static List<Cidr> NON_PUBLIC_CIDRS = ImmutableList.<Cidr>builder().addAll(PRIVATE_NETWORKS_RFC_1918).add(LINK_LOCAL).add(LOOPBACK).build();
+    public static final List<Cidr> NON_PUBLIC_CIDRS = ImmutableList.<Cidr>builder().addAll(PRIVATE_NETWORKS_RFC_1918).add(LINK_LOCAL).add(LOOPBACK).build();
 
     
     final int[] subnetBytes = new int[] { 0, 0, 0, 0 };

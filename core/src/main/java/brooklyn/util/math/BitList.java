@@ -38,7 +38,7 @@ public class BitList {
 
     public boolean get(int index) {
         if (index<0 || index>=length)
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("Index "+index+" in "+this);
         return bits.get(index);
     }
     
@@ -60,6 +60,27 @@ public class BitList {
         return newInstance(bits, bytes.length*8);
     }
     
+    public static BitList newInstance(List<Boolean> l) {
+        BitSet bs = new BitSet();
+        for (int i=0; i<l.size(); i++)
+            bs.set(i, l.get(i));
+        return new BitList(bs, l.size());
+    }
+
+    public static BitList newInstance(boolean ...l) {
+        BitSet bs = new BitSet();
+        for (int i=0; i<l.length; i++)
+            bs.set(i, l[i]);
+        return new BitList(bs, l.length);
+    }
+    
+    public static BitList newInstance(BigInteger x) {
+        BitSet bs = new BitSet();
+        for (int i=0; i<x.bitLength(); i++)
+            if (x.testBit(i)) bs.set(i);
+        return new BitList(bs, x.bitLength());
+    }
+
     /**
      * returns the bits converted to bytes, with least significant bit first
      * *and* first 8 bits in the first byte  
@@ -93,20 +114,6 @@ public class BitList {
             list.add(get(i));
         }
         return list;
-    }
-    
-    public static BitList newInstance(List<Boolean> l) {
-        BitSet bs = new BitSet();
-        for (int i=0; i<l.size(); i++)
-            bs.set(i, l.get(i));
-        return new BitList(bs, l.size());
-    }
-
-    public static BitList newInstance(boolean ...l) {
-        BitSet bs = new BitSet();
-        for (int i=0; i<l.length; i++)
-            bs.set(i, l[i]);
-        return new BitList(bs, l.length);
     }
     
     /** represents the result of this bit list logically ORred with the other */ 
@@ -188,13 +195,6 @@ public class BitList {
     
     public List<Byte> asByteList() {
         return Bytes.asList(asBytes());
-    }
-
-    public static BitList newInstance(BigInteger x) {
-        BitSet bs = new BitSet();
-        for (int i=0; i<x.bitLength(); i++)
-            if (x.testBit(i)) bs.set(i);
-        return new BitList(bs, x.bitLength());
     }
 
     /** returns value of this as a byte(ignoring any too-high bits) */

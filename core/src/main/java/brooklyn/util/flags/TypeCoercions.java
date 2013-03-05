@@ -339,11 +339,7 @@ public class TypeCoercions {
         registerAdapter(String.class, InetAddress.class, new Function<String,InetAddress>() {
             @Override
             public InetAddress apply(String input) {
-                try {
-                    return NetworkUtils.getInetAddressWithFixedName(input);
-                } catch (UnknownHostException e) {
-                    throw Throwables.propagate(e);
-                }
+                return NetworkUtils.getInetAddressWithFixedName(input);
             }
         });
         registerAdapter(String.class, Cidr.class, new Function<String,Cidr>() {
