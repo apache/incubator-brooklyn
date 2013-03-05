@@ -2,12 +2,13 @@ package brooklyn.util.internal
 
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-
-import groovy.time.TimeDuration;
+import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
 
 import org.testng.annotations.Test
+
+import com.google.common.base.Stopwatch
 
 public class RepeaterTest {
     static { TimeExtras.init() }
@@ -148,25 +149,35 @@ public class RepeaterTest {
         assertEquals 5, iterations;
     }
 
-    @Test
+    /**
+     * Check that the {@link Repeater} will stop after a time limit.
+     *
+     * The repeater is configured to run every 100ms and never stop until the limit is reached.
+     * This is given as {@link Repeater#limitTimeTo(groovy.time.Duration)} and the execution time
+     * is then checked to ensure it is between 100% and 400% of the specified value. Due to scheduling
+     * delays and other factors in a non RTOS system it is expected that the repeater will take much
+     * longer to exit occasionally.
+     *
+     * @see #runRespectsMaximumIterationLimitAndReturnsFalseIfReached()
+     */
+    @Test(groups="Integration")
     public void runRespectsTimeLimitAndReturnsFalseIfReached() {
-        final int DEADLINE = 200;
+        final long LIMIT = 2000l;
         Repeater repeater = new Repeater("runRespectsTimeLimitAndReturnsFalseIfReached")
             .repeat()
-            .every(10 * MILLISECONDS)
+            .every(100 * MILLISECONDS)
             .until { false }
-            .limitTimeTo(DEADLINE * MILLISECONDS);
+            .limitTimeTo(LIMIT * MILLISECONDS);
 
-        Calendar start = Calendar.getInstance();
+        Stopwatch stopwatch = new Stopwatch().start();
         boolean result = repeater.run();
-        Calendar end = Calendar.getInstance();
+        stopwatch.stop();
 
         assertFalse result;
 
-        long difference = end.timeInMillis - start.timeInMillis
-        assertTrue difference >= DEADLINE
-        assertTrue difference < DEADLINE*3
-		// old bounds of 0.8 and 1.2 were too narrow
+        long difference = stopwatch.elapsedMillis();
+        assertTrue(difference >= LIMIT, "Difference was: " + difference);
+        assertTrue(difference < 4 * LIMIT, "Difference was: " + difference);
     }
 
     @Test(expectedExceptions = [ IllegalStateException.class ])
