@@ -38,13 +38,8 @@ function roundIfNumberToNumDecimalPlaces(v, mantissa) {
     var vk = v;
     for (i=0; i<mantissa; i++) {
         vk *= 10;
-        log(vk)
         if (Math.round(vk)==vk)
-            return vk;
+            return v;
     }
-    // rounding needed
-    vk = Math.round(vk);
-    for (i=0; i<mantissa; i++)
-        vk /= 10;
-    return vk;
+    return Number(v.toFixed(mantissa))
 }

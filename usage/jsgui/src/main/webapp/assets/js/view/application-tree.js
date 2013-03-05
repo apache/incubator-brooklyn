@@ -101,6 +101,7 @@ define([
             if (tab) {
                 href = href+"/"+tab
                 stateId = entityId+"/"+tab
+                this.preselectTab(tab)
             }
             window.history.pushState(stateId, "", href)
         	this.displayEntityId(entityId, $(eventName.currentTarget).data("parent-app"));

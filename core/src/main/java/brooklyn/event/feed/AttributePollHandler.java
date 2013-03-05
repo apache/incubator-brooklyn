@@ -67,7 +67,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         } else if (lastWasFailure) {
             if (log.isDebugEnabled()) log.debug("recurring error reading "+this+" from "+entity, error);
         } else {
-            // if we see an error once it is up, log it as a warning and mark service up = false
+            // if we see an error once it is up, log it as a warning the first time until it corrects itself
             log.warn("Error reading "+entity+"->"+sensor+": "+error);
             if (log.isDebugEnabled())
                 log.debug("details for error reading "+entity+"->"+sensor+": "+error, error);

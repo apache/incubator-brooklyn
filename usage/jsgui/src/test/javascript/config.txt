@@ -1,4 +1,7 @@
 
+
+
+
     /* Libraries */
     paths:{
         "jquery":"js/libs/jquery",
@@ -13,8 +16,10 @@
         "jquery-ba-bbq":"js/libs/jquery.ba-bbq.min",
         "handlebars":"js/libs/handlebars-1.0.rc.1",
         "brooklyn-utils":"js/libs/brooklyn-utils",
-        "datatables-fnstandingredraw":"js/libs/dataTables.fnStandingRedraw",
+        "datatables-extensions":"js/libs/dataTables.extensions",
+        "googlemaps":"view/googlemaps",
         "text":"js/libs/text",
+
         "model":"js/model",
         "view":"js/view",
         "router":"js/router"
@@ -30,7 +35,7 @@
             deps:[ "underscore", "jquery" ],
             exports:"Backbone"
         },
-        "datatables-fnstandingredraw":{
+        "datatables-extensions":{
             deps:[ "jquery", "jquery-datatables" ]
         }
     }

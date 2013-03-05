@@ -96,8 +96,6 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
         MySqlNode mysql = (MySqlNode) addChild(
                 getEntityManager().createEntity(
                         BasicEntitySpec.newInstance(MySqlNode.class)
-                        .configure(MySqlNode.SUGGESTED_VERSION, "5.5.29")
-                        
                         .configure(MySqlNode.CREATION_SCRIPT_URL, getConfig(DB_SETUP_SQL_URL))) );
 
         ControlledDynamicWebAppCluster web = (ControlledDynamicWebAppCluster) addChild(

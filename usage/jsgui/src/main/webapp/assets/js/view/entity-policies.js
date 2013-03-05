@@ -29,27 +29,29 @@ define([
             // fetch the list of policies and create a view for each one
             that._policies = new PolicySummary.Collection();
             that._policies.url = that.model.getLinkByName("policies");
-            that.render();
             that.callPeriodically("entity-policies", function() {
                 that.refresh();
             }, 3000);
+            that.refresh();
         },
         refresh:function() {
             var that = this;
+            that.render();
             that._policies.fetch({ success:function () {
                 that.render();
             }});
         },
         render:function () {
             var that = this,
-                $tbody = $('#policies-table tbody').empty();
+                $tbody = this.$('#policies-table tbody').empty();
             if (that._policies.length==0) {
-                $(".has-no-policies").show();
-                $("#policy-config").hide();
-                $("#policy-config-none-selected").hide();
+                this.$(".has-no-policies").show();
+                this.$("#policy-config").hide();
+                this.$("#policy-config-none-selected").hide();
             } else {
-                $(".has-no-policies").hide();
+                this.$(".has-no-policies").hide();
                 that._policies.each(function (policy) {
+                    // TODO better to use datatables, and a json array, as we do elsewhere
                     $tbody.append(that.policyRow({
                         cid:policy.get("id"),
                         name:policy.get("name"),
@@ -57,12 +59,12 @@ define([
                         summary:policy
                     }));
                     if (that.activePolicy) {
-                        $("#policies-table tr[id='"+that.activePolicy+"']").addClass("selected");
+                        that.$("#policies-table tr[id='"+that.activePolicy+"']").addClass("selected");
                         that.showPolicyConfig(that.activePolicy);
                         that.refreshPolicyConfig(that);
                     } else {
-                        $("#policy-config").hide();
-                        $("#policy-config-none-selected").show();
+                        that.$("#policy-config").hide();
+                        that.$("#policy-config-none-selected").show();
                     }
                 });
             }
@@ -100,6 +102,7 @@ define([
         showPolicyConfig:function (activePolicyId) {
             var that = this;
             if (activePolicyId != null && that.activePolicy != activePolicyId) {
+                // TODO better to use a json array, as we do elsewhere
                 var $table = $('#policy-config-table'),
                     $tbody = $('#policy-config-table tbody').empty();
                 $("#policy-config-none-selected").hide(100);

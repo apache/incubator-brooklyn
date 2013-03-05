@@ -13,7 +13,6 @@ require.config({
         "formatJson":"libs/json-formatter",
         "jquery-form":"libs/jquery.form",
         "jquery-datatables":"libs/jquery.dataTables",
-        "async":"libs/async",
         "jquery-slideto":"libs/jquery.slideto.min",
         "jquery-wiggle":"libs/jquery.wiggle.min",
         "jquery-ba-bbq":"libs/jquery.ba-bbq.min",
@@ -22,6 +21,7 @@ require.config({
         "datatables-extensions":"libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",
         "text":"libs/text",
+//        "async":"libs/async",
         "tpl":"../tpl"
     },
     shim:{
