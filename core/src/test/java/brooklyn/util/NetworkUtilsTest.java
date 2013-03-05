@@ -3,6 +3,7 @@ package brooklyn.util;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -11,6 +12,7 @@ import java.net.UnknownHostException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 
 public class NetworkUtilsTest {
@@ -37,12 +39,17 @@ public class NetworkUtilsTest {
         
     }
     
-    @Test(expectedExceptions=UnknownHostException.class, groups="Integration")
+    @Test(groups="Integration")
     public void testGetInetAddressWithFixedNameButInvalidIpThrowsException() throws Exception {
         // as with ByonLocationResolverTest.testNiceError
         // some DNS servers give an IP for this "hostname"
         // so test is marked as integration now
-        NetworkUtils.getInetAddressWithFixedName("1.2.3.400");
+        try {
+            NetworkUtils.getInetAddressWithFixedName("1.2.3.400");
+            fail();
+        } catch (Exception e) {
+            if (Exceptions.getFirstThrowableOfType(e, UnknownHostException.class) == null) throw e;
+        }
     }
     
     @Test
