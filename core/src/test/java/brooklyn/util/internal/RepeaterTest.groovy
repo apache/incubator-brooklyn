@@ -2,12 +2,13 @@ package brooklyn.util.internal
 
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-
-import groovy.time.TimeDuration;
+import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
 
 import org.testng.annotations.Test
+
+import com.google.common.base.Stopwatch
 
 public class RepeaterTest {
     static { TimeExtras.init() }
@@ -159,7 +160,7 @@ public class RepeaterTest {
      *
      * @see #runRespectsMaximumIterationLimitAndReturnsFalseIfReached()
      */
-    @Test
+    @Test(groups="Integration")
     public void runRespectsTimeLimitAndReturnsFalseIfReached() {
         final long LIMIT = 2000l;
         Repeater repeater = new Repeater("runRespectsTimeLimitAndReturnsFalseIfReached")
@@ -168,13 +169,13 @@ public class RepeaterTest {
             .until { false }
             .limitTimeTo(LIMIT * MILLISECONDS);
 
-        Calendar start = Calendar.getInstance();
+        Stopwatch stopwatch = new Stopwatch().start();
         boolean result = repeater.run();
-        Calendar end = Calendar.getInstance();
+        stopwatch.stop();
 
         assertFalse result;
 
-        long difference = end.timeInMillis - start.timeInMillis;
+        long difference = stopwatch.elapsedMillis();
         assertTrue(difference >= LIMIT, "Difference was: " + difference);
         assertTrue(difference < 4 * LIMIT, "Difference was: " + difference);
     }
