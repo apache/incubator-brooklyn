@@ -463,7 +463,10 @@ define([
                 if (catalogEntryItem!=null && catalogEntryItem.config!=null) {
                     var that = this
                     _.each(catalogEntryItem.config, function (cfg) {
-                        that.$('.config-table').append(_.template(RequiredConfigEntryHtml, cfg)) 
+                        if (cfg.label)
+                            // only include items with labels
+                            that.$('.config-table').append(_.template(RequiredConfigEntryHtml, {data:cfg}))
+                        // (others might be included in future with an "expand" option, or priority option)
                     })
                 }
             }
@@ -476,8 +479,6 @@ define([
                     $('#checkboxValue',elt).length ? $('#checkboxValue',elt).is(':checked') :
                     $('#value',elt).val()
             })
-            log("CONFIG")
-            log(map)
             return map;
         },
         selection:function (event) {

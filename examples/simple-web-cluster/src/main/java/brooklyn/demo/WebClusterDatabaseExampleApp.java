@@ -93,12 +93,10 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     public void postConstruct() {
         super.postConstruct();
 
-        String sqlUrl = getConfig(DB_SETUP_SQL_URL);
-        if ("".equals(sqlUrl)) sqlUrl = null;
         MySqlNode mysql = (MySqlNode) addChild(
                 getEntityManager().createEntity(
                         BasicEntitySpec.newInstance(MySqlNode.class)
-                        .configure("creationScriptUrl", sqlUrl)) );
+                        .configure(MySqlNode.CREATION_SCRIPT_URL, getConfig(DB_SETUP_SQL_URL))) );
 
         ControlledDynamicWebAppCluster web = (ControlledDynamicWebAppCluster) addChild(
                 getEntityManager().createEntity(

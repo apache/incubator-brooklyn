@@ -25,12 +25,14 @@ import brooklyn.entity.rebind.RebindContext;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
@@ -159,15 +161,26 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
     
     /** returns URL, if it can be inferred; null otherwise */
-    protected String inferUrl() {
+    protected String inferUrl(boolean requireManagementAccessible) {
         String protocol = checkNotNull(getProtocol(), "no protocol configured");
         String domain = getDomain();
+        Integer port = checkNotNull(getPort(), "no port configured (the requested port may be in use)");
+        if (requireManagementAccessible) {
+            HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, port);
+            if (accessible!=null) {
+                domain = accessible.getHostText();
+                port = accessible.getPort();
+            }
+        }
         if (domain==null) domain = getAttribute(HOSTNAME);
         if (domain==null) return null;
-        Integer port = checkNotNull(getPort(), "no port configured (the requested port may be in use)");
         return protocol+"://"+domain+":"+port+"/";
     }
-    
+
+    protected String inferUrl() {
+        return inferUrl(false);
+    }
+
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts();

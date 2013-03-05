@@ -4,7 +4,6 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,7 +22,6 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -97,7 +95,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     }
     
     public static InetAddress getLocalhostInetAddress() {
-        return TypeCoercions.coerce(elvis(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue(), lookupLocalHost()), InetAddress.class);
+        return TypeCoercions.coerce(elvis(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue(), 
+                NetworkUtils.getLocalHost()), InetAddress.class);
     }
 
     public InetAddress getAddress() { return address; }
@@ -107,7 +106,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void provisionMore(int size) {
         for (int i=0; i<size; i++) {
-            Map flags = MutableMap.of("address", elvis(address, lookupLocalHost()));
+            Map flags = MutableMap.of("address", elvis(address, NetworkUtils.getLocalHost()));
             // TODO is this necessary? since they are inherited anyway? 
             // (probably, since inheritance is only respected for a small subset) 
             for (String k: SshMachineLocation.ALL_SSH_CONFIG_KEY_NAMES) {
@@ -119,14 +118,6 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
        }
     }
 
-    private static InetAddress lookupLocalHost() {
-        try {
-            return InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            throw Throwables.propagate(e);
-        }
-    }
-    
     public static synchronized boolean obtainSpecificPort(InetAddress localAddress, int portNumber) {
         if (portsInUse.contains(portNumber)) {
             return false;

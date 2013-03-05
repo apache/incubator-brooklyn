@@ -328,7 +328,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             waitForReachable(computeService, node, initialCredentials, setup);
             
             String vmHostname = getPublicHostname(node, setup);
-            JcloudsSshMachineLocation sshLocByHostname = createJcloudsSshMachineLocation(node, vmHostname, setup);
+            JcloudsSshMachineLocation sshLocByHostname = registerJcloudsSshMachineLocation(node, vmHostname, setup);
             
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
@@ -667,7 +667,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             // TODO confirm we can SSH ?
 
-            return createJcloudsSshMachineLocation(node, hostname, setup);
+            return registerJcloudsSshMachineLocation(node, hostname, setup);
             
         } catch (IOException e) {
             throw Throwables.propagate(e);
@@ -678,10 +678,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     // -------------- create the SshMachineLocation instance, and connect to it etc ------------------------
+    
+    protected JcloudsSshMachineLocation registerJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, ConfigBag setup) throws IOException {
+        JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(node, vmHostname, setup);
+        machine.setParentLocation(this);
+        vmInstanceIds.put(machine, node.getId());
+        return machine;
+    }
 
     protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, ConfigBag setup) throws IOException {
         Map<?,?> sshConfig = extractSshConfig(setup, node);
-        
         if (LOG.isDebugEnabled())
             LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} for {} with {}", 
                     new Object[] {
@@ -690,18 +696,19 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             setup.getDescription(), 
                             Entities.sanitize(sshConfig)
                     });
-        JcloudsSshMachineLocation machine = new JcloudsSshMachineLocation(
+        return new JcloudsSshMachineLocation(
                 MutableMap.builder()
                         .put("address", vmHostname) 
                         .put("displayName", vmHostname)
                         .put("user", getUser(setup))
+                        // don't think "config" does anything
+                        .putAll(sshConfig)
+                        // FIXME remove "config" -- inserted directly, above
                         .put("config", sshConfig)
+                        
                         .build(),
                 this, 
                 node);
-        machine.setParentLocation(this);
-        vmInstanceIds.put(machine, node.getId());
-        return machine;
     }
 
     // -------------- give back the machines------------------

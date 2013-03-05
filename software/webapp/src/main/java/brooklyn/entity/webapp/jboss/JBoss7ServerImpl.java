@@ -13,9 +13,11 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.location.access.BrooklynAccessUtils;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.net.HostAndPort;
 
 public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements JBoss7Server {
 
@@ -49,10 +51,12 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     protected void connectSensors() {
         super.connectSensors();
 
-        String host = getAttribute(HOSTNAME);
-        int port = getAttribute(MANAGEMENT_HTTP_PORT) + getAttribute(PORT_INCREMENT);
+        HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, 
+                // TODO really increment???
+                getAttribute(MANAGEMENT_HTTP_PORT) + getAttribute(PORT_INCREMENT));
         
-        String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource", host, port);
+        String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource",
+                hp.getHostText(), hp.getPort());
         Map<String, String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
         
         httpFeed = HttpFeed.builder()

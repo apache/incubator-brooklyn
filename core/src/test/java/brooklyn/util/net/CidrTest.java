@@ -2,8 +2,7 @@ package brooklyn.util.net;
 
 import java.util.Arrays;
 
-import junit.framework.Assert;
-
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class CidrTest {
@@ -71,6 +70,30 @@ public class CidrTest {
         assertBytesEquals(c.getBytes(), new int[] { 0, 0, 0, 0 });
         Assert.assertEquals(c.getLength(), 32);
     }
+    
+    @Test
+    public void test_10_0_0_0_7_LessABit() {
+        Cidr c = new Cidr("10.0.0.0/7");
+        Assert.assertEquals(c.toString(), "10.0.0.0/7");
+        assertBytesEquals(c.getBytes(), new int[] { 10, 0, 0, 0 });
+        Assert.assertEquals(c.getLength(), 7);
+    }
+
+    @Test
+    public void test_10_0_0_0_6_LessTwoBitsOneIsSignificant() {
+        Cidr c = new Cidr("10.0.0.1/6");
+        Assert.assertEquals(c.toString(), "8.0.0.0/6");
+        assertBytesEquals(c.getBytes(), new int[] { 8, 0, 0, 0 });
+        Assert.assertEquals(c.getLength(), 6);
+    }
+
+    @Test
+    public void test_10_0_blah_6() {
+        Cidr c = new Cidr("10.0../6");
+        Assert.assertEquals(c.toString(), "8.0.0.0/6");
+        assertBytesEquals(c.getBytes(), new int[] { 8, 0, 0, 0 });
+        Assert.assertEquals(c.getLength(), 6);
+    }
 
     @Test
     public void testSubnet() {
@@ -99,5 +122,36 @@ public class CidrTest {
         Assert.assertEquals(c.addressAtOffset(256*256*8+1).getHostAddress(), "10.8.0.1");
     }
 
+    @Test
+    public void testCommonPrefixLength() {
+        Cidr c1 = new Cidr("10.0.0.0/8");
+        Cidr c2 = new Cidr("11.0.0.0/8");
+        Assert.assertEquals(c1.commonPrefixLength(c2), 7);
+        Assert.assertEquals(c2.commonPrefixLength(c1), 7);
+        Assert.assertEquals(c2.commonPrefix(c1), c1.commonPrefix(c2));
+        Assert.assertEquals(c2.commonPrefix(c1), new Cidr("10.0../7"));
+        Cidr c1s = new Cidr("10.0../6");
+        Assert.assertEquals(c2.commonPrefixLength(c1s), 6);
+        
+        Assert.assertTrue(c1s.contains(c1));
+        Assert.assertTrue(c1s.contains(c2));
+        Assert.assertFalse(c1.contains(c2));
+        Assert.assertFalse(c2.contains(c1));
+    }
 
+    @Test
+    public void testContains() {
+        Assert.assertTrue(Cidr._172_16.contains(new Cidr("172.17.0.1/32")));
+        Assert.assertFalse(Cidr._172_16.contains(new Cidr("172.144.0.1/32")));
+    }
+    
+    @Test
+    public void testIsCanonical() {
+        Assert.assertTrue(Cidr.isCanonical("10.0.0.0/8"));
+        Assert.assertTrue(Cidr.isCanonical("10.0.0.0/16"));
+        Assert.assertTrue(Cidr.isCanonical(Cidr._172_16.toString()));
+        Assert.assertFalse(Cidr.isCanonical("10.0.0.1/8"));
+        Assert.assertFalse(Cidr.isCanonical("/0"));
+        Assert.assertFalse(Cidr.isCanonical("10.0.0.0/33"));
+    }
 }
