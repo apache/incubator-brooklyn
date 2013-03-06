@@ -35,7 +35,7 @@
 	padding: 15px;
 }
 #application-content .tab-content {
-    max-height: 500px;
+    max-height: 720px;
     overflow: scroll;
 }
 #application-content .template-lozenge {
@@ -426,7 +426,7 @@ input[type="color"]:focus,.uneditable-input:focus {
     height: auto;
 }
 .tab-content {
-	padding: 18px;
+	padding: 12px 18px 18px 18px;
     border-right: 1px solid #DDD;
     border-left: 1px solid #DDD;
     min-height: 300px;
@@ -559,17 +559,62 @@ background-color: #FFFFFF;
 }
 table.dataTable thead th {
 text-align: left;
+background-color: #E0E4E0;
+line-height: 24px;
 }
 table.dataTable {
-margin: 0 auto 4px auto;
-border-width: 0px 0px 1px 0px;
+margin: 0;
+border-width: 2px 0px 2px 0px;
 border-style: solid;
-border-color: gray;
+border-color: black;
+background-color: #fff;
+overflow: scroll;
+/* background-color: #fff;
+ border-top-width: 1px; */
+}
+.bottom {
+	vertical-align: bottom;
+}
+.smallpadside {
+	margin-left: 0.25em;
+	margin-right: 0.25em;
+}
+.table-scroll-wrapper {
+    width: 100%;
+    overflow: scroll;
+    background-color: #ececec;
+	border-style: solid;
+	border-color: #e8e8e8;
+	border-width: 1px 1px 1px 1px;
+	border-bottom-left-radius: 7px;
+	border-bottom-right-radius: 7px;
+}
+.table-scroll-wrapper .dataTables_filter {
+	float: left;
+	padding-left: 6px;
+}
+.table-scroll-wrapper .dataTables_filter label {
+	margin-bottom: 5px;
+	margin-top: 4px;
+}
+.dataTables_wrapper .brook-db-top-toolbar {
+    font-size: 85%;
+    float: right;
+    padding-right: 6px;
+    padding-top: 7px;
+}
+.dataTables_wrapper .brook-db-bot-toolbar {
+    font-size: 85%;
+    float: right;
+    padding-right: 6px;
+    padding-left: 5px;
+    padding-top: 5px;
 }
 
 .dataTables_info {
-	padding-top: 2px;
-	padding-left: 6px;
+	padding-top: 5px;
+	padding-left: 8px;
+	padding-bottom: 8px;
     font-size: 85%;
     width: auto;
     align: center;
@@ -578,11 +623,20 @@ border-color: gray;
 .dataTables_paginate {
     font-size: 85%;
     float: right;
+    margin-top: 6px;
+    margin-bottom: 3px;
+    padding-top: 1px;
+    padding-right: 4px;
+    height: 18px;
+    line-height: 18px;
+}
+.paging_full_numbers a.paginate_active {
+     background-color: #A8B8B0;
 }
 .dataTables_length {
     float: left;
-    padding-left: 0.5em;
-    padding-top: 1px;
+    padding-left: 1em;
+    padding-top: 5px;
 }
 .dataTables_length label {
     font-size: 85%;
@@ -607,25 +661,19 @@ margin: 0;
     background-size:12px 12px;
     background-repeat: no-repeat;
     background-position: 8px 5px;
-    width: 15em;
+    width: 12em;
     font-size: 85%;
     padding: 1px 4px 1px 24px;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
+    border-color: #888C88;
+    /*
     -webkit-border-radius: 1em;
     -moz-border-radius: 1em;
     border-radius: 1em;
-}
-.dataTables_wrapper .brook-db-top-toolbar {
-	font-size: 85%;
-	float: right;
-	padding-right: 6px;
-}
-.dataTables_wrapper .brook-db-bot-toolbar {
-    font-size: 85%;
-    float: left;
-    padding-right: 10px;
-    padding-left: 5px;
-    padding-top: 1px;
+    */
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
 }
 /* nonDatatables environments want to look a bit like our datatables environment */
 table.nonDatatables {
@@ -642,6 +690,11 @@ table.table.nonDatatables tbody > tr:first-child > td {
 	/* need both bottom of head, and top of body, to support empty table and override non-empty row top border */
 	border-top: 1px black solid;
 }
+table.dataTable tbody tr.selected,
+table.dataTable tr.odd.selected td.sorting_1,
+table.dataTable tr.even.selected td.sorting_1 {
+	background: #AC8 !important;
+},
 table.table.nonDatatables tbody tr.selected,
 table.table.nonDatatables tbody tr.selected td {
     background: #AC8;
@@ -1103,11 +1156,13 @@ textarea {
     width: 15px !important;
     height: 15px !important;
 }
-
-.icon-refresh:hover {
+.green-hover.icon-refresh:hover {
     background: url(../images/application-icon-refresh-hover.png) top left
         !important;
 }
+.table-toolbar-icon:hover {
+	opacity: .7;
+} 
 
 #details {
     background-color: #f0f0f0 !important;

@@ -11,7 +11,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.util.flags.TypeCoercions;
+import brooklyn.rest.util.JsonUtils;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -36,15 +36,8 @@ public class EntityConfigSummary extends ConfigSummary {
   protected EntityConfigSummary(ConfigKey<?> config, String label, Map<String, URI> links) {
       super(config.getName(), config.getTypeName(), 
           config.getDescription(), 
-          toJsonableValue(config.getDefaultValue()), config.isReconfigurable(), label);
+          JsonUtils.toJsonable(config.getDefaultValue()), config.isReconfigurable(), label);
       this.links = links==null ? null : ImmutableMap.copyOf(links);
-  }
-  
-  private static Object toJsonableValue(Object x) {
-      if (x==null) return null;
-      if (TypeCoercions.isPrimitiveOrBoxer(x.getClass()))
-          return x;
-      return ""+x;
   }
   
   /** generates a representation for a given config key, 

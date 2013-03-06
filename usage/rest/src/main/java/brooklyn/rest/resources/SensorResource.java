@@ -18,6 +18,7 @@ import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.SensorSummary;
+import brooklyn.rest.util.JsonUtils;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -67,15 +68,14 @@ public class SensorResource extends AbstractBrooklynRestResource {
   @GET
   @Path("/current-state")
   @ApiOperation(value = "Fetch sensor values in batch", notes="Returns a map of sensor name to value")
-  public Map<String, String> batchSensorRead(
+  public Map<String, Object> batchSensorRead(
           @ApiParam(value = "Application ID or name", required = true)
           @PathParam("application") final String application,
           @ApiParam(value = "Entity ID or name", required = true)
           @PathParam("entity") final String entityToken
       ) {
     final EntityLocal entity = brooklyn().getEntity(application, entityToken);
-    // TODO: add test
-    Map<String, String> sensorMap = Maps.newHashMap();
+    Map<String, Object> sensorMap = Maps.newHashMap();
     List<Sensor<?>> sensors = Lists.newArrayList(filter(entity.getEntityType().getSensors(),
         new Predicate<Sensor<?>>() {
           @Override
@@ -87,7 +87,7 @@ public class SensorResource extends AbstractBrooklynRestResource {
     for (Sensor<?> sensor : sensors) {
       Object value = entity.getAttribute(findSensor(entity, sensor.getName()));
       // TODO type
-      sensorMap.put(sensor.getName(), (value != null) ? value.toString() : "");
+      sensorMap.put(sensor.getName(), JsonUtils.toJsonable(value));
     }
     return sensorMap;
   }

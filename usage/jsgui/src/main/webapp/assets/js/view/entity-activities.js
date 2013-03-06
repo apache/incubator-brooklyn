@@ -2,58 +2,84 @@
  * Displays the list of activities/tasks the entity performed.
  */
 define([
-    "underscore", "backbone", "text!tpl/apps/activities.html", "text!tpl/apps/activity-row.html",
-    "text!tpl/apps/activity-details.html", "bootstrap", "formatJson"
-], function (_, Backbone, ActivitiesHtml, ActivityRowHtml, ActivityDetailsHtml) {
+    "underscore", "jquery", "backbone", "view/viewutils",
+    "text!tpl/apps/activities.html", "text!tpl/apps/activity-details.html", 
+    "bootstrap", "formatJson", "jquery-datatables", "datatables-extensions", "brooklyn-utils"
+], function (_, $, Backbone, ViewUtils, ActivitiesHtml, ActivityDetailsHtml) {
 
     var ActivitiesView = Backbone.View.extend({
         template:_.template(ActivitiesHtml),
-        taskRow:_.template(ActivityRowHtml),
+        table:null,
+        refreshActive:true,
         events:{
-            "click #activities-table tr":"rowClick"
+            "click #activities-table tr":"rowClick",
+            'click .toggleAutoRefresh':'toggleAutoRefresh'
         },
         initialize:function () {
-            var that = this;
-            that.$el.html(that.template({}));
+            this.$el.html(this.template({ }));
+            $.ajaxSetup({ async:false });
+            var that = this,
+                $table = that.$('#activities-table');
             that.collection.url = that.model.getLinkByName("activities");
-            that.collection.fetch();
+            that.table = ViewUtils.myDataTable($table, {
+                "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                    $(nRow).attr('id', aData[0])
+                },
+                "aoColumnDefs": [
+                                 {
+                                     "mRender": function ( data, type, row ) {
+                                         return prep(data)
+                                     },
+                                     "aTargets": [ 0, 1, 2, 3 ]
+                                 },
+                                 { "bVisible": false,  "aTargets": [ 0 ] }
+                             ]            
+            });
+            // TODO domain-specific filters
+            ViewUtils.addAutoRefreshButton(that.table);
+            ViewUtils.addRefreshButton(that.table);
+            
             that.collection.on("reset", that.render, that);
             that.callPeriodically("entity-activities", function () {
-                that.collection.fetch();
-            }, 5000);
+                if (self.refreshActive)
+                    that.collection.fetch();
+            }, 3000);
+            that.collection.fetch();
         },
         beforeClose:function () {
             this.collection.off("reset", this.render);
         },
+        toggleAutoRefresh:function () {
+            ViewUtils.toggleAutoRefresh(this);
+        },
+        enableAutoRefresh: function(isEnabled) {
+            this.refreshActive = isEnabled
+        },
         render:function () {
-            var that = this,
-                $tbody = $("#activities-table tbody").empty();
-            if (this.collection.length==0) {
+            var that = this;
+            if (that.table == null || this.collection.length==0) {
                 $(".has-no-activities").show();
                 $("#activity-details-none-selected").hide();
             } else {
                 $(".has-no-activities").hide();
-                this.collection.each(function (task) {
-                    $tbody.append(that.taskRow({
-                        cid:task.get("id"),
-                        displayName:task.get("displayName"),
-                        submitTimeUtc:task.get("submitTimeUtc"),
-                        startTimeUtc:task.get("startTimeUtc"),
-                        endTimeUtc:task.get("endTimeUtc"),
-                        currentStatus:task.get("currentStatus"),
-                        entityDisplayName:task.get("entityDisplayName")
-                    }));
-                if (that.activeTask) {
-                    $("#activities-table tr[id='"+that.activeTask+"']").addClass("selected");
-                    that.showFullActivity(that.activeTask);
-                } else {
-                    $("#activity-details-none-selected").show();
-                }
-            });
+                ViewUtils.updateMyDataTable(that.table, that.collection, function(task, index) {
+                    return [ 
+                                  // columns are: id, name, when submitted, status         
+                                  task.get("id"),
+                                  task.get("displayName"),
+                                  task.get("submitTimeUtc"),
+                                  task.get("currentStatus")
+                              ];
+                    //also have:
+//                  startTimeUtc:task.get("startTimeUtc"),
+//                  endTimeUtc:task.get("endTimeUtc"),
+//                  entityDisplayName:task.get("entityDisplayName")
+                })
             }
             return this;
         },
         rowClick:function(evt) {
+            // TODO link row click, and details stuff
             var row = $(evt.currentTarget).closest("tr");
             var id = row.attr("id");
             $("#activities-table tr").removeClass("selected");

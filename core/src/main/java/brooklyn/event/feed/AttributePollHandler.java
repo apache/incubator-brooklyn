@@ -39,7 +39,10 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     
     @Override
     public void onSuccess(V val) {
-        lastWasFailure = false;
+        if (lastWasFailure) {
+            lastWasFailure = false;
+            log.info("Success (following previous failure) reading "+entity+"->"+sensor);
+        }
         
         if (log.isTraceEnabled()) log.trace("poll for {}->{} got: {}", new Object[] {entity, sensor, val});
         
@@ -64,7 +67,10 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         } else if (lastWasFailure) {
             if (log.isDebugEnabled()) log.debug("recurring error reading "+this+" from "+entity, error);
         } else {
-            log.warn("error reading "+entity+"->"+sensor, error);
+            // if we see an error once it is up, log it as a warning the first time until it corrects itself
+            log.warn("Error reading "+entity+"->"+sensor+": "+error);
+            if (log.isDebugEnabled())
+                log.debug("details for error reading "+entity+"->"+sensor+": "+error, error);
         }
         lastWasFailure = true;
         

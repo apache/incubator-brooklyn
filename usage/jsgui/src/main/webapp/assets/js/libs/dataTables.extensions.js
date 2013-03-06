@@ -14,3 +14,13 @@ $.fn.dataTableExt.oApi.fnStandingRedraw = function(oSettings) {
     // draw the 'current' page
     oSettings.oApi._fnDraw(oSettings);
 };
+
+
+jQuery.fn.dataTableExt.oApi.fnProcessingIndicator = function ( oSettings, onoff )
+{
+    if( typeof(onoff) == 'undefined' )
+    {
+        onoff=true;
+    }
+    this.oApi._fnProcessingDisplay( oSettings, onoff );
+};
