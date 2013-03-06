@@ -3,6 +3,7 @@
  */
 package brooklyn.entity.nosql.couchdb;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
@@ -13,6 +14,7 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents a CouchDB node in a {@link CouchDBCluster}.
  */
+@Catalog(name="CouchDB Node", description="Apache CouchDB is a database that uses JSON for documents, JavaScript for MapReduce queries, and regular HTTP for an API", iconUrl="classpath:///couchdb-logo.png")
 @ImplementedBy(CouchDBNodeImpl.class)
 public interface CouchDBNode extends SoftwareProcess, WebAppService {
 
