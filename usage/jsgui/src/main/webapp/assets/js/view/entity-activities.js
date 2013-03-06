@@ -93,12 +93,12 @@ define([
             }
         },
         showFullActivity:function (id) {
-            $("#activity-details-none-selected").hide(100);
+            $("#activity-details-none-selected").slideUp(100);
             var task = this.collection.get(id);
             if (task==null) {
                 this.activeTask = null;
-                $("#activity-details").hide(100);
-                $("#activity-details-none-selected").show(100);
+                $("#activity-details").slideUp(100);
+                $("#activity-details-none-selected").slideDown(100);
                 return;
             }
             var $ta = this.$("#activity-details textarea");
@@ -111,7 +111,7 @@ define([
                 });
                 $("#activity-details").html(html);
             }
-            $("#activity-details").show(100);
+            $("#activity-details").slideDown(100);
         }
     });
 

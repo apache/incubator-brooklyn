@@ -875,7 +875,7 @@ tr.app-add-wizard-config-entry {
 .accordion-nav-row.active {
     font-weight: bold;
 }
-.catalog-details-generic {
+.catalog-details {
 	padding-left: 16px;
     padding-right: 25px;
     padding-top: 8px;
@@ -884,7 +884,7 @@ tr.app-add-wizard-config-entry {
 .catalog-details h3 {
     margin-bottom: 8px;
 }
-.catalog-details-generic textarea {
+.catalog-details textarea {
     width: 100%;
     cursor: auto;
 }
