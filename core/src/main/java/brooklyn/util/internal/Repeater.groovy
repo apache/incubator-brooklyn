@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.util.Time;
+import brooklyn.util.Time
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
 
@@ -197,14 +197,6 @@ public class Repeater {
 		Preconditions.checkArgument duration.toMilliseconds() > 0, "deadline must be positive: %s", duration
 		this.durationLimit = duration
         return this
-    }
-
-    /**
-     * @see #limitTimeTo(long, TimeUnit)
-     * @deprecated since 0.4.  specify unit
-     */
-    Repeater limitTimeTo(long duration) {
-        return limitTimeTo(duration, TimeUnit.MILLISECONDS)
     }
 
     /**
