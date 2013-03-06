@@ -8,6 +8,7 @@ toc: ../toc.json
 
 * [The Distro](#distro)
 * [A Single Jar](#alljar)
+* [Release Notes](#releasenotes)
 * [Examples](#examples)
 * [Maven](#maven)  
 * [Source Code](#source)
@@ -64,6 +65,13 @@ here:
 
 Just download your preferred flavour and add it to your classpath{% if site.brooklyn-version contains 'SNAPSHOT' %} 
 (but again, check the source and date for snapshot JARs){% endif %}.
+
+
+<a name="releasenotes"></a>
+## Release Notes
+
+Release notes can be found [here]({{ site.url }}/start/release-notes/), or more
+specifically for [0.5.0-M2]({{ site.url }}/start/release-notes/0.5.0-M2.html).
 
 
 <a name="examples"></a>
