@@ -18,6 +18,21 @@ function log(obj) {
     }
 }
 
+function log(obj1, obj2) {
+    if (typeof window.console != 'undefined') {
+        console.log(obj1);
+        console.log(obj2);
+    }
+}
+
+function log(obj1, obj2, obj3) {
+    if (typeof window.console != 'undefined') {
+        console.log(obj1);
+        console.log(obj2);
+        console.log(obj3);
+    }
+}
+
 function setVisibility(obj, visible) {
     if (visible) obj.show()
     else obj.hide()

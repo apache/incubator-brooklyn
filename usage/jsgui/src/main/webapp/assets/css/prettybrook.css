@@ -537,6 +537,22 @@ line-height: 18px;
 	/* correct for textarea width oddity */
 	margin-right: 10px;
 }
+#activities-table .toolbar-row i {
+	background-image: url("../img/glyphicons-halflings-dark-green.png");
+	width: 18px;
+}
+#activities-table .toolbar-row i.active {
+	background-image: url("../img/glyphicons-halflings-green.png");
+}
+#activities-table .toolbar-row i:hover,
+#activities-table .toolbar-row i.active:hover {
+    background-image: url("../img/glyphicons-halflings-bright-green.png");
+}
+#activities-table tr.activity-row:hover:not(.selected),
+#activities-table tr.activity-row:hover:not(.selected) td,
+#activities-table tr.activity-row:hover:not(.selected) td.sorting_1 {
+    background-color: #E4E8E2;
+}
 /* effector modal dialog */
 #params td {
     vertical-align: middle;
@@ -561,6 +577,7 @@ table.dataTable thead th {
 text-align: left;
 background-color: #E0E4E0;
 line-height: 24px;
+font-size: 110%;
 }
 table.dataTable {
 margin: 0;
@@ -698,6 +715,9 @@ table.dataTable tr.even.selected td.sorting_1 {
 table.table.nonDatatables tbody tr.selected,
 table.table.nonDatatables tbody tr.selected td {
     background: #AC8;
+}
+table.dataTable tbody td.row-expansion {
+	background: #D8E4D0;
 }
 /* we keep the thin gray line between rows for manual tables,
    subtle difference but seems nice */
@@ -1139,24 +1159,24 @@ textarea {
     margin-top: -18px !important;
 }
 
-.icon-plus-sign {
+.icon-br-plus-sign {
     background: url(../images/application-icon-add.png) top left !important;
     width: 15px !important;
     height: 15px !important;
 }
 
-.icon-plus-sign:hover {
+.icon-br-plus-sign:hover {
     background: url(../images/application-icon-add-hover.png) top left
         !important;
 }
 
-.icon-refresh {
+.icon-br-refresh {
     background: url(../images/application-icon-refresh.png) top left
         !important;
     width: 15px !important;
     height: 15px !important;
 }
-.green-hover.icon-refresh:hover {
+.icon-br-refresh:hover {
     background: url(../images/application-icon-refresh-hover.png) top left
         !important;
 }
