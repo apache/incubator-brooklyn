@@ -45,7 +45,7 @@ import brooklyn.util.BrooklynLanguageExtensions
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
-import brooklyn.util.task.DeferredSupplier;
+import brooklyn.util.task.DeferredSupplier
 import brooklyn.util.text.Identifiers
 
 import com.google.common.annotations.Beta
@@ -90,6 +90,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             "entity.sensor.added", "Sensor dynamically added to entity")
     public static BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.removed", "Sensor dynamically removed from entity")
+
+    public static BasicNotificationSensor<PolicyDescriptor> POLICY_ADDED = new BasicNotificationSensor<Sensor>(PolicyDescriptor.class,
+            "entity.policy.added", "Policy dynamically added to entity")
+    public static BasicNotificationSensor<PolicyDescriptor> POLICY_REMOVED = new BasicNotificationSensor<Sensor>(PolicyDescriptor.class,
+            "entity.policy.removed", "Policy dynamically removed from entity")
 
     @SetFromFlag(value="id")
     private String id = Identifiers.makeRandomId(8);
@@ -875,6 +880,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         ((AbstractPolicy)policy).setEntity(this)
         
         getManagementSupport().getEntityChangeListener().onPoliciesChanged();
+        emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
     }
 
     @Override
@@ -884,6 +890,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         
         if (changed) {
             getManagementSupport().getEntityChangeListener().onPoliciesChanged();
+            emit(AbstractEntity.POLICY_REMOVED, new PolicyDescriptor(policy));
         }
         return changed;
     }
