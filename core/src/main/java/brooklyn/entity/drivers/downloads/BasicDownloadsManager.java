@@ -15,7 +15,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class BasicDownloadsRegistry implements DownloadResolverRegistry {
+public class BasicDownloadsManager implements DownloadResolverManager {
 
     private final List<Function<? super DownloadRequirement, ? extends DownloadTargets>> producers = Lists.newCopyOnWriteArrayList();
 
@@ -32,8 +32,8 @@ public class BasicDownloadsRegistry implements DownloadResolverRegistry {
      * @param config
      * @return
      */
-    public static BasicDownloadsRegistry newDefault(StringConfigMap config) {
-        BasicDownloadsRegistry result = new BasicDownloadsRegistry();
+    public static BasicDownloadsManager newDefault(StringConfigMap config) {
+        BasicDownloadsManager result = new BasicDownloadsManager();
         
         // In-order, will look up: local repo, overrides defined in the properties, and then 
         // the entity's attribute to get the download URL
@@ -54,8 +54,8 @@ public class BasicDownloadsRegistry implements DownloadResolverRegistry {
         return result;
     }
     
-    public static BasicDownloadsRegistry newEmpty() {
-        return new BasicDownloadsRegistry();
+    public static BasicDownloadsManager newEmpty() {
+        return new BasicDownloadsManager();
     }
     
     @Override

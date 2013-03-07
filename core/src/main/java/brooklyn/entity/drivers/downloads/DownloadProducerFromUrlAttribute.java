@@ -3,8 +3,8 @@ package brooklyn.entity.drivers.downloads;
 import java.util.Map;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
-import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadTargets;
+import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
+import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

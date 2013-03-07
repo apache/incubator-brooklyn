@@ -6,7 +6,7 @@ import com.google.common.annotations.Beta;
 
 /**
  * Gives download details for an entity or an entity add-on.
- * Returned by the {@link DownloadResolverFactory}, when queried for a specific entity or entity add-on. 
+ * Returned by the {@link DownloadResolverManager}, when queried for a specific entity or entity add-on. 
  * 
  * @author aled
  */

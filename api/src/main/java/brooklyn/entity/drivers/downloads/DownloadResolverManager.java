@@ -8,17 +8,47 @@ import brooklyn.entity.drivers.EntityDriver;
 import com.google.common.base.Function;
 
 /**
- * A registry of "resolvers" for determining where to download the installers from, for different entities.
+ * Used by an {@link EntityDriver} to obtain the download locations when installing an entity.
+ * 
+ * Most commonly, the {@link DownloadResolver}'s targets are URIs. However, an EntityDriver 
+ * implementation is free to interpret the String however is appropriate (e.g. the name of a 
+ * custom package to install from the enterprise's package manager repository).
+
+ * Also supports registering other "resolvers" for determining where to download the installers 
+ * from, for different entities.
  * 
  * When using {@link resolve(EntityDriver)} to get the list of things to try (in-order until one succeeds),
- * the registry will go through each of the registered resolvers in-order to get their contributions.
+ * the manager will go through each of the registered resolvers in-order to get their contributions.
  * These contributions are split into "primary" and "fallback". All of the primaries will be added to the
  * list first, and then all of the fallbacks.
  * 
  * @author aled
  */
-public interface DownloadResolverRegistry extends DownloadResolverFactory {
+public interface DownloadResolverManager {
 
+    /**
+     * For installing the main entity.
+     * Returns a list of options, to be tried in order until one of them works.
+     */
+    public DownloadResolver resolve(EntityDriver driver);
+
+    /**
+     * For installing the main entity.
+     * Returns a list of options, to be tried in order until one of them works.
+     */
+    public DownloadResolver resolve(EntityDriver driver, Map<String,?> properties);
+
+    /**
+     * For installing an entity add-on.
+     * Returns a list of options, to be tried in order until one of them works.
+     * This is used for resolving the download for an "add-on" - e.g. an additional module required 
+     * during an entity's installation. Common properties include:
+     * <ul>
+     *   <li>addonversion: the required version of the add-on
+     * </ul>
+     */
+    public DownloadResolver resolve(EntityDriver driver, String addonName, Map<String,?> addonProperties);
+    
     /**
      * Registers a producer, to be tried before all other producers.
      * 

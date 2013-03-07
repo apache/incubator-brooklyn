@@ -93,7 +93,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
     
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("jboss-as-%s", getVersion()));

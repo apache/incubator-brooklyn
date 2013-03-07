@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Map;
 
 import brooklyn.entity.drivers.EntityDriver;
-import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
+import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Objects;
