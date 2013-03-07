@@ -67,6 +67,8 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     private volatile JmxFeed jmxFeed;
     private JmxHelper jmxHelper;
     private ObjectName storageServiceMBean = JmxHelper.createObjectName("org.apache.cassandra.db:type=StorageService");
+    private ObjectName readStageMBean = JmxHelper.createObjectName("org.apache.cassandra.request:type=ReadStage");
+    private ObjectName mutationStageMBean = JmxHelper.createObjectName("org.apache.cassandra.request:type=MutationStage");
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
@@ -108,6 +110,30 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             }
                         })
                         .onError(Functions.constant(-1)))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(READ_ACTIVE)
+                        .objectName(readStageMBean)
+                        .attributeName("ActiveCount")
+                        .onError(Functions.constant(-1)))
+                .pollAttribute(new JmxAttributePollConfig<Long>(READ_PENDING)
+                        .objectName(readStageMBean)
+                        .attributeName("PendingTasks")
+                        .onError(Functions.constant(-1l)))
+                .pollAttribute(new JmxAttributePollConfig<Long>(READ_COMPLETED)
+                        .objectName(readStageMBean)
+                        .attributeName("CompletedTasks")
+                        .onError(Functions.constant(-1l)))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(WRITE_ACTIVE)
+                        .objectName(mutationStageMBean)
+                        .attributeName("ActiveCount")
+                        .onError(Functions.constant(-1)))
+                .pollAttribute(new JmxAttributePollConfig<Long>(WRITE_PENDING)
+                        .objectName(mutationStageMBean)
+                        .attributeName("PendingTasks")
+                        .onError(Functions.constant(-1l)))
+                .pollAttribute(new JmxAttributePollConfig<Long>(WRITE_COMPLETED)
+                        .objectName(mutationStageMBean)
+                        .attributeName("CompletedTasks")
+                        .onError(Functions.constant(-1l)))
                 .build();
     }
 
@@ -115,7 +141,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     public void disconnectSensors() {
         super.disconnectSensors();
 
-        if (jmxFeed != null) jmxFeed.stop();
+        if (jmxFeed != null && jmxFeed.isActivated()) jmxFeed.stop();
         if (jmxHelper.isConnected()) jmxHelper.disconnect();
     }
 
