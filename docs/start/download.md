@@ -6,9 +6,9 @@ toc: ../toc.json
 
 ## Contents
 
-* [The Distro](#distro)
-* [A Single Jar](#alljar)
-* [Release Notes](#releasenotes)
+* [The Distro](#distro) (Best for getting started.)
+* [A Single Jar](#alljar) 
+* [Getting Started & Release Notes](#getstart-releasenotes)
 * [Examples](#examples)
 * [Maven](#maven)  
 * [Source Code](#source)
@@ -36,7 +36,7 @@ are available in the following formats and locations:
   and [Cloudsoft]({{ cloudsoft_snapshots_base_url }}io/brooklyn/brooklyn-dist/)
 
 
-Just download your preferred flavour and unpack.
+Read the [Getting Started]({{ site.url }}/use/guide/quickstart/index.html) guide to set up your `brooklyn.properties` and `catalog.xml` files, and then try the [examples](#examples).
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %} 
 **Please note**: You are reading the documentation for a snapshot version of Brooklyn.
@@ -67,11 +67,12 @@ Just download your preferred flavour and add it to your classpath{% if site.broo
 (but again, check the source and date for snapshot JARs){% endif %}.
 
 
-<a name="releasenotes"></a>
-## Release Notes
+<a name="getstart-releasenotes"></a>
+## Getting Started and Release Notes
 
-Release notes can be found [here]({{ site.url }}/start/release-notes/), or more
-specifically for [0.5.0-M2]({{ site.url }}/start/release-notes/0.5.0-M2.html).
+First time using Brooklyn? Read [Getting Started]({{ site.url }}/use/guide/quickstart/index.html) to set up your `brooklyn.properties` and `catalog.xml` files.
+
+Release notes can be found [here]({{ site.url }}/start/release-notes){% if SNAPSHOT %}{% else %}, and specifically for [{{ site.brooklyn-version }}]({{ site.url }}/start/release-notes/{{ site.brooklyn-version }}.html){% endif %}.
 
 
 <a name="examples"></a>
