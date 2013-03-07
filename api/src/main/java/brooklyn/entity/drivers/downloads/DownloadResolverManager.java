@@ -30,13 +30,13 @@ public interface DownloadResolverManager {
      * For installing the main entity.
      * Returns a list of options, to be tried in order until one of them works.
      */
-    public DownloadResolver resolve(EntityDriver driver);
+    public DownloadResolver newDownloader(EntityDriver driver);
 
     /**
      * For installing the main entity.
      * Returns a list of options, to be tried in order until one of them works.
      */
-    public DownloadResolver resolve(EntityDriver driver, Map<String,?> properties);
+    public DownloadResolver newDownloader(EntityDriver driver, Map<String,?> properties);
 
     /**
      * For installing an entity add-on.
@@ -47,7 +47,7 @@ public interface DownloadResolverManager {
      *   <li>addonversion: the required version of the add-on
      * </ul>
      */
-    public DownloadResolver resolve(EntityDriver driver, String addonName, Map<String,?> addonProperties);
+    public DownloadResolver newDownloader(EntityDriver driver, String addonName, Map<String,?> addonProperties);
     
     /**
      * Registers a producer, to be tried before all other producers.

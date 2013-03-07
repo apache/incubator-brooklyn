@@ -65,7 +65,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
 
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/" + resolver.getUnpackedDirectoryName("jboss-"+getVersion());
