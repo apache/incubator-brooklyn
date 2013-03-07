@@ -54,40 +54,20 @@ public class RubyRepIntegrationTest {
         testReplication(db1, db2);
     }
 
-    /*
-     * TODO had to alter kern.sysv.shmmax, kern.sysv.semmns etc to get this to pass on OS X.
-     * See http://willbryant.net/software/mac_os_x/postgres_initdb_fatal_shared_memory_error_on_leopard
-     * 
-     * The error you'll get in the log (from stderr of PostgreSqlSshDriver.customize()) is:
-     *   DETAIL:  Failed system call was shmget(key=2, size=2138112, 03600).
-     *   HINT:  This error usually means that PostgreSQL's request for a shared memory segment exceeded available memory or swap space, or exceeded your kernel's SHMALL parameter.  
-     *          You can either reduce the request size or reconfigure the kernel with larger SHMALL.  
-     *          To reduce the request size (currently 2138112 bytes), reduce PostgreSQL's shared memory usage, perhaps by reducing shared_buffers or max_connections.
-     * 
-     * You may also get an error about not being able to allocate semaphores - this can be caused by kern.sysv.semmns being set too low,
-     * hence increasing this to 87381 (which is the default on OS X Snow Leopard).
-     * 
-     * Create a file /etc/sysctl.conf with the following content:
-     *   kern.sysv.shmmax=4194304
-     *   kern.sysv.shmmin=1
-     *   kern.sysv.shmmni=32
-     *   kern.sysv.shmseg=8
-     *   kern.sysv.shmall=65536
-     *   kern.sysv.shmmax=16777216
-     *   kern.sysv.semmns=87381
+    /**
+     * Altered to use a single postgresql server to avoid issues with shared memory limits
      */
-    @Test(groups = {"Integration", "WIP"})
+    @Test(groups = {"Integration"})
     public void test_localhost_postgres() throws Exception {
+        String createTwoDbsScript = PostgreSqlIntegrationTest.CREATION_SCRIPT +
+                PostgreSqlIntegrationTest.CREATION_SCRIPT.replaceAll("CREATE USER.*", "").replaceAll(" feedback", " feedback1");
+        
         PostgreSqlNode db1 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
-                .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
+                .configure("creationScriptContents", createTwoDbsScript)
                 .configure("port", "9113"));
 
-        PostgreSqlNode db2 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
-                .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
-                .configure("port", "9114"));
-
-        startInLocation(tapp, db1, db2, new LocalhostMachineProvisioningLocation());
-        testReplication(db1, db2);
+        startInLocation(tapp, db1, "feedback", db1, "feedback1", new LocalhostMachineProvisioningLocation());
+        testReplication(db1, "feedback", db1, "feedback1");
     }
 
     @Test(enabled = false, groups = "Integration") // TODO this doesn't appear to be supported by RubyRep
@@ -105,10 +85,14 @@ public class RubyRepIntegrationTest {
         testReplication(db1, db2);
     }
 
+    public static void startInLocation(TestApplication tapp, DatabaseNode db1, DatabaseNode db2, Location... locations) throws Exception {
+        startInLocation(tapp, db1, "feedback", db2, "feedback", locations);
+    }
+
     /**
      * Configures rubyrep to connect to the two databases and starts the app
      */
-    public static void startInLocation(TestApplication tapp, DatabaseNode db1, DatabaseNode db2, Location... locations) throws Exception {
+    public static void startInLocation(TestApplication tapp, DatabaseNode db1, String dbName1, DatabaseNode db2, String dbName2, Location... locations) throws Exception {
         tapp.createAndManageChild(BasicEntitySpec.newInstance(RubyRepNode.class)
                 .configure("leftDatabase", db1)
                 .configure("rightDatabase", db2)
@@ -116,27 +100,32 @@ public class RubyRepIntegrationTest {
                 .configure("rightUsername", "sqluser")
                 .configure("rightPassword", "sqluserpw")
                 .configure("leftPassword", "sqluserpw")
-                .configure("leftDatabaseName", "feedback")
-                .configure("rightDatabaseName", "feedback")
+                .configure("leftDatabaseName", dbName1)
+                .configure("rightDatabaseName", dbName2)
                 .configure("replicationInterval", 1)
         );
 
         tapp.start(Arrays.asList(locations));
     }
+    
+
+    public static void testReplication(DatabaseNode db1, DatabaseNode db2) throws Exception {
+        testReplication(db1, "feedback", db2, "feedback");
+    }
 
     /**
      * Tests replication between the two databases by altering the first and checking the change is applied to the second
      */
-    public static void testReplication(DatabaseNode db1, DatabaseNode db2) throws Exception {
+    public static void testReplication(DatabaseNode db1, String dbName1, DatabaseNode db2, String dbName2) throws Exception {
         String db1Url = db1.getAttribute(DatabaseNode.DB_URL);
         String db2Url = db2.getAttribute(DatabaseNode.DB_URL);
 
         log.info("Testing replication between " + db1Url + " and " + db2Url);
 
         VogellaExampleAccess vea1 = new VogellaExampleAccess(db1 instanceof MySqlNode ? "com.mysql.jdbc.Driver" : "org.postgresql.Driver",
-                db1Url);
+                db1Url, dbName1);
         VogellaExampleAccess vea2 = new VogellaExampleAccess(db2 instanceof MySqlNode ? "com.mysql.jdbc.Driver" : "org.postgresql.Driver",
-                db2Url);
+                db2Url, dbName2);
 
         try {
             vea1.connect();
