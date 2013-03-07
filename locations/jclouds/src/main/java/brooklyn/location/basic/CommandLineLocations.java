@@ -18,7 +18,7 @@ public class CommandLineLocations {
     public static final String LOCALHOST = "localhost";
 
     /** shortcut to allow these to be specified without specifying 'aws-ec2:' prefix */
-    public static final Collection<String> AWS_REGIONS = ImmutableList.of("eu-west-1","us-east-1","us-west-1","ap-southeast-1","ap-northeast-1");
+    public static final Collection<String> AWS_REGIONS = ImmutableList.of("eu-west-1","us-east-1","us-west-1","us-west-2","sa-east-1","ap-southeast-1","ap-northeast-1");
 
     private CommandLineLocations() { }
 
