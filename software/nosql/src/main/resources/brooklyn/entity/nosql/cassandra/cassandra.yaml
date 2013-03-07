@@ -296,11 +296,11 @@ ssl_storage_port: ${entity.sslGossipPort?c}
 # address associated with the hostname (it might not be).
 #
 # Setting this to 0.0.0.0 is always wrong.
-listen_address: ${driver.hostname}
+listen_address: ${driver.address}
 
 # Address to broadcast to other Cassandra nodes
 # Leaving this blank will set it to the same value as listen_address
-broadcast_address: ${driver.hostname}
+broadcast_address: ${driver.address}
 
 
 # Whether to start the native transport server.
@@ -327,7 +327,7 @@ start_rpc: true
 # 
 # Leaving this blank has the same effect it does for ListenAddress,
 # (i.e. it will be based on the configured hostname of the node).
-rpc_address: ${driver.hostname}
+rpc_address: ${driver.address}
 # port for Thrift to listen for clients on
 rpc_port: ${entity.thriftPort?c}
 

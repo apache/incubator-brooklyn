@@ -60,6 +60,7 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
         List<String> commands = ImmutableList.<String>builder()
                 .add(CommonCommands.installPackage("erlang"))
                 .add(CommonCommands.installPackage("couchdb"))
+                .add("which service && sudo service couchdb stop")
                 .build();
 
         newScript(INSTALLING)
@@ -100,7 +101,8 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
     public void launch() {
         log.info("Launching  {}", entity);
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
-                .body.append(String.format("nohup couchdb -p %s -a %s/%s -o couchdb-console.log -e couchdb-error.log -b &", getPidFile(), getRunDir(), getCouchDBConfigFileName()))
+                .body.append(String.format("sudo nohup couchdb -p %s -a %s/%s -o couchdb-console.log -e couchdb-error.log -b &", getPidFile(), getRunDir(), getCouchDBConfigFileName()))
+                .failOnNonZeroResultCode()
                 .execute();
     }
 
@@ -108,15 +110,16 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("usePidFile", getPidFile()), CHECK_RUNNING)
-                .body.append(String.format("couchdb -p %s -s", getPidFile()))
+        return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
+                .body.append(String.format("sudo couchdb -p %s -s", getPidFile()))
                 .execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(MutableMap.of("usePidFile", getPidFile()), STOPPING)
-                .body.append(String.format("couchdb -p %s -k", getPidFile()))
+        newScript(MutableMap.of("usePidFile", false), STOPPING)
+                .body.append(String.format("sudo couchdb -p %s -k", getPidFile()))
+                .failOnNonZeroResultCode()
                 .execute();
     }
 }

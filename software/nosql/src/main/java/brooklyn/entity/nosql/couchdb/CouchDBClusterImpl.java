@@ -26,15 +26,8 @@ import com.google.common.collect.Iterables;
  * Implementation of {@link CouchDBCluster}.
  */
 public class CouchDBClusterImpl extends DynamicClusterImpl implements CouchDBCluster {
-    /** serialVersionUID */
-    private static final long serialVersionUID = 7288572450030871547L;
 
     private static final Logger log = LoggerFactory.getLogger(CouchDBClusterImpl.class);
-
-    // Mutex for synchronizing during re-size operations
-    private final Object mutex = new Object[0];
-
-    private AbstractMembershipTrackingPolicy policy;
 
     public CouchDBClusterImpl() {
         this(MutableMap.of(), null);
@@ -66,52 +59,15 @@ public class CouchDBClusterImpl extends DynamicClusterImpl implements CouchDBClu
     public void start(Collection<? extends Location> locations) {
         super.start(locations);
 
-        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "CouchDB Cluster Tracker")) {
-            @Override
-            protected void onEntityChange(Entity member) { }
-            @Override
-            protected void onEntityAdded(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Node {} added to Cluster {}", member, getClusterName());
-                update();
-            }
-            @Override
-            protected void onEntityRemoved(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Node {} removed from Cluster {}", member, getClusterName());
-                update();
-            }
-        };
-        addPolicy(policy);
-        policy.setGroup(this);
-
-        setAttribute(Startable.SERVICE_UP, true);
+        setAttribute(Startable.SERVICE_UP, calculateServiceUp());
     }
 
     @Override
-    public void stop() {
-        super.stop();
-
-        // Stop all member nodes
-        synchronized (mutex) {
-            for (Entity member : getMembers()) {
-                CouchDBNode node = (CouchDBNode) member;
-                node.stop();
-            }
+    protected boolean calculateServiceUp() {
+        boolean up = false;
+        for (Entity member : getMembers()) {
+            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) up = true;
         }
-
-        setAttribute(Startable.SERVICE_UP, false);
-    }
-
-    private Random random = new Random();
-
-    @Override
-    public void update() {
-        synchronized (mutex) {
-            Iterable<Entity> members = getMembers();
-            int n = Iterables.size(members);
-            // Choose a random cluster member
-            CouchDBNode node = (CouchDBNode) Iterables.get(members, random.nextInt(n));
-            setAttribute(HOSTNAME, node.getAttribute(Attributes.HOSTNAME));
-            setAttribute(HTTP_PORT, node.getAttribute(CouchDBNode.HTTP_PORT));
-        }
+        return up;
     }
 }

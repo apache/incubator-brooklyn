@@ -3,8 +3,6 @@
  */
 package brooklyn.entity.nosql.couchdb;
 
-import brooklyn.entity.basic.Description;
-import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
@@ -27,14 +25,9 @@ public interface CouchDBCluster extends DynamicCluster {
 
     AttributeSensor<Integer> HTTP_PORT = new BasicAttributeSensor<Integer>(Integer.class, "couchdb.cluster.http.port", "CouchDB HTTP port to connect to cluster with");
 
-    MethodEffector<Void> UPDATE = new MethodEffector<Void>(CouchDBCluster.class, "update");
-
     /**
      * The name of the cluster.
      */
     String getClusterName();
-
-    @Description("Updates the cluster members")
-    void update();
 
 }

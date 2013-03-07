@@ -6,7 +6,8 @@ package brooklyn.entity.nosql.cassandra;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import brooklyn.util.MutableMap;
 import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -32,8 +34,6 @@ import com.google.common.collect.Lists;
  * Implementation of {@link CassandraCluster}.
  */
 public class CassandraClusterImpl extends DynamicClusterImpl implements CassandraCluster {
-    /** serialVersionUID */
-    private static final long serialVersionUID = 7288572450030871547L;
 
     private static final Logger log = LoggerFactory.getLogger(CassandraClusterImpl.class);
 
@@ -106,7 +106,10 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
 
         policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Cluster Tracker")) {
             @Override
-            protected void onEntityChange(Entity member) { }
+            protected void onEntityChange(Entity member) {
+                if (log.isDebugEnabled()) log.debug("Node {} updated in Cluster {}", member, getClusterName());
+                update();
+            }
             @Override
             protected void onEntityAdded(Entity member) {
                 if (log.isDebugEnabled()) log.debug("Node {} added to Cluster {}", member, getClusterName());
@@ -121,35 +124,39 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         addPolicy(policy);
         policy.setGroup(this);
 
-        setAttribute(Startable.SERVICE_UP, true);
+        setAttribute(Startable.SERVICE_UP, calculateServiceUp());
     }
 
     @Override
-    public void stop() {
-        super.stop();
-
-        // Stop all member nodes
-        synchronized (mutex) {
-            for (Entity member : getMembers()) {
-                CassandraNode node = (CassandraNode) member;
-                node.stop();
-            }
+    protected boolean calculateServiceUp() {
+        boolean up = false;
+        for (Entity member : getMembers()) {
+            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) up = true;
         }
-
-        setAttribute(Startable.SERVICE_UP, false);
+        return up;
     }
-
-    private Random random = new Random();
 
     @Override
     public void update() {
         synchronized (mutex) {
-            Iterable<Entity> members = getMembers();
-            int n = Iterables.size(members);
-            // Choose a random cluster member
-            CassandraNode node = (CassandraNode) Iterables.get(members, random.nextInt(n));
-            setAttribute(HOSTNAME, node.getAttribute(Attributes.HOSTNAME));
-            setAttribute(THRIFT_PORT, node.getAttribute(CassandraNode.THRIFT_PORT));
+            // Update the SERVICE_UP attribute
+            boolean up = calculateServiceUp();
+            setAttribute(SERVICE_UP, up);
+
+            // Choose the first available cluster member to set host and port
+            if (up) {
+                CassandraNode node = (CassandraNode) Iterables.find(getMembers(), new Predicate<Entity>() {
+                    @Override
+                    public boolean apply(@Nullable Entity input) {
+                        return input.getAttribute(SERVICE_UP);
+                    }
+                });
+                setAttribute(HOSTNAME, node.getAttribute(Attributes.HOSTNAME));
+                setAttribute(THRIFT_PORT, node.getAttribute(CassandraNode.THRIFT_PORT));
+            } else {
+                setAttribute(HOSTNAME, null);
+                setAttribute(THRIFT_PORT, null);
+            }
         }
     }
 }
