@@ -31,7 +31,7 @@ If you're an Eclipse user, you'll probably want the Groovy, Maven (m2e), Git, Ja
 Via Help -> Install New Software, or from the Eclipse Marketplace,
 we recommend:
 
-{% readj /use/guide/quickstart/eclipse.include.md %}
+{% readj eclipse.include.md %}
 
 As of this writing, with Eclipse 4.2, m2e 1.1, and GrEclipse 2.7, 
 the codebase has been imported (Import -> Existing Maven Projects) 
