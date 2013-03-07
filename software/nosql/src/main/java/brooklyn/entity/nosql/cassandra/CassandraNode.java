@@ -24,7 +24,7 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "1.2.2");
 
     @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "${driver.mirrorUrl}/${version}/apache-cassandra-${version}-bin.tar.gz");
 
     /** download mirror, if desired */
@@ -58,6 +58,15 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     BasicAttributeSensor<Long> TOKEN = new BasicAttributeSensor<Long>(Long.class, "cassandra.token", "Cassandra Token");
 
     BasicAttributeSensor<Integer> PEERS = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.peers", "Number of peers in cluster");
+
+    /* Metrics for read/write performance. */
+
+    BasicAttributeSensor<Long> READ_PENDING = new BasicAttributeSensor<Long>(Long.class, "cassandra.read.pending", "Current pending ReadStage tasks");
+    BasicAttributeSensor<Integer> READ_ACTIVE = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.read.active", "Current active ReadStage tasks");
+    BasicAttributeSensor<Long> READ_COMPLETED = new BasicAttributeSensor<Long>(Long.class, "cassandra.read.completed", "Total completed ReadStage tasks");
+    BasicAttributeSensor<Long> WRITE_PENDING = new BasicAttributeSensor<Long>(Long.class, "cassandra.write.pending", "Current pending MutationStage tasks");
+    BasicAttributeSensor<Integer> WRITE_ACTIVE = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.write.active", "Current active MutationStage tasks");
+    BasicAttributeSensor<Long> WRITE_COMPLETED = new BasicAttributeSensor<Long>(Long.class, "cassandra.write.completed", "Total completed MutationStage tasks");
 
     ConfigKey<String> SEEDS = CassandraCluster.SEEDS;
 
