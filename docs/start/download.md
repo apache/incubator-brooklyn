@@ -18,25 +18,24 @@ toc: ../toc.json
 
 {% include fields.md %}
 
-Distribution archives containing Brooklyn as a standalone executable package 
+First time user? The [getting started]({{ site.url }}/use/guide/quickstart/index.html) guide will walk you through downloading Brooklyn, setup of your `brooklyn.properties` and `catalog.xml` files, and then trying the [examples](#examples). 
+
+The Distribution archives contain Brooklyn as a standalone executable package, and 
 are available in the following formats and locations:
 
-* **v{{ site.brooklyn-version }}** at
-  {% if SNAPSHOT %}[Sonatype]({{ this_dist_url_search }})
-  {% else %}[Maven Central]({{ this_dist_url_search }})
-  {% endif %}: 
+* **v{{ site.brooklyn-version }}**: 
   **[zip]({{ this_dist_url_zip }})** 
-  **[tgz]({{ this_dist_url_tgz }})** 
-  **[dir]({{ this_dist_url_dir }})** 
+  **[tgz]({{ this_dist_url_tgz }})**
+  **[dir]({{ this_dist_url_dir }})**
+  from {% if SNAPSHOT %}[Sonatype]({{ this_dist_url_search }})
+  {% else %}[Maven Central]({{ this_dist_url_search }})
+  {% endif %} 
 * **all stable versions**: 
   at [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-dist/)
   and [Cloudsoft]({{ cloudsoft_releases_base_url}}io/brooklyn/brooklyn-dist/) 
 * **all snapshot versions**: 
   at [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-dist/)
   and [Cloudsoft]({{ cloudsoft_snapshots_base_url }}io/brooklyn/brooklyn-dist/)
-
-
-Read the [Getting Started]({{ site.url }}/use/guide/quickstart/index.html) guide to set up your `brooklyn.properties` and `catalog.xml` files, and then try the [examples](#examples).
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %} 
 **Please note**: You are reading the documentation for a snapshot version of Brooklyn.
