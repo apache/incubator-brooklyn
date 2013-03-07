@@ -146,7 +146,7 @@ public class JmxFeed extends AbstractFeed {
         for (JmxAttributePollConfig<?> config : builder.attributePolls) {
             JmxAttributePollConfig<?> configCopy = new JmxAttributePollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
-            attributePolls.put(configCopy.getAttributeName(), configCopy);
+            attributePolls.put(configCopy.getObjectName().getCanonicalName() + configCopy.getAttributeName(), configCopy);
         }
         for (JmxOperationPollConfig<?> config : builder.operationPolls) {
             JmxOperationPollConfig<?> configCopy = new JmxOperationPollConfig(config);
