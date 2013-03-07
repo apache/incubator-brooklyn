@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.testng.annotations.AfterMethod;
@@ -97,13 +98,22 @@ public class PolicyRegistrationTest {
         entity.removeAllPolicies();
         
         assertEquals(entity.getPolicies(), ImmutableList.of());
-        assertEqualsEventually(ImmutableSet.copyOf(removed), ImmutableSet.of(new PolicyDescriptor(policy1), new PolicyDescriptor(policy2)));
+        assertCollectionEqualsEventually(removed, ImmutableSet.of(new PolicyDescriptor(policy1), new PolicyDescriptor(policy2)));
     }
     
     private <T> void assertEqualsEventually(final T actual, final T expected) {
         TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
                 @Override public void run() {
                     assertEquals(actual, expected, "actual="+actual);
+                }});
+    }
+    
+    // Ignores order of vals in collection, but asserts each same size and same elements 
+    private <T> void assertCollectionEqualsEventually(final Collection<? extends T> actual, final Collection<? extends T> expected) {
+        TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+                @Override public void run() {
+                    assertEquals(ImmutableSet.copyOf(actual), ImmutableSet.copyOf(expected), "actual="+actual);
+                    assertEquals(actual.size(), expected.size(), "actual="+actual);
                 }});
     }
 }
