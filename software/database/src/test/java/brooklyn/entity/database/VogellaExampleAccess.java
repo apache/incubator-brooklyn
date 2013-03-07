@@ -17,11 +17,17 @@ public class VogellaExampleAccess {
     private Connection connect = null;
     private Statement statement = null;
     private final String url;
+    private final String dbName;
 
     public VogellaExampleAccess(String driverClass, String url) throws ClassNotFoundException {
+        this(driverClass, url, "feedback");
+    }
+    
+    public VogellaExampleAccess(String driverClass, String url, String dbName) throws ClassNotFoundException {
         // This will load the JDBC driver, each DB has its own driver
         Class.forName(driverClass);
         this.url = url;
+        this.dbName = dbName;
     }
 
     public void readModifyAndRevertDataBase() throws Exception {
@@ -35,7 +41,7 @@ public class VogellaExampleAccess {
     public void connect() throws Exception {
         try {
             // Setup the connection with the DB
-            String jdbcUrl = "jdbc:" + url + "feedback?" + "user=sqluser&password=sqluserpw";
+            String jdbcUrl = "jdbc:" + url + dbName + "?" + "user=sqluser&password=sqluserpw";
             log.info("Connecting to " + jdbcUrl);
             connect = DriverManager.getConnection(jdbcUrl);
 
