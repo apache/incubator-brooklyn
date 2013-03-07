@@ -86,7 +86,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         DownloadResolver nginxResolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> nginxUrls = nginxResolver.getTargets();
         String nginxSaveAs = nginxResolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/" + nginxResolver.getUnpackedDirectorName(format("nginx-%s", getVersion()));
+        expandedInstallDir = getInstallDir()+"/" + nginxResolver.getUnpackedDirectoryName(format("nginx-%s", getVersion()));
 
         boolean sticky = ((NginxController) entity).isSticky();
         boolean isMac = getMachine().getOsDetails().isMac();
@@ -112,7 +112,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         List<String> stickyModuleUrls = stickyModuleResolver.getTargets();
         String stickyModuleSaveAs = stickyModuleResolver.getFilename();
         String stickyModuleExpandedInstallDir = String.format("%s/src/%s", expandedInstallDir, 
-                stickyModuleResolver.getUnpackedDirectorName("nginx-sticky-module-"+stickyModuleVersion));
+                stickyModuleResolver.getUnpackedDirectoryName("nginx-sticky-module-"+stickyModuleVersion));
         
         List<String> cmds = Lists.newArrayList();
         
@@ -128,7 +128,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                     this, "pcre", ImmutableMap.of("addonversion", pcreVersion));
             List<String> pcreUrls = pcreResolver.getTargets();
             String pcreSaveAs = pcreResolver.getFilename();
-            String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectorName("pcre-"+pcreVersion);
+            String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectoryName("pcre-"+pcreVersion);
 
             // Install PCRE
             cmds.addAll(CommonCommands.downloadUrlAs(pcreUrls, pcreSaveAs));

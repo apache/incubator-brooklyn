@@ -43,7 +43,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("redis-%s", getVersion()));
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("redis-%s", getVersion()));
 
         /*
          * FIXME On jenkins releng3 box, needed to explicitly install jemalloc:

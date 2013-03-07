@@ -47,7 +47,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(getBaseName());
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName());
         
         List<String> commands = new LinkedList<String>();
         commands.addAll(downloadUrlAs(urls, saveAs));

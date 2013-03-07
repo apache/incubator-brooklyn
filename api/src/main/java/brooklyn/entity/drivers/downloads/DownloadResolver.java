@@ -36,5 +36,5 @@ public interface DownloadResolver {
      * seems sensible.
      */
     @Beta
-    public String getUnpackedDirectorName(String defaultVal);
+    public String getUnpackedDirectoryName(String defaultVal);
 }

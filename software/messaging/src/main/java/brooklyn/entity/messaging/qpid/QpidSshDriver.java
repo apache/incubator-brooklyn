@@ -54,7 +54,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("qpid-broker-%s", getVersion()));
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("qpid-broker-%s", getVersion()));
         
         List<String> commands = new LinkedList<String>();
         commands.addAll( CommonCommands.downloadUrlAs(urls, saveAs));

@@ -56,7 +56,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("rabbitmq_server-%s", getVersion()));
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
                 .add(installPackage(// NOTE only 'port' states the version of Erlang used, maybe remove this constraint?

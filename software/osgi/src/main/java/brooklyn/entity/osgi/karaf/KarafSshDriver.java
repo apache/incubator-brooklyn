@@ -47,7 +47,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("apache-karaf-%s", getVersion()));
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("apache-karaf-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(CommonCommands.downloadUrlAs(urls, saveAs))

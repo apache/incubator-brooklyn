@@ -68,7 +68,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/" + resolver.getUnpackedDirectorName("jboss-"+getVersion());
+        expandedInstallDir = getInstallDir()+"/" + resolver.getUnpackedDirectoryName("jboss-"+getVersion());
         
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to

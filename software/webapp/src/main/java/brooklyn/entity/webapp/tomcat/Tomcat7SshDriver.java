@@ -45,7 +45,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName("apache-tomcat-"+getVersion());
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName("apache-tomcat-"+getVersion());
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
