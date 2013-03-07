@@ -7,7 +7,10 @@ import brooklyn.location.Location;
  * be tightly coupled to a specific driver implementation, so that there is flexibility for driver changes, without
  * changing the entity itself. The advantage is that drivers can easily be reconfigured, replaced or new drivers for
  * different environments can be added, without needing to modify Brooklyn.
+ * 
+ * @deprecated since 0.5; use EntityDriverManager instead
  */
+@Deprecated
 public interface EntityDriverFactory {
 
     /**

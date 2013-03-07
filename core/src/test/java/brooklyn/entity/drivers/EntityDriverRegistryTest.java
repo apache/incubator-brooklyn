@@ -26,9 +26,9 @@ public class EntityDriverRegistryTest {
     
     @Test
     public void testInstantiatesRegisteredDriver() throws Exception {
-        managementContext.getEntityDriverFactory().registerDriver(MyDriver.class, SshMachineLocation.class, MyOtherSshDriver.class);
+        managementContext.getEntityDriverManager().registerDriver(MyDriver.class, SshMachineLocation.class, MyOtherSshDriver.class);
         DriverDependentEntity<MyDriver> entity = new MyDriverDependentEntity<MyDriver>(MyDriver.class);
-        MyDriver driver = managementContext.getEntityDriverFactory().build(entity, sshLocation);
+        MyDriver driver = managementContext.getEntityDriverManager().build(entity, sshLocation);
         assertTrue(driver instanceof MyOtherSshDriver);
     }
 }

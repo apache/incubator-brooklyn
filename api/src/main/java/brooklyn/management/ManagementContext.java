@@ -6,7 +6,8 @@ import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.drivers.EntityDriverRegistry;
+import brooklyn.entity.drivers.DriverDependentEntity;
+import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
@@ -38,11 +39,21 @@ public interface ManagementContext {
     ExecutionManager getExecutionManager();
 
     /**
-     * Returns the {@link EntityDriverRegistry} entities can use to create drivers.
-     *
-      * @return the EntityDriverRegistry to use.
+     * @deprecated since 0.5; use {@link #getEntityDriverManager()}
      */
-    EntityDriverRegistry getEntityDriverFactory();
+    EntityDriverManager getEntityDriverFactory();
+
+    /**
+     * Returns the {@link EntityDriverManager} entities can use to create drivers. This
+     * manager can also be used to programmatically customize which driver type to use 
+     * for entities in different locations.
+     * 
+     * The default strategy for choosing a driver is to use a naming convention: 
+     * {@link DriverDependentEntity#getDriverInterface()} returns the interface that the
+     * driver must implement; its name should end in "Driver". For example, this suffix is 
+     * replaced with "SshDriver" for SshMachineLocation, for example.
+     */
+    EntityDriverManager getEntityDriverManager();
 
     /**
      * Returns the {@link DownloadResolverRegistry} for resolving things like which URL to download an installer from.

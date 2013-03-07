@@ -2,7 +2,7 @@ package brooklyn.entity.drivers;
 
 import brooklyn.location.Location;
 
-public class BasicEntityDriverFactory implements EntityDriverRegistry {
+public class BasicEntityDriverFactory implements EntityDriverManager {
 
     private final RegistryEntityDriverFactory registry;
     private final ReflectiveEntityDriverFactory reflective;
