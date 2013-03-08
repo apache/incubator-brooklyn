@@ -13,8 +13,9 @@ import org.testng.Assert
 import org.testng.annotations.Test
 
 /**
- * @deprecated will be deleted in 0.5. // use SingleThreadedScheduler; FIXME delete this class when we're definitely
- * happy with SingleThreadedScheduler
+ * @deprecated since 0.4; use SingleThreadedScheduler
+ * 
+ * FIXME delete when deleting SingleThreadedExecution
  */
 @Deprecated
 class SynchronizedExecutionTest {

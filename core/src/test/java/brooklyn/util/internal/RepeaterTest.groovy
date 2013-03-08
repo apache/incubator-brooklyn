@@ -92,13 +92,13 @@ public class RepeaterTest {
 
     @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void limitTimeToFailsIfPeriodIsZero() {
-        new Repeater("limitTimeToFailsIfPeriodIsZero").limitTimeTo(0 * MILLISECONDS);
+        new Repeater("limitTimeToFailsIfPeriodIsZero").limitTimeTo(0, TimeUnit.MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
     @Test(expectedExceptions = [ IllegalArgumentException.class ])
     public void limitTimeToFailsIfPeriodIsNegative() {
-        new Repeater("limitTimeToFailsIfPeriodIsNegative").limitTimeTo(-1 * MILLISECONDS);
+        new Repeater("limitTimeToFailsIfPeriodIsNegative").limitTimeTo(-1, TimeUnit.MILLISECONDS);
         fail "Expected exception was not thrown"
     }
 
@@ -110,7 +110,7 @@ public class RepeaterTest {
 
     @Test
     public void limitTimeToSucceedsIfPeriodIsPositiveAndUnitsIsNonNull() {
-        new Repeater("limitTimeToSucceedsIfClosureIsNonNull").limitTimeTo(10 * MILLISECONDS);
+        new Repeater("limitTimeToSucceedsIfClosureIsNonNull").limitTimeTo(10, TimeUnit.MILLISECONDS);
     }
 
     @Test
@@ -167,7 +167,7 @@ public class RepeaterTest {
             .repeat()
             .every(100 * MILLISECONDS)
             .until { false }
-            .limitTimeTo(LIMIT * MILLISECONDS);
+            .limitTimeTo(LIMIT, TimeUnit.MILLISECONDS);
 
         Stopwatch stopwatch = new Stopwatch().start();
         boolean result = repeater.run();

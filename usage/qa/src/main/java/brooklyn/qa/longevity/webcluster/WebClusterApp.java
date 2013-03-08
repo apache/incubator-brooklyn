@@ -3,7 +3,6 @@ package brooklyn.qa.longevity.webcluster;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -76,7 +75,7 @@ public class WebClusterApp extends AbstractApplication {
                         "factory", jbossFactory), app);
 
 
-        web.getCluster().addEnricher(CustomAggregatingEnricher.getAveragingEnricher(new LinkedList(), sinusoidalLoad, averageLoad));
+        web.getCluster().addEnricher(CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), sinusoidalLoad, averageLoad));
         web.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(averageLoad)
                 .sizeRange(1, 3)

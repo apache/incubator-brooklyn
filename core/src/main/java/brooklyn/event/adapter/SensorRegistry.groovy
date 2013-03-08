@@ -26,7 +26,7 @@ import brooklyn.event.adapter.legacy.ValueProvider
  * It is strongly recommended to not modify a sensor-adapter while concurrently registering it
  * (e.g. adding additional sensors to it in a separate thread).
  * 
- * @deprecated See brooklyn.event.feed.*
+ * @deprecated since 0.5; see brooklyn.event.feed.*
  */
 @Deprecated
 @SuppressWarnings("deprecation")

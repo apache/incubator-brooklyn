@@ -3,8 +3,6 @@ package brooklyn.location.jclouds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -17,10 +15,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.location.basic.CommandLineLocations;
 import brooklyn.location.basic.LocationResolverTest;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.MutableMap;
@@ -130,18 +125,4 @@ public class JcloudsLocationResolverTest {
     public void testJcloudsOnlyFails() {
         LocationResolverTest.resolve("jclouds");
     }
-
-    @Test
-    public void testLegacyCommandLineAcceptsList() {
-        CommandLineLocations.getLocationsById(Arrays.asList("localhost"));
-    }
-
-    @Test
-    public void testLegacyCommandLineAcceptsListOLists() {
-        //if inner list has a single item it automatically gets coerced correctly to string
-        //preserve for compatibility (since 0.4.0)
-        CommandLineLocations.getLocationsById((List)Arrays.asList(Arrays.asList("localhost")));
-    }
-
-
 }

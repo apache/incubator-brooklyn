@@ -167,8 +167,8 @@ class DynamicFabricTest {
 
         new Repeater("Wait until each task is executing")
                 .repeat()
-                .every(100 * MILLISECONDS)
-                .limitTimeTo(30 * SECONDS)
+                .every(100, TimeUnit.MILLISECONDS)
+                .limitTimeTo(30, TimeUnit.SECONDS)
                 .until { latches.size() == locs.size() }
                 .run()
 
@@ -178,8 +178,8 @@ class DynamicFabricTest {
                
         new Repeater("Wait until complete")
                 .repeat()
-                .every(100 * MILLISECONDS)
-                .limitTimeTo(30 * SECONDS)
+                .every(100, TimeUnit.MILLISECONDS)
+                .limitTimeTo(30, TimeUnit.SECONDS)
                 .until { task.isDone() }
                 .run()
 
