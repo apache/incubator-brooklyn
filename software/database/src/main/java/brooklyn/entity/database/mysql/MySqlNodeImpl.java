@@ -49,7 +49,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(DB_URL, String.format("mysql://%s:%s/", getLocalHostname(), getPort()));
+        setAttribute(DB_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MYSQL_PORT)));
         
         /*        
          * TODO status gives us things like:
