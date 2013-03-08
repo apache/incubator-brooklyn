@@ -952,8 +952,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             ConfigBag sshConfig = extractSshConfig(setup, new ConfigBag());
             
             // TODO messy way to get an SSH session 
-            sshLocByIp = new SshMachineLocation(MutableMap.of("address", ip, "user", getUser(setup), 
-                    "config", sshConfig.getAllConfig()));
+            sshLocByIp = new SshMachineLocation(MutableMap.builder()
+                    .put("address", ip) 
+                    .put("user", getUser(setup))
+                    .putAll(sshConfig.getAllConfig())
+                    .build());
             
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
