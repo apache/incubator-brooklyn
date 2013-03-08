@@ -45,7 +45,8 @@ public class MongoDbTest {
 
     @Test(groups = "Integration")
     public void testCanStartAndStop() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class));
+        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
+                .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
@@ -55,7 +56,8 @@ public class MongoDbTest {
 
     @Test(groups = "Integration")
     public void testCanReadAndWrite() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class));
+        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
+                .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
         String id = insert(entity, "hello", "world!");
@@ -65,7 +67,8 @@ public class MongoDbTest {
 
     @Test(groups = "Integration")
     public void testPollInsertCountSensor() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class));
+        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
+                .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
 

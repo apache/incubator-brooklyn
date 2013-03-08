@@ -23,7 +23,7 @@ import com.mongodb.MongoClient;
 public class MongoDbEc2LiveTest extends AbstractEc2LiveTest {
 
     // TODO Remove duplication from MongoDbTest (for insert/getById utility methods)
-    
+
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(MongoDbEc2LiveTest.class);
 
@@ -32,9 +32,10 @@ public class MongoDbEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class));
+        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
+                .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(loc));
-        
+
         EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.SERVICE_UP, true);
 
         String id = insert(entity, "hello", "world!");

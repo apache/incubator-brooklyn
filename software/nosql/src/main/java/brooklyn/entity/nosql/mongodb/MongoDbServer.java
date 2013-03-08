@@ -15,7 +15,7 @@ import org.bson.BasicBSONObject;
 public interface MongoDbServer extends SoftwareProcess {
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
+    BasicConfigKey<String> SUGGESTED_VERSION =
             new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.2.3");
 
     // e.g. http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.2.tgz,
@@ -23,49 +23,56 @@ public interface MongoDbServer extends SoftwareProcess {
     // http://downloads.mongodb.org/win32/mongodb-win32-x86_64-1.8.5.zip
     // Note Windows download is a zip.
     @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "http://fastdl.mongodb.org/${driver.osDir}/${driver.osTag}-${version}.tgz");
 
     @SetFromFlag("port")
-    public static final PortAttributeSensorAndConfigKey PORT =
+    PortAttributeSensorAndConfigKey PORT =
             new PortAttributeSensorAndConfigKey("mongodb.server.port", "Server port", "27017+");
 
-    public static final BasicConfigKey<String> CONFIG_URL = new BasicConfigKey<String>(String.class,
-            "mongodb.config.url", "URL where a Mongo configuration file can be found", "classpath://default-mongodb.conf");
+    @SetFromFlag("dataDirectory")
+    BasicConfigKey<String> DATA_DIRECTORY = new BasicConfigKey<String>(String.class,
+            "mongodb.data.directory", "Data directory to store MongoDB journals");
+
+    @SetFromFlag("mongodbConfTemplateUrl")
+    BasicConfigKey<String> MONGODB_CONF_TEMPLATE_URL = new BasicConfigKey<String>(String.class,
+            "mongodb.config.url", "Template file (in freemarker format) for a a Mongo configuration file",
+            "classpath://brooklyn/entity/nosql/mongodb/default-mongodb.conf");
 
     // Can also treat this as a Map
-    public static final BasicAttributeSensor<BasicBSONObject> STATUS = new BasicAttributeSensor<BasicBSONObject>(BasicBSONObject.class,
+    BasicAttributeSensor<BasicBSONObject> STATUS = new BasicAttributeSensor<BasicBSONObject>(BasicBSONObject.class,
             "mongodb.server.status", "Server status");
 
-    public static final BasicAttributeSensor<Double> UPTIME_SECONDS = new BasicAttributeSensor<Double>(Double.class,
+    BasicAttributeSensor<Double> UPTIME_SECONDS = new BasicAttributeSensor<Double>(Double.class,
             "mongodb.server.uptime", "Server uptime in seconds");
 
-    public static final BasicAttributeSensor<Long> OPCOUNTERS_INSERTS = new BasicAttributeSensor<Long>(Long.class,
+    BasicAttributeSensor<Long> OPCOUNTERS_INSERTS = new BasicAttributeSensor<Long>(Long.class,
             "mongodb.server.opcounters.insert", "Server inserts");
 
-    public static final BasicAttributeSensor<Long> OPCOUNTERS_QUERIES = new BasicAttributeSensor<Long>(Long.class,
+    BasicAttributeSensor<Long> OPCOUNTERS_QUERIES = new BasicAttributeSensor<Long>(Long.class,
             "mongodb.server.opcounters.query", "Server queries");
 
-    public static final BasicAttributeSensor<Long> OPCOUNTERS_UPDATES = new BasicAttributeSensor<Long>(Long.class,
+    BasicAttributeSensor<Long> OPCOUNTERS_UPDATES = new BasicAttributeSensor<Long>(Long.class,
             "mongodb.server.opcounters.update", "Server updates");
 
-    public static final BasicAttributeSensor<Long> OPCOUNTERS_DELETES = new BasicAttributeSensor<Long>(Long.class,
+    BasicAttributeSensor<Long> OPCOUNTERS_DELETES = new BasicAttributeSensor<Long>(Long.class,
             "mongodb.server.opcounters.delete", "Server deletes");
 
-    public static final BasicAttributeSensor<Long> OPCOUNTERS_GETMORE = new BasicAttributeSensor<Long>(Long.class,
+    BasicAttributeSensor<Long> OPCOUNTERS_GETMORE = new BasicAttributeSensor<Long>(Long.class,
             "mongodb.server.opcounters.getmore", "Server getmores");
 
-    public static final BasicAttributeSensor<Long> OPCOUNTERS_COMMAND = new BasicAttributeSensor<Long>(Long.class,
+    BasicAttributeSensor<Long> OPCOUNTERS_COMMAND = new BasicAttributeSensor<Long>(Long.class,
             "mongodb.server.opcounters.command", "Server commands");
 
-    public static final BasicAttributeSensor<Long> NETWORK_BYTES_IN = new BasicAttributeSensor<Long>(Long.class,
-            "mongodb.server.network.bytesIn", "Server deletes");
+    BasicAttributeSensor<Long> NETWORK_BYTES_IN = new BasicAttributeSensor<Long>(Long.class,
+            "mongodb.server.network.bytesIn", "Server incoming network traffic (in bytes)");
 
-    public static final BasicAttributeSensor<Long> NETWORK_BYTES_OUT = new BasicAttributeSensor<Long>(Long.class,
-            "mongodb.server.network.bytesOut", "Server deletes");
+    BasicAttributeSensor<Long> NETWORK_BYTES_OUT = new BasicAttributeSensor<Long>(Long.class,
+            "mongodb.server.network.bytesOut", "Server outgoing network traffic (in bytes)");
 
-    public static final BasicAttributeSensor<Long> NETWORK_NUM_REQUESTS = new BasicAttributeSensor<Long>(Long.class,
-            "mongodb.server.network.numRequests", "Server deletes");
+    BasicAttributeSensor<Long> NETWORK_NUM_REQUESTS = new BasicAttributeSensor<Long>(Long.class,
+            "mongodb.server.network.numRequests", "Server network requests");
 
+    Integer getServerPort();
 
 }

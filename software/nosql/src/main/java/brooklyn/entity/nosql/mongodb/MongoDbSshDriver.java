@@ -2,9 +2,6 @@ package brooklyn.entity.nosql.mongodb;
 
 import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -14,13 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
-import brooklyn.util.ResourceUtils;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -41,14 +36,19 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
         return expandedInstallDir;
     }
-    
+
+    @Override
+    public String getDataDirectory() {
+        return entity.getConfig(MongoDbServer.DATA_DIRECTORY, getRunDir() + "/data");
+    }
+
     @Override
     public void install() {
         DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName());
-        
+
         List<String> commands = new LinkedList<String>();
         commands.addAll(downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.INSTALL_TAR);
@@ -63,19 +63,13 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     public void customize() {
         Map ports = ImmutableMap.of("port", getServerPort());
         NetworkUtils.checkPortsValid(ports);
-        String hostname = entity.getAttribute(SoftwareProcess.HOSTNAME);
-        String command = String.format("mkdir -p %s/data", getRunDir());
+        String command = String.format("mkdir -p %s", getDataDirectory());
         newScript(CUSTOMIZING)
                 .updateTaskAndFailOnNonZeroResultCode()
                 .body.append(command).execute();
 
-        String url = entity.getConfig(MongoDbServer.CONFIG_URL);
-        Reader configFile;
-        if (!Strings.isNullOrEmpty(url))
-            configFile = new InputStreamReader(new ResourceUtils(entity).getResourceFromUrl(url));
-        else
-            configFile = new StringReader("");
-        getMachine().copyTo(configFile, getConfFile());
+        String templateUrl = entity.getConfig(MongoDbServer.MONGODB_CONF_TEMPLATE_URL);
+        if (!Strings.isNullOrEmpty(templateUrl)) copyTemplate(templateUrl, getConfFile());
     }
 
     @Override
@@ -85,8 +79,8 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         String args = Joiner.on(" ").join(ImmutableList.of(
                 "--config", getConfFile(),
                 "--pidfilepath", getPidFile(),
-                "--dbpath", getDataDir(),
                 "--logpath", getLogFile(),
+                "--dbpath", getDataDirectory(),
                 "--port", port,
                 "--fork"));
         String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
@@ -131,10 +125,6 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
             String arch = os.is64bit() ? "x86_64" : "i686";
             return "mongodb-linux-" + arch;
         }
-    }
-
-    protected String getDataDir() {
-        return getRunDir() + "/data/";
     }
 
     protected String getLogFile() {
