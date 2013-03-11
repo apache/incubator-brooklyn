@@ -2,11 +2,17 @@ package brooklyn.catalog.internal;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ApplicationBuilder;
 
 @SuppressWarnings("serial")
 public class MyCatalogItems {
 
-    @Catalog(description="Some silly test")
+    @Catalog(description="Some silly app test")
     public static class MySillyAppTemplate extends AbstractApplication {}
     
+    @Catalog(description="Some silly app builder test")
+    public static class MySillyAppBuilderTemplate extends ApplicationBuilder {
+        @Override protected void doBuild() {
+        }
+    }
 }
