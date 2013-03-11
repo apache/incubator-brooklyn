@@ -29,6 +29,10 @@ public class Identifiers {
      * in other words, it's appropriate for contexts where random id's are needed,
      * but use efficiently (ie cache it per object), and 
      * prefer to use a counter where feasible
+     * <p>
+     * in general this is preferable to base64 as is more portable,
+     * can be used throughout javascript (as ID's which don't allow +)
+     * or as java identifiers (which don't allow numers in the first char)
      **/
     public static String makeRandomId(int l) {
         //this version is 30-50% faster than the old double-based one, 
