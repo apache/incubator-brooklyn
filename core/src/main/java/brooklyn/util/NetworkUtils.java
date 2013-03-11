@@ -3,10 +3,14 @@ package brooklyn.util;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -209,7 +213,8 @@ public class NetworkUtils {
             throw Throwables.propagate(e);
         }
     }
-    
+
+    /** returns local IP address, or 127.0.0.1 if it cannot be parsed */
     public static InetAddress getLocalHost() {
         try {
             return InetAddress.getLocalHost();
@@ -220,12 +225,40 @@ public class NetworkUtils {
             return result;
         }
     }
+    
+    /** returns all local addresses */
+    public static Map<String,InetAddress> getLocalAddresses() {
+        Map<String, InetAddress> result = new LinkedHashMap<String, InetAddress>();
+        Enumeration<NetworkInterface> ne;
+        try {
+            ne = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            log.warn("Local network interfaces are not resolvable: "+e);
+            ne = null;
+        }
+        while (ne != null && ne.hasMoreElements()) {
+            NetworkInterface nic = ne.nextElement();
+            Enumeration<InetAddress> inets = nic.getInetAddresses();
+            while (inets.hasMoreElements()) {
+                InetAddress inet = inets.nextElement();
+                result.put(inet.getHostAddress(), inet);
+            }
+        }
+        if (result.isEmpty()) {
+            log.warn("No local network addresses found; assuming 127.0.0.1");
+            InetAddress loop = Cidr.LOOPBACK.addressAtOffset(0);
+            result.put(loop.getHostAddress(), loop);
+        }
+        return result;
+    }
 
+    /** returns a CIDR object for the given string, e.g. "10.0.0.0/8" */
     public static Cidr cidr(String cidr) {
         return new Cidr(cidr);
     }
 
-    /** returns the private network which the given IP is in, or the /32 of local address if none */
+    /** returns any well-known private network (e.g. 10.0.0.0/8 or 192.168.0.0/16) 
+     * which the given IP is in, or the /32 of local address if none */
     public static Cidr getPrivateNetwork(String ip) {
         Cidr me = new Cidr(ip+"/32");
         for (Cidr c: PRIVATE_NETWORKS)
@@ -238,6 +271,7 @@ public class NetworkUtils {
         return getPrivateNetwork(address.getHostAddress());
     }
     
+    /** returns whether the IP is _not_ in any private subnet */
     public static boolean isPublicIp(String ipAddress) {
         Cidr me = new Cidr(ipAddress+"/32");
         for (Cidr c: Cidr.NON_PUBLIC_CIDRS)
@@ -245,6 +279,7 @@ public class NetworkUtils {
         return true;
     }
     
+    /** returns the externally-facing IP address from which this host comes */
     public static String getLocalhostExternalIp() {
         return UtraceHostGeoLookup.getLocalhostExternalIp();
     }
