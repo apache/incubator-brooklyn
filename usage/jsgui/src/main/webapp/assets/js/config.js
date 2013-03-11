@@ -20,8 +20,8 @@ require.config({
         "brooklyn-utils":"libs/brooklyn-utils",
         "datatables-extensions":"libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",
+        "async":"libs/async",  //not explicitly referenced, but needed for google
         "text":"libs/text",
-//        "async":"libs/async",
         "tpl":"../tpl"
     },
     shim:{
