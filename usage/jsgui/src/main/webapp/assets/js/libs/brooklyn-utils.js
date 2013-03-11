@@ -12,24 +12,13 @@ function count_occurrences(string, subString, allowOverlapping) {
     return(n);
 }
 
-function log(obj) {
+function log(args) {
     if (typeof window.console != 'undefined') {
-        console.log(obj);
-    }
-}
-
-function log(obj1, obj2) {
-    if (typeof window.console != 'undefined') {
-        console.log(obj1);
-        console.log(obj2);
-    }
-}
-
-function log(obj1, obj2, obj3) {
-    if (typeof window.console != 'undefined') {
-        console.log(obj1);
-        console.log(obj2);
-        console.log(obj3);
+        console.log(args);
+        if (arguments.length>1) {
+            for (i=1; i<arguments.length; i++)
+                console.log(arguments[i])
+        }
     }
 }
 

@@ -15,6 +15,7 @@ define([
         selectedRow:null,
         events:{
             "click #activities-table tr":"rowClick",
+            'click .refresh':'refreshNow',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
             'click .toggleFullDetail':'toggleFullDetail'
         },
@@ -55,10 +56,13 @@ define([
             
             that.collection.on("reset", that.render, that);
             that.callPeriodically("entity-activities", function () {
-                if (self.refreshActive)
+                if (that.refreshActive)
                     that.collection.fetch();
             }, 3000);
             that.collection.fetch();
+        },
+        refreshNow: function() {
+            this.collection.fetch();
         },
         beforeClose:function () {
             this.collection.off("reset", this.render);
@@ -71,12 +75,9 @@ define([
         },
         render:function () {
             var that = this;
-            $('.expanded-node', that.table).remove()
             if (that.table == null || this.collection.length==0) {
-                $(".has-no-activities").show();
-                $("#activity-details-none-selected").hide();
+                // nothing to do
             } else {
-                $(".has-no-activities").hide();
                 ViewUtils.updateMyDataTable(that.table, that.collection, function(task, index) {
                     return [ 
                                   // columns are: id, name, when submitted, status         
@@ -90,6 +91,7 @@ define([
 //                  endTimeUtc:task.get("endTimeUtc"),
 //                  entityDisplayName:task.get("entityDisplayName")
                 })
+                this.showDetailRow(true);
             }
             return this;
         },
@@ -98,6 +100,7 @@ define([
 //            $(this).toggleClass('icon-chevron-down icon-chevron-right')
 //            var open = $(this).hasClass('icon-chevron-down')
             
+            var that = this;
             var row = $(evt.currentTarget).closest("tr");
             var id = row.attr("id");
             
@@ -107,28 +110,38 @@ define([
             
             $("#activities-table tr").removeClass("selected");
             
-            if (this.selectedRow!=null)
-                this.table.fnClose(this.selectedRow);
+            if (this.selectedRow!=null) {
+                var r = this.selectedRow;
+                // slide it up, then close once it is hidden (else it vanishes suddenly)
+                // the slide effect isn't just cool, it helps keep rows in a visually consistent place
+                // (so that it doesn't just jump when you click, if a row above it was previously selected)
+                $('tr[#'+id+'] .activity-row-details').slideUp(50, "swing", function() { 
+                    that.table.fnClose(r);
+                })
+            }
             
             if (this.selectedId == id) {
                 // deselected
                 this.selectedRow = null;
                 this.selectedId = null;
                 this.showFullActivity(null);
-                
             } else {
                 row.addClass("selected");
                 this.selectedRow = row[0];
                 this.selectedId = id;
                 this.table.fnOpen(row[0], '', 'row-expansion'); 
-                this.showDetailRow();
+                this.showDetailRow(false);
             }
         },
         
-        showDetailRow: function() {
-            var task = this.collection.get(this.selectedId);
-            var html = _.template(ActivityRowDetailsHtml, { task: task==null ? null : task.attributes })
-            $('.row-expansion').html(html) 
+        showDetailRow: function(updateOnly) {
+            var id = this.selectedId;
+            if (id==null) return;
+            var task = this.collection.get(id);
+            if (task==null) return;
+            var html = _.template(ActivityRowDetailsHtml, { task: task==null ? null : task.attributes, updateOnly: updateOnly })
+            $('tr#'+id).next().find('.row-expansion').html(html)
+            $('tr#'+id).next().find('.row-expansion .activity-row-details').slideDown(50);
         },
         toggleFullDetail: function() {
             var i = $('.toggleFullDetail');
@@ -140,7 +153,6 @@ define([
         },
         showFullActivity: function() {
             var id = this.selectedId
-            $("#activity-details-none-selected").slideUp(50);
             var task = this.collection.get(id);
             if (task==null) {
                 this.hideFullActivity();
@@ -152,21 +164,8 @@ define([
         },
         hideFullActivity: function() {
             $("#activity-details").slideUp(100);
-            $("#activity-details-none-selected").slideDown(50);
         }
     });
 
-//    ActivitiesView.Details = Backbone.View.extend({
-//        tagName:"div",
-//        className:"modal hide",
-//        template:_.template(ActivityFullDetailsHtml),
-//        render:function () {
-//            this.$el.html(this.template({
-//                displayName:this.model.get("displayName"),
-//                description:FormatJSON(this.model.toJSON())
-//            }));
-//            return this;
-//        }
-//    });
     return ActivitiesView;
 });
