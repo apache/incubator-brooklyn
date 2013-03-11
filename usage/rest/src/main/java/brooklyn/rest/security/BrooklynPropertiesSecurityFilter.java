@@ -67,7 +67,7 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
         }
         
         if (provider.authenticate(request.getSession(), user, pass)) {
-            log.info("Web API authenticated "+request.getSession()+" for user "+user);
+            log.debug("Web API authenticated "+request.getSession()+" for user "+user);
             if (user!=null) {
                 request.getSession().setAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE, user);
             }

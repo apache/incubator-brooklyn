@@ -102,7 +102,7 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
     }
 
     private boolean allow(HttpSession session, String user) {
-        LOG.info("Web console "+getClass().getSimpleName()+" authenticated user "+user);
+        LOG.debug("Web console "+getClass().getSimpleName()+" authenticated user "+user);
         session.setAttribute(AUTHENTICATION_KEY, user);
         return true;
     }
