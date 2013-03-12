@@ -94,7 +94,8 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         List<String> commands = new LinkedList<String>();
         commands.add(CommonCommands.INSTALL_TAR);
         commands.add("echo installing extra packages");
-        commands.add(installPackage(ImmutableMap.of("yum", "libgcc_s.so.1 libaio.so.1 libncurses.so.5", "apt", "libaio1 libaio-dev"), null));
+        commands.add(installPackage(ImmutableMap.of("yum", "libgcc_s.so.1"), null));
+        commands.add(installPackage(ImmutableMap.of("yum", "libaio.so.1 libncurses.so.5", "apt", "libaio1 libaio-dev"), null));
 
         // these deps are needed on some OS versions but others don't need them so ignore failures (ok(...))
         commands.add(ok(installPackage(ImmutableMap.of("yum", "libaio", "apt", "ia32-libs"), null)));
