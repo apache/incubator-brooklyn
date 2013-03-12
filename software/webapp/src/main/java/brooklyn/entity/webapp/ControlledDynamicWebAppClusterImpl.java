@@ -17,6 +17,7 @@ import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.WrappingEntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -56,6 +57,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         ConfigToAttributes.apply(this, FACTORY);
         ConfigToAttributes.apply(this, MEMBER_SPEC);
         ConfigToAttributes.apply(this, CONTROLLER);
+        ConfigToAttributes.apply(this, CONTROLLER_SPEC);
         
         ConfigurableEntityFactory<? extends WebAppService> webServerFactory = getAttribute(FACTORY);
         EntitySpec<? extends WebAppService> webServerSpec = getAttribute(MEMBER_SPEC);
@@ -81,9 +83,15 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         
         AbstractController controller = getAttribute(CONTROLLER);
         if (controller == null) {
-            log.debug("creating default controller for {}", this);
-            controller = getEntityManager().createEntity(BasicEntitySpec.newInstance(NginxController.class)
-                    .parent(this));
+            EntitySpec<? extends AbstractController> controllerSpec = getAttribute(CONTROLLER_SPEC);
+            if (controllerSpec == null) {
+                log.debug("creating controller using default spec for {}", this);
+                controllerSpec = BasicEntitySpec.newInstance(NginxController.class);
+                setAttribute(CONTROLLER_SPEC, controllerSpec);
+            } else {
+                log.debug("creating controller using custom spec for {}", this);
+            }
+            controller = getEntityManager().createEntity(WrappingEntitySpec.newInstance(controllerSpec).parent(this));
             if (Entities.isManaged(this)) Entities.manage(controller);
             setAttribute(CONTROLLER, controller);
         }

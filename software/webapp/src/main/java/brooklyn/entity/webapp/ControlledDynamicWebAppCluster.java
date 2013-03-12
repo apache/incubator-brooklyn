@@ -79,6 +79,10 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
     public static BasicAttributeSensorAndConfigKey<AbstractController> CONTROLLER = new BasicAttributeSensorAndConfigKey<AbstractController>(
             AbstractController.class, "controlleddynamicweballcluster.controller", "Controller for the cluster; if null a default will created");
 
+    @SetFromFlag("controllerSpec")
+    public static BasicAttributeSensorAndConfigKey<EntitySpec<? extends AbstractController>> CONTROLLER_SPEC = new BasicAttributeSensorAndConfigKey(
+            EntitySpec.class, "controlleddynamicweballcluster.controllerSpec", "Spec for creating the cluster (if one not supplied explicitly); if null an NGINX instance will be created");
+
     /** factory (or closure) to create the web server, given flags */
     @SetFromFlag("factory")
     public static BasicAttributeSensorAndConfigKey<ConfigurableEntityFactory<? extends WebAppService>> FACTORY = new BasicAttributeSensorAndConfigKey(
