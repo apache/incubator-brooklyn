@@ -15,6 +15,7 @@ import brooklyn.catalog.Catalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
@@ -125,7 +126,11 @@ public class CatalogClasspathDo {
             if (scanMode==CatalogScanningModes.ANNOTATIONS) {
                 Set<Class<?>> catalogClasses = scanner.getTypesAnnotatedWith(Catalog.class);
                 for (Class<?> c: catalogClasses) {
-                    addCatalogEntry(c);
+                    try {
+                        addCatalogEntry(c);
+                    } catch (Exception e) {
+                        log.warn("Failed to add catalog entry for "+c+"; continuing scan...", e);
+                    }
                     count++;
                 }
             } else if (scanMode==CatalogScanningModes.TYPES) {
@@ -173,6 +178,7 @@ public class CatalogClasspathDo {
     /** augments the given item with annotations and class data for the given class, then adds to catalog */
     public CatalogItem<?> addCatalogEntry(Class<?> c) {
         if (Application.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
+        if (ApplicationBuilder.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
         if (Entity.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogEntityItemDto(), c);
         if (Policy.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogPolicyItemDto(), c);
         throw new IllegalStateException("Cannot add "+c+" to catalog: unsupported type "+c.getName());

@@ -58,21 +58,28 @@ public class CatalogScanTest {
         CatalogItem<Application> s1 = defaultCatalog.getCatalogItem(Application.class, silly1.iterator().next().getId());
         Assert.assertEquals(s1, Iterables.getOnlyElement(silly1));
         
-        Assert.assertEquals(s1.getDescription(), "Some silly test");
+        Assert.assertEquals(s1.getDescription(), "Some silly app test");
         
         Class<? extends Application> app = defaultCatalog.loadClass(s1);
         Assert.assertEquals(MySillyAppTemplate.class, app);
         
         String xml = ((BasicBrooklynCatalog)defaultCatalog).toXmlString();
         log.info("Catalog is:\n"+xml);
-        Assert.assertTrue(xml.indexOf("Some silly test") >= 0);
+        Assert.assertTrue(xml.indexOf("Some silly app test") >= 0);
     }
 
     @Test
-    public void testAnnotationLoadsSome() {
+    public void testAnnotationLoadsSomeApps() {
         loadAnnotationsOnlyCatalog();
         Iterable<CatalogItem<Object>> silly1 = annotsCatalog.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
-        Assert.assertEquals(Iterables.getOnlyElement(silly1).getDescription(), "Some silly test");
+        Assert.assertEquals(Iterables.getOnlyElement(silly1).getDescription(), "Some silly app test");
+    }
+    
+    @Test
+    public void testAnnotationLoadsSomeAppBuilders() {
+        loadAnnotationsOnlyCatalog();
+        Iterable<CatalogItem<Object>> silly1 = annotsCatalog.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppBuilderTemplate")));
+        Assert.assertEquals(Iterables.getOnlyElement(silly1).getDescription(), "Some silly app builder test");
     }
     
     @Test
