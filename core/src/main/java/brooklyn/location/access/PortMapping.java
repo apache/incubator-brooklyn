@@ -1,5 +1,7 @@
 package brooklyn.location.access;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Objects;
 
 import brooklyn.location.Location;
@@ -8,7 +10,7 @@ public class PortMapping {
     
     public PortMapping(String publicIpId, int publicPort, Location target, int privatePort) {
         super();
-        this.publicIpId = publicIpId;
+        this.publicIpId = checkNotNull(publicIpId, "publicIpId");
         this.publicPort = publicPort;
         this.target = target;
         this.privatePort = privatePort;
@@ -34,7 +36,7 @@ public class PortMapping {
     
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("public=", publicPort).
-            add("private", target+":"+privatePort).toString();
+        return Objects.toStringHelper(this).add("public", publicIpId+":"+publicPort).
+                add("private", target+":"+privatePort).toString();
     }
 }
