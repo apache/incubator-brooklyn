@@ -14,7 +14,7 @@ define([
         configMetadata:{},
         refreshActive:true,
         events:{
-            'click .refresh':'refreshConfig',
+            'click .refresh':'refreshNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh'
         },
@@ -37,9 +37,10 @@ define([
                                      "mRender": function ( data, type, row ) {
                                          // name (column 1) should have tooltip title
                                          return '<span class="config-name" '+ 
-                                             'rel="tooltip" title="<b>'+
-                                             Util.prep(data['description'])+'</b><br/>('+
-                                             Util.prep(data['type'])+')" data-placement="left">'+
+                                             'rel="tooltip" title='+
+                                             (data['description'] ? 
+                                                     '"<b>'+Util.prep(data['description'])+'</b><br/>' : '')+
+                                             '('+Util.prep(data['type'])+')" data-placement="left">'+
                                              Util.prep(data['name'])+'</span>';
                                      },
                                      "aTargets": [ 1 ]
@@ -90,7 +91,7 @@ define([
         enableAutoRefresh: function(isEnabled) {
             this.refreshActive = isEnabled
         },
-        refreshConfig:function () {
+        refreshNow:function () {
             this.updateConfigNow(this);  
         },
         updateConfigPeriodically:function (that) {
@@ -134,6 +135,7 @@ define([
                         value
                     ];
                 });
+                ViewUtils.processTooltips($table)
             });
         }
     });

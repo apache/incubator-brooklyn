@@ -1,5 +1,5 @@
 <span class="sensor-name" rel="tooltip" data-placement="left"
-      title="<b><%- description %></b><br/><%- type %>">
+    title="<% if (description) { %><b><%- description %></b><br/><% } %>(<%- type %>)">
     <% if (href) { %><a href="<%= href %>"> <% } %>
     <%- name %>
     <% if (href) { %></a> <% } %>

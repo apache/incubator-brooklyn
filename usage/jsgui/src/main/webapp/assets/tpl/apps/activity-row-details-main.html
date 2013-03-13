@@ -1,0 +1,12 @@
+    <% if (task.startTimeUtc) { %>started <%= task.startTimeUtc %><% 
+        if (task.submitTimeUtc != task.startTimeUtc) { %> (submitted <%= task.submitTimeUtc %>)<% } 
+        if (task.endTimeUtc) { %>, finished <%= task.endTimeUtc %> 
+        <% } else { %>, in progress
+        <% } %>
+    <% } else { %>
+       submitted <%= task.submitTimeUtc %>, waiting
+    <% } %>
+    <% if (task.tags) { %>
+        <br/>
+        tags: <%= task.tags %>
+    <% } %>

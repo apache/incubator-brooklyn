@@ -92,8 +92,8 @@ define([
             	this.activePolicy = null;
                 this._config = null;
                 $("#policy-config-table").dataTable().fnDestroy();
-                $("#policy-config").hide(100);
-                $("#policy-config-none-selected").show(100);
+                $("#policy-config").slideUp(100);
+                $("#policy-config-none-selected").slideDown(100);
             } else {
                 row.addClass("selected");
                 var that = this;
@@ -112,7 +112,7 @@ define([
                 // TODO better to use a json array, as we do elsewhere
                 var $table = $('#policy-config-table'),
                     $tbody = $('#policy-config-table tbody').empty();
-                $("#policy-config-none-selected").hide(100);
+                $("#policy-config-none-selected").slideUp(100);
                 if (that._config.length==0) {
                     $(".has-no-policy-config").show();
                 } else {
@@ -132,8 +132,8 @@ define([
                         $tbody.find('*[rel="tooltip"]').tooltip();
                     });
                     that.currentStateUrl = that._policies.get(that.activePolicy).getLinkByName("config") + "/current-state";
-                    $("#policy-config").show(100);
-                    $table.show(100);
+                    $("#policy-config").slideDown(100);
+                    $table.slideDown(100);
                     ViewUtils.myDataTable($table, {
                         "bAutoWidth": false,
                         "aoColumns" : [

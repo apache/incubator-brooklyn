@@ -39,15 +39,15 @@ define([
         },
         addRefreshButton: function($table) {
             this.myDataTableToolbarAddHtml($table,
-                '<i class="refresh table-toolbar-icon icon-refresh handy smallpadside" rel="tooltip" title="Reload content immediately"></i>');
+                '<i class="refresh table-toolbar-icon bootstrap-glyph icon-refresh handy smallpadside" rel="tooltip" title="Reload content immediately"></i>');
         },
         addFilterEmptyButton: function($table) {
             this.myDataTableToolbarAddHtml($table,
-                '<i class="filterEmpty table-toolbar-icon icon-eye-open handy bottom smallpadside" rel="tooltip" title="Show/hide empty records"></i>');
+                '<i class="filterEmpty table-toolbar-icon bootstrap-glyph icon-eye-open handy bottom smallpadside" rel="tooltip" title="Show/hide empty records"></i>');
         },
         addAutoRefreshButton: function($table) {
             this.myDataTableToolbarAddHtml($table,
-                '<i class="toggleAutoRefresh table-toolbar-icon icon-pause handy smallpadside" rel="tooltip" title="Toggle auto-refresh"></i>');
+                '<i class="toggleAutoRefresh table-toolbar-icon bootstrap-glyph icon-pause handy smallpadside" rel="tooltip" title="Toggle auto-refresh"></i>');
         },
         /* fnConvertData takes the entries in collection (value, optionalKeyOrIndex) and returns a list
          * whose first element is the ID (hidden first column of table)
@@ -106,7 +106,7 @@ define([
 //                log("adding "+newDisplayData[prop])
                 table.fnAddData( newDisplayData[prop] )
             }
-            table.fnAdjustColumnSizing();
+//            table.fnAdjustColumnSizing();
             table.fnStandingRedraw();
         },
         toggleFilterEmpty: function($table, column) {
@@ -171,6 +171,11 @@ define([
                 // try underscore
                 return _.each(collection, fn);
             }
+        },
+        // makes tooltips appear as white-on-black-bubbles rather than boring black-on-yellow-boxes
+        // but NB if the html is updated the tooltip can remain visible until page refresh
+        processTooltips: function($el) {
+            $el.find('*[rel="tooltip"]').tooltip();
         }
     };
     return ViewUtils;

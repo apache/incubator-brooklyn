@@ -550,26 +550,63 @@ line-height: 18px;
 .app-summary > .name { margin-bottom: 12px; }
 .app-summary .json { margin-top: 18px; }
 
-#activity-details div.for-activity-textarea {
+table.dataTable tbody td.row-expansion {
+    background: #D8E4D0;
+}
+table.dataTable.activity-table tbody td.row-expansion {
+	background: #FFFFFF;
+}
+
+#activities-table-group div.for-activity-textarea {
 	/* correct for textarea width oddity */
 	margin-right: 10px;
+	margin-top: 6px;
 }
-#activities-table .toolbar-row i {
-	background-image: url("../img/glyphicons-halflings-dark-green.png");
+#activities-table-group div.for-activity-textarea textarea {
+    margin-bottom: 0px;
+    border-color: #BBB;
+}
+#activities-root .toolbar-row i {
+	background-image: url("../img/glyphicons-halflings.png");
 	width: 18px;
 }
-#activities-table .toolbar-row i.active {
-	background-image: url("../img/glyphicons-halflings-green.png");
+#activities-root .toolbar-row i.active {
+	background-image: url("../img/glyphicons-halflings-bright-green.png");
 }
-#activities-table .toolbar-row i:hover,
-#activities-table .toolbar-row i.active:hover {
-    background-image: url("../img/glyphicons-halflings-bright-green.png");
+#activities-root .toolbar-row {
+	padding-top: 1px;
 }
-#activities-table tr.activity-row:hover:not(.selected),
-#activities-table tr.activity-row:hover:not(.selected) td,
-#activities-table tr.activity-row:hover:not(.selected) td.sorting_1 {
-    background-color: #E4E8E2;
+#activities-root .toolbar-row i:hover,
+#activities-root .toolbar-row i.active:hover {
+    background-image: url("../img/glyphicons-halflings-dark-green.png");
 }
+table.dataTable td.row-expansion {
+	padding-top: 0px;
+}
+.opened-row-details {
+    display: block;
+    font-size: 90%;
+    
+    border-top: dotted whiteSmoke 1px;
+    margin-top: 0px;
+    padding-top: 2px;
+    
+    margin-left: -6px;
+    margin-right: -6px;
+    padding-left: 6px;
+    padding-right: 6px;
+    
+    margin-bottom: 4px;
+    padding-bottom: 6px;
+    border-right: dotted gray 1px;
+    border-bottom: dotted gray 1px;
+    border-left: dotted gray 1px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    
+    background: #D8E0D4;
+}
+
 /* effector modal dialog */
 #params td {
     vertical-align: middle;
@@ -590,6 +627,37 @@ background-color: #F9F9F9;
 table.dataTable tr.even {
 background-color: #FFFFFF;
 }
+table.dataTable tbody tr.selected,
+table.dataTable tr.odd.selected td.sorting_1,
+table.dataTable tr.even.selected td.sorting_1 {
+    background: #B8C8B0;
+}
+table.nonDatatables tr:hover,
+table.nonDatatables tr.odd:hover,
+table.nonDatatables tr.even:hover,
+table.dataTable tr:hover:not(.selected),
+table.dataTable tr.odd:hover:not(.selected),
+table.dataTable tr.even:hover:not(.selected),
+table.nonDatatables tr:hover td,
+table.nonDatatables tr.odd:hover td,
+table.nonDatatables tr.even:hover td,
+table.dataTable tr:hover:not(.selected) td:not(.row-expansion),
+table.dataTable tr:hover:not(.selected) td.sorting_1:not(.row-expansion),
+table.dataTable tr.odd:hover:not(.selected) td:not(.row-expansion),
+table.dataTable tr.even:hover:not(.selected) td:not(.row-expansion) {
+    background-color: #E0E4E0;
+}
+table.dataTable tbody tr.selected:hover,
+table.dataTable tr.odd.selected td.sorting_1:hover,
+table.dataTable tr.even.selected td.sorting_1:hover {
+    background: #98B890;
+}
+
+table.dataTable.activity-table tbody tr.activity-row,
+table.nonDatatables#policies-table tbody tr.policy-row {
+	cursor: hand; cursor: pointer;
+}
+
 table.dataTable thead th {
 text-align: left;
 background-color: #E0E4E0;
@@ -724,17 +792,9 @@ table.table.nonDatatables tbody > tr:first-child > td {
 	/* need both bottom of head, and top of body, to support empty table and override non-empty row top border */
 	border-top: 1px black solid;
 }
-table.dataTable tbody tr.selected,
-table.dataTable tr.odd.selected td.sorting_1,
-table.dataTable tr.even.selected td.sorting_1 {
-	background: #AC8 !important;
-},
 table.table.nonDatatables tbody tr.selected,
 table.table.nonDatatables tbody tr.selected td {
     background: #AC8;
-}
-table.dataTable tbody td.row-expansion {
-	background: #D8E4D0;
 }
 /* we keep the thin gray line between rows for manual tables,
    subtle difference but seems nice */
@@ -1053,4 +1113,26 @@ input[type="file"] {
 
 .padded-div {
     padding: 0.5em 1.2em;
+}
+
+/* this is used in activities, for when we slide in a panel e.g. for sub-table */
+.slide-panel-group {
+    width: 569px;
+}
+.slide-panel {
+    position: relative;
+    width: 569px;
+    margin-right: -569px;
+    float: left;
+}
+.subpanel-header-row {
+	color: black;
+	background-color: #b8b8b8;
+	padding-top: 12px;
+	padding-bottom: 12px;
+	margin-bottom: 24px;
+	padding-left: 12px;
+	vertical-align: top;
+	font-weight: 700;
+	font-size: 120%;
 }
