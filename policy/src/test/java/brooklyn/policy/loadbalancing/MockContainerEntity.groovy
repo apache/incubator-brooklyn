@@ -87,6 +87,7 @@ public class MockContainerEntity extends AbstractGroupImpl implements Balanceabl
         emit(BalanceableContainer.ITEM_REMOVED, item)
     }
 
+    @Override
     public Set<Entity> getBalanceableItems() {
         return new LinkedHashSet<Entity>(getMembers())
     }

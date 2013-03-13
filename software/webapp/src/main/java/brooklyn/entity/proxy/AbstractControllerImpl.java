@@ -288,14 +288,14 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     protected boolean belongsInServerPool(Entity member) {
         if (!groovyTruth(member.getAttribute(Startable.SERVICE_UP))) {
-            if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, eliminating because not up", getDisplayName(), member.getDisplayName());
+            if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, eliminating because not up", this, member);
             return false;
         }
         if (!getServerPool().getMembers().contains(member)) {
-            if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, eliminating because not member", getDisplayName(), member.getDisplayName());
+            if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, eliminating because not member", this, member);
             return false;
         }
-        if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, approving", getDisplayName(), member.getDisplayName());
+        if (LOG.isTraceEnabled()) LOG.trace("Members of {}, checking {}, approving", this, member);
         return true;
     }
     

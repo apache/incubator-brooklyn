@@ -332,7 +332,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     
     protected Entity addNode() {
         Map creation = Maps.newLinkedHashMap(getCustomChildFlags());
-        if (logger.isDebugEnabled()) logger.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {getDisplayName(), getId(), creation});
+        if (logger.isDebugEnabled()) logger.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] {this, getId(), creation});
 
         Entity entity = createNode(creation);
         Entities.manage(entity);

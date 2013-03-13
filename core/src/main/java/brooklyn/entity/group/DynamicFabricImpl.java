@@ -201,7 +201,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         
         if (locationName != null) {
             if (entity.getDisplayName()==null)
-                ((EntityLocal)entity).setDisplayName(entity.getClass().getSimpleName() +" ("+locationName+")");
+                ((EntityLocal)entity).setDisplayName(entity.getEntityType().getSimpleName() +" ("+locationName+")");
             else if (!entity.getDisplayName().contains(locationName)) 
                 ((EntityLocal)entity).setDisplayName(entity.getDisplayName() +" ("+locationName+")");
         }
