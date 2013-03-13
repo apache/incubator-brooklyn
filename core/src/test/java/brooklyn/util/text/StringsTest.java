@@ -178,6 +178,11 @@ public class StringsTest {
     }
 
     public void testSizeString() {
+        assertEquals(Strings.makeSizeString(0), "0b");
+        assertEquals(Strings.makeSizeString(999), "999b");
+        assertEquals(Strings.makeSizeString(1234), "1.23kb");
         assertEquals(Strings.makeSizeString(23456789), "23.5mb");
+        assertEquals(Strings.makeSizeString(23456789012L), "23.5gb");
+        assertEquals(Strings.makeSizeString(23456789012345L), "2.35E4gb");
     }
 }

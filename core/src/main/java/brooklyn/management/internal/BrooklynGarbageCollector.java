@@ -50,6 +50,9 @@ public class BrooklynGarbageCollector {
     public static final ConfigKey<Long> GC_PERIOD = new BasicConfigKey<Long>(
             Long.class, "brooklyn.gc.period", "the period, in millisconds, for checking if any tasks need to be deleted", 60*1000L);
     
+    public static final ConfigKey<Boolean> DO_SYSTEM_GC = new BasicConfigKey<Boolean>(
+            Boolean.class, "brooklyn.gc.doSystemGc", "whether to periodically call System.gc()", false);
+    
     public static final ConfigKey<Integer> MAX_TASKS_PER_TAG = new BasicConfigKey<Integer>(
             Integer.class, "brooklyn.gc.maxTasksPerTag", 
             "the maximum number of tasks to be kept for a given tag (e.g. for effector calls invoked on a particular entity)", 
@@ -65,6 +68,7 @@ public class BrooklynGarbageCollector {
     private final long gcPeriodMs;
     private final int maxTasksPerTag;
     private final long maxTaskAge;
+    private final boolean doSystemGc;
     private volatile boolean running = true;
     
     public BrooklynGarbageCollector(BrooklynProperties brooklynProperties, BasicExecutionManager executionManager){
@@ -73,6 +77,7 @@ public class BrooklynGarbageCollector {
         gcPeriodMs = brooklynProperties.getConfig(GC_PERIOD);
         maxTasksPerTag = brooklynProperties.getConfig(MAX_TASKS_PER_TAG);
         maxTaskAge = brooklynProperties.getConfig(MAX_TASK_AGE);
+        doSystemGc = brooklynProperties.getConfig(DO_SYSTEM_GC);
         
         executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
                 @Override public Thread newThread(Runnable r) {
@@ -89,10 +94,17 @@ public class BrooklynGarbageCollector {
                 @Override public void run() {
                     try {
                         logUsage("brooklyn gc (before)");
-                        gc();
+                        gcTasks();
                         logUsage("brooklyn gc (after)");
-                        System.gc(); System.gc();
-                        logUsage("brooklyn gc (after system gc)");
+                        
+                        if (doSystemGc) {
+                            // Can be very useful when tracking down OOMEs etc, where a lot of tasks are executing
+                            // Empirically observed that (on OS X jvm at least) calling twice blocks - logs a significant
+                            // amount of memory having been released, as though a full-gc had been run. But this is highly
+                            // dependent on the JVM implementation.
+                            System.gc(); System.gc();
+                            logUsage("brooklyn gc (after system gc)");
+                        }
                     } catch (RuntimeInterruptedException e) {
                         throw e; // graceful shutdown
                     } catch (Throwable t) {
@@ -137,7 +149,11 @@ public class BrooklynGarbageCollector {
         }
     }
     
-    private void gc() {
+    /**
+     * Deletes old tasks. The age/number of tasks to keep is controlled by fields like 
+     * {@link #maxTasksPerTag} and {@link #maxTaskAge}. 
+     */
+    private void gcTasks() {
         if (!running) return;
         
         Set<Object> taskTags = executionManager.getTaskTags();
