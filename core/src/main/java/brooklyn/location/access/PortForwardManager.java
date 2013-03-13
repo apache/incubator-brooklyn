@@ -53,6 +53,7 @@ public class PortForwardManager {
         int port = portReserved.incrementAndGet();
         
         PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
+        log.debug("allocating public port "+port+" at "+publicIpId+" (no association info yet)");
         
         mappings.put(makeKey(publicIpId, port), mapping);
         return port;
@@ -61,6 +62,7 @@ public class PortForwardManager {
     /** returns old mapping if it existed, null if it is new */
     public PortMapping acquirePublicPortExplicit(String publicIpId, int port) {
         PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
+        log.debug("assigning explicit public port "+port+" at "+publicIpId);
         return mappings.put(makeKey(publicIpId, port), mapping);        
     }
 
@@ -81,9 +83,11 @@ public class PortForwardManager {
         return result;
     }
 
-    /** clears the given port mapping, returning the mapping if there was not one */
+    /** clears the given port mapping, returning the mapping if there was one */
     public synchronized PortMapping forgetPortMapping(String publicIpId, int publicPort) {
-        return mappings.remove(makeKey(publicIpId, publicPort));
+        PortMapping result = mappings.remove(makeKey(publicIpId, publicPort));
+        log.debug("clearing port mapping for "+publicIpId+":"+publicPort+" - "+result);
+        return result;
     }
     
     public boolean forgetPortMapping(PortMapping m) {
@@ -95,6 +99,7 @@ public class PortForwardManager {
     /** records a public hostname or address to be associated with the given publicIpId for lookup purposes */
     // conceivably this may have to be access-location specific
     public void recordPublicIpHostname(String publicIpId, String hostnameOrPublicIpAddress) {
+        log.debug("recording public IP "+publicIpId+" associated with "+hostnameOrPublicIpAddress);
         synchronized (publicIpIdToHostname) {
             String old = publicIpIdToHostname.put(publicIpId, hostnameOrPublicIpAddress);
             if (old!=null && !old.equals(hostnameOrPublicIpAddress))
@@ -111,6 +116,7 @@ public class PortForwardManager {
     
     /** clears a previous call to {@link #recordPublicIpHostname(String, String)} */
     public boolean forgetPublicIpHostname(String publicIpId) {
+        log.debug("forgetting public IP "+publicIpId+" association");
         synchronized (publicIpIdToHostname) {
             return publicIpIdToHostname.remove(publicIpId) != null;
         }
@@ -133,9 +139,13 @@ public class PortForwardManager {
     public synchronized int acquirePublicPort(String publicIpId, Location l, int privatePort) {
         PortMapping old = getPortMappingWithPrivateSide(l, privatePort);
         // only works for 1 public IP ID per location (which is the norm)
-        if (old!=null && old.publicIpId.equals(publicIpId)) return old.getPublicPort();
+        if (old!=null && old.publicIpId.equals(publicIpId)) {
+            log.debug("request to acquire public port at "+publicIpId+" for "+l+":"+privatePort+", reusing old assignment "+old);
+            return old.getPublicPort();
+        }
         
         int publicPort = acquirePublicPort(publicIpId);
+        log.debug("request to acquire public port at "+publicIpId+" for "+l+":"+privatePort+", allocating "+publicPort);
         associate(publicIpId, publicPort, l, privatePort);
         return publicPort;
     }
@@ -163,6 +173,7 @@ public class PortForwardManager {
      */
     public synchronized void associate(String publicIpId, int publicPort, Location l, int privatePort) {
         PortMapping mapping = getPortMappingWithPublicSide(publicIpId, publicPort);
+        log.debug("associating public port "+publicPort+" on "+publicIpId+" with private port "+privatePort+" at "+l+" ("+mapping+")");
         if (mapping==null)
             throw new IllegalStateException("No record of port mapping for "+publicIpId+":"+publicPort);
         PortMapping mapping2 = new PortMapping(publicIpId, publicPort, l, privatePort);

@@ -57,6 +57,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         
         String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource",
                 hp.getHostText(), hp.getPort());
+        log.debug("JBoss sensors for "+this+" reading from "+managementUri);
         Map<String, String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
         
         httpFeed = HttpFeed.builder()

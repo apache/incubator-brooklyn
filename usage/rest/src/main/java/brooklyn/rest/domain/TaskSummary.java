@@ -2,8 +2,10 @@ package brooklyn.rest.domain;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.Set;
+import java.util.List;
 import java.util.TimeZone;
 
 import javax.annotation.Nullable;
@@ -13,10 +15,12 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 import brooklyn.entity.Entity;
 import brooklyn.management.Task;
+import brooklyn.rest.util.JsonUtils;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class TaskSummary {
@@ -27,7 +31,7 @@ public class TaskSummary {
   private final String displayName;
   private final String description;
   private final String id;
-  private final Set<Object> tags;
+  private final Collection<Object> tags;
   private final long rawSubmitTimeUtc;
   private final String submitTimeUtc;
   private final String startTimeUtc;
@@ -42,7 +46,7 @@ public class TaskSummary {
           @JsonProperty("displayName") String displayName, 
           @JsonProperty("description") String description, 
           @JsonProperty("id") String id, 
-          @JsonProperty("tags") Set<Object> tags,
+          @JsonProperty("tags") Collection<Object> tags,
           @JsonProperty("rawSubmitTimeUtc") long rawSubmitTimeUtc, 
           @JsonProperty("submitTimeUtc") String submitTimeUtc, 
           @JsonProperty("startTimeUtc") String startTimeUtc, 
@@ -54,7 +58,7 @@ public class TaskSummary {
     this.displayName = displayName;
     this.description = description;
     this.id = id;
-    this.tags = tags;
+    this.tags = ImmutableList.<Object>copyOf(tags);
     this.rawSubmitTimeUtc = rawSubmitTimeUtc;
     this.submitTimeUtc = submitTimeUtc;
     this.startTimeUtc = startTimeUtc;
@@ -125,10 +129,17 @@ public TaskSummary(Task task) {
     return id;
   }
 
-  @JsonIgnore
-  public Set<Object> getTags() {
-    return tags;
+  public Collection<Object> getTags() {
+    List<Object> result = new ArrayList<Object>();
+    for (Object t: tags)
+        result.add(JsonUtils.toJsonable(t));
+    return result;
   }
+
+  @JsonIgnore
+  public Collection<Object> getRawTags() {
+      return tags;
+    }
 
   public long getRawSubmitTimeUtc() {
     return rawSubmitTimeUtc;

@@ -45,6 +45,7 @@ public class BrooklynAccessUtils {
                     if (l instanceof SupportsPortForwarding) {
                         Cidr source = entity.getConfig(MANAGEMENT_ACCESS_CIDR);
                         if (source!=null) {
+                            log.debug("BrooklynAccessUtils requesting new port-forwarding rule to access "+port+" on "+entity+" (at "+l+", enabled for "+source+")");
                             // TODO discuss, is this the best way to do it
                             // (will probably _create_ the port forwarding rule!)
                             hp = ((SupportsPortForwarding) l).getSocketEndpointFor(source, port);

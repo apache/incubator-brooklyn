@@ -6,24 +6,18 @@ import brooklyn.util.text.Identifiers;
 import com.google.common.base.Objects;
 
 public class BasicTaskStub implements TaskStub {
-    private final long idCode  = Identifiers.randomLong();
-    
-    private transient String idCache = null;
+    private String id = Identifiers.makeRandomId(8);
     public String getId() {
-        if (idCache!=null) return idCache;
-        idCache = Identifiers.getBase64IdFromValue(idCode);
-        return idCache;
+        return id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(idCode);
+        return Objects.hashCode(id);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof BasicTaskStub)
-            return ((BasicTaskStub)obj).idCache == idCache;
         if (obj instanceof TaskStub)
             return ((TaskStub)obj).getId().equals(getId());
         return false;

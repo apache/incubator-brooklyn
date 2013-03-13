@@ -12,9 +12,13 @@ function count_occurrences(string, subString, allowOverlapping) {
     return(n);
 }
 
-function log(obj) {
+function log(args) {
     if (typeof window.console != 'undefined') {
-        console.log(obj);
+        console.log(args);
+        if (arguments.length>1) {
+            for (i=1; i<arguments.length; i++)
+                console.log(arguments[i])
+        }
     }
 }
 

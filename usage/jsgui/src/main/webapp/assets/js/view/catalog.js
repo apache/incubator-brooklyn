@@ -48,7 +48,7 @@ define([
         },
         render:function (eventName) {
             this.$el.html(_.template(CatalogPageHtml, {}))
-            this.$(".accordion-body", this.$el).hide()
+            this.$(".accordion-body", this.$el).slideUp()
             this.renderLocationsAccordion()
             this.refresh()
             return this
@@ -90,16 +90,16 @@ define([
             var hidden = elt.next()[0].style.display!='block'
             elt.parent().parent().find('.accordion-head').removeClass('active')
             if (animation)
-                elt.parent().parent().find('.accordion-body').hide('fast')
+                elt.parent().parent().find('.accordion-body').slideUp('fast')
             else
-                elt.parent().parent().find('.accordion-body').hide()
+                elt.parent().parent().find('.accordion-body').slideUp()
                 
             if (hidden) {
                 elt.addClass('active')
                 if (animation)
-                    elt.next().show('fast')
+                    elt.next().slideDown('fast')
                 else
-                    elt.next().show()
+                    elt.next().slideDown()
                     
                 this.activeAccordion = elt.parent().attr('id')
             } else {
@@ -163,7 +163,7 @@ define([
             } else if (that.activeAccordion=='locations') {
                 that.addLocation(event)
             } else {
-                that.$('#accordion-empty-to-create-info-message').show('slow').delay(2000).hide('slow')
+                that.$('#accordion-empty-to-create-info-message').slideDown('slow').delay(2000).slideUp('slow')
             }
         },
 
