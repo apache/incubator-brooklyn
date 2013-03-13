@@ -21,6 +21,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.ExecutionListener;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Lists;
 
@@ -87,7 +88,11 @@ public class BrooklynGarbageCollector {
             new Runnable() {
                 @Override public void run() {
                     try {
+                        logUsage("brooklyn gc (before)");
                         gc();
+                        logUsage("brooklyn gc (after)");
+                        System.gc(); System.gc();
+                        logUsage("brooklyn gc (after system gc)");
                     } catch (RuntimeInterruptedException e) {
                         throw e; // graceful shutdown
                     } catch (Throwable t) {
@@ -101,6 +106,19 @@ public class BrooklynGarbageCollector {
             TimeUnit.MILLISECONDS);
     }
 
+    public void logUsage(String prefix) {
+        if (LOG.isDebugEnabled())
+            LOG.debug(prefix+" - "+"using "+
+                Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
+                Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
+                "tasks: " +
+                executionManager.getNumActiveTasks()+" active,"+
+                executionManager.getNumInMemoryTasks()+" in memory "+
+                "("+executionManager.getNumIncompleteTasks()+" incomplete and "+
+                executionManager.getTotalTasksSubmitted()+" total submitted)"
+                );
+    }
+    
     public void shutdownNow() {
         running = false;
         if (executor != null) executor.shutdownNow();

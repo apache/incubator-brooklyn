@@ -198,7 +198,11 @@ public class BasicExecutionManager implements ExecutionManager {
     public long getNumActiveTasks() {
         return activeTaskCount.get();
     }
-    
+
+    public long getNumInMemoryTasks() {
+        return tasksById.size();
+    }
+
     private Set<Task> getMutableTasksWithTag(Object tag) {
         if (tag == null) {
             System.out.println("argph, null");

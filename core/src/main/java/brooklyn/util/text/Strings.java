@@ -561,4 +561,9 @@ public class Strings {
         return false;
     }
 
+    /** returns a size string using defaults from {@link ByteSizeStrings}, e.g. 23.5mb */
+    public static String makeSizeString(long sizeInBytes) {
+        return new ByteSizeStrings().makeSizeString(sizeInBytes);
+    }
+    
 }
