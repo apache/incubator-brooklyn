@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -47,7 +48,11 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> {
      * @throws IllegalArgumentException if any of the passed child jobs is not one of the above types 
      */
     public CompoundTask(Collection<?> jobs) {
-        super( MutableMap.of("tag", "compound"));
+        this(MutableMap.of("tag", "compound"), jobs);
+    }
+    
+    public CompoundTask(Map<String,?> flags, Collection<?> jobs) {
+        super(flags);
         super.job = new Callable<List<T>>() {
             @Override public List<T> call() throws Exception {
                 return runJobs();

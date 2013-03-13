@@ -39,6 +39,7 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;
 
 import com.google.common.collect.ImmutableList;
@@ -81,15 +82,22 @@ public class Entities {
 	    //      What is advantage of invoking in callingEntity's context?
         
 		if (entitiesToCall == null || Iterables.isEmpty(entitiesToCall)) return null;
-		List<Callable<T>> tasks = Lists.newArrayList();
+		List<Task<T>> tasks = Lists.newArrayList();
 		
 		for (final Entity entity : entitiesToCall) {
-		    tasks.add(new Callable<T>() {
-		        public T call() throws Exception {
-		            return entity.invoke(effector, parameters).get();
-		        }});
+		    tasks.add(new BasicTask<T>(
+		            MutableMap.of("displayName", "invoke", "description", "invoke effector \""+effector.getName()+"\" on entity "+entity), 
+		            new Callable<T>() {
+        		        public T call() throws Exception {
+        		            return entity.invoke(effector, parameters).get();
+        		        }
+    		        }));
 		}
-	    ParallelTask<T> invoke = new ParallelTask<T>(tasks);
+	    ParallelTask<T> invoke = new ParallelTask<T>(
+	            MutableMap.of(
+	                    "displayName", "compound-invoke", 
+	                    "description", "invoke effector \""+effector.getName()+"\" on "+tasks.size()+(tasks.size() == 1 ? " entity" : " entities")), 
+	            tasks);
 	    ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(invoke);
 	    return invoke;
 	}
