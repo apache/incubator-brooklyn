@@ -121,7 +121,7 @@ public class PortForwardManager {
     public HostAndPort getPublicHostAndPort(PortMapping m) {
         String hostname = getPublicIpHostname(m.publicIpId);
         if (hostname==null)
-            throw new IllegalStateException("No public hostname associated with "+m.publicIpId);
+            throw new IllegalStateException("No public hostname associated with "+m.publicIpId+" (mapping "+m+")");
         return HostAndPort.fromParts(hostname, m.publicPort);
     }
 

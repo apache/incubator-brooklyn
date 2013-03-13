@@ -15,8 +15,10 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
@@ -54,6 +56,41 @@ public class ControlledDynamicWebAppClusterTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app);
+    }
+    
+    @Test(groups="Integration")
+    public void testUsesCustomController() {
+        NginxController controller = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class).displayName("mycustom"));
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 0)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER, controller)
+                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
+        app.start(locs);
+
+        EntityTestUtils.assertAttributeEqualsEventually(controller, NginxController.SERVICE_UP, true);
+        assertEquals(cluster.getController(), controller);
+
+        // Stopping cluster should not stop controller (because it didn't create it)
+        cluster.stop();
+        EntityTestUtils.assertAttributeEquals(controller, NginxController.SERVICE_UP, true);
+    }
+    
+    @Test(groups="Integration")
+    public void testUsesCustomControllerSpec() {
+        EntitySpec<NginxController> controllerSpec = BasicEntitySpec.newInstance(NginxController.class).displayName("mycustom");
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 0)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, controllerSpec)
+                .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
+        app.start(locs);
+        AbstractController controller = cluster.getController();
+        
+        EntityTestUtils.assertAttributeEqualsEventually(controller, NginxController.SERVICE_UP, true);
+        assertEquals(controller.getDisplayName(), "mycustom");
+
+        // Stopping cluster should stop the controller (because it created it)
+        cluster.stop();
+        EntityTestUtils.assertAttributeEquals(controller, NginxController.SERVICE_UP, false);
     }
     
     @Test(groups="Integration")

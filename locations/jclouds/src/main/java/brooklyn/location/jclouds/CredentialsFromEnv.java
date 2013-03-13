@@ -72,7 +72,26 @@ public class CredentialsFromEnv {
         props.put("provider", provider);
         
         for (ConfigKey<?> it : JcloudsLocation.getAllSupportedProperties()) {
-            String v = getProviderSpecificValue(convertFromCamelToProperty(it.getName()));
+            // Accepts camel and hyphenated properties, warning if both defined 
+            // (and preferring hyphenated, because that's what was previously supported)
+            // TODO Support only one, and deprecate the other! Which?
+            String camelProperty = it.getName();
+            String nonCamelProperty = convertFromCamelToProperty(camelProperty);
+            String v = getProviderSpecificValue(nonCamelProperty);
+            if (!camelProperty.equals(nonCamelProperty)) {
+                String v2 = getProviderSpecificValue(camelProperty);
+                if (v2 != null) {
+                    if (v != null) {
+                        if (v.equals(v2)) {
+                            log.warn("Duplicate property '{}' and '{}' defined for jclouds provider {}, but with same value", new Object[] {camelProperty, nonCamelProperty, provider});
+                        } else {
+                            log.warn("Duplicate property '{}' and '{}' defined for jclouds provider {}, preferring {}", new Object[] {camelProperty, nonCamelProperty, provider, nonCamelProperty});
+                        }
+                    } else {
+                        v = v2;
+                    }
+                }
+            }
             if (v!=null) props.put(it.getName(), v);
         }
         
