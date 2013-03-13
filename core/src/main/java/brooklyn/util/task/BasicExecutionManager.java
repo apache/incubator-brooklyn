@@ -99,6 +99,8 @@ public class BasicExecutionManager implements ExecutionManager {
     //synch blocks are as finely grained as possible for efficiency
     //Not using a CopyOnWriteArraySet for each, because profiling showed this being a massive perf bottleneck.
     private ConcurrentMap<Object,Set<Task>> tasksByTag = new ConcurrentHashMap<Object,Set<Task>>();
+    
+    private ConcurrentMap<String,Task> tasksById = new ConcurrentHashMap<String,Task>();
 
     @Deprecated
     private ConcurrentMap<Object, TaskPreprocessor> preprocessorByTag = new ConcurrentHashMap<Object, TaskPreprocessor>();
@@ -178,6 +180,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 if (tasks != null) tasks.remove(task);
             }
         }
+        tasksById.remove(task.getId());
     }
 
     public boolean isShutdown() {
@@ -208,6 +211,11 @@ public class BasicExecutionManager implements ExecutionManager {
         return tasksByTag.get(tag);
     }
 
+    @Override
+    public Task getTask(String id) {
+        return tasksById.get(id);
+    }
+    
     @Override
     public Set<Task<?>> getTasksWithTag(Object tag) {
         Set<Task> result = getMutableTasksWithTag(tag);
@@ -284,6 +292,7 @@ public class BasicExecutionManager implements ExecutionManager {
 
 	protected Task submitNewScheduledTask(final Map flags, final ScheduledTask task) {
 		task.submitTimeUtc = System.currentTimeMillis();
+		tasksById.put(task.getId(), task);
 		if (!task.isDone()) {
 			task.result = delayedRunner.schedule(new Callable() { public Object call() {
 				if (task.startTimeUtc==-1) task.startTimeUtc = System.currentTimeMillis();
@@ -323,6 +332,7 @@ public class BasicExecutionManager implements ExecutionManager {
         if (task instanceof ScheduledTask)
             return submitNewScheduledTask(flags, (ScheduledTask)task);
         
+        tasksById.put(task.getId(), task);
         totalTaskCount.incrementAndGet();
         
         beforeSubmit(flags, task);

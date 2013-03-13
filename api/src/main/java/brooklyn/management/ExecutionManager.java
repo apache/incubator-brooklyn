@@ -41,6 +41,9 @@ import java.util.concurrent.ExecutorService;
 public interface ExecutionManager {
     public boolean isShutdown();
     
+    /** returns the task with the given ID, or null if none */ 
+    public Task getTask(String id);
+    
     public Set<Task<?>> getTasksWithTag(Object tag);
 
     public Set<Task<?>> getTasksWithAnyTag(Iterable<?> tags);
