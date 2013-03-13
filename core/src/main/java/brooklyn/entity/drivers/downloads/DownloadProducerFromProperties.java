@@ -12,8 +12,8 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.drivers.EntityDriver;
-import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
-import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadTargets;
+import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
+import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;

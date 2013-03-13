@@ -34,7 +34,7 @@ public class BasicDownloadResolver implements DownloadResolver {
     }
 
     @Override
-    public String getUnpackedDirectorName(String defaultVal) {
+    public String getUnpackedDirectoryName(String defaultVal) {
         return unpackDirectoryName == null ? defaultVal : unpackDirectoryName;
     }
     

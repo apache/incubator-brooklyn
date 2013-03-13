@@ -47,7 +47,7 @@ public class Infinispan5SshDriver extends JavaSoftwareProcessSshDriver implement
     
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         // FIXME will saveAs be "infinispan-${version}-all.zip"?

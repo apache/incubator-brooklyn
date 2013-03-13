@@ -15,7 +15,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class BasicDownloadsRegistry implements DownloadResolverRegistry {
+public class BasicDownloadsManager implements DownloadResolverManager {
 
     private final List<Function<? super DownloadRequirement, ? extends DownloadTargets>> producers = Lists.newCopyOnWriteArrayList();
 
@@ -32,8 +32,8 @@ public class BasicDownloadsRegistry implements DownloadResolverRegistry {
      * @param config
      * @return
      */
-    public static BasicDownloadsRegistry newDefault(StringConfigMap config) {
-        BasicDownloadsRegistry result = new BasicDownloadsRegistry();
+    public static BasicDownloadsManager newDefault(StringConfigMap config) {
+        BasicDownloadsManager result = new BasicDownloadsManager();
         
         // In-order, will look up: local repo, overrides defined in the properties, and then 
         // the entity's attribute to get the download URL
@@ -54,8 +54,8 @@ public class BasicDownloadsRegistry implements DownloadResolverRegistry {
         return result;
     }
     
-    public static BasicDownloadsRegistry newEmpty() {
-        return new BasicDownloadsRegistry();
+    public static BasicDownloadsManager newEmpty() {
+        return new BasicDownloadsManager();
     }
     
     @Override
@@ -74,21 +74,21 @@ public class BasicDownloadsRegistry implements DownloadResolverRegistry {
     }
 
     @Override
-    public DownloadResolver resolve(EntityDriver driver) {
-        return resolve(new BasicDownloadRequirement(driver));
+    public DownloadResolver newDownloader(EntityDriver driver) {
+        return newDownloader(new BasicDownloadRequirement(driver));
     }
 
     @Override
-    public DownloadResolver resolve(EntityDriver driver, Map<String, ?> properties) {
-        return resolve(new BasicDownloadRequirement(driver, properties));
+    public DownloadResolver newDownloader(EntityDriver driver, Map<String, ?> properties) {
+        return newDownloader(new BasicDownloadRequirement(driver, properties));
     }
 
     @Override
-    public DownloadResolver resolve(EntityDriver driver, String addonName, Map<String, ?> addonProperties) {
-        return resolve(new BasicDownloadRequirement(driver, addonName, addonProperties));
+    public DownloadResolver newDownloader(EntityDriver driver, String addonName, Map<String, ?> addonProperties) {
+        return newDownloader(new BasicDownloadRequirement(driver, addonName, addonProperties));
     }
 
-    private DownloadResolver resolve(DownloadRequirement req) {
+    private DownloadResolver newDownloader(DownloadRequirement req) {
         // Infer filename
         String filename = null;
         for (Function<? super DownloadRequirement, String> filenameProducer : filenameProducers) {

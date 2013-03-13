@@ -85,11 +85,11 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public void install() {
         //mysql-${version}-${driver.osTag}.tar.gz
         
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(
                 this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        _expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("mysql-%s-%s", getVersion(), getOsTag()));
+        _expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("mysql-%s-%s", getVersion(), getOsTag()));
         
         List<String> commands = new LinkedList<String>();
         commands.add(CommonCommands.INSTALL_TAR);

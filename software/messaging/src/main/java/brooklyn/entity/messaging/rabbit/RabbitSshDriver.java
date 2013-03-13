@@ -53,10 +53,10 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(format("rabbitmq_server-%s", getVersion()));
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion()));
         
         List<String> commands = ImmutableList.<String>builder()
                 .add(installPackage(// NOTE only 'port' states the version of Erlang used, maybe remove this constraint?

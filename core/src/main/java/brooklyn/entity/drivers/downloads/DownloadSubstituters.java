@@ -15,8 +15,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.drivers.EntityDriver;
-import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadRequirement;
-import brooklyn.entity.drivers.downloads.DownloadResolverRegistry.DownloadTargets;
+import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
+import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 

@@ -83,10 +83,10 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
             body.append(CommonCommands.dontRequireTtyForSudo()).
             execute();
 
-        DownloadResolver nginxResolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        DownloadResolver nginxResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> nginxUrls = nginxResolver.getTargets();
         String nginxSaveAs = nginxResolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/" + nginxResolver.getUnpackedDirectorName(format("nginx-%s", getVersion()));
+        expandedInstallDir = getInstallDir()+"/" + nginxResolver.getUnpackedDirectoryName(format("nginx-%s", getVersion()));
 
         boolean sticky = ((NginxController) entity).isSticky();
         boolean isMac = getMachine().getOsDetails().isMac();
@@ -107,12 +107,12 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 "port", null);
 
         String stickyModuleVersion = entity.getConfig(NginxController.STICKY_VERSION);
-        DownloadResolver stickyModuleResolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(
+        DownloadResolver stickyModuleResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(
                 this, "stickymodule", ImmutableMap.of("addonversion", stickyModuleVersion));
         List<String> stickyModuleUrls = stickyModuleResolver.getTargets();
         String stickyModuleSaveAs = stickyModuleResolver.getFilename();
         String stickyModuleExpandedInstallDir = String.format("%s/src/%s", expandedInstallDir, 
-                stickyModuleResolver.getUnpackedDirectorName("nginx-sticky-module-"+stickyModuleVersion));
+                stickyModuleResolver.getUnpackedDirectoryName("nginx-sticky-module-"+stickyModuleVersion));
         
         List<String> cmds = Lists.newArrayList();
         
@@ -124,11 +124,11 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         
         if (isMac) {
             String pcreVersion = entity.getConfig(NginxController.PCRE_VERSION);
-            DownloadResolver pcreResolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(
+            DownloadResolver pcreResolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(
                     this, "pcre", ImmutableMap.of("addonversion", pcreVersion));
             List<String> pcreUrls = pcreResolver.getTargets();
             String pcreSaveAs = pcreResolver.getFilename();
-            String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectorName("pcre-"+pcreVersion);
+            String pcreExpandedInstallDirname = pcreResolver.getUnpackedDirectoryName("pcre-"+pcreVersion);
 
             // Install PCRE
             cmds.addAll(CommonCommands.downloadUrlAs(pcreUrls, pcreSaveAs));

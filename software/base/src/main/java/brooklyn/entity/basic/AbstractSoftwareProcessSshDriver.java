@@ -21,7 +21,7 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.basic.lifecycle.ScriptRunner;
-import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
+import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
@@ -98,14 +98,21 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
     
     /**
-     * @deprecated since 0.5.0; instead rely on {@link DownloadResolverRegistry} to include local-repo
+     * @deprecated since 0.5.0; instead rely on {@link DownloadResolverManager} to include local-repo, such as:
+     * 
+     * <pre>
+     * {@code
+     * DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().resolve(this);
+       List<String> urls = resolver.getTargets();
+     * }
+     * </pre>
      */
     protected String getEntityVersionLabel() {
         return getEntityVersionLabel("_");
     }
     
     /**
-     * @deprecated since 0.5.0; instead rely on {@link DownloadResolverRegistry} to include local-repo
+     * @deprecated since 0.5.0; instead rely on {@link DownloadResolverManager} to include local-repo
      */
     protected String getEntityVersionLabel(String separator) {
         return elvis(entity.getEntityType().getSimpleName(),  

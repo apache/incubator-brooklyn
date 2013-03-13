@@ -44,10 +44,10 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsRegistry().resolve(this);
+        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectorName(getBaseName());
+        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName());
         
         List<String> commands = new LinkedList<String>();
         commands.addAll(downloadUrlAs(urls, saveAs));
