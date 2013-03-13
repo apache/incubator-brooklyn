@@ -181,6 +181,6 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 
     @Override
     public String getShortName() {
-        return "JBoss";
+        return "JBossAS7";
     }
 }

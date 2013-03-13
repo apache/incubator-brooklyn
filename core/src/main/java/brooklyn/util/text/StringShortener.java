@@ -11,12 +11,12 @@ public class StringShortener {
     protected Map<String,String> wordsByIdInOrder = new LinkedHashMap<String,String>();
     protected String separator = null;
     
-    protected abstract static class ShorteningRule {
+    protected interface ShorteningRule {
         /** returns the new list, with the relevant items in the list replaced */
-        public abstract int apply(LinkedHashMap<String, String> words, int maxlen, int length);
+        public int apply(LinkedHashMap<String, String> words, int maxlen, int length);
     }
     
-    protected class TruncationRule extends ShorteningRule {
+    protected class TruncationRule implements ShorteningRule {
         public TruncationRule(String id, int len) {
             this.id = id;
             this.len = len;
@@ -38,7 +38,7 @@ public class StringShortener {
         }
     }
     
-    protected class RemovalRule extends ShorteningRule {
+    protected class RemovalRule implements ShorteningRule {
         public RemovalRule(String id) {
             this.id = id;
         }
@@ -96,13 +96,14 @@ public class StringShortener {
         words.putAll(wordsByIdInOrder);
         int length = 0;
         for (String w: words.values()) {
-            if (w!=null && w.length()>0) {
+            if (!Strings.isBlank(w)) {
                 length += w.length();
                 if (separator!=null)
                     length += separator.length();
             }
         }
         if (separator!=null && length>0)
+            // remove trailing separator if one had been added
             length -= separator.length();
         
         List<ShorteningRule> rulesLeft = new ArrayList<ShorteningRule>();
@@ -115,7 +116,7 @@ public class StringShortener {
         
         StringBuilder sb = new StringBuilder();
         for (String w: words.values()) {
-            if (w!=null && w.length()>0) {
+            if (!Strings.isBlank(w)) {
                 if (separator!=null && sb.length()>0)
                     sb.append(separator);
                 sb.append(w);

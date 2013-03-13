@@ -29,7 +29,8 @@ public class CloudMachineNamerTest {
         // br-user-myco-1234
         Assert.assertTrue(result.length() <= 15);
         
-        String user = Strings.maxlen(System.getProperty("user.name"), 4);
+        String user = Strings.maxlen(System.getProperty("user.name"), 2);
+        // (length 2 will happen if user is brooklyn)
         Assert.assertTrue(result.indexOf(user) >= 0);
         Assert.assertTrue(result.indexOf("-myc") >= 0);
     }
@@ -41,7 +42,6 @@ public class CloudMachineNamerTest {
         try {
 
             ConfigBag cfg = new ConfigBag()
-//                .configure(JcloudsLocationConfig.CLOUD_PROVIDER, "vcloud")
                 .configure(JcloudsLocationConfig.CALLER_CONTEXT, child);
 
             String result = new CloudMachineNamer(cfg).generateNewGroupId();
