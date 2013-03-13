@@ -179,7 +179,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
     public <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
         return runAtEntity(
                 MutableMap.builder()
-                        .put("description", "invoking "+eff.getName()+" on "+entity.getDisplayName())
+                        .put("description", "invoking "+eff.getName()+" on "+entity+" ("+entity.getDisplayName()+")")
                         .put("displayName", eff.getName())
                         .put("tags", MutableList.of(EFFECTOR_TAG))
                         .build(), 
@@ -210,7 +210,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 // Wrap in a task if we aren't already in a task that is tagged with this entity
                 Task<T> task = runAtEntity(
                         MutableMap.builder()
-                                .put("description", "invoking "+eff.getName()+" on "+entity.getDisplayName())
+                                .put("description", "invoking "+eff.getName()+" on "+entity+" ("+entity.getDisplayName()+")")
                                 .put("displayName", eff.getName())
                                 .put("tags", MutableList.of(EFFECTOR_TAG))
                                 .build(), 

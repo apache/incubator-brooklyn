@@ -21,6 +21,9 @@ import brooklyn.location.Location;
  * TODO: remove legacy code comments
  */
 public class BalancingStrategy<NodeType extends Entity, ItemType extends Movable> {
+
+    // FIXME Bad idea to use MessageFormat.format in this way; if toString of entity contains
+    // special characters interpreted by MessageFormat, then it will all break!
     
     // This is a modified version of the watermark elasticity policy from Monterey v3.
     
