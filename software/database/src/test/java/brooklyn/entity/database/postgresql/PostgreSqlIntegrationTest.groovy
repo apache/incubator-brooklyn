@@ -39,7 +39,7 @@ public class PostgreSqlIntegrationTest {
     //from http://www.vogella.de/articles/MySQLJava/article.html
     public static final String CREATION_SCRIPT = """
 CREATE USER sqluser WITH PASSWORD 'sqluserpw'; 
-create database feedback;
+CREATE DATABASE feedback OWNER sqluser;
 
 \\c feedback;
 

@@ -14,6 +14,7 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,21 +145,34 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver
     @Override
     public void launch() {
         log.info(String.format("Starting entity %s at %s", this, getLocation()));
-        newScript(LAUNCHING).body.append(callPgctl("start", false)).failOnNonZeroResultCode().execute();
+        newScript(MutableMap.of("usePidFile", true), LAUNCHING).
+                updateTaskAndFailOnNonZeroResultCode().body.append(callPgctl("start", false)).execute();
     }
 
     @Override
     public boolean isRunning() {
-        return newScript(CHECK_RUNNING).body.append(callPgctl("status", false)).execute() == 0;
+        return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
+                .body.append(getStatusCmd())
+                .execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(STOPPING).body.append(callPgctl("stop", false)).failOnNonZeroResultCode().execute();
+        newScript(MutableMap.of("usePidFile", false), STOPPING).body.append(callPgctl("stop", false)).failOnNonZeroResultCode().execute();
+    }
+
+    @Override
+    public void kill() {
+        newScript(MutableMap.of("usePidFile", true), KILLING).execute();
     }
 
     @Override
     public PostgreSqlNodeImpl getEntity() {
         return (PostgreSqlNodeImpl) super.getEntity();
+    }
+
+    @Override
+    public String getStatusCmd() {
+        return callPgctl("status", false);
     }
 }
