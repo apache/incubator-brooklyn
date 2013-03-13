@@ -32,8 +32,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
+import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.location.Location;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.policy.basic.AbstractPolicy;
@@ -195,18 +194,14 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+                .application(BasicEntitySpec.newInstance(StartableApplication.class)
+                        .displayName("Brooklyn Global Web Fabric with Hadoop Example")
+                        .impl(WebClusterWithHadoopExample.class))
                 .webconsolePort(port)
-                .launch();
-
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = server.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(StartableApplication.class)
-                .displayName("Brooklyn Global Web Fabric with Hadoop Example")
-                .impl(WebClusterWithHadoopExample.class));
-        Entities.startManagement(app, server.getManagementContext());
-        app.start(ImmutableList.of(loc));
-        
-        Entities.dumpInfo(app);
+                .location(location)
+                .start();
+         
+        Entities.dumpInfo(launcher.getApplications());
     }
 }

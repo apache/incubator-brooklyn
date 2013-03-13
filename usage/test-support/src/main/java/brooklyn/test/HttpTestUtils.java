@@ -118,6 +118,21 @@ public class HttpTestUtils {
         return status;
     }
 
+    /**
+     * Asserts that gets back any "valid" response - i.e. not an exception. This could be an unauthorized,
+     * a redirect, a 404, or anything else that implies there is web-server listening on that port.
+     */
+    public static void assertUrlReachable(String url) {
+        try {
+            getHttpStatusCode(url);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted for "+url+" (in assertion that is reachable)", e);
+        } catch (Exception e) {
+            throw new IllegalStateException("Server at "+url+" failed to respond (in assertion that is reachable): "+e, e);
+        }
+    }
+
     public static void assertUrlUnreachable(String url) {
         try {
             int statusCode = getHttpStatusCode(url);

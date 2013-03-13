@@ -42,6 +42,7 @@ import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
 import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationRegistry;
@@ -271,20 +272,14 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+                .application(BasicEntitySpec.newInstance(StartableApplication.class)
+                        .displayName("Brooklyn Global Web Fabric with Hadoop Example")
+                        .impl(WebFabricWithHadoopExample.class))
                 .webconsolePort(port)
-                .launch();
-
-        List<Location> locs = new LocationRegistry().getLocationsById(ImmutableList.of(location));
-
-        StartableApplication app = server.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(StartableApplication.class)
-                .displayName("Brooklyn Global Web Fabric with Hadoop Example")
-                .impl(WebFabricWithHadoopExample.class));
-        Entities.startManagement(app, server.getManagementContext());
-        
-        log.info("starting WebFabricWithHadoop, locations {}, mgmt on port {}", locs, port);
-        app.start(locs);
-        
-        Entities.dumpInfo(app);
+                .location(location)
+                .start();
+         
+        Entities.dumpInfo(launcher.getApplications());
     }
 }

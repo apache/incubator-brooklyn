@@ -29,15 +29,12 @@ import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
+import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
@@ -127,19 +124,13 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
-                .webconsolePort(port)
-                .launch();
-
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = ApplicationBuilder.builder(WebClusterDatabaseExampleApp.class)
-                .displayName("Brooklyn WebApp Cluster with Database example")
-                .manage(server.getManagementContext());
-
-        app.start(ImmutableList.of(loc));
-
-        Entities.dumpInfo(app);
+        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+                 .application(ApplicationBuilder.newAppSpec(WebClusterDatabaseExampleApp.class)
+                         .displayName("Brooklyn WebApp Cluster with Database example"))
+                 .webconsolePort(port)
+                 .location(location)
+                 .start();
+             
+        Entities.dumpInfo(launcher.getApplications());
     }
-    
 }

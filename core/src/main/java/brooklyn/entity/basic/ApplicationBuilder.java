@@ -13,6 +13,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.proxying.WrappingEntitySpec;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
@@ -60,6 +61,26 @@ public abstract class ApplicationBuilder {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationBuilder.class);
 
+    /**
+     * Creates a new EntitySpec for this application type. If the type is an interface, then the returned spec
+     * will be use the normal logic of looking for {@link ImplementedBy} etc. 
+     * 
+     * However, if the type is a class then the that implementation will be used directly. When an entity is
+     * created using the EntitySpec, one will get back a proxy of type {@link StartableApplication}, but the
+     * proxy will also implement all the other interfaces that the given type class implements.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends StartableApplication> BasicEntitySpec<StartableApplication, ?> newAppSpec(Class<? extends T> type) {
+        if (type.isInterface()) {
+            return (BasicEntitySpec<StartableApplication, ?>) BasicEntitySpec.newInstance(type);
+        } else {
+            // is implementation
+            Class<?>[] additionalInterfaceClazzes = type.getInterfaces();
+            return BasicEntitySpec.newInstance(StartableApplication.class, type)
+                    .additionalInterfaces(additionalInterfaceClazzes);
+        }
+    }
+
     public static Builder<StartableApplication> builder() {
         return new Builder<StartableApplication>().app(BasicEntitySpec.newInstance(BasicApplication.class));
     }
@@ -71,6 +92,8 @@ public abstract class ApplicationBuilder {
     /** smart builder factory method which takes an interface type _or_ an implementation type */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static <T extends Application,U extends T> Builder<T> builder(Class<? extends T> type) {
+        // TODO Don't think we want to handle abstract classes like this; it's not an interface so can't be
+        // used for proxying
         if (type.isInterface() || ((type.getModifiers() & Modifier.ABSTRACT)!=0))
             // is interface or abstract
             return new Builder<T>().app(type);

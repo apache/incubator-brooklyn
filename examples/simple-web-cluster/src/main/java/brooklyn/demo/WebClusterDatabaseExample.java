@@ -13,7 +13,6 @@ import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
@@ -22,15 +21,12 @@ import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
+import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
@@ -79,31 +75,16 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
     }
 
     public static void main(String[] argv) {
-        // TODO want to crate a simpler way to do the boilerplate psv main; suggestion here: 
-//        BrooklynApplicationCli cli = BrooklynApplicationCli.newInstance().
-//            application(new WebClusterDatabaseExample()
-//                .appDisplayName("Brooklyn WebApp Cluster with Database example")).
-//            defaultLocations("localhost").
-//            start();
-//        
-//        Entities.dumpInfo(cli.getApplication());
-        
         List<String> args = Lists.newArrayList(argv);
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+                .application(new WebClusterDatabaseExample().appDisplayName("Brooklyn WebApp Cluster with Database example"))
                 .webconsolePort(port)
-                .launch();
-
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = new WebClusterDatabaseExample()
-                .appDisplayName("Brooklyn WebApp Cluster with Database example")
-                .manage(server.getManagementContext());
-        
-        app.start(ImmutableList.of(loc));
-        
-        Entities.dumpInfo(app);
+                .location(location)
+                .start();
+         
+        Entities.dumpInfo(launcher.getApplications());
     }
 }
