@@ -14,7 +14,7 @@ import com.google.common.annotations.Beta;
  *
  * @author Peter Veentjer.
  * @see DriverDependentEntity
- * @see EntityDriverFactory
+ * @see EntityDriverManager
  */
 public interface EntityDriver {
 

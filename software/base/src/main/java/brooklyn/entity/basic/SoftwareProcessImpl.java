@@ -78,7 +78,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	}
 
   	protected SoftwareProcessDriver newDriver(MachineLocation loc){
-        return getManagementContext().getEntityDriverFactory().build(this,(Location)loc);
+        return getManagementContext().getEntityDriverManager().build(this,(Location)loc);
     }
 
     protected MachineLocation getMachineOrNull() {

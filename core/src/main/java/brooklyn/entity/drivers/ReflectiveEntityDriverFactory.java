@@ -19,11 +19,10 @@ import com.google.common.base.Throwables;
  * 
  * @author Peter Veentjer
  */
-public class ReflectiveEntityDriverFactory implements EntityDriverFactory {
+public class ReflectiveEntityDriverFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReflectiveEntityDriverFactory.class);
 
-    @Override
     public <D extends EntityDriver> D build(DriverDependentEntity<D> entity, Location location){
         Class<D> driverInterface = entity.getDriverInterface();
         Class<? extends D> driverClass;

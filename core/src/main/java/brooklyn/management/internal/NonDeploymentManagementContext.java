@@ -12,7 +12,7 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.drivers.EntityDriverFactory;
+import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverRegistry;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
@@ -125,8 +125,13 @@ public class NonDeploymentManagementContext implements ManagementContext {
 
     // TODO the methods below should delegate to the application?
     @Override
-    public EntityDriverFactory getEntityDriverFactory() {
+    public EntityDriverManager getEntityDriverManager() {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+    }
+
+    @Override
+    public EntityDriverManager getEntityDriverFactory() {
+        return getEntityDriverManager();
     }
 
     @Override
