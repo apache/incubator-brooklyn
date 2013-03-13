@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,8 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.util.MutableMap;
 
 /**
  * Tests the deprecated use of AbstractAppliation, where its constructor is called directly.
@@ -38,6 +41,16 @@ public class AbstractEntityLegacyTest {
         
         public MyEntityImpl() {
             super();
+            configureDuringConstructionCount = configureCount;
+        }
+        
+        public MyEntityImpl(Entity parent) {
+            super(parent);
+            configureDuringConstructionCount = configureCount;
+        }
+        
+        public MyEntityImpl(Map flags, Entity parent) {
+            super(flags, parent);
             configureDuringConstructionCount = configureCount;
         }
         
@@ -82,5 +95,44 @@ public class AbstractEntityLegacyTest {
         
         assertEquals(entity.getConfigureCount(), 1);
         assertEquals(entity.getConfigureDuringConstructionCount(), 0);
+    }
+    
+    @Test
+    public void testLegacyConstructionSetsDefaultDisplayName() throws Exception {
+        app = new TestApplicationImpl();
+        MyEntity entity = new MyEntityImpl(app);
+
+        assertTrue(entity.getDisplayName().startsWith("MyEntityImpl:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
+        
+        Entities.startManagement(app);
+        assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
+    }
+    
+    @Test
+    public void testLegacyConstructionUsesCustomDisplayName() throws Exception {
+        app = new TestApplicationImpl(MutableMap.of("displayName", "appname"));
+        MyEntity entity = new MyEntityImpl(MutableMap.of("displayName", "entityname"), app);
+        MyEntity entity2 = new MyEntityImpl(MutableMap.of("name", "entityname2"), app);
+
+        assertEquals(app.getDisplayName(), "appname");
+        assertEquals(entity.getDisplayName(), "entityname");
+        assertEquals(entity2.getDisplayName(), "entityname2");
+    }
+    
+    @Test
+    public void testNewStyleSetsDefaultDisplayName() throws Exception {
+        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        MyEntity entity = app.createChild(BasicEntitySpec.newInstance(MyEntity.class));
+        
+        assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
+    }
+    
+    @Test
+    public void testNewStyleUsesCustomDisplayName() throws Exception {
+        app = ApplicationBuilder.builder(TestApplication.class).displayName("appname").manage();
+        MyEntity entity = app.createChild(BasicEntitySpec.newInstance(MyEntity.class).displayName("entityname"));
+        
+        assertEquals(app.getDisplayName(), "appname");
+        assertEquals(entity.getDisplayName(), "entityname");
     }
 }
