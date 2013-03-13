@@ -39,11 +39,14 @@ define([
             	id.find("#circles-map-message").html("(map off in offline mode)");
             } else {
             	requirejs(["googlemaps"], function (GoogleMaps) {
+            	    _.defer( function() {
+            	        log("loading google maps")
             			var map = GoogleMaps.addMapToCanvas(id[0],
             			        // brooklyn bridge
 //            			        40.7063, -73.9971, 14
             			        // edinburgh + atlantic
 //            			        55.6, -2.5, 2
+            			        // center
             			        0, 0, 1
             			        )
             			var locatedLocations = new Location.UsageLocated()
@@ -51,7 +54,8 @@ define([
             			that.callPeriodically("circles", function() {
             			    that.updateCircles(that, locatedLocations, GoogleMaps, map)
             			}, 10000)
-            		}, function (error) {
+            	    })
+            	}, function (error) {
             			id.find("#circles-map-message").html("(map not available)"); 
             	});
             }

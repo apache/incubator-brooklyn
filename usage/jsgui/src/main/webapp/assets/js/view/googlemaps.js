@@ -13,8 +13,7 @@ define(
                             mapTypeId: google.maps.MapTypeId.SATELLITE
                     };
 
-                    var map = new google.maps.Map( mapCanvas, myOptions );
-                    return map;
+                    return new google.maps.Map(mapCanvas, myOptions);
                 },
 
                 // TODO info window; massive code tidy
