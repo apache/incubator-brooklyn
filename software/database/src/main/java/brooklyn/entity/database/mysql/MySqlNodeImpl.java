@@ -104,4 +104,9 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
         }
         return result;
     }
+    
+    @Override
+    public String getShortName() {
+        return "MySQL";
+    }
 }

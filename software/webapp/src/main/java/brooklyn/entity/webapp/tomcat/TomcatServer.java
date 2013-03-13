@@ -6,6 +6,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.trait.HasShortName;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -19,7 +20,7 @@ import brooklyn.util.flags.SetFromFlag;
  */
 @Catalog(name="Tomcat Server", description="Apache Tomcat is an open source software implementation of the Java Servlet and JavaServer Pages technologies", iconUrl="classpath:///tomcat-logo.png")
 @ImplementedBy(TomcatServerImpl.class)
-public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx {
+public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasShortName {
 
     class Spec<T extends TomcatServer, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
 

@@ -25,6 +25,7 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
@@ -265,7 +266,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             Collection<Integer> ports = getRequiredOpenPorts();
             if (ports != null && ports.size() > 0) result.put("inboundPorts", ports);
         }
-        result.put("callerContext", ""+this);
+        result.put(LocationConfigKeys.CALLER_CONTEXT.getName(), this);
         return result;
     }
     

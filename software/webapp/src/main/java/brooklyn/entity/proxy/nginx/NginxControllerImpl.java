@@ -460,4 +460,8 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         }
     }
 
+    @Override
+    public String getShortName() {
+        return "Nginx";
+    }
 }

@@ -3,6 +3,7 @@ package brooklyn.entity.webapp.jboss;
 import brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.trait.HasShortName;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -13,7 +14,7 @@ import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="JBoss Application Server 7", description="AS7: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.png")
 @ImplementedBy(JBoss7ServerImpl.class)
-public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppService {
+public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppService, HasShortName {
 
     @SetFromFlag("version")
     BasicConfigKey<String> SUGGESTED_VERSION =

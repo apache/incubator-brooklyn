@@ -1,6 +1,7 @@
 package brooklyn.location.cloud;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -22,5 +23,7 @@ public interface CloudLocationConfig {
     public static final ConfigKey<String> PRIVATE_KEY_FILE = LocationConfigKeys.PRIVATE_KEY_FILE;
     public static final ConfigKey<String> PRIVATE_KEY_DATA = LocationConfigKeys.PRIVATE_KEY_DATA;
     public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = LocationConfigKeys.PRIVATE_KEY_PASSPHRASE;
+
+    public static final ConfigKey<Object> CALLER_CONTEXT = LocationConfigKeys.CALLER_CONTEXT;
 
 }

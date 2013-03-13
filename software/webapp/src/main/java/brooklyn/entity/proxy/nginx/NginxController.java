@@ -10,6 +10,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.trait.HasShortName;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
@@ -36,7 +37,7 @@ import com.google.common.collect.ImmutableMap;
  */
 @Catalog(name="nginx server", description="A single nginx server: an HTTP and reverse proxy server", iconUrl="classpath:///nginx-logo.jpeg")
 @ImplementedBy(NginxControllerImpl.class)
-public interface NginxController extends AbstractController {
+public interface NginxController extends AbstractController, HasShortName {
 
     MethodEffector<Void> GET_CURRENT_CONFIGURATION = 
             new MethodEffector<Void>(NginxController.class, "getCurrentConfiguration");

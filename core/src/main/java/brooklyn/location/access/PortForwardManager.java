@@ -194,4 +194,8 @@ public class PortForwardManager {
         return null;
     }
 
+    @Override
+    public String toString() {
+        return getClass().getName()+"["+mappings+"]";
+    }
 }

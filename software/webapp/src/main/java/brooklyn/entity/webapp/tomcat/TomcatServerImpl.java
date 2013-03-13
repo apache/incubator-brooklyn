@@ -97,5 +97,10 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     public Class getDriverInterface() {
         return Tomcat7Driver.class;
     }
+    
+    @Override
+    public String getShortName() {
+        return "Tomcat";
+    }
 }
 

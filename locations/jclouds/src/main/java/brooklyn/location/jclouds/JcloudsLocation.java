@@ -300,7 +300,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         setCreationString(setup);
         
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
-        String groupId = elvis(setup.get(GROUP_ID), generateGroupId(setup.get(CLOUD_PROVIDER)));
+        String groupId = elvis(setup.get(GROUP_ID), new CloudMachineNamer(setup).generateNewGroupId());
         NodeMetadata node = null;
         try {
             LOG.info("Creating VM in "+setup.getDescription()+" for "+this);
@@ -754,21 +754,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     // ------------ support methods --------------------
-
-    public static String generateGroupId(String provider) {
-        // In jclouds 1.5, there are strict rules for group id: it must be DNS compliant, and no more than 15 characters
-        // TODO surely this can be overridden!  it's so silly being so short in common places ... or at least set better metadata?
-        // TODO smarter length-aware system
-        String user = System.getProperty("user.name");
-        String rand = Identifiers.makeRandomId(6);
-        String result = "brooklyn-" + ("brooklyn".equals(user) ? "" : user+"-") + rand;
-        if ("vcloud".equals(provider)) {
-            rand = Identifiers.makeRandomId(2);
-            result = "br-" + Strings.maxlen(user, 4) + "-" + rand;
-        }
-
-        return result.toLowerCase();
-    }
 
     protected LoginCredentials extractVmCredentials(ConfigBag setup, NodeMetadata node) {
         LoginCredentials expectedCredentials = setup.get(CUSTOM_CREDENTIALS);

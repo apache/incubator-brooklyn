@@ -565,5 +565,10 @@ public class Strings {
     public static String makeSizeString(long sizeInBytes) {
         return new ByteSizeStrings().makeSizeString(sizeInBytes);
     }
+
+    /** returns a configurable shortener */
+    public static StringShortener shortener() {
+        return new StringShortener();
+    }
     
 }
