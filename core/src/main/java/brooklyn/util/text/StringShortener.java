@@ -1,0 +1,131 @@
+package brooklyn.util.text;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/** utility which takes a bunch of segments and applies shortening rules to them */
+public class StringShortener {
+
+    protected Map<String,String> wordsByIdInOrder = new LinkedHashMap<String,String>();
+    protected String separator = null;
+    
+    protected abstract static class ShorteningRule {
+        /** returns the new list, with the relevant items in the list replaced */
+        public abstract int apply(LinkedHashMap<String, String> words, int maxlen, int length);
+    }
+    
+    protected class TruncationRule extends ShorteningRule {
+        public TruncationRule(String id, int len) {
+            this.id = id;
+            this.len = len;
+        }
+        String id;
+        int len;
+        
+        public int apply(LinkedHashMap<String, String> words, int maxlen, int length) {
+            String v = words.get(id);
+            if (v!=null && v.length()>len) {
+                int charsToRemove = v.length() - len;
+                if (length-charsToRemove < maxlen) charsToRemove = length-maxlen;
+                words.put(id, v.substring(0, v.length() - charsToRemove));
+                length -= charsToRemove;
+                if (charsToRemove==v.length() && separator!=null && length>0)
+                    length -= separator.length();
+            }
+            return length;
+        }
+    }
+    
+    protected class RemovalRule extends ShorteningRule {
+        public RemovalRule(String id) {
+            this.id = id;
+        }
+        String id;
+        
+        public int apply(LinkedHashMap<String, String> words, int maxlen, int length) {
+            String v = words.get(id);
+            if (v!=null) {
+                words.remove(id);
+                length -= v.length();
+                if (separator!=null && length>0)
+                    length -= separator.length();
+            }
+            return length;
+        }
+    }
+    
+    private List<ShorteningRule> rules = new ArrayList<StringShortener.ShorteningRule>();
+    
+
+    public StringShortener separator(String separator) {
+        this.separator = separator;
+        return this;
+    }
+
+    public StringShortener append(String id, String text) {
+        String old = wordsByIdInOrder.put(id, text);
+        if (old!=null) {
+            throw new IllegalStateException("Cannot append with id '"+id+"' when id already present");
+        }
+        // TODO expose a replace or update
+        return this;
+    }
+
+    public StringShortener truncate(String id, int len) {
+        String v = wordsByIdInOrder.get(id);
+        if (v!=null && v.length()>len) {
+            wordsByIdInOrder.put(id, v.substring(0, len));
+        }
+        return this;
+    }
+
+    public StringShortener canTruncate(String id, int len) {
+        rules.add(new TruncationRule(id, len));
+        return this;
+    }
+
+    public StringShortener canRemove(String id) {
+        rules.add(new RemovalRule(id));
+        return this;
+    }
+
+    public String getStringOfMaxLength(int maxlen) {
+        LinkedHashMap<String, String> words = new LinkedHashMap<String,String>();
+        words.putAll(wordsByIdInOrder);
+        int length = 0;
+        for (String w: words.values()) {
+            if (w!=null && w.length()>0) {
+                length += w.length();
+                if (separator!=null)
+                    length += separator.length();
+            }
+        }
+        if (separator!=null && length>0)
+            length -= separator.length();
+        
+        List<ShorteningRule> rulesLeft = new ArrayList<ShorteningRule>();
+        rulesLeft.addAll(rules);
+        
+        while (length > maxlen && !rulesLeft.isEmpty()) {
+            ShorteningRule r = rulesLeft.remove(0);
+            length = r.apply(words, maxlen, length);
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (String w: words.values()) {
+            if (w!=null && w.length()>0) {
+                if (separator!=null && sb.length()>0)
+                    sb.append(separator);
+                sb.append(w);
+            }
+        }
+        
+        String result = sb.toString();
+        if (result.length() > maxlen) result = result.substring(0, maxlen);
+        
+        return result;
+    }
+
+}

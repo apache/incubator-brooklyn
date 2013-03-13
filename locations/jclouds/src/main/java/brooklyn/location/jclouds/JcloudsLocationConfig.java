@@ -42,9 +42,6 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     
     public static final ConfigKey<String> GROUP_ID = new StringConfigKey("groupId");
     
-    public static final ConfigKey<Object> CALLER_CONTEXT = new BasicConfigKey<Object>(Object.class, "callerContext",
-            "An object whose toString is used for logging, to indicate wherefore a VM is being created");
-
     // jclouds compatibility
     public static final ConfigKey<String> JCLOUDS_KEY_USERNAME = new StringConfigKey("userName", "Equivalent to 'user'; provided for jclouds compatibility", null);
     public static final ConfigKey<String> JCLOUDS_KEY_ENDPOINT = new StringConfigKey(Constants.PROPERTY_ENDPOINT, "Equivalent to 'endpoint'; provided for jclouds compatibility", null);

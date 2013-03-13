@@ -24,22 +24,6 @@ import com.google.common.base.Predicate;
  */
 public class JcloudsLocationTest implements JcloudsLocationConfig {
 
-    @Test
-    public void testGenerateGroupId() {
-        String user = System.getProperty("user.name");
-
-        String vcloudGroupId = JcloudsLocation.generateGroupId("vcloud");
-        assertTrue(vcloudGroupId.startsWith("br-"));
-
-        String fooGroupId = JcloudsLocation.generateGroupId("foo");
-        if ("brooklyn".equals(user)) {
-            // skip check -- we don't write   brooklyn-brooklyn-  because that looks funny
-            // (and running as user brooklyn is common) 
-        } else {
-            assertTrue(fooGroupId.startsWith("brooklyn-"+user));
-        }
-    }
-    
     public static final RuntimeException BAIL_OUT_FOR_TESTING = 
             new RuntimeException("early termination for test");
     

@@ -22,12 +22,14 @@ public class LocationConfigKeys {
     public static final ConfigKey<String> USER = new StringConfigKey("user", 
             "user account for normal access to the remote machine, defaulting to local user", System.getProperty("user.name"));
     
-    // TODO is this used?
     public static final ConfigKey<String> PASSWORD = new StringConfigKey("password");
     public static final ConfigKey<String> PUBLIC_KEY_FILE = new StringConfigKey("publicKeyFile");
     public static final ConfigKey<String> PUBLIC_KEY_DATA = new StringConfigKey("publicKeyData");
     public static final ConfigKey<String> PRIVATE_KEY_FILE = new StringConfigKey("privateKeyFile");
     public static final ConfigKey<String> PRIVATE_KEY_DATA = new StringConfigKey("privateKeyData");
     public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = new StringConfigKey("privateKeyPassphrase");
+
+    public static final ConfigKey<Object> CALLER_CONTEXT = new BasicConfigKey<Object>(Object.class, "callerContext",
+            "An object whose toString is used for logging, to indicate wherefore a VM is being created");
 
 }
