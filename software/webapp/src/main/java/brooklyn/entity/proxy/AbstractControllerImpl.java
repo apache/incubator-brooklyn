@@ -52,7 +52,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
 
     protected AbstractMembershipTrackingPolicy serverPoolMemberTrackerPolicy;
     protected Set<String> serverPoolAddresses = Sets.newLinkedHashSet();
-    protected Set<Entity> serverPoolTargets = Sets.newLinkedHashSet();
+    protected Map<Entity,String> serverPoolTargets = Maps.newLinkedHashMap();
     
     public AbstractControllerImpl() {
         this(MutableMap.of(), null, null);
@@ -261,8 +261,8 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             for (Entity member : getServerPool().getMembers()) {
                 if (belongsInServerPool(member)) {
                     if (LOG.isTraceEnabled()) LOG.trace("Done {} checkEntity {}", this, member);
-                    serverPoolTargets.add(member);
                     String address = getAddressOfEntity(member);
+                    serverPoolTargets.put(member, address);
                     if (address != null) {
                         serverPoolAddresses.add(address);
                     }
@@ -300,7 +300,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
     
     protected synchronized void addServerPoolMember(Entity member) {
-        if (serverPoolTargets.contains(member)) {
+        if (serverPoolTargets.containsKey(member)) {
             if (LOG.isTraceEnabled()) LOG.trace("For {}, not adding as already have member {}", new Object[] {this, member});
             return;
         }
@@ -313,16 +313,16 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, address});
         
         update();
-        serverPoolTargets.add(member);
+        serverPoolTargets.put(member, address);
     }
     
     protected synchronized void removeServerPoolMember(Entity member) {
-        if (!serverPoolTargets.contains(member)) {
+        if (!serverPoolTargets.containsKey(member)) {
             if (LOG.isTraceEnabled()) LOG.trace("For {}, not removing as don't have member {}", new Object[] {this, member});
             return;
         }
         
-        String address = getAddressOfEntity(member);
+        String address = serverPoolTargets.get(member);
         if (address != null) {
             serverPoolAddresses.remove(address);
         }
@@ -359,7 +359,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             	// TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
             	// will be out-of-sync (for ever more?)
             	serverPoolAddresses.addAll((Collection<String>) memento.getCustomField("serverPoolAddresses"));
-				serverPoolTargets.addAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), Collection.class, true));
+				serverPoolTargets.putAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), Map.class, true));
             }
         };
     }

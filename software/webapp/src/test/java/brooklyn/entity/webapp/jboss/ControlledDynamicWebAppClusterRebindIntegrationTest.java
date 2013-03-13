@@ -99,7 +99,6 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     	return monitor;
     }
     
-    // FIXME Fails before rebind (getting 404 from nginx)! Need to investigate this more.
     @Test(groups = {"Integration"})
     public void testRebindsToRunningCluster() throws Exception {
         NginxController origNginx = new NginxControllerImpl(MutableMap.of("domain", "localhost"), origApp);
