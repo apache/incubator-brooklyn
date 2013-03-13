@@ -845,7 +845,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     Statement statement = Statements.newStatementList(exec("hostname"));
                     // NB this assumes passwordless sudo !
                     ExecResponse response = computeService.runScriptOnNode(nodeRef.getId(), statement, 
-                            overrideLoginCredentials(expectedCredentialsRef));
+                            overrideLoginCredentials(expectedCredentialsRef).runAsRoot(false));
                     return response.getExitStatus() == 0;
                 }})
             .limitTimeTo(delayMs, MILLISECONDS)
