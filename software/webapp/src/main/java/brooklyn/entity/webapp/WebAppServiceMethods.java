@@ -8,10 +8,10 @@ public class WebAppServiceMethods implements WebAppServiceConstants {
     
     public static void connectWebAppServerPolicies(EntityLocal entity) {
         entity.addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(entity,
-                WebAppServiceConstants.REQUEST_COUNT, WebAppServiceConstants.REQUESTS_PER_SECOND));
+                WebAppServiceConstants.REQUEST_COUNT, WebAppServiceConstants.REQUESTS_PER_SECOND_LAST));
         
         entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity,
-            WebAppServiceConstants.REQUESTS_PER_SECOND, WebAppServiceConstants.AVG_REQUESTS_PER_SECOND,
-            WebAppServiceConstants.AVG_REQUESTS_PER_SECOND_PERIOD));
+            WebAppServiceConstants.REQUESTS_PER_SECOND_LAST, WebAppServiceConstants.REQUESTS_PER_SECOND_IN_WINDOW,
+            WebAppServiceConstants.REQUESTS_PER_SECOND_WINDOW_PERIOD));
     }
 }
