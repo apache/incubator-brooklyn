@@ -3,6 +3,7 @@ package brooklyn.util.task;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import brooklyn.management.Task;
@@ -18,7 +19,11 @@ import com.google.common.collect.ImmutableList;
  */
 public class ParallelTask<T> extends CompoundTask<T> {
     public ParallelTask(Object... tasks) { super(tasks); }
+    
+    public ParallelTask(Map<String,?> flags, Collection<? extends Object> tasks) { super(flags, tasks); }
     public ParallelTask(Collection<? extends Object> tasks) { super(tasks); }
+    
+    public ParallelTask(Map<String,?> flags, Iterable<? extends Object> tasks) { super(flags, ImmutableList.copyOf(tasks)); }
     public ParallelTask(Iterable<? extends Object> tasks) { super(ImmutableList.copyOf(tasks)); }
 
     protected List<T> runJobs() throws InterruptedException, ExecutionException {
