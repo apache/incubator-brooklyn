@@ -718,7 +718,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                         }
                     }
                 }
-                shell.sendEOF();
+                // workaround attempt for SSHJ deadlock - https://github.com/shikhar/sshj/issues/105
+                synchronized (shell.getOutputStream()) {
+                    shell.sendEOF();
+                }
                 closeWhispering(output, this);
                 
                 try {
