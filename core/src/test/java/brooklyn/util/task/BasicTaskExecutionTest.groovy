@@ -150,6 +150,13 @@ public class BasicTaskExecutionTest {
     }
 
     @Test
+    public void testGetTaskById() {
+        Task t = new BasicTask({ /*no-op*/ })
+        em.submit tag:"A",t
+        assertEquals(em.getTask(t.id), t);
+    }
+
+    @Test
     public void testRetrievingTasksWithTagsReturnsExpectedTask() {
         Task t = new BasicTask({ /*no-op*/ })
         em.submit tag:"A",t

@@ -177,4 +177,7 @@ public class StringsTest {
         assertFalse(Strings.containsLiteralIgnoreCase("hello", "!"));
     }
 
+    public void testSizeString() {
+        assertEquals(Strings.makeSizeString(23456789), "23.5mb");
+    }
 }

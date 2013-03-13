@@ -250,7 +250,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     @Beta
     public Entity getProxyIfAvailable() {
-        return getProxy() ?: this;
+        return getProxy()!=null ? getProxy() : this;
     }
     
     /** @deprecated since 0.4.0 now handled by EntityMangementSupport */

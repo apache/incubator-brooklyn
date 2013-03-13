@@ -32,7 +32,7 @@ public class Identifiers {
      * <p>
      * in general this is preferable to base64 as is more portable,
      * can be used throughout javascript (as ID's which don't allow +)
-     * or as java identifiers (which don't allow numers in the first char)
+     * or as java identifiers (which don't allow numbers in the first char)
      **/
     public static String makeRandomId(int l) {
         //this version is 30-50% faster than the old double-based one, 
