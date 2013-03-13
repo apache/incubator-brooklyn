@@ -29,7 +29,10 @@ import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.flags.SetFromFlag
 
-class AbstractControllerTest {
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.Iterables
+
+public class AbstractControllerTest {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractControllerTest)
     
@@ -106,22 +109,15 @@ class AbstractControllerTest {
         child2.setAttribute(ClusteredEntity.HTTP_PORT, 1234)
         child2.setAttribute(Startable.SERVICE_UP, true)
         assertEventuallyAddressesMatchCluster()
+        
+        // And remove all children; expect all addresses to go away
+        cluster.resize(0);
+        assertEventuallyAddressesMatchCluster();
     }
 
-    @Test(groups = "Integration")
+    @Test(groups = "Integration", invocationCount=10)
     public void testUpdateCalledWithAddressesOfNewChildrenManyTimes() {
-        for (int i=0; i<10; i++) {
-            try {
-                log.info("testUpdateCalledWithAddressesOfNewChildren #"+i);
-                testUpdateCalledWithAddressesOfNewChildren();
-                cluster.resize(0);
-                assertEventuallyAddressesMatchCluster();
-                updates.clear();
-            } catch (Throwable e) {
-                log.warn "testUpdateCalledWithAddressesOfNewChildren, #"+i+" failed: "+e
-                throw e;
-            }
-        }
+        testUpdateCalledWithAddressesOfNewChildren();
     }
     
     @Test
@@ -140,15 +136,41 @@ class AbstractControllerTest {
         assertEventuallyAddressesMatchCluster()
     }
 
+    @Test
+    public void testUpdateCalledWithAddressesRemovedForServiceDownChildrenThatHaveClearedHostnamePort() {
+        // Get some children, so we can remove one...
+        cluster.resize(2)
+        cluster.children.each {
+            it.setAttribute(ClusteredEntity.HTTP_PORT, 1234)
+            it.setAttribute(Startable.SERVICE_UP, true)
+        }
+        assertEventuallyAddressesMatchCluster()
+
+        // Now unset host/port, and remove children
+        // Note the unsetting of hostname is done in SoftwareProcessImpl.stop(), so this is realistic
+        for (EntityLocal child : cluster.getChildren()) {
+            child.setAttribute(ClusteredEntity.HTTP_PORT, null)
+            child.setAttribute(ClusteredEntity.HOSTNAME, null)
+            child.setAttribute(Startable.SERVICE_UP, false)
+        }
+        assertEventuallyAddressesMatch(ImmutableList.<Entity>of());
+    }
+
     private void assertEventuallyAddressesMatchCluster() {
+        assertEventuallyAddressesMatch(cluster.children);
+    }
+
+    private void assertEventuallyAddressesMatch(final Collection<Entity> expectedMembers) {
         executeUntilSucceeds(timeout:5000) {
-            def u = new ArrayList(updates);
-            log.debug "test ${u.size()} updates, expecting ${locationsToAddresses(1234, cluster.children)} = ${u ? u.last() : 'empty'}"
+            List<Collection<String>> u = new ArrayList(updates);
+            Collection<String> last = Iterables.getLast(u, null);
+            Collection<String> expectedAddresses = locationsToAddresses(1234, expectedMembers);
+            log.debug "test ${u.size()} updates, expecting $expectedAddresses; actual $last"
             assertTrue(u.size() > 0);
-            assertTrue(u.last() == locationsToAddresses(1234, cluster.children), "actual="+u.last()+" expected="+locationsToAddresses(1234, cluster.children));
+            assertTrue(u.last() == expectedAddresses, "actual="+last+" expected="+expectedAddresses);
         }
     }
-    
+
     private Collection<String> locationsToAddresses(int port, Entity... entities) {
         return locationsToAddresses(port, entities as List)
     }
