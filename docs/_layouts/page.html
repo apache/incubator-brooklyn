@@ -17,6 +17,8 @@
 	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/js/jquery/smoothness/jquery-ui-1.8.18.custom.css" />
 	
 	<script type="text/javascript" src="{{ site.url }}/style/js/superfish.js"></script>
+	<script type="text/javascript" src="{{ site.url }}/style/js/jquery.cookie.js"></script>
+	
 	
 <!-- Clipboard support -->
 <script src="{{ site.url }}/style/js/zeroclipboard/ZeroClipboard.js"></script>
@@ -64,7 +66,9 @@ $(document).ready(function() {
         });
     </script>
 
-<script type="text/javascript"> <!-- search -->
+<script type="text/javascript">
+
+<!-- search -->
 	$(function() {
 		$('#simple_google')
 			.submit(function() {
@@ -83,6 +87,34 @@ $(document).ready(function() {
 			})
 			.blur();
     });
+    
+<!-- page notes -->
+   	$(function() {
+		if (document.location.pathname.replace(/^\/([^\/]*).*$/, '$1') === "v"){
+			var thisversion, msg;
+			thisversion = document.location.pathname.split("/")[2];
+			
+			if (!$.cookie('brooklyn_versions') || $.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1){
+				msg = "<p>Careful. This page is for <strong>Brooklyn version "+thisversion+"</strong>, and the content may differ between versions.</p>"
+				msg += "<p><a href = '{{ site.url }}'>Latest version</a>, "
+				msg += "<a href = '{{ site.url }}/meta/versions.html'>All versions</a>, "
+				msg += "<a href = '#' onclick=\"set_user_version('"+thisversion+"');\">Don't show again</a>. </p>"
+							
+				$('#page_notes').html(msg);
+				$('#page_notes').fadeIn('slow');
+			}
+		}
+	});
+	function set_user_version(version) {
+		var version_cookie = $.cookie("brooklyn_versions").split(",") || [];
+		version_cookie.push(version);
+		$.cookie('brooklyn_versions', version_cookie, { expires: 365, path: '/' });
+		$('#page_notes').fadeOut();
+		event.preventDefault ? event.preventDefault() : event.returnValue = false;
+	}
+	
+	
+   
 </script>
 
 <script type="text/javascript"> <!-- analytics -->
@@ -140,6 +172,8 @@ _gaq.push(['_trackPageview']);
         <div id="maincontent">
 
 {% include breadcrumbs.html %}
+
+<div id="page_notes"></div>
 
 <h1 id="header_title">{{ page.title }}</h1>
     

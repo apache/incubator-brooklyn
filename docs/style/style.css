@@ -79,6 +79,20 @@ div.warning{
 	-moz-border-radius: 8px;
 	border-radius: 8px;
 }
+#page_notes{
+	display: none;
+	background-color: rgb(221, 255, 222);
+	border: 1px solid #d5dade;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+	padding: 0.3em;
+	padding-left: 0.75em;
+	margin-top: -0.5em;
+	margin-bottom: 1em;
+}
+#page_notes p{
+	line-height: 85%
+}
 
 /* SIDEBAR */
 #sidebar {font-size: 13px;}
