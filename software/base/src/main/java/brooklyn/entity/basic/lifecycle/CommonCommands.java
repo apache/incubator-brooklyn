@@ -48,9 +48,14 @@ public class CommonCommands {
     /**
      * Returns a command for safely running as root, using {@code sudo}.
      * <p/>
-     * Ensuring non-blocking if password not set by using {@code -S} which reads
-     * from stdin routed to {@code /dev/null} and {@code -E} passes the parent
-     * environment in. If already root, simply runs the command, wrapped in brackets in case it is backgrounded.
+     * Ensuring non-blocking if password not set by using 
+     * {@code -n} which means to exit if password required,
+     * and (perhaps unnecessarily ?)
+     * {@code -S} which reads from stdin (routed to {@code /dev/null}, it was claimed here previously, though I'm not sure?).
+     * <p/>
+     * Also specify {@code -E} to pass the parent environment in.
+     * <p/> 
+     * If already root, simply runs the command, wrapped in brackets in case it is backgrounded.
      * <p/>
      * The command is not quoted or escaped in any ways. 
      * If you are doing privileged redirect you may need to pass e.g. "bash -c 'echo hi > file'".
@@ -59,7 +64,7 @@ public class CommonCommands {
      */
     public static String sudo(String command) {
         if (command==null) return null;
-        return format("( if test \"$UID\" -eq 0; then ( %s ); else sudo -E -n -s -- %s; fi )", command, command);
+        return format("( if test \"$UID\" -eq 0; then ( %s ); else sudo -E -n -S -- %s; fi )", command, command);
     }
 
     /** some machines require a tty for sudo; brooklyn by default does not use a tty
