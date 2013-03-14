@@ -475,6 +475,7 @@ ol.tree {
 	padding: 0px 8px 6px 2px;
 	overflow-x: scroll;
 	margin: 0;
+	white-space: nowrap;
 }
 
 .label-message {
