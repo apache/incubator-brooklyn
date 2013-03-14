@@ -24,6 +24,11 @@ public class CloudMachineNamer {
         StringShortener shortener = Strings.shortener().separator("-");
         shortener.append("system", "brooklyn");
         
+        // randId often not necessary, as an 8-char hex identifier is added later (in jclouds? can we override?)
+        // however it can be useful to have this early in the string, to prevent collisions in places where it is abbreviated 
+        shortener.
+            append("randId", Identifiers.makeRandomId(4));
+        
         String user = System.getProperty("user.name");
         if (!"brooklyn".equals(user))
             // include user; unless the user is 'brooklyn', as 'brooklyn-brooklyn-' is just silly!
@@ -41,9 +46,6 @@ public class CloudMachineNamer {
         } else if (context!=null) {
             shortener.append("context", context.toString());
         }
-        // randId not useful, as an 8-char hex identifier is added later (in jclouds? can we override?)
-//        shortener.
-//            append("randId", Identifiers.makeRandomId(4));
         
         shortener.
             truncate("user", 12).
