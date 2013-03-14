@@ -483,7 +483,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             if (newMax < getConfig(MIN_POOL_SIZE)) {
                 throw new IllegalArgumentException("Min pool size "+val+" must not be greater than max pool size "+getConfig(MAX_POOL_SIZE));
             }
-            onPoolSizeLimitsChanged(getConfig(MAX_POOL_SIZE), newMax);
+            onPoolSizeLimitsChanged(getConfig(MIN_POOL_SIZE), newMax);
         } else {
             throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
         }
@@ -541,7 +541,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                         int desiredSize = Math.min(max, Math.max(min, currentSize));
 
                         if (currentSize != desiredSize) {
-                            if (LOG.isInfoEnabled()) LOG.info("{} resizing pool {} immediatley from {} to {} (due to new pool size limits)", new Object[] {this, poolEntity, currentSize, desiredSize});
+                            if (LOG.isInfoEnabled()) LOG.info("{} resizing pool {} immediateley from {} to {} (due to new pool size limits)", new Object[] {this, poolEntity, currentSize, desiredSize});
                             getResizeOperator().resize(poolEntity, desiredSize);
                         }
                         
