@@ -17,11 +17,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brooklyn.entity.basic.AbstractApplication;
-
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import brooklyn.entity.Application;
+import brooklyn.entity.basic.AbstractApplication;
 
 /**
  * Test the command line interface operation.
@@ -65,9 +66,9 @@ public class CliIntegrationTest {
         pb.command(BROOKLYN_BIN_PATH, "help");
         final Process brooklyn = pb.start();
  
-        Callable<Void> cli = new Callable<Void>() {
+        Callable<Integer> cli = new Callable<Integer>() {
             @Override
-            public Void call() throws Exception {
+            public Integer call() throws Exception {
                 // Get the console output of running that command
                 String consoleOutput = convertStreamToString(brooklyn.getInputStream());
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
@@ -82,16 +83,17 @@ public class CliIntegrationTest {
                         "Implemented commands not listed; output=" + consoleOutput);
                 assertTrue(consoleError.isEmpty(), "Output present; error=" + consoleError);
 
-                return null;
+                // Return exit status on completion
+                return brooklyn.waitFor();
             }
         };
 
         try {
-            Future<Void> future = executor.submit(cli);
-            future.get(10, TimeUnit.SECONDS);
+            Future<Integer> future = executor.submit(cli);
+            int exitStatus = future.get(10, TimeUnit.SECONDS);
 
             // Check error code from process is 0
-            assertEquals(brooklyn.exitValue(), 0, "Command terminated with error status");
+            assertEquals(exitStatus, 0, "Command terminated with error status");
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
@@ -115,10 +117,11 @@ public class CliIntegrationTest {
         pb.command(BROOKLYN_BIN_PATH, "--verbose", "launch", "--stopOnKeyPress", "--app", "brooklyn.cli.CliIntegrationTest$TestApplication", "--location", "localhost", "--noConsole");
         final Process brooklyn = pb.start();
  
-        Callable<Void> cli = new Callable<Void>() {
+        Callable<Integer> cli = new Callable<Integer>() {
             @Override
-            public Void call() throws Exception {
+            public Integer call() throws Exception {
                 // Get the console output of running that command
+                Thread.sleep(5000L);
                 String consoleOutput = convertStreamToString(brooklyn.getInputStream());
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
 
@@ -129,23 +132,23 @@ public class CliIntegrationTest {
                 assertTrue(consoleOutput.contains("Server started. Press return to stop."), "Server started message not output; output=" + consoleOutput);
                 assertTrue(consoleError.isEmpty(), "Output present; error=" + consoleError);
 
-                return null;
+                // Return exit status on completion
+                return brooklyn.waitFor();
             }
         };
 
         try {
-            Future<Void> future = executor.submit(cli);
+            Future<Integer> future = executor.submit(cli);
 
-            // Wait 15s for console output, then send CR to stop
-            Thread.sleep(15000L);
+            // Send CR to stop
             OutputStream out = brooklyn.getOutputStream();
             out.write('\n');
             out.flush();
 
-            future.get(10, TimeUnit.SECONDS);
+            int exitStatus = future.get(30, TimeUnit.SECONDS);
 
             // Check error code from process is 0
-            assertEquals(brooklyn.exitValue(), 0, "Command terminated with error status");
+            assertEquals(exitStatus, 0, "Command terminated with error status");
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
@@ -169,9 +172,9 @@ public class CliIntegrationTest {
         pb.command(BROOKLYN_BIN_PATH, "launch", "nothing", "--app");
         final Process brooklyn = pb.start();
 
-        Callable<Void> cli = new Callable<Void>() {
+        Callable<Integer> cli = new Callable<Integer>() {
             @Override
-            public Void call() throws Exception {
+            public Integer call() throws Exception {
                 // Get the console output of running that command
                 String consoleOutput = convertStreamToString(brooklyn.getInputStream());
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
@@ -184,16 +187,17 @@ public class CliIntegrationTest {
                         && consoleError.contains("COMMANDS"), "Usage info not printed; error=" + consoleError);
                 assertTrue(consoleOutput.isEmpty(), "Output present; output=" + consoleOutput);
 
-                return null;
+                // Return exit status on completion
+                return brooklyn.waitFor();
             }
         };
 
         try {
-            Future<Void> future = executor.submit(cli);
-            future.get(10, TimeUnit.SECONDS);
+            Future<Integer> future = executor.submit(cli);
+            int exitStatus = future.get(10, TimeUnit.SECONDS);
 
             // Check error code from process
-            assertEquals(brooklyn.exitValue(), 1, "Command returned wrong status");
+            assertEquals(exitStatus, 1, "Command returned wrong status");
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
@@ -217,9 +221,9 @@ public class CliIntegrationTest {
         pb.command(BROOKLYN_BIN_PATH, "biscuit");
         final Process brooklyn = pb.start();
 
-        Callable<Void> cli = new Callable<Void>() {
+        Callable<Integer> cli = new Callable<Integer>() {
             @Override
-            public Void call() throws Exception {
+            public Integer call() throws Exception {
                 // Get the console output of running that command
                 String consoleOutput = convertStreamToString(brooklyn.getInputStream());
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
@@ -232,16 +236,17 @@ public class CliIntegrationTest {
                         && consoleError.contains("COMMANDS"), "Usage info not printed; error=" + consoleError);
                 assertTrue(consoleOutput.isEmpty(), "Output present; output=" + consoleOutput);
 
-                return null;
+                // Return exit status on completion
+                return brooklyn.waitFor();
             }
         };
 
         try {
-            Future<Void> future = executor.submit(cli);
-            future.get(10, TimeUnit.SECONDS);
+            Future<Integer> future = executor.submit(cli);
+            int exitStatus = future.get(10, TimeUnit.SECONDS);
 
             // Check error code from process
-            assertEquals(brooklyn.exitValue(), 1, "Command returned wrong status");
+            assertEquals(exitStatus, 1, "Command returned wrong status");
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
@@ -254,7 +259,7 @@ public class CliIntegrationTest {
     }
 
     /**
-     * Checks if a correct error and help message is given if using incorrect command.
+     * Checks if a correct error and help message is given if using incorrect application.
      */
     @Test(groups = "Integration")
     public void testLaunchCliAppLaunchError() throws Throwable {
@@ -265,9 +270,9 @@ public class CliIntegrationTest {
         pb.command(BROOKLYN_BIN_PATH, "launch", "--app", "org.eample.DoesNotExist", "--location", "nowhere");
         final Process brooklyn = pb.start();
 
-        Callable<Void> cli = new Callable<Void>() {
+        Callable<Integer> cli = new Callable<Integer>() {
             @Override
-            public Void call() throws Exception {
+            public Integer call() throws Exception {
                 // Get the console output of running that command
                 String consoleOutput = convertStreamToString(brooklyn.getInputStream());
                 String consoleError = convertStreamToString(brooklyn.getErrorStream());
@@ -276,16 +281,17 @@ public class CliIntegrationTest {
                 assertTrue(consoleOutput.contains("ERROR Execution error: brooklyn.util.ResourceUtils.getResourceFromUrl"), "Execution error not logged; output=" + consoleOutput);
                 assertTrue(consoleError.contains("Execution error: Error getting resource for LaunchCommand"), "Execution error not reported; error=" + consoleError);
 
-                return null;
+                // Return exit status on completion
+                return brooklyn.waitFor();
             }
         };
 
         try {
-            Future<Void> future = executor.submit(cli);
-            future.get(10, TimeUnit.SECONDS);
+            Future<Integer> future = executor.submit(cli);
+            int exitStatus = future.get(10, TimeUnit.SECONDS);
 
             // Check error code from process
-            assertEquals(brooklyn.exitValue(), 2, "Command returned wrong status");
+            assertEquals(exitStatus, 2, "Command returned wrong status");
         } catch (TimeoutException te) {
             fail("Timed out waiting for process to complete");
         } catch (ExecutionException ee) {
