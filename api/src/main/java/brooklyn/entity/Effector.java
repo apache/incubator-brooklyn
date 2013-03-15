@@ -8,8 +8,7 @@ import javax.management.MBeanOperationInfo;
 /**
  * An operation of some kind, carried out by an {@link Entity}.
  *
- * Modeled on concepts in the JMX {@link MBeanOperationInfo} class.
- * <p>
+ * Similar to the concepts in the JMX {@link MBeanOperationInfo} class.
  */
 public interface Effector<T> extends Serializable {
     /**

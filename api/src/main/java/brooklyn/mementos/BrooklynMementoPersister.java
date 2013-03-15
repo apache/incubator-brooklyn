@@ -5,8 +5,14 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import brooklyn.entity.rebind.RebindManager;
+
 import com.google.common.annotations.VisibleForTesting;
 
+/**
+ * Controls the persisting and reading back of mementos. Used by {@link RebindManager} 
+ * to support brooklyn restart.
+ */
 public interface BrooklynMementoPersister {
 
     BrooklynMemento loadMemento() throws IOException;

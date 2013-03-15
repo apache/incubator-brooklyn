@@ -10,7 +10,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 
 /**
- * This is the context through which an {@link Entity} can manage subscriptions.
+ * This is the context through which an {@link Entity} can manage its subscriptions.
  */
 public interface SubscriptionContext {
     /**

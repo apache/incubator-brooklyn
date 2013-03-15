@@ -6,8 +6,7 @@ import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.location.Location;
 
 /**
- * A registry for entity implementations to use when an entity needs to be created
- * of a given type.
+ * A registry of the entity implementations to be used when creating an entity of a given type.
  * 
  * A given implementation can only be associated with one entity type interface.
  */
@@ -29,7 +28,8 @@ public interface EntityTypeRegistry {
      * Returns the interface of this entity implementation.
      * E.g. for use as the fully qualified name in {@code entity.getEntityType().getName()}.
      * 
-     * @throws IllegalArgumentException If no interface is registered against this implementation, and no super-type of the class is annotated with {@link ImplementedBy} to point at the given class
+     * @throws IllegalArgumentException If no interface is registered against this implementation, 
+     *         and no super-type of the class is annotated with {@link ImplementedBy} to point at the given class
      */
     <T extends Entity> Class<? super T> getEntityTypeOf(Class<T> type);
 

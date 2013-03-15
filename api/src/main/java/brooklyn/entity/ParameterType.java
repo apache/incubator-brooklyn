@@ -2,29 +2,24 @@ package brooklyn.entity;
 
 import java.io.Serializable;
 
+import javax.management.MBeanParameterInfo;
+
 /**
- * Modeled on concepts in the JMX {@link MBeanParameterInfo} class.
+ * Similar to the concepts in the JMX {@link MBeanParameterInfo} class.
  *
- * TODO javadoc
+ * @see Effector
  */
 public interface ParameterType<T> extends Serializable {
-    /**
-     * TODO javadoc
-     */
+    
     public String getName();
 
-    /**
-     * TODO javadoc
-     */
     public Class<T> getParameterClass();
 
     /**
-     * TODO javadoc
+     * The canonical name of the parameter class; especially useful if the class 
+     * cannot be resolved after deserialization. 
      */
     public String getParameterClassName();
 
-    /**
-     * TODO javadoc
-     */
     public String getDescription();
 }

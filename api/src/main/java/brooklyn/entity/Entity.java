@@ -16,9 +16,13 @@ import brooklyn.policy.Policy;
 /**
  * The basic interface for a Brooklyn entity.
  * 
- * Implementors of entities are strongly encouraged to extend {@link AbstractEntity}.
+ * Implementors of entities are strongly encouraged to extend {@link brooklyn.entity.basic.AbstractEntity}.
  * 
- * @see AbstractEntity
+ * To instantiate an entity, see {@code managementContext.getEntityManager().createEntity(entitySpec)}.
+ * 
+ * Entities may not be {@link Serializable} in subsequent releases!
+ * 
+ * @see brooklyn.entity.basic.AbstractEntity
  */
 public interface Entity extends Serializable, Rebindable<EntityMemento> {
     /**
@@ -36,13 +40,13 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
      */
     EntityType getEntityType();
     
-    /*
-     * Return the {@link Application} this entity is registered with.
+    /**
+     * @return the {@link Application} this entity is registered with.
      */
     Application getApplication();
 
     /**
-     * Return the id of the {@link Application} this entity is registered with.
+     * @return the id of the {@link Application} this entity is registered with.
      */
     String getApplicationId();
 
@@ -134,7 +138,7 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
     Collection<Policy> getPolicies();
     
     /**
-     * @return an immutable thread-safe view of the policies.
+     * @return an immutable thread-safe view of the enrichers.
      */
     Collection<Enricher> getEnrichers();
     

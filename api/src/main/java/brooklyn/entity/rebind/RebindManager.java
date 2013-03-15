@@ -10,6 +10,12 @@ import brooklyn.mementos.BrooklynMementoPersister;
 
 import com.google.common.annotations.VisibleForTesting;
 
+/**
+ * Manages the persisting of brooklyn's state, and recreating that state, e.g. on
+ * brooklyn restart.
+ * 
+ * Users are not expected to implement this class, or to call methods on it directly.
+ */
 public interface RebindManager {
     
     // FIXME Should we be calling managementContext.getRebindManager().rebind, using a

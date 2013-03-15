@@ -9,7 +9,12 @@ import brooklyn.entity.rebind.Rebindable;
 import brooklyn.mementos.LocationMemento;
 
 /**
- *  Location.
+ * A location that an entity can be in. Examples of locations include a single machine
+ * or a pool of machines, or a region within a given cloud. 
+ * 
+ * See {@link brooklyn.entity.trait.Startable#start(Collection)}.
+ * 
+ * Locations may not be {@link Serializable} in subsequent releases!
  */
 public interface Location extends Serializable, Rebindable<LocationMemento> {
 
