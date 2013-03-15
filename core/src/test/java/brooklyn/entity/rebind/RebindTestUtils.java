@@ -54,10 +54,7 @@ public class RebindTestUtils {
     }
 
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader) {
-        LocalManagementContext result = new LocalManagementContext();
-        BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
-        result.getRebindManager().setPersister(newPersister);
-        return result;
+        return newPersistingManagementContext(mementoDir, classLoader, 100);
     }
     
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader, long persistPeriodMillis) {

@@ -49,7 +49,7 @@ public class EntitySpecs {
     
     /**
      * Creates a new EntitySpec for this application type. If the type is an interface, then the returned spec
-     * will be use the normal logic of looking for {@link ImplementedBy} etc. 
+     * will use the normal logic of looking for {@link ImplementedBy} etc. 
      * 
      * However, if the type is a class then the that implementation will be used directly. When an entity is
      * created using the EntitySpec, one will get back a proxy of type {@link StartableApplication}, but the
