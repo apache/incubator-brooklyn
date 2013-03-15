@@ -9,8 +9,9 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
-import brooklyn.management.internal.AbstractManagementContext
+import brooklyn.management.ManagementContext
 import brooklyn.management.internal.LocalSubscriptionManager
+import brooklyn.management.internal.ManagementContextInternal
 import brooklyn.util.flags.SetFromFlag
 import brooklyn.util.task.BasicExecutionManager
 
@@ -63,12 +64,12 @@ public class BrooklynMetrics extends AbstractEntity {
     }
 
     private void refreshSensors() {
-        AbstractManagementContext managementContext = (AbstractManagementContext) getManagementContext()
-        BasicExecutionManager execManager = (BasicExecutionManager) getManagementContext()?.getExecutionManager()
-        LocalSubscriptionManager subsManager = (LocalSubscriptionManager) getManagementContext()?.getSubscriptionManager()
+        ManagementContext managementContext = getManagementContext()
+        BasicExecutionManager execManager = (BasicExecutionManager) managementContext?.getExecutionManager()
+        LocalSubscriptionManager subsManager = (LocalSubscriptionManager) managementContext?.getSubscriptionManager()
         
         if (managementContext != null) {
-            setAttribute(TOTAL_EFFECTORS_INVOKED, managementContext.getTotalEffectorInvocations())
+            setAttribute(TOTAL_EFFECTORS_INVOKED, ((ManagementContextInternal)managementContext).getTotalEffectorInvocations())
         }
         if (execManager != null) {
             setAttribute(TOTAL_TASKS_SUBMITTED, execManager.getTotalTasksSubmitted())

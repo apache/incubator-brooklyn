@@ -31,9 +31,9 @@ import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
-import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.MutableMap;
@@ -462,7 +462,7 @@ public class Entities {
             ManagementContext managementContext = app.getManagementContext();
             if (app instanceof Startable) Entities.invokeEffector((EntityLocal)app, app, Startable.STOP).getUnchecked();
             if (app instanceof AbstractEntity) ((AbstractEntity)app).destroy();
-            if (managementContext instanceof AbstractManagementContext) ((AbstractManagementContext)managementContext).terminate();
+            if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
             unmanage(app);
         }
     }

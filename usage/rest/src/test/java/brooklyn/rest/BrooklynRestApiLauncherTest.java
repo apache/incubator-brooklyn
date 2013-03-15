@@ -9,8 +9,8 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.testing.mocks.RestMockApp;
 import brooklyn.test.HttpTestUtils;
@@ -57,7 +57,7 @@ public class BrooklynRestApiLauncherTest {
 
     public static void forceUseOfDefaultCatalogWithJavaClassPath(ManagementContext manager) {
         // don't use any catalog.xml which is set
-        ((BrooklynProperties)manager.getConfig()).put(AbstractManagementContext.BROOKLYN_CATALOG_URL, "");
+        ((BrooklynProperties)manager.getConfig()).put(ManagementContextInternal.BROOKLYN_CATALOG_URL, "");
         // sets URLs for a surefire
         ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
         // this also works

@@ -14,7 +14,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
@@ -33,7 +33,7 @@ public class InternalEntityFactoryTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (managementContext instanceof AbstractManagementContext) ((AbstractManagementContext)managementContext).terminate();
+        if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
     }
     
     @Test

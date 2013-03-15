@@ -211,7 +211,7 @@ public class EffectorUtils {
             if (!mgmtSupport.isDeployed()) {
                 mgmtSupport.attemptLegacyAutodeployment(name);
             }
-            AbstractManagementContext mgmtContext = (AbstractManagementContext) mgmtSupport.getManagementContext(false);
+            ManagementContextInternal mgmtContext = (ManagementContextInternal) mgmtSupport.getManagementContext(false);
             if (mgmtContext==null) {
                 throw new IllegalStateException("Execution of effector "+name+" on entity "+id+" not permitted: not in managed state");
             }

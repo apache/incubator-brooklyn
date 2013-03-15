@@ -48,14 +48,8 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 
-public abstract class AbstractManagementContext implements ManagementContext  {
+public abstract class AbstractManagementContext implements ManagementContext, ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
-    public static final String EFFECTOR_TAG = "EFFECTOR";
-    public static final String NON_TRANSIENT_TASK_TAG = "NON-TRANSIENT";
-
-    public static final ConfigKey<String> BROOKLYN_CATALOG_URL = new StringConfigKey("brooklyn.catalog.url",
-            "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +
-            "or empty for no URL (use default scanner)", "file://~/.brooklyn/catalog.xml");
     
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
@@ -202,7 +196,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * when a method is called on that entity.
      * @throws ExecutionException 
      */
-    protected <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
+    public <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
         try {
             Task<?> current = Tasks.current();
             if (current == null || !current.getTags().contains(entity) || !isManagedLocally(entity)) {
