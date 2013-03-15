@@ -2,6 +2,7 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -26,7 +27,7 @@ import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.util.task.AbstractExecutionContext;
 
-public class NonDeploymentManagementContext implements ManagementContext {
+public class NonDeploymentManagementContext implements ManagementContext, ManagementContextInternal {
 
     public enum NonDeploymentManagementContextMode {
         PRE_MANAGEMENT,
@@ -43,7 +44,7 @@ public class NonDeploymentManagementContext implements ManagementContext {
     
     private final AbstractEntity entity;
     private NonDeploymentManagementContextMode mode;
-    private ManagementContext initialManagementContext;
+    private ManagementContextInternal initialManagementContext;
     
     private final QueueingSubscriptionManager qsm = new QueueingSubscriptionManager();
     private BasicSubscriptionContext subcon;
@@ -53,7 +54,7 @@ public class NonDeploymentManagementContext implements ManagementContext {
         this.mode = mode;
     }
     
-    public void setManagementContext(ManagementContext val) {
+    public void setManagementContext(ManagementContextInternal val) {
         this.initialManagementContext = checkNotNull(val, "initialManagementContext");
     }
 
@@ -189,18 +190,83 @@ public class NonDeploymentManagementContext implements ManagementContext {
     @Override
     public void unmanage(Entity e) {
         if (e != entity) throw new IllegalStateException("NonDeployment context can only use a single Entity: has "+this.entity+", bug passed "+entity);
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot unmanage "+e);
     }
     
-    private boolean isInitialManagementContextReal() {
-        return (initialManagementContext != null && !(initialManagementContext instanceof NonDeploymentManagementContext));
-    }
-    
+    @Override
     public <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot invoke effector "+eff+" on entity "+entity);
     }
     
+    @Override
     public <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot invoke effector "+eff+" on entity "+entity);
+    }
+
+    @Override
+    public ClassLoader getBaseClassLoader() {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getBaseClassLoader();
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
+    }
+
+    @Override
+    public Iterable<URL> getBaseClassPathForScanning() {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getBaseClassPathForScanning();
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
+    }
+
+    @Override
+    public void addEntitySetListener(CollectionChangeListener<Entity> listener) {
+        if (isInitialManagementContextReal()) {
+            initialManagementContext.addEntitySetListener(listener);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
+    }
+
+    @Override
+    public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
+        if (isInitialManagementContextReal()) {
+            initialManagementContext.removeEntitySetListener(listener);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
+    }
+
+    @Override
+    public void terminate() {
+        if (isInitialManagementContextReal()) {
+            initialManagementContext.terminate();
+        } else {
+            // no-op; the non-deployment management context has nothing needing terminated
+        }
+    }
+
+    @Override
+    public long getTotalEffectorInvocations() {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getTotalEffectorInvocations();
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public void setBaseClassPathForScanning(Iterable<URL> urls) {
+        if (isInitialManagementContextReal()) {
+            initialManagementContext.setBaseClassPathForScanning(urls);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
+    }
+    
+    private boolean isInitialManagementContextReal() {
+        return (initialManagementContext != null && !(initialManagementContext instanceof NonDeploymentManagementContext));
     }
 }
