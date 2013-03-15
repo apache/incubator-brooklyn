@@ -19,7 +19,7 @@ import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster;
-import brooklyn.launcher.BrooklynLauncherCli;
+import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.CommandLineUtil;
 
@@ -73,7 +73,7 @@ public class GlobalWebFabricExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String locations = CommandLineUtil.getCommandLineOption(args, "--locations", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
-        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .application(new GlobalWebFabricExample().appDisplayName("Brooklyn Global Web Fabric Example"))
                 .webconsolePort(port)
                 .locations(Arrays.asList(locations))

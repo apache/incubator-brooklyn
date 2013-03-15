@@ -5,10 +5,19 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import groovy.lang.GroovyClassLoader;
 
+import java.io.File;
 import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.iq80.cli.Cli;
 import org.iq80.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.cli.Main.BrooklynCommand;
@@ -25,13 +34,30 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.TestUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 public class CliTest {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
+
+    private ExecutorService executor;
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        executor = Executors.newCachedThreadPool();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (executor != null) executor.shutdownNow();
+    }
+    
     @Test
     public void testLoadApplicationFromClasspath() throws Exception {
         String appName = ExampleApp.class.getName();
@@ -99,14 +125,32 @@ public class CliTest {
         }
     }
     
+    public static final AtomicBoolean GROOVY_INVOKED = new AtomicBoolean(false);
     @Test
-    public void testStartAndStopAllApplications() throws Exception {
+    public void testInvokeGroovyScript() throws Exception {
+        File groovyFile = File.createTempFile("testinvokegroovy", "groovy");
+        try {
+            String contents = CliTest.class.getCanonicalName()+".GROOVY_INVOKED.set(true);";
+            Files.write(contents.getBytes(), groovyFile);
+
+            LaunchCommand launchCommand = new Main.LaunchCommand();
+            ResourceUtils resourceUtils = new ResourceUtils(this);
+            GroovyClassLoader loader = new GroovyClassLoader(CliTest.class.getClassLoader());
+            launchCommand.execGroovyScript(resourceUtils, loader, groovyFile.toURI().toString());
+            assertTrue(GROOVY_INVOKED.get());
+            
+        } finally {
+            groovyFile.delete();
+            GROOVY_INVOKED.set(false);
+        }
+    }
+    
+    @Test
+    public void testStopAllApplications() throws Exception {
         LaunchCommand launchCommand = new Main.LaunchCommand();
-        Location loc = new SimulatedLocation();
         ExampleApp app = new ExampleApp();
         Entities.startManagement(app);
-        
-        launchCommand.startAllApps(ImmutableList.of(app), ImmutableList.of(loc));
+        app.start(ImmutableList.of(new SimulatedLocation()));
         assertTrue(app.running);
         
         launchCommand.stopAllApps(ImmutableList.of(app));
@@ -131,7 +175,7 @@ public class CliTest {
     }
 
     @Test
-    public void testLaunchCommand() throws ParseException {
+    public void testLaunchCommandParsesArgs() throws ParseException {
         Cli<BrooklynCommand> cli = Main.buildCli();
         BrooklynCommand command = cli.parse("launch", "--app", "my.App", "--location", "localhost");
         assertTrue(command instanceof LaunchCommand, ""+command);
@@ -157,19 +201,57 @@ public class CliTest {
         command = cli.parse();
         assertTrue(command instanceof HelpCommand);
     }
-    
+
+    @Test
+    public void testLaunchWillStartAppWhenGivenImpl() throws Exception {
+        exampleAppConstructed = false;
+        exampleAppRunning = false;
+        
+        Cli<BrooklynCommand> cli = Main.buildCli();
+        final BrooklynCommand command = cli.parse("launch", "--noConsole", "--app", ExampleApp.class.getName(), "--location", "localhost");
+        
+        executor.submit(new Callable<Void>() {
+            public Void call() throws Exception {
+                try {
+                    LOG.info("Calling command: "+command);
+                    command.call();
+                    return null;
+                } catch (Throwable t) {
+                    LOG.error("Error executing command", t);
+                    throw Exceptions.propagate(t);
+                }
+            }});
+        
+        TestUtils.executeUntilSucceeds(new Runnable() {
+            public void run() {
+                assertTrue(exampleAppConstructed);
+                assertTrue(exampleAppRunning);
+            }
+        });
+    }
+
     // An empty app to be used for testing
+    private static volatile boolean exampleAppRunning;
+    private static volatile boolean exampleAppConstructed;
     @SuppressWarnings("serial")
     public static class ExampleApp extends AbstractApplication {
         volatile boolean running;
+        volatile boolean constructed;
         
+        @Override public void postConstruct() {
+            super.postConstruct();
+            constructed = true;
+            exampleAppConstructed = true;
+        }
         @Override public void start(Collection<? extends Location> locations) {
             super.start(locations);
             running = true;
+            exampleAppRunning = true;
         }
         @Override public void stop() {
             super.stop();
             running = false;
+            exampleAppRunning = false;
         }
     }
     

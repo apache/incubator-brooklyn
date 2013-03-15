@@ -26,9 +26,9 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class BrooklynLauncherCliTest {
+public class BrooklynLauncherTest {
     
-    private BrooklynLauncherCli launcher;
+    private BrooklynLauncher launcher;
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
@@ -38,7 +38,7 @@ public class BrooklynLauncherCliTest {
     // Integration because takes a few seconds to start web-console
     @Test(groups="Integration")
     public void testStartsWebServerOnExpectectedPort() throws Exception {
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsolePort("10000+")
                 .start();
         
@@ -52,7 +52,7 @@ public class BrooklynLauncherCliTest {
     
     @Test
     public void testCanDisableWebServerStartup() throws Exception {
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .start();
         
@@ -62,7 +62,7 @@ public class BrooklynLauncherCliTest {
     
     @Test
     public void testStartsAppInstance() throws Exception {
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .application(new TestApplicationImpl())
                 .start();
@@ -72,7 +72,7 @@ public class BrooklynLauncherCliTest {
     
     @Test
     public void testStartsAppFromSpec() throws Exception {
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .application(EntitySpecs.appSpec(TestApplication.class))
                 .start();
@@ -82,7 +82,7 @@ public class BrooklynLauncherCliTest {
     
     @Test
     public void testStartsAppFromBuilder() throws Exception {
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .application(new ApplicationBuilder(EntitySpecs.spec(TestApplication.class)) {
                         @Override protected void doBuild() {
@@ -94,7 +94,7 @@ public class BrooklynLauncherCliTest {
     
     @Test
     public void testStartsAppInSuppliedLocations() throws Exception {
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .location("localhost")
                 .application(new ApplicationBuilder(EntitySpecs.spec(TestApplication.class)) {
@@ -109,7 +109,7 @@ public class BrooklynLauncherCliTest {
     @Test
     public void testUsesSuppliedManagementContext() throws Exception {
         LocalManagementContext myManagementContext = new LocalManagementContext();
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .managementContext(myManagementContext)
                 .start();
@@ -121,7 +121,7 @@ public class BrooklynLauncherCliTest {
     public void testUsesSuppliedBrooklynProperties() throws Exception {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put("mykey", "myval");
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .brooklynProperties(props)
                 .start();
@@ -131,7 +131,7 @@ public class BrooklynLauncherCliTest {
 
     @Test
     public void testUsesSupplementaryBrooklynProperties() throws Exception {
-        launcher = BrooklynLauncherCli.newInstance()
+        launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .brooklynProperties("mykey", "myval")
                 .start();
@@ -139,7 +139,7 @@ public class BrooklynLauncherCliTest {
         assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("mykey"), "myval");
     }
 
-    private void assertOnlyApp(BrooklynLauncherCli launcher, Class<? extends Application> expectedType) {
+    private void assertOnlyApp(BrooklynLauncher launcher, Class<? extends Application> expectedType) {
         assertEquals(launcher.getApplications().size(), 1, "apps="+launcher.getApplications());
         assertNotNull(Iterables.find(launcher.getApplications(), Predicates.instanceOf(TestApplication.class), null), "apps="+launcher.getApplications());
     }

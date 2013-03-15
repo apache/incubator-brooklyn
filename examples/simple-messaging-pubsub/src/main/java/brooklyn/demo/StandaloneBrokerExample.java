@@ -7,7 +7,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.qpid.QpidBroker;
 import brooklyn.entity.proxying.EntitySpecs;
-import brooklyn.launcher.BrooklynLauncherCli;
+import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.ImmutableMap;
@@ -42,7 +42,7 @@ public class StandaloneBrokerExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
-        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .application(new StandaloneBrokerExample().appDisplayName("Qpid app"))
                 .webconsolePort(port)
                 .location(location)

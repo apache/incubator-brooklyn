@@ -1,63 +1,44 @@
 package brooklyn.qa.longevity.webcluster;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxy.nginx.NginxControllerImpl;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocationRegistry;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.MutableMap;
 
-public class WebClusterApp extends AbstractApplication {
+import com.google.common.collect.Lists;
+
+public class WebClusterApp extends ApplicationBuilder {
 
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault();
-
-    public static final String DEFAULT_LOCATION = "localhost";
 
     public static final String WAR_PATH = "classpath://hello-world.war";
 
     private static final long loadCyclePeriodMs = 2 * 60 * 1000L;
 
-    public WebClusterApp() {
-        this(new LinkedHashMap());
-    }
-
-    public WebClusterApp(Map props) {
-        super(props);
-    }
-
-    public static void main(String[] argv) {
+    @Override
+    protected void doBuild() {
         final BasicAttributeSensor<Double> sinusoidalLoad =
                 new BasicAttributeSensor<Double>(Double.class, "brooklyn.qa.sinusoidalLoad", "Sinusoidal server load");
         BasicAttributeSensor<Double> averageLoad =
                 new BasicAttributeSensor<Double>(Double.class, "brooklyn.qa.averageLoad", "Average load in cluster");
 
-        ArrayList args = new ArrayList(Arrays.asList(argv));
-        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = new LocationRegistry(config).getLocationsById(!args.isEmpty() ? args : Arrays.asList(DEFAULT_LOCATION));
-
-        WebClusterApp app = new WebClusterApp(MutableMap.of("name", "Brooklyn WebApp Cluster example"));
-
-        NginxController nginxController = new NginxControllerImpl(
-                // domain: 'webclusterexample.brooklyn.local',
-                MutableMap.of("port", 8000));
+        NginxController nginxController = createChild(BasicEntitySpec.newInstance(NginxController.class)
+                // .configure("domain", "webclusterexample.brooklyn.local")
+                .configure("port", "8000+"));
 
         JBoss7ServerFactory jbossFactory = new JBoss7ServerFactory(MutableMap.of("httpPort", "8080+", "war", WAR_PATH)) {
             public JBoss7Server newEntity2(Map flags, Entity parent) {
@@ -67,12 +48,11 @@ public class WebClusterApp extends AbstractApplication {
             }
         };
 
-        ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppClusterImpl(
-                MutableMap.of(
-                        "name", "WebApp cluster",
-                        "controller", nginxController,
-                        "initialSize", 1,
-                        "factory", jbossFactory), app);
+        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+                .displayName("WebApp cluster")
+                .configure("controller", nginxController)
+                .configure("initialSize", 1)
+                .configure("factory", jbossFactory));
 
 
         web.getCluster().addEnricher(CustomAggregatingEnricher.newAveragingEnricher(MutableMap.of("allMembers", true), sinusoidalLoad, averageLoad));
@@ -81,9 +61,19 @@ public class WebClusterApp extends AbstractApplication {
                 .sizeRange(1, 3)
                 .metricRange(0.3, 0.7)
                 .build());
+    }
+    
+    public static void main(String[] argv) {
+        List<String> args = Lists.newArrayList(argv);
+        String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
+        String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
-        BrooklynLauncher.manage(app, port);
-        app.start(locations);
-        Entities.dumpInfo(app);
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+                .application(new WebClusterApp().appDisplayName("Brooklyn WebApp Cluster example"))
+                .webconsolePort(port)
+                .location(location)
+                .start();
+         
+        Entities.dumpInfo(launcher.getApplications());
     }
 }
