@@ -288,7 +288,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                 public MachineLocation call() throws NoMachinesAvailableException {
                     return location.obtain(flags);
                 }});
-            if (machine == null) throw new NoMachinesAvailableException(location);
+            if (machine == null) throw new NoMachinesAvailableException("Failed to obtain machine in "+location.toString());
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
