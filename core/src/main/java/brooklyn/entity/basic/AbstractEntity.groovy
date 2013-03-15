@@ -376,7 +376,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     protected String getEntityTypeName() {
         try {
-            Class<?> typeClazz = getManagementSupport().getManagementContext(true).getEntityManager().getEntityTypeRegistry().getEntityTypeOf(getClass());
+            Class<?> typeClazz = getManagementSupport().getManagementContext().getEntityManager().getEntityTypeRegistry().getEntityTypeOf(getClass());
             String typeName = typeClazz.getCanonicalName();
             if (typeName == null) typeName = typeClazz.getName();
             return typeName;
@@ -584,11 +584,11 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     @Override
     @Deprecated
     public synchronized ManagementContext getManagementContext() {
-        return getManagementSupport().getManagementContext(false);
+        return getManagementSupport().getManagementContext();
     }
 
     protected EntityManager getEntityManager() {
-        return getManagementSupport().getManagementContext(true).getEntityManager();
+        return getManagementSupport().getManagementContext().getEntityManager();
     }
     
     @Override

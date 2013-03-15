@@ -257,15 +257,10 @@ public class EntityManagementSupport {
         return managementContextUsable.get();
     }
     
-    public synchronized ManagementContext getManagementContext(boolean returnNonDeploymentIfNotDeployed) {
-        if (managementContextUsable.get()) return managementContext;
-        if (returnNonDeploymentIfNotDeployed) {
-            return nonDeploymentManagementContext;
-        } else {
-            NonDeploymentManagementContextMode mode = (nonDeploymentManagementContext != null) ? nonDeploymentManagementContext.getMode() : null;
-            throw new IllegalStateException("Management context not available for entity "+entity+" (mode="+mode+")");
-        }
-    }
+    public synchronized ManagementContext getManagementContext() {
+        return (managementContextUsable.get()) ? managementContext :nonDeploymentManagementContext;
+    }    
+    
     public synchronized ExecutionContext getExecutionContext() {
         if (executionContext!=null) return executionContext;
         if (managementContextUsable.get()) {
@@ -301,7 +296,7 @@ public class EntityManagementSupport {
             Entity e=entity;
             if (e.getParent()!=null && ((EntityInternal)e.getParent()).getManagementSupport().isDeployed()) { 
                 log.warn("Autodeployment in parent's management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
-                ((EntityInternal)e.getParent()).getManagementSupport().getManagementContext(false).getEntityManager().manage(entity);
+                ((EntityInternal)e.getParent()).getManagementSupport().getManagementContext().getEntityManager().manage(entity);
                 return;
             }
         }
@@ -315,23 +310,23 @@ public class EntityManagementSupport {
     private class EntityChangeListenerImpl implements EntityChangeListener {
         @Override
         public void onChildrenChanged() {
-            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
         public void onLocationsChanged() {
-            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
         public void onMembersChanged() {
-            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
         public void onPoliciesChanged() {
-            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
         public void onAttributeChanged(AttributeSensor<?> attribute) {
-            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
         public void onEffectorStarting(Effector<?> effector) {
@@ -339,7 +334,7 @@ public class EntityManagementSupport {
         }
         @Override
         public void onEffectorCompleted(Effector<?> effector) {
-            getManagementContext(false).getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
     }
 }

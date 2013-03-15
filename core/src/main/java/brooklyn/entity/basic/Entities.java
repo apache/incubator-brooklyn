@@ -468,7 +468,7 @@ public class Entities {
     }
 
     public static boolean isManaged(Entity e) {
-        return ((EntityInternal)e).getManagementSupport().isDeployed() && ((EntityInternal)e).getManagementSupport().getManagementContext(true).isRunning();
+        return ((EntityInternal)e).getManagementSupport().isDeployed() && ((EntityInternal)e).getManagementSupport().getManagementContext().isRunning();
     }
     
     /** brings this entity under management iff its ancestor is managed, returns true in that case;
@@ -484,7 +484,7 @@ public class Entities {
             o = o.getParent();
         }
         if (isManaged(o)) {
-            ((EntityInternal)o).getManagementSupport().getManagementContext(false).getEntityManager().manage(eum);
+            ((EntityInternal)o).getManagementSupport().getManagementContext().getEntityManager().manage(eum);
             return true;
         }
         if (!(o instanceof Application))
@@ -511,7 +511,7 @@ public class Entities {
             o = o.getParent();
         }
         if (isManaged(o)) {
-            ManagementContext mgmt = ((EntityInternal)o).getManagementSupport().getManagementContext(false);
+            ManagementContext mgmt = ((EntityInternal)o).getManagementSupport().getManagementContext();
             mgmt.getEntityManager().manage(eum);
             return mgmt;
         }
@@ -564,7 +564,7 @@ public class Entities {
 
     public static void unmanage(Entity entity) {
         if (((EntityInternal)entity).getManagementSupport().isDeployed()) {
-            ((EntityInternal)entity).getManagementSupport().getManagementContext(true).getEntityManager().unmanage(entity);
+            ((EntityInternal)entity).getManagementSupport().getManagementContext().getEntityManager().unmanage(entity);
         }
     }
 

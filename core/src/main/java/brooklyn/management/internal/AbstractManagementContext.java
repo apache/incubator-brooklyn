@@ -83,7 +83,7 @@ public abstract class AbstractManagementContext implements ManagementContext, Ma
                 if (input instanceof EntityInternal) 
                     return apply(((EntityInternal)input).getManagementSupport());
                 if (input instanceof EntityManagementSupport) 
-                    return apply(((EntityManagementSupport)input).getManagementContext(true));
+                    return apply(((EntityManagementSupport)input).getManagementContext());
                 if (input instanceof AbstractManagementContext) 
                     return ((AbstractManagementContext)input).getCatalog().getRootClassLoader();
                 return null;

@@ -96,7 +96,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
     
     @Override
     public void postConstruct() {
-        StringConfigMap config = getManagementSupport().getManagementContext(true).getConfig();
+        StringConfigMap config = getManagementSupport().getManagementContext().getConfig();
         
         hadoopCluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(WhirrHadoopCluster.class)
                 .parent(this)

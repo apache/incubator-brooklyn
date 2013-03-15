@@ -167,7 +167,7 @@ public class EntityReferences {
                 throw new IllegalStateException("EntityReference should have been initialised with a reference parent");
             Map<String,T> result = new LinkedHashMap<String,T>();
             for (String it : entityRefs) {
-                Entity e = ((EntityInternal)referrer).getManagementSupport().getManagementContext(true).getEntityManager().getEntity(it); 
+                Entity e = ((EntityInternal)referrer).getManagementSupport().getManagementContext().getEntityManager().getEntity(it); 
                 if (e==null) { 
                     LOG.warn("unable to find {}, referred to by {}", it, referrer);
                 } else {

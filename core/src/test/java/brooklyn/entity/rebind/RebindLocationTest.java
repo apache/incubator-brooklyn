@@ -112,7 +112,7 @@ public class RebindLocationTest {
 
         origLoc.myAtomicLong.incrementAndGet();
         assertEquals(origLoc.myAtomicLong.get(), 124L);
-        ((EntityInternal)origApp).getManagementSupport().getManagementContext(false).getRebindManager().getChangeListener().onChanged(origLoc);
+        ((EntityInternal)origApp).getManagementSupport().getManagementContext().getRebindManager().getChangeListener().onChanged(origLoc);
         
         MyApplication newApp = (MyApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
