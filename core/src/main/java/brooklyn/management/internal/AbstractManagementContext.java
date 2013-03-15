@@ -24,7 +24,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEffector;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.drivers.BasicEntityDriverFactory;
+import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
@@ -76,7 +76,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
-       this.entityDriverManager = new BasicEntityDriverFactory();
+       this.entityDriverManager = new BasicEntityDriverManager();
        this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
     }
     
