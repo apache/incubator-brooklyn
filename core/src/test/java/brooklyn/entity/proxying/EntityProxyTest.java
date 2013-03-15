@@ -39,7 +39,7 @@ public class EntityProxyTest {
     public void setUp() throws Exception {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(TestEntity.Spec.newInstance());
-        managementContext = app.getManagementSupport().getManagementContext();
+        managementContext = app.getManagementContext();
     }
     
     @AfterMethod(alwaysRun=true)

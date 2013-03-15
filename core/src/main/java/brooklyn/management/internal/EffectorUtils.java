@@ -211,7 +211,7 @@ public class EffectorUtils {
             if (!mgmtSupport.isDeployed()) {
                 mgmtSupport.attemptLegacyAutodeployment(name);
             }
-            ManagementContextInternal mgmtContext = (ManagementContextInternal) mgmtSupport.getManagementContext();
+            ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal)entity).getManagementContext();
             
             mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
             try {
@@ -262,7 +262,7 @@ public class EffectorUtils {
         if (!mgmtSupport.isDeployed()) {
             mgmtSupport.attemptLegacyAutodeployment(name);
         }
-        ManagementContextInternal mgmtContext = (ManagementContextInternal) mgmtSupport.getManagementContext();
+        ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal)entity).getManagementContext();
         
         mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
         try {

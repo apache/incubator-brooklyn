@@ -41,11 +41,8 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
-import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynLauncherCli;
-import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
@@ -96,7 +93,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
     
     @Override
     public void postConstruct() {
-        StringConfigMap config = getManagementSupport().getManagementContext().getConfig();
+        StringConfigMap config = getManagementContext().getConfig();
         
         hadoopCluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(WhirrHadoopCluster.class)
                 .parent(this)

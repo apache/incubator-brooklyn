@@ -13,6 +13,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.MutableMap;
@@ -32,7 +33,7 @@ import com.google.common.collect.Maps;
  */
 public class InternalEntityFactory {
 
-    private final ManagementContext managementContext;
+    private final ManagementContextInternal managementContext;
     private final EntityTypeRegistry entityTypeRegistry;
 
     /**
@@ -87,7 +88,7 @@ public class InternalEntityFactory {
         }
     }
     
-    public InternalEntityFactory(ManagementContext managementContext, EntityTypeRegistry entityTypeRegistry) {
+    public InternalEntityFactory(ManagementContextInternal managementContext, EntityTypeRegistry entityTypeRegistry) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
         this.entityTypeRegistry = checkNotNull(entityTypeRegistry, "entityTypeRegistry");
     }

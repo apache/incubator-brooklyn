@@ -91,7 +91,7 @@ public class CheckpointEntityTest {
         
         // Assert does not container unmanaged entity
         assertEquals(ImmutableList.copyOf(newApp.getChildren()), Collections.emptyList());
-        assertNull(((EntityInternal)newApp).getManagementSupport().getManagementContext().getEntityManager().getEntity(origE.getId()));
+        assertNull(((EntityInternal)newApp).getManagementContext().getEntityManager().getEntity(origE.getId()));
     }
     
     @Test

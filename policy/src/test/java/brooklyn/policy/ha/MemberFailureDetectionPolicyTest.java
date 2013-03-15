@@ -45,7 +45,7 @@ public class MemberFailureDetectionPolicyTest {
         group = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         
-        app.getManagementSupport().getManagementContext().getSubscriptionManager().subscribe(
+        app.getManagementContext().getSubscriptionManager().subscribe(
                 null, 
                 HASensors.ENTITY_FAILED, 
                 new SensorEventListener<FailureDescriptor>() {
@@ -53,7 +53,7 @@ public class MemberFailureDetectionPolicyTest {
                         events.add(event);
                     }
                 });
-        app.getManagementSupport().getManagementContext().getSubscriptionManager().subscribe(
+        app.getManagementContext().getSubscriptionManager().subscribe(
                 null, 
                 HASensors.ENTITY_RECOVERED, 
                 new SensorEventListener<FailureDescriptor>() {

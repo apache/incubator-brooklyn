@@ -13,7 +13,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
@@ -22,18 +21,18 @@ import brooklyn.test.entity.TestEntityImpl;
 
 public class InternalEntityFactoryTest {
 
-    private ManagementContext managementContext;
+    private ManagementContextInternal managementContext;
     private InternalEntityFactory factory;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = Entities.newManagementContext();
+        managementContext = (ManagementContextInternal) Entities.newManagementContext();
         factory = new InternalEntityFactory(managementContext, managementContext.getEntityManager().getEntityTypeRegistry());
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
+        if (managementContext != null) managementContext.terminate();
     }
     
     @Test

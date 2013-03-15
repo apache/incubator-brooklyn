@@ -82,7 +82,6 @@ public interface EntityInternal extends Entity {
     
     /** 
      * @return The management context for the entity, or null if it is not yet managed.
-     * @deprecated since 0.5 access via getManagementSupport
      */
     ManagementContext getManagementContext();
 

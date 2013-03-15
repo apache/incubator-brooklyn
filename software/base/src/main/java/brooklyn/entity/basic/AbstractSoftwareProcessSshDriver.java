@@ -157,7 +157,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * the SshTool is created or re-used by the SshMachineLocation making use of these properties */
     protected Map<String, Object> getSshFlags() {
         Map<String, Object> result = Maps.newLinkedHashMap();
-        StringConfigMap globalConfig = ((EntityInternal)getEntity()).getManagementSupport().getManagementContext().getConfig();
+        StringConfigMap globalConfig = ((EntityInternal)getEntity()).getManagementContext().getConfig();
         Map<ConfigKey<?>, Object> mgmtConfig = globalConfig.getAllConfig();
         Map<ConfigKey<?>, Object> entityConfig = ((EntityInternal)getEntity()).getAllConfig();
         Map<ConfigKey<?>, Object> allConfig = MutableMap.<ConfigKey<?>, Object>builder().putAll(mgmtConfig).putAll((Map)entityConfig).build();

@@ -75,7 +75,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
     
     @Override
     public void postConstruct() {
-        StringConfigMap config = getManagementSupport().getManagementContext().getConfig();
+        StringConfigMap config = getManagementContext().getConfig();
     
         hadoopCluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(WhirrHadoopCluster.class)
                 .parent(this)
