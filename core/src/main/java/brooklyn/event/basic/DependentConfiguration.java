@@ -259,9 +259,10 @@ public class DependentConfiguration {
     /** blocks until the given task completes, submitting if necessary, returning the result of that task;
      * optional contextMessage is available in status if this is running in a task
      */
+    @SuppressWarnings("unchecked")
     public static <T> T waitForTask(Task<T> t, Entity context, String contextMessage) throws InterruptedException {
         try {
-            return (T) Tasks.resolveValue(t, Object.class, ((EntityLocal)context).getExecutionContext(), contextMessage);
+            return (T) Tasks.resolveValue(t, Object.class, ((EntityInternal)context).getExecutionContext(), contextMessage);
         } catch (ExecutionException e) {
             throw Throwables.propagate(e);
         }

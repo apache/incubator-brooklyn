@@ -146,14 +146,13 @@ public interface EntityLocal extends Entity, Configurable {
     
     /** 
      * @return The management context for the entity, or null if it is not yet managed.
-     * @deprecated since 0.5.0 access via {@link EntityInternal#getManagementContext()}.
+     * @deprecated since 0.5.0; access via {@link EntityInternal#getManagementContext()}.
      */
     ManagementContext getManagementContext();
 
     /** 
      * @return The task execution context for the entity, or null if it is not yet managed.
-     * @deprecated since 0.5.0 access via getManagementSupport
-     * @see EntityInternal.getExecutionContext()
+     * @deprecated since 0.5.0; access via {@link EntityInternal#getExecutionContext()}.
      */    
     ExecutionContext getExecutionContext();
 }
