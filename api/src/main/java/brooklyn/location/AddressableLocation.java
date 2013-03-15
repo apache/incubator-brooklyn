@@ -7,7 +7,7 @@ import java.net.InetAddress;
  * This IP address may be a machine (usually the MachineLocation sub-interface), 
  * or often an entry point for a service.
  */
-public interface AddressableLocation {
+public interface AddressableLocation extends Location {
 
     /**
      * Return the single most appropriate address for this location.
