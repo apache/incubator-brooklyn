@@ -46,16 +46,23 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
     private NonDeploymentManagementContextMode mode;
     private ManagementContextInternal initialManagementContext;
     
-    private final QueueingSubscriptionManager qsm = new QueueingSubscriptionManager();
-    private BasicSubscriptionContext subcon;
-    
+    private final QueueingSubscriptionManager qsm;
+    private final BasicSubscriptionContext subscriptionContext;
+    private final NonDeploymentExecutionContext executionContext;
+    private NonDeploymentEntityManager entityManager;
+
     public NonDeploymentManagementContext(AbstractEntity entity, NonDeploymentManagementContextMode mode) {
-        this.entity = entity;
-        this.mode = mode;
+        this.entity = checkNotNull(entity, "entity");
+        this.mode = checkNotNull(mode, "mode");
+        qsm = new QueueingSubscriptionManager();
+        subscriptionContext = new BasicSubscriptionContext(qsm, entity);
+        executionContext = new NonDeploymentExecutionContext();
+        entityManager = new NonDeploymentEntityManager(null);
     }
     
     public void setManagementContext(ManagementContextInternal val) {
         this.initialManagementContext = checkNotNull(val, "initialManagementContext");
+        this.entityManager = new NonDeploymentEntityManager(val);
     }
 
     @Override
@@ -64,7 +71,7 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
     }
     
     public void setMode(NonDeploymentManagementContextMode mode) {
-        this.mode = mode;
+        this.mode = checkNotNull(mode, "mode");
     }
     public NonDeploymentManagementContextMode getMode() {
         return mode;
@@ -83,12 +90,12 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
 
     @Override
     public EntityManager getEntityManager() {
-        return new NonDeploymentEntityManager(initialManagementContext == null ? this : initialManagementContext);
+        return entityManager;
     }
     
     @Override
     public ExecutionManager getExecutionManager() {
-        throw new IllegalStateException("Executions cannot be performed prior to management. (Non-deployment context "+this+" is not valid for this operation.)");
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: executions cannot be performed prior to management");
     }
 
     @Override
@@ -98,38 +105,24 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
 
     @Override
     public synchronized SubscriptionContext getSubscriptionContext(Entity entity) {
-        if (entity != this.entity) throw new IllegalStateException("NonDeployment context can only use a single Entity: has "+this.entity+", but passed "+entity);
-        
-        if (subcon==null) subcon = new BasicSubscriptionContext(qsm, entity);
-        return subcon;
+        if (!this.entity.equals(entity)) throw new IllegalStateException("Non-deployment context "+this+" can only use a single Entity: has "+this.entity+", but passed "+entity);
+        return subscriptionContext;
     }
 
     @Override
     public ExecutionContext getExecutionContext(Entity entity) {
-        if (entity != this.entity) throw new IllegalStateException("NonDeployment context can only use a single Entity: has "+this.entity+", bug passed "+entity);
-        
-        return new AbstractExecutionContext() {
-            @Override
-            public Set<Task<?>> getTasks() {
-                return Collections.emptySet();
-            }
-            
-            @Override
-            public Task<?> getCurrentTask() {
-                return null;
-            }
-            
-            @Override
-            protected <T> Task<T> submitInternal(@SuppressWarnings("rawtypes") Map properties, Object task) {
-                throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
-            }
-        };
+        if (!this.entity.equals(entity)) throw new IllegalStateException("Non-deployment context "+this+" can only use a single Entity: has "+this.entity+", but passed "+entity);
+        return executionContext;
     }
 
     // TODO the methods below should delegate to the application?
     @Override
     public EntityDriverManager getEntityDriverManager() {
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntityDriverManager();
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
     }
 
     @Override
@@ -139,7 +132,11 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
 
     @Override
     public DownloadResolverManager getEntityDownloadsManager() {
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntityDownloadsManager();
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
     }
 
     @Override
@@ -153,44 +150,54 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
 
     @Override
     public RebindManager getRebindManager() {
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getRebindManager();
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
     }
 
     @Override
     public LocationRegistry getLocationRegistry() {
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getLocationRegistry();
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
     }
 
     @Override
     public BrooklynCatalog getCatalog() {
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getCatalog();
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
     }
     
     @Override
     public Collection<Entity> getEntities() {
-        return Collections.emptyList();
+        return getEntityManager().getEntities();
     }
 
     @Override
     public Entity getEntity(String id) {
-        return null;
+        return getEntityManager().getEntity(id);
     }
 
     @Override
     public boolean isManaged(Entity entity) {
-        return false;
+        return getEntityManager().isManaged(entity);
     }
 
     @Override
     public void manage(Entity e) {
-        if (e != entity) throw new IllegalStateException("NonDeployment context can only use a single Entity: has "+this.entity+", bug passed "+entity);
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        getEntityManager().manage(e);
     }
 
     @Override
     public void unmanage(Entity e) {
-        if (e != entity) throw new IllegalStateException("NonDeployment context can only use a single Entity: has "+this.entity+", bug passed "+entity);
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot unmanage "+e);
+        getEntityManager().unmanage(e);
     }
     
     @Override
@@ -268,5 +275,22 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
     
     private boolean isInitialManagementContextReal() {
         return (initialManagementContext != null && !(initialManagementContext instanceof NonDeploymentManagementContext));
+    }
+    
+    private class NonDeploymentExecutionContext extends AbstractExecutionContext {
+        @Override
+        public Set<Task<?>> getTasks() {
+            return Collections.emptySet();
+        }
+        
+        @Override
+        public Task<?> getCurrentTask() {
+            return null;
+        }
+        
+        @Override
+        protected <T> Task<T> submitInternal(@SuppressWarnings("rawtypes") Map properties, Object task) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
     }
 }

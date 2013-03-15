@@ -20,6 +20,9 @@ import brooklyn.management.SubscriptionContext;
 import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * Encapsulates management activities at an entity.
  * <p>
@@ -253,12 +256,14 @@ public class EntityManagementSupport {
         }
     }
 
+    @VisibleForTesting
+    @Beta
     public boolean isManagementContextReal() {
         return managementContextUsable.get();
     }
     
     public synchronized ManagementContext getManagementContext() {
-        return (managementContextUsable.get()) ? managementContext :nonDeploymentManagementContext;
+        return (managementContextUsable.get()) ? managementContext : nonDeploymentManagementContext;
     }    
     
     public synchronized ExecutionContext getExecutionContext() {
