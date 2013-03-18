@@ -22,12 +22,11 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.util.task.AbstractExecutionContext;
 
-public class NonDeploymentManagementContext implements ManagementContext, ManagementContextInternal {
+public class NonDeploymentManagementContext implements ManagementContextInternal {
 
     public enum NonDeploymentManagementContextMode {
         PRE_MANAGEMENT,
@@ -118,11 +117,8 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
     // TODO the methods below should delegate to the application?
     @Override
     public EntityDriverManager getEntityDriverManager() {
-        if (isInitialManagementContextReal()) {
-            return initialManagementContext.getEntityDriverManager();
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        return initialManagementContext.getEntityDriverManager();
     }
 
     @Override
@@ -132,47 +128,32 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
 
     @Override
     public DownloadResolverManager getEntityDownloadsManager() {
-        if (isInitialManagementContextReal()) {
-            return initialManagementContext.getEntityDownloadsManager();
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        return initialManagementContext.getEntityDownloadsManager();
     }
 
     @Override
     public StringConfigMap getConfig() {
-        if (isInitialManagementContextReal()) {
-            return initialManagementContext.getConfig();
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        return initialManagementContext.getConfig();
     }
 
     @Override
     public RebindManager getRebindManager() {
-        if (isInitialManagementContextReal()) {
-            return initialManagementContext.getRebindManager();
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        return initialManagementContext.getRebindManager();
     }
 
     @Override
     public LocationRegistry getLocationRegistry() {
-        if (isInitialManagementContextReal()) {
-            return initialManagementContext.getLocationRegistry();
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        return initialManagementContext.getLocationRegistry();
     }
 
     @Override
     public BrooklynCatalog getCatalog() {
-        if (isInitialManagementContextReal()) {
-            return initialManagementContext.getCatalog();
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        return initialManagementContext.getCatalog();
     }
     
     @Override
@@ -212,38 +193,26 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
 
     @Override
     public ClassLoader getBaseClassLoader() {
-        if (isInitialManagementContextReal()) {
-            return initialManagementContext.getBaseClassLoader();
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        return initialManagementContext.getBaseClassLoader();
     }
 
     @Override
     public Iterable<URL> getBaseClassPathForScanning() {
-        if (isInitialManagementContextReal()) {
-            return initialManagementContext.getBaseClassPathForScanning();
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        return initialManagementContext.getBaseClassPathForScanning();
     }
 
     @Override
     public void addEntitySetListener(CollectionChangeListener<Entity> listener) {
-        if (isInitialManagementContextReal()) {
-            initialManagementContext.addEntitySetListener(listener);
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        initialManagementContext.addEntitySetListener(listener);
     }
 
     @Override
     public void removeEntitySetListener(CollectionChangeListener<Entity> listener) {
-        if (isInitialManagementContextReal()) {
-            initialManagementContext.removeEntitySetListener(listener);
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        initialManagementContext.removeEntitySetListener(listener);
     }
 
     @Override
@@ -266,17 +235,20 @@ public class NonDeploymentManagementContext implements ManagementContext, Manage
 
     @Override
     public void setBaseClassPathForScanning(Iterable<URL> urls) {
-        if (isInitialManagementContextReal()) {
-            initialManagementContext.setBaseClassPathForScanning(urls);
-        } else {
-            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
-        }
+        checkInitialManagementContextReal();
+        initialManagementContext.setBaseClassPathForScanning(urls);
     }
     
     private boolean isInitialManagementContextReal() {
         return (initialManagementContext != null && !(initialManagementContext instanceof NonDeploymentManagementContext));
     }
     
+    private void checkInitialManagementContextReal() {
+        if (!isInitialManagementContextReal()) {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        }
+    }
+
     private class NonDeploymentExecutionContext extends AbstractExecutionContext {
         @Override
         public Set<Task<?>> getTasks() {

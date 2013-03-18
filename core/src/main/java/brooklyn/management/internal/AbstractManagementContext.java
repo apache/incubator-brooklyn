@@ -18,7 +18,6 @@ import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -30,11 +29,9 @@ import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
@@ -48,7 +45,7 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 
-public abstract class AbstractManagementContext implements ManagementContext, ManagementContextInternal {
+public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
     
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();

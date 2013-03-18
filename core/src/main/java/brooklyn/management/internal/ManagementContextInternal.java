@@ -25,6 +25,8 @@ public interface ManagementContextInternal extends ManagementContext {
 
     Iterable<URL> getBaseClassPathForScanning();
 
+    void setBaseClassPathForScanning(Iterable<URL> urls);
+
     void addEntitySetListener(CollectionChangeListener<Entity> listener);
 
     void removeEntitySetListener(CollectionChangeListener<Entity> listener);
@@ -36,6 +38,4 @@ public interface ManagementContextInternal extends ManagementContext {
     <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException;
     
     <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters);
-
-    void setBaseClassPathForScanning(Iterable<URL> urls);
 }
