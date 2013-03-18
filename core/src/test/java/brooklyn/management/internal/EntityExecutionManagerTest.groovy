@@ -2,7 +2,6 @@ package brooklyn.management.internal
 
 import static org.testng.Assert.*
 
-import java.io.Serializable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -52,7 +51,7 @@ class EntityExecutionManagerTest {
         e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
         
         CountDownLatch latch = new CountDownLatch(1)
-        Task task = e.executionContext.submit( [tag : AbstractManagementContext.NON_TRANSIENT_TASK_TAG], { latch.countDown() } )
+        Task task = e.executionContext.submit( [tag : ManagementContextInternal.NON_TRANSIENT_TASK_TAG], { latch.countDown() } )
         latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)
         
         Collection<Task> tasks = app.managementContext.executionManager.getTasksWithTag(e);
@@ -152,13 +151,13 @@ class EntityExecutionManagerTest {
         }
         
         // Should initially have all tasks
-        Set<Task<?>> storedTasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags([entity, AbstractManagementContext.EFFECTOR_TAG]);
+        Set<Task<?>> storedTasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags([entity, ManagementContextInternal.EFFECTOR_TAG]);
         assertEquals(storedTasks, tasks as Set, "storedTasks="+storedTasks+"; expected="+tasks);
         
         // Then oldest should be GC'ed to leave only maxNumTasks
         List recentTasks = tasks.subList(1, maxNumTasks+1);
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            Set<Task<?>> storedTasks2 = app.getManagementContext().getExecutionManager().getTasksWithAllTags([entity, AbstractManagementContext.EFFECTOR_TAG]);
+            Set<Task<?>> storedTasks2 = app.getManagementContext().getExecutionManager().getTasksWithAllTags([entity, ManagementContextInternal.EFFECTOR_TAG]);
             assertEquals(storedTasks2, recentTasks as Set, "storedTasks="+storedTasks2+"; expected="+recentTasks);
         }
     }
@@ -180,7 +179,7 @@ class EntityExecutionManagerTest {
         oldTask.get();
         
         TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            Set<Task<?>> storedTasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags([entity, AbstractManagementContext.EFFECTOR_TAG]);
+            Set<Task<?>> storedTasks = app.getManagementContext().getExecutionManager().getTasksWithAllTags([entity, ManagementContextInternal.EFFECTOR_TAG]);
             assertEquals(storedTasks, [] as Set, "storedTasks="+storedTasks);
         }
 

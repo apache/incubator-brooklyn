@@ -142,7 +142,7 @@ public class BrooklynGarbageCollector {
     
     public void onTaskDone(Task<?> task) {
         Set<Object> tags = task.getTags();
-        if (tags.contains(AbstractManagementContext.EFFECTOR_TAG) || tags.contains(AbstractManagementContext.NON_TRANSIENT_TASK_TAG)) {
+        if (tags.contains(ManagementContextInternal.EFFECTOR_TAG) || tags.contains(ManagementContextInternal.NON_TRANSIENT_TASK_TAG)) {
             // keep it for a while
         } else {
             executionManager.deleteTask(task);
@@ -158,7 +158,7 @@ public class BrooklynGarbageCollector {
         
         Set<Object> taskTags = executionManager.getTaskTags();
         for (Object tag : taskTags) {
-            if (tag == null || tag.equals(AbstractManagementContext.EFFECTOR_TAG)) {
+            if (tag == null || tag.equals(ManagementContextInternal.EFFECTOR_TAG)) {
                 continue; // there'll be other tags
             }
             Set<Task<?>> tasksWithTag = executionManager.getTasksWithTag(tag);

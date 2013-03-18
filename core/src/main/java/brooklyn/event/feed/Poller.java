@@ -1,7 +1,5 @@
 package brooklyn.event.feed;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -9,6 +7,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
 import brooklyn.util.MutableMap;
@@ -88,7 +87,7 @@ public class Poller<V> {
                         return new BasicTask<V>(MutableMap.of("entity", entity), pollJob.wrappedJob); }
                 };
                 ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollJob.pollPeriod), pollingTaskFactory);
-                tasks.add((ScheduledTask) entity.getExecutionContext().submit(task));
+                tasks.add((ScheduledTask) ((EntityInternal)entity).getExecutionContext().submit(task));
             } else {
                 if (log.isDebugEnabled()) log.debug("Activating poll (but leaving off, as period {}) for {} (using {})", new Object[] {pollJob.pollPeriod, entity, this});
             }

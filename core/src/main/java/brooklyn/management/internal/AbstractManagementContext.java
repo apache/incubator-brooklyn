@@ -18,7 +18,6 @@ import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -30,11 +29,9 @@ import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
@@ -48,14 +45,8 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 
-public abstract class AbstractManagementContext implements ManagementContext  {
+public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
-    public static final String EFFECTOR_TAG = "EFFECTOR";
-    public static final String NON_TRANSIENT_TASK_TAG = "NON-TRANSIENT";
-
-    public static final ConfigKey<String> BROOKLYN_CATALOG_URL = new StringConfigKey("brooklyn.catalog.url",
-            "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +
-            "or empty for no URL (use default scanner)", "file://~/.brooklyn/catalog.xml");
     
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
@@ -89,7 +80,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
                 if (input instanceof EntityInternal) 
                     return apply(((EntityInternal)input).getManagementSupport());
                 if (input instanceof EntityManagementSupport) 
-                    return apply(((EntityManagementSupport)input).getManagementContext(true));
+                    return apply(((EntityManagementSupport)input).getManagementContext());
                 if (input instanceof AbstractManagementContext) 
                     return ((AbstractManagementContext)input).getCatalog().getRootClassLoader();
                 return null;
@@ -202,7 +193,7 @@ public abstract class AbstractManagementContext implements ManagementContext  {
      * when a method is called on that entity.
      * @throws ExecutionException 
      */
-    protected <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
+    public <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException {
         try {
             Task<?> current = Tasks.current();
             if (current == null || !current.getTags().contains(entity) || !isManagedLocally(entity)) {

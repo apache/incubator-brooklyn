@@ -14,6 +14,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigMapViewWithStringKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
@@ -23,7 +24,6 @@ import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings("deprecation")
@@ -86,7 +86,7 @@ public class PolicyConfigMap implements brooklyn.config.ConfigMap {
             if (((ConfigKeySelfExtracting<T>)ownKey).isSet(ownConfig)) {
                 // FIXME Should we support config from futures? How to get execution context before setEntity?
                 EntityLocal entity = policy.entity;
-                ExecutionContext exec = (entity != null) ? entity.getExecutionContext() : null;
+                ExecutionContext exec = (entity != null) ? ((EntityInternal)entity).getExecutionContext() : null;
                 return ((ConfigKeySelfExtracting<T>)ownKey).extractValue(ownConfig, exec);
             }
         } else {

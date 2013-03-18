@@ -20,7 +20,7 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
-import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.MutableMap;
@@ -39,13 +39,13 @@ public class EntityProxyTest {
     public void setUp() throws Exception {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
         entity = app.createAndManageChild(TestEntity.Spec.newInstance());
-        managementContext = app.getManagementSupport().getManagementContext(false);
+        managementContext = app.getManagementContext();
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (app != null) Entities.destroy(app);
-        if (managementContext instanceof AbstractManagementContext) ((AbstractManagementContext)managementContext).terminate();
+        if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
     }
 
     @Test
@@ -69,7 +69,7 @@ public class EntityProxyTest {
         assertEquals(result, "abc");
         
         Set<Task<?>> tasks = managementContext.getExecutionManager().getTasksWithAllTags(
-                ImmutableList.of(AbstractManagementContext.EFFECTOR_TAG, entity));
+                ImmutableList.of(ManagementContextInternal.EFFECTOR_TAG, entity));
         Task<?> task = Iterables.get(tasks, 0);
         assertEquals(tasks.size(), 1, "tasks="+tasks);
         assertTrue(task.getDescription().contains("identityEffector"));

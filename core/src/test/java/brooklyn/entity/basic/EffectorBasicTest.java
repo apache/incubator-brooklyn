@@ -13,7 +13,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task;
-import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -76,7 +76,7 @@ public class EffectorBasicTest {
     public void testInvokeEffectorTaskHasTag() {
         Task<Void> starting = app.invoke(Startable.START, MutableMap.of("locations", locs));
 //        log.info("TAGS: "+starting.getTags());
-        Assert.assertTrue(starting.getTags().contains(AbstractManagementContext.EFFECTOR_TAG));
+        Assert.assertTrue(starting.getTags().contains(ManagementContextInternal.EFFECTOR_TAG));
     }
     
 }

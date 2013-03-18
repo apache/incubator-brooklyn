@@ -16,7 +16,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
@@ -99,16 +99,16 @@ public class CatalogClasspathDo {
                 // scan default classpath:
                 ClassLoader baseCL = null;
                 Iterable<URL> baseCP = null;
-                if (catalog.mgmt instanceof AbstractManagementContext) {
-                    baseCL = ((AbstractManagementContext)catalog.mgmt).getBaseClassLoader();
-                    baseCP = ((AbstractManagementContext)catalog.mgmt).getBaseClassPathForScanning();
+                if (catalog.mgmt instanceof ManagementContextInternal) {
+                    baseCL = ((ManagementContextInternal)catalog.mgmt).getBaseClassLoader();
+                    baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
                 }
                 scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
                 if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
                     try {
-                        ((AbstractManagementContext)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+                        ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
                         log.info("Catalog scan of default classloader returned nothing; reverting to java.class.path");
-                        baseCP = ((AbstractManagementContext)catalog.mgmt).getBaseClassPathForScanning();
+                        baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
                         scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
                     } catch (Exception e) {
                         log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");

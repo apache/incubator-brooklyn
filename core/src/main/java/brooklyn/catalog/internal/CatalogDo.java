@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
@@ -217,7 +217,7 @@ public class CatalogDo {
         if (local!=null) cl.addFirst(local);
         if (parent==null) {
             // we are root.  include the mgmt base classloader and/or standard class loaders 
-            ClassLoader base = ((AbstractManagementContext)mgmt).getBaseClassLoader();
+            ClassLoader base = ((ManagementContextInternal)mgmt).getBaseClassLoader();
             if (base!=null) cl.addFirst(base);
             else {
                 cl.addFirst(getClass().getClassLoader());

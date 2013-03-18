@@ -81,14 +81,18 @@ public interface EntityInternal extends Entity {
     void destroy();
     
     /** 
-     * @return The management context for the entity, or null if it is not yet managed.
-     * @deprecated since 0.5 access via getManagementSupport
+     * Returns the management context for the entity. If the entity is not yet managed, some 
+     * operations on the management context will fail. 
+     * 
+     * Do not cache this object; instead call getManagementContext() each time you need to use it.
      */
     ManagementContext getManagementContext();
 
     /** 
-     * @return The task execution context for the entity, or null if it is not yet managed.
-     * @deprecated since 0.5 access via getManagementSupport
+     * Returns the task execution context for the entity. If the entity is not yet managed, some 
+     * operations on the management context will fail.
+     * 
+     * Do not cache this object; instead call getExecutionContext() each time you need to use it.
      */    
     ExecutionContext getExecutionContext();
     

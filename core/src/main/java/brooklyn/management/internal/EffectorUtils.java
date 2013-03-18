@@ -211,10 +211,7 @@ public class EffectorUtils {
             if (!mgmtSupport.isDeployed()) {
                 mgmtSupport.attemptLegacyAutodeployment(name);
             }
-            AbstractManagementContext mgmtContext = (AbstractManagementContext) mgmtSupport.getManagementContext(false);
-            if (mgmtContext==null) {
-                throw new IllegalStateException("Execution of effector "+name+" on entity "+id+" not permitted: not in managed state");
-            }
+            ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal)entity).getManagementContext();
             
             mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
             try {
@@ -265,10 +262,7 @@ public class EffectorUtils {
         if (!mgmtSupport.isDeployed()) {
             mgmtSupport.attemptLegacyAutodeployment(name);
         }
-        AbstractManagementContext mgmtContext = (AbstractManagementContext) mgmtSupport.getManagementContext(false);
-        if (mgmtContext==null) {
-            throw new IllegalStateException("Execution of effector "+name+" on entity "+id+" not permitted: not in managed state");
-        }
+        ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal)entity).getManagementContext();
         
         mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
         try {

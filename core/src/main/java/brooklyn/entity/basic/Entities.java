@@ -31,9 +31,9 @@ import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
-import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.MutableMap;
@@ -462,13 +462,13 @@ public class Entities {
             ManagementContext managementContext = app.getManagementContext();
             if (app instanceof Startable) Entities.invokeEffector((EntityLocal)app, app, Startable.STOP).getUnchecked();
             if (app instanceof AbstractEntity) ((AbstractEntity)app).destroy();
-            if (managementContext instanceof AbstractManagementContext) ((AbstractManagementContext)managementContext).terminate();
+            if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
             unmanage(app);
         }
     }
 
     public static boolean isManaged(Entity e) {
-        return ((EntityInternal)e).getManagementSupport().isDeployed() && ((EntityInternal)e).getManagementSupport().getManagementContext(true).isRunning();
+        return ((EntityInternal)e).getManagementSupport().isDeployed() && ((EntityInternal)e).getManagementContext().isRunning();
     }
     
     /** brings this entity under management iff its ancestor is managed, returns true in that case;
@@ -484,7 +484,7 @@ public class Entities {
             o = o.getParent();
         }
         if (isManaged(o)) {
-            ((EntityInternal)o).getManagementSupport().getManagementContext(false).getEntityManager().manage(eum);
+            ((EntityInternal)o).getManagementContext().getEntityManager().manage(eum);
             return true;
         }
         if (!(o instanceof Application))
@@ -511,7 +511,7 @@ public class Entities {
             o = o.getParent();
         }
         if (isManaged(o)) {
-            ManagementContext mgmt = ((EntityInternal)o).getManagementSupport().getManagementContext(false);
+            ManagementContext mgmt = ((EntityInternal)o).getManagementContext();
             mgmt.getEntityManager().manage(eum);
             return mgmt;
         }
@@ -564,7 +564,7 @@ public class Entities {
 
     public static void unmanage(Entity entity) {
         if (((EntityInternal)entity).getManagementSupport().isDeployed()) {
-            ((EntityInternal)entity).getManagementSupport().getManagementContext(true).getEntityManager().unmanage(entity);
+            ((EntityInternal)entity).getManagementContext().getEntityManager().unmanage(entity);
         }
     }
 

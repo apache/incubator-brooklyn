@@ -13,8 +13,8 @@ import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.CollectionChangeListener;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
 
@@ -91,7 +91,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     public void stop() {
         setAttribute(RUNNING, false);
         if (setChangeListener != null) {
-            ((AbstractManagementContext)getManagementContext()).removeEntitySetListener(setChangeListener);
+            ((ManagementContextInternal)getManagementContext()).removeEntitySetListener(setChangeListener);
         }
     }
     
@@ -155,7 +155,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
             return;
         }
         setChangeListener = new MyEntitySetChangeListener();
-        ((AbstractManagementContext)getManagementContext()).addEntitySetListener(setChangeListener);
+        ((ManagementContextInternal)getManagementContext()).addEntitySetListener(setChangeListener);
         rescanEntities();
     }
 
@@ -165,7 +165,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
             log.warn("{} no longer master twice", this);
             return;
         }
-        ((AbstractManagementContext) getManagementContext()).removeEntitySetListener(setChangeListener);
+        ((ManagementContextInternal) getManagementContext()).removeEntitySetListener(setChangeListener);
         setChangeListener = null;
     }
     
@@ -187,7 +187,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
             Collection<Entity> currentMembers = super.getMembers();
             Collection<Entity> toRemove = new LinkedHashSet<Entity>(currentMembers);
             
-            for (Entity it : ((AbstractManagementContext) getManagementContext()).getEntities()) {
+            for (Entity it : getManagementContext().getEntityManager().getEntities()) {
                 if (acceptsEntity(it)) {
                     toRemove.remove(it);
                     if (!currentMembers.contains(it)) {

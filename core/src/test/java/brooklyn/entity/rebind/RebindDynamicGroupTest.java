@@ -52,7 +52,6 @@ public class RebindDynamicGroupTest {
         Entities.startManagement(origApp, managementContext);
         
         TestApplication newApp = rebind();
-        ManagementContext newManagementContext = newApp.getManagementSupport().getManagementContext(false);
         final DynamicGroup newG = (DynamicGroup) Iterables.find(newApp.getChildren(), Predicates.instanceOf(DynamicGroup.class));
         final MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
 

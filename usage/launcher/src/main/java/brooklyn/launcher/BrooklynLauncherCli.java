@@ -23,8 +23,8 @@ import brooklyn.location.Location;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 
 import com.google.common.annotations.Beta;
@@ -320,8 +320,8 @@ public class BrooklynLauncherCli {
             }
         }
         
-        if (managementContext instanceof AbstractManagementContext) {
-            ((AbstractManagementContext)managementContext).terminate();
+        if (managementContext instanceof ManagementContextInternal) {
+            ((ManagementContextInternal)managementContext).terminate();
         }
         
         for (Location loc : locations) {

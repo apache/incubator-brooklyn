@@ -169,7 +169,7 @@ public class BrooklynLauncher {
         }
 
         for (Application app: appsToManage) {
-            ManagementContext appContext = ((AbstractApplication)app).getManagementSupport().getManagementContext(true);
+            ManagementContext appContext = ((AbstractApplication)app).getManagementContext();
             if (!(appContext instanceof NonDeploymentManagementContext)) {
                 if (context!=null && !context.equals(appContext)) throw new IllegalStateException("Can't start single web console with multiple applications with different active managers");
                 context = appContext;

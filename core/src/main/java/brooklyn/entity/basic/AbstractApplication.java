@@ -14,6 +14,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -23,7 +24,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
     
     @SetFromFlag("mgmt")
-    private volatile AbstractManagementContext mgmt;
+    private volatile ManagementContext mgmt;
     
     private boolean deployed = false;
 
@@ -43,7 +44,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         super(properties);
 
         if (properties.containsKey("mgmt")) {
-            mgmt = (AbstractManagementContext) properties.remove("mgmt");
+            mgmt = (ManagementContext) properties.remove("mgmt");
         }
 
         // TODO decide whether this is the best way to inject properties like this
@@ -226,7 +227,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     }
     
 //    @Override
-//    public synchronized AbstractManagementContext getManagementContext() {
+//    public synchronized ManagementContext getManagementContext() {
 //        if (hasManagementContext())
 //            return mgmt;
 //

@@ -44,12 +44,20 @@ public class NonDeploymentEntityManager implements EntityManager {
 
     @Override
     public Collection<Entity> getEntities() {
-        return Collections.emptyList();
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntities();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Override
     public Entity getEntity(String id) {
-        return null;
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getEntity(id);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -59,12 +67,12 @@ public class NonDeploymentEntityManager implements EntityManager {
 
     @Override
     public void manage(Entity e) {
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot manage "+e);
     }
 
     @Override
     public void unmanage(Entity e) {
-        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation.");
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot unmanage "+e);
     }
     
     private boolean isInitialManagementContextReal() {

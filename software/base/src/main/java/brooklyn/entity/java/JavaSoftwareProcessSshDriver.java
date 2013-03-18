@@ -15,14 +15,15 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.base.Function;
@@ -101,7 +102,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                             if (v != null && Primitives.isWrapperType(v.getClass())) {
                                 v = "" + v;
                             } else {
-                                v = BasicConfigKey.resolveValue(v, Object.class, entity.getExecutionContext());
+                                v = Tasks.resolveValue(v, Object.class, ((EntityInternal)entity).getExecutionContext());
                                 if (v == null) {
                                 } else if (v instanceof CharSequence) {
                                 } else if (TypeCoercions.isPrimitiveOrBoxer(v.getClass())) {
