@@ -20,8 +20,7 @@ import java.util.concurrent.TimeoutException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.entity.Application;
-import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ApplicationBuilder;
 
 import com.google.common.collect.Lists;
 
@@ -30,9 +29,13 @@ import com.google.common.collect.Lists;
  */
 public class BaseCliIntegrationTest {
 
-    // FIXME this should not be hardcoded; needed to use the local code for Main
+    // TODO does this need to be hard-coded?
     private static final String BROOKLYN_BIN_PATH = "./target/brooklyn-dist/bin/brooklyn";
     private static final String BROOKLYN_CLASSPATH = "./target/test-classes/:./target/classes/";
+
+    // Times in seconds to allow Brooklyn to run and produce output
+    private static final long DELAY = 10l;
+    private static final long TIMEOUT = DELAY + 30l;
 
     private ExecutorService executor;
 
@@ -51,7 +54,7 @@ public class BaseCliIntegrationTest {
         ProcessBuilder pb = new ProcessBuilder();
         pb.environment().remove("BROOKLYN_HOME");
         pb.environment().put("BROOKLYN_CLASSPATH", BROOKLYN_CLASSPATH);
-        pb.command(Lists.asList(BROOKLYN_BIN_PATH, argv).toArray(new String[0]));
+        pb.command(Lists.asList(BROOKLYN_BIN_PATH, argv));
         return pb.start();
     }
 
@@ -71,12 +74,12 @@ public class BaseCliIntegrationTest {
                 out.flush();
             }
 
-            int exitStatus = future.get(10, TimeUnit.SECONDS);
+            int exitStatus = future.get(TIMEOUT, TimeUnit.SECONDS);
 
             // Check error code from process
             assertEquals(exitStatus, expectedExit, "Command returned wrong status");
         } catch (TimeoutException te) {
-            fail("Timed out waiting for process to complete");
+            fail("Timed out waiting for process to complete", te);
         } catch (ExecutionException ee) {
             if (ee.getCause() instanceof AssertionError) {
                 throw ee.getCause();
@@ -88,6 +91,7 @@ public class BaseCliIntegrationTest {
 
     /** A {@link Callable} that encapsulates Brooklyn CLI test logic. */
     public static abstract class BrooklynCliTest implements Callable<Integer> {
+
         private final Process brooklyn;
 
         private String consoleOutput;
@@ -100,7 +104,7 @@ public class BaseCliIntegrationTest {
         @Override
         public Integer call() throws Exception {
             // Wait for initial output
-            Thread.sleep(5000l);
+            Thread.sleep(TimeUnit.SECONDS.toMillis(DELAY));
 
             // Get the console output of running that command
             consoleOutput = convertStreamToString(brooklyn.getInputStream());
@@ -157,10 +161,10 @@ public class BaseCliIntegrationTest {
         }
     };
 
-    /** An empty {@link Application} for testing. */
-    @SuppressWarnings("serial")
-    public static class TestApplication extends AbstractApplication {
-        public TestApplication() {
+    /** An empty application for testing. */
+    public static class TestApplication extends ApplicationBuilder {
+        @Override
+        protected void doBuild() {
             // Empty, for testing
         }
     }

@@ -42,7 +42,7 @@ public class CliIntegrationTest extends BaseCliIntegrationTest {
             public void checkConsole() {
                 assertConsoleOutput("Launching Brooklyn web console management"); // Launch message not output
                 assertNoConsoleOutput("Initiating Jersey application"); // Web console started
-                assertConsoleOutput("Started application TestApplication"); // Application not started
+                assertConsoleOutput("Started application BasicApplicationImpl"); // Application not started
                 assertConsoleOutput("Server started. Press return to stop."); // Server started message not output
                 assertConsoleErrorEmpty();
             }
