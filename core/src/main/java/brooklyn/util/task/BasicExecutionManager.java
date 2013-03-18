@@ -36,6 +36,7 @@ import brooklyn.util.internal.LanguageUtils;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
@@ -235,7 +236,7 @@ public class BasicExecutionManager implements ExecutionManager {
         while (ti.hasNext()) {
             result.addAll(getTasksWithTag(ti.next()));
         }
-        return result;
+        return Collections.unmodifiableSet(result);
     }
 
     @Override
@@ -255,10 +256,10 @@ public class BasicExecutionManager implements ExecutionManager {
                 result.retainAll(getTasksWithTag(tag));
             }
         }
-        return result;
+        return Collections.unmodifiableSet(result);
     }
 
-    public Set<Object> getTaskTags() { return tasksByTag.keySet(); }
+    public Set<Object> getTaskTags() { return Collections.unmodifiableSet(Sets.newLinkedHashSet(tasksByTag.keySet())); }
 
     public Task<?> submit(Runnable r) { return submit(new LinkedHashMap(1), r); }
     public Task<?> submit(Map<?,?> flags, Runnable r) { return submit(flags, new BasicTask(flags, r)); }

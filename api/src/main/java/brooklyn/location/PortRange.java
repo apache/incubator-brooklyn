@@ -21,6 +21,9 @@ public interface PortRange extends Iterable<Integer> {
     boolean isEmpty();
     
     /**
+     * Note: this method is only here for use with "groovy truth". Users are strongly discouraged  
+     * from calling it directly.
+     *  
      * @return {@code !isEmpty()}; i.e. true if there is at least one port in the range; false otherwise
      */
     boolean asBoolean();

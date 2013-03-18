@@ -41,12 +41,12 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
     EntityType getEntityType();
     
     /**
-     * @return the {@link Application} this entity is registered with.
+     * @return the {@link Application} this entity is registered with, or null if not registered.
      */
     Application getApplication();
 
     /**
-     * @return the id of the {@link Application} this entity is registered with.
+     * @return the id of the {@link Application} this entity is registered with, or null if not registered.
      */
     String getApplicationId();
 

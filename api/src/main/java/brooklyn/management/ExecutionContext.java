@@ -15,12 +15,13 @@ import brooklyn.entity.Entity;
  */
 public interface ExecutionContext extends Executor {
     /**
-     * Returns the current {@link Task} being executed by this context.
+     * Returns the current {@link Task} being executed by this context, or null if not currently executing a task.
+     * @deprecated in 0.5, use Tasks.current()
      */
     Task<?> getCurrentTask();
 
     /**
-     * Get the tasks executed through this context.
+     * Get the tasks executed through this context (returning an immutable set).
      */
     Set<Task<?>> getTasks();
 

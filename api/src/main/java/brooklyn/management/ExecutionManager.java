@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
+import brooklyn.entity.Entity;
+
 /** 
  * This class manages the execution of a number of jobs with tags.
  * 
@@ -13,7 +15,7 @@ import java.util.concurrent.ExecutorService;
  * where jobs can be:
  * <ul>
  * <li>Tracked with tags/buckets
- * <li>Be {@link Runnable}s, {@link Callable}s, or {@link Closure}s
+ * <li>Be {@link Runnable}s, {@link Callable}s, or {@link groovy.lang.Closure}s
  * <li>Remembered after completion
  * <li>Treated as {@link Task} instances (see below)
  * <li>Given powerful synchronization capabilities
@@ -44,16 +46,19 @@ public interface ExecutionManager {
     /** returns the task with the given ID, or null if none */ 
     public Task getTask(String id);
     
+    /** returns all tasks with the given tag (immutable) */
     public Set<Task<?>> getTasksWithTag(Object tag);
 
+    /** returns all tasks that have any of the given tags (immutable) */
     public Set<Task<?>> getTasksWithAnyTag(Iterable<?> tags);
 
+    /** returns all tasks that have all of the given tags (immutable) */
     public Set<Task<?>> getTasksWithAllTags(Iterable<?> tags);
 
     /** returns all tags known to this manager (immutable) */
     public Set<Object> getTaskTags();
 
-    /** returns all tasks known to this manager (immutable) */
+//    /** returns all tasks known to this manager (immutable) */
 //    public Set<Task<?>> getAllTasks();
 
     /** see {@link #submit(Map, Task)} */
@@ -89,11 +94,11 @@ public interface ExecutionManager {
      *                      used for associating with contexts, mutex execution, and other purposes
      * <li><em>synchId</em> - A string, or {@link Collection} of strings, representing a category on which an object should own a synch lock 
      * <li><em>synchObj</em> - A string, or {@link Collection} of strings, representing a category on which an object should own a synch lock 
-     * <li><em>newTaskStartCallback</em> - A {@link Closure} that will be invoked just before the task starts if it starts as a result of this call
-     * <li><em>newTaskEndCallback</em> - A {@link Closure} that will be invoked when the task completes if it starts as a result of this call
+     * <li><em>newTaskStartCallback</em> - A {@link groovy.lang.Closure} that will be invoked just before the task starts if it starts as a result of this call
+     * <li><em>newTaskEndCallback</em> - A {@link groovy.lang.Closure} that will be invoked when the task completes if it starts as a result of this call
      * </ul>
-     * Callbacks run in the task's thread, and if the callback is a closure it is passed the task for convenience. The closure can be any of the
-     * following types; either a {@link Closure}, {@link Runnable} or {@link Callable}.
+     * Callbacks run in the task's thread, and if the callback is a {@link groovy.lang.Closure} it is passed the task for convenience. The closure can be any of the
+     * following types; either a {@link groovy.lang.Closure}, {@link Runnable} or {@link Callable}.
      * <p>
      * If a Map is supplied it must be modifiable (currently; may allow immutable maps in future). 
      */
