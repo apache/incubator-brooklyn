@@ -22,7 +22,8 @@ public interface SensorEvent<T> {
     T getValue();
 
     /**
-     * The time this data was published.
+     * The time this data was published, as a UTC time in milliseconds (e.g. as returned
+     * by {@link System#currentTimeMillis()}.
      */
     long getTimestamp();
 }

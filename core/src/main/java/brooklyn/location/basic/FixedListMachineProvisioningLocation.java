@@ -172,7 +172,7 @@ implements MachineProvisioningLocation<T>, Closeable {
                     a = getAvailable();
                 }
                 if (a.isEmpty())
-                    throw new NoMachinesAvailableException(this);
+                    throw new NoMachinesAvailableException("No machines available in "+toString());
             }
             if (desiredMachine != null) {
                 if (a.contains(desiredMachine)) {

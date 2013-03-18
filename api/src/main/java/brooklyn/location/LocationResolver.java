@@ -3,6 +3,9 @@ package brooklyn.location;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+/**
+ * Provides a way of creating location instances of a particular type.
+ */
 public interface LocationResolver {
 
     /** the prefix that this resolver will attend to */

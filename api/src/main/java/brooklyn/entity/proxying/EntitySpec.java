@@ -14,12 +14,12 @@ import brooklyn.policy.Policy;
  * Gives details of an entity to be created. It describes the entity's configuration, and is
  * reusable to create multiple entities with the same configuration.
  * 
- * @author aled
- *
+ * Users who need to implement this are strongly encouraged to extend 
+ * {@link brooklyn.entity.proxying.BasicEntitySpec}.
+ * 
  * @param <T> The type of entity to be created
  * 
- * @see BasicEntitySpec for instantiating this; users who need to implement this are strongly encouraged
- *      to extend BasicEntitySpec.
+ * @author aled
  */
 public interface EntitySpec<T extends Entity> {
 

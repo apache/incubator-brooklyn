@@ -4,6 +4,14 @@ import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.policy.Policy;
 
+/**
+ * Listener to be notified of changes within brooklyn, so that the new state
+ * of the entity/location/policy can be persisted.
+ * 
+ * Users are not expected to implement this class. It is for use by the {@link RebindManager}.
+ * 
+ * @author aled
+ */
 public interface ChangeListener {
 
     public static final ChangeListener NOOP = new ChangeListener() {

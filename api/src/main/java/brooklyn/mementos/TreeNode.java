@@ -5,6 +5,9 @@ import java.util.List;
 /**
  * A simple tree structure, where a node references a parent and children using their ids.
  * 
+ * e.g. could be used to represent the entity hierarchy within mementos, where the 
+ * String is the id of parent/child entities.
+ * 
  * @author aled
  */
 public interface TreeNode {

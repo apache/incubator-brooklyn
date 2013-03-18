@@ -3,6 +3,11 @@ package brooklyn.location;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The registry of the sorts of locations that brooklyn knows about. Given a
+ * {@LocationDefinition} or a {@link String} representation of a spec, this can
+ * be used to create a {@link Location} instance.
+ */
 @SuppressWarnings("rawtypes")
 public interface LocationRegistry {
 

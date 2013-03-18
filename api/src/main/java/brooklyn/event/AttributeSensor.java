@@ -5,5 +5,4 @@ package brooklyn.event;
  */
 public interface AttributeSensor<T> extends Sensor<T> {
     // Marker Interface
-
 }

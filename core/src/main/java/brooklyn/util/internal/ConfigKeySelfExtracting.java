@@ -8,8 +8,7 @@ import brooklyn.management.ExecutionContext;
  * but discouraged for external usage.
  */
 // TODO replace by brooklyn.config.ConfigKey, when we removed the deprecated one
-@SuppressWarnings("deprecation")
-public interface ConfigKeySelfExtracting<T> extends brooklyn.entity.ConfigKey<T> {
+public interface ConfigKeySelfExtracting<T> extends brooklyn.config.ConfigKey<T> {
     /**
      * Extracts the value for this config key from the given map.
      */

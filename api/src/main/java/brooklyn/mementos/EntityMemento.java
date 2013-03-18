@@ -6,13 +6,13 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 
 /**
  * Represents the state of an entity, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
- * @see Entity.getMemento()
- * @see Entity.rebind(BrooklynMemento, String)
+ * @see RebindSupport
  * 
  * @author aled
  */

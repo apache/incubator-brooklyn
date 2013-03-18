@@ -10,7 +10,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 
 /**
- * The mangement interface for subscriptions.
+ * The management interface for subscriptions.
  * 
  * Different implementations will handle entities subscribing and unsubscribing to {@link SensorEvent}s
  * and their delivery.
