@@ -94,24 +94,47 @@ $(document).ready(function() {
 			var thisversion, msg;
 			thisversion = document.location.pathname.split("/")[2];
 			
-			if (!$.cookie('brooklyn_versions') || $.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1){
-				msg = "<p>Careful. This page is for <strong>Brooklyn version "+thisversion+"</strong>, and the content may differ between versions.</p>"
-				msg += "<p><a href = 'http://brooklyncentral.github.com/'>Latest version</a>, "
-				msg += "<a href = 'http://brooklyncentral.github.com/meta/versions.html'>All versions</a>, "
-				msg += "<a href = '#' onclick=\"set_user_version('"+thisversion+"');\">Don't show again</a>. </p>"
+			if (!$.cookie('brooklyn_versions') || 
+			        (($.inArray('ALL', $.cookie('brooklyn_versions').split(",")) === -1) &&
+			        ($.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1)) ){
+			    msg = "";
+			    msg += "<div class='warning_banner_image'><img src='{{ site.url }}/style/icons/warning.png'/></div>";
+				msg += "<p>You are browsing <strong>Brooklyn version "+thisversion+"</strong> archived content, not the main site. "+
+			           "Please confirm that this is the version you expect.</p>";
+				msg += "<p class='warning_banner_buttons'>";
+				msg += "<a href = '#' onclick=\"set_user_version('"+thisversion+"');\">Yes, hide this warning</a>";
+			    msg += "<a href = '/'>No, give me the latest version</a>";
+				msg += "<a href = '/meta/versions.html'>Show all versions</a>";
+				msg += "</p>"
 							
 				$('#page_notes').html(msg);
 				$('#page_notes').fadeIn('slow');
 			}
 		}
 	});
+   	function get_user_versions() {
+   	    return $.cookie("brooklyn_versions") ? $.cookie("brooklyn_versions").split(",") : [];
+   	};
 	function set_user_version(version) {
-		var version_cookie = $.cookie("brooklyn_versions").split(",") || [];
+		var version_cookie = get_user_versions();
 		version_cookie.push(version);
 		$.cookie('brooklyn_versions', version_cookie, { expires: 365, path: '/' });
 		$('#page_notes').fadeOut();
 		event.preventDefault ? event.preventDefault() : event.returnValue = false;
-	}
+	};
+    function set_user_versions_all() {
+        var version_cookie = get_user_versions();
+        version_cookie.push("ALL");
+        $.cookie('brooklyn_versions', version_cookie, { expires: 365, path: '/' });
+        $('#page_notes').fadeOut();
+        event.preventDefault ? event.preventDefault() : event.returnValue = false;
+    };
+    function clear_user_versions() {
+        var version_cookie = [];
+        $.cookie('brooklyn_versions', version_cookie, { expires: 1, path: '/' });
+        $('#page_notes').fadeOut();
+        event.preventDefault ? event.preventDefault() : event.returnValue = false;
+    };
 	
 	
    
