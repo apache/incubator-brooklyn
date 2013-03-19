@@ -49,7 +49,11 @@ public class ActiveMQIntegrationTest {
 
     @AfterMethod(groups = "Integration")
     public void shutdown() {
-        if (app != null) Entities.destroyAll(app);
+        try {
+            if (app != null) Entities.destroyAll(app);
+        } catch (Exception e) {
+            log.warn("Error stopping entities", e);
+        }
     }
 
     /**
