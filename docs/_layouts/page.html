@@ -96,8 +96,8 @@ $(document).ready(function() {
 			
 			if (!$.cookie('brooklyn_versions') || $.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1){
 				msg = "<p>Careful. This page is for <strong>Brooklyn version "+thisversion+"</strong>, and the content may differ between versions.</p>"
-				msg += "<p><a href = '{{ site.url }}'>Latest version</a>, "
-				msg += "<a href = '{{ site.url }}/meta/versions.html'>All versions</a>, "
+				msg += "<p><a href = 'http://brooklyncentral.github.com/'>Latest version</a>, "
+				msg += "<a href = 'http://brooklyncentral.github.com/meta/versions.html'>All versions</a>, "
 				msg += "<a href = '#' onclick=\"set_user_version('"+thisversion+"');\">Don't show again</a>. </p>"
 							
 				$('#page_notes').html(msg);
