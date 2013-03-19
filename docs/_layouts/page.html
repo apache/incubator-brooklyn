@@ -95,10 +95,15 @@ $(document).ready(function() {
 			thisversion = document.location.pathname.split("/")[2];
 			
 			if (!$.cookie('brooklyn_versions') || $.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1){
-				msg = "<p>Careful. This page is for <strong>Brooklyn version "+thisversion+"</strong>, and the content may differ between versions.</p>"
-				msg += "<p><a href = '{{ site.url }}'>Latest version</a>, "
-				msg += "<a href = '{{ site.url }}/meta/versions.html'>All versions</a>, "
-				msg += "<a href = '#' onclick=\"set_user_version('"+thisversion+"');\">Don't show again</a>. </p>"
+			    msg = "";
+			    msg += "<div class='warning_banner_image'><img src='{{ site.url }}/style/icons/warning.png'/></div>";
+				msg += "<p>You are browsing <strong>Brooklyn version "+thisversion+"</strong> archived content, not the main site. "+
+			           "Please confirm that this is the version you expect.</p>";
+				msg += "<p class='warning_banner_buttons'>";
+				msg += "<a href = '#' onclick=\"set_user_version('"+thisversion+"');\">Yes, hide this warning</a>";
+			    msg += "<a href = '/'>No, give me the latest version</a>";
+				msg += "<a href = '/meta/versions.html'>Show all versions</a>";
+				msg += "</p>"
 							
 				$('#page_notes').html(msg);
 				$('#page_notes').fadeIn('slow');
