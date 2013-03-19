@@ -130,6 +130,7 @@ $(document).ready(function() {
     };
     function clear_user_versions() {
         $.removeCookie('brooklyn_versions', { path: '/' });
+        $('#page_notes').fadeIn('slow');
         event.preventDefault ? event.preventDefault() : event.returnValue = false;
     };
 	
