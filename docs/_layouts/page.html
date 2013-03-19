@@ -91,19 +91,18 @@ $(document).ready(function() {
 <!-- page notes -->
    	$(function() {
 		if (document.location.pathname.replace(/^\/([^\/]*).*$/, '$1') === "v"){
-			var thisversion, msg;
-			thisversion = document.location.pathname.split("/")[2];
+			var thisversion = document.location.pathname.split("/")[2],
+				msg = "";
 			
 			if (!$.cookie('brooklyn_versions') || 
 			        (($.inArray('ALL', $.cookie('brooklyn_versions').split(",")) === -1) &&
 			        ($.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1)) ){
-			    msg = "";
 			    msg += "<div class='warning_banner_image'><img src='{{ site.url }}/style/icons/warning.png'/></div>";
-				msg += "<p>You are browsing <strong>Brooklyn version "+thisversion+"</strong> archived content, not the main site. "+
-			           "Please confirm that this is the version you expect.</p>";
+				msg += "<p>This content is for <strong>Brooklyn "+thisversion+"</strong>, and may differ across versions.</p>";
+			    msg += "<p>Are you using version "+thisversion+"?</p>";
 				msg += "<p class='warning_banner_buttons'>";
 				msg += "<a href = '#' onclick=\"set_user_version('"+thisversion+"');\">Yes, hide this warning</a>";
-			    msg += "<a href = '/'>No, give me the latest version</a>";
+			    msg += "<a href = '/'>No, show me the latest version</a>";
 				msg += "<a href = '/meta/versions.html'>Show all versions</a>";
 				msg += "</p>"
 							
@@ -130,12 +129,9 @@ $(document).ready(function() {
         event.preventDefault ? event.preventDefault() : event.returnValue = false;
     };
     function clear_user_versions() {
-        var version_cookie = [];
-        $.cookie('brooklyn_versions', version_cookie, { expires: 1, path: '/' });
-        $('#page_notes').fadeOut();
+        $.removeCookie('brooklyn_versions', { path: '/' });
         event.preventDefault ? event.preventDefault() : event.returnValue = false;
     };
-	
 	
    
 </script>
