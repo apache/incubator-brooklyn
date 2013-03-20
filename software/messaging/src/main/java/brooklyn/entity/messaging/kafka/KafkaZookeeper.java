@@ -35,7 +35,7 @@ public interface KafkaZookeeper extends SoftwareProcess, UsesJmx, Kafka {
     @SetFromFlag("zookeeperPort")
     PortAttributeSensorAndConfigKey ZOOKEEPER_PORT = new PortAttributeSensorAndConfigKey("zookeeper.port", "Zookeeper port", "2181+");
 
-    /** Location of the configuration file template to be copied to the server.*/
+    /** Location of the configuration file template to be copied to the server. */
     @SetFromFlag("zookeeperConfig")
     BasicConfigKey<String> ZOOKEEPER_CONFIG_TEMPLATE = new BasicConfigKey<String>(
             String.class, "kafka.config.zookeeper", "Zookeeper configuration template (in freemarker format)", "classpath://brooklyn/entity/messaging/kafka/zookeeper.properties");

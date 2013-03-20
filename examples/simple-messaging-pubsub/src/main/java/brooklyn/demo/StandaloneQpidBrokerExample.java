@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 /** Qpid Broker Application */
-public class StandaloneBrokerExample extends AbstractApplication {
+public class StandaloneQpidBrokerExample extends AbstractApplication {
 
     public static final String CUSTOM_CONFIG_PATH = "classpath://custom-config.xml";
     public static final String PASSWD_PATH = "classpath://passwd";
@@ -44,7 +44,7 @@ public class StandaloneBrokerExample extends AbstractApplication {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.appSpec(StandaloneBrokerExample.class).displayName("Qpid app"))
+                .application(EntitySpecs.appSpec(StandaloneQpidBrokerExample.class).displayName("Qpid app"))
                 .webconsolePort(port)
                 .location(location)
                 .start();
