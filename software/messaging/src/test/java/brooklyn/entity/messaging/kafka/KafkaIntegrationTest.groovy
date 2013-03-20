@@ -117,8 +117,6 @@ public class KafkaIntegrationTest {
 
         Entities.dumpInfo(cluster);
 
-        Thread.sleep(5000l);
-
         KafkaSupport support = new KafkaSupport(cluster.getZookeeper());
         support.sendMessage("brooklyn", "TEST_MESSAGE")
         List<String> messages = support.getMessage("brooklyn");

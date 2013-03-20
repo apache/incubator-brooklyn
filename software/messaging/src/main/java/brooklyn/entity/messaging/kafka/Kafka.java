@@ -17,7 +17,6 @@ package brooklyn.entity.messaging.kafka;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
