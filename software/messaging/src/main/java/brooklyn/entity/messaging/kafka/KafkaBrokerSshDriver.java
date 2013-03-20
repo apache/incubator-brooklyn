@@ -15,10 +15,8 @@
  */
 package brooklyn.entity.messaging.kafka;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +48,7 @@ public class KafkaBrokerSshDriver extends JavaSoftwareProcessSshDriver implement
     }
 
     @Override
-    protected String getLogFileLocation() { return getRunDir()+"/kafka-log"; }
+    protected String getLogFileLocation() { return getRunDir()+"/console.out"; }
 
     @Override
     public Integer getKafkaPort() { return entity.getAttribute(KafkaBroker.KAFKA_PORT); }
