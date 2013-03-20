@@ -29,6 +29,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -45,8 +46,6 @@ import com.google.common.collect.Sets;
 public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroker, KafkaBroker {
     private static final Logger log = LoggerFactory.getLogger(KafkaBrokerImpl.class);
 
-    private static final AtomicLong brokers = new AtomicLong(0l);
-
     public KafkaBrokerImpl() {
         super();
     }
@@ -62,14 +61,14 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
 
     @Override
     public void postConstruct() {
-        setAttribute(BROKER_ID, brokers.incrementAndGet());
+        setAttribute(BROKER_ID, hashCode());
     }
 
     @Override
     public Integer getKafkaPort() { return getAttribute(KAFKA_PORT); }
 
     @Override
-    public Long getBrokerId() { return getAttribute(BROKER_ID); }
+    public Integer getBrokerId() { return getAttribute(BROKER_ID); }
 
     @Override
     public KafkaZookeeper getZookeeper() { return getConfig(ZOOKEEPER); }

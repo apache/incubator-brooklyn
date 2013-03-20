@@ -46,6 +46,8 @@ import brooklyn.util.internal.TimeExtras
 
 /**
  * Test the operation of the {@link ActiveMQBroker} class.
+ *
+ * TODO test that sensors update.
  */
 public class KafkaIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(KafkaIntegrationTest.class)
@@ -101,20 +103,27 @@ public class KafkaIntegrationTest {
 
     /**
      * Test that we can start a cluster with zookeeper and one broker.
+     *
+     * Connects to the zookeeper controller and tests sending and receiving messages on a topic.
      */
     @Test(groups = "Integration")
     public void testSingleBrokerCluster() {
         KafkaCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(KafkaCluster.class).configure(KafkaCluster.INITIAL_SIZE, 1));
 
         cluster.start([ testLocation ])
-        executeUntilSucceedsWithShutdown(cluster, timeout:600*TimeUnit.SECONDS) {
+        executeUntilSucceeds(timeout:600*TimeUnit.SECONDS) {
             assertTrue cluster.getAttribute(Startable.SERVICE_UP)
-            Entities.dumpInfo(cluster)
         }
-        assertFalse cluster.getAttribute(Startable.SERVICE_UP)
+
+        Entities.dumpInfo(cluster);
+
+        Thread.sleep(5000l);
+
+        KafkaSupport support = new KafkaSupport(cluster.getZookeeper());
+        support.sendMessage("brooklyn", "TEST_MESSAGE")
+        List<String> messages = support.getMessage("brooklyn");
+        assertEquals(messages.size(), 1);
+        assertEquals(messages.get(0), "TEST_MESSAGE");
     }
 
-    // TODO test with API sending messages
-    // TODO test that sensors update
-    // TODO add demo application
 }
