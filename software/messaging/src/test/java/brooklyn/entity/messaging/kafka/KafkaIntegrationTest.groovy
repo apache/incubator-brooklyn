@@ -119,9 +119,8 @@ public class KafkaIntegrationTest {
 
         KafkaSupport support = new KafkaSupport(cluster.getZookeeper());
         support.sendMessage("brooklyn", "TEST_MESSAGE")
-        List<String> messages = support.getMessage("brooklyn");
-        assertEquals(messages.size(), 1);
-        assertEquals(messages.get(0), "TEST_MESSAGE");
+        String message = support.getMessage("brooklyn");
+        assertEquals(message, "TEST_MESSAGE");
     }
 
 }
