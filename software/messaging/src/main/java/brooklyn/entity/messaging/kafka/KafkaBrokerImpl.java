@@ -15,12 +15,15 @@
  */
 package brooklyn.entity.messaging.kafka;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +32,13 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
+import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.util.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
@@ -93,13 +97,29 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
         return ports;
     }
 
+    private ObjectName socketServerStatsMbean = JmxHelper.createObjectName("kafka:type=kafka.SocketServerStats");
     private volatile FunctionFeed functionFeed;
     private volatile JmxFeed jmxFeed;
 
     @Override
-    protected void connectSensors() {
-        String socketServerStatsMbean = "kafka:type=kafka.SocketServerStats";
+    public void waitForServiceUp(long duration, TimeUnit units) {
+        super.waitForServiceUp(duration, units);
 
+        // Wait for the MBean to exist
+        JmxHelper helper = null;
+        try {
+            helper = new JmxHelper(this);
+            helper.connect();
+            helper.assertMBeanExistsEventually(socketServerStatsMbean, units.toMillis(duration));
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            if (helper != null) helper.disconnect();
+        }
+    }
+
+    @Override
+    protected void connectSensors() {
         functionFeed = FunctionFeed.builder()
                 .entity(this)
                 .poll(new FunctionPollConfig<Object, Boolean>(SERVICE_UP)
