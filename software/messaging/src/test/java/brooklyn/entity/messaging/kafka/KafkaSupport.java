@@ -15,13 +15,15 @@
  */
 package brooklyn.entity.messaging.kafka;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Properties;
 
 import kafka.consumer.Consumer;
 import kafka.consumer.ConsumerConfig;
+import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaMessageStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.javaapi.producer.Producer;
@@ -53,20 +55,21 @@ public class KafkaSupport {
         producer.close();
     }
 
-    public List<String> getMessage(String topic) {
+    public String getMessage(String topic) {
         Properties props = new Properties();
         props.put("zk.connect", String.format("%s:%d", zookeeper.getAttribute(Attributes.HOSTNAME), zookeeper.getZookeeperPort()));
         props.put("zk.connectiontimeout.ms", "1000000");
-        props.put("groupid", "test_group");
+        props.put("groupid", "brooklyn");
         ConsumerConfig consumerConfig = new ConsumerConfig(props);
         ConsumerConnector consumer = Consumer.createJavaConsumerConnector(consumerConfig);
         List<KafkaMessageStream<Message>> streams = consumer.createMessageStreams(ImmutableMap.of(topic, 1)).get(topic);
-        List<String> messages = Lists.newArrayList();
-        for (Message msg : Iterables.getOnlyElement(streams)) {
-            assertTrue(msg.isValid());
-            String payload = new String(msg.payload().array());
-            messages.add(payload);
-          }
-        return messages;
+        ConsumerIterator<Message> iterator = Iterables.getOnlyElement(streams).iterator();
+        Message msg = iterator.next();
+        assertTrue(msg.isValid());
+        ByteBuffer buf = msg.payload();
+        byte[] data = new byte[buf.remaining()];
+        buf.get(data);
+        String payload = new String(data);
+        return payload;
     }
 }
