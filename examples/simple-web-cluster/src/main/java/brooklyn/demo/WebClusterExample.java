@@ -9,7 +9,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -41,7 +41,7 @@ public class WebClusterExample extends ApplicationBuilder {
     private ControlledDynamicWebAppCluster web;
     
     protected void doBuild() {
-        nginxController = createChild(BasicEntitySpec.newInstance(NginxController.class)
+        nginxController = createChild(EntitySpecs.spec(NginxController.class)
                 //.configure("domain", "webclusterexample.brooklyn.local")
                 .configure("port", "8000+"));
           
@@ -49,7 +49,7 @@ public class WebClusterExample extends ApplicationBuilder {
                 .displayName("WebApp cluster")
                 .controller(nginxController)
                 .initialSize(1)
-                .memberSpec(BasicEntitySpec.newInstance(JBoss7Server.class)
+                .memberSpec(EntitySpecs.spec(JBoss7Server.class)
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)));
         

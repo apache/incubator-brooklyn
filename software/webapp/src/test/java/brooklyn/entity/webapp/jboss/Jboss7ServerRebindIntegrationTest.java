@@ -20,7 +20,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
@@ -97,7 +97,7 @@ public class Jboss7ServerRebindIntegrationTest {
     @Test(groups = "Integration")
     public void testRebindsToRunningServer() throws Exception {
     	// Start an app-server, and wait for it to be fully up
-        JBoss7Server origServer = origApp.createAndManageChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+        JBoss7Server origServer = origApp.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
                     .configure("war", warUrl.toString()));
         
         origApp.start(ImmutableList.of(localhostProvisioningLocation));

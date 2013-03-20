@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
@@ -74,7 +74,7 @@ public class BrooklynLauncherCliTest {
     public void testStartsAppFromSpec() throws Exception {
         launcher = BrooklynLauncherCli.newInstance()
                 .webconsole(false)
-                .application(ApplicationBuilder.newAppSpec(TestApplication.class))
+                .application(EntitySpecs.appSpec(TestApplication.class))
                 .start();
         
         assertOnlyApp(launcher, TestApplication.class);
@@ -84,7 +84,7 @@ public class BrooklynLauncherCliTest {
     public void testStartsAppFromBuilder() throws Exception {
         launcher = BrooklynLauncherCli.newInstance()
                 .webconsole(false)
-                .application(new ApplicationBuilder(BasicEntitySpec.newInstance(TestApplication.class)) {
+                .application(new ApplicationBuilder(EntitySpecs.spec(TestApplication.class)) {
                         @Override protected void doBuild() {
                         }})
                 .start();
@@ -97,7 +97,7 @@ public class BrooklynLauncherCliTest {
         launcher = BrooklynLauncherCli.newInstance()
                 .webconsole(false)
                 .location("localhost")
-                .application(new ApplicationBuilder(BasicEntitySpec.newInstance(TestApplication.class)) {
+                .application(new ApplicationBuilder(EntitySpecs.spec(TestApplication.class)) {
                         @Override protected void doBuild() {
                         }})
                 .start();

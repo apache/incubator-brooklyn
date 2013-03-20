@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.extras.whirr.core.WhirrCluster;
 import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.util.CommandLineUtil;
@@ -27,7 +27,7 @@ public class WhirrExample extends ApplicationBuilder {
             "whirr.instance-templates=1 noop, 1 elasticsearch"+"\n";
 
     protected void doBuild() {
-        WhirrCluster cluster = createChild(BasicEntitySpec.newInstance(WhirrCluster.class)
+        WhirrCluster cluster = createChild(EntitySpecs.spec(WhirrCluster.class)
                 .configure("recipe", RECIPE));
     }
 

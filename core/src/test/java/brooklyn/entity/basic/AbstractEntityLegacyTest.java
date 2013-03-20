@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
@@ -91,7 +92,7 @@ public class AbstractEntityLegacyTest {
     @Test
     public void testNewStyleCallsConfigureAfterConstruction() throws Exception {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        MyEntity entity = app.createChild(BasicEntitySpec.newInstance(MyEntity.class));
+        MyEntity entity = app.createChild(EntitySpecs.spec(MyEntity.class));
         
         assertEquals(entity.getConfigureCount(), 1);
         assertEquals(entity.getConfigureDuringConstructionCount(), 0);
@@ -122,7 +123,7 @@ public class AbstractEntityLegacyTest {
     @Test
     public void testNewStyleSetsDefaultDisplayName() throws Exception {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        MyEntity entity = app.createChild(BasicEntitySpec.newInstance(MyEntity.class));
+        MyEntity entity = app.createChild(EntitySpecs.spec(MyEntity.class));
         
         assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
     }
@@ -130,7 +131,7 @@ public class AbstractEntityLegacyTest {
     @Test
     public void testNewStyleUsesCustomDisplayName() throws Exception {
         app = ApplicationBuilder.builder(TestApplication.class).displayName("appname").manage();
-        MyEntity entity = app.createChild(BasicEntitySpec.newInstance(MyEntity.class).displayName("entityname"));
+        MyEntity entity = app.createChild(EntitySpecs.spec(MyEntity.class).displayName("entityname"));
         
         assertEquals(app.getDisplayName(), "appname");
         assertEquals(entity.getDisplayName(), "entityname");

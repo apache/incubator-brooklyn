@@ -182,7 +182,7 @@ This means we could run our new entity by changing one line in the
 (although of course ``move`` will throw an exception):
 
 {% highlight java %}
-        createChild(BasicEntitySpec.newInstance(MovableElasticWebAppCluster.class)
+        createChild(EntitySpecs.spec(MovableElasticWebAppCluster.class)
                 .configure("war", WAR_FILE_URL));
 {% endhighlight %}
 

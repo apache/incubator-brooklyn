@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
@@ -44,7 +44,7 @@ public class WhirrHadoopClusterLiveTest {
     public void testAwsRollout() {
         try {
             //final WhirrHadoopCluster hadoop = 
-            app.createAndManageChild(BasicEntitySpec.newInstance(WhirrHadoopCluster.class));
+            app.createAndManageChild(EntitySpecs.spec(WhirrHadoopCluster.class));
             Location loc = ctx.getLocationRegistry().resolve(LOCATION_SPEC);
             app.start(ImmutableList.of(loc));
         } finally {

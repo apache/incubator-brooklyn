@@ -13,7 +13,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.EntityManager;
@@ -42,7 +42,7 @@ public class MembershipTrackingPolicyTest {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
         entityManager = app.getManagementContext().getEntityManager();
         
-        group = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class)
+        group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         policy = new RecordingMembershipTrackingPolicy(MutableMap.of("group", group));
         group.addPolicy(policy);
@@ -58,7 +58,7 @@ public class MembershipTrackingPolicyTest {
     
     private TestEntity createAndManageChildOf(Entity parent) {
         EntityManager entityManager = app.getManagementContext().getEntityManager();
-        TestEntity result = entityManager.createEntity(BasicEntitySpec.newInstance(TestEntity.class).parent(parent));
+        TestEntity result = entityManager.createEntity(EntitySpecs.spec(TestEntity.class).parent(parent));
         Entities.manage(result);
         return result;
     }

@@ -13,7 +13,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -46,13 +46,13 @@ public class EntityTypeTest {
 
     @Test
     public void testGetName() throws Exception {
-        TestEntity entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         assertEquals(entity2.getEntityType().getName(), TestEntity.class.getCanonicalName());
     }
     
     @Test
     public void testGetSimpleName() throws Exception {
-        TestEntity entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         assertEquals(entity2.getEntityType().getSimpleName(), TestEntity.class.getSimpleName());
     }
 

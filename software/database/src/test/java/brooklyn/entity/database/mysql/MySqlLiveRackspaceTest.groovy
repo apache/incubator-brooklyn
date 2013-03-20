@@ -4,15 +4,16 @@ import static java.util.Arrays.asList
 
 import org.testng.annotations.Test
 
+import static java.util.Arrays.asList
+
+import org.testng.annotations.Test
+
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.jclouds.JcloudsLocation
-import org.testng.annotations.Test
-
-import static java.util.Arrays.asList
 
 /**
  * The MySqlLiveTest installs MySQL on various operating systems like Ubuntu, CentOS, Red Hat etc. To make sure that
@@ -65,7 +66,7 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
     }
 
     public void test(String osRegex) throws Exception {
-        MySqlNode mysql = tapp.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode mysql = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptContents", CREATION_SCRIPT));
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();

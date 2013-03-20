@@ -14,7 +14,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.internal.LocalManagementContext;
@@ -42,7 +42,7 @@ public class DownloadProducerFromLocalRepoTest {
         
         loc = new SimulatedLocation();
         app = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
-        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         driver = new MyEntityDriver(entity, loc);
         entitySimpleType = TestEntity.class.getSimpleName();
         

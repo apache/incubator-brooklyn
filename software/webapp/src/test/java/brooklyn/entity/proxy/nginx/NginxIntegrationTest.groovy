@@ -15,8 +15,7 @@ import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.group.DynamicCluster
-import brooklyn.entity.group.DynamicClusterImpl
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
@@ -53,11 +52,11 @@ public class NginxIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testWhenNoServersReturns404() {
-        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+        serverPool = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
                 .configure(DynamicCluster.FACTORY, { throw new UnsupportedOperationException(); })
                 .configure("initialSize", 0));
         
-        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
                 .configure("serverPool", serverPool)
                 .configure("domain", "localhost"));
         
@@ -72,12 +71,12 @@ public class NginxIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testCanStartupAndShutdown() {
-        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+        serverPool = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
-        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
                 .configure("serverPool", serverPool)
                 .configure("domain", "localhost")
 	            .configure("portNumberSensor", WebAppService.HTTP_PORT));
@@ -113,12 +112,12 @@ public class NginxIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testDomainless() {
-        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+        serverPool = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
-        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
                 .configure("serverPool", serverPool)
                 .configure("domain", "localhost")
                 .configure("portNumberSensor", WebAppService.HTTP_PORT));
@@ -150,16 +149,16 @@ public class NginxIntegrationTest {
     
     @Test(groups = "Integration")
     public void testTwoNginxesGetDifferentPorts() {
-        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
+        serverPool = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
                 .configure(DynamicCluster.FACTORY, { throw new UnsupportedOperationException(); })
                 .configure("initialSize", 0));
         
-        NginxController nginx1 = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+        NginxController nginx1 = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
                 .configure("serverPool", serverPool)
                 .configure("domain", "localhost")
                 .configure("port", "14000+"));
         
-        NginxController nginx2 = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+        NginxController nginx2 = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
                 .configure("serverPool", serverPool)
                 .configure("domain", "localhost")
                 .configure("port", "14000+"));
@@ -186,12 +185,12 @@ public class NginxIntegrationTest {
     // FIXME test disabled -- reload isn't a problem, but #365 is
     @Test(enabled = false, groups = "Integration")
     public void testServiceContinuity() {
-        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+        serverPool = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
-        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
                 .configure("serverPool", serverPool));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])
@@ -245,12 +244,12 @@ public class NginxIntegrationTest {
      */
     @Test(enabled=false, groups = "Integration")
     public void testContinuityNginxAndJboss() {
-        serverPool = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(JBoss7Server.class))
+        serverPool = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class))
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
         
-        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
                 .configure("serverPool", serverPool));
         
         app.start([ new LocalhostMachineProvisioningLocation() ])

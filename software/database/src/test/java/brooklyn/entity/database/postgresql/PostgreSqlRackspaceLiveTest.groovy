@@ -1,14 +1,15 @@
 package brooklyn.entity.database.postgresql
 
+import static java.util.Arrays.asList
+
+import org.testng.annotations.Test
+
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.jclouds.JcloudsLocation
-import org.testng.annotations.Test
-
-import static java.util.Arrays.asList
 
 /**
  * The PostgreSqlRackspaceLiveTest installs Postgresql on various operating systems like Ubuntu, CentOS, Red Hat etc. To
@@ -61,7 +62,7 @@ public class PostgreSqlRackspaceLiveTest extends PostgreSqlIntegrationTest {
     }
     
     public void test(String osRegex) throws Exception {
-        PostgreSqlNode psql = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+        PostgreSqlNode psql = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
                 .configure("creationScriptContents", CREATION_SCRIPT));
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();

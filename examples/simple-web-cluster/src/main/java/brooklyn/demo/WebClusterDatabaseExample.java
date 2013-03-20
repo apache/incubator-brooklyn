@@ -14,7 +14,7 @@ import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -48,10 +48,10 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
             "appservers.count", "Number of app servers deployed");
 
     protected void doBuild() {
-        MySqlNode mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode mysql = createChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptUrl", DB_SETUP_SQL_URL));
         
-        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster web = createChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                 .configure(JavaWebAppService.ROOT_WAR, WAR_PATH)
                 .configure(javaSysProp("brooklyn.example.db.url"), 

@@ -7,14 +7,14 @@ import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.trait.Startable
 import brooklyn.location.jclouds.JcloudsLocation
 import brooklyn.util.MutableMap
@@ -50,7 +50,7 @@ public class CassandraNodeLiveTest extends AbstractCassandraNodeTest {
         testLocation = (JcloudsLocation) app.getManagementContext().getLocationRegistry()
                 .resolve(provider + (Strings.isNonEmpty(region) ? ":" + region : ""), properties)
 
-        cassandra = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraNode.class)
+        cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class)
                 .configure("thriftPort", "9876+")
                 .configure("clusterName", "TestCluster"));
         app.start(ImmutableList.of(testLocation))

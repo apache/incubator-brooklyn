@@ -13,7 +13,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.trait.Startable
 
 import com.google.common.collect.ImmutableList
@@ -31,7 +31,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        cassandra = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraNode.class));
+        cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class));
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceedsWithShutdown(cassandra, timeout:2*TimeUnit.MINUTES) {
             assertTrue cassandra.getAttribute(Startable.SERVICE_UP)
@@ -44,7 +44,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithCustomJmx() {
-        cassandra = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraNode.class)
+        cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class)
                 .configure("jmxPort", "11099+")
                 .configure("rmiServerPort", "19001+"));
         app.start(ImmutableList.of(testLocation))
@@ -59,7 +59,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void testConnection() throws Exception {
-        cassandra = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraNode.class)
+        cassandra = app.createAndManageChild(EntitySpecs.spec(CassandraNode.class)
                 .configure("thriftPort", "9876+"));
         app.start(ImmutableList.of(testLocation))
         executeUntilSucceeds(timeout:2*TimeUnit.MINUTES) {

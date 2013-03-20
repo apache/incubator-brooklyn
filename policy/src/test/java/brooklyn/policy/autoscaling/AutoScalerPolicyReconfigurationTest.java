@@ -7,7 +7,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
@@ -25,7 +25,7 @@ public class AutoScalerPolicyReconfigurationTest {
     @BeforeMethod()
     public void before() {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        tc = app.createAndManageChild(BasicEntitySpec.newInstance(TestCluster.class)
+        tc = app.createAndManageChild(EntitySpecs.spec(TestCluster.class)
                 .configure("initialSize", 1));
     }
     

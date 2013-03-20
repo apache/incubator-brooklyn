@@ -44,7 +44,7 @@ public class ApplicationBuilderBuildingTest {
     
     @Test
     public void testUsesSuppliedApplicationClass() {
-        app = ApplicationBuilder.builder(BasicEntitySpec.newInstance(TestApplication.class)).manage();
+        app = ApplicationBuilder.builder(EntitySpecs.spec(TestApplication.class)).manage();
         
         assertEquals(app.getEntityType().getName(), TestApplication.class.getName());
     }
@@ -102,7 +102,7 @@ public class ApplicationBuilderBuildingTest {
 
     @Test
     public void testCreateAppSpecUsingInterface() {
-        BasicEntitySpec<StartableApplication, ?> spec = ApplicationBuilder.newAppSpec(TestApplication.class);
+        BasicEntitySpec<StartableApplication, ?> spec = EntitySpecs.appSpec(TestApplication.class);
         app = ApplicationBuilder.builder(spec).manage();
         
         assertEquals(app.getEntityType().getName(), TestApplication.class.getCanonicalName());
@@ -110,7 +110,7 @@ public class ApplicationBuilderBuildingTest {
     
     @Test
     public void testCreatesAppSpecUsingImplClass() {
-        BasicEntitySpec<StartableApplication, ?> spec = ApplicationBuilder.newAppSpec(MyApplicationImpl.class);
+        BasicEntitySpec<StartableApplication, ?> spec = EntitySpecs.appSpec(MyApplicationImpl.class);
         app = ApplicationBuilder.builder(spec).manage();
         
         assertTrue(app instanceof EntityProxy);

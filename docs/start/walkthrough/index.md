@@ -21,8 +21,8 @@ for management:
 {% highlight java %}
 public class WebClusterDatabaseExample extends ApplicationBuilder {
     protected void doBuild() {
-        MySqlNode mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class));
-        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class));
+        MySqlNode mysql = createChild(EntitySpecs.spec(MySqlNode.class));
+        ControlledDynamicWebAppCluster web = createChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class));
     }
 }
 {% endhighlight %}
@@ -77,11 +77,11 @@ block "at the last moment" when the value is needed
 {% highlight java %}
 public class WebClusterDatabaseExample extends ApplicationBuilder {
     protected void doBuild() {
-        MySqlNode mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode mysql = createChild(EntitySpecs.spec(MySqlNode.class)
                 .configure(MySqlNode.CREATION_SCRIPT_URL, "classpath://visitors-database-setup.sql"));
         
-        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
-                .configure("memberSpec", BasicEntitySpec.newInstance(JBoss7Server.class)
+        ControlledDynamicWebAppCluster web = createChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
+                .configure("memberSpec", EntitySpecs.spec(JBoss7Server.class)
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)
                         .configure(javaSysProp("brooklyn.example.db.url"), 

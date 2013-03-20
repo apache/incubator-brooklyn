@@ -45,7 +45,7 @@ public class ApplicationBuilderOverridingTest {
     
     @Test
     public void testUsesSuppliedApplicationClass() {
-        app = new ApplicationBuilder(BasicEntitySpec.newInstance(TestApplication.class)) {
+        app = new ApplicationBuilder(EntitySpecs.spec(TestApplication.class)) {
             @Override public void doBuild() {}
         }.manage();
         

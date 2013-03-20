@@ -9,7 +9,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.AttributeSensor
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation
@@ -49,7 +49,7 @@ class BrooklynMetricsTest {
     
     @Test
     public void testBrooklynMetricsIncremented() {
-        TestEntity e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity e = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         app.start([loc])
 
         executeUntilSucceeds(timeout:TIMEOUT_MS) {

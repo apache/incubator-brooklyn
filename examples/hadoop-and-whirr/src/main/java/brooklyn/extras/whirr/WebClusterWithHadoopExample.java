@@ -23,7 +23,7 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
@@ -77,7 +77,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
     public void postConstruct() {
         StringConfigMap config = getManagementContext().getConfig();
     
-        hadoopCluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(WhirrHadoopCluster.class)
+        hadoopCluster = getEntityManager().createEntity(EntitySpecs.spec(WhirrHadoopCluster.class)
                 .parent(this)
                 .configure("size", 2)
                 .configure("memory", 2048)
@@ -90,7 +90,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
         hadoopCluster.addRecipeLine("whirr.client-cidrs=0.0.0.0/0");
         hadoopCluster.addRecipeLine("whirr.firewall-rules=8020,8021,50010");
     
-        webCluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        webCluster = getEntityManager().createEntity(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .parent(this)
                 .configure("war", WAR_PATH)
                 .policy(AutoScalerPolicy.builder()
@@ -99,7 +99,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
                         .metricRange(10, 100)
                         .build()));
         
-        webVms = getEntityManager().createEntity(BasicEntitySpec.newInstance(DynamicGroup.class)
+        webVms = getEntityManager().createEntity(EntitySpecs.spec(DynamicGroup.class)
                 .parent(this)
                 .displayName("Web VMs")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(JBoss7Server.class)));
@@ -195,7 +195,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
         String location = CommandLineUtil.getCommandLineOption(args, "--location", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
         BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
-                .application(BasicEntitySpec.newInstance(StartableApplication.class)
+                .application(EntitySpecs.spec(StartableApplication.class)
                         .displayName("Brooklyn Global Web Fabric with Hadoop Example")
                         .impl(WebClusterWithHadoopExample.class))
                 .webconsolePort(port)

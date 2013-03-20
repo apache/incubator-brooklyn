@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -97,7 +97,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     
     @Test(groups = "Integration")
     public void testRebindsToRunningCluster() throws Exception {
-        DynamicWebAppCluster origCluster = origApp.createAndManageChild(BasicEntitySpec.newInstance(DynamicWebAppCluster.class)
+        DynamicWebAppCluster origCluster = origApp.createAndManageChild(EntitySpecs.spec(DynamicWebAppCluster.class)
                 .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
 				.configure("initialSize", 1));
     	

@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -30,7 +30,7 @@ public class SingleWebServerExample extends ApplicationBuilder {
 
     @Override
     protected void doBuild() {
-        createChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+        createChild(EntitySpecs.spec(JBoss7Server.class)
                 .configure("war", WAR_PATH)
                 .configure("httpPort", 8080));
     }
@@ -49,7 +49,7 @@ public class SingleWebServerExample extends ApplicationBuilder {
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
         StartableApplication app = ApplicationBuilder.builder()
-                .child(BasicEntitySpec.newInstance(JBoss7Server.class)
+                .child(EntitySpecs.spec(JBoss7Server.class)
                         .configure("war", WAR_PATH)
                         .configure("httpPort", 8080))
                 .manage();

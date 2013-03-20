@@ -1,9 +1,8 @@
 package brooklyn.entity.database.mysql
 
-import brooklyn.util.MutableMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.Assert;
+import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -11,9 +10,10 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
+import brooklyn.util.MutableMap
 import brooklyn.util.text.Strings
 
 /**
@@ -73,7 +73,7 @@ INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vo
     @Test(groups = ["Integration"])
     public void test_localhost() throws Exception {
         String dataDir = "/tmp/mysql-data-" + Strings.makeRandomId(8);
-        MySqlNode mysql = tapp.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode mysql = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
                 .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.of("skip-name-resolve",""))
                 .configure("creationScriptContents", CREATION_SCRIPT)
                 .configure("dataDir", dataDir));

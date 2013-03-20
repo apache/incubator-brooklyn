@@ -22,7 +22,7 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.WrappingEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
@@ -343,7 +343,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     protected Entity createNode(Map flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
-            EntitySpec<?> wrappingEntitySpec = WrappingEntitySpec.newInstance(memberSpec).configure(flags).parent(this);
+            EntitySpec<?> wrappingEntitySpec = EntitySpecs.wrapSpec(memberSpec).configure(flags).parent(this);
             return getEntityManager().createEntity(wrappingEntitySpec);
         }
         

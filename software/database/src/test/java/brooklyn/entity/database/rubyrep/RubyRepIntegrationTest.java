@@ -1,5 +1,16 @@
 package brooklyn.entity.database.rubyrep;
 
+import static org.testng.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatabaseNode;
@@ -8,20 +19,10 @@ import brooklyn.entity.database.mysql.MySqlIntegrationTest;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import brooklyn.entity.database.postgresql.PostgreSqlNode;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.entity.TestApplication;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.util.Arrays;
-import java.util.List;
-
-import static org.testng.Assert.assertEquals;
 
 public class RubyRepIntegrationTest {
 
@@ -41,11 +42,11 @@ public class RubyRepIntegrationTest {
 
     @Test(groups = "Integration")
     public void test_localhost_mysql() throws Exception {
-        MySqlNode db1 = tapp.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode db1 = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", "9111"));
 
-        MySqlNode db2 = tapp.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode db2 = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", "9112"));
 
@@ -62,7 +63,7 @@ public class RubyRepIntegrationTest {
         String createTwoDbsScript = PostgreSqlIntegrationTest.CREATION_SCRIPT +
                 PostgreSqlIntegrationTest.CREATION_SCRIPT.replaceAll("CREATE USER.*", "").replaceAll(" feedback", " feedback1");
         
-        PostgreSqlNode db1 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+        PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
                 .configure("creationScriptContents", createTwoDbsScript)
                 .configure("port", "9113"));
 
@@ -72,11 +73,11 @@ public class RubyRepIntegrationTest {
 
     @Test(enabled = false, groups = "Integration") // TODO this doesn't appear to be supported by RubyRep
     public void test_localhost_postgres_mysql() throws Exception {
-        PostgreSqlNode db1 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+        PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", "9115"));
 
-        MySqlNode db2 = tapp.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode db2 = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptContents", MySqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", "9116"));
 
@@ -93,7 +94,7 @@ public class RubyRepIntegrationTest {
      * Configures rubyrep to connect to the two databases and starts the app
      */
     public static void startInLocation(TestApplication tapp, DatabaseNode db1, String dbName1, DatabaseNode db2, String dbName2, Location... locations) throws Exception {
-        tapp.createAndManageChild(BasicEntitySpec.newInstance(RubyRepNode.class)
+        tapp.createAndManageChild(EntitySpecs.spec(RubyRepNode.class)
                 .configure("leftDatabase", db1)
                 .configure("rightDatabase", db2)
                 .configure("leftUsername", "sqluser")

@@ -4,7 +4,7 @@ import java.util.List;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.launcher.BrooklynLauncherCli;
 import brooklyn.util.CommandLineUtil;
 
@@ -17,7 +17,7 @@ public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
 
     @Override
     protected void doBuild() {
-        createChild(BasicEntitySpec.newInstance(MovableElasticWebAppCluster.class)
+        createChild(EntitySpecs.spec(MovableElasticWebAppCluster.class)
                 .configure("war", WAR_FILE_URL));
     }
     

@@ -29,7 +29,7 @@ public class SingleWebServerExample extends ApplicationBuilder {
 
     @Override
     protected void doBuild() {
-        createChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+        createChild(EntitySpecs.spec(JBoss7Server.class)
                 .configure("war", WAR_PATH)
                 .configure("httpPort", 8080));
     }
@@ -85,11 +85,11 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
     public static final String DB_PASSWORD = "br00k11n";
     
     protected void doBuild() {
-        MySqlNode mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode mysql = createChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptUrl", DB_SETUP_SQL_URL));
         
-        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
-                .configure("memberSpec", BasicEntitySpec.newInstance(JBoss7Server.class)
+        ControlledDynamicWebAppCluster web = createChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
+                .configure("memberSpec", EntitySpecs.spec(JBoss7Server.class)
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)
                         .configure(javaSysProp("brooklyn.example.db.url"), 

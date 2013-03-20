@@ -5,7 +5,7 @@ import org.testng.annotations.Test
 
 import brooklyn.enricher.basic.SensorPropagatingEnricher
 import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.test.TestUtils
@@ -17,7 +17,7 @@ class SensorPropagatingEnricherTest {
     @Test
     public void testPropagation() {
         TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage();
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         app.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(entity, TestEntity.SEQUENCE)) 
 

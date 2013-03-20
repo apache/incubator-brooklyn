@@ -4,7 +4,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
@@ -13,7 +13,7 @@ public class PostgreSqlEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        PostgreSqlNode psql = app.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+        PostgreSqlNode psql = app.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT));
 
         app.start(ImmutableList.of(loc));

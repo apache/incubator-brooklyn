@@ -17,7 +17,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -35,7 +35,6 @@ import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.policy.autoscaling.MaxPoolSizeReachedEvent;
 import brooklyn.util.CommandLineUtil;
 
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -68,10 +67,10 @@ public class WebClusterDatabaseOpenLoopExample extends ApplicationBuilder {
             MaxPoolSizeReachedEvent.class, "cluster.maxPoolSizeReached", "");
 
     protected void doBuild() {
-        MySqlNode mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode mysql = createChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptUrl", DB_SETUP_SQL_URL));
         
-        ControlledDynamicWebAppCluster web = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster web = createChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                 .configure(JavaWebAppService.ROOT_WAR, WAR_PATH)
                 .configure(javaSysProp("brooklyn.example.db.url"), 
