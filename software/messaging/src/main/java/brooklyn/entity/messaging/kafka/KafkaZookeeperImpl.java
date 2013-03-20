@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.messaging.qpid.QpidBroker;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -38,7 +37,6 @@ import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Sets;

@@ -44,7 +44,7 @@ public class KafkaZookeeperSshDriver extends JavaSoftwareProcessSshDriver implem
     }
 
     @Override
-    protected String getLogFileLocation() { return getRunDir()+"/kafka-log"; }
+    protected String getLogFileLocation() { return getRunDir()+"/console.out"; }
 
     @Override
     public Integer getZookeeperPort() { return entity.getAttribute(KafkaZookeeper.ZOOKEEPER_PORT); }
