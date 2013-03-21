@@ -461,7 +461,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     /**
-     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
+     * Adds the given entity as a child of this parent <em>and</em> sets this entity as the parent of the child;
      * returns argument passed in, for convenience.
      */
     @Override
@@ -478,7 +478,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
         return child
     }
-    
+
     @Override
     @Deprecated // see addChild(Entity)
     public Entity addOwnedChild(Entity child) {

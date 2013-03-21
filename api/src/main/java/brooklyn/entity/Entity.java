@@ -84,10 +84,12 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
     /** 
      * Add a child {@link Entity}, and set this entity as its parent,
      * returning the added child.
+     * 
+     * TODO Signature will change to {@code <T extends Entity> T addChild(T child)}, but
+     * that currently breaks groovy AbstractEntity subclasses sometimes so deferring that
+     * until (hopefully) the next release.
      */
     Entity addChild(Entity child);
-    // would be nice to use the following signature, but it breaks groovy AE subclasses, sometimes
-//    <T extends Entity> T addChild(T child);
     
     /** 
      * Removes the specified child {@link Entity}; its parent will be set to null.

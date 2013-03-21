@@ -48,7 +48,10 @@ public class FederatingManagementContext extends AbstractManagementContext {
         new FederatingManagementContext().onApplicationStart(null);
     }
     
-
+    @Override
+    protected void manageIfNecessary(Entity entity, Object context) {
+        throw new UnsupportedOperationException(); // FIXME Code rot
+    }
     
     @Override
     public void registerApplication(Application app) {
