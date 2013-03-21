@@ -33,7 +33,7 @@ public class CouchDBNodeIntegrationTest extends AbstractCouchDBNodeTest {
     /**
      * Test that a node starts and sets SERVICE_UP correctly.
      */
-    @Test(groups = "Integration")
+    @Test(groups = {"Integration", "WIP"})
     public void canStartupAndShutdown() {
         couchdb = app.createAndManageChild(EntitySpecs.spec(CouchDBNode.class)
                 .configure("httpPort", "8000+"));
@@ -49,7 +49,7 @@ public class CouchDBNodeIntegrationTest extends AbstractCouchDBNodeTest {
     /**
      * Test that a node can be used with jcouchdb client.
      */
-    @Test(groups = "Integration")
+    @Test(groups = {"Integration", "WIP"})
     public void testConnection() throws Exception {
         couchdb = app.createAndManageChild(EntitySpecs.spec(CouchDBNode.class)
                 .configure("httpPort", "8000+"));
