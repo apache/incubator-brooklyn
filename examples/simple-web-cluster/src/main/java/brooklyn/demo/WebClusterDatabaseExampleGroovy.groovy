@@ -39,10 +39,10 @@ public class WebClusterDatabaseExampleGroovy extends ApplicationBuilder {
     public static final String DB_PASSWORD = "br00k11n";
     
     protected void doBuild() {
-        MySqlNode mysql = createChild(MySqlNode,
+        MySqlNode mysql = addChild(MySqlNode,
                 creationScriptUrl: DB_SETUP_SQL_URL);
         
-        ControlledDynamicWebAppCluster web = createChild(ControlledDynamicWebAppCluster,
+        ControlledDynamicWebAppCluster web = addChild(ControlledDynamicWebAppCluster,
                 war: WAR_PATH,
                 httpPort: "8080+",
                 (javaSysProp("brooklyn.example.db.url")): 

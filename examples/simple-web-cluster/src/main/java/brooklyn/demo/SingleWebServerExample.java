@@ -30,7 +30,7 @@ public class SingleWebServerExample extends ApplicationBuilder {
 
     @Override
     protected void doBuild() {
-        createChild(EntitySpecs.spec(JBoss7Server.class)
+        addChild(EntitySpecs.spec(JBoss7Server.class)
                 .configure("war", WAR_PATH)
                 .configure("httpPort", 8080));
     }

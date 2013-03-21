@@ -1,11 +1,13 @@
 package brooklyn.example.cloudfoundry
 
+import org.jclouds.cloudstack.options.AddClusterOptions;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Effector
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.trait.Startable
@@ -13,6 +15,7 @@ import brooklyn.entity.trait.StartableMethods
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.location.Location
 import brooklyn.location.basic.LocationRegistry
+import brooklyn.management.EntityManager
 import brooklyn.util.task.Tasks
 
 import com.google.common.collect.Iterables
@@ -24,7 +27,10 @@ public class MovableElasticWebAppClusterImpl extends AbstractEntity implements M
     public MovableElasticWebAppClusterImpl() {
     }
     
-    @Deprecated // use EntityManager.createEntity() or ApplicationBuilder.createChild()
+    /**
+     * @deprecated since 0.5; use {@link EntityManager#createEntity(EntitySpec) or {@link ApplicationBuilder#addChild(EntitySpec)}
+     */
+    @Deprecated
     public MovableElasticWebAppClusterImpl(Map flags, Entity parent) {
         super(flags, parent);
     }

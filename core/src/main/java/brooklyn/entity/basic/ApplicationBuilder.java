@@ -36,8 +36,8 @@ import com.google.common.collect.Lists;
  * <code>
  *   app = new ApplicationBuilder() {
  *       @Override public void doBuild() {
- *           MySqlNode db = createChild(EntitySpecs.spec(MySqlNode.class)));
- *           JBoss7Server as = createChild(EntitySpecs.spec(JBoss7Server.class)
+ *           MySqlNode db = addChild(EntitySpecs.spec(MySqlNode.class)));
+ *           JBoss7Server as = addChild(EntitySpecs.spec(JBoss7Server.class)
  *                   .configure(HTTP_PORT, "8080+")
  *                   .configure(javaSysProp("brooklyn.example.db.url"), attributeWhenReady(db, MySqlNode.MYSQL_URL));
  *       }
@@ -204,12 +204,27 @@ public abstract class ApplicationBuilder {
         return this;
     }
     
+    /**
+     * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2); use {@link #addChild(EntitySpec)}, 
+     *             for consistency with {@link AbstractEntity#addChild(EntitySpec)}.
+     */
     protected final <T extends Entity> T createChild(EntitySpec<T> spec) {
+        return addChild(spec);
+    }
+    
+    /**
+     * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2); use {@link #addChild(Map, Class)}
+     */
+    protected final <T extends Entity> T createChild(Map<?,?> config, Class<T> type) {
+        return addChild(config, type);
+    }
+    
+    protected final <T extends Entity> T addChild(EntitySpec<T> spec) {
         checkNotManaged();
         return addChild(createEntity(spec));
     }
     
-    protected final <T extends Entity> T createChild(Map<?,?> config, Class<T> type) {
+    protected final <T extends Entity> T addChild(Map<?,?> config, Class<T> type) {
         checkNotManaged();
         EntitySpec<T> spec = EntitySpecs.spec(type).configure(config);
         return addChild(createEntity(spec));

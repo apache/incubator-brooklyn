@@ -43,14 +43,14 @@ public class GlobalWebFabricExample extends ApplicationBuilder {
     protected void doBuild() {
         StringConfigMap config = getManagementContext().getConfig();
         
-        GeoscalingDnsService geoDns = createChild(EntitySpecs.spec(GeoscalingDnsService.class)
+        GeoscalingDnsService geoDns = addChild(EntitySpecs.spec(GeoscalingDnsService.class)
                 .displayName("GeoScaling DNS")
                 .configure("username", checkNotNull(config.getFirst("brooklyn.geoscaling.username"), "username"))
                 .configure("password", checkNotNull(config.getFirst("brooklyn.geoscaling.password"), "password"))
                 .configure("primaryDomainName", checkNotNull(config.getFirst("brooklyn.geoscaling.primaryDomain"), "primaryDomain")) 
                 .configure("smartSubdomainName", "brooklyn"));
         
-        DynamicFabric webFabric = createChild(EntitySpecs.spec(DynamicFabric.class)
+        DynamicFabric webFabric = addChild(EntitySpecs.spec(DynamicFabric.class)
                 .displayName("Web Fabric")
                 .configure(DynamicFabric.FACTORY, new ElasticJavaWebAppService.Factory())
                 

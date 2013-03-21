@@ -48,10 +48,10 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
             "appservers.count", "Number of app servers deployed");
 
     protected void doBuild() {
-        MySqlNode mysql = createChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptUrl", DB_SETUP_SQL_URL));
         
-        ControlledDynamicWebAppCluster web = createChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster web = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                 .configure(JavaWebAppService.ROOT_WAR, WAR_PATH)
                 .configure(javaSysProp("brooklyn.example.db.url"), 

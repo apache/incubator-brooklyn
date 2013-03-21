@@ -13,6 +13,6 @@ public class RestMockAppBuilder extends ApplicationBuilder {
     
     @Override
     protected void doBuild() {
-        createChild(EntitySpecs.spec(Entity.class).impl(RestMockSimpleEntity.class).displayName("child1"));
+        addChild(EntitySpecs.spec(Entity.class).impl(RestMockSimpleEntity.class).displayName("child1"));
     }
 }

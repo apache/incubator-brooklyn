@@ -2,7 +2,7 @@
 public class TomcatFabricApp extends ApplicationBuilder {
     @Override
     protected void doBuild() {
-        createChild(EntitySpecs.spec(DynamicFabric.class)
+        addChild(EntitySpecs.spec(DynamicFabric.class)
                 .configure("displayName", "WebFabric")
                 .configure("displayNamePrefix", "")
                 .configure("displayNameSuffix", " web cluster")
