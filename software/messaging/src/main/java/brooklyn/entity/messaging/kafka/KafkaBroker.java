@@ -15,6 +15,7 @@
  */
 package brooklyn.entity.messaging.kafka;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
@@ -35,31 +36,31 @@ public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Ka
     public static final ConfigKey<Integer> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
 
     @SetFromFlag("version")
-    BasicConfigKey<String> SUGGESTED_VERSION = Kafka.SUGGESTED_VERSION;
+    ConfigKey<String> SUGGESTED_VERSION = Kafka.SUGGESTED_VERSION;
 
     @SetFromFlag("kafkaPort")
     PortAttributeSensorAndConfigKey KAFKA_PORT = new PortAttributeSensorAndConfigKey("kafka.port", "Kafka port", "9092+");
 
     /** Location of the configuration file template to be copied to the server.*/
     @SetFromFlag("serverConfig")
-    BasicConfigKey<String> SERVER_CONFIG_TEMPLATE = new BasicConfigKey<String>(
-            String.class, "kafka.config.server", "Server configuration template (in freemarker format)", "classpath://brooklyn/entity/messaging/kafka/server.properties");
+    ConfigKey<String> SERVER_CONFIG_TEMPLATE = new BasicConfigKey<String>(
+            String.class, "kafka.broker.configTemplate", "Server configuration template (in freemarker format)", "classpath://brooklyn/entity/messaging/kafka/server.properties");
 
     @SetFromFlag("zookeeper")
-    BasicConfigKey<KafkaZookeeper> ZOOKEEPER = new BasicConfigKey<KafkaZookeeper>(KafkaZookeeper.class, "kafka.broker.zookeeper", "Kafka zookeeper entity");
+    ConfigKey<KafkaZookeeper> ZOOKEEPER = new BasicConfigKey<KafkaZookeeper>(KafkaZookeeper.class, "kafka.broker.zookeeper", "Kafka zookeeper entity");
 
     AttributeSensor<Integer> BROKER_ID = new BasicAttributeSensor<Integer>(Integer.class, "kafka.broker.id", "Kafka unique broker ID");
 
-    BasicAttributeSensor<Long> FETCH_REQUEST_COUNT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.fetch.total", "Fetch request count");
-    BasicAttributeSensor<Long> TOTAL_FETCH_TIME = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.fetch.time.total", "Total fetch request processing time (millis)");
-    BasicAttributeSensor<Double> MAX_FETCH_TIME = new BasicAttributeSensor<Double>(Double.class, "kafka.broker.fetch.time.max", "Max fetch request processing time (millis)");
+    AttributeSensor<Long> FETCH_REQUEST_COUNT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.fetch.total", "Fetch request count");
+    AttributeSensor<Long> TOTAL_FETCH_TIME = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.fetch.time.total", "Total fetch request processing time (millis)");
+    AttributeSensor<Double> MAX_FETCH_TIME = new BasicAttributeSensor<Double>(Double.class, "kafka.broker.fetch.time.max", "Max fetch request processing time (millis)");
 
-    BasicAttributeSensor<Long> PRODUCE_REQUEST_COUNT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.produce.total", "Produce request count");
-    BasicAttributeSensor<Long> TOTAL_PRODUCE_TIME = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.produce.time.total", "Total produce request processing time (millis)");
-    BasicAttributeSensor<Double> MAX_PRODUCE_TIME = new BasicAttributeSensor<Double>(Double.class, "kafka.broker.produce.time.max", "Max produce request processing time (millis)");
+    AttributeSensor<Long> PRODUCE_REQUEST_COUNT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.produce.total", "Produce request count");
+    AttributeSensor<Long> TOTAL_PRODUCE_TIME = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.produce.time.total", "Total produce request processing time (millis)");
+    AttributeSensor<Double> MAX_PRODUCE_TIME = new BasicAttributeSensor<Double>(Double.class, "kafka.broker.produce.time.max", "Max produce request processing time (millis)");
 
-    BasicAttributeSensor<Long> BYTES_RECEIVED = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.bytes.received", "Total bytes received");
-    BasicAttributeSensor<Long> BYTES_SENT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.bytes.sent", "Total bytes sent");
+    AttributeSensor<Long> BYTES_RECEIVED = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.bytes.received", "Total bytes received");
+    AttributeSensor<Long> BYTES_SENT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.bytes.sent", "Total bytes sent");
 
     Integer getKafkaPort();
 
