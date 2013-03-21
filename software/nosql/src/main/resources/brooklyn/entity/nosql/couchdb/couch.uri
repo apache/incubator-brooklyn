@@ -1,0 +1,2 @@
+[#ftl]
+http://${driver.hostname}:${entity.httpPort?c}/

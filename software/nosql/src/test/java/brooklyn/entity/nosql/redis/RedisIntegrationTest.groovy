@@ -46,7 +46,7 @@ public class RedisIntegrationTest {
      * Test that the server starts up and sets SERVICE_UP correctly.
      */
     // FIXME Marked as WIP because failing in jenkins; environmental differences?
-    @Test(groups = ["Integration", "WIP"])
+    @Test(groups = ["Integration"])
     public void canStartupAndShutdown() {
         redis = new RedisStore(parent:app);
         app.start([ testLocation ])
@@ -62,7 +62,7 @@ public class RedisIntegrationTest {
      * Test that a client can connect to the service.
      */
     // FIXME Marked as WIP because failing in jenkins; environmental differences?
-    @Test(groups = ["Integration", "WIP"])
+    @Test(groups = ["Integration"])
     public void testRedisConnection() {
         // Start Redis
         redis = new RedisStore(parent:app)

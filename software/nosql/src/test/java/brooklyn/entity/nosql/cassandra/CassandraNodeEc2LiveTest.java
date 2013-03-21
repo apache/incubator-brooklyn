@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.nosql.redis.RedisStore;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
@@ -23,10 +22,10 @@ public class CassandraNodeEc2LiveTest extends AbstractEc2LiveTest {
                 .configure("thriftPort", "9876+")
                 .configure("clusterName", "TestCluster"));
         app.start(ImmutableList.of(loc));
-        
-        EntityTestUtils.assertAttributeEqualsEventually(cassandra, RedisStore.SERVICE_UP, true);
 
-        // FIXME Extract astyanaxTest so can call from something other than sub-class of CassandraNodeIntegrationTest
-        //astyanaxTest();
+        EntityTestUtils.assertAttributeEqualsEventually(cassandra, CassandraNode.SERVICE_UP, true);
+
+        AstyanaxSupport astyanax = new AstyanaxSupport(cassandra);
+        astyanax.astyanaxTest();
     }
 }

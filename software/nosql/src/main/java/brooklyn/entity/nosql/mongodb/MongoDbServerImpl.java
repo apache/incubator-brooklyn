@@ -39,6 +39,11 @@ public class MongoDbServerImpl extends SoftwareProcessImpl implements MongoDbSer
     }
 
     @Override
+    public Integer getServerPort() {
+        return getAttribute(MongoDbServer.PORT);
+    }
+
+    @Override
     public Class getDriverInterface() {
         return MongoDbDriver.class;
     }

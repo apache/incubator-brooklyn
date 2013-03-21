@@ -34,8 +34,6 @@ import com.google.common.collect.Maps;
  * Implementation of {@link CassandraNode}.
  */
 public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraNode {
-    /** serialVersionUID */
-    private static final long serialVersionUID = -5430475649331861964L;
 
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeImpl.class);
 

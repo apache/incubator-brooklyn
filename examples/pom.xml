@@ -37,7 +37,7 @@
         <module>hadoop-and-whirr</module>
         <module>portable-cloudfoundry</module>
         <module>simple-messaging-pubsub</module>
-        <module>monitored-cassandra-cluster</module>
+        <module>simple-nosql-cluster</module>
     </modules>
 
 </project>
