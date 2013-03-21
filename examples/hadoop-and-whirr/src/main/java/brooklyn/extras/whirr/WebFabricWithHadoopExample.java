@@ -95,8 +95,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
     public void postConstruct() {
         StringConfigMap config = getManagementContext().getConfig();
         
-        hadoopCluster = getEntityManager().createEntity(EntitySpecs.spec(WhirrHadoopCluster.class)
-                .parent(this)
+        hadoopCluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
                 .configure("size", 2)
                 .configure("memory", 2048)
                 .configure("name", "Whirr Hadoop Cluster"));
@@ -105,16 +104,14 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
         // specify hadoop version (1.0.2 has a nice, smaller hadoop client jar)
         hadoopCluster.addRecipeLine("whirr.hadoop.version=1.0.2");
     
-        GeoscalingDnsService geoDns = getEntityManager().createEntity(EntitySpecs.spec(GeoscalingDnsService.class)
-                .parent(this)
+        GeoscalingDnsService geoDns = addChild(EntitySpecs.spec(GeoscalingDnsService.class)
                 .displayName("GeoScaling DNS")
                 .configure("username", checkNotNull(config.getFirst("brooklyn.geoscaling.username"), "username"))
                 .configure("password", checkNotNull(config.getFirst("brooklyn.geoscaling.password"), "password"))
                 .configure("primaryDomainName", checkNotNull(config.getFirst("brooklyn.geoscaling.primaryDomain"), "primaryDomain"))
                 .configure("smartSubdomainName", "brooklyn"));
         
-        webFabric = getEntityManager().createEntity(EntitySpecs.spec(DynamicFabric.class)
-                .parent(this)
+        webFabric = addChild(EntitySpecs.spec(DynamicFabric.class)
                 .displayName("Web Fabric")
                 .configure("factory", new ElasticJavaWebAppService.Factory())
                 //specify the WAR file to use
@@ -131,8 +128,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
 //                        .metricRange(10, 100)
 //                        .build()));
         
-        webVms = getEntityManager().createEntity(EntitySpecs.spec(DynamicGroup.class)
-                .parent(this)
+        webVms = addChild(EntitySpecs.spec(DynamicGroup.class)
                 .displayName("Web VMs")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(JBoss7Server.class)));
         

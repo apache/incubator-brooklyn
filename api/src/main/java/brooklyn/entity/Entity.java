@@ -15,11 +15,14 @@ import brooklyn.policy.Policy;
 
 /**
  * The basic interface for a Brooklyn entity.
- * 
+ * <p>
  * Implementors of entities are strongly encouraged to extend {@link brooklyn.entity.basic.AbstractEntity}.
- * 
+ * <p>
  * To instantiate an entity, see {@code managementContext.getEntityManager().createEntity(entitySpec)}.
- * 
+ * Also see {@link brooklyn.entity.basic.ApplicationBuilder}, 
+ * {@link brooklyn.entity.basic.AbstractEntity#addChild(EntitySpec)}, and
+ * {@link brooklyn.entity.proxying.EntitySpecs}.
+ * <p>
  * Entities may not be {@link Serializable} in subsequent releases!
  * 
  * @see brooklyn.entity.basic.AbstractEntity

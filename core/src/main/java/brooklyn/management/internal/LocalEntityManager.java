@@ -84,7 +84,7 @@ public class LocalEntityManager implements EntityManager {
 
     @Override
     public <T extends Entity> T createEntity(Map<?,?> config, Class<T> type) {
-        return createEntity(EntitySpecs.spec(type).configure(config));
+        return createEntity(EntitySpecs.spec(config, type));
     }
 
     @Override

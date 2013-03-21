@@ -89,21 +89,19 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     public void postConstruct() {
         super.postConstruct();
 
-        MySqlNode mysql = (MySqlNode) addChild(
-                getEntityManager().createEntity(
-                        EntitySpecs.spec(MySqlNode.class)
-                        .configure(MySqlNode.CREATION_SCRIPT_URL, getConfig(DB_SETUP_SQL_URL))) );
+        MySqlNode mysql = addChild(
+                EntitySpecs.spec(MySqlNode.class)
+                        .configure(MySqlNode.CREATION_SCRIPT_URL, getConfig(DB_SETUP_SQL_URL)));
 
-        ControlledDynamicWebAppCluster web = (ControlledDynamicWebAppCluster) addChild(
-                getEntityManager().createEntity(
-                        EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster web = addChild(
+                EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                         .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                         .configure(JavaWebAppService.ROOT_WAR, getConfig(WAR_PATH))
                         .configure(JavaEntityMethods.javaSysProp("brooklyn.example.db.url"), 
                                 formatString("jdbc:%s%s?user=%s\\&password=%s", 
                                         attributeWhenReady(mysql, MySqlNode.MYSQL_URL), DB_TABLE, DB_USERNAME, DB_PASSWORD))
                         .configure(DynamicCluster.INITIAL_SIZE, 2)
-                        .configure(WebAppService.ENABLED_PROTOCOLS, Arrays.asList(getConfig(USE_HTTPS) ? "https" : "http")) ));
+                        .configure(WebAppService.ENABLED_PROTOCOLS, Arrays.asList(getConfig(USE_HTTPS) ? "https" : "http")) );
 
         web.getCluster().addPolicy(AutoScalerPolicy.builder().
                 metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE).

@@ -74,8 +74,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         } else {
             flags = MutableMap.<String,Object>of("factory", webServerFactory);
         }
-        DynamicWebAppCluster cluster = getEntityManager().createEntity(EntitySpecs.spec(DynamicWebAppCluster.class)
-                .parent(this)
+        DynamicWebAppCluster cluster = addChild(EntitySpecs.spec(DynamicWebAppCluster.class)
                 .configure(flags));
         if (Entities.isManaged(this)) Entities.manage(cluster);
         setAttribute(CLUSTER, cluster);
@@ -90,7 +89,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
             } else {
                 log.debug("creating controller using custom spec for {}", this);
             }
-            controller = getEntityManager().createEntity(EntitySpecs.wrapSpec(controllerSpec).parent(this));
+            controller = addChild(controllerSpec);
             if (Entities.isManaged(this)) Entities.manage(controller);
             setAttribute(CONTROLLER, controller);
         }

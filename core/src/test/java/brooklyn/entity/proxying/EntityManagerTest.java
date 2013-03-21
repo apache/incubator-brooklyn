@@ -55,6 +55,9 @@ public class EntityManagerTest {
     
     @ImplementedBy(MyEntityImpl.class)
     public static interface MyEntity extends Entity {
+        /**
+         * @deprecated Use {@link #addChild(EntitySpec)}
+         */
         public <T extends Entity> T createChild(EntitySpec<T> spec);
         public <T extends Entity> T createChild(Map<?,?> flags, Class<T> type);
     }
@@ -62,10 +65,10 @@ public class EntityManagerTest {
     @ImplementedBy(MyEntityImpl.class)
     public static class MyEntityImpl extends AbstractEntity implements MyEntity {
         public <T extends Entity> T createChild(EntitySpec<T> spec) {
-            return (T) addChild(getEntityManager().createEntity(spec));
+            return addChild(spec);
         }
         public <T extends Entity> T createChild(Map<?,?> flags, Class<T> type) {
-            return (T) addChild(getEntityManager().createEntity(flags, type));
+            return addChild(EntitySpecs.spec(flags, type));
         }
     }
 }

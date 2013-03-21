@@ -106,11 +106,12 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         throw new UnsupportedOperationException();
     }
     
+    /**
+     * TODO Rename to addChild
+     */
     @Override
     public <T extends Entity> T createChild(EntitySpec<T> spec) {
-        T child = getEntityManager().createEntity(spec);
-        addChild(child);
-        return child;
+        return addChild(spec);
     }
 
     @Override

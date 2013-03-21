@@ -343,8 +343,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     protected Entity createNode(Map flags) {
         EntitySpec<?> memberSpec = getMemberSpec();
         if (memberSpec != null) {
-            EntitySpec<?> wrappingEntitySpec = EntitySpecs.wrapSpec(memberSpec).configure(flags).parent(this);
-            return getEntityManager().createEntity(wrappingEntitySpec);
+            return addChild(EntitySpecs.wrapSpec(memberSpec).configure(flags));
         }
         
         EntityFactory<?> factory = getFactory();
