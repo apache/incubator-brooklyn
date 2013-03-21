@@ -92,6 +92,10 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     private volatile FunctionFeed functionFeed;
     private volatile JmxFeed jmxFeed;
 
+    /** Wait for five minutes to start. */
+    @Override
+    public void waitForServiceUp() { waitForServiceUp(5, TimeUnit.MINUTES); }
+
     @Override
     public void waitForServiceUp(long duration, TimeUnit units) {
         super.waitForServiceUp(duration, units);

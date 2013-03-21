@@ -29,6 +29,9 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(KafkaZookeeperImpl.class)
 public interface KafkaZookeeper extends SoftwareProcess, UsesJmx, Kafka {
 
+    @SetFromFlag("startTimeout")
+    public static final ConfigKey<Integer> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
+
     @SetFromFlag("version")
     BasicConfigKey<String> SUGGESTED_VERSION = Kafka.SUGGESTED_VERSION;
 

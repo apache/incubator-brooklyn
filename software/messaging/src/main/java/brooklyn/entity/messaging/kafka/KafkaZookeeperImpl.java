@@ -39,6 +39,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 
 /**
@@ -74,6 +75,10 @@ public class KafkaZookeeperImpl extends SoftwareProcessImpl implements KafkaZook
     private ObjectName zookeeperMbean = JmxHelper.createObjectName("org.apache.ZooKeeperService:name0=StandaloneServer_port-1");
     private volatile FunctionFeed functionFeed;
     private volatile JmxFeed jmxFeed;
+
+    /** Wait for five minutes to start. */
+    @Override
+    public void waitForServiceUp() { waitForServiceUp(5, TimeUnit.MINUTES); }
 
     @Override
     public void waitForServiceUp(long duration, TimeUnit units) {
