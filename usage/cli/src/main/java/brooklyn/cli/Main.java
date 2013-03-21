@@ -29,6 +29,8 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
@@ -306,7 +308,13 @@ public class Main {
             if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
                 Constructor<?> constructor = clazz.getConstructor();
                 return (ApplicationBuilder) constructor.newInstance();
+            } else if (StartableApplication.class.isAssignableFrom(clazz)) {
+                EntitySpec<StartableApplication> appSpec = EntitySpecs.appSpec((Class<? extends StartableApplication>)clazz);
+                return new ApplicationBuilder(appSpec) {
+                    @Override protected void doBuild() {
+                    }};
             } else if (AbstractApplication.class.isAssignableFrom(clazz)) {
+                // TODO If this application overrides postConstruct() then in trouble, as that won't get called!
                 Constructor<?> constructor = clazz.getConstructor();
                 return (AbstractApplication) constructor.newInstance();
             } else if (AbstractEntity.class.isAssignableFrom(clazz)) {

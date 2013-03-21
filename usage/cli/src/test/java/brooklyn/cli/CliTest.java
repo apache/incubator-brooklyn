@@ -35,8 +35,9 @@ public class CliTest {
     @Test
     public void testLoadApplicationFromClasspath() throws Exception {
         String appName = ExampleApp.class.getName();
-        Object app = loadApplicationFromClasspathOrParse(appName);
-        assertTrue(app instanceof ExampleApp, "app="+app);
+        Object appBuilder = loadApplicationFromClasspathOrParse(appName);
+        assertTrue(appBuilder instanceof ApplicationBuilder, "app="+appBuilder);
+        assertAppWrappedInBuilder((ApplicationBuilder)appBuilder, ExampleApp.class.getCanonicalName());
     }
 
     @Test
@@ -76,8 +77,9 @@ public class CliTest {
     @Test
     public void testLoadApplicationByParsingFile() throws Exception {
         String appName = "ExampleAppInFile.groovy"; // file found in src/test/resources (contains empty app)
-        Object app = loadApplicationFromClasspathOrParse(appName);
-        assertTrue(app.getClass().getName().equals("ExampleAppInFile"), "app="+app);
+        Object appBuilder = loadApplicationFromClasspathOrParse(appName);
+        assertTrue(appBuilder instanceof ApplicationBuilder, "app="+appBuilder);
+        assertAppWrappedInBuilder((ApplicationBuilder)appBuilder, "ExampleAppInFile");
     }
     
     private Object loadApplicationFromClasspathOrParse(String appName) throws Exception {
@@ -85,6 +87,16 @@ public class CliTest {
         ResourceUtils resourceUtils = new ResourceUtils(this);
         GroovyClassLoader loader = new GroovyClassLoader(CliTest.class.getClassLoader());
         return launchCommand.loadApplicationFromClasspathOrParse(resourceUtils, loader, appName);
+    }
+    
+    private void assertAppWrappedInBuilder(ApplicationBuilder builder, String expectedAppTypeName) {
+        StartableApplication app = builder.manage();
+        try {
+            String typeName = app.getEntityType().getName();
+            assertEquals(typeName, expectedAppTypeName, "app="+app+"; typeName="+typeName);
+        } finally {
+            Entities.destroyAll(app);
+        }
     }
     
     @Test
