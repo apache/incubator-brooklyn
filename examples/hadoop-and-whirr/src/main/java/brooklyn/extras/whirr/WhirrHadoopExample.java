@@ -24,7 +24,7 @@ public class WhirrHadoopExample extends ApplicationBuilder {
 
     @Override
     protected void doBuild() {
-        WhirrCluster cluster = createChild(EntitySpecs.spec(WhirrHadoopCluster.class)
+        WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
                 .displayName("brooklyn-hadoop-example")
                 .configure("size", 2)
                 .configure("memory", 2048));

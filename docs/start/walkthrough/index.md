@@ -21,8 +21,8 @@ for management:
 {% highlight java %}
 public class WebClusterDatabaseExample extends ApplicationBuilder {
     protected void doBuild() {
-        MySqlNode mysql = createChild(EntitySpecs.spec(MySqlNode.class));
-        ControlledDynamicWebAppCluster web = createChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class));
+        MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class));
+        ControlledDynamicWebAppCluster web = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class));
     }
 }
 {% endhighlight %}
@@ -77,10 +77,10 @@ block "at the last moment" when the value is needed
 {% highlight java %}
 public class WebClusterDatabaseExample extends ApplicationBuilder {
     protected void doBuild() {
-        MySqlNode mysql = createChild(EntitySpecs.spec(MySqlNode.class)
+        MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class)
                 .configure(MySqlNode.CREATION_SCRIPT_URL, "classpath://visitors-database-setup.sql"));
         
-        ControlledDynamicWebAppCluster web = createChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster web = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure("memberSpec", EntitySpecs.spec(JBoss7Server.class)
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)

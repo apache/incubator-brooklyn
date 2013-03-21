@@ -25,7 +25,7 @@ public class StandaloneBrokerExample extends ApplicationBuilder {
     
     protected void doBuild() {
         // Configure the Qpid broker entity
-    	QpidBroker broker = createChild(EntitySpecs.spec(QpidBroker.class)
+    	QpidBroker broker = addChild(EntitySpecs.spec(QpidBroker.class)
     	        .configure("amqpPort", 5672)
     	        .configure("amqpVersion", AmqpServer.AMQP_0_10)
     	        .configure("runtimeFiles", ImmutableMap.builder()

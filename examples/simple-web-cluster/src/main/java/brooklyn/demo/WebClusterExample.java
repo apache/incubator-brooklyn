@@ -41,11 +41,11 @@ public class WebClusterExample extends ApplicationBuilder {
     private ControlledDynamicWebAppCluster web;
     
     protected void doBuild() {
-        nginxController = createChild(EntitySpecs.spec(NginxController.class)
+        nginxController = addChild(EntitySpecs.spec(NginxController.class)
                 //.configure("domain", "webclusterexample.brooklyn.local")
                 .configure("port", "8000+"));
           
-        web = createChild(ControlledDynamicWebAppCluster.Spec.newInstance()
+        web = addChild(ControlledDynamicWebAppCluster.Spec.newInstance()
                 .displayName("WebApp cluster")
                 .controller(nginxController)
                 .initialSize(1)

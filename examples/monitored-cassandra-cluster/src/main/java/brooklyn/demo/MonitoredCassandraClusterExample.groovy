@@ -11,7 +11,7 @@ public class MonitoredCassandraClusterExample extends ApplicationBuilder {
      * For overriding, to create and wire together entities.
      */
     protected void doBuild() {
-        createChild(EntitySpecs.spec(CassandraCluster.class)
+        addChild(EntitySpecs.spec(CassandraCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "CassandraDemo")
                 .configure("jmxPort", "11099+")

@@ -27,7 +27,7 @@ public class WhirrExample extends ApplicationBuilder {
             "whirr.instance-templates=1 noop, 1 elasticsearch"+"\n";
 
     protected void doBuild() {
-        WhirrCluster cluster = createChild(EntitySpecs.spec(WhirrCluster.class)
+        WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrCluster.class)
                 .configure("recipe", RECIPE));
     }
 

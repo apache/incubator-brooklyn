@@ -320,12 +320,12 @@ public class Main {
             } else if (AbstractEntity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
                     @Override protected void doBuild() {
-                        createChild(EntitySpecs.spec(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
+                        addChild(EntitySpecs.spec(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
                     }};
             } else if (Entity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
                     @Override protected void doBuild() {
-                        createChild(EntitySpecs.spec((Class<? extends Entity>)clazz));
+                        addChild(EntitySpecs.spec((Class<? extends Entity>)clazz));
                     }};
             } else {
                 throw new IllegalArgumentException("Application class "+clazz+" must extend one of ApplicationBuilder or AbstractApplication");

@@ -17,7 +17,7 @@ public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
 
     @Override
     protected void doBuild() {
-        createChild(EntitySpecs.spec(MovableElasticWebAppCluster.class)
+        addChild(EntitySpecs.spec(MovableElasticWebAppCluster.class)
                 .configure("war", WAR_FILE_URL));
     }
     

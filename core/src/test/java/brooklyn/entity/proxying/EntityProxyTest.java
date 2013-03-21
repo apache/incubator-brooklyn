@@ -143,7 +143,7 @@ public class EntityProxyTest {
             ApplicationBuilder appB = new ApplicationBuilder() {
                 @Override
                 protected void doBuild() {
-                    createChild(MutableMap.of("confName", "faz"), TestEntity.class);
+                    addChild(MutableMap.of("confName", "faz"), TestEntity.class);
                 }
             };
             app2 = appB.manage();
