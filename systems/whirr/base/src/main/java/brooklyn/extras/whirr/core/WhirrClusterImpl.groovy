@@ -157,16 +157,15 @@ public class WhirrClusterImpl extends AbstractEntity implements WhirrCluster {
         for (Cluster.Instance instance : cluster.getInstances()) {
             log.info("Creating group for instance " + instance.id)
             def rolesGroup = 
-                addChild(getEntityManager().createEntity(EntitySpecs.spec(WhirrInstance.class).
+                addChild(EntitySpecs.spec(WhirrInstance.class).
                     displayName("Instance:" + instance.id).
-                    configure("instance", instance)) );
+                    configure("instance", instance));
 
             for (String role: instance.roles) {
                 log.info("Creating entity for '" + role + "' on instance " + instance.id)
-                rolesGroup.addChild(
-                    getEntityManager().createEntity(EntitySpecs.spec(WhirrRole.class).
+                rolesGroup.addChild(EntitySpecs.spec(WhirrRole.class).
                         displayName("Role:" + role).
-                        configure("role", role)) );
+                        configure("role", role));
             }
             addGroup(rolesGroup)
         }

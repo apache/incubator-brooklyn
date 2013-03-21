@@ -17,6 +17,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.EntityType
 import brooklyn.entity.Group
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference
+import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.proxying.InternalEntityFactory
 import brooklyn.entity.rebind.BasicEntityRebindSupport
 import brooklyn.entity.rebind.RebindSupport
@@ -461,7 +462,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     /**
-     * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child;
+     * Adds the given entity as a child of this parent <em>and</em> sets this entity as the parent of the child;
      * returns argument passed in, for convenience.
      */
     @Override
@@ -477,6 +478,23 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
             getManagementSupport().getEntityChangeListener().onChildrenChanged();
         }
         return child
+    }
+
+    /**
+     * Creates an entity using the given spec, and adds it as a child of this entity.
+     * 
+     * @see #addChild(Entity)
+     * @see EntityManager#createEntity(EntitySpec)
+     * 
+     * @throws IllegalArgumentException If {@code spec.getParent()} is set and is different from this entity
+     */
+    @Override
+    public <T extends Entity> T addChild(EntitySpec<T> spec) {
+        if (spec.getParent() != null && !this.equals(spec.getParent())) {
+            throw new IllegalArgumentException("Attempt to create child of "+this+" with entity spec "+spec+
+                " failed because spec has different parent: "+spec.getParent());
+        }
+        return (T) addChild(getEntityManager().createEntity(spec));
     }
     
     @Override

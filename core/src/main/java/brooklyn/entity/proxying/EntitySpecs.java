@@ -1,5 +1,7 @@
 package brooklyn.entity.proxying;
 
+import java.util.Map;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.StartableApplication;
 
@@ -31,6 +33,18 @@ public class EntitySpecs {
      */
     public static <T extends Entity, U extends T> BasicEntitySpec<T,?> spec(Class<T> type, Class<U> implType) {
         return BasicEntitySpec.newInstance(type, implType);
+    }
+    
+    /**
+     * Creates a new {@link EntitySpec} instance with the given config, for an entity of the given type.
+     * 
+     * This is primarily for groovy code; equivalent to {@code EntitySpecs.spec(type).configure(config)}.
+     * 
+     * @param config The spec's configuration (see {@link BasicEntitySpec#configure(Map)}).
+     * @param type   An {@link Entity} interface
+     */
+    public static <T extends Entity> BasicEntitySpec<T,?> spec(Map<?,?> config, Class<T> type) {
+        return EntitySpecs.spec(type).configure(config);
     }
     
     /**

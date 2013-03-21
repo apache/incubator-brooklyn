@@ -77,8 +77,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
     public void postConstruct() {
         StringConfigMap config = getManagementContext().getConfig();
     
-        hadoopCluster = getEntityManager().createEntity(EntitySpecs.spec(WhirrHadoopCluster.class)
-                .parent(this)
+        hadoopCluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
                 .configure("size", 2)
                 .configure("memory", 2048)
                 .configure("name", "Whirr Hadoop Cluster"));
@@ -90,8 +89,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
         hadoopCluster.addRecipeLine("whirr.client-cidrs=0.0.0.0/0");
         hadoopCluster.addRecipeLine("whirr.firewall-rules=8020,8021,50010");
     
-        webCluster = getEntityManager().createEntity(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
-                .parent(this)
+        webCluster = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure("war", WAR_PATH)
                 .policy(AutoScalerPolicy.builder()
                         .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
@@ -99,8 +97,7 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
                         .metricRange(10, 100)
                         .build()));
         
-        webVms = getEntityManager().createEntity(EntitySpecs.spec(DynamicGroup.class)
-                .parent(this)
+        webVms = addChild(EntitySpecs.spec(DynamicGroup.class)
                 .displayName("Web VMs")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(JBoss7Server.class)));
     }

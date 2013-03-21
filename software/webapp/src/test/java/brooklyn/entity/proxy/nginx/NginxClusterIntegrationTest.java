@@ -28,6 +28,7 @@ import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
+import brooklyn.management.EntityManager;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.MutableMap;
@@ -49,6 +50,7 @@ public class NginxClusterIntegrationTest {
     private URL war;
     private LocalhostMachineProvisioningLocation localhostProvisioningLoc;
     private TestApplication app;
+    private EntityManager entityManager;
     private LoadBalancerCluster loadBalancerCluster;
     private EntitySpec<NginxController> nginxSpec;
     private Group urlMappings;
@@ -63,6 +65,7 @@ public class NginxClusterIntegrationTest {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
         urlMappings = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class)
                 .configure("childrenAsMembers", true));
+        entityManager = app.getManagementContext().getEntityManager();
         
         nginxSpec = EntitySpecs.spec(NginxController.class);
     }
@@ -120,7 +123,7 @@ public class NginxClusterIntegrationTest {
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(war.getPath())));
 
-        UrlMapping urlMapping = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping urlMapping = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", "/hello-world($|/.*)")
                 .configure("target", c1)

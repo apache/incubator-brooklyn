@@ -22,6 +22,7 @@ import brooklyn.entity.webapp.JavaWebAppService
 import brooklyn.entity.webapp.WebAppService
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.management.EntityManager
 import brooklyn.test.HttpTestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.util.internal.TimeExtras
@@ -47,6 +48,7 @@ public class NginxUrlMappingIntegrationTest {
     private NginxController nginx
     private DynamicCluster cluster
     private Group urlMappingsGroup;
+    private EntityManager entityManager;
     
     private URL war;
     private static String WAR_URL = "classpath://hello-world.war";
@@ -59,6 +61,7 @@ public class NginxUrlMappingIntegrationTest {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
         urlMappingsGroup = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class)
                 .configure("childrenAsMembers", true));
+        entityManager = app.getManagementContext().getEntityManager();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -96,7 +99,7 @@ public class NginxUrlMappingIntegrationTest {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
-        UrlMapping u0 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u0 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c0)
                 .parent(urlMappingsGroup));
@@ -107,7 +110,7 @@ public class NginxUrlMappingIntegrationTest {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.NAMED_WARS, [WAR_URL]));
-        UrlMapping u1 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u1 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost2")
                 .configure("path", '/hello-world($|/.*)')
                 .configure("target", c1)
@@ -118,7 +121,7 @@ public class NginxUrlMappingIntegrationTest {
         DynamicCluster c2 = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+")));
-        UrlMapping u2 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u2 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost3")
                 .configure("path", '/c2($|/.*)')
                 .configure("target", c2)
@@ -174,7 +177,7 @@ public class NginxUrlMappingIntegrationTest {
         DynamicCluster c0 = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+")));
-        UrlMapping u0 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u0 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", '/atC0($|/.*)')
                 .configure("target", c0)
@@ -184,7 +187,7 @@ public class NginxUrlMappingIntegrationTest {
         DynamicCluster c1 = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+")));
-        UrlMapping u1 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u1 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", '/atC1($|/.*)')
                 .configure("target", c1)
@@ -227,7 +230,7 @@ public class NginxUrlMappingIntegrationTest {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, war.toString()));
-        UrlMapping u0 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u0 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost2")
                 .configure("target", c0)
                 .parent(urlMappingsGroup));
@@ -266,7 +269,7 @@ public class NginxUrlMappingIntegrationTest {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.NAMED_WARS, [war.toString()]));
-        UrlMapping u1 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u1 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c1)
                 .parent(urlMappingsGroup));
@@ -302,7 +305,7 @@ public class NginxUrlMappingIntegrationTest {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
-        UrlMapping u0 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u0 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c0)
                 .parent(urlMappingsGroup));
@@ -354,7 +357,7 @@ public class NginxUrlMappingIntegrationTest {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, war.toString()));
-        UrlMapping u1 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u1 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c1)
                 .parent(urlMappingsGroup));
@@ -413,7 +416,7 @@ public class NginxUrlMappingIntegrationTest {
         DynamicCluster c0 = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+")));
-        UrlMapping u0 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u0 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", '/atC0($|/.*)')
                 .configure("target", c0)
@@ -454,7 +457,7 @@ public class NginxUrlMappingIntegrationTest {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(JBoss7Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
-        UrlMapping u0 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(UrlMapping.class)
+        UrlMapping u0 = entityManager.createEntity(EntitySpecs.spec(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c0)
                 .parent(urlMappingsGroup));
