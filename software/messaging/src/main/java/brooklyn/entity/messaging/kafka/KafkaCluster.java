@@ -20,6 +20,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.BasicEntitySpec;
@@ -88,6 +89,9 @@ public interface KafkaCluster extends Entity, Startable, Resizable  {
             return self();
         }
     }
+
+    @SetFromFlag("startTimeout")
+    public static final ConfigKey<Integer> START_TIMEOUT = ConfigKeys.START_TIMEOUT;
 
     @SetFromFlag("initialSize")
     public static ConfigKey<Integer> INITIAL_SIZE = new BasicConfigKey<Integer>(Cluster.INITIAL_SIZE, 1);
