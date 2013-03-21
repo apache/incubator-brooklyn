@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,6 @@ public abstract class ApplicationBuilder {
     /**
      * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2)
      */
-    @SuppressWarnings("unchecked")
     public static <T extends StartableApplication> BasicEntitySpec<StartableApplication, ?> newAppSpec(Class<? extends T> type) {
         return EntitySpecs.appSpec(type);
     }
@@ -166,6 +166,7 @@ public abstract class ApplicationBuilder {
     }
     
     protected volatile boolean managed = false;
+    protected final AtomicBoolean inManage = new AtomicBoolean(false);
     private BasicEntitySpec<? extends StartableApplication, ?> appSpec;
     private ManagementContext managementContext;
     private StartableApplication app;
@@ -179,27 +180,39 @@ public abstract class ApplicationBuilder {
     }
 
     public final ApplicationBuilder appDisplayName(String val) {
+        checkPreManage();
         appSpec.displayName(val);
         return this;
     }
     
     protected final <T extends Entity> T createEntity(EntitySpec<T> spec) {
-        checkNotManaged();
+        checkDuringManage();
         EntityManager entityManager = managementContext.getEntityManager();
         return entityManager.createEntity(spec);
     }
 
+    /**
+     * Adds the given entity as a child of the application being built.
+     * To be called during {@link #doBuild()}.
+     */
     protected final <T extends Entity> T addChild(T entity) {
-        checkNotManaged();
+        checkDuringManage();
         app.addChild(entity);
         return entity;
     }
 
+    /**
+     * Returns the type of the application being built.
+     */
     public final Class<? extends StartableApplication> getType() {
         return appSpec.getType();
     }
     
+    /**
+     * Configures the application instance.
+     */
     public final ApplicationBuilder configure(Map<?,?> config) {
+        checkPreManage();
         appSpec.configure(config);
         return this;
     }
@@ -219,13 +232,16 @@ public abstract class ApplicationBuilder {
         return addChild(config, type);
     }
     
+    /**
+     * Adds the given entity as a child of the application being built.
+     */
     protected final <T extends Entity> T addChild(EntitySpec<T> spec) {
-        checkNotManaged();
+        checkDuringManage();
         return addChild(createEntity(spec));
     }
     
     protected final <T extends Entity> T addChild(Map<?,?> config, Class<T> type) {
-        checkNotManaged();
+        checkDuringManage();
         EntitySpec<T> spec = EntitySpecs.spec(type).configure(config);
         return addChild(createEntity(spec));
     }
@@ -243,23 +259,56 @@ public abstract class ApplicationBuilder {
      */
     protected abstract void doBuild();
 
+    /**
+     * Creates a new {@link ManagementContext}, and then builds and manages the application.
+     * 
+     * @see #manage(ManagementContext)
+     */
     public final StartableApplication manage() {
         return manage(Entities.newManagementContext());
     }
     
+    /**
+     * Builds and manages the application, calling the user's {@link #doBuild()} method.
+     * 
+     * @throws IllegalStateException If already managed, or if called during {@link #doBuild()}, or if 
+     *                               multiple concurrent calls
+     */
     public final StartableApplication manage(ManagementContext managementContext) {
-        checkNotManaged();
-        this.app = managementContext.getEntityManager().createEntity(appSpec);
-        this.managementContext = managementContext;
-        doBuild();
-        Entities.startManagement(app, managementContext);
-        managed = true;
-        return app;
+        if (!inManage.compareAndSet(false, true)) {
+            throw new IllegalStateException("Concurrent and re-entrant calls to manage() forbidden on "+this);
+        }
+        try {
+            checkNotManaged();
+            this.app = managementContext.getEntityManager().createEntity(appSpec);
+            this.managementContext = managementContext;
+            doBuild();
+            Entities.startManagement(app, managementContext);
+            managed = true;
+            return app;
+        } finally {
+            inManage.set(false);
+        }
+    }
+    
+    protected void checkPreManage() {
+        if (inManage.get()) {
+            throw new IllegalStateException("Builder being managed; cannot perform operation during call to manage(), or in doBuild()");
+        }
+        if (managed) {
+            throw new IllegalStateException("Builder already managed; cannot perform operation after call to manage()");
+        }
     }
     
     protected void checkNotManaged() {
         if (managed) {
             throw new IllegalStateException("Builder already managed; cannot perform operation after call to manage()");
+        }
+    }
+    
+    protected void checkDuringManage() {
+        if (!inManage.get() || app == null) {
+            throw new IllegalStateException("Operation only permitted during manage, e.g. called from doBuild() of "+this);
         }
     }
 }
