@@ -62,7 +62,7 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         // This DeferredSupplier will return a comma separated list of all available
         // hostnames in the cluster or if none are available yet then a Task for the first
         // hostname in the list when it is ready. If there are no nodes yet it returns null.
-        setConfig(SEEDS, new DeferredSupplier() {
+        setConfig(SEEDS, new DeferredSupplier<Object>() {
                 public Object get() {
                     Iterable<Entity> members = getMembers();
                     List<String> nodes = Lists.newArrayList();
