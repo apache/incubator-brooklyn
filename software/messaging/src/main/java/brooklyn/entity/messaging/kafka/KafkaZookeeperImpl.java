@@ -67,16 +67,8 @@ public class KafkaZookeeperImpl extends SoftwareProcessImpl implements KafkaZook
     public String getHostname() { return getAttribute(HOSTNAME); }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return KafkaZookeeperDriver.class;
-    }
-
-    @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Set<Integer> ports = Sets.newLinkedHashSet(super.getRequiredOpenPorts());
-        ports.add(getAttribute(ZOOKEEPER_PORT));
-        log.debug("getRequiredOpenPorts detected expanded ports {} for {}", ports, this);
-        return ports;
     }
 
     private ObjectName zookeeperMbean = JmxHelper.createObjectName("org.apache.ZooKeeperService:name0=StandaloneServer_port-1");
