@@ -82,9 +82,6 @@ This is the archived documentation for Brooklyn v{{ site.brooklyn-version }}
 
 Note: To prevent accidentally referring to out-of-date information,
 a banner is displayed when accessing specific versions from the archive.
-
-<img src='{{ site.url }}/style/images/version banner.png'/>
-
 You may 
-<a href="#" onclick="set_user_versions_all(); window.location.reload();">disable all warnings</a> or
-<a href="#" onclick="clear_user_versions(); window.location.reload();">re-enable all warnings</a>.
+<a href="#" onclick="set_user_versions_all();">disable all warnings</a> or
+<a href="#" onclick="clear_user_versions();">re-enable all warnings</a>.
