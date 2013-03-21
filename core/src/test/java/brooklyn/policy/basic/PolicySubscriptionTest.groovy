@@ -9,7 +9,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicSensorEvent
@@ -36,8 +36,8 @@ public class PolicySubscriptionTest {
     public void setUp() {
         loc = new SimulatedLocation();
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
-        entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         listener = new RecordingSensorEventListener();
         policy = new AbstractPolicy() {};
         entity.addPolicy(policy);

@@ -22,7 +22,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -59,7 +59,7 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        qpid = app.createAndManageChild(BasicEntitySpec.newInstance(QpidBroker.class)
+        qpid = app.createAndManageChild(EntitySpecs.spec(QpidBroker.class)
                 .configure("jmxPort", "9909+")
                 .configure("rmiServerPort", "9910+"));
         qpid.start([ testLocation ])
@@ -74,7 +74,7 @@ public class QpidIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithHttpManagement() {
-        qpid = app.createAndManageChild(BasicEntitySpec.newInstance(QpidBroker.class)
+        qpid = app.createAndManageChild(EntitySpecs.spec(QpidBroker.class)
                 .configure("httpManagementPort", "8888"));
         Entities.startManagement(app);
         qpid.start([ testLocation ])
@@ -107,7 +107,7 @@ public class QpidIntegrationTest {
                    ('lib/plugins/sample-plugin.jar'):new File('software/messaging/'+pluginjar),
                    ('etc/config.xml'):new File('software/messaging/'+configfile) ]
         }
-        qpid = app.createAndManageChild(BasicEntitySpec.newInstance(QpidBroker.class)
+        qpid = app.createAndManageChild(EntitySpecs.spec(QpidBroker.class)
                 .configure("runtimeFiles", qpidRuntimeFiles)
                 .configure(QpidBroker.SUGGESTED_VERSION, "0.14"));
 
@@ -136,7 +136,7 @@ public class QpidIntegrationTest {
 
         // Start broker with a configured queue
         // FIXME Can't use app.createAndManageChild, because of QpidDestination reffing impl directly
-        qpid = app.createAndManageChild(BasicEntitySpec.newInstance(QpidBroker.class)
+        qpid = app.createAndManageChild(EntitySpecs.spec(QpidBroker.class)
                 .configure("queue", queueName));
         
         qpid.start([ testLocation ])

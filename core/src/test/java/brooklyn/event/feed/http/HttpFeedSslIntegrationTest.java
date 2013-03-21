@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -48,7 +48,7 @@ public class HttpFeedSslIntegrationTest {
 
         loc = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 

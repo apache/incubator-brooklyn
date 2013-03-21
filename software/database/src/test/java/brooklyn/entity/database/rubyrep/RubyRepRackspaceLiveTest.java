@@ -9,7 +9,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import brooklyn.entity.database.postgresql.PostgreSqlNode;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.SshMachineLocation;
 
@@ -62,10 +62,10 @@ public class RubyRepRackspaceLiveTest extends RubyRepIntegrationTest {
     }
 
     public void test(String osRegex) throws Exception {
-        PostgreSqlNode db1 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+        PostgreSqlNode db1 = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", 9111));
-        PostgreSqlNode db2 = tapp.createAndManageChild(BasicEntitySpec.newInstance(PostgreSqlNode.class)
+        PostgreSqlNode db2 = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", 9111));
 

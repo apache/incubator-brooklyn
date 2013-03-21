@@ -14,12 +14,12 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.location.basic.LocationConfigUtils;
+import brooklyn.location.basic.LocationConfigUtils
 import brooklyn.location.jclouds.JcloudsLocation
-import brooklyn.location.jclouds.JcloudsLocationConfig;
+import brooklyn.location.jclouds.JcloudsLocationConfig
 
 /**
  * Generic entity that can be used to deploy clusters that are
@@ -157,14 +157,14 @@ public class WhirrClusterImpl extends AbstractEntity implements WhirrCluster {
         for (Cluster.Instance instance : cluster.getInstances()) {
             log.info("Creating group for instance " + instance.id)
             def rolesGroup = 
-                addChild(getEntityManager().createEntity(BasicEntitySpec.newInstance(WhirrInstance.class).
+                addChild(getEntityManager().createEntity(EntitySpecs.spec(WhirrInstance.class).
                     displayName("Instance:" + instance.id).
                     configure("instance", instance)) );
 
             for (String role: instance.roles) {
                 log.info("Creating entity for '" + role + "' on instance " + instance.id)
                 rolesGroup.addChild(
-                    getEntityManager().createEntity(BasicEntitySpec.newInstance(WhirrRole.class).
+                    getEntityManager().createEntity(EntitySpecs.spec(WhirrRole.class).
                         displayName("Role:" + role).
                         configure("role", role)) );
             }

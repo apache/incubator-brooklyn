@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
 
@@ -27,7 +27,7 @@ public class RabbitEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        RabbitBroker rabbit = app.createAndManageChild(BasicEntitySpec.newInstance(RabbitBroker.class));
+        RabbitBroker rabbit = app.createAndManageChild(EntitySpecs.spec(RabbitBroker.class));
         rabbit.start(ImmutableList.of(loc));
         EntityTestUtils.assertAttributeEqualsEventually(rabbit, RabbitBroker.SERVICE_UP, true);
 

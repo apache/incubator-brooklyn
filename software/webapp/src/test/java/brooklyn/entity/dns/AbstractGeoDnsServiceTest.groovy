@@ -12,14 +12,11 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
-import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.DynamicGroup
-import brooklyn.entity.basic.DynamicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.group.DynamicFabric
-import brooklyn.entity.group.DynamicFabricImpl
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.Location
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.location.basic.SshMachineLocation
@@ -67,10 +64,10 @@ public class AbstractGeoDnsServiceTest {
     @BeforeMethod(alwaysRun=true)
     public void setup() {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        fabric = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+        fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
             .configure("factory", { properties -> new TestEntityImpl(properties) }));
         
-        testEntities = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicGroup.class)
+        testEntities = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
             .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
         geoDns = new GeoDnsTestService(app, polPeriod:10);
         geoDns.setTargetEntityProvider(testEntities);

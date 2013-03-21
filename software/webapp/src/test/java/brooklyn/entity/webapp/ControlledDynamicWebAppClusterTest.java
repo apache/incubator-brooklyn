@@ -17,8 +17,8 @@ import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
@@ -60,8 +60,8 @@ public class ControlledDynamicWebAppClusterTest {
     
     @Test(groups="Integration")
     public void testUsesCustomController() {
-        NginxController controller = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class).displayName("mycustom"));
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        NginxController controller = app.createAndManageChild(EntitySpecs.spec(NginxController.class).displayName("mycustom"));
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER, controller)
                 .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
@@ -77,8 +77,8 @@ public class ControlledDynamicWebAppClusterTest {
     
     @Test(groups="Integration")
     public void testUsesCustomControllerSpec() {
-        EntitySpec<NginxController> controllerSpec = BasicEntitySpec.newInstance(NginxController.class).displayName("mycustom");
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        EntitySpec<NginxController> controllerSpec = EntitySpecs.spec(NginxController.class).displayName("mycustom");
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, controllerSpec)
                 .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
@@ -95,7 +95,7 @@ public class ControlledDynamicWebAppClusterTest {
     
     @Test(groups="Integration")
     public void testConfiguresController() {
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
                 .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
         app.start(locs);
@@ -108,7 +108,7 @@ public class ControlledDynamicWebAppClusterTest {
     // Needs to be integration test because still using nginx controller; could pass in mock controller
     @Test(groups="Integration")
     public void testSetsInitialSize() {
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 2)
                 .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
         app.start(locs);
@@ -119,7 +119,7 @@ public class ControlledDynamicWebAppClusterTest {
     
     @Test(groups="Integration")
     public void testSetsToplevelHostnameFromController() {
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
                 .configure("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString()))));
         app.start(locs);

@@ -15,9 +15,8 @@ import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.WrappingEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -63,7 +62,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         EntitySpec<? extends WebAppService> webServerSpec = getAttribute(MEMBER_SPEC);
         if (webServerFactory == null && webServerSpec == null) {
             log.debug("creating default web server spec for {}", this);
-            webServerSpec = BasicEntitySpec.newInstance(JBoss7Server.class);
+            webServerSpec = EntitySpecs.spec(JBoss7Server.class);
             setAttribute(MEMBER_SPEC, webServerSpec);
         }
         
@@ -75,7 +74,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         } else {
             flags = MutableMap.<String,Object>of("factory", webServerFactory);
         }
-        DynamicWebAppCluster cluster = getEntityManager().createEntity(BasicEntitySpec.newInstance(DynamicWebAppCluster.class)
+        DynamicWebAppCluster cluster = getEntityManager().createEntity(EntitySpecs.spec(DynamicWebAppCluster.class)
                 .parent(this)
                 .configure(flags));
         if (Entities.isManaged(this)) Entities.manage(cluster);
@@ -86,12 +85,12 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
             EntitySpec<? extends AbstractController> controllerSpec = getAttribute(CONTROLLER_SPEC);
             if (controllerSpec == null) {
                 log.debug("creating controller using default spec for {}", this);
-                controllerSpec = BasicEntitySpec.newInstance(NginxController.class);
+                controllerSpec = EntitySpecs.spec(NginxController.class);
                 setAttribute(CONTROLLER_SPEC, controllerSpec);
             } else {
                 log.debug("creating controller using custom spec for {}", this);
             }
-            controller = getEntityManager().createEntity(WrappingEntitySpec.newInstance(controllerSpec).parent(this));
+            controller = getEntityManager().createEntity(EntitySpecs.wrapSpec(controllerSpec).parent(this));
             if (Entities.isManaged(this)) Entities.manage(controller);
             setAttribute(CONTROLLER, controller);
         }

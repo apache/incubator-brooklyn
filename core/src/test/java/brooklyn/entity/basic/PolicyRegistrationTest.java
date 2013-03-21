@@ -10,7 +10,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.Policy;
@@ -39,7 +39,7 @@ public class PolicyRegistrationTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         policy1 = new AbstractPolicy() {};
         policy2 = new AbstractPolicy() {};
         

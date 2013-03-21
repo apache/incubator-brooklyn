@@ -15,9 +15,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
-import brooklyn.entity.basic.BasicGroupImpl;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionHandle;
@@ -38,7 +37,7 @@ public class LocalSubscriptionManagerTest {
     @BeforeMethod(alwaysRun=true)
     public void setup() {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
     }
 
     private void manage(Entity ...entities) {
@@ -100,8 +99,8 @@ public class LocalSubscriptionManagerTest {
     
     @Test
     public void testSubscribeToMemberAttributeChange() throws Exception {
-        BasicGroup group = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class));
-        TestEntity member = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        BasicGroup group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class));
+        TestEntity member = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         manage(group, member);
         
         group.addMember(member);
@@ -128,7 +127,7 @@ public class LocalSubscriptionManagerTest {
     @Test(groups="Integration")
     public void testConcurrentSubscribingAndPublishing() throws Exception {
         final AtomicReference<Exception> threadException = new AtomicReference<Exception>();
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         // Repeatedly subscribe and unsubscribe, so listener-set constantly changing while publishing to it.
         // First create a stable listener so it is always the same listener-set object.

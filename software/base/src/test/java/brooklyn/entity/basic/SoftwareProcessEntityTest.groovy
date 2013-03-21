@@ -34,7 +34,7 @@ public class SoftwareProcessEntityTest {
         machine = new SshMachineLocation(address:"localhost");
         loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        //entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        //entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         MyService entity = new MyService(app)
     }
 

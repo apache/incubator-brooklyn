@@ -6,7 +6,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
@@ -39,7 +39,7 @@ public class NginxEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        nginx = app.createAndManageChild(BasicEntitySpec.newInstance(NginxController.class)
+        nginx = app.createAndManageChild(EntitySpecs.spec(NginxController.class)
                 .configure("portNumberSensor", WebAppService.HTTP_PORT));
         
         app.start(ImmutableList.of(loc));

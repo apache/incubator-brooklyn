@@ -17,11 +17,10 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.location.Location;
-import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -206,7 +205,7 @@ public class RebindManagerImpl implements RebindManager {
   
         if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
             Class<?> entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
-            EntitySpec<?> entitySpec = BasicEntitySpec.newInstance((Class)entityInterface).impl((Class)entityClazz).configure("id", entityId);
+            EntitySpec<?> entitySpec = EntitySpecs.spec((Class)entityInterface).impl((Class)entityClazz).configure("id", entityId);
             return managementContext.getEntityManager().createEntity(entitySpec);
         } else {
             // There are several possibilities for the constructor; find one that works.

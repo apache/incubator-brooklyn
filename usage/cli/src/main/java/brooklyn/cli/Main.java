@@ -29,7 +29,7 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -312,12 +312,12 @@ public class Main {
             } else if (AbstractEntity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
                     @Override protected void doBuild() {
-                        createChild(BasicEntitySpec.newInstance(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
+                        createChild(EntitySpecs.spec(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
                     }};
             } else if (Entity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
                     @Override protected void doBuild() {
-                        createChild(BasicEntitySpec.newInstance((Class<? extends Entity>)clazz));
+                        createChild(EntitySpecs.spec((Class<? extends Entity>)clazz));
                     }};
             } else {
                 throw new IllegalArgumentException("Application class "+clazz+" must extend one of ApplicationBuilder or AbstractApplication");

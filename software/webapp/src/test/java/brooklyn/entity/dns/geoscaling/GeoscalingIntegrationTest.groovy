@@ -8,7 +8,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.DynamicGroup
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.geo.HostGeoInfo
 import brooklyn.test.entity.TestApplication
@@ -37,13 +37,13 @@ class GeoscalingIntegrationTest {
     @Test(groups=["Integration"])
     public void testRoutesToExpectedLocation() {
         TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage();
-        TestEntity target = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity target = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         target.setAttribute(Attributes.HOSTNAME,addr.getHostName())
         
-        DynamicGroup group = app.createAndManageChild(BasicEntitySpec.newInstance(DynamicGroup.class)
+        DynamicGroup group = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
         
-        GeoscalingDnsService geoDns = app.createAndManageChild(BasicEntitySpec.newInstance(GeoscalingDnsService.class)
+        GeoscalingDnsService geoDns = app.createAndManageChild(EntitySpecs.spec(GeoscalingDnsService.class)
                 .displayName("Geo-DNS")
                 .configure("username", "cloudsoft")
                 .configure("password", "cl0uds0ft")

@@ -13,8 +13,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.proxying.WrappingEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 
@@ -37,8 +36,8 @@ import com.google.common.collect.Lists;
  * <code>
  *   app = new ApplicationBuilder() {
  *       @Override public void doBuild() {
- *           MySqlNode db = createChild(BasicEntitySpec.newInstance(MySqlNode.class)));
- *           JBoss7Server as = createChild(BasicEntitySpec.newInstance(JBoss7Server.class)
+ *           MySqlNode db = createChild(EntitySpecs.spec(MySqlNode.class)));
+ *           JBoss7Server as = createChild(EntitySpecs.spec(JBoss7Server.class)
  *                   .configure(HTTP_PORT, "8080+")
  *                   .configure(javaSysProp("brooklyn.example.db.url"), attributeWhenReady(db, MySqlNode.MYSQL_URL));
  *       }
@@ -49,8 +48,8 @@ import com.google.common.collect.Lists;
  * 
  * <code>
  *   app = ApplicationBuilder.builder()
- *           .child(BasicEntitySpec.newInstance(MySqlNode.class))
- *           .child(BasicEntitySpec.newInstance(JBoss7Server.class))
+ *           .child(EntitySpecs.spec(MySqlNode.class))
+ *           .child(EntitySpecs.spec(JBoss7Server.class))
  *           .manage();
  * </code>
  * 
@@ -62,27 +61,15 @@ public abstract class ApplicationBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationBuilder.class);
 
     /**
-     * Creates a new EntitySpec for this application type. If the type is an interface, then the returned spec
-     * will be use the normal logic of looking for {@link ImplementedBy} etc. 
-     * 
-     * However, if the type is a class then the that implementation will be used directly. When an entity is
-     * created using the EntitySpec, one will get back a proxy of type {@link StartableApplication}, but the
-     * proxy will also implement all the other interfaces that the given type class implements.
+     * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2)
      */
     @SuppressWarnings("unchecked")
     public static <T extends StartableApplication> BasicEntitySpec<StartableApplication, ?> newAppSpec(Class<? extends T> type) {
-        if (type.isInterface()) {
-            return (BasicEntitySpec<StartableApplication, ?>) BasicEntitySpec.newInstance(type);
-        } else {
-            // is implementation
-            Class<?>[] additionalInterfaceClazzes = type.getInterfaces();
-            return BasicEntitySpec.newInstance(StartableApplication.class, type)
-                    .additionalInterfaces(additionalInterfaceClazzes);
-        }
+        return EntitySpecs.appSpec(type);
     }
 
     public static Builder<StartableApplication> builder() {
-        return new Builder<StartableApplication>().app(BasicEntitySpec.newInstance(BasicApplication.class));
+        return new Builder<StartableApplication>().app(EntitySpecs.spec(BasicApplication.class));
     }
 
     public static <T extends Application> Builder<T> builder(EntitySpec<T> appSpec) {
@@ -101,14 +88,14 @@ public abstract class ApplicationBuilder {
             // is implementation
             Class interfaceType = (StartableApplication.class.isAssignableFrom(type)) ? StartableApplication.class : Application.class;
             Class<?>[] additionalInterfaceClazzes = type.getInterfaces();
-            EntitySpec<T> spec = BasicEntitySpec.newInstance((Class<T>)interfaceType, (Class<U>)type)
+            EntitySpec<T> spec = EntitySpecs.spec((Class<T>)interfaceType, (Class<U>)type)
                     .additionalInterfaces(additionalInterfaceClazzes);
             return new Builder<T>().app(spec);
         }
     }
 
     public static <T extends Application> Builder<T> builder(Class<T> interfaceType, Class<T> implType) {
-        return new Builder<T>().app(BasicEntitySpec.newInstance(interfaceType, implType));
+        return new Builder<T>().app(EntitySpecs.spec(interfaceType, implType));
     }
 
     public static class Builder<T extends Application> {
@@ -122,7 +109,7 @@ public abstract class ApplicationBuilder {
         // Use static builder methods
         protected Builder<T> app(EntitySpec<? extends T> val) {
             checkNotManaged();
-            this.appSpec = WrappingEntitySpec.newInstance(val); 
+            this.appSpec = EntitySpecs.wrapSpec(val); 
             return this;
         }
         
@@ -130,7 +117,7 @@ public abstract class ApplicationBuilder {
         @SuppressWarnings("unchecked")
         protected Builder<T> app(Class<? extends T> type) {
             checkNotManaged();
-            this.appSpec = BasicEntitySpec.newInstance((Class<T>)type); 
+            this.appSpec = EntitySpecs.spec((Class<T>)type); 
             return this;
         }
         
@@ -184,11 +171,11 @@ public abstract class ApplicationBuilder {
     private StartableApplication app;
     
     public ApplicationBuilder() {
-        this.appSpec = BasicEntitySpec.newInstance(BasicApplication.class);
+        this.appSpec = EntitySpecs.spec(BasicApplication.class);
     }
 
     public ApplicationBuilder(EntitySpec<? extends StartableApplication> appSpec) {
-        this.appSpec = WrappingEntitySpec.newInstance(appSpec);
+        this.appSpec = EntitySpecs.wrapSpec(appSpec);
     }
 
     public final ApplicationBuilder appDisplayName(String val) {
@@ -224,8 +211,7 @@ public abstract class ApplicationBuilder {
     
     protected final <T extends Entity> T createChild(Map<?,?> config, Class<T> type) {
         checkNotManaged();
-        BasicEntitySpec<T,?> spec = BasicEntitySpec.newInstance(type);
-        spec.configure(config);
+        EntitySpec<T> spec = EntitySpecs.spec(type).configure(config);
         return addChild(createEntity(spec));
     }
     

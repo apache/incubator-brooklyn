@@ -12,7 +12,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SimulatedLocation;
@@ -47,7 +47,7 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigPassedInAtConstructionIsAvailable() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKey, "aval")
                 .configure(intKey, 2));
 
@@ -57,7 +57,7 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigSetToGroovyTruthFalseIsAvailable() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(intKeyWithDefault, 0));
         
         assertEquals(entity.getConfig(intKeyWithDefault), (Integer)0);
@@ -65,16 +65,16 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testInheritedConfigSetToGroovyTruthFalseIsAvailable() throws Exception {
-        TestEntity parent = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity parent = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(intKeyWithDefault, 0));
-        TestEntity entity = parent.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         assertEquals(entity.getConfig(intKeyWithDefault), (Integer)0);
     }
     
     @Test
     public void testConfigSetToNullIsAvailable() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKeyWithDefault, null));
         
         assertEquals(entity.getConfig(strKeyWithDefault), null);
@@ -82,16 +82,16 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testInheritedConfigSetToNullIsAvailable() throws Exception {
-        TestEntity parent = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity parent = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKeyWithDefault, null));
-        TestEntity entity = parent.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         assertEquals(entity.getConfig(strKeyWithDefault), null);
     }
     
     @Test
     public void testConfigCanBeSetOnEntity() throws Exception {
-        TestEntity entity = app.createChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = app.createChild(EntitySpecs.spec(TestEntity.class));
         ((EntityLocal)entity).setConfig(strKey, "aval");
         ((EntityLocal)entity).setConfig(intKey, 2);
         Entities.manage(entity);
@@ -102,11 +102,11 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigInheritedFromParent() throws Exception {
-        TestEntity parent = app.createChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity parent = app.createChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKey, "aval"));
         ((EntityLocal)parent).setConfig(intKey, 2);
         Entities.manage(parent);
-        TestEntity entity = parent.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         assertEquals(entity.getConfig(strKey), "aval");
         assertEquals(2, entity.getConfig(intKey), (Integer)2);
@@ -114,9 +114,9 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigAtConstructionOverridesParentValue() throws Exception {
-        TestEntity parent = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity parent = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKey, "aval"));
-        TestEntity entity = parent.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKey, "diffval"));
         
         assertEquals(entity.getConfig(strKey), "diffval");
@@ -124,9 +124,9 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigSetterOverridesParentValue() throws Exception {
-        TestEntity parent = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity parent = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKey, "aval"));
-        TestEntity entity = parent.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         ((EntityLocal)entity).setConfig(strKey, "diffval");
         
         assertEquals(entity.getConfig(strKey), "diffval");
@@ -134,7 +134,7 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigSetterOverridesConstructorValue() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKey, "aval"));
         ((EntityLocal)entity).setConfig(strKey, "diffval");
         Entities.manage(entity);
@@ -144,8 +144,8 @@ public class EntityConfigMapUsageTest {
 
     @Test
     public void testConfigSetOnParentInheritedByExistingChildrenBeforeStarted() throws Exception {
-        TestEntity parent = app.createChild(BasicEntitySpec.newInstance(TestEntity.class));
-        TestEntity entity = parent.createChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity parent = app.createChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity = parent.createChild(EntitySpecs.spec(TestEntity.class));
         ((EntityLocal)parent).setConfig(strKey,"aval");
         Entities.manage(entity);
         
@@ -154,10 +154,10 @@ public class EntityConfigMapUsageTest {
 
     @Test
     public void testConfigInheritedThroughManyGenerations() throws Exception {
-        TestEntity e = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity e = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(strKey, "aval"));
-        TestEntity e2 = e.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
-        TestEntity e3 = e2.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity e2 = e.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity e3 = e2.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         assertEquals(e.getConfig(strKey), "aval");
         assertEquals(e2.getConfig(strKey), "aval");
@@ -167,7 +167,7 @@ public class EntityConfigMapUsageTest {
     // This has been relaxed to a warning, with a message saying "may not be supported in future versions"
     @Test(enabled=false)
     public void testConfigCannotBeSetAfterApplicationIsStarted() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         app.start(locs);
         
         try {
@@ -182,13 +182,13 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testConfigReturnsDefaultValueIfNotSet() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "defaultval");
     }
     
     @Test
     public void testGetFutureConfigWhenReady() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(TestEntity.CONF_NAME, DependentConfiguration.whenDone(Callables.returning("aval"))));
         app.start(locs);
         
@@ -198,7 +198,7 @@ public class EntityConfigMapUsageTest {
     @Test
     public void testGetFutureConfigBlocksUntilReady() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(TestEntity.CONF_NAME, DependentConfiguration.whenDone(new Callable<String>() {
                         public String call() {
                             try {
@@ -232,8 +232,8 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testGetAttributeWhenReadyConfigReturnsWhenSet() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
-        TestEntity entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME)));
         app.start(locs);
         
@@ -243,8 +243,8 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testGetAttributeWhenReadyWithPostProcessingConfigReturnsWhenSet() throws Exception {
-        TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
-        TestEntity entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(TestEntity.CONF_NAME, DependentConfiguration.attributePostProcessedWhenReady(entity, TestEntity.NAME, Predicates.notNull(), new Function<String,String>() {
                         public String apply(String input) {
                             return input+"mysuffix";
@@ -257,8 +257,8 @@ public class EntityConfigMapUsageTest {
     
     @Test
     public void testGetAttributeWhenReadyConfigBlocksUntilSet() throws Exception {
-        final TestEntity entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
-        TestEntity entity2 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class)
+        final TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME)));
         app.start(locs);
         

@@ -14,6 +14,7 @@ import brooklyn.policy.Policy;
  * Gives details of an entity to be created. It describes the entity's configuration, and is
  * reusable to create multiple entities with the same configuration.
  * 
+ * To create an EntitySpec, it is strongly encouraged to use {@link brooklyn.entity.proxying.EntitySpecs}.
  * Users who need to implement this are strongly encouraged to extend 
  * {@link brooklyn.entity.proxying.BasicEntitySpec}.
  * 

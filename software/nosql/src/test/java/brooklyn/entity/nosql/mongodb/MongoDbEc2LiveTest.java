@@ -1,22 +1,24 @@
 package brooklyn.entity.nosql.mongodb;
 
+import static org.testng.Assert.assertEquals;
+
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
+
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
+
 import com.google.common.collect.ImmutableList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
-
-import static org.testng.Assert.assertEquals;
 
 public class MongoDbEc2LiveTest extends AbstractEc2LiveTest {
 
@@ -30,7 +32,7 @@ public class MongoDbEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        MongoDbServer entity = app.createAndManageChild(BasicEntitySpec.newInstance(MongoDbServer.class));
+        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class));
         app.start(ImmutableList.of(loc));
         
         EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.SERVICE_UP, true);

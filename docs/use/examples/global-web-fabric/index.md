@@ -121,7 +121,7 @@ or perhaps a `CloudFoundryJavaWebAppCluster` if deploying to a Cloud Foundry loc
 (see below). 
 
 {% highlight java %}
-        DynamicFabric webFabric = createChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+        DynamicFabric webFabric = createChild(EntitySpecs.spec(DynamicFabric.class)
                 .displayName("Web Fabric")
                 .configure(DynamicFabric.FACTORY, new ElasticJavaWebAppService.Factory())
                 .configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH));
@@ -143,7 +143,7 @@ First, however, let's make sure any load-balancer proxies (e.g. nginx) in these 
 are listening on port 80:
 
 {% highlight java %}
-        DynamicFabric webFabric = createChild(BasicEntitySpec.newInstance(DynamicFabric.class)
+        DynamicFabric webFabric = createChild(EntitySpecs.spec(DynamicFabric.class)
                 .displayName("Web Fabric")
                 .configure(DynamicFabric.FACTORY, new ElasticJavaWebAppService.Factory())
                 .configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH)
@@ -160,7 +160,7 @@ from confusing us -- e.g. `brooklyn-1234.yourname.geopaas.org`.
 {% highlight java %}
         StringConfigMap config = getManagementContext().getConfig();
         
-        GeoscalingDnsService geoDns = createChild(BasicEntitySpec.newInstance(GeoscalingDnsService.class)
+        GeoscalingDnsService geoDns = createChild(EntitySpecs.spec(GeoscalingDnsService.class)
                 .displayName("GeoScaling DNS")
                 .configure("username", checkNotNull(config.getFirst("brooklyn.geoscaling.username"), "username"))
                 .configure("password", checkNotNull(config.getFirst("brooklyn.geoscaling.password"), "password"))

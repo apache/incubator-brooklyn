@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -36,7 +36,7 @@ public class SensorSummaryTest {
   @BeforeMethod(alwaysRun=true)
   public void setUp() throws Exception {
       app = ApplicationBuilder.builder(TestApplication.class).manage();
-      entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+      entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
   }
   
   @AfterMethod(alwaysRun=true)

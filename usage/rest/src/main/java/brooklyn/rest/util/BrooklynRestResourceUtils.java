@@ -31,6 +31,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
@@ -259,9 +260,9 @@ public class BrooklynRestResourceUtils {
         final Class<? extends Entity> clazz = getCatalog().loadClassByType(type, Entity.class);
         BasicEntitySpec<? extends Entity, ?> result;
         if (clazz.isInterface()) {
-            result = BasicEntitySpec.newInstance(clazz);
+            result = EntitySpecs.spec(clazz);
         } else {
-            result = BasicEntitySpec.newInstance(Entity.class).impl(clazz);
+            result = EntitySpecs.spec(Entity.class).impl(clazz);
         }
         if (!Strings.isEmpty(name)) result.displayName(name);
         result.configure( convertFlagsToKeys(result.getType(), config) );
@@ -274,13 +275,13 @@ public class BrooklynRestResourceUtils {
         
         BasicEntitySpec result;
         if (clazz.isInterface()) {
-            result = BasicEntitySpec.newInstance(clazz);
+            result = EntitySpecs.spec(clazz);
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
             Class<?>[] additionalInterfaceClazzes = clazz.getInterfaces();
-            result = BasicEntitySpec.newInstance(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
+            result = EntitySpecs.spec(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         
         if (!Strings.isEmpty(name)) result.displayName(name);

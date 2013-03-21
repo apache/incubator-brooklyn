@@ -19,7 +19,7 @@ import brooklyn.entity.Entity
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Attributes
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.test.entity.TestApplication
@@ -80,7 +80,7 @@ class CassandraClusterLiveTest {
      */
     @Test(groups = "Live")
     public void canStartupAndShutdown() {
-        cluster = app.createAndManageChild(BasicEntitySpec.newInstance(CassandraCluster.class)
+        cluster = app.createAndManageChild(EntitySpecs.spec(CassandraCluster.class)
                 .configure("initialSize", 2)
                 .configure("clusterName", "AmazonCluster"));
         assertEquals cluster.currentSize, 0

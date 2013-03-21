@@ -8,14 +8,14 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.basic.DependentConfiguration
 import brooklyn.event.basic.ListConfigKey.ListModifications
 import brooklyn.event.basic.MapConfigKey.MapModifications
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.Exceptions
 
 import com.google.common.collect.ImmutableList
 
@@ -29,7 +29,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     public void setUp() {
         locs = ImmutableList.of(new SimulatedLocation());
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        entity = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
     }
 
     @AfterMethod(alwaysRun=true)

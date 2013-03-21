@@ -1,26 +1,28 @@
 package brooklyn.entity.nosql.mongodb;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+
+import org.bson.types.ObjectId;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
+
 import com.google.common.collect.ImmutableList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import org.bson.types.ObjectId;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 
 public class MongoDbTest {
 
@@ -43,7 +45,7 @@ public class MongoDbTest {
 
     @Test(groups = "Integration")
     public void testCanStartAndStop() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(BasicEntitySpec.newInstance(MongoDbServer.class));
+        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
@@ -53,7 +55,7 @@ public class MongoDbTest {
 
     @Test(groups = "Integration")
     public void testCanReadAndWrite() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(BasicEntitySpec.newInstance(MongoDbServer.class));
+        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
         String id = insert(entity, "hello", "world!");
@@ -63,7 +65,7 @@ public class MongoDbTest {
 
     @Test(groups = "Integration")
     public void testPollInsertCountSensor() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(BasicEntitySpec.newInstance(MongoDbServer.class));
+        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class));
         app.start(ImmutableList.of(localhostProvisioningLocation));
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
 

@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.entity.TestApplication;
 
@@ -56,7 +56,7 @@ public class TomcatServerIntegrationTest {
         ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
         try {
             app = ApplicationBuilder.builder(TestApplication.class).manage();
-            tc = app.createAndManageChild(BasicEntitySpec.newInstance(TomcatServer.class).configure("httpPort",DEFAULT_HTTP_PORT));
+            tc = app.createAndManageChild(EntitySpecs.spec(TomcatServer.class).configure("httpPort",DEFAULT_HTTP_PORT));
             
             try {
                 tc.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));

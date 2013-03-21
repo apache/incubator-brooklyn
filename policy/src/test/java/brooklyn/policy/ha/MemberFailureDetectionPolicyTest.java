@@ -16,7 +16,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -42,7 +42,7 @@ public class MemberFailureDetectionPolicyTest {
     public void setUp() throws Exception {
         events = new CopyOnWriteArrayList<SensorEvent<FailureDescriptor>>();
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        group = app.createAndManageChild(BasicEntitySpec.newInstance(BasicGroup.class)
+        group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         
         app.getManagementContext().getSubscriptionManager().subscribe(
@@ -69,7 +69,7 @@ public class MemberFailureDetectionPolicyTest {
     }
 
     private TestEntity createAndManageChildOf(Entity parent) {
-        TestEntity e = app.getManagementContext().getEntityManager().createEntity(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity e = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class));
         e.setParent(parent);
         Entities.manage(e);
         return e;
@@ -225,7 +225,7 @@ public class MemberFailureDetectionPolicyTest {
         policy = new MemberFailureDetectionPolicy(MutableMap.of("onlyReportIfPreviouslyUp", false));
         group.addPolicy(policy);
         
-        TestEntity e1 = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        TestEntity e1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.ON_FIRE);
 
         group.addMember(e1);

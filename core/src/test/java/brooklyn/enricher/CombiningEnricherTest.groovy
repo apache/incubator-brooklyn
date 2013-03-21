@@ -10,7 +10,7 @@ import org.testng.annotations.Test
 import brooklyn.enricher.basic.AbstractCombiningEnricher
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
@@ -33,7 +33,7 @@ class CombiningEnricherTest {
     @BeforeMethod(alwaysRun=true)
     public void before() {
         app = ApplicationBuilder.builder(TestApplication.class).manage();
-        producer = app.createAndManageChild(BasicEntitySpec.newInstance(TestEntity.class));
+        producer = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         intSensorA = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.a");
         intSensorB = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.b");
         intSensorC = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.c");

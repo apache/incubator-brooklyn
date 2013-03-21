@@ -14,13 +14,12 @@ import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
@@ -92,12 +91,12 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
 
         MySqlNode mysql = (MySqlNode) addChild(
                 getEntityManager().createEntity(
-                        BasicEntitySpec.newInstance(MySqlNode.class)
+                        EntitySpecs.spec(MySqlNode.class)
                         .configure(MySqlNode.CREATION_SCRIPT_URL, getConfig(DB_SETUP_SQL_URL))) );
 
         ControlledDynamicWebAppCluster web = (ControlledDynamicWebAppCluster) addChild(
                 getEntityManager().createEntity(
-                        BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+                        EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                         .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                         .configure(JavaWebAppService.ROOT_WAR, getConfig(WAR_PATH))
                         .configure(JavaEntityMethods.javaSysProp("brooklyn.example.db.url"), 
@@ -125,7 +124,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
-                 .application(ApplicationBuilder.newAppSpec(WebClusterDatabaseExampleApp.class)
+                 .application(EntitySpecs.appSpec(WebClusterDatabaseExampleApp.class)
                          .displayName("Brooklyn WebApp Cluster with Database example"))
                  .webconsolePort(port)
                  .location(location)

@@ -1,13 +1,8 @@
 package brooklyn.demo
 
-import java.util.List
-
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.nosql.cassandra.CassandraCluster
-import brooklyn.entity.proxying.BasicEntitySpec;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.location.Location
+import brooklyn.entity.proxying.EntitySpecs
 
 /** Cassandra Application */
 public class MonitoredCassandraClusterExample extends ApplicationBuilder {
@@ -16,7 +11,7 @@ public class MonitoredCassandraClusterExample extends ApplicationBuilder {
      * For overriding, to create and wire together entities.
      */
     protected void doBuild() {
-        createChild(BasicEntitySpec.newInstance(CassandraCluster.class)
+        createChild(EntitySpecs.spec(CassandraCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "CassandraDemo")
                 .configure("jmxPort", "11099+")

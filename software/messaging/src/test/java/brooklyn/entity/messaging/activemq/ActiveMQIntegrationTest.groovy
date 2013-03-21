@@ -22,7 +22,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.BasicEntitySpec
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -57,7 +57,7 @@ public class ActiveMQIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdown() {
-        activeMQ = app.createAndManageChild(BasicEntitySpec.newInstance(ActiveMQBroker.class));
+        activeMQ = app.createAndManageChild(EntitySpecs.spec(ActiveMQBroker.class));
 
         activeMQ.start([ testLocation ])
         executeUntilSucceedsWithShutdown(activeMQ, timeout:600*TimeUnit.SECONDS) {
@@ -72,7 +72,7 @@ public class ActiveMQIntegrationTest {
      */
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithCustomJmx() {
-        activeMQ = app.createAndManageChild(BasicEntitySpec.newInstance(ActiveMQBroker.class)
+        activeMQ = app.createAndManageChild(EntitySpecs.spec(ActiveMQBroker.class)
                 .configure("jmxPort", "11099+"));
        
         app.start([ testLocation ])

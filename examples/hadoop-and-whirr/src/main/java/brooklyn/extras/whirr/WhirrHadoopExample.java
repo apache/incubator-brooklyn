@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.extras.whirr.core.WhirrCluster;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
 import brooklyn.launcher.BrooklynLauncherCli;
@@ -24,7 +24,7 @@ public class WhirrHadoopExample extends ApplicationBuilder {
 
     @Override
     protected void doBuild() {
-        WhirrCluster cluster = createChild(BasicEntitySpec.newInstance(WhirrHadoopCluster.class)
+        WhirrCluster cluster = createChild(EntitySpecs.spec(WhirrHadoopCluster.class)
                 .displayName("brooklyn-hadoop-example")
                 .configure("size", 2)
                 .configure("memory", 2048));
