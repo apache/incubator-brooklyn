@@ -53,7 +53,7 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(KafkaClusterImpl.class)
 public interface KafkaCluster extends Entity, Startable, Resizable  {
 
-    public static class Spec<T extends KafkaCluster, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
+    class Spec<T extends KafkaCluster, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
 
         private static class ConcreteSpec extends Spec<KafkaCluster, ConcreteSpec> {
             ConcreteSpec() {
@@ -70,7 +70,7 @@ public interface KafkaCluster extends Entity, Startable, Resizable  {
         }
 
         public S initialSize(int val) {
-            configure(INITIAL_SIZE, 1);
+            configure(INITIAL_SIZE, val);
             return self();
         }
 
@@ -94,35 +94,35 @@ public interface KafkaCluster extends Entity, Startable, Resizable  {
     public static final ConfigKey<Integer> START_TIMEOUT = ConfigKeys.START_TIMEOUT;
 
     @SetFromFlag("initialSize")
-    public static ConfigKey<Integer> INITIAL_SIZE = new BasicConfigKey<Integer>(Cluster.INITIAL_SIZE, 1);
+    ConfigKey<Integer> INITIAL_SIZE = new BasicConfigKey<Integer>(Cluster.INITIAL_SIZE, 1);
 
-    @SetFromFlag("controller")
-    public static BasicAttributeSensorAndConfigKey<KafkaZookeeper> ZOOKEEPER = new BasicAttributeSensorAndConfigKey<KafkaZookeeper>(
-            KafkaZookeeper.class, "kafkacluster.zookeeper", "Kafka zookeeper for the cluster; if null a default will created");
+    @SetFromFlag("zookeeper")
+    BasicAttributeSensorAndConfigKey<KafkaZookeeper> ZOOKEEPER = new BasicAttributeSensorAndConfigKey<KafkaZookeeper>(
+            KafkaZookeeper.class, "kafka.cluster.zookeeper", "Kafka zookeeper for the cluster; if null a default will created");
 
     @SetFromFlag("zookeeperSpec")
-    public static BasicAttributeSensorAndConfigKey<EntitySpec<KafkaZookeeper>> ZOOKEEPER_SPEC = new BasicAttributeSensorAndConfigKey(
-            EntitySpec.class, "kafkacluster.zookeeperSpec", "Spec for creating the kafka zookeeper");
+    BasicAttributeSensorAndConfigKey<EntitySpec<KafkaZookeeper>> ZOOKEEPER_SPEC = new BasicAttributeSensorAndConfigKey(
+            EntitySpec.class, "kafka.cluster.zookeeperSpec", "Spec for creating the kafka zookeeper");
 
     /** Factory to create a Kafka broker, given flags */
     @SetFromFlag("brokerFactory")
-    public static BasicAttributeSensorAndConfigKey<ConfigurableEntityFactory<KafkaBroker>> BROKER_FACTORY = new BasicAttributeSensorAndConfigKey(
-            ConfigurableEntityFactory.class, "kafkacluster.brokerFactory", "Factory to create a Kafka broker");
+    BasicAttributeSensorAndConfigKey<ConfigurableEntityFactory<KafkaBroker>> BROKER_FACTORY = new BasicAttributeSensorAndConfigKey(
+            ConfigurableEntityFactory.class, "kafka.cluster.brokerFactory", "Factory to create a Kafka broker");
 
     /** Spec for Kafka broker entiites to be created */
     @SetFromFlag("brokerSpec")
-    public static BasicAttributeSensorAndConfigKey<EntitySpec<KafkaBroker>> BROKER_SPEC = new BasicAttributeSensorAndConfigKey(
-            EntitySpec.class, "kafkacluster.brokerSpec", "Spec for Kafka broker entiites to be created");
+    BasicAttributeSensorAndConfigKey<EntitySpec<KafkaBroker>> BROKER_SPEC = new BasicAttributeSensorAndConfigKey(
+            EntitySpec.class, "kafka.cluster.brokerSpec", "Spec for Kafka broker entiites to be created");
 
-    public static AttributeSensor<DynamicCluster> CLUSTER = new BasicAttributeSensor<DynamicCluster>(
-            DynamicCluster.class, "kafkacluster.cluster", "Underlying Kafka broker cluster");
+    AttributeSensor<DynamicCluster> CLUSTER = new BasicAttributeSensor<DynamicCluster>(
+            DynamicCluster.class, "kafka.cluster.brokerCluster", "Underlying Kafka broker cluster");
 
-    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
+    AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
 
-    public KafkaZookeeper getZookeeper();
+    KafkaZookeeper getZookeeper();
 
-    public ConfigurableEntityFactory<KafkaBroker> getBrokerFactory();
+    ConfigurableEntityFactory<KafkaBroker> getBrokerFactory();
 
-    public DynamicCluster getCluster();
+    DynamicCluster getCluster();
 
 }

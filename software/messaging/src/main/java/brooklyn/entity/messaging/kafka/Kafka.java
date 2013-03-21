@@ -15,6 +15,7 @@
  */
 package brooklyn.entity.messaging.kafka;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -26,7 +27,7 @@ import brooklyn.util.flags.SetFromFlag;
  */
 public interface Kafka {
 
-    BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "0.7.2-incubating");
+    ConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "0.7.2-incubating");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
