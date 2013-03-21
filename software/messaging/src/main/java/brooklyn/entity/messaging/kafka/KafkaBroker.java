@@ -43,7 +43,7 @@ public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Ka
             String.class, "kafka.config.server", "Server configuration template (in freemarker format)", "classpath://brooklyn/entity/messaging/kafka/server.properties");
 
     @SetFromFlag("zookeeper")
-    BasicConfigKey<KafkaZookeeper> ZOOKEEPER = new BasicConfigKey<KafkaZookeeper>(KafkaZookeeper.class, "Kafka zookeeper entity");
+    BasicConfigKey<KafkaZookeeper> ZOOKEEPER = new BasicConfigKey<KafkaZookeeper>(KafkaZookeeper.class, "kafka.broker.zookeeper", "Kafka zookeeper entity");
 
     AttributeSensor<Integer> BROKER_ID = new BasicAttributeSensor<Integer>(Integer.class, "kafka.broker.id", "Kafka unique broker ID");
 

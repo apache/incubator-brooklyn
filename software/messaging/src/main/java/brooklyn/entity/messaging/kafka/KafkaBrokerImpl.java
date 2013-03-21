@@ -76,7 +76,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     @Override
     public KafkaZookeeper getZookeeper() { return getConfig(ZOOKEEPER); }
 
-    public KafkaTopic createTopic(Map properties) {
+    public KafkaTopic createTopic(Map<?, ?> properties) {
         KafkaTopic result = new KafkaTopic(properties, this);
         Entities.manage(result);
         result.create();
@@ -84,16 +84,8 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return KafkaBrokerDriver.class;
-    }
-
-    @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Set<Integer> ports = Sets.newLinkedHashSet(super.getRequiredOpenPorts());
-        ports.add(getAttribute(KAFKA_PORT));
-        log.debug("getRequiredOpenPorts detected expanded ports {} for {}", ports, this);
-        return ports;
     }
 
     private ObjectName socketServerStatsMbean = JmxHelper.createObjectName("kafka:type=kafka.SocketServerStats");

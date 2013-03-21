@@ -76,11 +76,11 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
         if (zookeeper == null) {
             EntitySpec<KafkaZookeeper> zookeeperSpec = getAttribute(ZOOKEEPER_SPEC);
             if (zookeeperSpec == null) {
-                log.debug("creating controller using default spec for {}", this);
+                log.debug("creating zookeeper using default spec for {}", this);
                 zookeeperSpec = BasicEntitySpec.newInstance(KafkaZookeeper.class);
                 setAttribute(ZOOKEEPER_SPEC, zookeeperSpec);
             } else {
-                log.debug("creating controller using custom spec for {}", this);
+                log.debug("creating zookeeper using custom spec for {}", this);
             }
             zookeeper = getEntityManager().createEntity(WrappingEntitySpec.newInstance(zookeeperSpec).parent(this));
             if (Entities.isManaged(this)) Entities.manage(zookeeper);

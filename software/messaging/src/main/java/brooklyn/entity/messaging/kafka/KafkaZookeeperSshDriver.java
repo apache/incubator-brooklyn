@@ -24,13 +24,17 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class KafkaZookeeperSshDriver extends JavaSoftwareProcessSshDriver implements KafkaZookeeperDriver {
@@ -83,8 +87,23 @@ public class KafkaZookeeperSshDriver extends JavaSoftwareProcessSshDriver implem
                 .body.append(format("cp -R %s/* %s", getExpandedInstallDir(), getRunDir()))
                 .execute();
 
-        String serverConfig = entity.getConfig(KafkaZookeeper.ZOOKEEPER_CONFIG_TEMPLATE);
-        copyTemplate(serverConfig, "zookeeper.properties");
+        String zookeeperConfig = entity.getConfig(KafkaZookeeper.ZOOKEEPER_CONFIG_TEMPLATE);
+        copyTemplate(zookeeperConfig, "zookeeper.properties");
+
+        // Copy JMX agent Jar to server
+        getMachine().copyTo(new ResourceUtils(this).getResourceFromUrl(getJmxRmiAgentJarUrl()), getJmxRmiAgentJarDestinationFilePath());
+    }
+
+    public String getJmxRmiAgentJarBasename() {
+        return "brooklyn-jmxrmi-agent-" + BrooklynVersion.get() + ".jar";
+    }
+
+    public String getJmxRmiAgentJarUrl() {
+        return "classpath://" + getJmxRmiAgentJarBasename();
+    }
+
+    public String getJmxRmiAgentJarDestinationFilePath() {
+        return getRunDir() + "/" + getJmxRmiAgentJarBasename();
     }
 
     @Override
@@ -111,10 +130,31 @@ public class KafkaZookeeperSshDriver extends JavaSoftwareProcessSshDriver implem
     }
 
     @Override
+    protected Map<String, ?> getJmxJavaSystemProperties() {
+        return MutableMap.<String, Object> builder()
+                .put(JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, getJmxPort())
+                .put(JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, getRmiServerPort())
+                .put("com.sun.management.jmxremote.ssl", false)
+                .put("com.sun.management.jmxremote.authenticate", false)
+                .put("java.rmi.server.hostname", getHostname())
+                .build();
+    }
+
+    @Override
+    protected List<String> getJmxJavaConfigOptions() {
+        return ImmutableList.of("-javaagent:" + getJmxRmiAgentJarDestinationFilePath());
+    }
+
+    /**
+     * Use RMI agent to provide JMX.
+     */
+    @Override
     public Map<String, String> getShellEnvironment() {
         Map<String, String> orig = super.getShellEnvironment();
+        String kafkaJmxOpts = orig.remove("JAVA_OPTS");
         return MutableMap.<String, String>builder()
-                .put("KAFKA_JMX_OPTS", orig.get("JAVA_OPTS"))
+                .putAll(orig)
+                .put("KAFKA_JMX_OPTS", kafkaJmxOpts)
                 .build();
     }
 
