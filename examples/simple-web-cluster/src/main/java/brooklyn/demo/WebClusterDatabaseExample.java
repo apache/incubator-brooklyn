@@ -21,7 +21,7 @@ import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.launcher.BrooklynLauncherCli;
+import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
@@ -79,7 +79,7 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
-        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .application(new WebClusterDatabaseExample().appDisplayName("Brooklyn WebApp Cluster with Database example"))
                 .webconsolePort(port)
                 .location(location)

@@ -13,7 +13,7 @@ import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.launcher.BrooklynLauncherCli;
+import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
@@ -66,7 +66,7 @@ public class WebClusterExample extends ApplicationBuilder {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         // TODO Want to parse, to handle multiple locations
-        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .application(new WebClusterExample().appDisplayName("Brooklyn WebApp Cluster example"))
                 .webconsolePort(port)
                 .location(location)

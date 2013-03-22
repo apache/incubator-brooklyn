@@ -13,7 +13,7 @@ import brooklyn.entity.basic.StartableApplication
 import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.launcher.BrooklynLauncherCli
+import brooklyn.launcher.BrooklynLauncher
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
 
@@ -62,7 +62,7 @@ public class WebClusterDatabaseExampleGroovy extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
-        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .application(new WebClusterDatabaseExampleGroovy().appDisplayName("Brooklyn WebApp Cluster with Database example"))
                 .webconsolePort(port)
                 .location(location)

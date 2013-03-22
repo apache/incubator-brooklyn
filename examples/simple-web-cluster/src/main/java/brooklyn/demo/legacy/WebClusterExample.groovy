@@ -13,10 +13,10 @@ import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl
 import brooklyn.entity.webapp.DynamicWebAppCluster
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory
 import brooklyn.launcher.BrooklynLauncher
-import brooklyn.location.Location
-import brooklyn.location.basic.LocationRegistry
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
+
+import com.google.common.collect.Lists
 
 /**
  * Launches a clustered and load-balanced set of web servers.
@@ -25,14 +25,15 @@ import brooklyn.util.CommandLineUtil
  * <p>
  * Requires: 
  * -Xmx512m -Xms128m -XX:MaxPermSize=256m
- * and brooklyn-all jar, and this jar or classes dir, on classpath. 
- **/
+ * and brooklyn-all jar, and this jar or classes dir, on classpath.
+ * 
+ * @deprecated in 0.5; see {@link brooklyn.demo.WebClusterExample}
+ */
+@Deprecated
 public class WebClusterExample extends AbstractApplication {
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterExample)
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault()
-
-    public static final String DEFAULT_LOCATION = "localhost"
 
     public static final String WAR_PATH = "classpath://hello-world-webapp.war"
     
@@ -54,24 +55,25 @@ public class WebClusterExample extends AbstractApplication {
         factory: jbossFactory)
     
     AutoScalerPolicy policy = AutoScalerPolicy.builder()
-            .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+            .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_LAST_PER_NODE)
             .sizeRange(1, 5)
             .metricRange(10, 100)
             .build();
     
 
     public static void main(String[] argv) {
-        ArrayList args = new ArrayList(Arrays.asList(argv));
-        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        List<Location> locations = new LocationRegistry().getLocationsById(args ?: [DEFAULT_LOCATION])
-
+        List<String> args = Lists.newArrayList(argv);
+        String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
+        String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
         WebClusterExample app = new WebClusterExample(name:'Brooklyn WebApp Cluster example')
-            
-        BrooklynLauncher.manage(app, port)
-        app.start(locations)
-        Entities.dumpInfo(app)
         
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+                .application(app)
+                .webconsolePort(port)
+                .location(location)
+                .start();
+         
         app.web.cluster.addPolicy(app.policy)
+        Entities.dumpInfo(launcher.getApplications());
     }
-
 }

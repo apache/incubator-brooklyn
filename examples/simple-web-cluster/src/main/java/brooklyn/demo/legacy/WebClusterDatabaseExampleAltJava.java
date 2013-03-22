@@ -3,9 +3,6 @@ package brooklyn.demo.legacy;
 import static brooklyn.event.basic.DependentConfiguration.valueWhenAttributeReady;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,12 +22,11 @@ import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocationRegistry;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  * Launches a 3-tier app with nginx, clustered jboss, and mysql.
@@ -39,15 +35,16 @@ import com.google.common.base.Function;
  * <p>
  * Requires: 
  * -Xmx512m -Xms128m -XX:MaxPermSize=256m
- * and brooklyn-all jar, and this jar or classes dir, on classpath. 
- **/
+ * and brooklyn-all jar, and this jar or classes dir, on classpath.
+ * 
+ * @deprecated in 0.5; see {@link brooklyn.demo.WebClusterDatabaseExample}
+ */
+@Deprecated
 public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
     private static final long serialVersionUID = -3549130575905836518L;
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterDatabaseExampleAltJava.class);
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault();
-
-    public static final String DEFAULT_LOCATION = "localhost";
 
     public static final String WAR_PATH = "classpath://hello-world-sql-webapp.war";
     
@@ -86,25 +83,27 @@ public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
         web.getFactory().setConfig(JBoss7Server.JAVA_SYSPROPS, jvmSysProps);
 
         web.getCluster().addPolicy(AutoScalerPolicy.builder()
-                .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
+                .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_LAST_PER_NODE)
                 .sizeRange(1, 5)
                 .metricRange(10, 100)
                 .build());
     }    
 
     public static void main(String[] argv) throws IOException {
-        ArrayList args = new ArrayList(Arrays.asList(argv));
-        int port = CommandLineUtil.getCommandLineOptionInt(args, "--port", 8081);
-        BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
-        List<Location> locations = new LocationRegistry(properties).getLocationsById(
-                !args.isEmpty() ? args : Collections.singletonList(DEFAULT_LOCATION));
+        List<String> args = Lists.newArrayList(argv);
+        String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
+        String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
         WebClusterDatabaseExampleAltJava app = new WebClusterDatabaseExampleAltJava();
         app.setDisplayName("Brooklyn WebApp Cluster with Database example");
-            
-        BrooklynLauncher.manage(app, port);
-        app.start(locations);
-        Entities.dumpInfo(app);
+
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+                .application(app)
+                .webconsolePort(port)
+                .location(location)
+                .start();
+         
+        Entities.dumpInfo(launcher.getApplications());
     }
     
 }

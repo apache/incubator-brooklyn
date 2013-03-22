@@ -41,7 +41,7 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
-import brooklyn.launcher.BrooklynLauncherCli;
+import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SshMachineLocation;
@@ -259,13 +259,13 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
             }
         }
     }
-        
+    
     public static void main(String[] argv) {
         List<String> args = Lists.newArrayList(argv);
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
-        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .application(EntitySpecs.spec(StartableApplication.class)
                         .displayName("Brooklyn Global Web Fabric with Hadoop Example")
                         .impl(WebFabricWithHadoopExample.class))

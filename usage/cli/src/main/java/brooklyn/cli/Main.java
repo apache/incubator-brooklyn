@@ -7,7 +7,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
@@ -35,9 +34,9 @@ import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -112,7 +111,7 @@ public class Main {
 
         @Override
         public Void call() throws Exception {
-            log.debug("Invoked help command");
+            if (log.isDebugEnabled()) log.debug("Invoked help command: {}", this);
             return help.call();
         }
     }
@@ -122,7 +121,7 @@ public class Main {
 
         @Override
         public Void call() throws Exception {
-            log.debug("Invoked info command");
+            if (log.isDebugEnabled()) log.debug("Invoked info command: {}", this);
 
             // Get current version
             String version = BrooklynVersion.get();
@@ -175,7 +174,7 @@ public class Main {
         public boolean noShutdownOnExit = false;
 
         /**
-         * Note that this is a temporrary workaround to allow for runnig the
+         * Note that this is a temporary workaround to allow for running the
          * brooklyn-whirr example.
          * 
          * This will be replaced by more powerful CLI control for running
@@ -193,7 +192,7 @@ public class Main {
 
         @Override
         public Void call() throws Exception {
-            log.debug("Invoked launch command");
+            if (log.isDebugEnabled()) log.debug("Invoked launch command {}", this);
             if (!quiet) System.out.println(BANNER);
 
             if (verbose) {
@@ -203,7 +202,17 @@ public class Main {
                     System.out.println("Launching brooklyn server (no app)");
                 }
             }
-            BrooklynLauncher launcher = BrooklynLauncher.newLauncher();
+
+            if (Strings.isBlank(locations)) {
+                if (app != null) {
+                    System.err.println("Locations parameter not supplied: assuming localhost");
+                    locations = "localhost";
+                }
+            } else {
+                if (app == null) {
+                    System.err.println("Locations specified without any applications; ignoring locations");
+                }
+            }
 
             ResourceUtils utils = new ResourceUtils(this);
             ClassLoader parent = utils.getLoader();
@@ -211,48 +220,41 @@ public class Main {
 
             // First, run a setup script if the user has provided one
             if (script != null) {
-                log.debug("Running the user provided script: {}", script);
-                String content = utils.getResourceAsString(script);
-                GroovyShell shell = new GroovyShell(loader);
-                shell.evaluate(content);
+                execGroovyScript(utils, loader, script);
             }
 
-            launcher.webconsolePort(port);
-            launcher.webconsole(!noConsole);
-
-            if (locations == null || locations.isEmpty()) {
-                if (app != null) {
-                    System.err.println("Locations parameter not supplied: assuming localhost");
-                    locations = "localhost";
-                }
-            }
-
+            BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+                    .webconsolePort(port)
+                    .webconsole(!noConsole)
+                    .shutdownOnExit(!noShutdownOnExit)
+                    .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
+            
             if (app != null) {
                 // Create the instance of the brooklyn app
                 log.debug("Load the user's application: {}", app);
                 Object loadedApp = loadApplicationFromClasspathOrParse(utils, loader, app);
                 if (loadedApp instanceof ApplicationBuilder) {
-                    launcher.managing((ApplicationBuilder)loadedApp);
+                    launcher.application((ApplicationBuilder)loadedApp);
+                } else if (loadedApp instanceof Application) {
+                    launcher.application((AbstractApplication)loadedApp);
                 } else {
-                    launcher.managing((AbstractApplication)loadedApp);
+                    throw new IllegalStateException("Unexpected application type "+(loadedApp==null ? null : loadedApp.getClass())+", for app "+loadedApp);
                 }
             }
 
+            
             // Launch server
-            log.info("Launching Brooklyn web console management");
-            BrooklynServerDetails server = launcher.launch();
+            launcher.start();
+            BrooklynServerDetails server = launcher.getServerDetails();
             ManagementContext ctx = server.getManagementContext();
             
             // Force load of catalog (so web console is up to date)
             ctx.getCatalog().getCatalogItems();
 
-            // Resolve locations
-            List<Location> brooklynLocations = locations != null ?
-                    ctx.getLocationRegistry().resolve(Arrays.asList(locations)) : null;
-
-            // Start application
-            startAllApps(ctx.getApplications(), brooklynLocations);
-
+            if (verbose) {
+                Entities.dumpInfo(launcher.getApplications());
+            }
+            
             if (stopOnKeyPress) {
                 // Wait for the user to type a key
                 log.info("Server started. Press return to stop.");
@@ -272,15 +274,23 @@ public class Main {
             Object mutex = new Object();
             synchronized (mutex) {
                 try {
-                    while (true) {
+                    while (!Thread.currentThread().isInterrupted()) {
                         mutex.wait();
-                        log.debug("spurious wake in brooklyn Main, how about that!");
+                        log.debug("Spurious wake in brooklyn Main while waiting for interrupt, how about that!");
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return; // exit gracefully
                 }
             }
+        }
+
+        @VisibleForTesting
+        void execGroovyScript(ResourceUtils utils, GroovyClassLoader loader, String script) {
+            log.debug("Running the user provided script: {}", script);
+            String content = utils.getResourceAsString(script);
+            GroovyShell shell = new GroovyShell(loader);
+            shell.evaluate(content);
         }
 
         /**
@@ -304,7 +314,7 @@ public class Main {
             }
             final Class<?> clazz = tempclazz;
 
-            // Intantiate the app class (or app builder)
+            // Intantiate an app builder (wrapping app class in ApplicationBuilder, if necessary)
             if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
                 Constructor<?> constructor = clazz.getConstructor();
                 return (ApplicationBuilder) constructor.newInstance();
@@ -315,9 +325,12 @@ public class Main {
                     }};
             } else if (AbstractApplication.class.isAssignableFrom(clazz)) {
                 // TODO If this application overrides postConstruct() then in trouble, as that won't get called!
+                // TODO grr; what to do about non-startable applications?
+                // without this we could return ApplicationBuilder rather than Object
                 Constructor<?> constructor = clazz.getConstructor();
                 return (AbstractApplication) constructor.newInstance();
             } else if (AbstractEntity.class.isAssignableFrom(clazz)) {
+                // TODO Should we really accept any entity type, and just wrap it in an app? That's not documented!
                 return new ApplicationBuilder() {
                     @Override protected void doBuild() {
                         addChild(EntitySpecs.spec(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
@@ -333,34 +346,12 @@ public class Main {
         }
 
         @VisibleForTesting
-        void startAllApps(Collection<? extends Application> applications, List<? extends Location> brooklynLocations) {
-            if (applications.size() > 0) {
-                for (Application application : applications) {
-                    // Start application
-                    if (application!=null) {
-                        log.info("Starting brooklyn application {} in location{} {}", new Object[] { application, brooklynLocations.size()!=1?"s":"", brooklynLocations });
-                        if (!noShutdownOnExit) Entities.invokeStopOnShutdown(application);
-                        try {
-                            ((Startable)application).start(brooklynLocations);
-                        } catch (Exception e) {
-                            log.error("Error starting "+application+": "+e, e);
-                        }
-                    }
-                    
-                    if (verbose) {
-                        if (application!=null) Entities.dumpInfo(application);
-                    }
-                }
-            } else if (brooklynLocations!=null && !brooklynLocations.isEmpty()) {
-                System.err.println("Locations specified without any applications; ignoring");
-            }
-        }
-        
-        @VisibleForTesting
         void stopAllApps(Collection<? extends Application> applications) {
             for (Application application : applications) {
                 try {
-                    ((Startable)application).stop();
+                    if (application instanceof Startable) {
+                        ((Startable)application).stop();
+                    }
                 } catch (Exception e) {
                     log.error("Error stopping "+application+": "+e, e);
                 }
@@ -375,7 +366,8 @@ public class Main {
                     .add("location", locations)
                     .add("port", port)
                     .add("noConsole", noConsole)
-                    .add("noShutdwonOnExit", noShutdownOnExit);
+                    .add("noShutdownOnExit", noShutdownOnExit)
+                    .add("stopOnKeyPress", stopOnKeyPress);
         }
     }
 

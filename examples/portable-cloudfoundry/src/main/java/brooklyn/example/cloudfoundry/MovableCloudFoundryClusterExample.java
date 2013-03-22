@@ -5,7 +5,7 @@ import java.util.List;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpecs;
-import brooklyn.launcher.BrooklynLauncherCli;
+import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
@@ -26,7 +26,7 @@ public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
-        BrooklynLauncherCli launcher = BrooklynLauncherCli.newInstance()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .application(new MovableCloudFoundryClusterExample().appDisplayName("Movable Web Cluster"))
                 .webconsolePort(port)
                 .location(location)
