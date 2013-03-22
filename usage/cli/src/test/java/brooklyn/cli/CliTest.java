@@ -185,7 +185,7 @@ public class CliTest {
         assertTrue(details.contains("location=localhost"), details);
         assertTrue(details.contains("port=8081"), details);
         assertTrue(details.contains("noConsole=false"), details);
-        assertTrue(details.contains("noShutdwonOnExit=false"), details);
+        assertTrue(details.contains("noShutdownOnExit=false"), details);
     }
 
     @Test
