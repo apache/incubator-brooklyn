@@ -366,7 +366,7 @@ public class Main {
                     .add("location", locations)
                     .add("port", port)
                     .add("noConsole", noConsole)
-                    .add("noShutdwonOnExit", noShutdownOnExit)
+                    .add("noShutdownOnExit", noShutdownOnExit)
                     .add("stopOnKeyPress", stopOnKeyPress);
         }
     }

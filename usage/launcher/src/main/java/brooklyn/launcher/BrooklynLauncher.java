@@ -192,6 +192,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use {@link #brooklynProperties(String, Object)}
      */
+    @Deprecated
     public BrooklynLauncher setAttribute(String field, Object value) {
         return brooklynProperties(field, value);
     }
@@ -211,7 +212,7 @@ public class BrooklynLauncher {
     }
 
     /** 
-     * Specifies the port where the web console (and any additional webapps specified) will listed; 
+     * Specifies the port where the web console (and any additional webapps specified) will be listed; 
      * default "8081+" being the first available >= 8081.
      */ 
     public BrooklynLauncher webconsolePort(int port) {
@@ -219,7 +220,7 @@ public class BrooklynLauncher {
     }
 
     /**
-     * Specifies the port where the web console (and any additional webapps specified) will listed;
+     * Specifies the port where the web console (and any additional webapps specified) will be listed;
      * default "8081+" being the first available >= 8081.
      */
     public BrooklynLauncher webconsolePort(String port) {
@@ -227,7 +228,7 @@ public class BrooklynLauncher {
     }
 
     /**
-     * Specifies the port where the web console (and any additional webapps specified) will listed;
+     * Specifies the port where the web console (and any additional webapps specified) will be listed;
      * default "8081+" being the first available >= 8081.
      */ 
     public BrooklynLauncher webconsolePort(PortRange port) {
@@ -379,6 +380,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use newInstance().application(app).start()
      */
+    @Deprecated
     public static ManagementContext manage(AbstractApplication app) {
         return manage(app, 8081, true, true);
     }
@@ -389,6 +391,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use newInstance().webconsolePort(port).shutdownOnExit(true).application(app).start()
      */
+    @Deprecated
     public static ManagementContext manage(final AbstractApplication app, int port){
         return manage(app, port,true,true);
     }
@@ -398,6 +401,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use newInstance().webconsolePort(port).shutdownOnExit(shutdownApp).webconsole(startWebConsole).application(app).start()
      */
+    @Deprecated
     public static ManagementContext manage(final AbstractApplication app, int port, boolean shutdownApp, boolean startWebConsole) {
         // Locate the management context
         Entities.startManagement(app);
@@ -420,6 +424,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use newInstance();
      */
+    @Deprecated
     public static BrooklynLauncher newLauncher() {
         return newInstance();
     }
@@ -429,6 +434,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use managementContext(context);
      */
+    @Deprecated
     public BrooklynLauncher management(ManagementContext context) {
         return managementContext(context);
     }
@@ -439,6 +445,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use application(app);
      */
+    @Deprecated
     public BrooklynLauncher managing(Application app) {
         return application(app);
     }
@@ -449,6 +456,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use application(app);
      */
+    @Deprecated
     public BrooklynLauncher managing(ApplicationBuilder app) {
         return application(app);
     }
@@ -458,6 +466,7 @@ public class BrooklynLauncher {
      * 
      * @deprecated in 0.5; use {@link #start()}; if you really don't want to start the apps then don't pass them in!
      */
+    @Deprecated
     public BrooklynServerDetails launch() {
         // for backwards compatibility:
         shutdownOnExit(false);
