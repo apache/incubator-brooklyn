@@ -134,12 +134,13 @@ public class LanguageUtilsTest {
 	
 	@Test
 	public void testRepeatUntilSuccessFlags() {
-		long start = System.currentTimeMillis();
-		LanguageUtils.repeatUntilSuccess(period: 5*TimeUnit.MILLISECONDS, timeout: 500*TimeUnit.MILLISECONDS) { 
-			System.currentTimeMillis() > start+50 
-		}
-		assertTrue System.currentTimeMillis() > start+50
-		assertTrue System.currentTimeMillis() < start+500
+	    long start = System.currentTimeMillis();
+	    LanguageUtils.repeatUntilSuccess(period: 1*TimeUnit.MILLISECONDS, timeout: 5000*TimeUnit.MILLISECONDS) { 
+	        System.currentTimeMillis() > start+50 
+	    }
+	    long time = System.currentTimeMillis() - start;
+	    assertTrue(time >= 50, "time="+time);
+	    assertTrue(time <= 1000, "time="+time);
 	}
 	@Test
 	public void testRepeatUntilSuccessDefaults() {
