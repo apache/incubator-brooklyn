@@ -27,16 +27,17 @@ public class EntityConfigSummary extends ConfigSummary {
       @JsonProperty("defaultValue") Object defaultValue,
       @JsonProperty("reconfigurable") boolean reconfigurable,
       @JsonProperty("label") String label,
+      @JsonProperty("priority") Double priority,
       @JsonProperty("links") Map<String, URI> links
   ) {
-    super(name, type, description, defaultValue, reconfigurable, label);
+    super(name, type, description, defaultValue, reconfigurable, label, priority);
     this.links = links!=null ? ImmutableMap.copyOf(links) : null;
   }
 
-  protected EntityConfigSummary(ConfigKey<?> config, String label, Map<String, URI> links) {
+  protected EntityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {
       super(config.getName(), config.getTypeName(), 
           config.getDescription(), 
-          JsonUtils.toJsonable(config.getDefaultValue()), config.isReconfigurable(), label);
+          JsonUtils.toJsonable(config.getDefaultValue()), config.isReconfigurable(), label, priority);
       this.links = links==null ? null : ImmutableMap.copyOf(links);
   }
   
@@ -57,6 +58,7 @@ public class EntityConfigSummary extends ConfigSummary {
       
 //    String label = typeMap.getConfigKeyField(config.getName());
     String label = null;
+    Double priority = null;
     
     String applicationUri = "/v1/applications/" + entity.getApplicationId();
     String entityUri = applicationUri + "/entities/" + entity.getId();
@@ -66,19 +68,20 @@ public class EntityConfigSummary extends ConfigSummary {
         .put("entity", URI.create(entityUri))
         .build();
     
-    return new EntityConfigSummary(config, label, links);
+    return new EntityConfigSummary(config, label, priority, links);
   }
 
   /** generates a representation for a given config key, with no label or links */
   public static EntityConfigSummary forCatalog(ConfigKey<?> config) {
-      return new EntityConfigSummary(config, null, null);
+      return new EntityConfigSummary(config, null, null, null);
   }
   
   /** generates a representation for a given config key, with no links, but label from this field */
   public static EntityConfigSummary forCatalog(ConfigKey<?> config, Field configKeyField) {
       CatalogConfig catalogConfig = configKeyField!=null ? configKeyField.getAnnotation(CatalogConfig.class) : null;
       String label = catalogConfig==null ? null : catalogConfig.label();
-      return new EntityConfigSummary(config, label, null);
+      Double priority = catalogConfig==null ? null : catalogConfig.priority();
+      return new EntityConfigSummary(config, label, priority, null);
   }
 
   @Override
