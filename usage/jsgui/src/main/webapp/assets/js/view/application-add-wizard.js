@@ -459,18 +459,24 @@ define([
             if (catalogEntryItem=="LOADING") {
                 this.$('.required-config-loading').show()
             } else {
+                var configs = []
                 this.$('.required-config-loading').hide()
                 if (catalogEntryItem!=null && catalogEntryItem.config!=null) {
                     var that = this
                     _.each(catalogEntryItem.config, function (cfg) {
-                        if (cfg.label)
+                        if (cfg.label) {
+                            configs.push( { priority: cfg.priority, html: _.template(RequiredConfigEntryHtml, {data:cfg}) } )
                             // only include items with labels
-                            that.$('.config-table').append(_.template(RequiredConfigEntryHtml, {data:cfg}))
+                        }
                         // (others might be included in future with an "expand" option, or priority option)
                     })
                 }
+                configs = configs.sort( function(a,b) { return b.priority - a.priority } )
+                for (c in configs) {
+                    that.$('.config-table').append(configs[c].html)
+                }
+                // TODO add any manual config supplied by user (in previous turn visiting this tab)
             }
-            // TODO add any manually added config
         },
         getConfigMap:function() {
             var map = {}

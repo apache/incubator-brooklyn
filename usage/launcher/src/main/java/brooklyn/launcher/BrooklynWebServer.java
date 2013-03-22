@@ -186,8 +186,9 @@ public class BrooklynWebServer {
     }
     /** Specifies attributes passed to deployed webapps 
      * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT} */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public BrooklynWebServer putAttributes(Map newAttrs) {
-        attributes.putAll(newAttrs);
+        if (newAttrs!=null) attributes.putAll(newAttrs);
         return this;
     }
 

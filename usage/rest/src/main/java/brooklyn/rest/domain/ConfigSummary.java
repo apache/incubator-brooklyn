@@ -21,6 +21,8 @@ public abstract class ConfigSummary {
   private final boolean reconfigurable;
   @JsonSerialize(include=Inclusion.NON_NULL)
   private final String label;
+  @JsonSerialize(include=Inclusion.NON_NULL)
+  private final Double priority;
 
   protected ConfigSummary(
       @JsonProperty("name") String name,
@@ -28,7 +30,8 @@ public abstract class ConfigSummary {
       @JsonProperty("description") String description,
       @JsonProperty("defaultValue") Object defaultValue,
       @JsonProperty("reconfigurable") boolean reconfigurable,
-      @JsonProperty("label") String label
+      @JsonProperty("label") String label,
+      @JsonProperty("priority") Double priority
   ) {
     this.name = name;
     this.type = type;
@@ -36,6 +39,7 @@ public abstract class ConfigSummary {
     this.defaultValue = defaultValue;
     this.reconfigurable = reconfigurable;
     this.label = label;
+    this.priority = priority;
   }
 
   protected ConfigSummary(ConfigKey<?> config) {
@@ -50,6 +54,7 @@ public abstract class ConfigSummary {
      */
     this.defaultValue = (config.getDefaultValue() == null) ? null : config.getDefaultValue().toString();
     this.label = null;
+    this.priority = null;
   }
   
   public String getName() {
@@ -75,6 +80,10 @@ public abstract class ConfigSummary {
   
   public String getLabel() {
     return label;
+  }
+  
+  public Double getPriority() {
+    return priority;
   }
   
   public abstract Map<String, URI> getLinks();

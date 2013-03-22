@@ -56,7 +56,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
 
     public static final String DEFAULT_WAR_PATH = "classpath://hello-world-sql-webapp.war";
     
-    @CatalogConfig(label="WAR (URL)")
+    @CatalogConfig(label="WAR (URL)", priority=2)
     public static final ConfigKey<String> WAR_PATH = new BasicConfigKey<String>(String.class,
         "app.war", "URL to the application archive which should be deployed", 
         DEFAULT_WAR_PATH);
@@ -70,7 +70,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     
     public static final String DEFAULT_DB_SETUP_SQL_URL = "classpath://visitors-creation-script.sql";
     
-    @CatalogConfig(label="DB Setup SQL (URL)")
+    @CatalogConfig(label="DB Setup SQL (URL)", priority=1)
     public static final ConfigKey<String> DB_SETUP_SQL_URL = new BasicConfigKey<String>(String.class,
         "app.db_sql", "URL to the SQL script to set up the database", 
         DEFAULT_DB_SETUP_SQL_URL);
