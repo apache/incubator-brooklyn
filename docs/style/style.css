@@ -79,6 +79,27 @@ div.warning{
 	-moz-border-radius: 8px;
 	border-radius: 8px;
 }
+#page_notes{
+	display: none;
+	background-color: #4D9D3A;
+	border: 3px solid orange;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+	padding: 0.3em;
+	padding-left: 0.75em;
+	margin-top: -0.5em;
+	margin-bottom: 1em;
+}
+#page_notes .warning_banner_image img {
+    width: 64px; padding-top: 8px; padding-right: 12px;
+    float: left;
+}
+#page_notes p { line-height: 100%; color: white; }
+#page_notes p.warning_banner_buttons {padding-right: 24px; } 
+#page_notes p.warning_banner_buttons a, #page_notes p.warning_banner_buttons a:visited { 
+	color: orange; font-weight: bold; padding-right: 1em; text-decoration: none; }
+#page_notes p.warning_banner_buttons a:hover { color: #FFC31E; font-weight: bold; }
+
 
 /* SIDEBAR */
 #sidebar {font-size: 13px;}

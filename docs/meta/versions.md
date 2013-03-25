@@ -77,3 +77,11 @@ This is the archived documentation for Brooklyn v{{ site.brooklyn-version }}
 
 * **[v0.4.0](/v/0.4.0/)**: current RC of first GA release, supporting wide range of entities and examples
 
+
+
+
+Note: To prevent accidentally referring to out-of-date information,
+a banner is displayed when accessing specific versions from the archive.
+You may 
+<a href="#" onclick="set_user_versions_all();">disable all warnings</a> or
+<a href="#" onclick="clear_user_versions();">re-enable all warnings</a>.
