@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -35,7 +37,11 @@ import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.Provider;
+import brooklyn.util.javalang.Providers;
+import brooklyn.util.net.UrlFunctions;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultimap;
@@ -90,33 +96,37 @@ public class HttpFeed extends AbstractFeed {
     
     public static class Builder {
         private EntityLocal entity;
-        private URI baseUri;
+        private Provider<URI> baseUriProvider;
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<HttpPollConfig<?>> polls = Lists.newArrayList();
+        private URI baseUri;
         private Map<String, String> baseUriVars = Maps.newLinkedHashMap();
         private Map<String, String> headers = Maps.newLinkedHashMap();
+        private boolean suspended = false;
         private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
             this.entity = val;
             return this;
         }
-        public Builder baseUrl(URL val) {
-            try {
-                this.baseUri = new URI(val.toString());
-            } catch (URISyntaxException e) {
-                throw Throwables.propagate(e);
-            }
+        public Builder baseUri(Provider<URI> val) {
+            if (baseUri!=null && val!=null)
+                throw new IllegalStateException("Builder cannot take both a URI and a URI Provider");
+            this.baseUriProvider = val;
             return this;
         }
         public Builder baseUri(URI val) {
+            if (baseUriProvider!=null && val!=null)
+                throw new IllegalStateException("Builder cannot take both a URI and a URI Provider");
             this.baseUri = val;
             return this;
         }
+        public Builder baseUrl(URL val) {
+            return baseUri(UrlFunctions.URI_FROM_STRING.apply(val.toString()));
+        }
         public Builder baseUri(String val) {
-            this.baseUri = URI.create(val);
-            return this;
+            return baseUri(URI.create(val));
         }
         public Builder baseUriVars(Map<String,String> vals) {
             baseUriVars.putAll(vals);
@@ -146,9 +156,14 @@ public class HttpFeed extends AbstractFeed {
             polls.add(config);
             return this;
         }
+        public Builder suspended() {
+            this.suspended = true;
+            return this;
+        }
         public HttpFeed build() {
             built = true;
             HttpFeed result = new HttpFeed(this);
+            if (suspended) result.suspend();
             result.start();
             return result;
         }
@@ -160,13 +175,16 @@ public class HttpFeed extends AbstractFeed {
     
     private static class HttpPollIdentifier {
         final String method;
-        final URI uri;
+        final Provider<URI> uriProvider;
         final Map<String,String> headers;
         final byte[] body;
 
         private HttpPollIdentifier(String method, URI uri, Map<String,String> headers, byte[] body) {
+            this(method, Providers.constant(uri), headers, body);
+        }
+        private HttpPollIdentifier(String method, Provider<URI> uriProvider, Map<String,String> headers, byte[] body) {
             this.method = checkNotNull(method, "method").toLowerCase();
-            this.uri = checkNotNull(uri, "uri");
+            this.uriProvider = checkNotNull(uriProvider, "uriProvider");
             this.headers = checkNotNull(headers, "headers");
             this.body = body;
             
@@ -180,7 +198,7 @@ public class HttpFeed extends AbstractFeed {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(method, uri, headers, body);
+            return Objects.hashCode(method, uriProvider, headers, body);
         }
         
         @Override
@@ -190,7 +208,7 @@ public class HttpFeed extends AbstractFeed {
             }
             HttpPollIdentifier o = (HttpPollIdentifier) other;
             return Objects.equal(method, o.method) &&
-                    Objects.equal(uri, o.uri) &&
+                    Objects.equal(uriProvider, o.uriProvider) &&
                     Objects.equal(headers, o.headers) &&
                     Objects.equal(body, o.body);
         }
@@ -201,18 +219,29 @@ public class HttpFeed extends AbstractFeed {
     
     protected HttpFeed(Builder builder) {
         super(builder.entity);
-        URI baseUri = builder.baseUri;
-        Map<String,String> baseUriVars = ImmutableMap.copyOf(checkNotNull(builder.baseUriVars, "baseUriVars"));
         Map<String,String> baseHeaders = ImmutableMap.copyOf(checkNotNull(builder.headers, "headers"));
         
         for (HttpPollConfig<?> config : builder.polls) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
             HttpPollConfig<?> configCopy = new HttpPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             String method = config.getMethod();
-            URI uri = config.buildUri(baseUri, baseUriVars);
             Map<String,String> headers = config.buildHeaders(baseHeaders);
             byte[] body = config.getBody();
-            polls.put(new HttpPollIdentifier(method, uri, headers, body), configCopy);
+            
+            Provider<URI> baseUriProvider = builder.baseUriProvider;
+            if (builder.baseUri!=null) {
+                if (baseUriProvider!=null)
+                    throw new IllegalStateException("Not permitted to supply baseUri and baseUriProvider");
+                Map<String,String> baseUriVars = ImmutableMap.copyOf(checkNotNull(builder.baseUriVars, "baseUriVars"));
+                URI uri = config.buildUri(builder.baseUri, baseUriVars);
+                baseUriProvider = Providers.constant(uri);
+            } else if (!builder.baseUriVars.isEmpty()) {
+                throw new IllegalStateException("Not permitted to supply URI vars when using a URI provider");
+            }
+            checkNotNull(baseUriProvider);
+
+            polls.put(new HttpPollIdentifier(method, baseUriProvider, headers, body), configCopy);
         }
     }
 
@@ -229,14 +258,15 @@ public class HttpFeed extends AbstractFeed {
             }
             
             final DefaultHttpClient httpClient = new DefaultHttpClient();
-            if ("https".equalsIgnoreCase(pollInfo.uri.getScheme())) {
+            URI uri = pollInfo.uriProvider.get();
+            if (uri!=null && "https".equalsIgnoreCase(uri.getScheme())) {
                 try {
-                    int port = (pollInfo.uri.getPort() >= 0) ? pollInfo.uri.getPort() : 443;
+                    int port = (uri.getPort() >= 0) ? uri.getPort() : 443;
                     SSLSocketFactory socketFactory = new SSLSocketFactory(new TrustAllStrategy(), SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
                     Scheme sch = new Scheme("https", port, socketFactory);
                     httpClient.getConnectionManager().getSchemeRegistry().register(sch);
                 } catch (Exception e) {
-                    log.warn("Error in HTTP Feed of {}, setting trust for uri {}", entity, pollInfo.uri);
+                    log.warn("Error in HTTP Feed of {}, setting trust for uri {}", entity, uri);
                     throw Exceptions.propagate(e);
                 }
             }
@@ -247,13 +277,13 @@ public class HttpFeed extends AbstractFeed {
                 pollJob = new Callable<HttpPollValue>() {
                     public HttpPollValue call() throws Exception {
                         if (log.isTraceEnabled()) log.trace("http polling for {} sensors at {}", entity, pollInfo);
-                        return httpGet(httpClient, pollInfo.uri, pollInfo.headers);
+                        return httpGet(httpClient, pollInfo.uriProvider.get(), pollInfo.headers);
                     }};
             } else if (pollInfo.method.equals("post")) {
                 pollJob = new Callable<HttpPollValue>() {
                     public HttpPollValue call() throws Exception {
                         if (log.isTraceEnabled()) log.trace("http polling for {} sensors at {}", entity, pollInfo);
-                        return httpPost(httpClient, pollInfo.uri, pollInfo.headers, pollInfo.body);
+                        return httpPost(httpClient, pollInfo.uriProvider.get(), pollInfo.headers, pollInfo.body);
                     }};
             } else {
                 throw new IllegalStateException("Unexpected http method: "+pollInfo.method);
@@ -262,7 +292,7 @@ public class HttpFeed extends AbstractFeed {
             getPoller().scheduleAtFixedRate(pollJob, new DelegatingPollHandler<HttpPollValue>(handlers), minPeriod);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private Poller<HttpPollValue> getPoller() {
         return (Poller<HttpPollValue>) poller;
@@ -274,9 +304,10 @@ public class HttpFeed extends AbstractFeed {
             httpGet.addHeader(entry.getKey(), entry.getValue());
         }
         
+        long startTime = System.currentTimeMillis();
         HttpResponse httpResponse = httpClient.execute(httpGet);
         try {
-            return new HttpPollValue(httpResponse);
+            return new HttpPollValue(httpResponse, startTime);
         } finally {
             EntityUtils.consume(httpResponse.getEntity());
         }
@@ -292,10 +323,11 @@ public class HttpFeed extends AbstractFeed {
             httpPost.setEntity(httpEntity);
         }
         
+        long startTime = System.currentTimeMillis();
         HttpResponse httpResponse = httpClient.execute(httpPost);
         
         try {
-            return new HttpPollValue(httpResponse);
+            return new HttpPollValue(httpResponse, startTime);
         } finally {
             EntityUtils.consume(httpResponse.getEntity());
         }

@@ -26,15 +26,22 @@ public abstract class AbstractFeed {
     
     protected final EntityLocal entity;
     protected final Poller<?> poller;
-    private volatile boolean running;
+    private volatile Boolean activated, active;
 
     public AbstractFeed(EntityLocal entity) {
         this.entity = checkNotNull(entity, "entity");;
         this.poller = new Poller<Object>(entity);
     }
     
+    /** true if everything has been _started_ (is is starting) but not stopped,
+     * even if it is suspended; see also {@link #isActive()} */
     public boolean isActivated() {
-        return running;
+        return activated != null && activated.booleanValue();
+    }
+    
+    /** true iff the feed is running */
+    public boolean isActive() {
+        return active != null && active.booleanValue();
     }
     
     public EntityLocal getEntity() {
@@ -51,26 +58,56 @@ public abstract class AbstractFeed {
 
     protected void start() {
         if (log.isDebugEnabled()) log.debug("Starting feed {} for {}", this, entity);
-        if (running) { 
+        if (activated!=null && activated.booleanValue()) { 
             throw new IllegalStateException(String.format("Attempt to start feed %s of entity %s when already running", 
                     this, entity));
         }
         
-        running = true;
+        activated = true;
         preStart();
-        poller.start();
+        synchronized (poller) {
+            // don't start poller if we are syspended
+            if (active==null || active.booleanValue()) {
+                poller.start();
+            }
+        }
     }
 
+    /** suspends this feed (stops the poller, or indicates that the feed should start in a state where the poller is stopped) */
+    public void suspend() {
+        synchronized (poller) {
+            if (active!=null && active.booleanValue()) {
+                poller.stop();
+            }
+            active = false;
+        }
+    }
+    
+    /** resumes this feed if it has been suspended and not stopped */
+    public void resume() {
+        synchronized (poller) {
+            if (active!=null && !active.booleanValue()) {
+                poller.start();
+            }
+            active = true;
+        }
+    }
+    
     public void stop() {
         if (log.isDebugEnabled()) log.debug("stopping feed {} for {}", this, entity);
-        if (!running) { 
+        if (activated==null || !activated.booleanValue()) { 
             log.warn("Ignoring attempt to stop feed {} of entity {} when not running", this, entity);
             return;
         }
         
-        running = false;
+        activated = false;
         preStop();
-        poller.stop();
+        synchronized (poller) {
+            if (active!=null && active.booleanValue()) {
+                active = false;
+                poller.stop();
+            }
+        }
         postStop();
     }
 
