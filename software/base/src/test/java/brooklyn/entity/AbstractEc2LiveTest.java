@@ -63,7 +63,7 @@ public abstract class AbstractEc2LiveTest {
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app);
     }
-    
+
     @Test(groups = {"Live"})
     public void test_Debian_6() throws Exception {
         // release codename "squeeze"

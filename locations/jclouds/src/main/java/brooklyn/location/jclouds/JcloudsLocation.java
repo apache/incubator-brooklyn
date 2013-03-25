@@ -22,6 +22,7 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.logging.Log;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.ComputeMetadata;
@@ -63,6 +64,10 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.ssh.IptablesCommands;
+import brooklyn.util.ssh.IptablesCommands.Chain;
+import brooklyn.util.ssh.IptablesCommands.Policy;
+import brooklyn.util.ssh.IptablesCommands.Protocol;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
@@ -330,6 +335,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             String vmHostname = getPublicHostname(node, setup);
             JcloudsSshMachineLocation sshLocByHostname = registerJcloudsSshMachineLocation(node, vmHostname, setup);
             
+            // Apply same securityGroups rules to iptables, if iptables is running on the node
+            mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
+                    (Iterable<Integer>) setup.get(INBOUND_PORTS));
+            
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
                 customizer.customize(computeService, sshLocByHostname);
@@ -353,6 +362,23 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     }
 
+    private void mapSecurityGroupRuleToIpTables(ComputeService computeService, NodeMetadata node,
+            LoginCredentials credentials, String networkInterface, Iterable<Integer> ports) {
+        for (Integer port : ports) {
+            String insertIptableRule = IptablesCommands.insertIptablesRule(Chain.INPUT, networkInterface, 
+                    Protocol.TCP, port, Policy.ACCEPT);
+            Statement statement = Statements.newStatementList(exec(insertIptableRule));
+            ExecResponse response = computeService.runScriptOnNode(node.getId(), statement,
+                    overrideLoginCredentials(credentials).runAsRoot(false));
+            if (response.getExitStatus() != 0) {
+                String msg = String.format("Cannot insert the iptables rule for port %d. Error: %s", port, 
+                        response.getError());
+                LOG.error(msg);
+                throw new RuntimeException(msg);
+            }
+        }
+    }
+    
     // ------------- constructing the template, etc ------------------------
     
     private static interface CustomizeTemplateBuilder {

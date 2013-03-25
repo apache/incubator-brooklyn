@@ -3,8 +3,6 @@ package brooklyn.entity.database.mysql;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
 import static brooklyn.entity.basic.lifecycle.CommonCommands.ok;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.sudo;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.exists;
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 import static java.lang.String.format;
@@ -20,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
@@ -28,9 +25,9 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ComparableVersion;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.ssh.CommonCommands;
 import brooklyn.util.text.Strings;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -121,8 +118,6 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         copyDatabaseCreationScript();
         copyDatabaseConfigScript();
 
-        configureIptablesRules();
-        
         newScript(CUSTOMIZING).
             updateTaskAndFailOnNonZeroResultCode().
             body.append(
@@ -142,13 +137,6 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 "kill $MYSQL_PID"
             ).execute();
     }
-
-    private void configureIptablesRules() {
-        List<String> script = new LinkedList<String>();
-        List<String> commands = ImmutableList.of(sudo("service iptables status > /dev/null"), sudo("iptables -F"), sudo("iptables -A INPUT -i eth0 -p tcp -m tcp --dport 3306 -j ACCEPT"));
-        script.add(CommonCommands.chain(commands));
-        newScript(CUSTOMIZING).body.append(script).execute();
-	}
 
 	private void copyDatabaseCreationScript() {
         newScript(CUSTOMIZING).
