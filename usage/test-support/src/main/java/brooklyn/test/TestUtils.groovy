@@ -77,7 +77,8 @@ public class TestUtils {
         return HttpTestUtils.connectToUrl(url);
     }
     
-    // TODO calling groovy from java doesn't cope with generics here; stripping them :-( 
+    // TODO see also Java variant: Asserts.eventually()
+    // calling groovy from java doesn't cope with generics here; stripping them from here :-(
     //      <T> void assertEventually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate)
     public static void assertEventually(Map flags=[:], Supplier supplier, Predicate predicate) {
         assertEventually(flags, supplier, predicate, (String)null);
@@ -311,6 +312,9 @@ public class TestUtils {
             return (TimeDuration) duration
         } else if (duration instanceof Number) {
             return new TimeDuration(0,0,0,(int)duration)
+            // TODO would be nice to have this, but we need to sort out utils / test-utils dependency
+//        } else if (duration instanceof String) {
+//            return Time.parseTimeString((String)duration);
         } else {
             throw new IllegalArgumentException("Cannot convert $duration of type ${duration.class.name} to a TimeDuration")
         }

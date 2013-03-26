@@ -2,12 +2,10 @@ package brooklyn.enricher;
 
 import java.util.LinkedList;
 
-import brooklyn.enricher.basic.AbstractTransformingEnricher;
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
-import brooklyn.util.flags.TypeCoercions;
 
 
 /**

@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -13,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -31,19 +28,18 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.Provider;
-import brooklyn.util.javalang.Providers;
-import brooklyn.util.net.UrlFunctions;
+import brooklyn.util.net.Urls;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.base.Throwables;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -83,6 +79,15 @@ import com.google.common.collect.Sets;
  * }
  * }
  * </pre>
+ * <p>
+ *  
+ * This also supports giving a Supplier for the URL 
+ * (e.g. {@link Entities#supplier(brooklyn.entity.Entity, brooklyn.event.AttributeSensor)})
+ * from a sensor.  Note however that if a Supplier-based sensor is *https*,
+ * https-specific initialization may not occur if the URL is not available at start time,
+ * and it may report errors if that sensor is not available.
+ * Some guidance for controlling enablement of a feed based on availability of a sensor
+ * can be seen in HttpLatencyDetector (in brooklyn-policy). 
  * 
  * @author aled
  */
@@ -96,7 +101,7 @@ public class HttpFeed extends AbstractFeed {
     
     public static class Builder {
         private EntityLocal entity;
-        private Provider<URI> baseUriProvider;
+        private Supplier<URI> baseUriProvider;
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<HttpPollConfig<?>> polls = Lists.newArrayList();
@@ -110,7 +115,7 @@ public class HttpFeed extends AbstractFeed {
             this.entity = val;
             return this;
         }
-        public Builder baseUri(Provider<URI> val) {
+        public Builder baseUri(Supplier<URI> val) {
             if (baseUri!=null && val!=null)
                 throw new IllegalStateException("Builder cannot take both a URI and a URI Provider");
             this.baseUriProvider = val;
@@ -123,7 +128,7 @@ public class HttpFeed extends AbstractFeed {
             return this;
         }
         public Builder baseUrl(URL val) {
-            return baseUri(UrlFunctions.URI_FROM_STRING.apply(val.toString()));
+            return baseUri(Urls.URI_FROM_STRING.apply(val.toString()));
         }
         public Builder baseUri(String val) {
             return baseUri(URI.create(val));
@@ -157,7 +162,10 @@ public class HttpFeed extends AbstractFeed {
             return this;
         }
         public Builder suspended() {
-            this.suspended = true;
+            return suspended(true);
+        }
+        public Builder suspended(boolean startsSuspended) {
+            this.suspended = startsSuspended;
             return this;
         }
         public HttpFeed build() {
@@ -175,14 +183,14 @@ public class HttpFeed extends AbstractFeed {
     
     private static class HttpPollIdentifier {
         final String method;
-        final Provider<URI> uriProvider;
+        final Supplier<URI> uriProvider;
         final Map<String,String> headers;
         final byte[] body;
 
         private HttpPollIdentifier(String method, URI uri, Map<String,String> headers, byte[] body) {
-            this(method, Providers.constant(uri), headers, body);
+            this(method, Suppliers.ofInstance(uri), headers, body);
         }
-        private HttpPollIdentifier(String method, Provider<URI> uriProvider, Map<String,String> headers, byte[] body) {
+        private HttpPollIdentifier(String method, Supplier<URI> uriProvider, Map<String,String> headers, byte[] body) {
             this.method = checkNotNull(method, "method").toLowerCase();
             this.uriProvider = checkNotNull(uriProvider, "uriProvider");
             this.headers = checkNotNull(headers, "headers");
@@ -229,13 +237,13 @@ public class HttpFeed extends AbstractFeed {
             Map<String,String> headers = config.buildHeaders(baseHeaders);
             byte[] body = config.getBody();
             
-            Provider<URI> baseUriProvider = builder.baseUriProvider;
+            Supplier<URI> baseUriProvider = builder.baseUriProvider;
             if (builder.baseUri!=null) {
                 if (baseUriProvider!=null)
                     throw new IllegalStateException("Not permitted to supply baseUri and baseUriProvider");
                 Map<String,String> baseUriVars = ImmutableMap.copyOf(checkNotNull(builder.baseUriVars, "baseUriVars"));
                 URI uri = config.buildUri(builder.baseUri, baseUriVars);
-                baseUriProvider = Providers.constant(uri);
+                baseUriProvider = Suppliers.ofInstance(uri);
             } else if (!builder.baseUriVars.isEmpty()) {
                 throw new IllegalStateException("Not permitted to supply URI vars when using a URI provider");
             }
@@ -259,6 +267,7 @@ public class HttpFeed extends AbstractFeed {
             
             final DefaultHttpClient httpClient = new DefaultHttpClient();
             URI uri = pollInfo.uriProvider.get();
+            // TODO if supplier returns null, we may wish to defer initialization until url available?
             if (uri!=null && "https".equalsIgnoreCase(uri.getScheme())) {
                 try {
                     int port = (uri.getPort() >= 0) ? uri.getPort() : 443;

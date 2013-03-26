@@ -42,6 +42,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -248,6 +249,7 @@ public class Entities {
     public static void dumpInfo(Location loc, String currentIndentation, String tab) throws IOException {
         dumpInfo(loc, new PrintWriter(System.out), currentIndentation, tab);
     }
+    @SuppressWarnings("rawtypes")
     public static void dumpInfo(Location loc, Writer out, String currentIndentation, String tab) throws IOException {
         out.append(currentIndentation+loc.toString()+"\n");
         
@@ -566,6 +568,11 @@ public class Entities {
         if (((EntityInternal)entity).getManagementSupport().isDeployed()) {
             ((EntityInternal)entity).getManagementContext().getEntityManager().unmanage(entity);
         }
+    }
+    public static <T> Supplier<T> supplier(final Entity entity, final AttributeSensor<T> sensor) {
+        return new Supplier<T>() {
+            public T get() { return entity.getAttribute(sensor); }
+        };
     }
 
 }

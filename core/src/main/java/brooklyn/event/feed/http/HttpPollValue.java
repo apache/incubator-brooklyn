@@ -8,8 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
@@ -26,56 +24,54 @@ public class HttpPollValue {
     
     private final Object mutex = new Object();
     private final HttpResponse response;
-    private final Long startTime;
-    private final Long durationMillisOfFirstResponse;
-    private final Long durationMillisOfFullContent;
+    private final long startTime;
+    private final long durationMillisOfFirstResponse;
+    private final long durationMillisOfFullContent;
     private int responseCode;
     private Map<String,List<String>> headerLists;
     private byte[] content;
-    
+
+    /** @deprecated since 0.5.0 caller should supply start time for accurate measurement */
+    @Deprecated
     public HttpPollValue(HttpResponse response) {
-        this(response, null);
+        this(response, System.currentTimeMillis());
     }
 
-    public HttpPollValue(HttpResponse response, Long startTime) {
+    public HttpPollValue(HttpResponse response, long startTime) {
         this.response = response;
         this.startTime = startTime; 
         
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            if (this.startTime!=null) {
-                response.getEntity().getContentLength();
-                // TODO is this useful?  if so should expose. if usu same as full content then just expose that.
-                durationMillisOfFirstResponse = System.currentTimeMillis() - startTime;
-            } else {
-                durationMillisOfFirstResponse = null;
-            }
+            response.getEntity().getContentLength();
+            durationMillisOfFirstResponse = System.currentTimeMillis() - startTime;
             
             ByteStreams.copy(response.getEntity().getContent(), out);
             content = out.toByteArray();
             
-            if (this.startTime!=null) {
-                response.getEntity().getContentLength();
-                durationMillisOfFullContent = System.currentTimeMillis() - startTime;
-                // TODO trace
-                if (log.isDebugEnabled())
-                    log.debug("latency detector detected "+durationMillisOfFirstResponse+" / "+durationMillisOfFullContent+" latency");
-            } else {
-                durationMillisOfFullContent = null;
-            }
+            response.getEntity().getContentLength();
+            durationMillisOfFullContent = System.currentTimeMillis() - startTime;
+            if (log.isDebugEnabled())
+                log.debug("latency detector detected "+durationMillisOfFirstResponse+" / "+durationMillisOfFullContent+" latency");
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }        
     }
 
+    /** @deprecated since 0.5.0 caller should supply start time for accurate measurement */
     public HttpPollValue(int responseCode, Map<String,List<String>> headers, byte[] content) {
+        this(responseCode, headers, content,
+                System.currentTimeMillis(), -1, -1);
+    }
+    public HttpPollValue(int responseCode, Map<String,List<String>> headers, byte[] content,
+            long startTime, long durationMillisOfFirstResponse, long durationMillisOfFullContent) {
         this.response = null;
         this.responseCode = responseCode;
         this.headerLists.putAll(headers);
         this.content = content;
-        this.startTime = null;
-        durationMillisOfFirstResponse = null;
-        durationMillisOfFullContent = null;
+        this.startTime = startTime;
+        this.durationMillisOfFirstResponse = durationMillisOfFirstResponse;
+        this.durationMillisOfFullContent = durationMillisOfFullContent;
     }
     
     public int getResponseCode() {
@@ -87,17 +83,18 @@ public class HttpPollValue {
         return responseCode;
     }
 
-    @Nullable
+    /** returns the timestamp (millis since 1970) when this request was started */ 
+    public long getStartTime() {
+        return startTime;
+    }
+    
     /** returns latency, in milliseconds, if value was initialized with a start time */
-    public Long getLatencyFullContent() {
-        if (startTime==null || durationMillisOfFullContent==null) return null;
+    public long getLatencyFullContent() {
         return durationMillisOfFullContent;
     }
     
-    @Nullable
-    /** returns latency, in milliseconds, if value was initialized with a start time */
-    public Long getLatencyFirstResponse() {
-        if (startTime==null || durationMillisOfFirstResponse==null) return null;
+    /** returns latency, in milliseconds, before response started coming in */
+    public long getLatencyFirstResponse() {
         return durationMillisOfFirstResponse;
     }
     

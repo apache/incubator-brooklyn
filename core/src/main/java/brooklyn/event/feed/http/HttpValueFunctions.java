@@ -44,13 +44,10 @@ public class HttpValueFunctions {
         return chain(jsonContents(), JsonFunctions.walk(elements), JsonFunctions.cast(expected));
     }
     
-    public static Function<HttpPollValue, Double> latency() {
-        return new Function<HttpPollValue, Double>() {
-            @Override
-            @Nullable
-            public Double apply(HttpPollValue input) {
-                if (input.getLatencyFullContent()==null) return null;
-                return input.getLatencyFullContent().doubleValue();
+    public static Function<HttpPollValue, Long> latency() {
+        return new Function<HttpPollValue, Long>() {
+            public Long apply(HttpPollValue input) {
+                return input.getLatencyFullContent();
             }
         };
     }

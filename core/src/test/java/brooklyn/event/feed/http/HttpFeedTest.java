@@ -6,6 +6,9 @@ import static org.testng.Assert.assertEquals;
 import java.net.URL;
 import java.util.concurrent.Callable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -18,10 +21,13 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.MutableMap;
 
 import com.google.common.base.Functions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mockwebserver.MockResponse;
@@ -29,6 +35,8 @@ import com.google.mockwebserver.MockWebServer;
 
 public class HttpFeedTest {
 
+    private static final Logger log = LoggerFactory.getLogger(HttpFeedTest.class);
+    
     final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
     final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
 
@@ -100,7 +108,57 @@ public class HttpFeedTest {
         assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
     }
-    
+
+    @Test(groups="Integration")
+    // marked integration as it takes a wee while
+    public void testSuspendResume() throws Exception {
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUrl(baseUrl)
+                .poll(new HttpPollConfig<Integer>(SENSOR_INT)
+                        .period(100)
+                        .onSuccess(HttpValueFunctions.responseCode()))
+                .poll(new HttpPollConfig<String>(SENSOR_STRING)
+                        .period(100)
+                        .onSuccess(HttpValueFunctions.stringContentsFunction()))
+                .build();
+        assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
+        feed.suspend();
+        int countWhenSuspended = server.getRequestCount();
+        Thread.sleep(500);
+        if (server.getRequestCount() > countWhenSuspended+1)
+            Assert.fail("Request count continued to increment while feed was suspended, from "+countWhenSuspended+" to "+server.getRequestCount());
+        feed.resume();
+        Thread.sleep(500);
+        if (server.getRequestCount() <= countWhenSuspended+1)
+            Assert.fail("Request count failed to increment when feed was resumed, from "+countWhenSuspended+", still at "+server.getRequestCount());        
+    }
+
+    @Test(groups="Integration")
+    // marked integration as it takes a wee while
+    public void testStartSuspended() throws Exception {
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUrl(baseUrl)
+                .poll(new HttpPollConfig<Integer>(SENSOR_INT)
+                        .period(100)
+                        .onSuccess(HttpValueFunctions.responseCode()))
+                .poll(new HttpPollConfig<String>(SENSOR_STRING)
+                        .period(100)
+                        .onSuccess(HttpValueFunctions.stringContentsFunction()))
+                .suspended()
+                .build();
+        TestUtils.assertContinuallyFromJava(MutableMap.of("timeout", 500),
+                Entities.supplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(null));
+        int countWhenSuspended = server.getRequestCount();
+        feed.resume();
+        TestUtils.assertEventually(Entities.supplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(200));
+        if (server.getRequestCount() <= countWhenSuspended)
+            Assert.fail("Request count failed to increment when feed was resumed, from "+countWhenSuspended+", still at "+server.getRequestCount());
+        log.info("RUN: "+countWhenSuspended+" - "+server.getRequestCount());
+    }
+
+
     @Test(groups="Integration")
     // marked as integration so it doesn't fail the plain build in environments
     // with dodgy DNS (ie where "thisdoesnotexistdefinitely" resolves as a host
