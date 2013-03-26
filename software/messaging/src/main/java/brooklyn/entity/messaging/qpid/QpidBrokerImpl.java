@@ -62,11 +62,10 @@ public class QpidBrokerImpl extends JMSBroker<QpidQueue, QpidTopic> implements Q
         super.waitForServiceUp(duration, units);
 
         // Also wait for the MBean to exist (as used when creating queue/topic)
-        JmxHelper helper = null;
+        JmxHelper helper = new JmxHelper(this);
         try {
             String virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME);
             ObjectName virtualHostManager = new ObjectName(format("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"%s\"", virtualHost));
-            helper = new JmxHelper(this);
             helper.connect();
             helper.assertMBeanExistsEventually(virtualHostManager, units.toMillis(duration));
         } catch (MalformedObjectNameException e) {

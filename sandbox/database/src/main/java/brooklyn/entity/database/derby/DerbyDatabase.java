@@ -88,15 +88,13 @@ public class DerbyDatabase extends SoftwareProcessImpl implements Database, Uses
     @Override
     public void connectSensors() {
         super.connectSensors();
+        connectServiceUpIsRunning();
+    }
 
-        FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
-                     MutableMap.of("period", 10*1000),
-                     new Callable<Boolean>() {
-                         @Override public Boolean call() {
-                            return getDriver().isRunning();
-                         }
-                     }));
-        serviceUpAdapter.poll(SERVICE_UP);
+    @Override
+    public void disconnectSensors() {
+        super.disconnectSensors();
+        disconnectServiceUpIsRunning();
     }
 
     @Override

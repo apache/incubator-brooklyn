@@ -15,7 +15,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.nosql.DataStore;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
@@ -64,13 +63,9 @@ public class RedisStore extends SoftwareProcessImpl implements DataStore {
     
     @Override
     protected void connectSensors() {
-        FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
-                MutableMap.of("period", 1*1000),
-                new Callable<Boolean>() {
-                    public Boolean call() {
-                        return getDriver().isRunning();
-                    }}));
-        serviceUpAdapter.poll(SERVICE_UP);
+        super.connectSensors();
+
+        connectServiceUpIsRunning();
         
         // TODO IF desired, port this for setting UPTIME (because legacy sshAdapter is deleted)
 //        String output = sshAdapter.newOutputValueProvider("${driver.runDir}/bin/redis-cli info").compute()
@@ -81,6 +76,12 @@ public class RedisStore extends SoftwareProcessImpl implements DataStore {
 //                return Integer.parseInt(data.substring(colon + 1))
 //            }
 //        }
+    }
+
+    @Override
+    public void disconnectSensors() {
+        super.disconnectSensors();
+        disconnectServiceUpIsRunning();
     }
     
     public Class getDriverInterface() {

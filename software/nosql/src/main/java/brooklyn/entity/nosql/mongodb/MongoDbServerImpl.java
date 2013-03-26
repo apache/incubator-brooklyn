@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class MongoDbServerImpl extends SoftwareProcessImpl implements MongoDbServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDbServerImpl.class);
-    private FunctionFeed serviceUp;
+
     private FunctionFeed serviceStats;
 
     public MongoDbServerImpl() {
@@ -52,17 +52,7 @@ public class MongoDbServerImpl extends SoftwareProcessImpl implements MongoDbSer
     protected void connectSensors() {
         super.connectSensors();
 
-        serviceUp = FunctionFeed.builder()
-                .entity(this)
-                .poll(new FunctionPollConfig<Object, Boolean>(SERVICE_UP)
-                        .period(1, TimeUnit.SECONDS)
-                        .callable(new Callable<Boolean>() {
-                            public Boolean call() {
-                                return getDriver().isRunning();
-                            }
-                        })
-                        .onError(Functions.constant(false)))
-                .build();
+        connectServiceUpIsRunning();
 
         serviceStats = FunctionFeed.builder()
                 .entity(this)
@@ -100,7 +90,7 @@ public class MongoDbServerImpl extends SoftwareProcessImpl implements MongoDbSer
 
     @Override
     protected void disconnectSensors() {
-        if (serviceUp != null) serviceUp.stop();
+        disconnectServiceUpIsRunning();
         if (serviceStats != null) serviceStats.stop();
     }
 

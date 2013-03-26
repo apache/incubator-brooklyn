@@ -18,6 +18,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.event.adapter.SensorRegistry;
 import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.event.feed.function.FunctionFeed;
+import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
@@ -34,6 +36,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -106,6 +109,41 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * on start() and on rebind().
      */
     protected void connectSensors() {
+    }
+
+    /** @see #connectServiceUpIsRunning() */
+    private volatile FunctionFeed serviceUp;
+
+    /**
+     * For connecting the {@link #SERVICE_UP} sensor to the value of the {@code getDriver().isRunning()} expression.
+     * <p>
+     * Should be called inside {@link #connectSensors()}.
+     *
+     * @see #disconnectServiceUpIsRunning()
+     */
+    protected void connectServiceUpIsRunning() {
+        FunctionFeed serviceUp = FunctionFeed.builder()
+                .entity(this)
+                .period(5000)
+                .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
+                        .onError(Functions.constant(Boolean.FALSE))
+                        .callable(new Callable<Boolean>() {
+                            public Boolean call() {
+                                return getDriver().isRunning();
+                            }
+                        }))
+                .build();
+    }
+
+    /**
+     * For disconneting the {@link #SERVICE_UP} feed.
+     * <p>
+     * Should be called from {@link #disconnectSensors()}.
+     *
+     * @see #connectServiceUpIsRunning()
+     */
+    protected void disconnectServiceUpIsRunning() {
+        if (serviceUp != null && serviceUp.isActivated()) serviceUp.stop();
     }
 
     /**

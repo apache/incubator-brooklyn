@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.util.MutableMap;
 
 import com.google.common.base.Objects.ToStringHelper;
@@ -81,19 +80,17 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
 
     @Override
     protected void connectSensors() {
-       super.connectSensors();
+        super.connectSensors();
 
-       FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
-                    MutableMap.of("period", 10*1000),
-                    new Callable<Boolean>(){
-                        public Boolean call() {
-                           return getDriver().isRunning();
-                        }
-                    }));
+        connectServiceUpIsRunning();
 
-       serviceUpAdapter.poll(SERVICE_UP);
-       
-       setBrokerUrl();
+        setBrokerUrl();
+    }
+
+    @Override
+    public void disconnectSensors() {
+        super.disconnectSensors();
+        disconnectServiceUpIsRunning();
     }
 
     @Override
