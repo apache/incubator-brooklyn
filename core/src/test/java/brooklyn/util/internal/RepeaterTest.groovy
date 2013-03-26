@@ -181,15 +181,6 @@ public class RepeaterTest {
     }
 
     @Test(expectedExceptions = [ IllegalStateException.class ])
-    public void runFailsIfBodyWasNotSet() {
-        new Repeater("runFailsIfBodyWasNotSet")
-            .every(10 * MILLISECONDS)
-            .until { true }
-            .run();
-        fail "Expected exception was not thrown"
-    }
-
-    @Test(expectedExceptions = [ IllegalStateException.class ])
     public void runFailsIfUntilWasNotSet() {
         new Repeater("runFailsIfUntilWasNotSet")
             .repeat()
