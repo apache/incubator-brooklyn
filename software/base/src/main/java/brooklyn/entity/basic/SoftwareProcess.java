@@ -15,6 +15,9 @@ import brooklyn.util.flags.SetFromFlag;
 
 public interface SoftwareProcess extends Entity, Startable {
 
+    @SetFromFlag("startTimeout")
+    public static final ConfigKey<Integer> START_TIMEOUT = ConfigKeys.START_TIMEOUT;
+
     @SetFromFlag("startLatch")
     public static final ConfigKey<Boolean> START_LATCH = ConfigKeys.START_LATCH;
     

@@ -200,7 +200,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
     public void waitForServiceUp() {
-        waitForServiceUp(60, TimeUnit.SECONDS);
+        Integer timeout = getConfig(ConfigKeys.START_TIMEOUT);
+        waitForServiceUp(timeout, TimeUnit.SECONDS);
     }
     public void waitForServiceUp(TimeDuration duration) {
         waitForServiceUp(duration.toMilliseconds(), TimeUnit.MILLISECONDS);
