@@ -22,6 +22,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.loadbalancing.Movable;
+import brooklyn.util.MutableMap;
 
 
 public class FollowTheSunPool extends AbstractEntity implements Resizable {
@@ -112,7 +113,7 @@ public class FollowTheSunPool extends AbstractEntity implements Resizable {
         this(properties, null);
     }
     public FollowTheSunPool(Entity parent) {
-        this(Collections.emptyMap(), parent);
+        this(MutableMap.of(), parent);
     }
     public FollowTheSunPool(Map properties, Entity parent) {
         super(properties, parent);
