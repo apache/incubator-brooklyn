@@ -67,11 +67,12 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
     }
 
     private volatile HttpFeed httpFeed;
-    private volatile FunctionFeed serviceUp;
 
     @Override 
     protected void connectSensors() {
         super.connectSensors();
+
+        connectServiceUpIsRunning();
 
         httpFeed = HttpFeed.builder()
                 .entity(this)
@@ -95,18 +96,6 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
                         }))
                         .onError(Functions.constant(-1)))
                 .build();
- 
-        serviceUp = FunctionFeed.builder()
-                .entity(this)
-                .period(5000)
-                .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
-                        .onError(Functions.constant(Boolean.FALSE))
-                        .callable(new Callable<Boolean>() {
-                            public Boolean call() {
-                                return getDriver().isRunning();
-                            }
-                        }))
-                .build();
 
         WebAppServiceMethods.connectWebAppServerPolicies(this);
     }
@@ -115,7 +104,7 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
     public void disconnectSensors() {
         super.disconnectSensors();
         if (httpFeed != null && httpFeed.isActivated()) httpFeed.stop();
-        if (serviceUp != null && serviceUp.isActivated()) serviceUp.stop();
+        disconnectServiceUpIsRunning();
     }
 
     /** @see JavaWebAppSoftwareProcessImpl#stop() */

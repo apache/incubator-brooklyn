@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -99,18 +98,14 @@ public class VanillaJavaApp extends SoftwareProcessImpl implements UsesJava, Use
             jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(MutableMap.of("period", jmxPollPeriod)));
             JavaAppUtils.connectMXBeanSensors(this, jmxAdapter);
         }
-        
-        Callable<Boolean> isRunningCallable = new Callable<Boolean>(){
-            public Boolean call() {
-                return getDriver().isRunning();
-            }
-        };
 
-        FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new FunctionSensorAdapter(
-                     MutableMap.of("period", 10*1000),
-                     isRunningCallable));
+        connectServiceUpIsRunning();
+    }
 
-        serviceUpAdapter.poll(SERVICE_UP);
+    @Override
+    public void disconnectSensors() {
+        super.disconnectSensors();
+        disconnectServiceUpIsRunning();
     }
     
     @Override

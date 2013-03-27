@@ -12,31 +12,17 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode {
-    protected FunctionFeed serviceUpFeed;
 
     @Override
     protected void connectSensors() {
         super.connectSensors();
-
-        serviceUpFeed = FunctionFeed.builder()
-                .entity(this)
-                .poll(new FunctionPollConfig<Object, Boolean>(SERVICE_UP)
-                        .period(500, TimeUnit.MILLISECONDS)
-                        .callable(new Callable<Object>() {
-                            @Override
-                            public Object call() throws Exception {
-                                return getDriver().isRunning();
-                            }
-                        })
-                        .onError(Functions.constant(Boolean.FALSE)))
-                .build();
+        connectServiceUpIsRunning();
     }
 
     @Override
-    protected void disconnectSensors() {
+    public void disconnectSensors() {
         super.disconnectSensors();
-
-        if (serviceUpFeed != null) serviceUpFeed.stop();
+        disconnectServiceUpIsRunning();
     }
 
     /**

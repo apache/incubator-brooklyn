@@ -39,6 +39,8 @@ public class ConfigKeys {
     public static final BasicConfigKey<Boolean> LAUNCH_LATCH = new BasicConfigKey<Boolean>(
             Boolean.class, "launch.latch", "Latch for blocking launch until ready");
 
+    public static final BasicConfigKey<Integer> START_TIMEOUT = new BasicConfigKey<Integer>(
+            Integer.class, "start.timeout", "Time to wait for SERVICE_UP to be set before failing (in seconds, default 60)", 60);
         
     /* selected properties from SshTool for external public access (e.g. putting on entities) */
     
