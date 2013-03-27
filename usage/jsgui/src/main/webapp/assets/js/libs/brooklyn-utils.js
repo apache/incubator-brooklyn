@@ -36,14 +36,29 @@ function prep(s) {
 function roundIfNumberToNumDecimalPlaces(v, mantissa) {
     if (typeof v !== 'number')
         return v;
-    if (Math.round(v)==v)
-        return v;
     
-    var vk = v;
+    log("rounding")
+    log(v)
+    if (isWholeNumber(v))
+        return Math.round(v);
+    
+    var vk = v, xp = 1;
     for (i=0; i<mantissa; i++) {
         vk *= 10;
-        if (Math.round(vk)==vk)
-            return v;
+        xp *= 10;
+        if (isWholeNumber(vk)) {
+            log("bailing")
+            log(vk)            
+            log(Math.round(vk)/xp);
+            return Math.round(vk)/xp;
+        }
     }
+    log("toFixed")
+    log(Number(v.toFixed(mantissa)))
     return Number(v.toFixed(mantissa))
 }
+
+function isWholeNumber(v) {
+    return (Math.abs(Math.round(v) - v) < 0.000000000001);
+}
+

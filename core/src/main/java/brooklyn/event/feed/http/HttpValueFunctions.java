@@ -44,6 +44,14 @@ public class HttpValueFunctions {
         return chain(jsonContents(), JsonFunctions.walk(elements), JsonFunctions.cast(expected));
     }
     
+    public static Function<HttpPollValue, Long> latency() {
+        return new Function<HttpPollValue, Long>() {
+            public Long apply(HttpPollValue input) {
+                return input.getLatencyFullContent();
+            }
+        };
+    }
+    
     public static <A,B,C> Function<A,C> chain(final Function<A,? extends B> f1, final Function<B,C> f2) {
         return new Function<A,C>() {
             @Override public C apply(@Nullable A input) {

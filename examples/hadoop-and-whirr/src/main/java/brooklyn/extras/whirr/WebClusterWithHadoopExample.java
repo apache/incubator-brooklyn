@@ -31,6 +31,7 @@ import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.http.HttpPollValue;
+import brooklyn.event.feed.http.HttpPolls;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
@@ -154,22 +155,11 @@ public class WebClusterWithHadoopExample extends AbstractApplication implements 
                         "key=brooklyn.example.hadoop.site.xml.contents"+"&"+
                         "value="+URLEncoder.encode(hadoopSiteXmlContents));
                 
-                HttpPollValue result = executeGet(updateConfigUri);
+                HttpPollValue result = HttpPolls.executeSimpleGet(updateConfigUri);
                 if (log.isDebugEnabled()) log.debug("http config update for {} got: {}, {}", new Object[] {e, result.getResponseCode(), new String(result.getContent())});
             } catch (Exception err) {
                 log.warn("unable to configure "+e+" for hadoop", err);
                 configuredIds.remove(e.getId());
-            }
-        }
-        
-        private HttpPollValue executeGet(URI uri) throws ClientProtocolException, IOException {
-            DefaultHttpClient httpClient = new DefaultHttpClient();
-            HttpGet httpGet = new HttpGet(uri);
-            HttpResponse httpResponse = httpClient.execute(httpGet);
-            try {
-                return new HttpPollValue(httpResponse);
-            } finally {
-                EntityUtils.consume(httpResponse.getEntity());
             }
         }
         

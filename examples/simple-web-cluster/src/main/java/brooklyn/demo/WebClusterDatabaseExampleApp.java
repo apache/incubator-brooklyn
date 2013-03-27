@@ -5,16 +5,19 @@ import static brooklyn.event.basic.DependentConfiguration.formatString;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
@@ -32,6 +35,7 @@ import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
+import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
@@ -103,6 +107,11 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
                         .configure(DynamicCluster.INITIAL_SIZE, 2)
                         .configure(WebAppService.ENABLED_PROTOCOLS, Arrays.asList(getConfig(USE_HTTPS) ? "https" : "http")) );
 
+        web.addEnricher(HttpLatencyDetector.builder().
+                url(ROOT_URL).
+                rollup(10, TimeUnit.SECONDS).
+                build());
+        
         web.getCluster().addPolicy(AutoScalerPolicy.builder().
                 metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE).
                 metricRange(10, 100).
@@ -111,7 +120,8 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
 
         addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
                 WebAppServiceConstants.ROOT_URL,
-                DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW));
+                DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
+                HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW));
         addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
                 DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT, Functions.<Integer>identity()));
     }

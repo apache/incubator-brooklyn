@@ -26,15 +26,23 @@ public abstract class AbstractFeed {
     
     protected final EntityLocal entity;
     protected final Poller<?> poller;
-    private volatile boolean running;
+    private volatile boolean activated, suspended;
+    private final Object pollerStateMutex = new Object(); 
 
     public AbstractFeed(EntityLocal entity) {
         this.entity = checkNotNull(entity, "entity");;
         this.poller = new Poller<Object>(entity);
     }
     
+    /** true if everything has been _started_ (or it is starting) but not stopped,
+     * even if it is suspended; see also {@link #isActive()} */
     public boolean isActivated() {
-        return running;
+        return activated;
+    }
+    
+    /** true iff the feed is running */
+    public boolean isActive() {
+        return activated && !suspended;
     }
     
     public EntityLocal getEntity() {
@@ -51,26 +59,55 @@ public abstract class AbstractFeed {
 
     protected void start() {
         if (log.isDebugEnabled()) log.debug("Starting feed {} for {}", this, entity);
-        if (running) { 
+        if (activated) { 
             throw new IllegalStateException(String.format("Attempt to start feed %s of entity %s when already running", 
                     this, entity));
         }
         
-        running = true;
+        activated = true;
         preStart();
-        poller.start();
+        synchronized (pollerStateMutex) {
+            // don't start poller if we are suspended
+            if (!suspended) {
+                poller.start();
+            }
+        }
     }
 
+    /** suspends this feed (stops the poller, or indicates that the feed should start in a state where the poller is stopped) */
+    public void suspend() {
+        synchronized (pollerStateMutex) {
+            if (activated && !suspended) {
+                poller.stop();
+            }
+            suspended = true;
+        }
+    }
+    
+    /** resumes this feed if it has been suspended and not stopped */
+    public void resume() {
+        synchronized (pollerStateMutex) {
+            if (activated && suspended) {
+                poller.start();
+            }
+            suspended = false;
+        }
+    }
+    
     public void stop() {
         if (log.isDebugEnabled()) log.debug("stopping feed {} for {}", this, entity);
-        if (!running) { 
+        if (!activated) { 
             log.warn("Ignoring attempt to stop feed {} of entity {} when not running", this, entity);
             return;
         }
         
-        running = false;
+        activated = false;
         preStop();
-        poller.stop();
+        synchronized (pollerStateMutex) {
+            if (!suspended) {
+                poller.stop();
+            }
+        }
         postStop();
     }
 

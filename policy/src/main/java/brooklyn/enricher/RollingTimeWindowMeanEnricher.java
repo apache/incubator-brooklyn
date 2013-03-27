@@ -94,12 +94,12 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
         Iterator<T> valuesIter = values.iterator();
         Iterator<Long> timestampsIter = timestamps.iterator();
         while (valuesIter.hasNext()) {
-            // Ignores out-of-date values (and also values that are received out-of-order, but that shouldn't happen!)
-            double val = valuesIter.next().doubleValue();
-            long timestamp = timestampsIter.next();
-            if (timestamp >= start) {
+            // Ignores null and out-of-date values (and also values that are received out-of-order, but that shouldn't happen!)
+            Number val = valuesIter.next();
+            Long timestamp = timestampsIter.next();
+            if (val!=null && timestamp >= start) {
                 end = timestamp;
-                weightedAverage += ((end - start) / (confidence * timePeriod)) * val;
+                weightedAverage += ((end - start) / (confidence * timePeriod)) * val.doubleValue();
                 start = timestamp;
             }
         }
