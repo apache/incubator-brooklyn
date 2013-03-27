@@ -1,17 +1,25 @@
-package brooklyn.entity.dns.geoscaling
+package brooklyn.entity.dns.geoscaling;
 
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.*
-import static com.google.common.base.Preconditions.*
-import brooklyn.config.render.RendererHints
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.Lifecycle
-import brooklyn.entity.dns.AbstractGeoDnsServiceImpl
-import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
-import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
-import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.text.Identifiers
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_CITY_INFO;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Function
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+import brooklyn.config.render.RendererHints;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
+import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
+import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
+import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.util.MutableMap;
+import brooklyn.util.MutableSet;
+import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
+
+import com.google.common.base.Function;
 
 public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implements GeoscalingDnsService {
     
@@ -24,7 +32,7 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
 
     // Must remember any desired redirection targets if they're specified before configure() has been called.
     private Set<HostGeoInfo> rememberedTargetHosts;
-    private final GeoscalingWebClient webClient = [ ];
+    private final GeoscalingWebClient webClient = new GeoscalingWebClient();
     
     // These are available only after the configure() method has been invoked.
     private boolean randomizeSmartSubdomainName;
@@ -32,8 +40,17 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
     private String password;
     private String primaryDomainName;
     private String smartSubdomainName;
-    
-    public GeoscalingDnsServiceImpl(Map properties = [:], Entity parent = null) {
+
+    public GeoscalingDnsServiceImpl() {
+        this(MutableMap.of(), null);
+    }
+    public GeoscalingDnsServiceImpl(Map properties) {
+        this(properties, null);
+    }
+    public GeoscalingDnsServiceImpl(Entity parent) {
+        this(MutableMap.of(), parent);
+    }
+    public GeoscalingDnsServiceImpl(Map properties, Entity parent) {
         super(properties, parent);
         
         // defaulting to randomized subdomains makes deploying multiple applications easier
@@ -64,7 +81,7 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         
         if (randomizeSmartSubdomainName) {
             // if no smart subdomain specified, but random is, use something random
-            if (smartSubdomainName) smartSubdomainName += "-";
+            if (smartSubdomainName != null) smartSubdomainName += "-";
             else smartSubdomainName = "";
             smartSubdomainName += Identifiers.makeRandomId(8);
         }
@@ -86,7 +103,8 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
     
     @Override
     public String getHostname() {
-        return getAttribute(MANAGED_DOMAIN)?:null;
+        String result = getAttribute(MANAGED_DOMAIN);
+        return (Strings.isBlank(result)) ? null : result;
     }
     
     /** minimum/default TTL here is 300s = 5m */
@@ -101,8 +119,8 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         if (randomizeSmartSubdomainName) {
             webClient.login(username, password);
             Domain primaryDomain = webClient.getPrimaryDomain(primaryDomainName);
-            SmartSubdomain smartSubdomain = primaryDomain?.getSmartSubdomain(smartSubdomainName);
-            if (smartSubdomain) {
+            SmartSubdomain smartSubdomain = (primaryDomain != null) ? primaryDomain.getSmartSubdomain(smartSubdomainName) : null;
+            if (smartSubdomain != null) {
                 log.info("Deleting randomized GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+"'");
                 smartSubdomain.delete();
             }
@@ -116,25 +134,25 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
     
     protected void reconfigureService(Collection<HostGeoInfo> targetHosts) {
         if (!isConfigured) {
-            this.rememberedTargetHosts = targetHosts;
+            this.rememberedTargetHosts = MutableSet.copyOf(targetHosts);
             return;
         }
         
         webClient.login(username, password);
         Domain primaryDomain = webClient.getPrimaryDomain(primaryDomainName);
         if (primaryDomain==null) 
-            throw new NullPointerException("$this got null from web client for primary domain $primaryDomainName")
+            throw new NullPointerException(this+" got null from web client for primary domain "+primaryDomainName);
         SmartSubdomain smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         
-        if (!smartSubdomain) {
-            log.info("GeoScaling $this smart subdomain '"+smartSubdomainName+"."+primaryDomainName+"' does not exist, creating it now");
+        if (smartSubdomain == null) {
+            log.info("GeoScaling {} smart subdomain '{}.{}' does not exist, creating it now", new Object[] {this, smartSubdomainName, primaryDomainName});
             // TODO use WithMutexes to ensure this is single-entrant
             primaryDomain.createSmartSubdomain(smartSubdomainName);
             smartSubdomain = primaryDomain.getSmartSubdomain(smartSubdomainName);
         }
         
-        if (smartSubdomain) {
-            log.debug("GeoScaling $this being reconfigured to use $targetHosts");
+        if (smartSubdomain != null) {
+            log.debug("GeoScaling {} being reconfigured to use {}", this, targetHosts);
             String script = GeoscalingScriptGenerator.generateScriptString(targetHosts);
             smartSubdomain.configure(PROVIDE_CITY_INFO, script);
             setServiceState(targetHosts.isEmpty() ? Lifecycle.CREATED : Lifecycle.RUNNING);

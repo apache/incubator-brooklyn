@@ -1,13 +1,13 @@
-package brooklyn.entity.messaging
+package brooklyn.entity.messaging;
 
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 
 /**
  * An interface that describes a messaging topic.
  */
 public interface Topic {
-    BasicAttributeSensorAndConfigKey<String> TOPIC_NAME = [ String, "topic.name", "Topic name" ]
+    BasicAttributeSensorAndConfigKey<String> TOPIC_NAME = new BasicAttributeSensorAndConfigKey<String>(
+            String.class, "topic.name", "Topic name");
 
     /**
      * Create the topic.

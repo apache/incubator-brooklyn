@@ -2,6 +2,7 @@ package brooklyn.example.cloudfoundry;
 
 import java.util.Collection;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Description;
@@ -21,7 +22,7 @@ public interface MovableElasticWebAppCluster extends Entity, Startable, MovableE
     // either by passing (war: "classpath://...") in the constructor or by setConfig(ROOT_WAR).
     // as a config variable, it will be inherited by children, so the children web app entities will pick it up.
     @SetFromFlag("war")
-    public static final BasicConfigKey<String> ROOT_WAR = JavaWebAppService.ROOT_WAR;
+    public static final ConfigKey<String> ROOT_WAR = JavaWebAppService.ROOT_WAR;
     
     @SetFromFlag("ttl")
     public static final BasicConfigKey<Long> TIME_TO_LIVE_SECONDS = new BasicConfigKey<Long>(

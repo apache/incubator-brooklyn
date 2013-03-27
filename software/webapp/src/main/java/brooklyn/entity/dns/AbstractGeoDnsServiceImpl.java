@@ -1,33 +1,40 @@
-package brooklyn.entity.dns
+package brooklyn.entity.dns;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.ThreadFactory
-import java.util.concurrent.TimeUnit
+import java.net.InetAddress;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey
-import brooklyn.entity.Entity
-import brooklyn.entity.Group
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.Attributes
-import brooklyn.entity.basic.DynamicGroup
-import brooklyn.entity.basic.Lifecycle
-import brooklyn.entity.trait.Startable
-import brooklyn.entity.webapp.WebAppService
-import brooklyn.event.Sensor
-import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.event.basic.BasicConfigKey
-import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.flags.SetFromFlag
+import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.webapp.WebAppService;
+import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.util.MutableMap;
+import brooklyn.util.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.SetFromFlag;
 
-import com.google.common.base.Throwables
-import com.google.common.collect.ImmutableMap
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implements AbstractGeoDnsService {
     protected static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsService.class);
@@ -42,7 +49,16 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     // specified). This set contains those entities we've complained about already, to avoid repetitive logging.
     transient protected Set<Entity> entitiesWithoutGeoInfo = new HashSet<Entity>();
     
-    public AbstractGeoDnsServiceImpl(Map properties = [:], Entity parent = null) {
+    public AbstractGeoDnsServiceImpl() {
+        super();
+    }
+    public AbstractGeoDnsServiceImpl(Map properties) {
+        super(properties, null);
+    }
+    public AbstractGeoDnsServiceImpl(Entity parent) {
+        super(MutableMap.of(), parent);
+    }
+    public AbstractGeoDnsServiceImpl(Map properties, Entity parent) {
         super(properties, parent);
     }
     
@@ -83,13 +99,13 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     // TODO: remove polling once locations can be determined via subscriptions
     ScheduledFuture poll;
     protected void beginPoll() {
-        if (log.isDebugEnabled()) log.debug("GeoDns $this starting poll");
+        if (log.isDebugEnabled()) log.debug("GeoDns {} starting poll", this);
         if (poll!=null) {
-            log.warn("GeoDns duplicate call to beginPoll, ignoring")
+            log.warn("GeoDns duplicate call to beginPoll, ignoring");
             return;
         }
         if (targetEntityProvider==null) {
-            log.warn("GeoDns $this has no targetEntityProvider; polling will have no-effect until it is set")
+            log.warn("GeoDns {} has no targetEntityProvider; polling will have no-effect until it is set", this);
         }
         
         // TODO Should re-use the execution manager's thread pool, somehow
@@ -101,11 +117,9 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 public void run() {
                     try {
                         refreshGroupMembership();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
                     } catch (Throwable t) {
-                        log.warn("Error refreshing group membership", t)
-                        Throwables.propagate(t)
+                        log.warn("Error refreshing group membership", t);
+                        Exceptions.propagate(t);
                     }
                 }
             }, 0, getConfig(POLL_PERIOD), TimeUnit.MILLISECONDS
@@ -114,7 +128,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     
     protected void endPoll() {
         if (poll!=null) {
-            if (log.isDebugEnabled()) log.debug("GeoDns $this ending poll");
+            if (log.isDebugEnabled()) log.debug("GeoDns {} ending poll", this);
             poll.cancel(true);
             poll = null;
         }
@@ -129,16 +143,16 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     // TODO: remove group member polling once locations can be determined via subscriptions
     protected void refreshGroupMembership() {
         try {
-            if (log.isDebugEnabled()) log.debug("GeoDns $this refreshing targets");
+            if (log.isDebugEnabled()) log.debug("GeoDns {} refreshing targets", this);
             if (targetEntityProvider == null)
                 return;
             if (targetEntityProvider instanceof DynamicGroup)
                 ((DynamicGroup) targetEntityProvider).rescanEntities();
-            Set<Entity> pool = [] + (targetEntityProvider instanceof Group ? targetEntityProvider.members : targetEntityProvider.children);
-            if (log.isDebugEnabled()) log.debug("GeoDns $this refreshing targets, pool now "+pool);
+            Set<Entity> pool = MutableSet.copyOf(targetEntityProvider instanceof Group ? ((Group)targetEntityProvider).getMembers(): targetEntityProvider.getChildren());
+            if (log.isDebugEnabled()) log.debug("GeoDns {} refreshing targets, pool now {}", this, pool);
             
             boolean changed = false;
-            Set<Entity> previousOnes = [] + targetHosts.keySet();
+            Set<Entity> previousOnes = MutableSet.copyOf(targetHosts.keySet());
             for (Entity e: pool) {
                 if (previousOnes.remove(e)) continue;
                 changed |= addTargetHost(e, false);
@@ -153,15 +167,15 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 update();
             
         } catch (Exception e) {
-            log.error("Problem refreshing group membership: $e", e);
+            log.error("Problem refreshing group membership: "+e, e);
         }
     }
     
     /** returns if host is added */
     protected boolean addTargetHost(Entity e, boolean doUpdate) {
         if (targetHosts.containsKey(e)) {
-            log.warn("GeoDns ignoring already-added entity $e");
-            return;
+            log.warn("GeoDns ignoring already-added entity {}", e);
+            return false;
         }
         //add it if it is valid
         try {
@@ -171,51 +185,51 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
                 URL u = new URL(url);
                 if (hostname==null) {
                     if (!entitiesWithoutGeoInfo.contains(e))  //don't log repeatedly
-                        log.warn("GeoDns using URL $url to redirect to $e (HOSTNAME attribute is preferred, but not available)");
-                    hostname = u.host; 
+                        log.warn("GeoDns using URL {} to redirect to {} (HOSTNAME attribute is preferred, but not available)", url, e);
+                    hostname = u.getHost(); 
                 }
-                if (u.port>0 && u.port!=80 && u.port!=443) {
+                if (u.getPort() > 0 && u.getPort() != 80 && u.getPort() != 443) {
                     if (!entitiesWithoutGeoInfo.contains(e))  //don't log repeatedly
-                        log.warn("GeoDns detected non-standard port in URL $url for $e; forwarding may not work");
+                        log.warn("GeoDns detected non-standard port in URL {} for {}; forwarding may not work", url, e);
                 }
             }
             if (hostname==null) {
                 if (entitiesWithoutGeoInfo.add(e)) {
-                    log.debug("GeoDns ignoring $e, will continue scanning (no hostname or URL available)");
+                    log.debug("GeoDns ignoring {}, will continue scanning (no hostname or URL available)", e);
                 }
-                return;
+                return false;
             }
             HostGeoInfo geoH = HostGeoInfo.fromIpAddress(InetAddress.getByName(hostname));
             if (geoH == null) {
                 if (entitiesWithoutGeoInfo.add(e)) {
-                    log.warn("GeoDns ignoring $e (no geography info available for $hostname)");
+                    log.warn("GeoDns ignoring {} (no geography info available for {})", e, hostname);
                 }
-                return;
+                return false;
             }
-            HostGeoInfo geoE = HostGeoInfo.fromEntity(e)
+            HostGeoInfo geoE = HostGeoInfo.fromEntity(e);
             if (geoE!=null) {
                 //geo info set for both; prefer H, but warn if they differ dramatially
                 if ((Math.abs(geoH.latitude-geoE.latitude)>3) ||
                         (Math.abs(geoH.longitude-geoE.longitude)>3) ) {
-                    log.warn("GeoDns mismatch, $e is in $geoE but hosts URL in $geoH");
+                    log.warn("GeoDns mismatch, {} is in {} but hosts URL in {}", new Object[] {e, geoE, geoH});
                 }
             }
             
             entitiesWithoutGeoInfo.remove(e);
-            log.info("GeoDns adding $e at $geoH"+(url!=null ? " (downstream listening on $url)" : ""));
+            log.info("GeoDns adding "+e+" at "+geoH+(url!=null ? " (downstream listening on "+url+")" : ""));
             targetHosts.put(e, geoH);
             if (doUpdate) update();
             return true;
         } catch (Exception ee) {
-            log.warn("GeoDns ignoring $e (error analysing location, $ee");
+            log.warn("GeoDns ignoring {} (error analysing location, {}", e, ee);
             return false;
         }
     }
 
     /** remove if host removed */
     protected boolean removeTargetHost(Entity e, boolean doUpdate) {
-        if (targetHosts.remove(e)) {
-            AbstractGeoDnsService.log.info("GeoDns removing reference to $e");
+        if (targetHosts.remove(e) != null) {
+            log.info("GeoDns removing reference to {}", e);
             if (doUpdate) update();
             return true;
         }
@@ -226,8 +240,10 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         Map<Entity, HostGeoInfo> m;
         synchronized(targetHosts) { m = ImmutableMap.copyOf(targetHosts); }
         
-        Map<String,String> entityIdToUrl = [:]
-        m.each { Entity k, HostGeoInfo v -> entityIdToUrl.put(k.id, v.address) }
+        Map<String,String> entityIdToUrl = Maps.newLinkedHashMap();
+        for (Map.Entry<Entity, HostGeoInfo> entry : m.entrySet()) {
+            entityIdToUrl.put(entry.getKey().getId(), entry.getValue().address);
+        }
         
         reconfigureService(new LinkedHashSet<HostGeoInfo>(m.values()));
         
