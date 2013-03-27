@@ -6,8 +6,6 @@ import org.infinispan.config.GlobalConfiguration
 import org.infinispan.manager.DefaultCacheManager
 import org.infinispan.manager.EmbeddedCacheManager
 
-import brooklyn.util.internal.LanguageUtils;
-
 public class OneA {
     
     public static void main(String[] args) throws Exception {

@@ -21,6 +21,7 @@ import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.CollectionChangeListener
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.util.internal.LanguageUtils
+import brooklyn.util.text.Identifiers
 
 public class FederatingManagementContext extends AbstractManagementContext {
     
@@ -84,7 +85,7 @@ public class FederatingManagementContext extends AbstractManagementContext {
     public EntityManager getEntityManager() { return rem.getContext().getEntityManager(); }
     
     public void onApplicationStart(Application app) {
-        String remoteNodeUid = LanguageUtils.newUid();
+        String remoteNodeUid = Identifiers.makeRandomId(8);
         c.addListener(new NodeStartListener());
         c.put(remoteNodeUid, BrooklynManagementNode.WELCOME_MESSAGE);
         

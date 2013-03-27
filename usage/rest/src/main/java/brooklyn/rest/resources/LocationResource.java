@@ -24,7 +24,7 @@ import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.util.EntityLocationUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.MutableMap;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -105,7 +105,7 @@ public class LocationResource extends AbstractBrooklynRestResource {
   public Response create(
           @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
           @Valid LocationSpec locationSpec) {
-      String id = LanguageUtils.newUid();
+      String id = Identifiers.makeRandomId(8);
       LocationDefinition l = new BasicLocationDefinition(id, locationSpec.getName(), locationSpec.getSpec(), locationSpec.getConfig());
       brooklyn().getLocationRegistry().updateDefinedLocation(l);
       return Response.created(URI.create(id)).build();

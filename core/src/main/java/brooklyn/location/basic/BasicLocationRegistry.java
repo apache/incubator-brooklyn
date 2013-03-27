@@ -22,7 +22,7 @@ import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.MutableMap;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
@@ -131,7 +131,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
                     // this is a new named location
                     String spec = (String) namedLocationProps.asMapWithStringKeys().get(k);
                     // make up an ID
-                    String id = LanguageUtils.newUid();
+                    String id = Identifiers.makeRandomId(8);
                     Map<String, Object> config = ConfigUtils.filterForPrefixAndStrip(namedLocationProps.asMapWithStringKeys(), k+".");
                     definedLocations.put(id, new BasicLocationDefinition(id, name, spec, config));
                     count++;
@@ -144,7 +144,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
                 // add 'localhost' *first*
                 ImmutableMap<String, LocationDefinition> oldDefined = ImmutableMap.copyOf(definedLocations);
                 definedLocations.clear();
-                String id = LanguageUtils.newUid();
+                String id = Identifiers.makeRandomId(8);
                 definedLocations.put(id, localhost(id));
                 definedLocations.putAll(oldDefined);
             }
@@ -294,7 +294,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         // ensure localhost is added (even on windows)
         LocationDefinition l = mgmt.getLocationRegistry().getDefinedLocationByName("localhost");
         if (l==null) mgmt.getLocationRegistry().updateDefinedLocation(
-                ((BasicLocationRegistry)mgmt.getLocationRegistry()).localhost(LanguageUtils.newUid()));
+                ((BasicLocationRegistry)mgmt.getLocationRegistry()).localhost(Identifiers.makeRandomId(8)));
         
         ((BasicLocationRegistry)mgmt.getLocationRegistry()).disablePersistence();
     }

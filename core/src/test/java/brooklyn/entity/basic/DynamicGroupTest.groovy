@@ -19,9 +19,9 @@ import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.SensorEvent
 import brooklyn.event.SensorEventListener
 import brooklyn.event.basic.BasicAttributeSensor
+import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.internal.LanguageUtils
 
 import com.google.common.base.Predicate
 import com.google.common.base.Predicates
@@ -240,7 +240,7 @@ public class DynamicGroupTest {
             Entities.unmanage(entity);
         }
 
-        LanguageUtils.repeatUntilSuccess(timeout:new groovy.time.TimeDuration(0, 0, 10, 0)) {
+        TestUtils.executeUntilSucceeds(timeout:new groovy.time.TimeDuration(0, 0, 10, 0)) {
             return notificationCount.get() == (NUM_CYCLES*2) || exceptions.size() > 0
         }
 
@@ -301,7 +301,7 @@ public class DynamicGroupTest {
             Entities.unmanage(entity);
         }
 
-        LanguageUtils.repeatUntilSuccess(timeout:new groovy.time.TimeDuration(0, 0, 10, 0)) {
+        TestUtils.executeUntilSucceeds(timeout:new groovy.time.TimeDuration(0, 0, 10, 0)) {
             return notificationCount.get() == (NUM_CYCLES*2) || exceptions.size() > 0;
         }
 
