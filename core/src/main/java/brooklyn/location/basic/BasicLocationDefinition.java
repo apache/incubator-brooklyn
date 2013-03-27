@@ -3,7 +3,7 @@ package brooklyn.location.basic;
 import java.util.Map;
 
 import brooklyn.location.LocationDefinition;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -16,7 +16,7 @@ public class BasicLocationDefinition implements LocationDefinition {
     private final Map<String,Object> config;
 
     public BasicLocationDefinition(String name, String spec, Map<String,? extends Object> config) {
-        this(LanguageUtils.newUid(), name, spec, config);
+        this(Identifiers.makeRandomId(8), name, spec, config);
     }
     
     public BasicLocationDefinition(String id, String name, String spec, Map<String,? extends Object> config) {      

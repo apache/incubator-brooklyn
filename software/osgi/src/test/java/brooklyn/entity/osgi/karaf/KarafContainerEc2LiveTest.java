@@ -8,7 +8,7 @@ import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.ImmutableList;
 
@@ -20,7 +20,7 @@ public class KarafContainerEc2LiveTest extends AbstractEc2LiveTest {
     @Override
     protected void doTest(Location loc) throws Exception {
         KarafContainer karaf = app.createAndManageChild(EntitySpecs.spec(KarafContainer.class)
-                .configure("name", LanguageUtils.newUid())
+                .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
                 .configure("jmxPort", "8099+")
                 .configure("rmiServerPort", "9099+"));

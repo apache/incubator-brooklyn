@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Throwables;
@@ -463,7 +463,7 @@ public class BasicExecutionManager implements ExecutionManager {
         ((BasicTask)task).endTimeUtc = System.currentTimeMillis();
         //clear thread _after_ endTime set, so we won't get a null thread when there is no end-time
         if (RENAME_THREADS) {
-            String newThreadName = "brooklyn-"+LanguageUtils.newUid();
+            String newThreadName = "brooklyn-"+Identifiers.makeRandomId(8);
             ((BasicTask)task).thread.setName(newThreadName);
         }
         ((BasicTask)task).thread = null;

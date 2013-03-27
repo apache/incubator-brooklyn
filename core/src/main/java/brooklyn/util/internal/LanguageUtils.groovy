@@ -6,13 +6,16 @@ import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
-import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Identifiers
 
 import com.thoughtworks.xstream.XStream
 
 /**
  * Useful Groovy utility methods.
+ * 
+ * @deprecated since 0.5; use Java! Class will likely have a major overhaul in 0.6 and may be deleted entirely
  */
+@Deprecated
 public class LanguageUtils {
     // For unique identifiers
     private static final AtomicLong seed = new AtomicLong(0L)
@@ -75,6 +78,7 @@ public class LanguageUtils {
     /**
      * @deprecated use Identifiers.makeRandomId(8)
      */
+    @Deprecated
     public static String newUid() { Identifiers.makeRandomId(8) }
 
     public static Map setFieldsFromMap(Object target, Map fieldValues) {
@@ -93,7 +97,10 @@ public class LanguageUtils {
      * synchronized on map for map access/change and set for addition there
      *
      * @return the updated set (instance, not copy)
+     * 
+     * @deprecated since 0.5; use {@link HashMultimap}, and {@link Multimaps#synchronizedSetMultimap(com.google.common.collect.SetMultimap)}
      */
+    @Deprecated
     public static <K,V> Set<V> addToMapOfSets(Map<K,Set<V>> map, K key, V valueInCollection) {
         Set<V> coll;
         synchronized (map) {
@@ -120,7 +127,12 @@ public class LanguageUtils {
         return addToMapOfSets(map, key, valueInCollection);
     }
 
-    /** as {@link #addToMapOfSets(Map, Object, Object)} but for {@link ArrayList} */
+    /**
+     * as {@link #addToMapOfSets(Map, Object, Object)} but for {@link ArrayList}
+     * 
+     * @deprecated since 0.5; use {@link ArrayListMultimap}, and {@link Multimaps#synchronizedListMultimap(com.google.common.collect.ListMultimap)}
+     */
+    @Deprecated
     public static <K,V> List<V> addToMapOfLists(Map<K,List<V>> map, K key, V valueInCollection) {
         List<V> coll;
         synchronized (map) {
@@ -151,7 +163,10 @@ public class LanguageUtils {
      * Removes the given value from a collection in the map under the key.
      *
      * @return the updated set (instance, not copy)
+     * 
+     * @deprecated since 0.5; use {@link ArrayListMultimap} or {@link HashMultimap}, and {@link Multimaps#synchronizedListMultimap(com.google.common.collect.ListMultimap)} etc
      */
+    @Deprecated
     public static <K,V> boolean removeFromMapOfCollections(Map<K,? extends Collection<V>> map, K key, V valueInCollection) {
         Collection<V> coll;
         synchronized (map) {

@@ -17,8 +17,8 @@ import brooklyn.entity.trait.Startable
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.internal.TimeExtras
+import brooklyn.util.text.Identifiers
 
 public class KarafContainerTest {
     static { TimeExtras.init() }
@@ -42,7 +42,7 @@ public class KarafContainerTest {
     @Test(groups = ["Integration", "WIP"])
     public void canStartupAndShutdown() {
         karaf = app.createAndManageChild(EntitySpecs.spec(KarafContainer.class)
-                .configure("name", LanguageUtils.newUid())
+                .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
                 .configure("jmxPort", "8099+")
                 .configure("rmiServerPort", "9099+"));
@@ -64,7 +64,7 @@ public class KarafContainerTest {
     @Test(groups = ["Integration", "WIP"])
     public void testCanInstallAndUninstallBundle() {
         karaf = app.createAndManageChild(EntitySpecs.spec(KarafContainer.class)
-            .configure("name", LanguageUtils.newUid())
+            .configure("name", Identifiers.makeRandomId(8))
             .configure("displayName", "Karaf Test")
             .configure("jmxPort", "8099+")
             .configure("rmiServerPort", "9099+"));

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.ListConfigKey.ListModification.ListModificationBase;
 import brooklyn.management.ExecutionContext;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.Lists;
 
@@ -49,7 +49,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
     }
 
     public ConfigKey<V> subKey() {
-        String subName = LanguageUtils.newUid();
+        String subName = Identifiers.makeRandomId(8);
         return new SubElementConfigKey<V>(this, subType, getName()+"."+subName, "element of "+getName()+", uid "+subName, null);
     }
 

@@ -90,7 +90,7 @@ public class WebAppIntegrationTest {
         }
     }
 
-    @AfterMethod(alwaysRun=true)
+    @AfterMethod(alwaysRun=true, dependsOnMethods="shutdownApp")
     public void ensureTomcatIsShutDown() {
         Socket shutdownSocket = null;
         SocketException gotException = null;
@@ -110,17 +110,17 @@ public class WebAppIntegrationTest {
                 .run();
     
             if (socketClosed == false) {
-                log.error "Tomcat did not shut down - this is a failure of the last test run";
-                log.warn "I'm sending a message to the Tomcat shutdown port";
-                OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
-                writer.write("SHUTDOWN\r\n");
-                writer.flush();
-                writer.close();
-                shutdownSocket.close();
-                throw new Exception("Last test run did not shut down Tomcat")
+//                log.error("Tomcat did not shut down - this is a failure of the last test run");
+//                log.warn("I'm sending a message to the Tomcat shutdown port {}", shutdownPort);
+//                OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
+//                writer.write("SHUTDOWN\r\n");
+//                writer.flush();
+//                writer.close();
+//                shutdownSocket.close();
+                throw new Exception("Last test run did not shut down Tomcat entity "+entity+" (port "+shutdownPort+")");
             }
         } else {
-            log.info "Cannot shutdown, because shutdown-port not set for $entity";
+            log.info("Cannot shutdown, because shutdown-port not set for {}", entity);
         }
     }
 
