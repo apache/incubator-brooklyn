@@ -2,7 +2,7 @@ package brooklyn.demo;
 
 import java.util.List;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.messaging.qpid.QpidBroker;
@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 /** Qpid Broker Application */
-public class StandaloneBrokerExample extends ApplicationBuilder {
+public class StandaloneBrokerExample extends AbstractApplication {
 
     public static final String CUSTOM_CONFIG_PATH = "classpath://custom-config.xml";
     public static final String PASSWD_PATH = "classpath://passwd";
@@ -23,7 +23,8 @@ public class StandaloneBrokerExample extends ApplicationBuilder {
 
     public static final String DEFAULT_LOCATION = "localhost";
     
-    protected void doBuild() {
+    @Override
+    public void postConstruct() {
         // Configure the Qpid broker entity
     	QpidBroker broker = addChild(EntitySpecs.spec(QpidBroker.class)
     	        .configure("amqpPort", 5672)
@@ -43,7 +44,7 @@ public class StandaloneBrokerExample extends ApplicationBuilder {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(new StandaloneBrokerExample().appDisplayName("Qpid app"))
+                .application(EntitySpecs.appSpec(StandaloneBrokerExample.class).displayName("Qpid app"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

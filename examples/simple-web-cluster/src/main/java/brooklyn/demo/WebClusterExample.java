@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpecs;
@@ -28,7 +28,7 @@ import com.google.common.collect.Lists;
  * -Xmx512m -Xms128m -XX:MaxPermSize=256m
  * and brooklyn-all jar, and this jar or classes dir, on classpath. 
  **/
-public class WebClusterExample extends ApplicationBuilder {
+public class WebClusterExample extends AbstractApplication {
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterExample.class);
     
     static BrooklynProperties config = BrooklynProperties.Factory.newDefault();
@@ -40,7 +40,8 @@ public class WebClusterExample extends ApplicationBuilder {
     private NginxController nginxController;
     private ControlledDynamicWebAppCluster web;
     
-    protected void doBuild() {
+    @Override
+    public void postConstruct() {
         nginxController = addChild(EntitySpecs.spec(NginxController.class)
                 //.configure("domain", "webclusterexample.brooklyn.local")
                 .configure("port", "8000+"));
@@ -67,7 +68,7 @@ public class WebClusterExample extends ApplicationBuilder {
 
         // TODO Want to parse, to handle multiple locations
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(new WebClusterExample().appDisplayName("Brooklyn WebApp Cluster example"))
+                .application(EntitySpecs.appSpec(WebClusterExample.class).displayName("Brooklyn WebApp Cluster example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

@@ -5,7 +5,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpecs;
@@ -16,14 +16,14 @@ import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 
-public class WhirrHadoopExample extends ApplicationBuilder {
+public class WhirrHadoopExample extends AbstractApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(WhirrHadoopExample.class);
 
     public static final String DEFAULT_LOCATION = "aws-ec2:eu-west-1";
 
     @Override
-    protected void doBuild() {
+    public void postConstruct() {
         WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
                 .displayName("brooklyn-hadoop-example")
                 .configure("size", 2)
@@ -36,7 +36,7 @@ public class WhirrHadoopExample extends ApplicationBuilder {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(new WhirrHadoopExample())
+                .application(EntitySpecs.appSpec(WhirrHadoopExample.class))
                 .webconsolePort(port)
                 .location(location)
                 .start();

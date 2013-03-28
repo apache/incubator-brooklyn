@@ -256,7 +256,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
         String location = CommandLineUtil.getCommandLineOption(args, "--location", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(EntitySpecs.spec(StartableApplication.class)
+                .application(EntitySpecs.appSpec(StartableApplication.class)
                         .displayName("Brooklyn Global Web Fabric with Hadoop Example")
                         .impl(WebFabricWithHadoopExample.class))
                 .webconsolePort(port)

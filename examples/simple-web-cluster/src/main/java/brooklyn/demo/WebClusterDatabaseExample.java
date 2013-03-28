@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.EntitySpecs;
@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
 /**
  * Launches a 3-tier app with nginx, clustered jboss, and mysql.
  **/
-public class WebClusterDatabaseExample extends ApplicationBuilder {
+public class WebClusterDatabaseExample extends AbstractApplication {
     
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterDatabaseExample.class);
     
@@ -47,7 +47,8 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
     public static final BasicAttributeSensor<Integer> APPSERVERS_COUNT = new BasicAttributeSensor<Integer>(Integer.class, 
             "appservers.count", "Number of app servers deployed");
 
-    protected void doBuild() {
+    @Override
+    public void postConstruct() {
         MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptUrl", DB_SETUP_SQL_URL));
         
@@ -67,10 +68,10 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
                 build());
 
         // expose some KPI's
-        getApp().addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
+        addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
                 WebAppServiceConstants.ROOT_URL,
                 DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW));
-        getApp().addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
+        addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
                 DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT, Functions.<Integer>identity()));
     }
 
@@ -80,7 +81,7 @@ public class WebClusterDatabaseExample extends ApplicationBuilder {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(new WebClusterDatabaseExample().appDisplayName("Brooklyn WebApp Cluster with Database example"))
+                .application(EntitySpecs.appSpec(WebClusterDatabaseExample.class).displayName("Brooklyn WebApp Cluster with Database example"))
                 .webconsolePort(port)
                 .location(location)
                 .start();

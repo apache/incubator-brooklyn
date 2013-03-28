@@ -1,14 +1,14 @@
 package brooklyn.demo;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.nosql.cassandra.CassandraCluster;
 import brooklyn.entity.proxying.EntitySpecs;
 
 /** Cassandra Application */
-public class MonitoredCassandraClusterExample extends ApplicationBuilder {
+public class MonitoredCassandraClusterExample extends AbstractApplication {
 
     @Override
-    protected void doBuild() {
+    public void postConstruct() {
         addChild(EntitySpecs.spec(CassandraCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "CassandraDemo")

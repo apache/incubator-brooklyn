@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
@@ -27,7 +27,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class GlobalWebFabricExample extends ApplicationBuilder {
+public class GlobalWebFabricExample extends AbstractApplication {
 
     public static final Logger log = LoggerFactory.getLogger(GlobalWebFabricExample.class);
     
@@ -39,8 +39,9 @@ public class GlobalWebFabricExample extends ApplicationBuilder {
             "aws-ec2:us-west-1" 
 //            "cloudfoundry:https://api.aws.af.cm/",
         );
-    
-    protected void doBuild() {
+
+    @Override
+    public void postConstruct() {
         StringConfigMap config = getManagementContext().getConfig();
         
         GeoscalingDnsService geoDns = addChild(EntitySpecs.spec(GeoscalingDnsService.class)
@@ -74,7 +75,7 @@ public class GlobalWebFabricExample extends ApplicationBuilder {
         String locations = CommandLineUtil.getCommandLineOption(args, "--locations", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(new GlobalWebFabricExample().appDisplayName("Brooklyn Global Web Fabric Example"))
+                .application(EntitySpecs.appSpec(GlobalWebFabricExample.class).displayName("Brooklyn Global Web Fabric Example"))
                 .webconsolePort(port)
                 .locations(Arrays.asList(locations))
                 .start();

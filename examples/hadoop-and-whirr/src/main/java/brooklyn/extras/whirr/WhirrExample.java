@@ -5,7 +5,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpecs;
@@ -15,7 +15,7 @@ import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 
-public class WhirrExample extends ApplicationBuilder {
+public class WhirrExample extends AbstractApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(WhirrExample.class);
 
@@ -26,7 +26,8 @@ public class WhirrExample extends ApplicationBuilder {
             "whirr.hardware-min-ram=1024"+"\n"+
             "whirr.instance-templates=1 noop, 1 elasticsearch"+"\n";
 
-    protected void doBuild() {
+    @Override
+    public void postConstruct() {
         WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrCluster.class)
                 .configure("recipe", RECIPE));
     }
@@ -37,7 +38,7 @@ public class WhirrExample extends ApplicationBuilder {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(new WhirrExample())
+                .application(EntitySpecs.appSpec(WhirrExample.class))
                 .webconsolePort(port)
                 .location(location)
                 .start();

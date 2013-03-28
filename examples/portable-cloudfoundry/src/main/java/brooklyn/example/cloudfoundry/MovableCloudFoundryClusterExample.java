@@ -2,7 +2,7 @@ package brooklyn.example.cloudfoundry;
 
 import java.util.List;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.launcher.BrooklynLauncher;
@@ -10,13 +10,13 @@ import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 
-public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
+public class MovableCloudFoundryClusterExample extends AbstractApplication {
 
     public static final String DEFAULT_LOCATION = "cloudfoundry";
     public static final String WAR_FILE_URL = "classpath://hello-world-webapp.war";
 
     @Override
-    protected void doBuild() {
+    public void postConstruct() {
         addChild(EntitySpecs.spec(MovableElasticWebAppCluster.class)
                 .configure("war", WAR_FILE_URL));
     }
@@ -27,7 +27,7 @@ public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATION);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .application(new MovableCloudFoundryClusterExample().appDisplayName("Movable Web Cluster"))
+                .application(EntitySpecs.appSpec(MovableCloudFoundryClusterExample.class).displayName("Movable Web Cluster"))
                 .webconsolePort(port)
                 .location(location)
                 .start();
