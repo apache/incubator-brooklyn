@@ -46,7 +46,7 @@ class DynamicClusterTest {
     
     @BeforeMethod
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = new SimulatedLocation()
         loc2 = new SimulatedLocation()
     }

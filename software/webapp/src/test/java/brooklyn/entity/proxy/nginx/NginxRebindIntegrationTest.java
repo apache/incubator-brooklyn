@@ -65,7 +65,7 @@ public class NginxRebindIntegrationTest {
 
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
-        origApp = ApplicationBuilder.builder(TestApplication.class).manage(origManagementContext);
+        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
 

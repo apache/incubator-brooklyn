@@ -26,7 +26,7 @@ class BrooklynMetricsTest {
     
     @BeforeMethod
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = new SimulatedLocation()
         brooklynMetrics = new BrooklynMetrics(updatePeriod:10L, parent:app)
         Entities.manage(brooklynMetrics);

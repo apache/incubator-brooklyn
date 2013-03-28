@@ -2,15 +2,12 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.lang.reflect.Modifier;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
@@ -18,16 +15,9 @@ import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 
-import com.google.common.collect.Lists;
-
 /**
- * For building an application. There are two ways to use this:
- * <ul>
- *   <li>By sub-classing and overriding doBuild(), putting the logic for creating and wiring 
- *       together entities in there.
- *   <li>As a conventional builder, using ApplicationBuilder.build().
- *       This is simpler to use, but less powerful for injecting configuration of one entity into other entities.
- * </ul>
+ * For building an application. Users can sub-class and override doBuild(), putting the logic for  
+ * creating and wiring together entities in there.
  * 
  * The builder is mutable; a given instance should be used to build only a single application.
  * Once {@link manage()} has been called, the application will be built and no additional configuration
@@ -45,21 +35,38 @@ import com.google.common.collect.Lists;
  *   }.manage();
  * </code>
  * 
- * And example code for using the builder:
- * 
- * <code>
- *   app = ApplicationBuilder.builder()
- *           .child(EntitySpecs.spec(MySqlNode.class))
- *           .child(EntitySpecs.spec(JBoss7Server.class))
- *           .manage();
- * </code>
- * 
  * @author aled
  */
 public abstract class ApplicationBuilder {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationBuilder.class);
+
+    @SuppressWarnings("unchecked")
+    public static <T extends StartableApplication> T newManagedApp(Class<T> type) {
+        return (T) newManagedApp(EntitySpecs.appSpec(type));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends StartableApplication> T newManagedApp(EntitySpec<T> spec) {
+        return (T) new ApplicationBuilder(spec) {
+            @Override protected void doBuild() {
+            }
+        }.manage();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends StartableApplication> T newManagedApp(Class<T> type, ManagementContext managementContext) {
+        return (T) newManagedApp(EntitySpecs.appSpec(type), managementContext);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends StartableApplication> T newManagedApp(EntitySpec<T> spec, ManagementContext managementContext) {
+        return (T) new ApplicationBuilder(spec) {
+            @Override protected void doBuild() {
+            }
+        }.manage(managementContext);
+    }
 
     /**
      * @deprecated since 0.5.0-rc.1 (added in 0.5.0-M2)
@@ -68,103 +75,6 @@ public abstract class ApplicationBuilder {
         return EntitySpecs.appSpec(type);
     }
 
-    public static Builder<StartableApplication> builder() {
-        return new Builder<StartableApplication>().app(EntitySpecs.spec(BasicApplication.class));
-    }
-
-    public static <T extends Application> Builder<T> builder(EntitySpec<T> appSpec) {
-        return new Builder<T>().app(appSpec);
-    }
-
-    /** smart builder factory method which takes an interface type _or_ an implementation type */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <T extends Application,U extends T> Builder<T> builder(Class<? extends T> type) {
-        // TODO Don't think we want to handle abstract classes like this; it's not an interface so can't be
-        // used for proxying
-        if (type.isInterface() || ((type.getModifiers() & Modifier.ABSTRACT)!=0))
-            // is interface or abstract
-            return new Builder<T>().app(type);
-        else {
-            // is implementation
-            Class interfaceType = (StartableApplication.class.isAssignableFrom(type)) ? StartableApplication.class : Application.class;
-            Class<?>[] additionalInterfaceClazzes = type.getInterfaces();
-            EntitySpec<T> spec = EntitySpecs.spec((Class<T>)interfaceType, (Class<U>)type)
-                    .additionalInterfaces(additionalInterfaceClazzes);
-            return new Builder<T>().app(spec);
-        }
-    }
-
-    public static <T extends Application> Builder<T> builder(Class<T> interfaceType, Class<T> implType) {
-        return new Builder<T>().app(EntitySpecs.spec(interfaceType, implType));
-    }
-
-    public static class Builder<T extends Application> {
-        protected volatile boolean managed = false;
-        private BasicEntitySpec<T, ?> appSpec;
-        private List<EntitySpec<?>> childSpecs = Lists.newArrayList();
-        
-        // Use static builder methods
-        protected Builder() {}
-        
-        // Use static builder methods
-        protected Builder<T> app(EntitySpec<? extends T> val) {
-            checkNotManaged();
-            this.appSpec = EntitySpecs.wrapSpec(val); 
-            return this;
-        }
-        
-        // Use static builder methods
-        @SuppressWarnings("unchecked")
-        protected Builder<T> app(Class<? extends T> type) {
-            checkNotManaged();
-            this.appSpec = EntitySpecs.spec((Class<T>)type); 
-            return this;
-        }
-        
-        public Builder<T> appImpl(Class<? extends T> val) {
-            checkNotManaged();
-            appSpec.impl(val);
-            return this;
-        }
-        
-        public Builder<T> displayName(String val) {
-            checkNotManaged();
-            appSpec.displayName(val);
-            return this;
-        }
-        
-        public final Builder<T> configure(Map<?,?> config) {
-            appSpec.configure(config);
-            return this;
-        }
-
-        public Builder<T> child(EntitySpec<?> val) {
-            checkNotManaged();
-            childSpecs.add(val);
-            return this;
-        }
-        
-        public final T manage() {
-            return manage(Entities.newManagementContext());
-        }
-        
-        public final T manage(ManagementContext managementContext) {
-            checkNotManaged();
-            managed = true;
-            T app = managementContext.getEntityManager().createEntity(appSpec);
-            for (EntitySpec<?> childSpec : childSpecs) {
-                Entity child = managementContext.getEntityManager().createEntity(childSpec);
-                app.addChild(child);
-            }
-            Entities.startManagement(app, managementContext);
-            return app;
-        }
-        
-        protected void checkNotManaged() {
-            if (managed) throw new IllegalStateException("Builder already managed; cannot perform operation after call to manage()");
-        }
-    }
-    
     protected volatile boolean managed = false;
     protected final AtomicBoolean inManage = new AtomicBoolean(false);
     private BasicEntitySpec<? extends StartableApplication, ?> appSpec;

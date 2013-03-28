@@ -49,7 +49,7 @@ public class UrlMappingTest {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
-        app = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         
         EntityFactory<StubAppServer> serverFactory = new BasicConfigurableEntityFactory<StubAppServer>(StubAppServer.class);
         cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)

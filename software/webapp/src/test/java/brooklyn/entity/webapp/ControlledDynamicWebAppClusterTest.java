@@ -48,7 +48,7 @@ public class ControlledDynamicWebAppClusterTest {
         String warPath = "hello-world.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
         
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = new LocalhostMachineProvisioningLocation();
         locs = ImmutableList.of(loc);
     }

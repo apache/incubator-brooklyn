@@ -39,7 +39,7 @@ public class MembershipTrackingPolicyTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entityManager = app.getManagementContext().getEntityManager();
         
         group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class)

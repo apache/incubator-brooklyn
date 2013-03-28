@@ -33,7 +33,7 @@ public class SoftwareProcessEntityTest {
     public void setUp() throws Exception {
         machine = new SshMachineLocation(address:"localhost");
         loc = new FixedListMachineProvisioningLocation<MachineLocation>(machines:[machine]);
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         //entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         MyService entity = new MyService(app)
     }

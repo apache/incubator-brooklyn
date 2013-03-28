@@ -35,7 +35,7 @@ public class TransformingEnricherTest {
 
     @BeforeMethod()
     public void before() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         producer = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         intSensorA = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.a");
         target = new BasicAttributeSensor<Long>(Long.class, "long.sensor.target");

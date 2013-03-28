@@ -38,7 +38,7 @@ public class DynamicWebAppClusterTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
     
     @AfterMethod(alwaysRun=true)

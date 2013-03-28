@@ -36,7 +36,7 @@ public class AutoScalerPolicyMetricTest {
     
     @BeforeMethod()
     public void before() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         tc = app.createAndManageChild(EntitySpecs.spec(TestCluster.class)
                 .configure("initialSize", 1));
     }

@@ -16,7 +16,7 @@ class SensorPropagatingEnricherTest {
 
     @Test
     public void testPropagation() {
-        TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage();
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
         TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         app.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(entity, TestEntity.SEQUENCE)) 

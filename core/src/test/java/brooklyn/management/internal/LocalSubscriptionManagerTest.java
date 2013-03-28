@@ -36,7 +36,7 @@ public class LocalSubscriptionManagerTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
     }
 

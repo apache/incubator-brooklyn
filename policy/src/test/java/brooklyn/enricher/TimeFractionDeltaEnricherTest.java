@@ -33,7 +33,7 @@ public class TimeFractionDeltaEnricherTest {
     
     @BeforeMethod(alwaysRun=true)
     public void before() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         producer = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor");

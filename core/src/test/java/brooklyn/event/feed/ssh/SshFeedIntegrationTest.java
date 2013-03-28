@@ -38,7 +38,7 @@ public class SshFeedIntegrationTest {
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
         machine = loc.obtain();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }

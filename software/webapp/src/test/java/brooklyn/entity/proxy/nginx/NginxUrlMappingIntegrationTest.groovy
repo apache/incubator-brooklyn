@@ -58,7 +58,7 @@ public class NginxUrlMappingIntegrationTest {
         war = getClass().getClassLoader().getResource("hello-world.war")
         assertNotNull(war, "Unable to locate hello-world.war resource");
         
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         urlMappingsGroup = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         entityManager = app.getManagementContext().getEntityManager();

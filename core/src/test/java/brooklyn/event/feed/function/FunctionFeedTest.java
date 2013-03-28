@@ -46,7 +46,7 @@ public class FunctionFeedTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }

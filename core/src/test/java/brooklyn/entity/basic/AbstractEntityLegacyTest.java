@@ -91,7 +91,7 @@ public class AbstractEntityLegacyTest {
     
     @Test
     public void testNewStyleCallsConfigureAfterConstruction() throws Exception {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         MyEntity entity = app.createChild(EntitySpecs.spec(MyEntity.class));
         
         assertEquals(entity.getConfigureCount(), 1);
@@ -122,7 +122,7 @@ public class AbstractEntityLegacyTest {
     
     @Test
     public void testNewStyleSetsDefaultDisplayName() throws Exception {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         MyEntity entity = app.createChild(EntitySpecs.spec(MyEntity.class));
         
         assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
@@ -130,7 +130,7 @@ public class AbstractEntityLegacyTest {
     
     @Test
     public void testNewStyleUsesCustomDisplayName() throws Exception {
-        app = ApplicationBuilder.builder(TestApplication.class).displayName("appname").manage();
+        app = ApplicationBuilder.newManagedApp(EntitySpecs.spec(TestApplication.class).displayName("appname"));
         MyEntity entity = app.createChild(EntitySpecs.spec(MyEntity.class).displayName("entityname"));
         
         assertEquals(app.getDisplayName(), "appname");

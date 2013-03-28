@@ -35,7 +35,7 @@ public class EntityTypeTest {
     
     @BeforeMethod
     public void setUpTestEntity() throws Exception{
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = new AbstractEntity(app) {};
         Entities.startManagement(entity);
         

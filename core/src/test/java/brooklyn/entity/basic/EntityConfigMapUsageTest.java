@@ -41,7 +41,7 @@ public class EntityConfigMapUsageTest {
     
     @BeforeMethod
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         locs = ImmutableList.of(new SimulatedLocation());
     }
     

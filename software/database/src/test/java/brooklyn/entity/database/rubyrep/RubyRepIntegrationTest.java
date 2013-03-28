@@ -31,7 +31,7 @@ public class RubyRepIntegrationTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        tapp = ApplicationBuilder.builder(TestApplication.class).manage();
+        tapp = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 
     @AfterMethod(alwaysRun = true)

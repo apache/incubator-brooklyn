@@ -25,7 +25,7 @@ public class PostgreSqlIntegrationTest {
 
     @BeforeMethod(alwaysRun = true)
     public void before() {
-        tapp = ApplicationBuilder.builder(TestApplication.class).manage();
+        tapp = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 
     @AfterMethod(alwaysRun = true)
