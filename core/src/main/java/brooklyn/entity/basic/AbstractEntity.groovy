@@ -72,12 +72,15 @@ import com.google.common.collect.Maps
  * Sub-classes should have a no-argument constructor. When brooklyn creates an entity, it will:
  * <ol>
  *   <li>Construct the entity via the no-argument constructor
- *   <li>Set the managment context
- *   <li>Set the proxy, which should be used by everything else when referring to this entity
- *       (except for drivers/policies that are attached to the entity, which can be given a 
- *       reference to this entity itself).
- *   <li>Configure the entity, first via the "flags" map and then via configuration keys
- *   <li>Set  the parent
+ *   <li>Call {@link #setDisplayName(String)}
+ *   <li>Call {@link #setManagementContext(ManagementContextInternal)}
+ *   <li>Call {@link #setProxy(Entity)}; the proxy should be used by everything else when referring 
+ *       to this entity (except for drivers/policies that are attached to the entity, which can be  
+ *       given a reference to this entity itself).
+ *   <li>Call {@link #configure(Map)} and then {@link #setConfig(ConfigKey, Object)}
+ *   <li>Call {@link #postConstruct()}
+ *   <li>Call {@link #addPolicy()} (for any policies defined in the {@link EntitySpec})
+ *   <li>Call {@link #setParent(Entity)}, if a parent is specified in the {@link EntitySpec}
  * </ol>
  * <p>
  * The legacy (pre 0.5) mechanism for creating entities is for others to call the constructor directly.
