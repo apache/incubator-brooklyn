@@ -17,7 +17,7 @@ import com.google.common.collect.ImmutableList;
 
 public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements KarafDriver {
 
-    private String expandedInstallDir;
+    protected String expandedInstallDir;
 
     // TODO getJmxJavaSystemProperties(), don't set via JAVA_OPTS; set ourselves manually
     // (karaf reads from props files)
@@ -37,7 +37,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         return format("{%s}/data/karaf.out", getRunDir());
     }
 
-    private String getExpandedInstallDir() {
+    protected String getExpandedInstallDir() {
         if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
         return expandedInstallDir;
     }
