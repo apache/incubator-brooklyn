@@ -1,15 +1,13 @@
-package brooklyn.demo
+package brooklyn.demo;
 
-import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.entity.nosql.cassandra.CassandraCluster
-import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.nosql.cassandra.CassandraCluster;
+import brooklyn.entity.proxying.EntitySpecs;
 
 /** Cassandra Application */
 public class MonitoredCassandraClusterExample extends ApplicationBuilder {
 
-    /**
-     * For overriding, to create and wire together entities.
-     */
+    @Override
     protected void doBuild() {
         addChild(EntitySpecs.spec(CassandraCluster.class)
                 .configure("initialSize", "2")
