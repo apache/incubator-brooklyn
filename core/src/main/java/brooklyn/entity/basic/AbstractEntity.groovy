@@ -57,13 +57,18 @@ import com.google.common.collect.Maps
 
 /**
  * Default {@link Entity} implementation, which should be extended whenever implementing an entity.
- *
+ * <p>
  * Provides several common fields ({@link #name}, {@link #id}), and supports the core features of
  * an entity such as configuration keys, attributes, subscriptions and effector invocation.
- * 
+ * <p>
+ * If a sub-class is creating other entities, this should be done in an overridden {@link #init()}
+ * method.
+ * <p>
+ * Note that config is typically inherited by children, whereas the fields and attributes are not.
+ * <p>
  * Though currently Groovy code, this is very likely to change to pure Java in a future release of 
  * Brooklyn so Groovy'isms should not be relied on.
- * 
+ * <p>
  * Sub-classes should have a no-argument constructor. When brooklyn creates an entity, it will:
  * <ol>
  *   <li>Construct the entity via the no-argument constructor
@@ -74,11 +79,9 @@ import com.google.common.collect.Maps
  *   <li>Configure the entity, first via the "flags" map and then via configuration keys
  *   <li>Set  the parent
  * </ol>
- * 
+ * <p>
  * The legacy (pre 0.5) mechanism for creating entities is for others to call the constructor directly.
  * This is now deprecated.
- * 
- * Note that config is typically inherited by children, whereas the fields and attributes are not.
  */
 public abstract class AbstractEntity extends GroovyObjectSupport implements EntityLocal, EntityInternal, GroovyInterceptable {
     
@@ -403,6 +406,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * </pre>
      */
     public void init() {
+        // no-op
     }
     
     /**

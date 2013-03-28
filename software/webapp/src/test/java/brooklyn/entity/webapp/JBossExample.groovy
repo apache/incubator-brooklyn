@@ -14,8 +14,13 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 @Deprecated
 class JBossExample extends AbstractApplication {
 
-    JBoss7Server s = new JBoss7ServerImpl(this, httpPort: "8080+", war:"classpath://hello-world.war");
+    JBoss7Server s;
     
+    @Override
+    public void init() {
+        s = new JBoss7ServerImpl(this, httpPort: "8080+", war:"classpath://hello-world.war");
+    }
+
     public static void main(String[] args) {
         def ex = new JBossExample();
         ex.start( [ new LocalhostMachineProvisioningLocation(name:'london') ] )

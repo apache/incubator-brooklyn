@@ -17,7 +17,6 @@ import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
@@ -35,7 +34,6 @@ import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
-import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
@@ -91,8 +89,6 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
 
     @Override
     public void init() {
-        super.init();
-
         MySqlNode mysql = addChild(
                 EntitySpecs.spec(MySqlNode.class)
                         .configure(MySqlNode.CREATION_SCRIPT_URL, getConfig(DB_SETUP_SQL_URL)));

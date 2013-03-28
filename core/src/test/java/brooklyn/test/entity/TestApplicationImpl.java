@@ -9,7 +9,6 @@ import org.testng.Assert;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
@@ -29,6 +28,11 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
         super(properties);
     }
 
+    @Override
+    public void init() {
+        // no-op
+    }
+    
     /**
      * @deprecated Use {@link #addChild(EntitySpec)}
      */

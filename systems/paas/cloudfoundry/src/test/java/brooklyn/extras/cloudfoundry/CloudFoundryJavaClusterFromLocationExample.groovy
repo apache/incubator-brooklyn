@@ -41,6 +41,11 @@ class CloudFoundryJavaClusterFromLocationExample extends AbstractApplication {
     ElasticJavaWebAppService svc;
     
     @Override
+    public void init() {
+        // no-op; see preStart
+    }
+
+    @Override
     public void preStart(Collection<? extends Location> locations) {
         svc = new ElasticJavaWebAppService.Factory().newFactoryForLocation( Iterables.getOnlyElement(locations) ).
             newEntity(this, war: WAR_FILE_URL);

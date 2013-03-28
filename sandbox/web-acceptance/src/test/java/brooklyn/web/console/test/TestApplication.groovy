@@ -60,6 +60,11 @@ class TestApplication extends AbstractApplication {
         setAttribute(CHILDREN, getChildren().size())
     }
 
+    @Override
+    public void init() {
+        // no-op
+    }
+
     public <T> Task<T> invoke(Effector<T> eff, Map<String, ?> parameters) {
         return null  //To change body of implemented methods use File | Settings | File Templates.
     }
