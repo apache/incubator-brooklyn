@@ -6,11 +6,11 @@ import com.google.common.base.Function;
 
 public class MathFunctions {
 
-    public static Function<Number,Double> divide(final Number n, final double divisor) {
+    public static Function<Number,Double> divide(final double divisor) {
         return new Function<Number, Double>() {
             public Double apply(@Nullable Number input) {
                 if (input==null) return null;
-                return n.doubleValue() / divisor;
+                return input.doubleValue() / divisor;
             }
         };
     }

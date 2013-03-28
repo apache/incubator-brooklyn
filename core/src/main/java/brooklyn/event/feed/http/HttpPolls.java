@@ -14,15 +14,13 @@ public class HttpPolls {
     public static HttpPollValue executeSimpleGet(URI uri) {
         DefaultHttpClient httpClient = new DefaultHttpClient();
         HttpGet httpGet = new HttpGet(uri);
-        HttpResponse httpResponse = null;
         try {
+            long startTime = System.currentTimeMillis();
+            HttpResponse httpResponse = httpClient.execute(httpGet);
             try {
-                long startTime = System.currentTimeMillis();
-                httpResponse = httpClient.execute(httpGet);
                 return new HttpPollValue(httpResponse, startTime);
             } finally {
-                if (httpResponse!=null)
-                    EntityUtils.consume(httpResponse.getEntity());
+                EntityUtils.consume(httpResponse.getEntity());
             }
         } catch (Exception e) {
             throw Exceptions.propagate(e);

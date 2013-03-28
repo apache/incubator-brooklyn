@@ -21,6 +21,8 @@ import com.google.common.collect.Iterables
 
 /**
  * Helper functions for tests of Tomcat, JBoss and others.
+ * 
+ * Note that methods will migrate from here to {@link Asserts} in future releases.
  */
 public class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class)
@@ -77,31 +79,22 @@ public class TestUtils {
         return HttpTestUtils.connectToUrl(url);
     }
     
-    // TODO see also Java variant: Asserts.eventually()
     // calling groovy from java doesn't cope with generics here; stripping them from here :-(
     //      <T> void assertEventually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate)
+    /**
+     * @deprecated since 0.5; use {@link Asserts.eventually(Map, Supplier, Predicate)}
+     */
+    @Deprecated
     public static void assertEventually(Map flags=[:], Supplier supplier, Predicate predicate) {
-        assertEventually(flags, supplier, predicate, (String)null);
+        Asserts.eventually(flags, supplier, predicate);
     }
     
+    /**
+     * @deprecated since 0.5; use {@link Asserts.eventually(Map, Supplier, Predicate, String)}
+     */
+    @Deprecated
     public static <T> void assertEventually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
-        TimeDuration timeout = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
-        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
-        long periodMs = period.toMilliseconds()
-        long startTime = System.currentTimeMillis()
-        long expireTime = startTime+timeout.toMilliseconds()
-        
-        boolean first = true;
-        T supplied = supplier.get();
-        while (first || System.currentTimeMillis() <= expireTime) {
-            supplied = supplier.get();
-            if (predicate.apply(supplied)) {
-                return;
-            }
-            first = false;
-            if (periodMs > 0) sleep(periodMs);
-        }
-        fail("supplied="+supplied+"; predicate="+predicate+(errMsg!=null?"; "+errMsg:""));
+        Asserts.eventually(flags, supplier, predicate, errMsg);
     }
     
     public static void assertEventually(Map flags=[:], Callable c) {
@@ -255,33 +248,38 @@ public class TestUtils {
         }
     }
     
-    // FIXME When calling from java, the generics declared in groovy messing things up! 
+    /**
+     * @deprecated since 0.5; use {@link Asserts.continually(Map, Supplier, Predicate)}
+     */
+    @Deprecated
+    // FIXME When calling from java, the generics declared in groovy messing things up!
     public static void assertContinuallyFromJava(Map flags=[:], Supplier<?> supplier, Predicate<?> predicate) {
-        assertContinually(flags, supplier, predicate, (String)null);
+        Asserts.continually(flags, supplier, predicate);
     }
     
+    /**
+     * @deprecated since 0.5; use {@link Asserts.continually(Map, Supplier, Predicate)}
+     */
+    @Deprecated
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate) {
-        assertContinually(flags, supplier, predicate, (String)null);
+        Asserts.continually(flags, supplier, predicate, (String)null);
     }
 
+    /**
+     * @deprecated since 0.5; use {@link Asserts.continually(Map, Supplier, Predicate, String)}
+     */
+    @Deprecated
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg, long durationMs) {
         flags.put("duration", toTimeDuration(durationMs));
-        assertContinually(flags, supplier, predicate, errMsg);
+        Asserts.continually(flags, supplier, predicate, errMsg);
     }
     
+    /**
+     * @deprecated since 0.5; use {@link Asserts.continually(Map, Supplier, Predicate, String)}
+     */
+    @Deprecated
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
-        TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
-        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
-        long periodMs = period.toMilliseconds()
-        long startTime = System.currentTimeMillis()
-        long expireTime = startTime+duration.toMilliseconds()
-        
-        boolean first = true;
-        while (first || System.currentTimeMillis() <= expireTime) {
-            assertTrue(predicate.apply(supplier.get()), "supplied="+supplier.get()+"; predicate="+predicate+(errMsg!=null?"; "+errMsg:""));
-            if (periodMs > 0) sleep(periodMs);
-            first = false;
-        }
+        Asserts.continually(flags, supplier, predicate, errMsg);
     }
     
     public static class BooleanWithMessage {
@@ -306,8 +304,12 @@ public class TestUtils {
     }
 
     public static TimeDuration toTimeDuration(Object duration) {
+        return toTimeDuration(duration, null);
+    }
+            
+    public static TimeDuration toTimeDuration(Object duration, TimeDuration defaultVal) {
         if (duration == null) {
-            return null
+            return defaultVal;
         } else if (duration instanceof TimeDuration) {
             return (TimeDuration) duration
         } else if (duration instanceof Number) {

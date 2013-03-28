@@ -35,7 +35,6 @@ import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Supplier;
@@ -128,7 +127,7 @@ public class HttpFeed extends AbstractFeed {
             return this;
         }
         public Builder baseUrl(URL val) {
-            return baseUri(Urls.URI_FROM_STRING.apply(val.toString()));
+            return baseUri(URI.create(val.toString()));
         }
         public Builder baseUri(String val) {
             return baseUri(URI.create(val));

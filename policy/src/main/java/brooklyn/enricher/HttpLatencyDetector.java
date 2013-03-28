@@ -53,15 +53,33 @@ public class HttpLatencyDetector extends AbstractEnricher {
                     "Request latency over time window, in seconds");
 
     HttpFeed httpFeed = null;
-    long periodMillis = 1000;
+    final long periodMillis;
     
-    boolean requireServiceUp = true; 
-    AtomicBoolean serviceUp = new AtomicBoolean(false);
+    final boolean requireServiceUp; 
+    final AtomicBoolean serviceUp = new AtomicBoolean(false);
     
-    AttributeSensor<String> urlSensor;
-    Function<String,String> urlPostProcessing = Functions.identity();
-    AtomicReference<String> url = new AtomicReference<String>(null);
-    TimeDuration rollupPeriod = LATENCY_WINDOW_DEFAULT_PERIOD;
+    final AttributeSensor<String> urlSensor;
+    final Function<String,String> urlPostProcessing;
+    final AtomicReference<String> url = new AtomicReference<String>(null);
+    final TimeDuration rollupWindowSize;
+    
+    protected HttpLatencyDetector(Builder builder) {
+        this.periodMillis = builder.periodMillis;
+        this.requireServiceUp = builder.requireServiceUp;
+        
+        if (builder.urlSensor != null) {
+            this.urlSensor = builder.urlSensor;
+            this.urlPostProcessing = builder.urlPostProcessing;
+            if (builder.url != null)
+                throw new IllegalStateException("Cannot set URL and UrlSensor");
+        } else {
+            this.url.set(builder.url);
+            this.urlSensor = null;
+            this.urlPostProcessing = null;
+        }
+
+        this.rollupWindowSize = builder.rollupWindowSize;
+    }
     
     @Override
     public void setEntity(EntityLocal entity) {
@@ -81,7 +99,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
         httpFeed = HttpFeed.builder()
                 .entity(entity)
                 .period(periodMillis)
-                .baseUri(Suppliers.compose(Urls.URI_FROM_STRING, AtomicReferences.supplier(url)))
+                .baseUri(Suppliers.compose(Urls.stringToUriFunction(), AtomicReferences.supplier(url)))
                 .poll(new HttpPollConfig<Double>(REQUEST_LATENCY_IN_SECONDS_MOST_RECENT)
                         .onSuccess(MathFunctions.divide(HttpValueFunctions.latency(), 1000.0d))
                         .onError(Functions.constant((Double)null)))
@@ -116,10 +134,10 @@ public class HttpLatencyDetector extends AbstractEnricher {
     }
 
     protected void activateAdditionalEnrichers(EntityLocal entity) {
-        if (rollupPeriod!=null) {
+        if (rollupWindowSize!=null) {
             entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity,
                 REQUEST_LATENCY_IN_SECONDS_MOST_RECENT, REQUEST_LATENCY_IN_SECONDS_IN_WINDOW,
-                rollupPeriod.toMilliseconds()));
+                rollupWindowSize.toMilliseconds()));
         }
     }
 
@@ -148,11 +166,11 @@ public class HttpLatencyDetector extends AbstractEnricher {
     }
     
     public static class Builder {
-        Boolean requireServiceUp;
-        Long periodMillis;
+        boolean requireServiceUp = true;
+        long periodMillis = 1000;
         String url;
         AttributeSensor<String> urlSensor;
-        Function<String, String> urlPostProcessing;
+        Function<String, String> urlPostProcessing = Functions.identity();
         TimeDuration rollupWindowSize = LATENCY_WINDOW_DEFAULT_PERIOD;
         
         /** indicates that the HttpLatencyDetector should not require "service up";
@@ -204,23 +222,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
         /** returns the detector. note that callers should then add this to the entity,
          * typically using {@link Entity#addEnricher(brooklyn.policy.Enricher)} */
         public HttpLatencyDetector build() {
-            HttpLatencyDetector result = new HttpLatencyDetector();
-            
-            if (periodMillis!=null) result.periodMillis = periodMillis;
-            if (requireServiceUp!=null) result.requireServiceUp = requireServiceUp;
-            
-            if (urlSensor!=null) {
-                result.urlSensor = urlSensor;
-                if (urlPostProcessing!=null) result.urlPostProcessing = urlPostProcessing;
-                if (url!=null)
-                    throw new IllegalStateException("Cannot set URL and UrlSensor");
-            } else {
-                result.url.set(url);
-            }
-
-            result.rollupPeriod = rollupWindowSize;
-            
-            return result;
+            return new HttpLatencyDetector(this);
         }
     }
     

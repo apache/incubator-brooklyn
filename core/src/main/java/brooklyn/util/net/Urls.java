@@ -12,13 +12,35 @@ import com.google.common.base.Throwables;
 
 public class Urls {
 
-    public static final Function<String,URI> URI_FROM_STRING = new Function<String,URI>() {
-        public URI apply(String input) { return toUri(input); } 
-    };
+    public static Function<String,URI> stringToUriFunction() {
+        return StringToUri.INSTANCE;
+    }
+    
+    public static Function<String,URL> stringToUrlFunction() {
+        return StringToUrl.INSTANCE;
+    }
+    
+    private static enum StringToUri implements Function<String,URI> {
+        INSTANCE;
+        @Override public URI apply(@Nullable String input) {
+            return toUri(input);
+        }
+        @Override
+        public String toString() {
+            return "StringToUri";
+        }
+    }
 
-    public static final Function<String,URL> URL_FROM_STRING = new Function<String,URL>() {
-        public URL apply(String input) { return toUrl(input); } 
-    };
+    private static enum StringToUrl implements Function<String,URL> {
+        INSTANCE;
+        @Override public URL apply(@Nullable String input) {
+            return toUrl(input);
+        }
+        @Override
+        public String toString() {
+            return "StringToUrl";
+        }
+    }
 
     /** creates a URL, preserving null and propagating exceptions *unchecked* */
     public static final URL toUrl(@Nullable String url) {
