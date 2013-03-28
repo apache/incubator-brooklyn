@@ -15,7 +15,13 @@ import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 
+import com.google.common.annotations.Beta;
+
 /**
+ * Experimental mechanism for defining/building applications. In future releases, this
+ * API will change. Its concepts will most likely be merged with a TOSCA implementation
+ * and with {@link EntitySpec}.
+ *
  * For building an application. Users can sub-class and override doBuild(), putting the logic for  
  * creating and wiring together entities in there.
  * 
@@ -37,17 +43,20 @@ import brooklyn.management.ManagementContext;
  * 
  * @author aled
  */
+@Beta
 public abstract class ApplicationBuilder {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationBuilder.class);
 
     @SuppressWarnings("unchecked")
+    @Beta
     public static <T extends StartableApplication> T newManagedApp(Class<T> type) {
         return (T) newManagedApp(EntitySpecs.appSpec(type));
     }
 
     @SuppressWarnings("unchecked")
+    @Beta
     public static <T extends StartableApplication> T newManagedApp(EntitySpec<T> spec) {
         return (T) new ApplicationBuilder(spec) {
             @Override protected void doBuild() {
@@ -56,11 +65,13 @@ public abstract class ApplicationBuilder {
     }
 
     @SuppressWarnings("unchecked")
+    @Beta
     public static <T extends StartableApplication> T newManagedApp(Class<T> type, ManagementContext managementContext) {
         return (T) newManagedApp(EntitySpecs.appSpec(type), managementContext);
     }
 
     @SuppressWarnings("unchecked")
+    @Beta
     public static <T extends StartableApplication> T newManagedApp(EntitySpec<T> spec, ManagementContext managementContext) {
         return (T) new ApplicationBuilder(spec) {
             @Override protected void doBuild() {
