@@ -397,12 +397,12 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      * <pre>
      * {@code
      * if (isLegacyConstruction()) {
-     *     postConstruct();
+     *     init();
      * }
      * }
      * </pre>
      */
-    public void postConstruct() {
+    public void init() {
     }
     
     /**

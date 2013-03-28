@@ -324,7 +324,7 @@ public class Main {
                     @Override protected void doBuild() {
                     }};
             } else if (AbstractApplication.class.isAssignableFrom(clazz)) {
-                // TODO If this application overrides postConstruct() then in trouble, as that won't get called!
+                // TODO If this application overrides init() then in trouble, as that won't get called!
                 // TODO grr; what to do about non-startable applications?
                 // without this we could return ApplicationBuilder rather than Object
                 Constructor<?> constructor = clazz.getConstructor();

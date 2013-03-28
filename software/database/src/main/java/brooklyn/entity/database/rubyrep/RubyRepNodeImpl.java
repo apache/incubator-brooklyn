@@ -31,8 +31,8 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
      * Adds support for binding to brooklyn DatabaseNodes (so the user doesn't have to call attributeWhenReady, etc)
      */
     @Override
-    public void postConstruct() {
-        super.postConstruct();
+    public void init() {
+        super.init();
 
         DatabaseNode leftNode = getConfig(LEFT_DATABASE);
         DatabaseNode rightNode = getConfig(RIGHT_DATABASE);

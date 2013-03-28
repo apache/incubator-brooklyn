@@ -56,8 +56,8 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     }
 
     @Override
-    public void postConstruct() {
-        super.postConstruct();
+    public void init() {
+        super.init();
 
         // This DeferredSupplier will return a comma separated list of all available
         // hostnames in the cluster or if none are available yet then a Task for the first

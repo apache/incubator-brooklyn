@@ -90,8 +90,8 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     public static final AttributeSensor<String> ROOT_URL = WebAppServiceConstants.ROOT_URL;
 
     @Override
-    public void postConstruct() {
-        super.postConstruct();
+    public void init() {
+        super.init();
 
         MySqlNode mysql = addChild(
                 EntitySpecs.spec(MySqlNode.class)

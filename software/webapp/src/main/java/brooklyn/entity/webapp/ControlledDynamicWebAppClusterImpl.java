@@ -52,7 +52,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     }
 
     @Override
-    public void postConstruct() {
+    public void init() {
         ConfigToAttributes.apply(this, FACTORY);
         ConfigToAttributes.apply(this, MEMBER_SPEC);
         ConfigToAttributes.apply(this, CONTROLLER);
@@ -110,7 +110,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
     
     public void start(Collection<? extends Location> locations) {
         if (isLegacyConstruction()) {
-            postConstruct();
+            init();
         }
         
         if (locations.isEmpty()) locations = this.getLocations();

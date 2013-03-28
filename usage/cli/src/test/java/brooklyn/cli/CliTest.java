@@ -238,8 +238,8 @@ public class CliTest {
         volatile boolean running;
         volatile boolean constructed;
         
-        @Override public void postConstruct() {
-            super.postConstruct();
+        @Override public void init() {
+            super.init();
             constructed = true;
             exampleAppConstructed = true;
         }
