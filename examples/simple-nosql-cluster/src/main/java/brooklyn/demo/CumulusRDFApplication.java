@@ -24,7 +24,7 @@ import brooklyn.entity.webapp.tomcat.TomcatServer;
 public class CumulusRDFApplication extends AbstractApplication {
 
     /** Create entities. */
-    public void postConstruct() {
+    public void init() {
         TomcatServer tomcat = getEntityManager().createEntity(EntitySpecs.spec(TomcatServer.class)
                 .configure("war", "classpath:///cumulusrdf.war"));
 

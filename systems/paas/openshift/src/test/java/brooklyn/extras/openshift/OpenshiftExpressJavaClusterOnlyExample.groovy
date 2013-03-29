@@ -56,23 +56,28 @@ class OpenshiftExpressJavaClusterOnlyExample extends AbstractApplication {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftExpressJavaClusterOnlyExample.class)
     
     File warFile = TestUtils.getResource("hello-world.war", getClass().getClassLoader())
-                
-    OpenshiftExpressJavaWebAppCluster openshift = 
-      new OpenshiftExpressJavaWebAppCluster(this, war: warFile.getAbsolutePath());
+    
+    OpenshiftExpressJavaWebAppCluster openshift;
+    
+    @Override
+    public void init() {
+        openshift = new OpenshiftExpressJavaWebAppCluster(this, war: warFile.getAbsolutePath());
+    }
+
     
     // TODO a richer example which starts Openshift alongside JBosses in EC2 with geoscaling
     // TODO (shouldn't use the tomcat-branded hello world for this :)
       
     // ---- the code above is your app descriptor; code below runs it ----
       
-    OpenshiftLocation loc = new OpenshiftLocation(
-          username: OpenshiftExpressAccessIntegrationTest.TEST_USER,
-          password: OpenshiftExpressAccessIntegrationTest.TEST_PASSWORD)
-      
     public static void main(String[] args) {
+        OpenshiftLocation loc = new OpenshiftLocation(
+              username: OpenshiftExpressAccessIntegrationTest.TEST_USER,
+              password: OpenshiftExpressAccessIntegrationTest.TEST_PASSWORD)
+      
         def app = new OpenshiftExpressJavaClusterOnlyExample();
         
-        app.start([app.loc]);
+        app.start([loc]);
         
         log.info "should now be able to visit site (for 60s): {}", app.openshift.getWebAppAddress()
         //should now be able to visit (assert?)

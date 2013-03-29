@@ -20,6 +20,11 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
+/**
+ * Users can extend this to define the entities in their application, and the relationships between
+ * those entities. Users should override the {@link #init()} method, and in there should create 
+ * their entities.
+ */
 public abstract class AbstractApplication extends AbstractEntity implements StartableApplication {
     public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
     
@@ -85,6 +90,11 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     @Deprecated
     public AbstractApplication(Map properties, Entity parent) {
         super(properties, parent);
+    }
+
+    @Override
+    public void init() {
+        log.warn("Deprecated: AbstractApplication.init() will be declared abstract in a future release; please override for code instantiating child entities");
     }
 
     @Override

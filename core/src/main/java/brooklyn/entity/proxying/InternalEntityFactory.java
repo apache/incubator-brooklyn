@@ -139,7 +139,7 @@ public class InternalEntityFactory {
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
             }
-            ((AbstractEntity)entity).postConstruct();
+            ((AbstractEntity)entity).init();
             
             for (Policy policy : spec.getPolicies()) {
                 entity.addPolicy((AbstractPolicy)policy);

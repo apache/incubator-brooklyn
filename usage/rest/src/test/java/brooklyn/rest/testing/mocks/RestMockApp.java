@@ -15,4 +15,8 @@ public class RestMockApp extends AbstractApplication {
         super(properties);
     }
 
+    @Override
+    public void init() {
+        // no-op
+    }
 }

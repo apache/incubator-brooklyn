@@ -95,6 +95,10 @@ public class BrooklynRestResourceUtilsTest {
 
     @Catalog
     public static class MyApplicationImpl extends AbstractApplication implements MyInterface {
+        @Override
+        public void init() {
+            // no-op
+        }
     }
     
     public static class MyPolicy extends AbstractPolicy {

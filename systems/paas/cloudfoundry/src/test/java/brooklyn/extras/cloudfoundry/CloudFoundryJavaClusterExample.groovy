@@ -33,9 +33,13 @@ public class CloudFoundryJavaClusterExample extends AbstractApplication {
     private static final Logger log = LoggerFactory.getLogger(CloudFoundryJavaClusterExample.class)
     
     public static final String WAR_FILE_URL = "classpath://hello-world.war";
-                
-    CloudFoundryJavaWebAppCluster cloudfoundry = 
-      new CloudFoundryJavaWebAppCluster(this, war: WAR_FILE_URL);
+    
+    CloudFoundryJavaWebAppCluster cloudfoundry;
+    
+    @Override
+    public void init() {
+        cloudfoundry = new CloudFoundryJavaWebAppCluster(this, war: WAR_FILE_URL);
+    }
     
     // TODO a richer example which starts CloudFoundry alongside Tomcats in EC2 with geoscaling
       

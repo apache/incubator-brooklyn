@@ -21,6 +21,8 @@ class OpenshiftExpressJavaWebAppCluster extends AbstractEntity implements Starta
 
     private static final Logger log = LoggerFactory.getLogger(OpenshiftExpressJavaWebAppCluster.class)
     
+    public static final BasicConfigKey<String> APP_NAME = [ String, "appName", "System name for uniquely referring to application; defaults to Brooklyn999999 " ]
+                    
     public OpenshiftExpressJavaWebAppCluster(Map flags=[:], Entity parent=null) {
         super(flags, parent)
         setConfigIfValNonNull(ROOT_WAR, flags.war)
@@ -28,8 +30,6 @@ class OpenshiftExpressJavaWebAppCluster extends AbstractEntity implements Starta
         setAttribute(AbstractService.SERVICE_STATUS, "uninitialized")
     }
 
-    public static final BasicConfigKey<String> APP_NAME = [ String, "appName", "System name for uniquely referring to application; defaults to Brooklyn999999 " ]
-    
     public String getAppName() {
         def appName = getConfig(APP_NAME);
         if (appName) return appName;
