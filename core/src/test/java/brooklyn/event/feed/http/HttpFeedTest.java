@@ -2,6 +2,7 @@ package brooklyn.event.feed.http;
 
 import static brooklyn.test.TestUtils.executeUntilSucceeds;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.net.URL;
 import java.util.concurrent.Callable;
@@ -21,6 +22,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -124,14 +126,19 @@ public class HttpFeedTest {
                 .build();
         assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
         feed.suspend();
-        int countWhenSuspended = server.getRequestCount();
+        final int countWhenSuspended = server.getRequestCount();
+        
         Thread.sleep(500);
         if (server.getRequestCount() > countWhenSuspended+1)
             Assert.fail("Request count continued to increment while feed was suspended, from "+countWhenSuspended+" to "+server.getRequestCount());
+        
         feed.resume();
-        Thread.sleep(500);
-        if (server.getRequestCount() <= countWhenSuspended+1)
-            Assert.fail("Request count failed to increment when feed was resumed, from "+countWhenSuspended+", still at "+server.getRequestCount());        
+        TestUtils.executeUntilSucceeds(new Runnable() {
+            public void run() {
+                assertTrue(server.getRequestCount() > countWhenSuspended+1, 
+                        "Request count failed to increment when feed was resumed, from "+countWhenSuspended+", still at "+server.getRequestCount());        
+            }
+        });
     }
 
     @Test(groups="Integration")
@@ -148,11 +155,11 @@ public class HttpFeedTest {
                         .onSuccess(HttpValueFunctions.stringContentsFunction()))
                 .suspended()
                 .build();
-        TestUtils.assertContinuallyFromJava(MutableMap.of("timeout", 500),
+        Asserts.continually(MutableMap.of("timeout", 500),
                 Entities.supplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(null));
         int countWhenSuspended = server.getRequestCount();
         feed.resume();
-        TestUtils.assertEventually(Entities.supplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(200));
+        Asserts.eventually(Entities.supplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(200));
         if (server.getRequestCount() <= countWhenSuspended)
             Assert.fail("Request count failed to increment when feed was resumed, from "+countWhenSuspended+", still at "+server.getRequestCount());
         log.info("RUN: "+countWhenSuspended+" - "+server.getRequestCount());

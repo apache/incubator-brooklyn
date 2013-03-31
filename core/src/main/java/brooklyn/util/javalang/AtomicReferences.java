@@ -22,8 +22,8 @@ public class AtomicReferences {
     public static <T> Supplier<T> supplier(final AtomicReference<T> ref) {
         Preconditions.checkNotNull(ref);
         return new Supplier<T>() {
-            public T get() { return ref.get(); }
+            @Override public T get() { return ref.get(); }
+            @Override public String toString() { return "AtomicRefSupplier"; }
         };
     }
-
 }

@@ -21,13 +21,20 @@ import com.google.common.collect.Iterables
 
 /**
  * Helper functions for tests of Tomcat, JBoss and others.
+ * 
+ * Note that methods will migrate from here to {@link Asserts} in future releases.
  */
 public class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class)
 
     private TestUtils() { }
 
-    /** True if two attempts to connect to the port succeed. */
+    /**
+     * True if two attempts to connect to the port succeed.
+     * 
+     * @deprecated since 0.5; use {@link brooklyn.util.NetworkUtils#isPortAvailable(int)}
+     */
+    @Deprecated
     public static boolean isPortInUse(int port, long retryAfterMillis=0) {
         try {
             def s = new Socket("localhost", port)
@@ -77,50 +84,60 @@ public class TestUtils {
         return HttpTestUtils.connectToUrl(url);
     }
     
-    // TODO see also Java variant: Asserts.eventually()
     // calling groovy from java doesn't cope with generics here; stripping them from here :-(
     //      <T> void assertEventually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate)
+    /**
+     * @deprecated since 0.5; use {@link Asserts#eventually(Map, Supplier, Predicate)}
+     */
+    @Deprecated
     public static void assertEventually(Map flags=[:], Supplier supplier, Predicate predicate) {
-        assertEventually(flags, supplier, predicate, (String)null);
+        Asserts.eventually(flags, supplier, predicate);
     }
     
+    /**
+     * @deprecated since 0.5; use {@link Asserts#eventually(Map, Supplier, Predicate, String)}
+     */
+    @Deprecated
     public static <T> void assertEventually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
-        TimeDuration timeout = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
-        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
-        long periodMs = period.toMilliseconds()
-        long startTime = System.currentTimeMillis()
-        long expireTime = startTime+timeout.toMilliseconds()
-        
-        boolean first = true;
-        T supplied = supplier.get();
-        while (first || System.currentTimeMillis() <= expireTime) {
-            supplied = supplier.get();
-            if (predicate.apply(supplied)) {
-                return;
-            }
-            first = false;
-            if (periodMs > 0) sleep(periodMs);
-        }
-        fail("supplied="+supplied+"; predicate="+predicate+(errMsg!=null?"; "+errMsg:""));
+        Asserts.eventually(flags, supplier, predicate, errMsg);
     }
-    
+
+    /**    
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(java.util.Map, Callable)}
+     */
+    @Deprecated
     public static void assertEventually(Map flags=[:], Callable c) {
         executeUntilSucceeds(flags, c);
     }
+    
+    /**
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Runnable)}
+     */
+    @Deprecated
     public static void assertEventually(Map flags=[:], Runnable c) {
         executeUntilSucceeds(flags, c);
     }
 
-    //FIXME rename these to assertEventually, refactor to have boolean blockUntil in some other util class
-    //FIXME remove dupilcation with LanguageUtils.repeatUntilSuccess
+    /**
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Callable)}
+     */
+    @Deprecated
     public static void executeUntilSucceeds(Map flags=[:], Closure c) {
-        executeUntilSucceedsWithFinallyBlock(flags, c) { }
+        Asserts.succeedsEventually(flags, c);
     }
 
+    /**
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Callable)}
+     */
+    @Deprecated
     public static void executeUntilSucceeds(Map flags=[:], Callable c) {
-        executeUntilSucceedsWithFinallyBlock(flags, c) { }
+        Asserts.succeedsEventually(flags, c);
     }
     
+    /**
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Runnable)}
+     */
+    @Deprecated
     public static void executeUntilSucceeds(Map flags=[:], Runnable r) {
         if (r in Callable) 
             executeUntilSucceedsWithFinallyBlock(flags, {return ((Callable)r).call();}, { })
@@ -130,6 +147,10 @@ public class TestUtils {
             executeUntilSucceedsWithFinallyBlock(flags, {r.run(); return true}, { })
     }
 
+    /**
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Callable)}, and tear-down with {@link AfterMethod}.
+     */
+    @Deprecated
     public static void executeUntilSucceedsElseShutdown(Map flags=[:], Entity entity, Closure c) {
         try { 
             executeUntilSucceedsWithFinallyBlock(flags, c) { }
@@ -139,11 +160,20 @@ public class TestUtils {
         }
     }
 
-    /** convenience for entities to ensure they shutdown afterwards */
+    /**
+     * convenience for entities to ensure they shutdown afterwards.
+     * 
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Callable)}, and tear-down with {@link AfterMethod}.
+     */
+    @Deprecated
     public static void executeUntilSucceedsWithShutdown(Map flags=[:], Entity entity, Closure c) {
         executeUntilSucceedsWithFinallyBlock(flags, c) { entity.stop() }
     }
 
+    /**
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Callable)}, and tear-down with {@link AfterMethod}.
+     */
+    @Deprecated
     public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Closure c, Closure finallyBlock={}) {
         executeUntilSucceedsWithFinallyBlockInternal(flags, c, finallyBlock)
     }
@@ -169,11 +199,20 @@ public class TestUtils {
      * @param flags, accepts the flags listed above
      * @param r
      * @param finallyBlock
+     * 
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Callable)}, and tear-down with {@link AfterMethod}.
      */
+    @Deprecated
     public static void executeUntilSucceedsWithFinallyBlock(Map flags=[:], Callable<?> c, Closure finallyBlock={}) {
         executeUntilSucceedsWithFinallyBlockInternal(flags, c, finallyBlock);
     }
-    /** the "real" implementation, renamed to allow multiple entry points (depending whether closure cast to callable) */
+    
+    /**
+     * the "real" implementation, renamed to allow multiple entry points (depending whether closure cast to callable)
+     * 
+     * @deprecated since 0.5; use {@link Asserts#succeedsEventually(Map, Callable)}, and tear-down with {@link AfterMethod}.
+     */
+    @Deprecated
     private static void executeUntilSucceedsWithFinallyBlockInternal(Map flags=[:], Callable<?> c, Closure finallyBlock={}) {
 //        log.trace "abortOnError = {}", flags.abortOnError
         boolean abortOnException = flags.abortOnException ?: false
@@ -236,11 +275,19 @@ public class TestUtils {
         }
     }
 
+    /**
+     * @deprecated since 0.5; use {@link Asserts#succeedsContinually(Map, Runnable)}
+     */
+    @Deprecated
     public static <T> void assertSucceedsContinually(Map flags=[:], Runnable job) {
         assertSucceedsContinually(flags, Executors.callable(job));
     }
     
-    public static <T> void assertSucceedsContinually(Map flags=[:], Callable<T> job) {
+    /**
+     * @deprecated since 0.5; use {@link Asserts#succeedsContinually(Map, Callable)}
+     */
+    @Deprecated
+    public static void assertSucceedsContinually(Map flags=[:], Callable<?> job) {
         TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
         TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
         long periodMs = period.toMilliseconds()
@@ -255,33 +302,38 @@ public class TestUtils {
         }
     }
     
-    // FIXME When calling from java, the generics declared in groovy messing things up! 
+    /**
+     * @deprecated since 0.5; use {@link Asserts#continually(Map, Supplier, Predicate)}
+     */
+    @Deprecated
+    // FIXME When calling from java, the generics declared in groovy messing things up!
     public static void assertContinuallyFromJava(Map flags=[:], Supplier<?> supplier, Predicate<?> predicate) {
-        assertContinually(flags, supplier, predicate, (String)null);
+        Asserts.continually(flags, supplier, predicate);
     }
     
+    /**
+     * @deprecated since 0.5; use {@link Asserts#continually(Map, Supplier, Predicate)}
+     */
+    @Deprecated
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate) {
-        assertContinually(flags, supplier, predicate, (String)null);
+        Asserts.continually(flags, supplier, predicate, (String)null);
     }
 
+    /**
+     * @deprecated since 0.5; use {@link Asserts#continually(Map, Supplier, Predicate, String)}
+     */
+    @Deprecated
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg, long durationMs) {
         flags.put("duration", toTimeDuration(durationMs));
-        assertContinually(flags, supplier, predicate, errMsg);
+        Asserts.continually(flags, supplier, predicate, errMsg);
     }
     
+    /**
+     * @deprecated since 0.5; use {@link Asserts#continually(Map, Supplier, Predicate, String)}
+     */
+    @Deprecated
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
-        TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
-        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
-        long periodMs = period.toMilliseconds()
-        long startTime = System.currentTimeMillis()
-        long expireTime = startTime+duration.toMilliseconds()
-        
-        boolean first = true;
-        while (first || System.currentTimeMillis() <= expireTime) {
-            assertTrue(predicate.apply(supplier.get()), "supplied="+supplier.get()+"; predicate="+predicate+(errMsg!=null?"; "+errMsg:""));
-            if (periodMs > 0) sleep(periodMs);
-            first = false;
-        }
+        Asserts.continually(flags, supplier, predicate, errMsg);
     }
     
     public static class BooleanWithMessage {
@@ -297,6 +349,10 @@ public class TestUtils {
         }
     }
     
+    /**
+     * @deprecated since 0.5; use {@link brooklyn.util.ResourceUtils}
+     */
+    @Deprecated
     public static File getResource(String path, ClassLoader loader) {
         URL resource = loader.getResource(path)
         if (resource==null)
@@ -305,9 +361,21 @@ public class TestUtils {
         return new File(resource.path)
     }
 
+    /**
+     * @deprecated since 0.5; use long and {@link TimeUnit}
+     */
+    @Deprecated
     public static TimeDuration toTimeDuration(Object duration) {
+        return toTimeDuration(duration, null);
+    }
+            
+    /**
+     * @deprecated since 0.5; use long and {@link TimeUnit}
+     */
+    @Deprecated
+    public static TimeDuration toTimeDuration(Object duration, TimeDuration defaultVal) {
         if (duration == null) {
-            return null
+            return defaultVal;
         } else if (duration instanceof TimeDuration) {
             return (TimeDuration) duration
         } else if (duration instanceof Number) {
@@ -354,30 +422,56 @@ public class TestUtils {
         }
     }
 
+    /**
+     * @deprecated since 0.5; use {@link EntityTestUtils#assertAttributeEqualsEventually(Entity, AttributeSensor, Object)}
+     */
+    @Deprecated
     public static <T> void assertAttributeEventually(Entity entity, AttributeSensor<T> attribute, T expected) {
         executeUntilSucceeds() {
             assertEquals(entity.getAttribute(attribute), expected);
         }
     }
     
+    /**
+     * @deprecated since 0.5; use {@link EntityTestUtils#assertAttributeEqualsContinually(Entity, AttributeSensor, Object)}
+     */
+    @Deprecated
     public static <T> void assertAttributeContinually(Entity entity, AttributeSensor<T> attribute, T expected) {
         assertSucceedsContinually() {
             assertEquals(entity.getAttribute(attribute), expected);
         }
     }
     
+    /**
+     * @deprecated since 0.5; use {@link HttpTestUtils#assertHttpStatusCodeEquals(String, int)}
+     */
+    @Deprecated
     public static void assertUrlStatusCodeEventually(final String url, final int expected) {
         executeUntilSucceeds() {
             assertEquals(urlRespondsStatusCode(url), expected);
         }
     }
 
+    /**
+     * @deprecated since 0.5; use {@link Asserts#assertFails(Runnable)}
+     */
+    @Deprecated
     public static void assertFails(Runnable c) {
         assertFailsWith(c, (Predicate)null);
     }
+    
+    /**
+     * @deprecated since 0.5; use {@link Asserts#assertFailsWith(Closure)}
+     */
+    @Deprecated
     public static void assertFailsWith(Runnable c, Closure exceptionChecker) {
         assertFailsWith(c, exceptionChecker as Predicate);
     }
+    
+    /**
+     * @deprecated since 0.5; use {@link Asserts#assertFailsWith(Runnable, Class, Class...)}
+     */
+    @Deprecated
     public static void assertFailsWith(Runnable c, final Class<? extends Throwable> validException, final Class<? extends Throwable> ...otherValidExceptions) {
         assertFailsWith(c, { e -> 
             if (validException.isInstance(e)) return true;
@@ -387,6 +481,11 @@ public class TestUtils {
             fail("Test threw exception of unexpected type "+e.getClass()+"; expecting "+expectedTypes);             
         });
     }
+    
+    /**
+     * @deprecated since 0.5; use {@link Asserts#assertFailsWith(Runnable, Predicate)}
+     */
+    @Deprecated
     public static void assertFailsWith(Runnable c, Predicate<Throwable> exceptionChecker) {
         boolean failed = false;
         try {
@@ -411,11 +510,19 @@ public class TestUtils {
         if (!s.isEmpty()) fail("Second argument contains additional contents: "+s);
     }
     
+    /**
+     * @deprecated since 0.5; use {@code assertFalse(Iterables.isEmpty(c))}
+     */
+    @Deprecated
     public static <T> void assertNonEmpty(Iterable<T> c) {
         if (c.iterator().hasNext()) return;
         fail("Expected non-empty set");
     }
 
+    /**
+     * @deprecated since 0.5; use {@code assertEquals(Iterables.size(c), expectedSize)}
+     */
+    @Deprecated
     public static <T> void assertSize(Iterable<T> c, int expectedSize) {
         int actualSize = Iterables.size(c);
         if (actualSize==expectedSize) return;
