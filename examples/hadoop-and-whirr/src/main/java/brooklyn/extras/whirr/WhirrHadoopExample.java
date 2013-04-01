@@ -23,8 +23,8 @@ public class WhirrHadoopExample extends AbstractApplication {
     public static final String DEFAULT_LOCATION = "aws-ec2:eu-west-1";
 
     @Override
-    public void postConstruct() {
-        WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
+    public void init() {
+        addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
                 .displayName("brooklyn-hadoop-example")
                 .configure("size", 2)
                 .configure("memory", 2048));

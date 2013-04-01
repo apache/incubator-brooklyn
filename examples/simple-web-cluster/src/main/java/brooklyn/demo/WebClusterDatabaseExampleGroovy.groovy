@@ -39,7 +39,7 @@ public class WebClusterDatabaseExampleGroovy extends AbstractApplication {
     public static final String DB_PASSWORD = "br00k11n";
     
     @Override
-    public void postConstruct() {
+    public void init() {
         MySqlNode mysql = addChild(MySqlNode,
                 creationScriptUrl: DB_SETUP_SQL_URL);
         

@@ -41,7 +41,7 @@ public class GlobalWebFabricExample extends AbstractApplication {
         );
 
     @Override
-    public void postConstruct() {
+    public void init() {
         StringConfigMap config = getManagementContext().getConfig();
         
         GeoscalingDnsService geoDns = addChild(EntitySpecs.spec(GeoscalingDnsService.class)

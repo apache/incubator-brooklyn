@@ -27,8 +27,8 @@ public class WhirrExample extends AbstractApplication {
             "whirr.instance-templates=1 noop, 1 elasticsearch"+"\n";
 
     @Override
-    public void postConstruct() {
-        WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrCluster.class)
+    public void init() {
+        addChild(EntitySpecs.spec(WhirrCluster.class)
                 .configure("recipe", RECIPE));
     }
 

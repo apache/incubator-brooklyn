@@ -8,7 +8,7 @@ import brooklyn.entity.proxying.EntitySpecs;
 public class MonitoredCassandraClusterExample extends AbstractApplication {
 
     @Override
-    public void postConstruct() {
+    public void init() {
         addChild(EntitySpecs.spec(CassandraCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "CassandraDemo")

@@ -16,7 +16,7 @@ public class MovableCloudFoundryClusterExample extends AbstractApplication {
     public static final String WAR_FILE_URL = "classpath://hello-world-webapp.war";
 
     @Override
-    public void postConstruct() {
+    public void init() {
         addChild(EntitySpecs.spec(MovableElasticWebAppCluster.class)
                 .configure("war", WAR_FILE_URL));
     }

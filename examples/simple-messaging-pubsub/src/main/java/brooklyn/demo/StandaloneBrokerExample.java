@@ -24,7 +24,7 @@ public class StandaloneBrokerExample extends AbstractApplication {
     public static final String DEFAULT_LOCATION = "localhost";
     
     @Override
-    public void postConstruct() {
+    public void init() {
         // Configure the Qpid broker entity
     	QpidBroker broker = addChild(EntitySpecs.spec(QpidBroker.class)
     	        .configure("amqpPort", 5672)

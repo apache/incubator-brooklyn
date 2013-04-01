@@ -22,7 +22,7 @@ public class SingleWebServerExample extends AbstractApplication {
     private static final String WAR_PATH = "classpath://hello-world-webapp.war";
 
     @Override
-    public void postConstruct() {
+    public void init() {
         addChild(EntitySpecs.spec(JBoss7Server.class)
                 .configure("war", WAR_PATH)
                 .configure("httpPort", "8080+"));
