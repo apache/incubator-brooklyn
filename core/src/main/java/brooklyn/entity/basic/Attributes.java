@@ -21,10 +21,12 @@ public interface Attributes {
             Void.class, "entity.locationChanged", "Indicates that an entity's location has been changed");
 
 
-    /*
+    /**
      * Application information sensors.
-     * @see SoftwareProcessEntities.SUGGESTED_VERSION
+     * 
+     * @deprecated since 0.5; see {@link ConfigKeys#SUGGESTED_VERSION}
      */
+    @Deprecated
     BasicAttributeSensor<String> VERSION = new BasicAttributeSensor<String>(String.class, "version", "Version information");
 
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
