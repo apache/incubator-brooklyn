@@ -38,7 +38,7 @@ public class EntitySubscriptionTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         observedEntity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         observedChildEntity = observedEntity.createAndManageChild(EntitySpecs.spec(TestEntity.class));

@@ -56,7 +56,7 @@ public abstract class AbstractEc2LiveTest {
         brooklynProperties.remove("brooklyn.ssh.config.scriptHeader");
         
         ctx = new LocalManagementContext(brooklynProperties);
-        app = ApplicationBuilder.builder(TestApplication.class).manage(ctx);
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, ctx);
     }
 
     @AfterMethod(alwaysRun=true)

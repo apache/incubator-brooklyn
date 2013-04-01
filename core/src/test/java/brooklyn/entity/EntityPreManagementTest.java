@@ -80,7 +80,7 @@ public class EntityPreManagementTest {
         if (!events.isEmpty()) Assert.fail("Shouldn't have events yet: "+events);
         Assert.assertFalse(e.getManagementSupport().isManagementContextReal());
         
-        TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         e.setParent(app);
         Entities.manage(e);
         

@@ -55,7 +55,7 @@ public class TomcatServerIntegrationTest {
     public void detectFailureIfTomcatCantBindToPort() throws Exception {
         ServerSocket listener = new ServerSocket(DEFAULT_HTTP_PORT);
         try {
-            app = ApplicationBuilder.builder(TestApplication.class).manage();
+            app = ApplicationBuilder.newManagedApp(TestApplication.class);
             tc = app.createAndManageChild(EntitySpecs.spec(TomcatServer.class).configure("httpPort",DEFAULT_HTTP_PORT));
             
             try {

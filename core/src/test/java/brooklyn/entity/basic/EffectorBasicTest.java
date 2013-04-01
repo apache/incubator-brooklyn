@@ -33,7 +33,7 @@ public class EffectorBasicTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         locs = ImmutableList.of(new SimulatedLocation());
     }
     

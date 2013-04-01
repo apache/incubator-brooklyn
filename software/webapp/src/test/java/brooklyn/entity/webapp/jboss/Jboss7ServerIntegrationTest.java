@@ -49,7 +49,7 @@ public class Jboss7ServerIntegrationTest {
         warUrl = getClass().getClassLoader().getResource(warPath);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         keystoreFile = createTemporaryKeyStore("myname", "mypass");
     }
 

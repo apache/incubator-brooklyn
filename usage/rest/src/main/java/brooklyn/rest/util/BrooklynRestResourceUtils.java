@@ -24,7 +24,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.ApplicationBuilder.Builder;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -165,10 +164,10 @@ public class BrooklynRestResourceUtils {
     public Application create(ApplicationSpec spec) {
         log.debug("REST creating application instance for {}", spec);
         
-        String type = spec.getType();
-        String name = spec.getName();
-        Map<String,String> configO = spec.getConfig();
-        Set<EntitySpec> entities = (spec.getEntities() == null) ? ImmutableSet.<EntitySpec>of() : spec.getEntities();
+        final String type = spec.getType();
+        final String name = spec.getName();
+        final Map<String,String> configO = spec.getConfig();
+        final Set<EntitySpec> entities = (spec.getEntities() == null) ? ImmutableSet.<EntitySpec>of() : spec.getEntities();
         
         final Application instance;
 
@@ -204,27 +203,28 @@ public class BrooklynRestResourceUtils {
                 instance = appBuilder.manage(mgmt);
                 
             } else if (Application.class.isAssignableFrom(clazz)) {
-                brooklyn.entity.proxying.EntitySpec<? extends Application> coreSpec = 
-                        (brooklyn.entity.proxying.EntitySpec<? extends Application>) toCoreEntitySpec(clazz, name, configO);
-                Builder<? extends Application> builder = ApplicationBuilder.builder(coreSpec);
+                brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
+                instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                 for (EntitySpec entitySpec : entities) {
                     log.info("REST creating instance for entity {}", entitySpec.getType());
-                    builder.child(toCoreEntitySpec(entitySpec));
+                    instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(entitySpec)));
                 }
                 
                 log.info("REST placing '{}' under management", spec.getName());
-                instance = builder.manage(mgmt);
+                Entities.startManagement(instance, mgmt);
                 
             } else if (Entity.class.isAssignableFrom(clazz)) {
-                final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
-                Builder<? extends Application> builder = ApplicationBuilder.builder()
-                        .configure(configO)
-                        .child(toCoreEntitySpec(eclazz, spec.getName(), spec.getConfig()));
                 if (entities.size() > 0) log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
                 
+                brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO);
+                instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
+                
+                final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
+                instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(eclazz, name, configO)));
+                
                 log.info("REST placing '{}' under management", spec.getName());
-                instance = builder.manage(mgmt);
-                    
+                Entities.startManagement(instance, mgmt);
+                
             } else {
                 throw new IllegalArgumentException("Class "+clazz+" must extend one of ApplicationBuilder, Application or Entity");
             }

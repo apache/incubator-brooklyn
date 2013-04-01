@@ -55,7 +55,7 @@ public class PolicyConfigMapUsageTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
     
     @AfterMethod(alwaysRun=true)

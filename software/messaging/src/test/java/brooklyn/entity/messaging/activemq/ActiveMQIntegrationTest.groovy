@@ -43,7 +43,7 @@ public class ActiveMQIntegrationTest {
 
     @BeforeMethod(groups = "Integration")
     public void setup() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         testLocation = new LocalhostMachineProvisioningLocation()
     }
 

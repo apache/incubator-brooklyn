@@ -36,7 +36,7 @@ class GeoscalingIntegrationTest {
     
     @Test(groups=["Integration"])
     public void testRoutesToExpectedLocation() {
-        TestApplication app = ApplicationBuilder.builder(TestApplication.class).manage();
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
         TestEntity target = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         target.setAttribute(Attributes.HOSTNAME,addr.getHostName())
         

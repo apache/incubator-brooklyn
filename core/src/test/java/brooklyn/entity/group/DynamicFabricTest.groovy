@@ -51,7 +51,7 @@ class DynamicFabricTest {
         loc1 = new SimulatedLocation()
         loc2 = new SimulatedLocation()
         loc3 = new SimulatedLocation()
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
     
     @Test

@@ -42,7 +42,7 @@ public class NginxHttpsSslIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 
     @AfterMethod(alwaysRun=true)

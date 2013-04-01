@@ -32,7 +32,7 @@ public class WhirrHadoopClusterLiveTest {
     public void setUp() throws Exception {
         brooklynProperties = BrooklynProperties.Factory.newDefault();
         ctx = new LocalManagementContext(brooklynProperties);
-        app = ApplicationBuilder.builder(TestApplication.class).manage(ctx);
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, ctx);
     }
 
     @AfterMethod(alwaysRun=true)

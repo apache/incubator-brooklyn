@@ -32,7 +32,7 @@ class CombiningEnricherTest {
 
     @BeforeMethod(alwaysRun=true)
     public void before() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         producer = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         intSensorA = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.a");
         intSensorB = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.b");

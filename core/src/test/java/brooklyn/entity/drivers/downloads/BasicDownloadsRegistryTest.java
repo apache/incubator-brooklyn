@@ -37,7 +37,7 @@ public class BasicDownloadsRegistryTest {
         managementContext = new LocalManagementContext(brooklynProperties);
 
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         driver = new MyEntityDriver(entity, loc);
         

@@ -78,7 +78,7 @@ import com.google.common.collect.Maps
  *       to this entity (except for drivers/policies that are attached to the entity, which can be  
  *       given a reference to this entity itself).
  *   <li>Call {@link #configure(Map)} and then {@link #setConfig(ConfigKey, Object)}
- *   <li>Call {@link #postConstruct()}
+ *   <li>Call {@link #init()}
  *   <li>Call {@link #addPolicy()} (for any policies defined in the {@link EntitySpec})
  *   <li>Call {@link #setParent(Entity)}, if a parent is specified in the {@link EntitySpec}
  * </ol>

@@ -20,7 +20,7 @@ public class TestPortSupplierLocation {
     @BeforeMethod
     public void setup() {
         l = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         e = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         app.start([l]);
         

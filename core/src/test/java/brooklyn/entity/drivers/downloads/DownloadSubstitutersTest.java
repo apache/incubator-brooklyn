@@ -33,7 +33,7 @@ public class DownloadSubstitutersTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         driver = new MyEntityDriver(entity, loc);
     }

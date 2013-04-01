@@ -39,7 +39,7 @@ public class DynamicWebAppFabricTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc1 = new SimulatedLocation();
         loc2 = new SimulatedLocation();
         locs = ImmutableList.of(loc1, loc2);

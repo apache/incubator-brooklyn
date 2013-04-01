@@ -41,10 +41,8 @@ import com.google.common.collect.Lists;
 /**
  * Launches a 3-tier app with nginx, clustered jboss, and mysql.
  * <p>
- * Demonstrates how to define a new Application Entity class (reusable and extensible),
- * as opposed to just using the builder as in {@link WebClusterDatabaseExample}.
- * With an app, when we define public static sensors and runtime config _on the app class_ 
- * (not the builder) they can be discovered at runtime.
+ * Includes some advanced features such as KPI / derived sensors,
+ * and annotations for use in a catalog.
  * <p>
  * This variant also increases minimum size to 2.  
  * Note the policy min size must have the same value,

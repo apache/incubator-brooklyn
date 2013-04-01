@@ -43,7 +43,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
     			.keyData("myKeyData")
     			.keyPassphrase("myKeyPassphrase")
     			.build();
-        origApp = ApplicationBuilder.builder(TestApplication.class).manage(managementContext);
+        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     	origApp.start(ImmutableList.of(origLoc));
     }
 

@@ -37,7 +37,7 @@ public class CloudMachineNamerTest {
 
     @Test
     public void testGenerateGroupIdWithEntity() {
-        TestApplication app = ApplicationBuilder.builder(TestApplication.class).displayName("TistApp").manage();
+        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpecs.spec(TestApplication.class).displayName("TistApp"));
         TestEntity child = app.createAndManageChild(EntitySpecs.spec(TestEntity.class).displayName("TestEnt"));
         try {
 

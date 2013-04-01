@@ -35,7 +35,7 @@ public class MongoDbTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 
     @AfterMethod(alwaysRun=true)

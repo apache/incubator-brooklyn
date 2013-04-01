@@ -42,7 +42,7 @@ public class DynamicGroupTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         group = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class));
         e1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         e2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));

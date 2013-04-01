@@ -28,7 +28,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         locs = ImmutableList.of(new SimulatedLocation());
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
     }
 

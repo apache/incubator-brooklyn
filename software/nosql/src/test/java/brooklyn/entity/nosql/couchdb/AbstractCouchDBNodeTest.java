@@ -44,7 +44,7 @@ public class AbstractCouchDBNodeTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         testLocation = new LocalhostMachineProvisioningLocation();
         // testLocation = app.managementContext.locationRegistry.resolve("named:test");
     }

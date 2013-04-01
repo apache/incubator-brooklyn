@@ -63,7 +63,7 @@ public class AbstractGeoDnsServiceTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
             .configure("factory", { properties -> new TestEntityImpl(properties) }));
         

@@ -39,7 +39,7 @@ public class NginxLightIntegrationTest {
     
     @BeforeMethod
     public void setup() {
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 
     @AfterMethod(alwaysRun=true)
