@@ -34,7 +34,7 @@ public class KafkaZookeeperSshDriver extends AbstractfKafkaSshDriver implements 
 
     @Override
     protected ConfigKey<String> getConfigTemplateKey() {
-        return KafkaZookeeper.ZOOKEEPER_CONFIG_TEMPLATE;
+        return KafkaZookeeper.KAFKA_ZOOKEEPER_CONFIG_TEMPLATE;
     }
 
     @Override

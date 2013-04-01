@@ -34,7 +34,7 @@ public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements Kaf
 
     @Override
     protected ConfigKey<String> getConfigTemplateKey() {
-        return KafkaBroker.SERVER_CONFIG_TEMPLATE;
+        return KafkaBroker.KAFKA_BROKER_CONFIG_TEMPLATE;
     }
 
     @Override
