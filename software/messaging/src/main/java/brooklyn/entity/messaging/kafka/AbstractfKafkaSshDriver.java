@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.util.ssh.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;

@@ -15,11 +15,7 @@
  */
 package brooklyn.entity.messaging.kafka;
 
-import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.ObjectName;
@@ -31,23 +27,24 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
+import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.util.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.collect.Sets;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka broker instance.
  */
 public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroker, KafkaBroker {
+
     private static final Logger log = LoggerFactory.getLogger(KafkaBrokerImpl.class);
+    private static final ObjectName SOCKET_SERVER_STATS_MBEAN = JmxHelper.createObjectName("kafka:type=kafka.SocketServerStats");
+
+    private volatile JmxFeed jmxFeed;
 
     public KafkaBrokerImpl() {
         super();
@@ -63,7 +60,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     }
 
     @Override
-    public void postConstruct() {
+    public void init() {
         setAttribute(BROKER_ID, Math.abs(hashCode())); // Must be positive for partitioning to work
     }
 
@@ -74,7 +71,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     public Integer getBrokerId() { return getAttribute(BROKER_ID); }
 
     @Override
-    public KafkaZookeeper getZookeeper() { return getConfig(ZOOKEEPER); }
+    public Zookeeper getZookeeper() { return getConfig(ZOOKEEPER); }
 
     public KafkaTopic createTopic(Map<?, ?> properties) {
         KafkaTopic result = new KafkaTopic(properties, this);
@@ -88,98 +85,85 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
         return KafkaBrokerDriver.class;
     }
 
-    private ObjectName socketServerStatsMbean = JmxHelper.createObjectName("kafka:type=kafka.SocketServerStats");
-    private volatile FunctionFeed functionFeed;
-    private volatile JmxFeed jmxFeed;
-
-    /** Wait for five minutes to start. */
-    @Override
-    public void waitForServiceUp() { waitForServiceUp(5, TimeUnit.MINUTES); }
-
     @Override
     public void waitForServiceUp(long duration, TimeUnit units) {
         super.waitForServiceUp(duration, units);
 
         // Wait for the MBean to exist
-        JmxHelper helper = null;
+        JmxHelper helper = new JmxHelper(this);
         try {
-            helper = new JmxHelper(this);
-            helper.connect();
-            helper.assertMBeanExistsEventually(socketServerStatsMbean, units.toMillis(duration));
-        } catch (IOException e) {
-            throw Exceptions.propagate(e);
+            helper.assertMBeanExistsEventually(SOCKET_SERVER_STATS_MBEAN, units.toMillis(duration));
         } finally {
-            if (helper != null) helper.disconnect();
+            helper.disconnect();
         }
     }
 
     @Override
     protected void connectSensors() {
-        functionFeed = FunctionFeed.builder()
-                .entity(this)
-                .poll(new FunctionPollConfig<Object, Boolean>(SERVICE_UP)
-                        .period(500, TimeUnit.MILLISECONDS)
-                        .callable(new Callable<Boolean>() {
-                            public Boolean call() throws Exception {
-                                return getDriver().isRunning();
-                            }
-                        })
-                        .onError(Functions.constant(Boolean.FALSE)))
-                .build();
+        connectServiceUpIsRunning();
 
         jmxFeed = JmxFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)
                 .pollAttribute(new JmxAttributePollConfig<Long>(FETCH_REQUEST_COUNT)
-                        .objectName(socketServerStatsMbean)
+                        .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("NumFetchRequests")
                         .onError(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(TOTAL_FETCH_TIME)
-                        .objectName(socketServerStatsMbean)
+                        .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalFetchRequestMs")
                         .onError(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Double>(MAX_FETCH_TIME)
-                        .objectName(socketServerStatsMbean)
+                        .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("MaxFetchRequestMs")
                         .onError(Functions.constant(-1.0d)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(PRODUCE_REQUEST_COUNT)
-                        .objectName(socketServerStatsMbean)
+                        .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("NumProduceRequests")
                         .onError(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(TOTAL_PRODUCE_TIME)
-                        .objectName(socketServerStatsMbean)
+                        .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalProduceRequestMs")
                         .onError(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Double>(MAX_PRODUCE_TIME)
-                        .objectName(socketServerStatsMbean)
+                        .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("MaxProduceRequestMs")
                         .onError(Functions.constant(-1.0d)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(BYTES_RECEIVED)
-                        .objectName(socketServerStatsMbean)
+                        .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalBytesRead")
                         .onError(Functions.constant(-1l)))
                 .pollAttribute(new JmxAttributePollConfig<Long>(BYTES_SENT)
-                        .objectName(socketServerStatsMbean)
+                        .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalBytesWritten")
                         .onError(Functions.constant(-1l)))
                 .build();
+
+        setBrokerUrl();
     }
 
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
-        if (functionFeed != null) functionFeed.stop();
+        disconnectServiceUpIsRunning();
         if (jmxFeed != null) jmxFeed.stop();
     }
 
     @Override
     protected ToStringHelper toStringHelper() {
-        return super.toStringHelper().add("kafkaPort", getKafkaPort());
+        return super.toStringHelper()
+                .add("kafkaPort", getKafkaPort());
     }
 
+    /** Use the {@link #getZookeeper() zookeeper} details if available, otherwise use our own host and port. */
     @Override
     public void setBrokerUrl() {
-        // TODO
+        Zookeeper zookeeper = getZookeeper();
+        if (zookeeper != null) {
+            setAttribute(BROKER_URL, String.format("zookeeper://%s:%d", zookeeper.getAttribute(HOSTNAME), zookeeper.getZookeeperPort()));
+        } else {
+            setAttribute(BROKER_URL, String.format("kafka://%s:%d", getAttribute(HOSTNAME), getKafkaPort()));
+        }
     }
 
 }

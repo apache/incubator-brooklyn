@@ -17,40 +17,28 @@ package brooklyn.entity.messaging.kafka;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.
  */
 @ImplementedBy(KafkaZookeeperImpl.class)
-public interface KafkaZookeeper extends SoftwareProcess, UsesJmx, Kafka {
+public interface KafkaZookeeper extends Zookeeper, Kafka {
 
     @SetFromFlag("startTimeout")
     public static final ConfigKey<Integer> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
 
+    /** The Kafka version, not the Zookeeper version. */
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = Kafka.SUGGESTED_VERSION;
 
-    @SetFromFlag("zookeeperPort")
-    PortAttributeSensorAndConfigKey ZOOKEEPER_PORT = new PortAttributeSensorAndConfigKey("zookeeper.port", "Zookeeper port", "2181+");
-
-    /** Location of the configuration file template to be copied to the server. */
-    @SetFromFlag("zookeeperConfig")
-    ConfigKey<String> ZOOKEEPER_CONFIG_TEMPLATE = new BasicConfigKey<String>(
-            String.class, "kafka.zookeeper.configTemplate", "Zookeeper configuration template (in freemarker format)", "classpath://brooklyn/entity/messaging/kafka/zookeeper.properties");
-
-    AttributeSensor<Long> OUTSTANDING_REQUESTS = new BasicAttributeSensor<Long>(Long.class, "kafka.zookeeper.outstandingRequests", "Outstanding request count");
-    AttributeSensor<Long> PACKETS_RECEIVED = new BasicAttributeSensor<Long>(Long.class, "kafka.zookeeper.packets.received", "Total packets received");
-    AttributeSensor<Long> PACKETS_SENT = new BasicAttributeSensor<Long>(Long.class, "kafka.zookeeper.packets.sent", "Total packets sent");
-
-    Integer getZookeeperPort();
-
-    String getHostname();
+    /** Location of the kafka configuration file template to be copied to the server. */
+    @SetFromFlag("kafkaZookeeperConfig")
+    ConfigKey<String> KAFKA_ZOOKEEPER_CONFIG_TEMPLATE = new BasicConfigKey<String>(String.class,
+            "kafka.zookeeper.configTemplate", "Kafka zookeeper configuration template (in freemarker format)",
+            "classpath://brooklyn/entity/messaging/kafka/zookeeper.properties");
 
 }

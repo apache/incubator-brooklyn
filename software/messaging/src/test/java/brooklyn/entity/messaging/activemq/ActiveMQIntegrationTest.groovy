@@ -41,19 +41,15 @@ public class ActiveMQIntegrationTest {
     private Location testLocation
     private ActiveMQBroker activeMQ
 
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun = true)
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         testLocation = new LocalhostMachineProvisioningLocation()
     }
 
-    @AfterMethod(groups = "Integration")
+    @AfterMethod(alwaysRun = true)
     public void shutdown() {
-        try {
-            if (app != null) Entities.destroyAll(app);
-        } catch (Exception e) {
-            log.warn("Error stopping entities", e);
-        }
+        if (app != null) Entities.destroyAll(app);
     }
 
     /**

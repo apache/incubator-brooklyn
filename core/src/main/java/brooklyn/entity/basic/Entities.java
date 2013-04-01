@@ -569,6 +569,7 @@ public class Entities {
             ((EntityInternal)entity).getManagementContext().getEntityManager().unmanage(entity);
         }
     }
+
     public static <T> Supplier<T> supplier(final Entity entity, final AttributeSensor<T> sensor) {
         return new Supplier<T>() {
             public T get() { return entity.getAttribute(sensor); }
