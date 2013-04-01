@@ -8,7 +8,7 @@
 
 CLASS=brooklyn.qa.longevity.webcluster.WebClusterApp
 # BROOKLYN_VERSION_BELOW
-VERSION=0.5.0-SNAPSHOT
+VERSION=0.5.0-rc.1
 
 ROOT=$(cd $(dirname $0) && pwd)
 cd $ROOT
