@@ -39,7 +39,7 @@ Application entities are the top-level entities created and managed externally, 
 
 Applications are typically defined in Brooklyn as an ***application descriptor***. 
 This is a Java class specifying the entities which make up the application,
-by extending the class ``ApplicationBuilder``, and specifying how these entities should be configured and managed.
+by extending the class ``AbstractApplication``, and specifying how these entities should be configured and managed.
 
 All entities, including applications, can be the parent of other entities. 
 This means that the "child" is typically started, configured, and managed by the parent.

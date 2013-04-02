@@ -32,9 +32,9 @@ The class ``WhirrHadoopExample`` shows how a Hadoop cluster can be started
 with an arbitrary size, using the ``WhirrHadoopCluster`` entity.
 
 {% highlight java %}
-public class WhirrHadoopExample extends ApplicationBuilder {
+public class WhirrHadoopExample extends AbstractApplication {
     @Override
-    protected void doBuild() {
+    public void init() {
         WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrHadoopCluster.class)
                 .configure("size", 2)
                 .configure("memory", 2048));
@@ -65,13 +65,14 @@ The class ``WhirrExample`` shows how an arbitrary [Whirr](http://whirr.apache.or
 can be run from within Brooklyn:
 
 {% highlight java %}
-public class WhirrExample extends ApplicationBuilder {
+public class WhirrExample extends AbstractApplication {
     public static final String RECIPE =
             "whirr.cluster-name=brooklyn-whirr"+"\n"+
             "whirr.hardware-min-ram=1024"+"\n"+
             "whirr.instance-templates=1 noop, 1 elasticsearch"+"\n";
 
-    protected void doBuild() {
+    @Override
+    public void init() {
         WhirrCluster cluster = addChild(EntitySpecs.spec(WhirrCluster.class)
                 .configure("recipe", RECIPE));
     }
