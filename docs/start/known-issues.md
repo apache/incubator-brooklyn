@@ -20,7 +20,7 @@ toc: ../toc.json
 
 *Symptom: Brooklyn fails to provision Ubuntu 8 VMs (e.g. in aws-ec2) with the following error 'Cannot insert the iptables rule for port 22. Error: sudo: illegal option `-n''.
 
-*Cause: Ubuntu 8 is too old; the sudu command doesn't support the -n setting.
+*Cause: Ubuntu 8 is too old; the sudo command doesn't support the -n setting.
 
 *Workaround: Choose Ubuntu 10 or higher.
 
