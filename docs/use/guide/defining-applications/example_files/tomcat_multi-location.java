@@ -1,7 +1,7 @@
 // TODO Untested code; see brooklyn-example for better maintained examples!
-public class TomcatFabricApp extends ApplicationBuilder {
+public class TomcatFabricApp extends AbstractApplication {
     @Override
-    protected void doBuild() {
+    public void init() {
         addChild(EntitySpecs.spec(DynamicFabric.class)
                 .configure("displayName", "WebFabric")
                 .configure("displayNamePrefix", "")

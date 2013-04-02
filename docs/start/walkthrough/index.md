@@ -19,8 +19,9 @@ Here's the essential code which creates these and sets them up
 for management:
 
 {% highlight java %}
-public class WebClusterDatabaseExample extends ApplicationBuilder {
-    protected void doBuild() {
+public class WebClusterDatabaseExample extends AbstractApplication {
+    @Override
+    public void init() {
         MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class));
         ControlledDynamicWebAppCluster web = addChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class));
     }
@@ -75,8 +76,9 @@ block "at the last moment" when the value is needed
 (but after e.g. the VMs have been provisioned, to speed things up).
 
 {% highlight java %}
-public class WebClusterDatabaseExample extends ApplicationBuilder {
-    protected void doBuild() {
+public class WebClusterDatabaseExample extends AbstractApplication {
+    @Override
+    public void init() {
         MySqlNode mysql = addChild(EntitySpecs.spec(MySqlNode.class)
                 .configure(MySqlNode.CREATION_SCRIPT_URL, "classpath://visitors-database-setup.sql"));
         

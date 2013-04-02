@@ -94,17 +94,18 @@ The heavy lifting will be done by off-the-shelf Brooklyn classes:
    and adds them as DNS targets for the region they are in  
 
 First, however, let's create the Java class -- call it `GlobalWebFabricExample`.
-This will extend the Brooklyn `ApplicationBuilder`:
+This will extend the Brooklyn `AbstractApplication`:
 
 {% highlight java %}
 package brooklyn.demo;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 
-public class GlobalWebFabricExample extends ApplicationBuilder {
-    protected void doBuild() {
-        // TODO create our app!
+public class GlobalWebFabricExample extends AbstractApplication {
+    @Override
+    public void init() {
+         // TODO create our app!
     }
 }
 {% endhighlight %}
@@ -223,7 +224,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
