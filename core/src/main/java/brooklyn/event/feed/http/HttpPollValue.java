@@ -13,6 +13,8 @@ import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.Time;
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -51,8 +53,8 @@ public class HttpPollValue {
             
             response.getEntity().getContentLength();
             durationMillisOfFullContent = System.currentTimeMillis() - startTime;
-            if (log.isDebugEnabled())
-                log.debug("latency detector detected "+durationMillisOfFirstResponse+" / "+durationMillisOfFullContent+" latency");
+            if (log.isTraceEnabled())
+                log.trace("HttpPollValue latency "+Time.makeTimeString(durationMillisOfFirstResponse)+" / "+Time.makeTimeString(durationMillisOfFullContent)+", content size "+content.length);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }        

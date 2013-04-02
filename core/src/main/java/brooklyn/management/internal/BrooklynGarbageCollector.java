@@ -124,7 +124,7 @@ public class BrooklynGarbageCollector {
                 Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
                 Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
                 "tasks: " +
-                executionManager.getNumActiveTasks()+" active,"+
+                executionManager.getNumActiveTasks()+" active, "+
                 executionManager.getNumInMemoryTasks()+" in memory "+
                 "("+executionManager.getNumIncompleteTasks()+" incomplete and "+
                 executionManager.getTotalTasksSubmitted()+" total submitted)"
