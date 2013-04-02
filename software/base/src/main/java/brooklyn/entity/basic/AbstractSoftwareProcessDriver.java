@@ -128,6 +128,12 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         return processTemplate(templateConfigFile.toURI().toASCIIString());
     }
 
+    /** Takes the contents of a template file from the given URL (often a classpath://com/myco/myprod/myfile.conf or .sh)
+     * and replaces "${entity.xxx}" with the result of entity.getXxx() and similar for other driver, location;
+     * as well as replacing config keys on the management context
+     * <p>
+     * uses Freemarker templates under the covers
+     **/  
     public String processTemplate(String templateConfigUrl) {
         return processTemplate(templateConfigUrl, ImmutableMap.<String,String>of());
     }
