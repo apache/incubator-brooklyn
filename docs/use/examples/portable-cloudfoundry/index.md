@@ -43,12 +43,12 @@ from scratch in a VM-based cloud.
 We'll create our application in a Java class ``MovableCloudFoundryClusterExample``:
 
 {% highlight java %}
-public class MovableCloudFoundryClusterExample extends ApplicationBuilder {
+public class MovableCloudFoundryClusterExample extends AbstractApplication {
 
     public static final String WAR_FILE_URL = "classpath://hello-world-webapp.war";
 
     @Override
-    protected void doBuild() {
+    public void init() {
         // FIXME Code not supported; temporary situation while we update to new mechanism!
         // ElasticJavaWebAppService websvc = new ElasticWebAppService(MutableMap.of("war", WAR_FILE_URL), getApp());
     }

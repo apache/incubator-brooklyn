@@ -41,8 +41,9 @@ default configuration, specifying only the AMQP port and creates
 no queues or topics:
 
 {% highlight java %}
-public class StandaloneBrokerExample extends ApplicationBuilder {
-    protected void doBuild() {
+public class StandaloneBrokerExample extends AbstractApplication {
+    @Override
+    public void init() {
         // Configure the Qpid broker entity
     	QpidBroker broker = addChild(EntitySpecs.spec(QpidBroker.class)
     	        .configure("amqpPort", 5672));

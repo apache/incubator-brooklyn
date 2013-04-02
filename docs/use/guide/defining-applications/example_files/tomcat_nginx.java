@@ -1,7 +1,7 @@
 // TODO Untested code; see brooklyn-example for better maintained examples!
-public class TomcatClusterWithNginxApp extends ApplicationBuilder {
+public class TomcatClusterWithNginxApp extends AbstractApplication {
     @Override
-    protected void doBuild() {
+    public void init() {
         addChild(EntitySpecs.spec(NginxController.class)
                 .configure("domain", "brooklyn.geopaas.org")
                 .configure("port", "8000+")
