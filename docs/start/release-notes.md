@@ -4,6 +4,13 @@ title: Release Notes
 toc: ../../toc.json
 ---
 
+## Brooklyn Version 0.5.0 RC1 (0.5.0-rc.1)
+
+API Tidy on top of M2, using `init()` as the method to override when building composed Application and Entity classes.
+
+There are known issues with Whirr clusters and the Cloud Foundry example (moving) which will be resolved for RC2.   
+
+
 ## Brooklyn Version 0.5.0 Milestone Two (0.5.0-M2)
 
 ### Introduction
