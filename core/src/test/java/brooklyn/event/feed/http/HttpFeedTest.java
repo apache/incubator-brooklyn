@@ -167,10 +167,10 @@ public class HttpFeedTest {
                 .suspended()
                 .build();
         Asserts.continually(MutableMap.of("timeout", 500),
-                Entities.supplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(null));
+                Entities.attributeSupplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(null));
         int countWhenSuspended = server.getRequestCount();
         feed.resume();
-        Asserts.eventually(Entities.supplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(200));
+        Asserts.eventually(Entities.attributeSupplier(entity, SENSOR_INT), Predicates.<Integer>equalTo(200));
         if (server.getRequestCount() <= countWhenSuspended)
             Assert.fail("Request count failed to increment when feed was resumed, from "+countWhenSuspended+", still at "+server.getRequestCount());
         log.info("RUN: "+countWhenSuspended+" - "+server.getRequestCount());
