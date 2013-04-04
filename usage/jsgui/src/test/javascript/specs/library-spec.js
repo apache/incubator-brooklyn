@@ -24,9 +24,8 @@ define([
         })
 
         describe('json-formatter', function () {
-
-            if ('must be able to format a JSON', function () {
-                expect(formatJson({ test:'twest'}).length).toEqual(1)
+            it ('must be able to format a JSON', function () {
+                expect(formatJson({ test:'twest'}).length).toEqual(23)
             });
         })
 

@@ -19,7 +19,7 @@ define([
         })
 
         afterEach(function () {
-            $("#containder").remove()
+            $("#container").remove()
         })
 
         it("shows the view inside div#container", function () {

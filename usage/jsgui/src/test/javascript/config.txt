@@ -1,6 +1,5 @@
 
-
-
+    /* Custom configuration for Jasmine tests. */
 
     /* Libraries */
     paths:{
