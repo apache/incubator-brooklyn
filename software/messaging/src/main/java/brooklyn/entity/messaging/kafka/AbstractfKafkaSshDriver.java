@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.util.ssh.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
@@ -69,7 +70,7 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
 
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion()));
