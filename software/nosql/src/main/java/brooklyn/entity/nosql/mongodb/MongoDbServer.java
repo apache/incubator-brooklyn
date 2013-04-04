@@ -34,6 +34,9 @@ public interface MongoDbServer extends SoftwareProcess {
     BasicConfigKey<String> DATA_DIRECTORY = new BasicConfigKey<String>(String.class,
             "mongodb.data.directory", "Data directory to store MongoDB journals");
 
+    public static final BasicAttributeSensorAndConfigKey<String> REPLICA_SET_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class,
+            "mongodb.server.replicaSet.name", "The name of the replica set that the server belongs to");
+
     @SetFromFlag("mongodbConfTemplateUrl")
     BasicConfigKey<String> MONGODB_CONF_TEMPLATE_URL = new BasicConfigKey<String>(String.class,
             "mongodb.config.url", "Template file (in freemarker format) for a a Mongo configuration file",
@@ -73,6 +76,30 @@ public interface MongoDbServer extends SoftwareProcess {
     BasicAttributeSensor<Long> NETWORK_NUM_REQUESTS = new BasicAttributeSensor<Long>(Long.class,
             "mongodb.server.network.numRequests", "Server network requests");
 
+    public static final BasicAttributeSensor<Boolean> REPLICA_SET_ENABLED = new BasicAttributeSensor<Boolean>(Boolean.class,
+            "mongodb.server.replicaSet.enabled", "True if this server was started to be part of a replica set");
+
+    public static final BasicAttributeSensor<Boolean> REPLICA_SET_MASTER = new BasicAttributeSensor<Boolean>(Boolean.class,
+            "mongodb.server.replicaSet.isMaster", "True if this server is the write master for the replica set");
+
+    public static final BasicAttributeSensor<Boolean> REPLICA_SET_SECONDARY = new BasicAttributeSensor<Boolean>(Boolean.class,
+            "mongodb.server.replicaSet.isSecondary", "True if this server is a secondary server in the replica set");
+
+    public static final BasicAttributeSensor<String> REPLICA_SET_HOSTS = new BasicAttributeSensor<String>(String.class,
+            "mongodb.server.replicaSet.hosts", "All hosts in the replica set (comma-seperated hostname:port)");
+
+    public static final BasicAttributeSensor<Integer> REPLICA_SET_NUMBER_OF_HOSTS = new BasicAttributeSensor<Integer>(Integer.class,
+            "mongodb.server.replicaSet.numberOfHosts", "Number of hosts in the replica set");
+
+    public static final BasicAttributeSensor<String> REPLICA_SET_PRIMARY = new BasicAttributeSensor<String>(String.class,
+            "mongodb.server.replicaSet.primary", "The name of the primary host in the replica set");
+
     Integer getServerPort();
 
+    public static final BasicAttributeSensor<String> REPLICA_SET_ME = new BasicAttributeSensor<String>(String.class,
+            "mongodb.server.replicaSet.me", "This server's host name in the replica");
+
+    void initializeReplicaSet();
+
+    void addToReplicaSet(MongoDbServer server);
 }

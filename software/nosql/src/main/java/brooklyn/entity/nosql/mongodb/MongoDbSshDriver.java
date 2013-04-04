@@ -76,13 +76,20 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     public void launch() {
         List<String> commands = new LinkedList<String>();
         Integer port = entity.getAttribute(MongoDbServer.PORT);
-        String args = Joiner.on(" ").join(ImmutableList.of(
-                "--config", getConfFile(),
-                "--pidfilepath", getPidFile(),
-                "--logpath", getLogFile(),
-                "--dbpath", getDataDirectory(),
-                "--port", port,
-                "--fork"));
+
+        ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
+                .add("--config", getConfFile())
+                .add("--pidfilepath", getPidFile())
+                .add("--dbpath", getDataDirectory())
+                .add("--logpath", getLogFile())
+                .add("--port", port.toString())
+                .add("--fork");
+
+        String replicaSetName = entity.getConfig(MongoDbServer.REPLICA_SET_NAME);
+        if (!Strings.isNullOrEmpty(replicaSetName))
+            argsBuilder.add("--replSet", replicaSetName);
+
+        String args = Joiner.on(" ").join(argsBuilder.build());
         String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
         commands.add(command);
         log.info(command);
