@@ -36,9 +36,9 @@ First time user? The [getting started]({{ site.url }}/use/guide/quickstart/index
 </tr>
 </table>
 {% if SNAPSHOT %}
-<span style='float:right'><small>Source: <a href='{{ this_dist_url_search }}'>Sonatype</a></small></span>
+<span style='float:right'><small>Source: <a href='{{ this_anything_url_search }}'>Sonatype</a></small></span>
 {% else %}
-<span style='float:right'><small>Source: <a href='{{ this_dist_url_search }}'>Maven Central</a></small></span>
+<span style='float:right'><small>Source: <a href='{{ this_anything_url_search }}'>Maven Central</a></small></span>
 {% endif %}
 
 <a name="distro"></a>
