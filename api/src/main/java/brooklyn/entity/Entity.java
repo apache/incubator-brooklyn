@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
@@ -90,9 +91,14 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
      * 
      * TODO Signature will change to {@code <T extends Entity> T addChild(T child)}, but
      * that currently breaks groovy AbstractEntity subclasses sometimes so deferring that
-     * until (hopefully) the next release.
+     * until (hopefully) the next release. For now use addChild(EntitySpec).
      */
     Entity addChild(Entity child);
+    
+    /** 
+     * Creates an {@link Entity} from the given spec and adds it, setting this entity as the parent,
+     * returning the added child. */
+    <T extends Entity> T addChild(EntitySpec<T> spec);
     
     /** 
      * Removes the specified child {@link Entity}; its parent will be set to null.
