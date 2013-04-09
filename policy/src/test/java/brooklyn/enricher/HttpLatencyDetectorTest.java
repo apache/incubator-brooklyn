@@ -57,7 +57,7 @@ public class HttpLatencyDetectorTest {
                 Entities.supplier(entity, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT), 
                 Predicates.equalTo(null));
         entity.setAttribute(TEST_URL, "http://www.google.com");
-        TestUtils.assertEventually(MutableMap.of("timeout", 400), 
+        TestUtils.assertEventually(MutableMap.of("timeout", 10000), 
                 Entities.supplier(entity, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT), 
                 Predicates.notNull());
         log.info("Latency to "+entity.getAttribute(TEST_URL)+" is "+entity.getAttribute(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT));
