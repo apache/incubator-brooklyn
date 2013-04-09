@@ -11,8 +11,8 @@
     </template>
     
     <classpath>
-      <entry>https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&amp;g=io.brooklyn.example&amp;a=brooklyn-example-simple-web-cluster&amp;v=0.5.0-SNAPSHOT&amp;e=jar</entry>
-      <entry>https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&amp;g=io.brooklyn.example&amp;a=brooklyn-example-global-web-fabric&amp;v=0.5.0-SNAPSHOT&amp;e=jar</entry>
+      <entry>https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&amp;g=io.brooklyn.example&amp;a=brooklyn-example-simple-web-cluster&amp;v=0.6.0-SNAPSHOT&amp;e=jar</entry> <!-- BROOKLYN_VERSION -->
+      <entry>https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&amp;g=io.brooklyn.example&amp;a=brooklyn-example-global-web-fabric&amp;v=0.6.0-SNAPSHOT&amp;e=jar</entry> <!-- BROOKLYN_VERSION -->
     </classpath>
 </catalog>
 
