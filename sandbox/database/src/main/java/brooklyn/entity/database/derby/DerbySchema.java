@@ -3,19 +3,20 @@ package brooklyn.entity.database.derby;
 import static java.lang.String.format;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.management.ObjectName;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.database.Schema;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.adapter.JmxHelper;
-import brooklyn.event.adapter.JmxObjectNameAdapter;
-import brooklyn.event.adapter.JmxSensorAdapter;
-import brooklyn.event.adapter.SensorRegistry;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.feed.jmx.JmxAttributePollConfig;
+import brooklyn.event.feed.jmx.JmxFeed;
+import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
@@ -47,10 +48,9 @@ public class DerbySchema extends AbstractEntity implements Schema {
     protected ObjectName virtualHostManager;
     protected ObjectName exchange;
 
-    transient JmxSensorAdapter jmxAdapter;
     transient JmxHelper jmxHelper;
-    transient SensorRegistry sensorRegistry;
-
+    transient JmxFeed jmxFeed;
+    
     public DerbySchema() {
         super(MutableMap.of(), null);
     }
@@ -84,15 +84,23 @@ public class DerbySchema extends AbstractEntity implements Schema {
             virtualHostManager = new ObjectName(format("org.apache.derby:type=VirtualHost.VirtualHostManager,VirtualHost=\"%s\"", virtualHost));
             exchange = new ObjectName(format("org.apache.derby:type=VirtualHost.Exchange,VirtualHost=\"%s\",name=\"amq.direct\",ExchangeType=direct", virtualHost));
             create();
+
+            jmxHelper = new JmxHelper((EntityLocal)getParent());
+
+            ObjectName schemaMBeanName = new ObjectName(format("org.apache.derby:type=VirtualHost.Schema,VirtualHost=\"%s\",name=\"%s\"", virtualHost, name));
+
+            jmxFeed = JmxFeed.builder()
+                    .entity(this)
+                    .helper(jmxHelper)
+                    .period(500, TimeUnit.MILLISECONDS)
+                    .pollAttribute(new JmxAttributePollConfig<Integer>(SCHEMA_DEPTH)
+                            .objectName(schemaMBeanName)
+                            .attributeName("SchemaDepth"))
+                    .pollAttribute(new JmxAttributePollConfig<Integer>(MESSAGE_COUNT)
+                            .objectName(schemaMBeanName)
+                            .attributeName("MessageCount"))
+                    .build();
             
-            sensorRegistry = new SensorRegistry(this);
-            jmxHelper = new JmxHelper(getParent());
-            jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(jmxHelper));
-            
-            ObjectName schema = new ObjectName(format("org.apache.derby:type=VirtualHost.Schema,VirtualHost=\"%s\",name=\"%s\"", virtualHost, name));
-            JmxObjectNameAdapter virtualHostObjectNameAdapter = jmxAdapter.objectName(schema);
-            virtualHostObjectNameAdapter.attribute("SchemaDepth").subscribe(SCHEMA_DEPTH);
-            virtualHostObjectNameAdapter.attribute("MessageCount").subscribe(MESSAGE_COUNT);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
@@ -110,7 +118,7 @@ public class DerbySchema extends AbstractEntity implements Schema {
 
     @Override
     public void destroy() {
-        sensorRegistry.close();
+        if (jmxFeed != null) jmxFeed.stop();
         super.destroy();
     }
 

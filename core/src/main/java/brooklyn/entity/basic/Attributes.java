@@ -47,10 +47,7 @@ public interface Attributes {
     PortAttributeSensorAndConfigKey RMI_SERVER_PORT = new PortAttributeSensorAndConfigKey(
             "rmi.server.port", "RMI server port", PortRanges.fromString("9001, 39001+"));
 
-    @Deprecated // since 0.4, use RMI_REGISTRY_PORT instead
-    PortAttributeSensorAndConfigKey RMI_PORT = RMI_SERVER_PORT;
-
-    BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
+     BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "jmx.user", "JMX username");
     
     BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(

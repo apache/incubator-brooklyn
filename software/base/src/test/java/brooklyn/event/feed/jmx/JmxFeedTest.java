@@ -96,7 +96,7 @@ public class JmxFeedTest {
                         super.start(locs);
                         setAttribute(Attributes.HOSTNAME, "localhost");
                         setAttribute(Attributes.JMX_PORT, 40123);
-                        setAttribute(Attributes.RMI_PORT, 40124);
+                        setAttribute(Attributes.RMI_SERVER_PORT, 40124);
                         setAttribute(Attributes.JMX_CONTEXT);
                     }
         };

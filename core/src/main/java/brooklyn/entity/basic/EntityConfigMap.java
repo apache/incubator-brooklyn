@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigMap;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
@@ -22,7 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 
 @SuppressWarnings("deprecation")
-public class EntityConfigMap implements brooklyn.config.ConfigMap, ConfigMap {
+public class EntityConfigMap implements ConfigMap {
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityConfigMap.class);
 

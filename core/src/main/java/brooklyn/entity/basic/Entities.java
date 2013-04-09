@@ -433,20 +433,6 @@ public class Entities {
         }
     }
 
-    /** @deprecated since 0.4; use start(Entity) */
-    public static Entity start(ManagementContext context, Entity e, Collection<? extends Location> locations) {
-        if (context != null) context.manage(e);
-        if (e instanceof Startable) ((Startable)e).start(locations);
-        return e;
-    }
-
-    /** @deprecated since 0.4; use destroy(Entity) */
-    public static void destroy(ManagementContext context, Entity e) {
-        if (e instanceof Startable) ((Startable)e).stop();
-        if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
-        if (context != null) context.getEntityManager().unmanage(e);
-    }
-
     /** convenience for starting an entity, esp a new Startable instance which has been created dynamically
      * (after the application is started) */
     public static void start(Entity e, Collection<Location> locations) {

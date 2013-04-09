@@ -18,11 +18,10 @@ import brooklyn.entity.database.Database;
 import brooklyn.entity.database.Schema;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.event.adapter.FunctionSensorAdapter;
-import brooklyn.event.adapter.JmxHelper;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 

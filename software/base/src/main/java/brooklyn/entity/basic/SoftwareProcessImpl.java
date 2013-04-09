@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
-import brooklyn.event.adapter.SensorRegistry;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
@@ -55,7 +54,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	private static final Logger log = LoggerFactory.getLogger(SoftwareProcessImpl.class);
     
 	private transient SoftwareProcessDriver driver;
-	protected transient SensorRegistry sensorRegistry;
 
 	public SoftwareProcessImpl() {
         super(MutableMap.of(), null);
@@ -93,8 +91,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
   	/**
-  	 * Called before driver.start; guarantees the driver will exist, locations will have been set
-  	 * and sensorRegistry will be set (but not yet activated).
+  	 * Called before driver.start; guarantees the driver will exist, and locations will have been set.
   	 */
     protected void preStart() {
     }
@@ -234,8 +231,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             log.info("On rebind of {}, no MachineLocation found (with locations {}) so not generating driver",
                     this, getLocations());
         }
-        
-        if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         
         callRebindHooks();
     }
@@ -385,7 +380,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         
         // Note: must only apply config-sensors after adding to locations and creating driver; 
         // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
-        if (sensorRegistry == null) sensorRegistry = new SensorRegistry(this);
         ConfigToAttributes.apply(this);
         
         if (getAttribute(HOSTNAME)==null)
@@ -465,7 +459,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         }
         log.info("Stopping {} in {}", this, getLocations());
 		setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
-		if (sensorRegistry!=null) sensorRegistry.deactivateAdapters();
         setAttribute(SERVICE_UP, false);
 		preStop();
 		MachineLocation machine = removeFirstMachineLocation();
@@ -494,7 +487,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         Throwable err = null;
         
         try {
-            if (sensorRegistry != null) sensorRegistry.close();
             if (driver != null) driver.stop();
             
         } catch (Throwable t) {

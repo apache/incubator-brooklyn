@@ -43,10 +43,6 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         public static BrooklynProperties newEmpty() {
             return new BrooklynProperties();
         }
-        /** @deprecated since 0.4.0 use newDefault or newEm=pty */
-        public static BrooklynProperties newWithSystemAndEnvironment() {
-            return newDefault();
-        }
 
         public static BrooklynProperties newDefault() {
             BrooklynProperties properties = new BrooklynProperties();
