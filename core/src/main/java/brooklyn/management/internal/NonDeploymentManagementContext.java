@@ -5,9 +5,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
@@ -17,6 +20,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
+import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
 import brooklyn.management.EntityManager;
@@ -24,6 +28,8 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
+import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.task.AbstractExecutionContext;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
@@ -140,8 +146,16 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
     @Override
     public RebindManager getRebindManager() {
-        checkInitialManagementContextReal();
-        return initialManagementContext.getRebindManager();
+        // There was a race where EffectorUtils on invoking an effector calls:
+        //     mgmtSupport.getEntityChangeListener().onEffectorCompleted(eff);
+        // but where the entity/app may be being unmanaged concurrently (e.g. calling app.stop()).
+        // So now we allow the change-listener to be called.
+        
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getRebindManager();
+        } else {
+            return new NonDeploymentRebindManager();
+        }
     }
 
     @Override
@@ -262,6 +276,49 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         
         @Override
         protected <T> Task<T> submitInternal(@SuppressWarnings("rawtypes") Map properties, Object task) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+    }
+    
+    /**
+     * For when the initial management context is not "real"; the changeListener is a no-op, but everything else forbidden.
+     * 
+     * @author aled
+     */
+    private class NonDeploymentRebindManager implements RebindManager {
+
+        @Override
+        public ChangeListener getChangeListener() {
+            return ChangeListener.NOOP;
+        }
+
+        @Override
+        public void setPersister(BrooklynMementoPersister persister) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public BrooklynMementoPersister getPersister() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public List<Application> rebind(BrooklynMemento memento) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public List<Application> rebind(BrooklynMemento memento, ClassLoader classLoader) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public void stop() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }
