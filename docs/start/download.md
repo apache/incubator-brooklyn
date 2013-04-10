@@ -72,7 +72,7 @@ This is a single JAR containing all of Brooklyn and its dependencies, for develo
 
 ## Release Notes
 
-Release notes can be found [here]({{ site.url }}/start/release-notes).
+Release notes can be found [here]({{ site.url }}/start/release-notes.html).
 
 <a name="examples"></a>
 ## Examples
