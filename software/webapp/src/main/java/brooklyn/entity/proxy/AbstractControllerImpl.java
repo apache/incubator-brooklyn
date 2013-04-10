@@ -33,6 +33,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Represents a controller mechanism for a {@link Cluster}.
@@ -359,7 +360,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             	// TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
             	// will be out-of-sync (for ever more?)
             	serverPoolAddresses.addAll((Collection<String>) memento.getCustomField("serverPoolAddresses"));
-				serverPoolTargets.putAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), Map.class, true));
+				serverPoolTargets.putAll(MementoTransformer.transformIdsToEntities(rebindContext, memento.getCustomField("serverPoolTargets"), new TypeToken<Map<Entity,String>>() {}, true));
             }
         };
     }
