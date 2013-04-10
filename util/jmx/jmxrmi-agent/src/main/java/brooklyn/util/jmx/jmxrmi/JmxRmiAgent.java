@@ -24,7 +24,8 @@ import javax.management.remote.JMXServiceURL;
  * <p>
  * Listens on 9001 unless overridden by system property {@code brooklyn.jmx-rmi-agent.port}.
  * <p>
- * {@code -Dbrooklyn.jmx-rmi-agent.port=9001 -javaagent:brooklyn-jmxrmi-agent-0.5.0-SNAPSHOT.jar}
+ * BROOKLYN_VERSION_BELOW
+ * {@code -Dbrooklyn.jmx-rmi-agent.port=9001 -javaagent:brooklyn-jmxrmi-agent-0.6.0-SNAPSHOT.jar}
     
  * @see brooklyn.util.jmx.jmxmp.JmxmpAgent
  * @see https://blogs.oracle.com/jmxetc/entry/connecting_through_firewall_using_jmx
