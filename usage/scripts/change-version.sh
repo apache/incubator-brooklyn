@@ -24,7 +24,7 @@ LABEL2=BROOKLYN_VERSION_BELOW
 CURRENT_VERSION=$1
 NEW_VERSION=$2
 
-GREP_ARGS="-r -l --exclude_dir=\\..* --exclude=.*.(log|war)"
+GREP_ARGS="-r -l --exclude_dir=^\..*|\/\..* --exclude=.*\.(log|war)"
 
 # look for lines (where we can put the literal $LABEL1 in an inline comment) matching
 # ... ${CURRENT_VERSION} ... BROOKLYN_VERSION
