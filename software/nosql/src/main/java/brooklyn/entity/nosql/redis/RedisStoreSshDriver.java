@@ -45,25 +45,10 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("redis-%s", getVersion()));
 
-        /*
-         * FIXME On jenkins releng3 box, needed to explicitly install jemalloc:
-         *   wget http://www.canonware.com/download/jemalloc/jemalloc-3.3.0.tar.bz2
-         *   tar -xvjpf jemalloc-3.3.0.tar.bz2 
-         *   cd jemalloc-3.3.0
-         *   ./configure
-         *   make
-         *   sudo make install
-         *   cd ..
-         *   
-         *   cd redis-2.6.7
-         *   make distclean
-         *   cd deps; make hiredis lua jemalloc linenoise; cd ..
-         *   "make LDFLAGS="-all-static"
-         */
-
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
                 .add(CommonCommands.INSTALL_TAR)
+                .add(CommonCommands.installPackage(MutableMap.of("apt", "libjemalloc-dev", "yum", "jemalloc-devel", "port", null, "brew", null), null))
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))
                 .add("make distclean")
