@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Release Notes
-toc: ../../toc.json
+toc: ../toc.json
 ---
 
 ## Brooklyn Version 0.5.0 RC1 (0.5.0-rc.1)

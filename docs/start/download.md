@@ -71,7 +71,7 @@ Just download your preferred flavour and add it to your classpath{% if site.broo
 
 First time using Brooklyn? Read [Getting Started]({{ site.url }}/use/guide/quickstart/index.html) to set up your `brooklyn.properties` and `catalog.xml` files.
 
-Release notes can be found [here]({{ site.url }}/start/release-notes){% if SNAPSHOT %}{% else %}, and specifically for [{{ site.brooklyn-version }}]({{ site.url }}/start/release-notes/{{ site.brooklyn-version }}.html){% endif %}.
+Release notes can be found [here]({{ site.url }}/start/release-notes.html).
 
 
 <a name="examples"></a>
