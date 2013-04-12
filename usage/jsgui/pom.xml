@@ -83,6 +83,14 @@
         </resources>
         <plugins>
             <!-- run js tests with: $ mvn clean process-resources jasmine:test -->
+            <!--
+                 The Jasmine Maven plugin is now on version 1.3.1.0. It has several improvements,
+                 but we're unable to upgrade to it because of a change to the way it handles our
+                 fixtures. In 1.2 it serves target/fixtures at /fixtures.  This no longer happens
+                 in 1.3.1. Ideally, the plugin would have a configuration option to include other
+                 directories for Jetty to serve. If this were added we would also be able to use
+                 mvn jasmine:bdd.
+            -->
             <plugin>
                 <groupId>com.github.searls</groupId>
                 <artifactId>jasmine-maven-plugin</artifactId>
