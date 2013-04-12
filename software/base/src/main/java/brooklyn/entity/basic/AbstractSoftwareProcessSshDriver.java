@@ -77,7 +77,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return (SshMachineLocation) super.getLocation();
     }
 
-    protected String getVersion() {
+    public String getVersion() {
         return elvis(getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION), getDefaultVersion());
     }
 
