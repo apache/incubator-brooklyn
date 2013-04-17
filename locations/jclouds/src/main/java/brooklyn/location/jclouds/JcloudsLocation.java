@@ -336,8 +336,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             JcloudsSshMachineLocation sshLocByHostname = registerJcloudsSshMachineLocation(node, vmHostname, setup);
             
             // Apply same securityGroups rules to iptables, if iptables is running on the node
-            mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
-                    (Iterable<Integer>) setup.get(INBOUND_PORTS));
+            String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
+            if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
+                mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
+                        (Iterable<Integer>) setup.get(INBOUND_PORTS));
+            } else {
+                // Otherwise would break CloudStack, where port-forwarding means that jclouds opinion 
+                // of using port 22 is wrong.
+            }
             
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
