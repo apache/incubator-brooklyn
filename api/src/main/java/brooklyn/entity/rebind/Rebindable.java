@@ -8,8 +8,8 @@ import brooklyn.mementos.Memento;
  * of the rebind is to reconstruct and reconnect the brooklyn objects, including
  * binding them to external resources.
  */
-public interface Rebindable<T extends Memento> {
+public interface Rebindable {
 
-    public RebindSupport<T> getRebindSupport();
+    public RebindSupport getRebindSupport();
     
 }
