@@ -1,6 +1,7 @@
 package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.net.URL;
 import java.util.Collection;
@@ -48,13 +49,13 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
     
     private final AbstractEntity entity;
-    private NonDeploymentManagementContextMode mode;
-    private ManagementContextInternal initialManagementContext;
+    private volatile NonDeploymentManagementContextMode mode;
+    private volatile ManagementContextInternal initialManagementContext;
     
     private final QueueingSubscriptionManager qsm;
     private final BasicSubscriptionContext subscriptionContext;
     private final NonDeploymentExecutionContext executionContext;
-    private NonDeploymentEntityManager entityManager;
+    private volatile NonDeploymentEntityManager entityManager;
 
     public NonDeploymentManagementContext(AbstractEntity entity, NonDeploymentManagementContextMode mode) {
         this.entity = checkNotNull(entity, "entity");
@@ -66,6 +67,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
     
     public void setManagementContext(ManagementContextInternal val) {
+        checkState(initialManagementContext == null || initialManagementContext == val, "Must not change initialManagementContext from %s to %s", initialManagementContext, val);
         this.initialManagementContext = checkNotNull(val, "initialManagementContext");
         this.entityManager = new NonDeploymentEntityManager(val);
     }
@@ -78,6 +80,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public void setMode(NonDeploymentManagementContextMode mode) {
         this.mode = checkNotNull(mode, "mode");
     }
+    
     public NonDeploymentManagementContextMode getMode() {
         return mode;
     }
