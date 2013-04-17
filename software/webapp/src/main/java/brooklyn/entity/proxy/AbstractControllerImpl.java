@@ -150,7 +150,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
 
     @Override
-    public AttributeSensor getPortNumberSensor() {
+    public AttributeSensor<Integer> getPortNumberSensor() {
         return getAttribute(PORT_NUMBER_SENSOR);
     }
 
@@ -336,7 +336,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     protected String getAddressOfEntity(Entity member) {
         String ip = member.getAttribute(Attributes.HOSTNAME);
-        Integer port = member.getAttribute(Attributes.HTTP_PORT);
+        Integer port = member.getAttribute(getPortNumberSensor());
         if (ip!=null && port!=null) {
             return ip+":"+port;
         }
