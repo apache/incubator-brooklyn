@@ -34,11 +34,11 @@ import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
+import brooklyn.util.Suppliers2;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -187,7 +187,7 @@ public class HttpFeed extends AbstractFeed {
         final byte[] body;
 
         private HttpPollIdentifier(String method, URI uri, Map<String,String> headers, byte[] body) {
-            this(method, Suppliers.ofInstance(uri), headers, body);
+            this(method, Suppliers2.ofInstance(uri), headers, body);
         }
         private HttpPollIdentifier(String method, Supplier<URI> uriProvider, Map<String,String> headers, byte[] body) {
             this.method = checkNotNull(method, "method").toLowerCase();
@@ -242,7 +242,7 @@ public class HttpFeed extends AbstractFeed {
                     throw new IllegalStateException("Not permitted to supply baseUri and baseUriProvider");
                 Map<String,String> baseUriVars = ImmutableMap.copyOf(checkNotNull(builder.baseUriVars, "baseUriVars"));
                 URI uri = config.buildUri(builder.baseUri, baseUriVars);
-                baseUriProvider = Suppliers.ofInstance(uri);
+                baseUriProvider = Suppliers2.ofInstance(uri);
             } else if (!builder.baseUriVars.isEmpty()) {
                 throw new IllegalStateException("Not permitted to supply URI vars when using a URI provider");
             }

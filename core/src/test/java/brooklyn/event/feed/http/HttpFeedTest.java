@@ -46,7 +46,10 @@ public class HttpFeedTest {
     
     private MockWebServer server;
     private URL baseUrl;
-    
+
+    private MockWebServer server2;
+    private URL baseUrl2;
+
     private Location loc;
     private TestApplication app;
     private EntityLocal entity;
@@ -61,6 +64,13 @@ public class HttpFeedTest {
         server.play();
         baseUrl = server.getUrl("/");
 
+        server2 = new MockWebServer();
+        for (int i = 0; i < 100; i++) {
+            server2.enqueue(new MockResponse().setResponseCode(200).addHeader("content-type: application/json").setBody(""+i));
+        }
+        server2.play();
+        baseUrl2 = server2.getUrl("/");
+
         loc = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
@@ -71,6 +81,7 @@ public class HttpFeedTest {
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
         if (server != null) server.shutdown();
+        if (server2 != null) server2.shutdown();
         if (app != null) Entities.destroyAll(app);
         feed = null;
     }
@@ -203,5 +214,31 @@ public class HttpFeedTest {
                 assertEquals(entity.getAttribute(sensor), expectedVal);
                 return null;
             }});
+    }
+    
+    @Test
+    public void testPollSharedByMultipleSensors() throws Exception {
+        long bigPeriod = 60*1000;
+        final BasicAttributeSensor<String> attribute1 = new BasicAttributeSensor<String>(String.class, "attrib1", "");
+        final BasicAttributeSensor<String> attribute2 = new BasicAttributeSensor<String>(String.class, "attrib2", "");
+
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUrl(baseUrl2)
+                .period(bigPeriod)
+                .poll(new HttpPollConfig<String>(attribute1)
+                        .onSuccess(HttpValueFunctions.stringContentsFunction()))
+                .poll(new HttpPollConfig<String>(attribute2)
+                        .onSuccess(HttpValueFunctions.stringContentsFunction()))
+                .build();
+        
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+           public void run() {
+               String val1 = entity.getAttribute(attribute1);
+               String val2 = entity.getAttribute(attribute2);
+               assertEquals(val1, "0", "attrib1="+val1+"; attrib2="+val2);
+               assertEquals(val2, "0", "attrib1="+val1+"; attrib2="+val2);
+           }
+        });
     }
 }
