@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.mementos.PolicyMemento;
 
 /**
  * A location that an entity can be in. Examples of locations include a single machine
@@ -16,7 +18,7 @@ import brooklyn.mementos.LocationMemento;
  * 
  * Locations may not be {@link Serializable} in subsequent releases!
  */
-public interface Location extends Serializable, Rebindable<LocationMemento> {
+public interface Location extends Serializable, Rebindable{
 
     /**
      * A unique id for this location.
@@ -106,4 +108,7 @@ public interface Location extends Serializable, Rebindable<LocationMemento> {
      */
     @Deprecated
     Object findLocationProperty(String key);
+
+    @Override
+    RebindSupport<LocationMemento> getRebindSupport();
 }

@@ -6,11 +6,13 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
@@ -28,7 +30,7 @@ import brooklyn.policy.Policy;
  * 
  * @see brooklyn.entity.basic.AbstractEntity
  */
-public interface Entity extends Serializable, Rebindable<EntityMemento> {
+public interface Entity extends Serializable, Rebindable {
     /**
      * The unique identifier for this entity.
      */
@@ -210,4 +212,7 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
      * @return True if the policy enricher at this entity; false otherwise
      */
     boolean removeEnricher(Enricher enricher);
+
+    @Override
+    RebindSupport<EntityMemento> getRebindSupport();
 }

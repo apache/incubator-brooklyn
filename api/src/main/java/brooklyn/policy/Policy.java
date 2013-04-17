@@ -3,6 +3,7 @@ package brooklyn.policy;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.mementos.PolicyMemento;
 
@@ -12,7 +13,7 @@ import com.google.common.annotations.Beta;
  * Policies implement actions and thus must be suspendable; policies should continue to evaluate their sensors
  * and indicate their desired planned action even if they aren't invoking them
  */
-public interface Policy extends EntityAdjunct, Rebindable<PolicyMemento> {
+public interface Policy extends EntityAdjunct, Rebindable {
     /**
      * A unique id for this policy.
      */
@@ -51,4 +52,7 @@ public interface Policy extends EntityAdjunct, Rebindable<PolicyMemento> {
     <T> T setConfig(ConfigKey<T> key, T val);
     
     Map<ConfigKey<?>, Object> getAllConfig();
+
+    @Override
+    RebindSupport<PolicyMemento> getRebindSupport();
 }
