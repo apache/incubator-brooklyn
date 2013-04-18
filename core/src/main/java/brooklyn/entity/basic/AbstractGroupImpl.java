@@ -34,7 +34,7 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         this(MutableMap.of(), null);
     }
     
-    public AbstractGroupImpl(Map<?,?> props) {
+    public AbstractGroupImpl(Map props) {
         this(props, null);
     }
     
@@ -42,7 +42,7 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         this(MutableMap.of(), parent);
     }
 
-    public AbstractGroupImpl(Map<?,?> props, Entity parent) {
+    public AbstractGroupImpl(Map props, Entity parent) {
         super(props, parent);
         setAttribute(Changeable.GROUP_SIZE, 0);
     }
