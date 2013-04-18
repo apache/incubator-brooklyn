@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.basic.MapConfigKey.MapModification.MapModificationBase;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.MutableMap;
 
@@ -129,20 +128,6 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
     }
 
     public interface MapModification<V> extends StructuredModification<MapConfigKey<V>>, Map<String,V> {
-        @SuppressWarnings("serial")
-        class MapModificationBase<V> extends LinkedHashMap<String,V> implements MapModification<V> {
-            private final boolean clearFirst;
-            public MapModificationBase(Map<String,V> delegate, boolean clearFirst) {
-                super(delegate);
-                this.clearFirst = clearFirst;
-            }
-            @SuppressWarnings({ "rawtypes" })
-            @Override
-            public Object applyToKeyInMap(MapConfigKey<V> key, Map target) {
-                if (clearFirst) StructuredModifications.clearing().applyToKeyInMap(key, target);
-                return key.applyValueToMap(new LinkedHashMap<String,V>(this), target);
-            }
-        }
     }
     
     public static class MapModifications extends StructuredModifications {
@@ -157,4 +142,21 @@ public class MapConfigKey<V> extends BasicConfigKey<Map<String,V>> implements St
         }
     }
 
+    @SuppressWarnings("serial")
+    public static class MapModificationBase<V> extends LinkedHashMap<String,V> implements MapModification<V> {
+        private final boolean clearFirst;
+        public MapModificationBase(Map<String,V> delegate, boolean clearFirst) {
+            super(delegate);
+            this.clearFirst = clearFirst;
+        }
+        @SuppressWarnings({ "rawtypes" })
+        @Override
+        public Object applyToKeyInMap(MapConfigKey<V> key, Map target) {
+            if (clearFirst) {
+                StructuredModification<StructuredConfigKey> clearing = StructuredModifications.clearing();
+                clearing.applyToKeyInMap(key, target);
+            }
+            return key.applyValueToMap(new LinkedHashMap<String,V>(this), target);
+        }
+    }
 }

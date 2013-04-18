@@ -1,7 +1,5 @@
 package brooklyn.event.adapter;
 
-import groovy.transform.InheritConstructors
-
 import javax.management.ObjectName
 
 import brooklyn.event.Sensor
@@ -15,7 +13,6 @@ import brooklyn.event.Sensor
  * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
 @Deprecated
-@InheritConstructors
 public class JmxOperationAdapter extends AbstractSensorAdapter {
 	final JmxSensorAdapter adapter;
 	final ObjectName objectName;

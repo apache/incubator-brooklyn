@@ -573,7 +573,7 @@ public class Entities {
     }
 
     public static ManagementContext newManagementContext(Map<?,?> props) {
-        return new LocalManagementContext(props);
+        return new LocalManagementContext( BrooklynProperties.Factory.newEmpty().addFromMap(props));
     }
 
     public static void unmanage(Entity entity) {
