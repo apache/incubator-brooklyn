@@ -86,12 +86,12 @@ public class ConfigMapTest {
         Assert.assertNull(sub.getRawConfig(MySubEntity.SUB_KEY_2));
     }
 
-    //todo: due to generics we already know that the supplied type of string won't work on an INT_KEY. So a test is not really needed.
-    //@Test(expectedExceptions=IllegalArgumentException.class)
-    //public void testFailFastOnInvalidConfigKeyCoercion() throws Exception {
-    //    MyOtherEntity entity2 = new MyOtherEntity(parent:app)
-    //    entity2.setConfig(MyOtherEntity.INT_KEY, "thisisnotanint");
-    //}
+    @Test(expectedExceptions=IllegalArgumentException.class)
+    public void testFailFastOnInvalidConfigKeyCoercion() throws Exception {
+        MyOtherEntity entity2 = new MyOtherEntity(parent:app)
+        BasicConfigKey key = MyOtherEntity.INT_KEY
+        entity2.setConfig(key, "thisisnotanint");
+    }
 
     @Test
     public void testGetConfigOfTypeClosureReturnsClosure() throws Exception {
