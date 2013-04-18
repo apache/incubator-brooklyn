@@ -1,8 +1,9 @@
-
-        
+      
 {% readj ../before-begin.include.md %}
 
-Now, go to this particular example's directory:
+## Simple Web Server
+
+Go to this particular example's directory:
 
 {% highlight bash %}
 % cd simple-web-cluster
@@ -18,7 +19,7 @@ the ``BROOKLYN_CLASSPATH`` environment variable in the following way:
 The project ``simple-web-cluster`` includes several deployment descriptors
 for rolling out a web application, under ``src/main/java``.
 
-## Simple Web Server
+
 
 The simplest of these, ``SingleWebServerExample``, starts JBoss on a single machine with a "Hello World" war deployed,
 with a single line:
