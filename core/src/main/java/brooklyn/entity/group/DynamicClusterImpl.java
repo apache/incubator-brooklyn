@@ -70,12 +70,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
      * 
      * Valid properties are:
      * <ul>
-     * <li>memberSpec - an {@EntitySpec) that defines entities to be created,
+     * <li>memberSpec - an {@EntitySpec} that defines entities to be created,
      * where the entities typically implementing {@link Startable}
-     * <li>factory - an {@EntityFactory) (or {@link Closure}) that creates an {@link Entity},
+     * <li>factory - an {@EntityFactory} (or {@link Closure}) that creates an {@link Entity},
      * typically implementing {@link Startable}, taking the {@link Map}
      * of properties from this cluster as an argument. This property is mandatory.
-     * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(List)} method is
+     * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(Collection)} method is
      * called. This property is optional, with a default of 1.
      * </ul>
      *

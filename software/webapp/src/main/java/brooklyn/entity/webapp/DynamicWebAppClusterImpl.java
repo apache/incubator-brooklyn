@@ -82,7 +82,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         });
     }
 
-        
+    @Override
     public synchronized boolean addMember(Entity member) {
         boolean result = super.addMember(member);
         setAttribute(SERVICE_UP, calculateServiceUp());

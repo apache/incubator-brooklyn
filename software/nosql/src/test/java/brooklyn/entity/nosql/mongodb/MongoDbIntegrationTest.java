@@ -24,10 +24,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
-public class MongoDbTest {
-
-    private static final String TEST_DB = "test-db";
-    private static final String TEST_COLLECTION = "test-collection";
+public class MongoDbIntegrationTest {
 
     private TestApplication app;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
@@ -54,55 +51,28 @@ public class MongoDbTest {
         assertFalse(entity.getAttribute(Startable.SERVICE_UP));
     }
 
-    @Test(groups = "Integration")
+    @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStop" })
     public void testCanReadAndWrite() throws Exception {
         MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
-        String id = insert(entity, "hello", "world!");
-        DBObject docOut = getById(entity, id);
+        String id = MongoDbTestHelper.insert(entity, "hello", "world!");
+        DBObject docOut = MongoDbTestHelper.getById(entity, id);
         assertEquals(docOut.get("hello"), "world!");
     }
 
-    @Test(groups = "Integration")
+    @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStop" })
     public void testPollInsertCountSensor() throws Exception {
         MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
 
-        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.OPCOUNTERS_INSERTS, new Long(0));
-        insert(entity, "a", Boolean.TRUE);
-        insert(entity, "b", Boolean.FALSE);
-        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.OPCOUNTERS_INSERTS, new Long(2));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.OPCOUNTERS_INSERTS, 0L);
+        MongoDbTestHelper.insert(entity, "a", Boolean.TRUE);
+        MongoDbTestHelper.insert(entity, "b", Boolean.FALSE);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.OPCOUNTERS_INSERTS, 2L);
     }
 
-    /** Inserts new object with { key: value } at given server, returns new document's id */
-    private String insert(MongoDbServer entity, String key, Object value) throws Exception {
-        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcess.HOSTNAME));
-        try {
-            DB db = mongoClient.getDB(TEST_DB);
-            DBCollection testCollection = db.getCollection(TEST_COLLECTION);
-            BasicDBObject doc = new BasicDBObject(key, value);
-            testCollection.insert(doc);
-            ObjectId id = (ObjectId) doc.get("_id");
-            return id.toString();
-        } finally {
-            mongoClient.close();
-        }
-    }
-
-    /** Returns DBObject representing object with given id */
-    private DBObject getById(MongoDbServer entity, String id) throws Exception {
-        MongoClient mongoClient = new MongoClient(entity.getAttribute(SoftwareProcess.HOSTNAME));
-        try {
-            DB db = mongoClient.getDB(TEST_DB);
-            DBCollection testCollection = db.getCollection(TEST_COLLECTION);
-            DBObject doc = testCollection.findOne(new BasicDBObject("_id", new ObjectId(id)));
-            return doc;
-        } finally {
-            mongoClient.close();
-        }
-    }
 }

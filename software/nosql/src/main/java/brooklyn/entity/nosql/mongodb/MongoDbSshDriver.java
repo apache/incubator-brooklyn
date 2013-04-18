@@ -1,17 +1,15 @@
 package brooklyn.entity.nosql.mongodb;
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.util.ssh.CommonCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
@@ -37,7 +35,6 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         return expandedInstallDir;
     }
 
-    @Override
     public String getDataDirectory() {
         return entity.getConfig(MongoDbServer.DATA_DIRECTORY, getRunDir() + "/data");
     }
@@ -50,7 +47,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(downloadUrlAs(urls, saveAs));
+        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
 
