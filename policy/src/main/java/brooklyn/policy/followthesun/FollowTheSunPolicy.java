@@ -214,7 +214,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         
         // Update the model, including the current metric value (if any).
         Map<? extends Movable, Double> currentValue = item.getAttribute(itemUsageMetric);
-        boolean immovable = elvis(item.getConfig(Movable.IMMOVABLE), false);
+        boolean immovable = (Boolean)elvis(item.getConfig(Movable.IMMOVABLE), false);
         model.onItemAdded(item, parentContainer, immovable);
 
         if (currentValue != null) {

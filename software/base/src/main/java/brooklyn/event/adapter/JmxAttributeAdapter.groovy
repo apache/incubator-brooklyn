@@ -20,7 +20,6 @@ import brooklyn.event.Sensor
  * @deprecated See brooklyn.event.feed.jmx.JmxFeed
  */
 @Deprecated
-@InheritConstructors
 public class JmxAttributeAdapter extends AbstractSensorAdapter {
     public static final Logger log = LoggerFactory.getLogger(JmxAttributeAdapter.class);
     

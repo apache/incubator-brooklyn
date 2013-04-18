@@ -1,7 +1,6 @@
 package brooklyn.entity
 
 import static org.testng.Assert.*
-import groovy.transform.InheritConstructors
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -33,29 +32,29 @@ public class EffectorSayHiTest {
 
     private Application app;
     private MyEntity e;
-    
+
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = new TestApplicationImpl();
         e = new MyEntity(app);
         Entities.startManagement(app);
     }
-    
+
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
         if (app != null) Entities.destroyAll(app);
     }
-    
+
     @Test
     public void testFindEffectors() {
         assertEquals("sayHi1", e.SAY_HI_1.getName());
         assertEquals(["name", "greeting"], e.SAY_HI_1.getParameters()[0..1]*.getName());
         assertEquals("says hello", e.SAY_HI_1.getDescription());
-		
+
 		assertEquals("sayHi1", e.SAY_HI_1_ALT.getName());
 		assertEquals(["name", "greeting"], e.SAY_HI_1_ALT.getParameters()[0..1]*.getName());
 		assertEquals("says hello", e.SAY_HI_1_ALT.getDescription());
-		
+
 		assertEquals("sayHi2", e.SAY_HI_2.getName());
 		assertEquals(["name", "greeting"], e.SAY_HI_2.getParameters()[0..1]*.getName());
 		assertEquals("says hello", e.SAY_HI_2.getDescription());
@@ -95,7 +94,7 @@ public class EffectorSayHiTest {
 
         assertEquals("hello Bob", e.SAY_HI_1.call(e, [name:"Bob"]) )
         assertEquals("hello Bob", e.invoke(e.SAY_HI_1, [name:"Bob"]).get() );
-		
+
 		assertEquals("hello Bob", e.SAY_HI_1_ALT.call(e, [name:"Bob"]) )
     }
 
@@ -141,7 +140,7 @@ interface CanSayHi {
 	static Effector<String> SAY_HI_1 = new MethodEffector<String>(CanSayHi.&sayHi1);
 	//slightly longer-winded pojo also supported
 	static Effector<String> SAY_HI_1_ALT = new MethodEffector<String>(CanSayHi.class, "sayHi1");
-	
+
 	@Description("says hello")
 	public String sayHi1(
 		@NamedParameter("name") String name,
@@ -149,8 +148,8 @@ interface CanSayHi {
 
 	//finally there is a way to provide a class/closure if needed or preferred for some odd reason
 	static Effector<String> SAY_HI_2 =
-	
-		//groovy 1.8.2 balks at runtime during getCallSiteArray (bug 5122) if we use anonymous inner class 
+
+		//groovy 1.8.2 balks at runtime during getCallSiteArray (bug 5122) if we use anonymous inner class
 //	  new ExplicitEffector<CanSayHi,String>(
 //			"sayHi2", String.class, [
 //					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
@@ -167,14 +166,28 @@ interface CanSayHi {
 					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
 				],
 			"says hello", { e, m -> e.sayHi2(m) })
-	
+
 	public String sayHi2(String name, String greeting);
 
 }
 
-@InheritConstructors
 public class MyEntity extends AbstractEntity implements CanSayHi {
-	public String sayHi1(String name, String greeting) { "$greeting $name" }
+    MyEntity() {
+    }
+
+    MyEntity(Map flags) {
+        super(flags)
+    }
+
+    MyEntity(Map flags, Entity parent) {
+        super(flags, parent)
+    }
+
+    MyEntity(Entity parent) {
+        super(parent)
+    }
+
+    public String sayHi1(String name, String greeting) { "$greeting $name" }
 	public String sayHi2(String name, String greeting) { "$greeting $name" }
 }
 

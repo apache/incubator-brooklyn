@@ -75,7 +75,7 @@ public class EntityConfigMapUsageTest {
     @Test
     public void testConfigSetToNullIsAvailable() throws Exception {
         TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
-                .configure(strKeyWithDefault, null));
+                .configure(strKeyWithDefault, (String)null));
         
         assertEquals(entity.getConfig(strKeyWithDefault), null);
     }
@@ -83,7 +83,7 @@ public class EntityConfigMapUsageTest {
     @Test
     public void testInheritedConfigSetToNullIsAvailable() throws Exception {
         TestEntity parent = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
-                .configure(strKeyWithDefault, null));
+                .configure(strKeyWithDefault, (String)null));
         TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         assertEquals(entity.getConfig(strKeyWithDefault), null);

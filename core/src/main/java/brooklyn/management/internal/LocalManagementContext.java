@@ -43,13 +43,9 @@ public class LocalManagementContext extends AbstractManagementContext {
         this(BrooklynProperties.Factory.newDefault());
     }
 
-    public LocalManagementContext(Map<?,?> brooklynProperties) {
-        this();
-        configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
-     }
-
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
-       super(brooklynProperties);
+        super(brooklynProperties);
+        configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
     }
 
     public void prePreManage(Entity entity) {

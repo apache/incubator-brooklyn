@@ -20,7 +20,7 @@ import brooklyn.util.flags.SetFromFlag
 import com.google.common.collect.Iterables
 
 
-public class MockContainerEntity extends AbstractGroupImpl implements BalanceableContainer<Entity>, Startable {
+public class MockContainerEntity extends AbstractGroupImpl implements BalanceableContainer<Movable>, Startable {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockContainerEntity)
 
@@ -88,7 +88,7 @@ public class MockContainerEntity extends AbstractGroupImpl implements Balanceabl
     }
 
     @Override
-    public Set<Entity> getBalanceableItems() {
+    public Set<Movable> getBalanceableItems() {
         return new LinkedHashSet<Entity>(getMembers())
     }
 

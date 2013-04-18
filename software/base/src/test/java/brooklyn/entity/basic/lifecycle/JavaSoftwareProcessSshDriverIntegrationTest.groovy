@@ -1,8 +1,9 @@
 package brooklyn.entity.basic.lifecycle
 
+import brooklyn.entity.Entity
+
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
-import groovy.transform.InheritConstructors
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
@@ -54,9 +55,11 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
     }
 }
 
-@InheritConstructors
 class MyEntity extends SoftwareProcessImpl {
-    
+    public MyEntity(Entity parent){
+        super(parent)
+    }
+
     @Override
     Class getDriverInterface() {
         return MyEntityDriver;

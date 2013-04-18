@@ -1,6 +1,8 @@
 package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import brooklyn.entity.drivers.EntityDriverManager;
 import groovy.time.TimeDuration;
 
 import java.net.InetAddress;
@@ -82,7 +84,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	}
 
   	protected SoftwareProcessDriver newDriver(MachineLocation loc){
-        return getManagementContext().getEntityDriverManager().build(this,(Location)loc);
+        EntityDriverManager entityDriverManager = getManagementContext().getEntityDriverManager();
+        return (SoftwareProcessDriver)entityDriverManager.build(this, loc);
     }
 
     protected MachineLocation getMachineOrNull() {
@@ -350,7 +353,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         Set<Integer> ports = MutableSet.of(22);
         for (ConfigKey k: getEntityType().getConfigKeys()) {
             if (PortRange.class.isAssignableFrom(k.getType())) {
-                PortRange p = getConfig(k);
+                PortRange p = (PortRange)getConfig(k);
                 if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
             }
         }
