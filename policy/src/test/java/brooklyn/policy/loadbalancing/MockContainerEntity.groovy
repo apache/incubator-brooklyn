@@ -1,4 +1,6 @@
-package brooklyn.policy.loadbalancing;
+package brooklyn.policy.loadbalancing
+
+import brooklyn.util.MutableMap;
 
 import java.util.concurrent.locks.ReentrantLock
 
@@ -36,13 +38,23 @@ public class MockContainerEntity extends AbstractGroupImpl implements Balanceabl
 
     ReentrantLock _lock = new ReentrantLock();
 
-    public MockContainerEntity (Map props=[:], Entity parent, long delay=0) {
+    public MockContainerEntity (Map props, Entity parent, long delay=0) {
         super(props, parent)
         this.delay = delay
     }
 
-    public MockContainerEntity (Map props=[:], long delay=0) {
+    public MockContainerEntity (Entity parent, long delay=0) {
+        super(MutableMap.of(), parent)
+        this.delay = delay
+    }
+
+    public MockContainerEntity (Map props, long delay=0) {
         super(props, null)
+        this.delay = delay
+    }
+
+    public MockContainerEntity (long delay=0) {
+        super(MutableMap.of(), null)
         this.delay = delay
     }
 

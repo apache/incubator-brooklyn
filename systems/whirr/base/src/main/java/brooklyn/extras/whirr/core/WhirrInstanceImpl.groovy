@@ -22,7 +22,7 @@ public class WhirrInstanceImpl extends AbstractGroupImpl implements WhirrInstanc
         
     public static final BasicAttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
 
-    public WhirrInstanceImpl(Map<?,?> props, Entity parent) {
+    public WhirrInstanceImpl(Map props, Entity parent) {
         super(props, parent);
         setAttribute(Changeable.GROUP_SIZE, 0);
         Cluster.Instance instance = getConfig(INSTANCE);
@@ -33,7 +33,7 @@ public class WhirrInstanceImpl extends AbstractGroupImpl implements WhirrInstanc
         this(Collections.emptyMap(), null);
     }
         
-    public WhirrInstanceImpl(Map<?,?> props) {
+    public WhirrInstanceImpl(Map props) {
         this(props, null);
     }
         
