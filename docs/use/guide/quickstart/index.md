@@ -5,23 +5,24 @@ toc: ../guide_toc.json
 categories: [use, guide]
 ---
 
+{% include fields.md %}
+
 This guide will get you up and running with Brooklyn quickly. You will become familiar with launching Brooklyn from the command line, using the web interface and deploying an application (to a public cloud).
 
 ### Before We Start
 You are going to need some basic tools (that are normally installed by default). You will need `curl`, `wget`, `tar`, `ssh` and `ssh-keygen`.
 
 ### Download Brooklyn
+
 Download the Brooklyn distribution. This contains Brooklyn, ready to run.
 
-[Download Page]({{site.url}}/start/download.html#distro) (Get the Distro as a tgz.)
-
-Save the Distro tgz file to your home directory `~/`, or a location of your choice. 
+Save the [Distro tgz]({{ this_dist_url_tgz }}) file to your home directory `~/`, or a location of your choice. (Other [download options]({{site.url}}/start/download.html) are available.)
 
 Untar the tgz. Each Distro is timestamped, so your filename will be different. 
 
 	$ tar -zxf brooklyn-dist-<version>-<timestamp>-dist.tar.tar.gz
 
-This will create a brooklyn-\<version\> folder. At the time of writing this was `brooklyn-0.5.0-SNAPSHOT`.
+This will create a brooklyn-\<version\> folder. At the time of writing this was `brooklyn-0.5.0-SNAPSHOT`. <!-- BROOKLYN VERSION -->
 
 Let's setup some paths for easy commands.
 
@@ -37,7 +38,7 @@ Running Brooklyn now will launch the web interface, but there will be little to 
 
 Brooklyn will output the address of the management interface:
 
-`... Started Brooklyn console at http://127.0.0.1:8081/` [link](http://127.0.0.1:8081/)
+`... Started Brooklyn console at http://127.0.0.1:8081/` ([link](http://127.0.0.1:8081/))
 
 Login with default credentials: `admin:password`
 
@@ -45,7 +46,7 @@ Stop Brooklyn with ctrl-c.
 
 ### Setting up Locations and Applications
 
-Brooklyn loads  configuration parameters from `~/.brooklyn/brooklyn.properties` and a service catalog from `~/.brooklyn/catalog.xml`. 
+By default Brooklyn loads configuration parameters from `~/.brooklyn/brooklyn.properties` and a service catalog from `~/.brooklyn/catalog.xml`. 
 
 Create a .brooklyn folder:
 
@@ -54,27 +55,25 @@ Create a .brooklyn folder:
 Then download the following default/template files.
 
 ### brooklyn.properties
-Download the [brooklyn.properties example](brooklyn.properties) (to `~/.brooklyn`).
+Download the template [brooklyn.properties](brooklyn.properties) (to `~/.brooklyn`).
 
 brooklyn.properties is a standard java .properties file. 
 
 Edit this file (in any text editor) to add credentials for your favorite cloud.
 
 ### catalog.xml
-Download the [catalog.xml example](catalog.xml) (to `~/.brooklyn`).
+Download the template [catalog.xml](catalog.xml) (to `~/.brooklyn`).
 
 catalog.xml is catalog of application or service blueprints. The example file contains two demos which will be automatically downloaded from the web if you run them.
 
-Edit this file (text editor) and check that the links to the demo applications' .jars are valid. At the time of writing these were for version `0.5.0-SNAPSHOT`, but if this has changed you may need to update the links.
+Edit this file (in any text editor) and check that the links to the demo applications' .jars are valid. At the time of writing these were for version `0.5.0-SNAPSHOT`, but if this has changed you may need to update the links. <!-- BROOKLYN VERSION -->
 
-### SSH Keys
-If this is a new machine, or you haven't used SSH before, you will need to create keys for Brooklyn to use.
+### SSH Key
+If this is a new machine, or you haven't used SSH before, you will need to create keys for Brooklyn to use. (Accept all default options, as this will setup password-less keys in the default location and Brooklyn will find them.)
 
 	$ ssh-keygen -t rsa
-	$ ssh-keygen -t dsa
 
-These commands will setup keys in the default directories, and Brooklyn will find them.
-
+It is advisable *not* to set a password for this key. If you are using an existing key that already has a password please add it to your `brooklyn.properties` file.
 
 ### 3-2-1 Go!
 
