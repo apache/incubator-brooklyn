@@ -11,15 +11,10 @@ This guide will get you up and running with Brooklyn quickly. You will become fa
 You are going to need some basic tools (that are normally installed by default). You will need `curl`, `wget`, `tar`, `ssh` and `ssh-keygen`.
 
 ### Download Brooklyn
+
 Download the Brooklyn distribution. This contains Brooklyn, ready to run.
 
-<<<<<<< HEAD
-[Download Page]({{site.url}}/start/download.html#distro) (Get the Distro as a tgz.)
-
-Save the Distro tgz file to your home directory `~/`, or a location of your choice. 
-=======
 Save the [Distro tgz]({{ this_dist_url_tgz }}) file to your home directory `~/`, or a location of your choice. (Other [download options]({{site.url}}/start/download.html) are available.)
->>>>>>> 7f47f59... SSH Keys: Mention no password.
 
 Untar the tgz. Each Distro is timestamped, so your filename will be different. 
 
