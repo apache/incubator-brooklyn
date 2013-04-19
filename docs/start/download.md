@@ -3,39 +3,51 @@ layout: page
 title: Downloads
 toc: ../toc.json
 ---
-
-## Contents
-
-* [The Distro](#distro) (Best for getting started.)
-* [A Single Jar](#alljar) 
-* [Getting Started & Release Notes](#getstart-releasenotes)
-* [Examples](#examples)
-* [Maven](#maven)  
-* [Source Code](#source)
-
-<a name="distro"></a>
-## The Distro
-
 {% include fields.md %}
 
 First time user? The [getting started]({{ site.url }}/use/guide/quickstart/index.html) guide will walk you through downloading Brooklyn, setup of your `brooklyn.properties` and `catalog.xml` files, and then trying the [examples](#examples). 
 
-The Distribution archives contain Brooklyn as a standalone executable package, and 
-are available in the following formats and locations:
+## Download Version {{ site.brooklyn-version }}
 
-* **v{{ site.brooklyn-version }}**: 
-  **[zip]({{ this_dist_url_zip }})** 
-  **[tgz]({{ this_dist_url_tgz }})**
-  **[dir]({{ this_dist_url_dir }})**
-  from {% if SNAPSHOT %}[Sonatype]({{ this_dist_url_search }})
-  {% else %}[Maven Central]({{ this_dist_url_search }})
-  {% endif %} 
-* **all stable versions**: 
-  at [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-dist/)
-  and [Cloudsoft]({{ cloudsoft_releases_base_url}}io/brooklyn/brooklyn-dist/) 
-* **all snapshot versions**: 
-  at [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-dist/)
-  and [Cloudsoft]({{ cloudsoft_snapshots_base_url }}io/brooklyn/brooklyn-dist/)
+<table>
+<tr>
+	<th style='text-align:left'>Download</th>
+	<th style='text-align:left'>File/Format</th>
+	<th>checksums <small><a href="/meta/verify.html" title='Instructions on verifying the integrity of your downloads.'>(?)</a></small></th>
+</tr>
+<tr>
+	<td style='text-align:left;vertical-align:top' rowspan='2'>Distro</td>
+	<td style='text-align:left'><a href='{{ this_dist_url_zip }}' title='Download ZIP archive'>brooklyn-dist-{{ site.brooklyn-version }}-dist.zip</a></td>
+	<td><small><a href='{{ this_dist_url_zip }}.asc'>PGP</a>, <a href='{{ this_dist_url_zip }}.sha1'>SHA1</a></small></td>
+</tr>
+<tr>
+	<td style='text-align:left'><a href='{{ this_dist_url_tgz }}' title='Download TGZ archive'>brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz</a></td>
+	<td ><small><a href='{{ this_dist_url_tgz }}.asc'>PGP</a>, <a href='{{ this_dist_url_tgz }}.sha1'>SHA1</a></small></td>
+</tr>
+<tr>
+	<td style='text-align:left'>All Jar</td>
+	<td style='text-align:left'><a href='{{ this_alljar_url_jar }}' title='Download the ALL JAR'>brooklyn-all-{{ site.brooklyn-version }}-with-dependencies.jar</a></td>
+	<td ><small><a href='{{ this_alljar_url_jar }}.asc'>PGP</a>, <a href='{{ this_alljar_url_jar }}.sha1'>SHA1<a/></small></td>
+</tr>
+<tr>
+	<td style='text-align:left'>Release notes</td>
+	<td style='text-align:left'><a href='/start/release-notes.html'>{{ site.brooklyn-version }}</a></td>
+	<td> - </td>
+</tr>
+</table>
+{% if SNAPSHOT %}
+<span style='float:right'><small>Source: <a href='{{ this_anything_url_search }}'>Sonatype</a></small></span>
+{% else %}
+<span style='float:right'><small>Source: <a href='{{ this_anything_url_search }}'>Maven Central</a></small></span>
+{% endif %}
+
+<a name="distro"></a>
+## The Distro
+
+The distribution archive contains Brooklyn as a standalone executable package.
+
+* previous stable versions: [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-dist/)
+* previous snapshot versions: [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-dist/)
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %} 
 **Please note**: You are reading the documentation for a snapshot version of Brooklyn.
@@ -46,33 +58,21 @@ You should always confirm that the source and date for snapshot artifacts.
 <a name="alljar"></a>
 ## The All Jar
 
-You can grab a single JAR containing all of Brooklyn and its dependencies 
-here:
+This is a single JAR containing all of Brooklyn and its dependencies, for developing Brooklyn into your own applications. Just download your preferred flavour and add it to your classpath.
 
-* **v{{ site.brooklyn-version }}** at
-  {% if SNAPSHOT %}[Sonatype]({{ this_alljar_url_search }})
-  {% else %}[Maven Central]({{ this_alljar_url_search }})
-  {% endif %}: 
-  **[jar]({{ this_alljar_url_jar }})** 
-  **[dir]({{ this_alljar_url_dir }})** 
-* **all stable versions**: 
-  at [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-all/)
-  and [Cloudsoft]({{ cloudsoft_releases_base_url}}/io/brooklyn/brooklyn-all/) 
-* **all snapshot versions**: 
-  at [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-all/)
-  and [Cloudsoft]({{ cloudsoft_snapshots_base_url }}io/brooklyn/brooklyn-all/)
+{% if SNAPSHOT %}{% else %}
+* [Version {{ site.brooklyn-version }}](http://search.maven.org/#artifactdetails|io.brooklyn|brooklyn-all|{{ site.brooklyn-version }}|jar) 
+{% endif %}
+* previous stable versions: [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-all/)
+* previous snapshot versions: [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-all/)
 
-Just download your preferred flavour and add it to your classpath{% if site.brooklyn-version contains 'SNAPSHOT' %} 
-(but again, check the source and date for snapshot JARs){% endif %}.
+{% if site.brooklyn-version contains 'SNAPSHOT' %} 
+**Again**, check the source and date for SNAPSHOT JARs.
+{% endif %}
 
+## Release Notes
 
-<a name="getstart-releasenotes"></a>
-## Getting Started and Release Notes
-
-First time using Brooklyn? Read [Getting Started]({{ site.url }}/use/guide/quickstart/index.html) to set up your `brooklyn.properties` and `catalog.xml` files.
-
-Release notes can be found [here]({{ site.url }}/start/release-notes.html)
-
+Release notes can be found [here]({{ site.url }}/start/release-notes.html).
 
 <a name="examples"></a>
 ## Examples
@@ -117,7 +117,7 @@ A good example to start with is the [Elastic Web Cluster]({{site.url}}/use/examp
 <a name="maven"></a>
 ## Maven
 
-If you use maven, you can add Brooklyn with the following in your pom:
+If you use Maven, you can add Brooklyn with the following in your pom:
 
 {% highlight xml %}
     <dependencies>
