@@ -40,7 +40,7 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
     }
 
     @SetFromFlag("version")
-    BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.37");
+    BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.0.39");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
