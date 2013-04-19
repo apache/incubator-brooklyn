@@ -13,7 +13,7 @@ First time user? The [getting started]({{ site.url }}/use/guide/quickstart/index
 <tr>
 	<th style='text-align:left'>Download</th>
 	<th style='text-align:left'>File/Format</th>
-	<th>checksums <small><a href="/meta/asc.html"  title='Instructions on verifying the integrity of your downloads.'>(?)</a></small></th>
+	<th>checksums <small><a href="/meta/verify.html" title='Instructions on verifying the integrity of your downloads.'>(?)</a></small></th>
 </tr>
 <tr>
 	<td style='text-align:left;vertical-align:top' rowspan='2'>Distro</td>
