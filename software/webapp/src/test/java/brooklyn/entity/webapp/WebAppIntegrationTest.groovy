@@ -105,7 +105,7 @@ public class WebAppIntegrationTest {
                         gotException = null
                     }
                 .every(100 * MILLISECONDS)
-                .until { gotException }
+                .until { gotException != null }
                 .limitIterationsTo(25)
                 .run();
     
