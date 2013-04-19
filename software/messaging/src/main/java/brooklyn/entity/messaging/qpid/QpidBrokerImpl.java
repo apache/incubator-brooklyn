@@ -99,18 +99,9 @@ public class QpidBrokerImpl extends JMSBroker<QpidQueue, QpidTopic> implements Q
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Set<Integer> ports = Sets.newLinkedHashSet(super.getRequiredOpenPorts());
-        ports.add(getAttribute(AMQP_PORT));
-        ports.add(getAttribute(HTTP_MANAGEMENT_PORT));
-        log.debug("getRequiredOpenPorts detected expanded (qpid) ports {} for {}", ports, this);
-        return ports;
-    }
-
-    @Override
     protected void connectSensors() {
         String serverInfoMBeanName = "org.apache.qpid:type=ServerInformation,name=ServerInformation";
-        
+
         jmxFeed = JmxFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)

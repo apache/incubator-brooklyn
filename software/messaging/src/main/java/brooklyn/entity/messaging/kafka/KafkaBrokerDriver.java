@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 by Cloudsoft Corp.
+ * Copyright 2013 by Cloudsoft Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package brooklyn.demo;
+package brooklyn.entity.messaging.kafka;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.nosql.redis.RedisCluster;
-import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.basic.SoftwareProcessDriver;
 
-/** Redis cluster. */
-public class SimpleRedisCluster extends ApplicationBuilder {
+public interface KafkaBrokerDriver extends SoftwareProcessDriver {
 
-    /** Create entities. */
-    protected void doBuild() {
-        addChild(EntitySpecs.spec(RedisCluster.class)
-                .configure("initialSize", "2")
-                .configure("clusterName", "Brooklyn"));
-    }
+    Integer getKafkaPort();
 
 }
