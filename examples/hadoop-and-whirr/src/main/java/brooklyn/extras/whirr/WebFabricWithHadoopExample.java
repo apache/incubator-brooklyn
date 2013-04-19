@@ -3,7 +3,6 @@ package brooklyn.extras.whirr;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
@@ -11,11 +10,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.apache.whirr.service.hadoop.HadoopCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +18,6 @@ import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
@@ -37,10 +30,8 @@ import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.http.HttpPollValue;
 import brooklyn.event.feed.http.HttpPolls;
-import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster;
 import brooklyn.extras.whirr.hadoop.WhirrHadoopCluster;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
@@ -75,12 +66,7 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
         //web locations
         "aws-ec2:eu-west-1",
         "aws-ec2:ap-southeast-1",
-        "aws-ec2:us-west-1"
-        
-        // cloudfoundry seems to have a timeout in upload time
-        // (in any case we don't have a clean way to initiate the proxy settings in there)
-//        "cloudfoundry:https://api.aws.af.cm/",
-    );
+        "aws-ec2:us-west-1");
 
     public static final String WAR_PATH = "classpath://hello-world-hadoop-webapp.war";
     
@@ -119,9 +105,6 @@ public class WebFabricWithHadoopExample extends AbstractApplication implements S
                 .configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH)
                 //load-balancer instances must run on 80 to work with GeoDNS (default is 8000)
                 .configure(AbstractController.PROXY_HTTP_PORT, PortRanges.fromInteger(80))
-                //CloudFoundry requires to be told what URL it should listen to, which is chosen by the GeoDNS service
-                .configure(CloudFoundryJavaWebAppCluster.HOSTNAME_TO_USE_FOR_URL,
-                        DependentConfiguration.attributeWhenReady(geoDns, Attributes.HOSTNAME))
                 );
 //                .policy(AutoScalerPolicy.builder()
 //                        .metric(DynamicWebAppCluster.AVERAGE_REQUESTS_PER_SECOND)
