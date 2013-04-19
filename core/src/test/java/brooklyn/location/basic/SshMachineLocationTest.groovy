@@ -101,9 +101,9 @@ public class SshMachineLocationTest {
         File dest = new File(System.getProperty("java.io.tmpdir")+"/"+"sssMachineLocationTest_dir/");
         dest.mkdir();
         try {
-            int result = host.installTo(null, "http://github.com/brooklyncentral/brooklyn/raw/master/README.rst", dest.getCanonicalPath()+"/");
+            int result = host.installTo(null, "https://raw.github.com/brooklyncentral/brooklyn/master/README.md", dest.getCanonicalPath()+"/");
             assertEquals(result, 0);
-            String contents = ResourceUtils.readFullyString(new FileInputStream(new File(dest, "README.rst")));
+            String contents = ResourceUtils.readFullyString(new FileInputStream(new File(dest, "README.md")));
             assertTrue(contents.contains("http://brooklyncentral.github.com"), "contents missing expected phrase; contains:\n"+contents);
         } finally {
             dest.delete()
