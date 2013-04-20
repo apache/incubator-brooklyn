@@ -40,7 +40,7 @@ public class CliIntegrationTest extends BaseCliIntegrationTest {
         BrooklynCliTest test = new BrooklynCliTest(brooklyn) {
             @Override
             public void checkConsole() {
-                assertConsoleOutput("Launching Brooklyn web console management"); // Launch message not output
+                assertConsoleOutput("Launching brooklyn app:"); // Launch message not output
                 assertNoConsoleOutput("Initiating Jersey application"); // Web console started
                 assertConsoleOutput("Started application BasicApplicationImpl"); // Application not started
                 assertConsoleOutput("Server started. Press return to stop."); // Server started message not output
