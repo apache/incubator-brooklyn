@@ -5,11 +5,12 @@ import static java.lang.String.format;
 import java.util.List;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
+import brooklyn.util.ssh.CommonCommands;
 
 import com.google.common.collect.ImmutableList;
 
@@ -40,7 +41,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
     
     @Override
     public void install() {
-        DownloadResolver resolver = entity.getManagementContext().getEntityDownloadsManager().newDownloader(this);
+        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("redis-%s", getVersion()));
@@ -48,12 +49,10 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
                 .add(CommonCommands.INSTALL_TAR)
-                .add(CommonCommands.installPackage(MutableMap.of("apt", "libjemalloc-dev", "yum", "jemalloc-devel", "port", null, "brew", null), null))
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))
                 .add("make distclean")
-                .add("cd deps; make hiredis lua jemalloc linenoise; cd ..")
-                .add("make LDFLAGS=\"-all-static\"")
+                .add("make")
                 .build();
 
         newScript(INSTALLING)
