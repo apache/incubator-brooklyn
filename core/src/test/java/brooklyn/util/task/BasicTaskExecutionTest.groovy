@@ -350,7 +350,7 @@ public class BasicTaskExecutionTest {
     @Test
     public void testScheduledTaskExecutedAfterDelay() {
         int delay = 100;
-        int maxOverhead = 250;
+        int maxOverhead = 500;
         int earlyReturnGrace = 25; // saw 13ms early return on jenkins!
         final CountDownLatch latch = new CountDownLatch(1);
         
@@ -363,9 +363,9 @@ public class BasicTaskExecutionTest {
             }};
         ScheduledTask t = new ScheduledTask(taskFactory).delay(delay);
 
+        Stopwatch stopwatch = new Stopwatch().start();
         em.submit(t);
         
-        Stopwatch stopwatch = new Stopwatch().start();
         assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
         long actualDelay = stopwatch.elapsedMillis();
         
