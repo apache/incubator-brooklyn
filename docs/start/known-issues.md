@@ -4,7 +4,7 @@ title: Known Issues
 toc: ../toc.json
 ---
 
-## Unable to Provision certain types of Debian VMs
+### Unable to Provision certain types of Debian VMs
 
 *Symptom*: Brooklyn fails to provision Debian VMs (e.g. in aws-ec2).
 
