@@ -40,8 +40,9 @@ public class RedisEc2LiveTest extends AbstractEc2LiveTest {
     }
 
     private Connection getRedisConnection(RedisStore redis) {
+        String hostname = redis.getAttribute(RedisStore.HOSTNAME);
         int port = redis.getAttribute(RedisStore.REDIS_PORT);
-        Connection connection = new Connection("localhost", port);
+        Connection connection = new Connection(hostname, port);
         connection.connect();
         return connection;
     }
