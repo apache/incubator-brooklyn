@@ -25,20 +25,11 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
         super(entity, machine);
     }
 
-    @Override
-    public RedisStoreImpl getEntity() {
-        return (RedisStoreImpl) super.getEntity();
-    }
-    
-    protected Integer getRedisPort() {
-        return getEntity().getAttribute(RedisStore.REDIS_PORT);
-    }
-
     private String getExpandedInstallDir() {
         if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
         return expandedInstallDir;
     }
-    
+
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
