@@ -9,7 +9,7 @@ with DNS configured on the front-end to combine the sites,
 routing users to the location closest to them.
 
 It can combine with the [Simple Web Cluster](../webcluster) example
-or the [Portable Cloud Foundry](../portable-cloudfoundry) example,
+or the [Portable Cloud Foundry](https://github.com/cloudsoft/brooklyn-cloudfoundry) example,
 but does not assume knowledge of either of these.
 
 {% readj ../before-begin.include.md %}
@@ -119,7 +119,7 @@ an elastic Java Web App service,
 such as the `ControlledDynamicWebAppCluster` used in the
 [Simple Web Cluster](../webcluster) example, if deploying to VMs,
 or perhaps a `CloudFoundryJavaWebAppCluster` if deploying to a Cloud Foundry location
-(see below). 
+(see [brooklyn-cloudfoundry repo](https://github.com/cloudsoft/brooklyn-cloudfoundry)).
 
 {% highlight java %}
         DynamicFabric webFabric = addChild(EntitySpecs.spec(DynamicFabric.class)
@@ -128,11 +128,11 @@ or perhaps a `CloudFoundryJavaWebAppCluster` if deploying to a Cloud Foundry loc
                 .configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH));
 {% endhighlight %}
 
-Here we have specified the WAR to use with `setConfig`.
-The `war:` convenience flag used in the previous example is only available on web-aware entities;
-configuration specified with a named key can be done on any entity,
+Here we have specified the WAR to use with `configure(ElasticJavaWebAppService.ROOT_WAR, WAR_PATH)`.
+The war configuration used in the previous example is only available on web-aware entities;
+configuration specified with a ConfigKey can be done on any entity,
 and is inherited at runtime, so this provides a useful way to specify the WAR to use
-even though the web-aware entities are only constructed at runtime.     
+even though the web-aware entities are only constructed at runtime.
 
 
 ### Stitching the Fabric together with DNS
@@ -187,30 +187,9 @@ mainly spent downloading software
 
 A quicker alternative is to deploy to a Java Web App platform-as-a-service
 such as Cloud Foundry.  A major advantage here is that they can provision very quickly,
-in a matter of seconds.
-
-However most of these services use a shared load-balancer, meaning that the
-hostname requested in the URL has to match what is set up at the PaaS.
-The hostname for geo-balancing is chosen at runtime by Geoscaling
-when we are using a `smartSubdomainName`, and we need to configure this in
-any target PaaS we are using.
-*At present the ability to configure URL's is disabled in `cloudfoundry.com` accounts.
-It has been tested and confirmed to work in AppFog's hosted Cloud Foundry.*
-
-We will use the `DependentConfiguration.attributeWhenReady` convenience to
-listen for the `HOSTNAME` sensor on `geoDns` and set the relevant Cloud Foundry 
-config parameter on the `webFabric`. 
-Other PaaS targets may expose a similar config key.
-Add the following configuration line in the construction of the webFabric (which must 
-come after construction of the geoDns).
-
-{% highlight java %}
-                .configure(CloudFoundryJavaWebAppCluster.HOSTNAME_TO_USE_FOR_URL,
-                        DependentConfiguration.attributeWhenReady(geoDns, Attributes.HOSTNAME)));
-{% endhighlight %}
-
-This config key will only apply to Cloud Foundry targets, 
-so it is safe to include in your class whether or not you are deploying there.
+in a matter of seconds.  Code for this can be found in the 
+[brooklyn-cloudfoundry repo](https://github.com/cloudsoft/brooklyn-cloudfoundry), 
+along with an example global-web-fabric app.
 
 
 ### Imports
@@ -231,8 +210,6 @@ import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.extras.cloudfoundry.CloudFoundryJavaWebAppCluster;
 import brooklyn.location.basic.PortRanges;
 {% endhighlight %}
 
@@ -251,6 +228,15 @@ The following static constants are assumed (most of these as in the [Simple Web 
 The code (which can safely be omitted) is as follows:
 
 {% highlight java %}
+import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.util.CommandLineUtil;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
+// class definition, and rest of class goes here...
+
     public static final Logger log = LoggerFactory.getLogger(GlobalWebFabricExample.class);
     
     // points to the webapp to deploy (a default supplied as part of the Brooklyn examples is used here)
@@ -258,28 +244,21 @@ The code (which can safely be omitted) is as follows:
     
     // locations to deploy to if none are supplied on the command-line; for this example `localhost` will 
     // frequently not work unless Geoscaling can see it (i.e. it has a public IP and appropriate firewall settings)
-    static final List<String> DEFAULT_LOCATIONS = [
+    static final List<String> DEFAULT_LOCATIONS = ImmutableList.of(
             "aws-ec2:eu-west-1",
             "aws-ec2:ap-southeast-1",
-            "aws-ec2:us-west-1", 
-        ];
+            "aws-ec2:us-west-1" );
         
     public static void main(String[] argv) {
         List<String> args = Lists.newArrayList(argv);
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String locations = CommandLineUtil.getCommandLineOption(args, "--locations", Joiner.on(",").join(DEFAULT_LOCATIONS));
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+                .application(EntitySpecs.appSpec(GlobalWebFabricExample.class).displayName("Brooklyn Global Web Fabric Example"))
                 .webconsolePort(port)
-                .launch();
-
-        List<Location> locs = new LocationRegistry().getLocationsById(Arrays.asList(locations));
-
-        StartableApplication app = new GlobalWebFabricExample()
-                .appDisplayName("Brooklyn Global Web Fabric Example")
-                .manage(server.getManagementContext());
-        
-        app.start(locs);
+                .locations(Arrays.asList(locations))
+                .start();
         
         Entities.dumpInfo(app);
     }
@@ -305,8 +284,7 @@ Let's look at the management web console, on port 8081 (default credentials are 
 
 [![Web Console Map](console-map-w700.png "Web Console Map")](console-map.png) 
 
-This shows the targets in Seattle (AppFog's Cloud Foundry), Ireland (AWS eu-west-1),
-and Singapore (AWS ap-southeast-1),
+This shows the targets (e.g. Ireland (AWS eu-west-1),  Singapore (AWS ap-southeast-1))
 as well as a few other places (wrong locations picked up for some AWS IP's!).
 This also shows the progress of the most recent tasks.
 
