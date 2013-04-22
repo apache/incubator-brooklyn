@@ -62,7 +62,7 @@ Other versions with documentation available are listed below.
 
 <!--- archive version -->
 
-This is the archived documentation for Brooklyn v{{ site.brooklyn-version }}
+This is the archived documentation for Brooklyn {{ site.brooklyn-version }}
 (generated {{ site.time }}, archived under {{ site.url }}).
 
 [View current documentation here.](/meta/versions.html)
@@ -77,9 +77,7 @@ This is the archived documentation for Brooklyn v{{ site.brooklyn-version }}
 
 * **[0.5.0-rc.1](/v/0.5.0-rc.1)**: includes new JS GUI and REST API, rebind/persistence support, cleaner model and naming conventions, more entities (Apr 2013)
 
-* **[v0.4.0](/v/0.4.0/)**: initial public GA release of Brooklyn to Maven Central, supporting wide range of entities and examples (Jan 2013)
-
-
+* **[0.4.0](/v/0.4.0/)**: initial public GA release of Brooklyn to Maven Central, supporting wide range of entities and examples (Jan 2013)
 
 
 Note: To prevent accidentally referring to out-of-date information,
@@ -87,3 +85,23 @@ a banner is displayed when accessing specific versions from the archive.
 You may 
 <a href="#" onclick="set_user_versions_all();">disable all warnings</a> or
 <a href="#" onclick="clear_user_versions();">re-enable all warnings</a>.
+
+
+### Versioning
+
+Brooklyn uses the [semantic versioning](http://semver.org/) guidelines. Releases will be numbered with the following format:
+
+`Brooklyn <major>.<minor>.<patch>`
+
+Breaking backward compatibility increments the `<major>` version.
+New additions without breaking backward compatibility ups the `<minor>` version.
+Bug fixes and misc changes bumps the `<patch>` version.
+New major and minor releases zero the less significant counters.
+
+Additionally, Brooklyn's release process include Snapshots, Milestones and Release Candidates.
+
+A Snapshot (`-SNAPSHOT`) is the bleeding edge. This will not be stable.
+
+Milestone versions (`-Mn`) are frozen snapshots. Some code features may be stable, but the documentation and examples may not be complete.
+
+A Release Candidate (`-rc.n`) is a just-about-ready version. Release candidates are tested against our acceptance criteria, and qualifying builds are promoted as final.
