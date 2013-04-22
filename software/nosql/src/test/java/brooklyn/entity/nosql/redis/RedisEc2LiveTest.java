@@ -29,7 +29,7 @@ public class RedisEc2LiveTest extends AbstractEc2LiveTest {
         app.start(ImmutableList.of(loc));
         EntityTestUtils.assertAttributeEqualsEventually(redis, RedisStore.SERVICE_UP, true);
 
-        RedisSupport support = new RedisSupport(redis);
+        JedisSupport support = new JedisSupport(redis);
         try {
             support.redisTest();
         } finally {

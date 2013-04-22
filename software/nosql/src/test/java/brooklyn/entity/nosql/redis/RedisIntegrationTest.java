@@ -66,7 +66,7 @@ public class RedisIntegrationTest {
 
         EntityTestUtils.assertAttributeEqualsEventually(redis, Startable.SERVICE_UP, true);
 
-        RedisSupport support = new RedisSupport(redis);
+        JedisSupport support = new JedisSupport(redis);
         try {
             support.redisTest();
         } finally {
