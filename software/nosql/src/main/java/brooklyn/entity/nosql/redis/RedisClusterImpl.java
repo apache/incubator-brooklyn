@@ -3,54 +3,49 @@ package brooklyn.entity.nosql.redis;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.catalog.Catalog;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.group.DynamicClusterImpl;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.util.MutableMap;
 
 import com.google.common.collect.Maps;
 
-/**
- * A cluster of {@link RedisStore}s with ione master and a group of slaves.
- *
- * The slaves are contained in a {@link DynamicCluster} which can be resized by a policy if required.
- *
- * TODO add sensors with aggregated Redis statistics from cluster
- */
-@Catalog(name="Redis Cluster", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.jpeg")
-public class RedisCluster extends AbstractEntity implements Startable {
+public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
     Map redisProperties = Maps.newLinkedHashMap();
-    RedisCluster master;
+    RedisStore master;
     DynamicCluster slaves;
 
-    public RedisCluster() {
+    public RedisClusterImpl() {
         this(MutableMap.of(), null);
     }
-    public RedisCluster(Map properties) {
+    public RedisClusterImpl(Map properties) {
         this(properties, null);
     }
-    public RedisCluster(Entity parent) {
+    public RedisClusterImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public RedisCluster(Map properties, Entity parent) {
+    public RedisClusterImpl(Map properties, Entity parent) {
         super(properties, parent);
 
         redisProperties.putAll(properties);
-        redisProperties.put("factory", new BasicConfigurableEntityFactory(RedisSlave.class));
     }
 
     @Override
     public void start(Collection<? extends Location> locations) {
-        master = new RedisCluster(redisProperties, this);
+        master = addChild(EntitySpecs.spec(RedisStore.class)
+                .configure(redisProperties));
+        Entities.manage(master);
         master.start(locations);
         redisProperties.put("master", master);
         
-        slaves = new DynamicClusterImpl(redisProperties, this);
+        slaves = addChild(EntitySpecs.spec(DynamicCluster.class)
+                .configure(redisProperties)
+                .configure(DynamicCluster.FACTORY, new BasicConfigurableEntityFactory(RedisSlave.class)));
         slaves.start(locations);
         
         setAttribute(Startable.SERVICE_UP, true);
@@ -58,8 +53,8 @@ public class RedisCluster extends AbstractEntity implements Startable {
 
     @Override
     public void stop() {
-        slaves.stop();
-        master.stop();
+        if (slaves != null) slaves.stop();
+        if (master != null) master.stop();
 
         setAttribute(Startable.SERVICE_UP, false);
     }
