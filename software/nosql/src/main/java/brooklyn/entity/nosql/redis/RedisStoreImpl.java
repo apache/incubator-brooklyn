@@ -1,7 +1,5 @@
 package brooklyn.entity.nosql.redis;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -14,6 +12,7 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshValueFunctions;
+import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
@@ -54,8 +53,14 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
 
         connectServiceUpIsRunning();
 
+        // Find an SshMachineLocation for the UPTIME feed
+        Optional<Location> location = Iterables.tryFind(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
+        if (!location.isPresent()) throw new IllegalStateException("Could not find SshMachineLocation in list of locations");
+        SshMachineLocation machine = (SshMachineLocation) location.get();
+
         sshFeed = SshFeed.builder()
                 .entity(this)
+                .machine(machine)
                 .poll(new SshPollConfig<Integer>(UPTIME)
                         .command(getDriver().getRunDir() + "/bin/redis-cli info")
                         .onError(Functions.constant(-1))
@@ -96,6 +101,11 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
     public String getAddress() {
         MachineLocation machine = getMachineOrNull();
         return (machine != null) ? machine.getAddress().getHostAddress() : null;
+    }
+
+    @Override
+    public Integer getRedisPort() {
+        return getAttribute(RedisStore.REDIS_PORT);
     }
 
 }

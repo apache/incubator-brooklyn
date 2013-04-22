@@ -41,4 +41,6 @@ public interface RedisStore extends SoftwareProcess, DataStore {
 
     String getAddress();
 
+    Integer getRedisPort();
+
 }
