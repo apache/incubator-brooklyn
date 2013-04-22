@@ -79,7 +79,6 @@ This is the archived documentation for Brooklyn {{ site.brooklyn-version }}
 
 * **[0.4.0](/v/0.4.0/)**: initial public GA release of Brooklyn to Maven Central, supporting wide range of entities and examples (Jan 2013)
 
-
 Note: To prevent accidentally referring to out-of-date information,
 a banner is displayed when accessing specific versions from the archive.
 You may 
