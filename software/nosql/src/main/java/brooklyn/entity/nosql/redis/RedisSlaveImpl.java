@@ -15,13 +15,13 @@ public class RedisSlaveImpl extends RedisStoreImpl implements RedisSlave {
     public RedisSlaveImpl() {
         this(MutableMap.of(), null);
     }
-    public RedisSlaveImpl(Map properties) {
+    public RedisSlaveImpl(Map<?, ?> properties) {
         this(properties, null);
     }
     public RedisSlaveImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public RedisSlaveImpl(Map properties, Entity parent) {
+    public RedisSlaveImpl(Map<?, ?> properties, Entity parent) {
         super(properties, parent);
     }
 

@@ -71,7 +71,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
                 .body.append("./bin/redis-server redis.conf")
                 .execute();
     }
- 
+
 
     @Override
     public boolean isRunning() {
