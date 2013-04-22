@@ -10,11 +10,13 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import redis.clients.jedis.Connection
+import brooklyn.entity.basic.ApplicationBuilder
+import brooklyn.entity.basic.Entities
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.trait.Startable
 import brooklyn.location.Location
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
 
 /**
@@ -31,15 +33,15 @@ public class RedisIntegrationTest {
     private Location testLocation
     private RedisStore redis
 
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = new TestApplicationImpl();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         testLocation = new LocalhostMachineProvisioningLocation(name:'london')
     }
 
-    @AfterMethod(groups = "Integration")
+    @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app != null) app.stop()
+        if (app != null) Entities.destroyAll(app);
     }
 
     /**
@@ -48,7 +50,7 @@ public class RedisIntegrationTest {
     // FIXME Marked as WIP because failing in jenkins; environmental differences?
     @Test(groups = ["Integration"])
     public void canStartupAndShutdown() {
-        redis = new RedisStore(parent:app);
+        redis = app.createAndManageChild(EntitySpecs.spec(RedisStore.class));
         app.start([ testLocation ])
         executeUntilSucceeds() {
             assertTrue redis.getAttribute(Startable.SERVICE_UP)
@@ -65,7 +67,7 @@ public class RedisIntegrationTest {
     @Test(groups = ["Integration"])
     public void testRedisConnection() {
         // Start Redis
-        redis = new RedisStore(parent:app)
+        redis = app.createAndManageChild(EntitySpecs.spec(RedisStore.class));
         app.start([ testLocation ])
         executeUntilSucceeds {
             assertTrue redis.getAttribute(Startable.SERVICE_UP)

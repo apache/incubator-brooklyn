@@ -21,13 +21,13 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     private String expandedInstallDir;
 
-    public RedisStoreSshDriver(RedisStore entity, SshMachineLocation machine) {
+    public RedisStoreSshDriver(RedisStoreImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
     @Override
-    public RedisStore getEntity() {
-        return (RedisStore) super.getEntity();
+    public RedisStoreImpl getEntity() {
+        return (RedisStoreImpl) super.getEntity();
     }
     
     protected Integer getRedisPort() {

@@ -4,20 +4,19 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.nosql.Shard;
 import brooklyn.util.MutableMap;
 
-public class RedisShard extends AbstractEntity implements Shard {
-    public RedisShard() {
+public class RedisShardImpl extends AbstractEntity implements RedisShard {
+    public RedisShardImpl() {
         this(MutableMap.of(), null);
     }
-    public RedisShard(Map properties) {
+    public RedisShardImpl(Map properties) {
         this(properties, null);
     }
-    public RedisShard(Entity parent) {
+    public RedisShardImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public RedisShard(Map properties, Entity parent) {
+    public RedisShardImpl(Map properties, Entity parent) {
         super(properties, parent);
     }
 }

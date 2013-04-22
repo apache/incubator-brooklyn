@@ -3,62 +3,35 @@ package brooklyn.entity.nosql.redis;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.nosql.DataStore;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
-import brooklyn.util.flags.SetFromFlag;
 
 /**
  * An entity that represents a Redis key-value store service.
  *
  * TODO add sensors with Redis statistics using INFO command
  */
-@Catalog(name="Redis Server", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.jpeg")
-public class RedisStore extends SoftwareProcessImpl implements DataStore {
+public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class);
 
-    @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.6.7");
-
-    @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
-            SoftwareProcess.DOWNLOAD_URL, "http://redis.googlecode.com/files/redis-${version}.tar.gz");
-
-    public static final PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", 6379);
-    public static final ConfigKey<String> REDIS_CONFIG_FILE = new BasicConfigKey<String>(String.class, "redis.config.file", "Redis user configuration file");
-    public static final AttributeSensor<Integer> UPTIME = new BasicAttributeSensor<Integer>(Integer.class, "redis.uptime", "Redis uptime in seconds");
-
-    public RedisStore() {
+    public RedisStoreImpl() {
         this(MutableMap.of(), null);
     }
-    public RedisStore(Map properties) {
+    public RedisStoreImpl(Map properties) {
         this(properties, null);
     }
-    public RedisStore(Entity parent) {
+    public RedisStoreImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public RedisStore(Map properties, Entity parent) {
+    public RedisStoreImpl(Map properties, Entity parent) {
         super(properties, parent);
-
-        setConfigIfValNonNull(REDIS_PORT, properties.get("redisPort"));
-        setConfigIfValNonNull(REDIS_CONFIG_FILE, properties.get("configFile"));
     }
     
     @Override
@@ -93,6 +66,7 @@ public class RedisStore extends SoftwareProcessImpl implements DataStore {
         return (RedisStoreDriver) super.getDriver();
     }
     
+    @Override
     public String getAddress() {
         MachineLocation machine = getMachineOrNull();
         return (machine != null) ? machine.getAddress().getHostAddress() : null;
@@ -122,6 +96,7 @@ public class RedisStore extends SoftwareProcessImpl implements DataStore {
         super.configure();
     }
 
+    @Override
     public String getConfigData(int port, boolean include) {
         String data = 
                 "daemonize yes"+"\n"+

@@ -12,21 +12,22 @@ import com.google.common.base.Preconditions;
  *
  * The {@code master} property must be set to the master Redis store entity.
  */
-public class RedisSlave extends RedisStore {
+public class RedisSlaveImpl extends RedisStoreImpl implements RedisSlave {
     RedisStore master;
 
-    public RedisSlave() {
+    public RedisSlaveImpl() {
         this(MutableMap.of(), null);
     }
-    public RedisSlave(Map properties) {
+    public RedisSlaveImpl(Map properties) {
         this(properties, null);
     }
-    public RedisSlave(Entity parent) {
+    public RedisSlaveImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public RedisSlave(Map properties, Entity parent) {
+    public RedisSlaveImpl(Map properties, Entity parent) {
         super(properties, parent);
 
+        // TODO Use config key for "master"
         Preconditions.checkArgument(properties.containsKey("master"), "The Redis master entity must be specified");
         master = (RedisStore) properties.get("master");
     }
