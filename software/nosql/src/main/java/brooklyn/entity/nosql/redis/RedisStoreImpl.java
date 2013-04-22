@@ -4,14 +4,26 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.event.feed.ssh.SshFeed;
+import brooklyn.event.feed.ssh.SshPollConfig;
+import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.MutableMap;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 
 /**
  * An entity that represents a Redis key-value store service.
@@ -20,6 +32,8 @@ import brooklyn.util.MutableMap;
  */
 public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
     protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class);
+
+    private transient SshFeed sshFeed;
 
     public RedisStoreImpl() {
         this(MutableMap.of(), null);
@@ -39,25 +53,37 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
         super.connectSensors();
 
         connectServiceUpIsRunning();
-        
-        // TODO IF desired, port this for setting UPTIME (because legacy sshAdapter is deleted)
-//        String output = sshAdapter.newOutputValueProvider("${driver.runDir}/bin/redis-cli info").compute()
-//        for (String line : output.split("\n")) {
-//            if (line =~ /^uptime_in_seconds:/) {
-//                String data = line.trim()
-//                int colon = data.indexOf(":")
-//                return Integer.parseInt(data.substring(colon + 1))
-//            }
-//        }
+
+        sshFeed = SshFeed.builder()
+                .entity(this)
+                .poll(new SshPollConfig<Integer>(UPTIME)
+                        .command(getDriver().getRunDir() + "/bin/redis-cli info")
+                        .onError(Functions.constant(-1))
+                        .onSuccess(Functions.compose(new Function<String, Integer>(){
+                            @Override
+                            public Integer apply(@Nullable String input) {
+                                Optional<String> line = Iterables.tryFind(Splitter.on('\n').split(input), Predicates.containsPattern("uptime_in_seconds:"));
+                                if (line.isPresent()) {
+                                    String data = line.get().trim();
+                                    int colon = data.indexOf(":");
+                                    return Integer.parseInt(data.substring(colon + 1));
+                                } else {
+                                    throw new IllegalStateException();
+                                }
+                            }
+                        }, SshValueFunctions.stdout())))
+                .build();
     }
 
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
         disconnectServiceUpIsRunning();
+        if (sshFeed != null && sshFeed.isActivated()) sshFeed.stop();
     }
-    
-    public Class getDriverInterface() {
+
+    @Override
+    public Class<?> getDriverInterface() {
         return RedisStoreDriver.class;
     }
 
@@ -65,45 +91,11 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
     public RedisStoreDriver getDriver() {
         return (RedisStoreDriver) super.getDriver();
     }
-    
+
     @Override
     public String getAddress() {
         MachineLocation machine = getMachineOrNull();
         return (machine != null) ? machine.getAddress().getHostAddress() : null;
     }
-    
-    
-    // FIXME Don't want to hard-code this as SshMachineLocatoin; want generic way of doing machine.copyTo
-    @Override
-    protected SshMachineLocation getMachineOrNull() {
-        return (SshMachineLocation) super.getMachineOrNull();
-    }
-    
-    // FIXME This logic should all be in the driver
-    void doExtraConfigurationDuringStart() {
-	    int port = getAttribute(REDIS_PORT);
-        boolean include = false;
 
-        String includeName = getConfig(REDIS_CONFIG_FILE);
-        if (includeName != null && includeName.length() > 0) {
-            File includeFile = new File(includeName);
-	        include = includeFile.exists();
-        }
-
-		getMachineOrNull().copyTo(new ByteArrayInputStream(getConfigData(port, include).getBytes()), getDriver().getRunDir()+"/redis.conf");
-        if (include) getMachineOrNull().copyTo(new File(includeName), getDriver().getRunDir()+"/include.conf");
-        
-        super.configure();
-    }
-
-    @Override
-    public String getConfigData(int port, boolean include) {
-        String data = 
-                "daemonize yes"+"\n"+
-                "pidfile "+getDriver().getRunDir()+"/pid.txt"+"\n"+
-                "port "+port+"\n";
-
-        if (include) data += "include "+getDriver().getRunDir()+"/include.conf";
-        return data;
-    }
 }

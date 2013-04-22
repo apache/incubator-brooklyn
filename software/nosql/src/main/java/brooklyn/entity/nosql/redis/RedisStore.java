@@ -22,22 +22,23 @@ import brooklyn.util.flags.SetFromFlag;
 public interface RedisStore extends SoftwareProcess, DataStore {
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
+    BasicConfigKey<String> SUGGESTED_VERSION =
             new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.6.7");
 
     @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "http://redis.googlecode.com/files/redis-${version}.tar.gz");
 
     @SetFromFlag("redisPort")
-    public static final PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", 6379);
-    
-    @SetFromFlag("configFile")
-    public static final ConfigKey<String> REDIS_CONFIG_FILE = new BasicConfigKey<String>(String.class, "redis.config.file", "Redis user configuration file");
-    
-    public static final AttributeSensor<Integer> UPTIME = new BasicAttributeSensor<Integer>(Integer.class, "redis.uptime", "Redis uptime in seconds");
+    PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", 6379);
 
-    public String getAddress();
-    
-    public String getConfigData(int port, boolean include);
+    @SetFromFlag("redisConfigTemplateUrl")
+    ConfigKey<String> REDIS_CONFIG_TEMPLATE_URL = new BasicConfigKey<String>(
+            String.class, "redis.config.templateUrl", "Template file (in freemarker format) for the redis.conf config file", 
+            "classpath://brooklyn/entity/nosql/redis/redis.conf");
+
+    AttributeSensor<Integer> UPTIME = new BasicAttributeSensor<Integer>(Integer.class, "redis.uptime", "Redis uptime in seconds");
+
+    String getAddress();
+
 }
