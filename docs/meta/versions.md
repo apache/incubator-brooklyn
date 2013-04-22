@@ -104,4 +104,4 @@ A Snapshot (`-SNAPSHOT`) is the bleeding edge. This will not be stable.
 
 Milestone versions (`-Mn`) are frozen snapshots. Some code features may be stable, but the documentation and examples may not be complete.
 
-A Release Candidate (`-rc.n`) is a just-about-ready version.
+A Release Candidate (`-rc.n`) is a just-about-ready version. Release candidates are tested against our acceptance criteria, and qualifying builds are promoted as final.
