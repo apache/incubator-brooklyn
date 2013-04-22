@@ -68,10 +68,10 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
                         format("cd %s", getExpandedInstallDir()),
                         "make install PREFIX="+getRunDir())
                 .execute();
-        
-        getEntity().doExtraConfigurationDuringStart();
+
+        copyTemplate(getEntity().getConfig(RedisStore.REDIS_CONFIG_TEMPLATE_URL), "redis.conf");
     }
-    
+
     @Override
     public void launch() {
         // TODO Should we redirect stdout/stderr: format(" >> %s/console 2>&1 </dev/null &", getRunDir())

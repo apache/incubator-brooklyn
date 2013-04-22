@@ -1,12 +1,9 @@
 package brooklyn.entity.nosql.redis;
 
-import static org.testng.Assert.assertTrue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import redis.clients.jedis.Connection;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
@@ -28,25 +25,18 @@ public class RedisEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        // Start Redis
         RedisStore redis = app.createAndManageChild(EntitySpecs.spec(RedisStore.class));
         app.start(ImmutableList.of(loc));
         EntityTestUtils.assertAttributeEqualsEventually(redis, RedisStore.SERVICE_UP, true);
 
-        // Access Redis
-        Connection connection = getRedisConnection(redis);
-        assertTrue(connection.isConnected());
-        connection.disconnect();
+        RedisSupport support = new RedisSupport(redis);
+        try {
+            support.redisTest();
+        } finally {
+            redis.stop();
+        }
     }
 
-    private Connection getRedisConnection(RedisStore redis) {
-        String hostname = redis.getAttribute(RedisStore.HOSTNAME);
-        int port = redis.getAttribute(RedisStore.REDIS_PORT);
-        Connection connection = new Connection(hostname, port);
-        connection.connect();
-        return connection;
-    }
-    
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
 }

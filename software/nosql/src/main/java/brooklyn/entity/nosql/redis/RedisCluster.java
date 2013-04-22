@@ -13,7 +13,7 @@ import brooklyn.entity.trait.Startable;
  *
  * TODO add sensors with aggregated Redis statistics from cluster
  */
-@Catalog(name="Redis Cluster", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.jpeg")
+@Catalog(name="Redis Cluster", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.png")
 @ImplementedBy(RedisClusterImpl.class)
 public interface RedisCluster extends Entity, Startable {
 }

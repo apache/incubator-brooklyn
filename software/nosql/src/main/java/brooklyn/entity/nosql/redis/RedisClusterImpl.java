@@ -16,7 +16,7 @@ import brooklyn.util.MutableMap;
 import com.google.common.collect.Maps;
 
 public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
-    Map redisProperties = Maps.newLinkedHashMap();
+
     RedisStore master;
     DynamicCluster slaves;
 
@@ -31,23 +31,18 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
     }
     public RedisClusterImpl(Map properties, Entity parent) {
         super(properties, parent);
-
-        redisProperties.putAll(properties);
     }
 
     @Override
     public void start(Collection<? extends Location> locations) {
-        master = addChild(EntitySpecs.spec(RedisStore.class)
-                .configure(redisProperties));
+        master = addChild(EntitySpecs.spec(RedisStore.class));
         Entities.manage(master);
         master.start(locations);
-        redisProperties.put("master", master);
-        
+
         slaves = addChild(EntitySpecs.spec(DynamicCluster.class)
-                .configure(redisProperties)
-                .configure(DynamicCluster.FACTORY, new BasicConfigurableEntityFactory(RedisSlave.class)));
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(RedisSlave.class).configure(RedisSlave.MASTER, master)));
         slaves.start(locations);
-        
+
         setAttribute(Startable.SERVICE_UP, true);
     }
 
