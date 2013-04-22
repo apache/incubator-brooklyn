@@ -78,12 +78,6 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-systems-cloudfoundry</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-launcher</artifactId>
             <version>${project.version}</version>
         </dependency>
