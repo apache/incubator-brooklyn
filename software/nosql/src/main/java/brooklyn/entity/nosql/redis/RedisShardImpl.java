@@ -10,13 +10,13 @@ public class RedisShardImpl extends AbstractEntity implements RedisShard {
     public RedisShardImpl() {
         this(MutableMap.of(), null);
     }
-    public RedisShardImpl(Map properties) {
+    public RedisShardImpl(Map<?, ?> properties) {
         this(properties, null);
     }
     public RedisShardImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public RedisShardImpl(Map properties, Entity parent) {
+    public RedisShardImpl(Map<?, ?> properties, Entity parent) {
         super(properties, parent);
     }
 }

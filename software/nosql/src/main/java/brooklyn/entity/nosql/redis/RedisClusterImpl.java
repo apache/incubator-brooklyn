@@ -23,13 +23,13 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
     public RedisClusterImpl() {
         this(MutableMap.of(), null);
     }
-    public RedisClusterImpl(Map properties) {
+    public RedisClusterImpl(Map<?, ?> properties) {
         this(properties, null);
     }
     public RedisClusterImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public RedisClusterImpl(Map properties, Entity parent) {
+    public RedisClusterImpl(Map<?, ?> properties, Entity parent) {
         super(properties, parent);
     }
 
@@ -43,7 +43,7 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpecs.spec(RedisSlave.class).configure(RedisSlave.MASTER, master)));
         slaves.start(locations);
 
-        setAttribute(Startable.SERVICE_UP, true);
+        setAttribute(Startable.SERVICE_UP, calculateServiceUp());
     }
 
     @Override
@@ -58,4 +58,13 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
     public void restart() {
         throw new UnsupportedOperationException();
     }
+
+    protected boolean calculateServiceUp() {
+        boolean up = false;
+        for (Entity member : slaves.getMembers()) {
+            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) up = true;
+        }
+        return up;
+    }
+
 }
