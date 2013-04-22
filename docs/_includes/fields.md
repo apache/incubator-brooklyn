@@ -25,7 +25,7 @@
   {% capture this_dist_url_tgz %}https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.brooklyn&v={{ site.brooklyn-version }}&a=brooklyn-dist&c=dist&e=tar.gz{% endcapture %}
   {% capture this_alljar_url_jar  %}https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.brooklyn&v={{ site.brooklyn-version }}&a=brooklyn-all&c=with-dependencies&e=jar{% endcapture %}
 {% else %}<!--- RELEASE -->
-  {% capture this_anything_url_search %}http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22io.brooklyn%22%20AND%20AND%20v%3A%22{{ site.brooklyn-version }}%22{% endcapture %}
+  {% capture this_anything_url_search %}http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22io.brooklyn%22%20AND%20v%3A%22{{ site.brooklyn-version }}%22{% endcapture %}
   {% capture this_dist_url_search %}http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22io.brooklyn%22%20AND%20a%3A%22brooklyn-dist%22%20AND%20v%3A%22{{ site.brooklyn-version }}%22{% endcapture %}
   {% capture this_alljar_url_search %}http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22io.brooklyn%22%20AND%20a%3A%22brooklyn-all%22%20AND%20v%3A%22{{ site.brooklyn-version }}%22{% endcapture %}
   {% capture this_dist_url_dir %}{{ mavencentral_repo_groupid_url }}brooklyn-dist/{{ site.brooklyn-version }}/{% endcapture %}
