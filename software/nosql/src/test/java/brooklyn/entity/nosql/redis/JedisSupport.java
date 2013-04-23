@@ -5,21 +5,15 @@ package brooklyn.entity.nosql.redis;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPubSub;
+
+import com.google.common.base.Strings;
 
 /**
  * {@link RedisStore} testing using Jedis API.
  */
 public class JedisSupport {
-    private static final Logger log = LoggerFactory.getLogger(JedisSupport.class);
+    private static final String TEST_DATA = Strings.repeat("0123456789", 16);
 
     private RedisStore redis;
 
@@ -31,25 +25,21 @@ public class JedisSupport {
      * Exercise the {@link RedisStore} using the Jedis API.
      */
     public void redisTest() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
+        writeData(TEST_DATA);
+        String result = readData();
+        assertEquals(result, TEST_DATA);
+    }
+    public void writeData(String data) throws Exception {
         Jedis client = getRedisClient(redis);
-        client.subscribe(new JedisPubSub() {
-            public void onMessage(String channel, String message) {
-                assertEquals(channel, "brooklyn");
-                assertEquals(message, "message");
-                latch.countDown();
-            }
-            public void onSubscribe(String channel, int subscribedChannels) { }
-            public void onUnsubscribe(String channel, int subscribedChannels) { }
-            public void onPSubscribe(String pattern, int subscribedChannels) { }
-            public void onPUnsubscribe(String pattern, int subscribedChannels) { }
-            public void onPMessage(String pattern, String channel, String message) { }
-        }, "brooklyn");
-
-        client.publish("brooklyn", "message");
-
-        assertTrue(latch.await(60, TimeUnit.SECONDS));
+        client.set("brooklyn", data);
         client.disconnect();
+    }
+
+    public String readData() throws Exception {
+        Jedis client = getRedisClient(redis);
+        String result = client.get("brooklyn");
+        client.disconnect();
+        return result;
     }
 
     private Jedis getRedisClient(RedisStore redis) {
