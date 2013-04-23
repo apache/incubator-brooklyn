@@ -39,7 +39,7 @@ import org.jclouds.ec2.domain.PasswordData;
 import org.jclouds.ec2.services.WindowsClient;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
-import org.jclouds.predicates.RetryablePredicate;
+import org.jclouds.util.Predicates2;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
 import org.jclouds.ssh.SshClient;
@@ -344,7 +344,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         };
         
         LOG.info("Waiting for password, for "+node.getProviderId()+":"+node.getId());
-        RetryablePredicate<String> passwordReadyRetryable = new RetryablePredicate<String>(passwordReady, timeUnit.toMillis(timeout), 10*1000, TimeUnit.MILLISECONDS);
+        Predicate passwordReadyRetryable = Predicates2.retry(passwordReady, timeUnit.toMillis(timeout), 10*1000, TimeUnit.MILLISECONDS);
         boolean ready = passwordReadyRetryable.apply(node.getProviderId());
         if (!ready) throw new TimeoutException("Password not available for "+node+" in region "+region+" after "+timeout+" "+timeUnit.name());
 

@@ -38,6 +38,30 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
               </exclusion>
+              <exclusion>
+                <groupId>org.jclouds</groupId>
+                <artifactId>jclouds-allblobstore</artifactId>
+              </exclusion> 
+              <exclusion>
+                <groupId>org.jclouds</groupId>
+                <artifactId>jclouds-compute</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds</groupId>
+                <artifactId>jclouds-scriptbuilder</artifactId>
+              </exclusion> 
+              <exclusion>
+                <groupId>org.jclouds.api</groupId>
+                <artifactId>byon</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds.driver</groupId>
+                <artifactId>jclouds-joda</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds.driver</groupId>
+                <artifactId>jclouds-netty</artifactId>
+              </exclusion>             
             </exclusions>
         </dependency>
         <dependency>
