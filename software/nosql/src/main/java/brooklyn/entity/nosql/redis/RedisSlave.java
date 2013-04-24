@@ -1,41 +1,24 @@
 package brooklyn.entity.nosql.redis;
 
-import java.util.Map;
-
-import brooklyn.entity.Entity;
-import brooklyn.util.MutableMap;
-
-import com.google.common.base.Preconditions;
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.util.flags.SetFromFlag;
 
 /**
  * A {@link RedisStore} configured as a slave.
- *
- * The {@code master} property must be set to the master Redis store entity.
  */
-public class RedisSlave extends RedisStore {
-    RedisStore master;
+@ImplementedBy(RedisSlaveImpl.class)
+public interface RedisSlave extends RedisStore {
 
-    public RedisSlave() {
-        this(MutableMap.of(), null);
-    }
-    public RedisSlave(Map properties) {
-        this(properties, null);
-    }
-    public RedisSlave(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public RedisSlave(Map properties, Entity parent) {
-        super(properties, parent);
+    @SetFromFlag("master")
+    ConfigKey<RedisStore> MASTER = new BasicConfigKey<RedisStore>(RedisStore.class, "redis.master", "Redis master");
 
-        Preconditions.checkArgument(properties.containsKey("master"), "The Redis master entity must be specified");
-        master = (RedisStore) properties.get("master");
-    }
+    @SetFromFlag("redisConfigTemplateUrl")
+    ConfigKey<String> REDIS_CONFIG_TEMPLATE_URL = new BasicConfigKey<String>(
+            String.class, "redis.config.templateUrl", "Template file (in freemarker format) for the redis.conf config file", 
+            "classpath://brooklyn/entity/nosql/redis/slave.conf");
 
-    @Override
-    public String getConfigData(int port, boolean include) {
-        String masterAddress = master.getAddress();
-        int masterPort = getParent().getAttribute(REDIS_PORT);
+    RedisStore getMaster();
 
-        return super.getConfigData(port, include) + "slaveof "+masterAddress+" "+masterPort;
-    }
 }
