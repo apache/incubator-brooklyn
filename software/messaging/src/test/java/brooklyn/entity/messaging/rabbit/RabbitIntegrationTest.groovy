@@ -101,7 +101,7 @@ public class RabbitIntegrationTest {
             QueueingConsumer queueConsumer = new QueueingConsumer(consumer);
             consumer.basicConsume(queue, true, queueConsumer);
         
-            QueueingConsumer.Delivery delivery = queueConsumer.nextDelivery();
+            QueueingConsumer.Delivery delivery = queueConsumer.nextDelivery(60 * 1000l); // one minute timeout
             assertEquals(delivery.body, content)
         } finally {
 	        producer?.close()
