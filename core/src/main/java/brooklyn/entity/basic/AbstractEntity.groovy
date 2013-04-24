@@ -440,7 +440,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         parent = entity
         //previously tested entity!=null but that should be guaranteed?
         entity.addChild(getProxyIfAvailable())
-        configsInternal.setInheritedConfig(((EntityInternal)entity).getAllConfig());
+        refreshInheritedConfig();
         previouslyOwned = true
         
         getApplication()
