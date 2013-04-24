@@ -1,27 +1,15 @@
 package brooklyn.entity.nosql.redis;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.nosql.DataStore;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -30,105 +18,37 @@ import brooklyn.util.flags.SetFromFlag;
  * TODO add sensors with Redis statistics using INFO command
  */
 @Catalog(name="Redis Server", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.jpeg")
-public class RedisStore extends SoftwareProcessImpl implements DataStore {
-    protected static final Logger LOG = LoggerFactory.getLogger(RedisStore.class);
+@ImplementedBy(RedisStoreImpl.class)
+public interface RedisStore extends SoftwareProcess, DataStore {
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION =
+    BasicConfigKey<String> SUGGESTED_VERSION =
             new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.6.7");
 
     @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "http://redis.googlecode.com/files/redis-${version}.tar.gz");
 
-    public static final PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", 6379);
-    public static final ConfigKey<String> REDIS_CONFIG_FILE = new BasicConfigKey<String>(String.class, "redis.config.file", "Redis user configuration file");
-    public static final AttributeSensor<Integer> UPTIME = new BasicAttributeSensor<Integer>(Integer.class, "redis.uptime", "Redis uptime in seconds");
+    @SetFromFlag("redisPort")
+    PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", 6379);
 
-    public RedisStore() {
-        this(MutableMap.of(), null);
-    }
-    public RedisStore(Map properties) {
-        this(properties, null);
-    }
-    public RedisStore(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public RedisStore(Map properties, Entity parent) {
-        super(properties, parent);
+    @SetFromFlag("redisConfigTemplateUrl")
+    ConfigKey<String> REDIS_CONFIG_TEMPLATE_URL = new BasicConfigKey<String>(
+            String.class, "redis.config.templateUrl", "Template file (in freemarker format) for the redis.conf config file", 
+            "classpath://brooklyn/entity/nosql/redis/redis.conf");
 
-        setConfigIfValNonNull(REDIS_PORT, properties.get("redisPort"));
-        setConfigIfValNonNull(REDIS_CONFIG_FILE, properties.get("configFile"));
-    }
-    
-    @Override
-    protected void connectSensors() {
-        super.connectSensors();
+    AttributeSensor<Integer> UPTIME = new BasicAttributeSensor<Integer>(Integer.class, "redis.uptime", "Redis uptime in seconds");
 
-        connectServiceUpIsRunning();
-        
-        // TODO IF desired, port this for setting UPTIME (because legacy sshAdapter is deleted)
-//        String output = sshAdapter.newOutputValueProvider("${driver.runDir}/bin/redis-cli info").compute()
-//        for (String line : output.split("\n")) {
-//            if (line =~ /^uptime_in_seconds:/) {
-//                String data = line.trim()
-//                int colon = data.indexOf(":")
-//                return Integer.parseInt(data.substring(colon + 1))
-//            }
-//        }
-    }
+    // See http://redis.io/commands/info for details of all information available
+    AttributeSensor<Integer> TOTAL_CONNECTIONS_RECEIVED = new BasicAttributeSensor<Integer>(Integer.class, "redis.connections.received.total", "Total number of connections accepted by the server");
+    AttributeSensor<Integer> TOTAL_COMMANDS_PROCESSED = new BasicAttributeSensor<Integer>(Integer.class, "redis.commands.processed.total", "Total number of commands processed by the server");
+    AttributeSensor<Integer> EXPIRED_KEYS = new BasicAttributeSensor<Integer>(Integer.class, "redis.keys.expired", "Total number of key expiration events");
+    AttributeSensor<Integer> EVICTED_KEYS = new BasicAttributeSensor<Integer>(Integer.class, "redis.keys.evicted", "Number of evicted keys due to maxmemory limit");
+    AttributeSensor<Integer> KEYSPACE_HITS = new BasicAttributeSensor<Integer>(Integer.class, "redis.keyspace.hits", "Number of successful lookup of keys in the main dictionary");
+    AttributeSensor<Integer> KEYSPACE_MISSES = new BasicAttributeSensor<Integer>(Integer.class, "redis.keyspace.misses", "Number of failed lookup of keys in the main dictionary");
 
-    @Override
-    public void disconnectSensors() {
-        super.disconnectSensors();
-        disconnectServiceUpIsRunning();
-    }
-    
-    public Class getDriverInterface() {
-        return RedisStoreDriver.class;
-    }
+    String getAddress();
 
-    @Override
-    public RedisStoreDriver getDriver() {
-        return (RedisStoreDriver) super.getDriver();
-    }
-    
-    public String getAddress() {
-        MachineLocation machine = getMachineOrNull();
-        return (machine != null) ? machine.getAddress().getHostAddress() : null;
-    }
-    
-    
-    // FIXME Don't want to hard-code this as SshMachineLocatoin; want generic way of doing machine.copyTo
-    @Override
-    protected SshMachineLocation getMachineOrNull() {
-        return (SshMachineLocation) super.getMachineOrNull();
-    }
-    
-    // FIXME This logic should all be in the driver
-    void doExtraConfigurationDuringStart() {
-	    int port = getAttribute(REDIS_PORT);
-        boolean include = false;
+    Integer getRedisPort();
 
-        String includeName = getConfig(REDIS_CONFIG_FILE);
-        if (includeName != null && includeName.length() > 0) {
-            File includeFile = new File(includeName);
-	        include = includeFile.exists();
-        }
-
-		getMachineOrNull().copyTo(new ByteArrayInputStream(getConfigData(port, include).getBytes()), getDriver().getRunDir()+"/redis.conf");
-        if (include) getMachineOrNull().copyTo(new File(includeName), getDriver().getRunDir()+"/include.conf");
-        
-        super.configure();
-    }
-
-    public String getConfigData(int port, boolean include) {
-        String data = 
-                "daemonize yes"+"\n"+
-                "pidfile "+getDriver().getRunDir()+"/pid.txt"+"\n"+
-                "port "+port+"\n";
-
-        if (include) data += "include "+getDriver().getRunDir()+"/include.conf";
-        return data;
-    }
 }

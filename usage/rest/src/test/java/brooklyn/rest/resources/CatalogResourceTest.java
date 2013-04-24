@@ -96,7 +96,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   @Test
   public void testGetCatalogEntityDetails() {
       CatalogEntitySummary details = client().resource(
-              URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore"))
+              // FIXME entity ids should use interface class not imp[lementation
+              URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStoreImpl"))
               .get(CatalogEntitySummary.class);
       assertTrue(details.toString().contains("redis.port"));
       assertTrue(details.toString().contains("run.dir"));
