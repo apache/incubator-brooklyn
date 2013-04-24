@@ -58,6 +58,7 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -160,7 +161,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         this(MutableMap.of());
     }
 
-     public SshMachineLocation(Map properties) {
+    public SshMachineLocation(Map properties) {
         super(properties);
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
         vanillaSshToolPool = buildVanillaPool();
@@ -636,6 +637,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Override
     public String toString() {
         return "SshMachineLocation["+name+":"+address+"]";
+    }
+
+    @Override
+    public String toVerboseString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("id", getId()).add("name", getName())
+                .add("user", getUser()).add("address", getAddress()).add("port", getConfig(SSH_PORT))
+                .add("parentLocation", getParentLocation())
+                .toString();
     }
 
     /**

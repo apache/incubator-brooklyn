@@ -22,6 +22,7 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -69,6 +70,14 @@ implements MachineProvisioningLocation<T>, Closeable {
                 throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getName()+"' has its parent location set");
 	        addChildLocation(machine);
         }
+    }
+
+    @Override
+    public String toVerboseString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("id", getId()).add("name", getName())
+                .add("machinesAvailable", getAvailable()).add("machinesInUse", getInUse())
+                .toString();
     }
 
     protected void configure(Map properties) {

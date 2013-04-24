@@ -158,7 +158,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return getClass().getSimpleName()+"["+name+":"+(identity != null ? identity : null)+
                 (configDescription!=null ? "/"+configDescription : "") + "]";
     }
-        
+
+    @Override
+    public String toVerboseString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("id", getId()).add("name", getName()).add("identity", getIdentity())
+                .add("description", getConfigBag().getDescription()).add("provider", getProvider())
+                .add("region", getRegion()).add("endpoint", getEndpoint())
+                .toString();
+    }
+
     public String getProvider() {
         return getConfig(CLOUD_PROVIDER);
     }

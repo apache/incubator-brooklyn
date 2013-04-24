@@ -267,6 +267,11 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         return string().toString();
     }
     
+    @Override
+    public String toVerboseString() {
+        return toString();
+    }
+
     /** override this, adding to the returned value, to supply additional fields to include in the toString */
     protected ToStringHelper string() {
         return Objects.toStringHelper(getClass()).add("id", id).add("name", name);
