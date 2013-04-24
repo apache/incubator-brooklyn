@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Collections;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -117,17 +118,26 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         return new ResourceUtils(entity).getResourceAsString(url);
     }
 
+    public String processTemplate(File templateConfigFile, Map<String,Object> extraSubstitutions) {
+        return processTemplate(templateConfigFile.toURI().toASCIIString(),extraSubstitutions);
+    }
+
     public String processTemplate(File templateConfigFile) {
         return processTemplate(templateConfigFile.toURI().toASCIIString());
     }
 
     public String processTemplate(String templateConfigUrl) {
+        return processTemplate(templateConfigUrl, Collections.EMPTY_MAP);
+    }
+
+    public String processTemplate(String templateConfigUrl, Map<String,Object> extraSubstitutions) {
         Map<String, Object> config = getEntity().getApplication().getManagementContext().getConfig().asMapWithStringKeys();
         Map<String, Object> substitutions = ImmutableMap.<String, Object>builder()
                 .putAll(config)
                 .put("entity", entity)
                 .put("driver", this)
                 .put("location", getLocation())
+                .putAll(extraSubstitutions)
                 .build();
 
         try {
