@@ -4,11 +4,21 @@ title: Release Notes
 toc: ../toc.json
 ---
 
+## Brooklyn Version 0.5.0 RC2 (0.5.0-rc.2)
+
+* Fix compatibility issue with Java 7 builds
+* Fix regression in HttpFeed: if polling same URL for multiple sensors, share the same http request.
+* Fix rebind of nginx entity
+* Fix redis install (was failing on some platforms)
+* Fix doc build problems
+* Fix Whirr cluster problems from rc.1
+* Cloud Foundry examples moved to [a separate repo](https://github.com/cloudsoft/brooklyn-cloudfoundry). 
+
 ## Brooklyn Version 0.5.0 RC1 (0.5.0-rc.1)
 
-API Tidy on top of M2, using `init()` as the method to override when building composed Application and Entity classes.
+* API Tidy on top of M2, using `init()` as the method to override when building composed Application and Entity classes.
 
-There are known issues with Whirr clusters and the Cloud Foundry example (moving) which will be resolved for RC2.   
+* There are known issues with Whirr clusters and the Cloud Foundry example (moving) which will be resolved for RC2.   
 
 
 ## Brooklyn Version 0.5.0 Milestone Two (0.5.0-M2)
