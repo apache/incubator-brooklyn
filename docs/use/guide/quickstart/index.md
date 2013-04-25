@@ -4,6 +4,7 @@ layout: page
 toc: ../guide_toc.json
 categories: [use, guide]
 ---
+{% include fields.md %}
 
 This guide will get you up and running with Brooklyn quickly. You will become familiar with launching Brooklyn from the command line, using the web interface and deploying an application (to a public cloud).
 
