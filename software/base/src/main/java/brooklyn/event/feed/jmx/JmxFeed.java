@@ -256,7 +256,7 @@ public class JmxFeed extends AbstractFeed {
         getPoller().scheduleAtFixedRate(
                 new Callable<Object>() {
                     public Object call() throws Exception {
-                        if (log.isDebugEnabled()) log.debug("jmx attribute polling for {} sensors at {} -> {}", new Object[] {getEntity(), jmxUri, jmxAttributeName});
+                        if (log.isTraceEnabled()) log.trace("jmx attribute polling for {} sensors at {} -> {}", new Object[] {getEntity(), jmxUri, jmxAttributeName});
                         return helper.getAttribute(objectName, jmxAttributeName);
                     }
                 }, 

@@ -90,6 +90,19 @@ public class EntityConfigMapUsageTest {
     }
     
     @Test
+    public void testInheritedConfigAvailableDeepInHierarchy() throws Exception {
+        TestEntity parent = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
+                .configure(strKeyWithDefault, "customval"));
+        TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = entity.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity3 = entity2.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        
+        assertEquals(entity.getConfig(strKeyWithDefault), "customval");
+        assertEquals(entity2.getConfig(strKeyWithDefault), "customval");
+        assertEquals(entity3.getConfig(strKeyWithDefault), "customval");
+    }
+    
+    @Test
     public void testConfigCanBeSetOnEntity() throws Exception {
         TestEntity entity = app.createChild(EntitySpecs.spec(TestEntity.class));
         ((EntityLocal)entity).setConfig(strKey, "aval");
