@@ -3,6 +3,7 @@ package brooklyn.entity.dns;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
@@ -154,8 +155,8 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             boolean changed = false;
             Set<Entity> previousOnes = MutableSet.copyOf(targetHosts.keySet());
             for (Entity e: pool) {
-                if (previousOnes.remove(e)) continue;
-                changed |= addTargetHost(e, false);
+                previousOnes.remove(e);
+                changed |= addTargetHost(e);
             }
             //anything left in previousOnes is no longer applicable
             for (Entity e: previousOnes) {
@@ -171,44 +172,39 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         }
     }
     
-    /** returns if host is added */
-    protected boolean addTargetHost(Entity e, boolean doUpdate) {
-        if (targetHosts.containsKey(e)) {
-            log.warn("GeoDns ignoring already-added entity {}", e);
-            return false;
-        }
-        //add it if it is valid
+    /**
+     * Adds this host, if it is absent or if its hostname has changed.
+     *  
+     * @return true if host is added or changed
+     */
+    protected boolean addTargetHost(Entity e) {
         try {
-            String hostname = e.getAttribute(Attributes.HOSTNAME);
-            String url = e.getAttribute(WebAppService.ROOT_URL);
-            if (url!=null) {
-                URL u = new URL(url);
-                if (hostname==null) {
-                    if (!entitiesWithoutGeoInfo.contains(e))  //don't log repeatedly
-                        log.warn("GeoDns using URL {} to redirect to {} (HOSTNAME attribute is preferred, but not available)", url, e);
-                    hostname = u.getHost(); 
-                }
-                if (u.getPort() > 0 && u.getPort() != 80 && u.getPort() != 443) {
-                    if (!entitiesWithoutGeoInfo.contains(e))  //don't log repeatedly
-                        log.warn("GeoDns detected non-standard port in URL {} for {}; forwarding may not work", url, e);
-                }
-            }
-            if (hostname==null) {
+            HostGeoInfo oldGeo = targetHosts.get(e);
+            String hostname = inferHostname(e);
+            HostGeoInfo geoH = (hostname == null) ? null : HostGeoInfo.fromIpAddress(InetAddress.getByName(hostname));
+
+            if (hostname == null) {
                 if (entitiesWithoutGeoInfo.add(e)) {
                     log.debug("GeoDns ignoring {}, will continue scanning (no hostname or URL available)", e);
                 }
                 return false;
             }
-            HostGeoInfo geoH = HostGeoInfo.fromIpAddress(InetAddress.getByName(hostname));
+            
             if (geoH == null) {
                 if (entitiesWithoutGeoInfo.add(e)) {
                     log.warn("GeoDns ignoring {} (no geography info available for {})", e, hostname);
                 }
                 return false;
             }
+            
+            // If we already knew about it, and it hasn't changed, then nothing to do
+            if (oldGeo != null && geoH.getAddress().equals(oldGeo.getAddress())) {
+                return false;
+            }
+            
+            // Check if location has lat/lon explicitly set; use geo-dns but warn if dramatically different
             HostGeoInfo geoE = HostGeoInfo.fromEntity(e);
-            if (geoE!=null) {
-                //geo info set for both; prefer H, but warn if they differ dramatially
+            if (geoE != null) {
                 if ((Math.abs(geoH.latitude-geoE.latitude)>3) ||
                         (Math.abs(geoH.longitude-geoE.longitude)>3) ) {
                     log.warn("GeoDns mismatch, {} is in {} but hosts URL in {}", new Object[] {e, geoE, geoH});
@@ -216,10 +212,10 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             }
             
             entitiesWithoutGeoInfo.remove(e);
-            log.info("GeoDns adding "+e+" at "+geoH+(url!=null ? " (downstream listening on "+url+")" : ""));
+            log.info("GeoDns adding "+e+" at "+geoH+(oldGeo != null ? " (previously "+oldGeo+")" : ""));
             targetHosts.put(e, geoH);
-            if (doUpdate) update();
             return true;
+
         } catch (Exception ee) {
             log.warn("GeoDns ignoring {} (error analysing location, {}", e, ee);
             return false;
@@ -250,4 +246,28 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         setAttribute(TARGETS, entityIdToUrl);
     }
     
+    protected String inferHostname(Entity entity) {
+        String hostname = entity.getAttribute(Attributes.HOSTNAME);
+        String url = entity.getAttribute(WebAppService.ROOT_URL);
+        if (url!=null) {
+            try {
+                URL u = new URL(url);
+                
+                if (hostname==null) {
+                    if (!entitiesWithoutGeoInfo.contains(entity))  //don't log repeatedly
+                        log.warn("GeoDns using URL {} to redirect to {} (HOSTNAME attribute is preferred, but not available)", url, entity);
+                    hostname = u.getHost(); 
+                }
+                
+                if (u.getPort() > 0 && u.getPort() != 80 && u.getPort() != 443) {
+                    if (!entitiesWithoutGeoInfo.contains(entity))  //don't log repeatedly
+                        log.warn("GeoDns detected non-standard port in URL {} for {}; forwarding may not work", url, entity);
+                }
+                
+            } catch (MalformedURLException e) {
+                LOG.warn("Invalid URL {} for entity {} in {}", new Object[] {url, entity, this});
+            }
+        }
+        return hostname;
+    }
 }

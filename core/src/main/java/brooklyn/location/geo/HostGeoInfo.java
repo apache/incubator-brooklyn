@@ -1,5 +1,7 @@
 package brooklyn.location.geo;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -99,12 +101,16 @@ public class HostGeoInfo implements Serializable {
     
     
     public HostGeoInfo(String address, String displayName, double latitude, double longitude) {
-        this.address = address;
+        this.address = checkNotNull(address, "address");
         this.displayName = displayName==null ? "" : displayName;
         this.latitude = latitude;
         this.longitude = longitude;
     }
 
+    public String getAddress() {
+        return address;
+    }
+    
     @Override
     public String toString() {
         return "HostGeoInfo["+displayName+": "+address+" at ("+latitude+","+longitude+")]";
