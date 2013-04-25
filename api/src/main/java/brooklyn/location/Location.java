@@ -8,7 +8,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.mementos.LocationMemento;
-import brooklyn.mementos.PolicyMemento;
 
 /**
  * A location that an entity can be in. Examples of locations include a single machine
@@ -48,6 +47,13 @@ public interface Location extends Serializable, Rebindable{
      */
     Collection<Location> getChildLocations();
 
+    /**
+     * @return meta-data about the location (usually a long line, or a small number of lines).
+     * 
+     * @since 0.6
+     */
+    String toVerboseString();
+        
     /**
      * Set the 'parent' of this location. If this location was previously a child of a different location, it is removed from
      * the other location first. It is valid to pass in {@code null} to indicate that the location should be disconnected

@@ -21,6 +21,7 @@ import brooklyn.location.basic.BasicOsDetails;
 import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.SshMachineLocation;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -38,6 +39,20 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         runScriptFactory = context.utils().injector().getInstance(RunScriptOnNode.Factory.class);
     }
     
+    @Override
+    public String toVerboseString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("id", getId()).add("name", getName())
+                .add("user", getUser()).add("address", getAddress()).add("port", getConfig(SSH_PORT))
+                .add("node", getNode())
+                .add("jcloudsId", getJcloudsId())
+                .add("privateAddresses", node.getPrivateAddresses())
+                .add("publicAddresses", node.getPublicAddresses())
+                .add("parentLocation", getParentLocation())
+                .add("osDetails", getOsDetails())
+                .toString();
+    }
+
     public NodeMetadata getNode() {
         return node;
     }
