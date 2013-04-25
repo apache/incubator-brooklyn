@@ -72,7 +72,7 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
         brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
-        brooklynProperties.put("inboundPorts", [22, 3306]);
+        brooklynProperties.put("inboundPorts", "22, 3306");
         LocationRegistry locationRegistry = new LocationRegistry(brooklynProperties);
 
         JcloudsLocation jcloudsLocation = (JcloudsLocation) locationRegistry.resolve("cloudservers-uk");
