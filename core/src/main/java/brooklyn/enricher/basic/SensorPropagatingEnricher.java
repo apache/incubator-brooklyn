@@ -1,7 +1,7 @@
 package brooklyn.enricher.basic;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -14,6 +14,8 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -24,9 +26,13 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         
     /** the entity to listen to */
     private final Entity source;
-    /** the sensors to listen to */
-    private final Set<Sensor<?>> sensors = Sets.newLinkedHashSet();
     
+    /** the sensors to listen to */
+    private final Set<Sensor<?>> sensors;
+
+    /** the sensors to listen to */
+    private final Map<Sensor<?>, Sensor<?>> sensorAlternatives;
+
     public static SensorPropagatingEnricher newInstanceListeningToAllSensors(Entity source) {
         return newInstanceListeningToAllSensorsBut(source);
     }
@@ -44,12 +50,24 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         return new SensorPropagatingEnricher(source, includes);
     }
 
-    public SensorPropagatingEnricher(Entity source, Sensor<?>... sensors) {
-        this(source, Arrays.asList(sensors));
+    public static SensorPropagatingEnricher newInstanceListeningTo(Entity source, Map<? extends Sensor<?>, ? extends Sensor<?>> sensors) {
+        return new SensorPropagatingEnricher(source, sensors);
     }
+
+    public SensorPropagatingEnricher(Entity source, Sensor<?>... sensors) {
+        this(source, ImmutableList.copyOf(sensors));
+    }
+    
     public SensorPropagatingEnricher(Entity source, Collection<Sensor<?>> sensors) {
         this.source = source;
-        this.sensors.addAll(sensors);
+        this.sensors = ImmutableSet.copyOf(sensors);
+        this.sensorAlternatives = ImmutableMap.of();
+    }
+    
+    public SensorPropagatingEnricher(Entity source, Map<? extends Sensor<?>, ? extends Sensor<?>> sensors) {
+        this.source = source;
+        this.sensors = ImmutableSet.copyOf(sensors.keySet());
+        this.sensorAlternatives = ImmutableMap.copyOf(sensors);
     }
     
     public void setEntity(EntityLocal entity) {
@@ -59,16 +77,23 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         }
     }
     
-    public void onEvent(SensorEvent event) {
-        if (log.isTraceEnabled()) log.trace("policy {} got {}, propagating via {}", new Object[] {this, event, entity});
-        //just propagate upwards
+    @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void onEvent(SensorEvent<Object> event) {
+        // propagate upwards
+        Sensor<?> sourceSensor = event.getSensor();
+        Sensor<?> destinationSensor = getDestinationSensor(sourceSensor);
+        
+        if (log.isTraceEnabled()) log.trace("policy {} got {}, propagating via {}{}", 
+                new Object[] {this, event, entity, (sourceSensor == destinationSensor ? "" : " (as "+destinationSensor+")")});
+        
         if (event.getSensor() instanceof AttributeSensor) {
-            entity.setAttribute((AttributeSensor)event.getSensor(), event.getValue());
+            entity.setAttribute((AttributeSensor)destinationSensor, event.getValue());
         } else {
-            entity.emit(event.getSensor(), event.getValue());
+            entity.emit((Sensor)destinationSensor, event.getValue());
         }       
     }
-    
+
     /** useful post-addition to emit current values */
     public void emitAllAttributes() {
         emitAllAttributes(false);
@@ -77,8 +102,9 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
     public void emitAllAttributes(boolean includeNullValues) {
         for (Sensor s: sensors) {
             if (s instanceof AttributeSensor) {
+                AttributeSensor destinationSensor = (AttributeSensor<?>) getDestinationSensor(s);
                 Object v = source.getAttribute((AttributeSensor)s);
-                if (v!=null || includeNullValues) entity.setAttribute((AttributeSensor)s, v);
+                if (v != null || includeNullValues) entity.setAttribute(destinationSensor, v);
             }
         }
     }
@@ -88,5 +114,9 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         host.addEnricher(this);
         emitAllAttributes();
         return this;
-    }    
+    }
+    
+    private Sensor<?> getDestinationSensor(Sensor<?> sourceSensor) {
+        return sensorAlternatives.containsKey(sourceSensor) ? sensorAlternatives.get(sourceSensor): sourceSensor;
+    }
 }
