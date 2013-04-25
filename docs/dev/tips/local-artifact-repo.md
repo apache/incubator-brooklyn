@@ -18,9 +18,9 @@ Brooklyn's default search behaviour for installation artifacts is as follows:
 
 Cloudsoft's fallback repository <small>[2]</small> contains many of the installation artifacts used by current Brooklyn entities. 
 
-It is intended to prevent problems occurring when the public url for an installer changes (e.g. when several new versions of MySQL have been released). It is provided on an as-is and as-is-available basis.
+It is intended to prevent problems occurring when the public url for an installer changes (e.g. when several new versions of MySQL have been released). It is provided on an as-is and as-available basis.
 
-If you use this command to create a local repository, please respect the `--user-agent`. In future this will allow Cloudsoft to easily filter repository syncing behaviour from  fallback behaviour, allowing out-of-date entities to be more easily be identified and updated. 
+If you use this command to create a local repository, please respect the `--user-agent`. In future this will allow Cloudsoft to easily filter repository syncing behaviour from  fallback behaviour, allowing out-of-date entities to be more easily identified and updated. 
 
 <br />
 <small>
