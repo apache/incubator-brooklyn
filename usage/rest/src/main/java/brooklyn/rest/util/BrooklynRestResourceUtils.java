@@ -256,8 +256,20 @@ public class BrooklynRestResourceUtils {
         String type = spec.getType();
         String name = spec.getName();
         Map<String, String> config = (spec.getConfig() == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(spec.getConfig());
-        
-        final Class<? extends Entity> clazz = getCatalog().loadClassByType(type, Entity.class);
+
+        Class<? extends Entity> tempclazz;
+        try {
+            tempclazz = getCatalog().loadClassByType(type, Entity.class);
+        } catch (NoSuchElementException e) {
+            try {
+                tempclazz = (Class<? extends Entity>) getCatalog().getRootClassLoader().loadClass(type);
+                log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
+            } catch (ClassNotFoundException e2) {
+                log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
+                throw e;
+            }
+        }
+        final Class<? extends Entity> clazz = tempclazz;
         BasicEntitySpec<? extends Entity, ?> result;
         if (clazz.isInterface()) {
             result = EntitySpecs.spec(clazz);
