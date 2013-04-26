@@ -3,6 +3,9 @@ package brooklyn.cli;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -11,6 +14,7 @@ import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.iq80.cli.Cli;
 import org.iq80.cli.Cli.CliBuilder;
 import org.iq80.cli.Command;
@@ -53,7 +57,7 @@ public class Main {
         "| '_ \\| '__/ _ \\ / _ \\| |/ / | | | | '_ \\ \n" +
         "| |_) | | | (_) | (_) |   <| | |_| | | | |\n" +
         "|_.__/|_|  \\___/ \\___/|_|\\_\\_|\\__, |_| |_|\n" +
-        "                              |___/       \n";
+        "                              |___/             "+loadVersion()+"\n";
 
     // Error codes
     public static final int SUCCESS = 0;
@@ -61,6 +65,20 @@ public class Main {
     public static final int EXECUTION_ERROR = 2;
 
     public static final Logger log = LoggerFactory.getLogger(Main.class);
+
+    public static String loadVersion(){
+        InputStream in = Main.class.getResourceAsStream("/brooklyn_version.txt");
+        String s;
+        try {
+            s = IOUtils.toString(new InputStreamReader(in));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }finally{
+            IOUtils.closeQuietly(in);
+        }
+
+        return s.substring(0,s.indexOf("<"));
+    }
 
     public static void main(String... args) {
         Cli<BrooklynCommand> parser = buildCli();
