@@ -57,7 +57,7 @@ public class Main {
         "| '_ \\| '__/ _ \\ / _ \\| |/ / | | | | '_ \\ \n" +
         "| |_) | | | (_) | (_) |   <| | |_| | | | |\n" +
         "|_.__/|_|  \\___/ \\___/|_|\\_\\_|\\__, |_| |_|\n" +
-        "                              |___/             "+loadVersion()+"\n";
+        "                              |___/             "+BrooklynVersion.get()+"\n";
 
     // Error codes
     public static final int SUCCESS = 0;
@@ -65,20 +65,6 @@ public class Main {
     public static final int EXECUTION_ERROR = 2;
 
     public static final Logger log = LoggerFactory.getLogger(Main.class);
-
-    public static String loadVersion(){
-        InputStream in = Main.class.getResourceAsStream("/brooklyn_version.txt");
-        String s;
-        try {
-            s = IOUtils.toString(new InputStreamReader(in));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }finally{
-            IOUtils.closeQuietly(in);
-        }
-
-        return s.substring(0,s.indexOf("<"));
-    }
 
     public static void main(String... args) {
         Cli<BrooklynCommand> parser = buildCli();
