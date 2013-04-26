@@ -18,15 +18,19 @@ Download the Brooklyn distribution. This contains Brooklyn, ready to run.
 
 Save the [Distro tgz]({{ this_dist_url_tgz }}) file to your home directory `~/`, or a location of your choice. (Other [download options]({{site.url}}/start/download.html) are available.)
 
-Untar the tgz. Each Distro is timestamped, so your filename will be different. 
+Expand the `tar.gz` archive. {% if site.brooklyn-version contains 'SNAPSHOT' %}Each Distro is timestamped, so your filename will be different.{% endif %}
 
-	$ tar -zxf brooklyn-dist-<version>-<timestamp>-dist.tar.tar.gz
+{% if site.brooklyn-version contains 'SNAPSHOT' %}
+	$ tar -zxf brooklyn-dist-{{ site.version }}-timestamp-dist.tar.gz
+{% else %}
+	$ tar -zxf brooklyn-dist-{{ site.version }}-dist.tar.gz
+{% endif %}
 
-This will create a brooklyn-\<version\> folder. At the time of writing this was `brooklyn-0.5.0-SNAPSHOT`. <!-- BROOKLYN VERSION -->
+This will create a `brooklyn-{{ site.version }}` folder.
 
 Let's setup some paths for easy commands.
 
-	$ cd brooklyn-<version>
+	$ cd brooklyn-{{ site.version }}
 	$ BROOKLYN_HOME=$(pwd)
 	$ export PATH=$PATH:$BROOKLYN_HOME/bin/
 

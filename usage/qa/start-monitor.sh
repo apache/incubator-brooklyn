@@ -7,8 +7,7 @@
 #set -x # debug
 
 CLASS=brooklyn.qa.longevity.Monitor
-# BROOKLYN_VERSION_BELOW
-VERSION=0.6.0-SNAPSHOT
+VERSION=0.6.0-SNAPSHOT # BROOKLYN_VERSION
 
 ROOT=$(cd $(dirname $0) && pwd)
 cd $ROOT
