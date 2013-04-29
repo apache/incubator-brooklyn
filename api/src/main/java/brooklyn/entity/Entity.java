@@ -110,42 +110,6 @@ public interface Entity extends Serializable, Rebindable {
     boolean removeChild(Entity child);
     
     /**
-     * @deprecated since 0.5; see getParent()
-     */
-    @Deprecated
-    Entity getOwner();
-
-    /** 
-     * @deprecated since 0.5; see getChildren()
-     */
-    @Deprecated
-    Collection<Entity> getOwnedChildren();
-    
-    /**
-     * @deprecated since 0.5; see setOwner(Entity)
-     */
-    @Deprecated
-    Entity setOwner(Entity group);
-    
-    /**
-     * @deprecated since 0.5; see clearParent()
-     */
-    @Deprecated
-    void clearOwner();
-    
-    /** 
-     * @deprecated since 0.5; see addChild(Entity)
-     */
-    @Deprecated
-    Entity addOwnedChild(Entity child);
-    
-    /** 
-     * @deprecated since 0.5; see removeChild(Entity)
-     */
-    @Deprecated
-    boolean removeOwnedChild(Entity child);
-    
-    /**
      * @return an immutable thread-safe view of the policies.
      */
     Collection<Policy> getPolicies();
