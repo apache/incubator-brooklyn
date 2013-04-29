@@ -9,10 +9,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.management.internal.EffectorUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
@@ -75,14 +77,28 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
             result = m.invoke(this, args);
         } else if (ENTITY_NON_EFFECTOR_METHODS.contains(sig)) {
             result = m.invoke(delegate, args);
-        } else if (delegate instanceof AbstractEntity) {
-            result = ((AbstractEntity)delegate).invokeMethod(m.getName(), (args == null ? new Object[0] : args));
         } else {
-            // TODO Extract out the AbstractEntity.invokeMethod logic for wrapping as effector call
-            throw new IllegalArgumentException("Entity does not extend AbstractEntity (currently unsupported for proxy), for entity "+delegate);
+            Object[] nonNullArgs = (args == null) ? new Object[0] : args;
+            Effector<?> eff = findEffector(m, nonNullArgs);
+            if (eff != null) {
+                result = EffectorUtils.invokeEffector(delegate, eff, nonNullArgs);
+            } else {
+                result = m.invoke(delegate, nonNullArgs);
+            }
         }
         
         return (result == delegate && delegate instanceof AbstractEntity) ? ((AbstractEntity)result).getProxy() : result;
+    }
+    
+    private Effector<?> findEffector(Method m, Object[] args) {
+        String name = m.getName();
+        Set<Effector<?>> effectors = delegate.getEntityType().getEffectors();
+        for (Effector<?> contender : effectors) {
+            if (name.equals(contender.getName())) {
+                return contender;
+            }
+        }
+        return null;
     }
     
     private static class MethodSignature {

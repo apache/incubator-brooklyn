@@ -200,7 +200,7 @@ public class EffectorUtils {
     /**
      * Invokes the effector so that its progress is tracked.
      */
-    public static Object invokeEffector(AbstractEntity entity, Effector<?> eff, Object[] args) {
+    public static Object invokeEffector(Entity entity, Effector<?> eff, Object[] args) {
         String id = entity.getId();
         String name = eff.getName();
         
