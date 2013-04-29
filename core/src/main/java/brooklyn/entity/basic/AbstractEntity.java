@@ -2,7 +2,10 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +53,9 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.MutableMap;
 import brooklyn.util.MutableSet;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.text.Identifiers;
 
@@ -195,43 +200,39 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      */
     @Deprecated
     public AbstractEntity(Map flags, Entity parent) {
-        this.@skipInvokeMethodEffectorInterception.set(true);
-        try {
-            if (flags==null) {
-                throw new IllegalArgumentException("Flags passed to entity "+this+" must not be null (try no-arguments or empty map)");
-            }
-            if (flags.parent != null && parent != null && flags.parent != parent) {
-                throw new IllegalArgumentException("Multiple parents supplied, "+flags.get("parent")+" and "+parent);
-            }
-            if (flags.owner != null && parent != null && flags.owner != parent) {
-                throw new IllegalArgumentException("Multiple parents supplied with flags.parent, "+flags.get("owner")+" and "+parent);
-            }
-            if (flags.parent != null && flags.owner != null && flags.parent != flags.owner) {
-                throw new IllegalArgumentException("Multiple parents supplied with flags.parent and flags.owner, "+flags.get("parent")+" and "+flags.get("owner"));
-            }
-            if (parent != null) {
-                flags.parent = parent;
-            }
-            if (flags.owner != null) {
-                LOG.warn("Use of deprecated \"flags.owner\" instead of \"flags.parent\" for entity {}", this);
-                flags.parent = flags.owner;
-                flags.remove("owner");
-            }
+        if (flags==null) {
+            throw new IllegalArgumentException("Flags passed to entity "+this+" must not be null (try no-arguments or empty map)");
+        }
+        if (flags.get("parent") != null && parent != null && flags.get("parent") != parent) {
+            throw new IllegalArgumentException("Multiple parents supplied, "+flags.get("parent")+" and "+parent);
+        }
+        if (flags.get("owner") != null && parent != null && flags.get("owner") != parent) {
+            throw new IllegalArgumentException("Multiple parents supplied with flags.parent, "+flags.get("owner")+" and "+parent);
+        }
+        if (flags.get("parent") != null && flags.get("owner") != null && flags.get("parent") != flags.get("owner")) {
+            throw new IllegalArgumentException("Multiple parents supplied with flags.parent and flags.owner, "+flags.get("parent")+" and "+flags.get("owner"));
+        }
+        if (parent != null) {
+            flags.put("parent", parent);
+        }
+        if (flags.get("owner") != null) {
+            LOG.warn("Use of deprecated \"flags.owner\" instead of \"flags.parent\" for entity {}", this);
+            flags.put("parent", flags.get("owner"));
+            flags.remove("owner");
+        }
 
-            // TODO Don't let `this` reference escape during construction
-            entityType = new EntityDynamicType(this);
-            
-            _legacyConstruction = !InternalEntityFactory.FactoryConstructionTracker.isConstructing();
-            
-            if (_legacyConstruction) {
-                LOG.warn("Deprecated use of old-style entity construction for "+getClass().getName()+"; instead use EntityManager().createEntity(spec)");
-                AbstractEntity checkWeGetThis = configure(flags);
-                assert this == checkWeGetThis : this+" configure method does not return itself; returns "+checkWeGetThis+" instead";
-            }
-            
-            inConstruction = false;
-            
-        } finally { this.@skipInvokeMethodEffectorInterception.set(false); }
+        // TODO Don't let `this` reference escape during construction
+        entityType = new EntityDynamicType(this);
+        
+        _legacyConstruction = !InternalEntityFactory.FactoryConstructionTracker.isConstructing();
+        
+        if (_legacyConstruction) {
+            LOG.warn("Deprecated use of old-style entity construction for "+getClass().getName()+"; instead use EntityManager().createEntity(spec)");
+            AbstractEntity checkWeGetThis = configure(flags);
+            assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead";
+        }
+        
+        inConstruction = false;
     }
 
     public int hashCode() {
@@ -239,7 +240,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
     
     public boolean equals(Object o) {
-        return o != null && (o.is(this) || o.is(selfProxy));
+        return o != null && (o == this || o == selfProxy);
     }
     
     protected boolean isLegacyConstruction() {
@@ -252,11 +253,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
     public void setProxy(Entity proxy) {
         if (selfProxy != null) throw new IllegalStateException("Proxy is already set; cannot reset proxy for "+toString());
-        this.@selfProxy = checkNotNull(proxy, "proxy");
+        selfProxy = checkNotNull(proxy, "proxy");
     }
     
     public Entity getProxy() {
-        return this.@selfProxy;
+        return selfProxy;
     }
     
     /**
@@ -288,26 +289,26 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 //        ConfigBag bag = new ConfigBag().putAll(flags);
         
         // FIXME Need to set parent with proxy, rather than `this`
-        Entity suppliedParent = flags.remove("parent") ?: null
-        if (suppliedParent) {
-            suppliedParent.addChild(getProxyIfAvailable())
+        Entity suppliedParent = (Entity) flags.remove("parent");
+        if (suppliedParent != null) {
+            suppliedParent.addChild(getProxyIfAvailable());
         }
         
-        Map<ConfigKey,Object> suppliedOwnConfig = flags.remove("config")
+        Map<ConfigKey,?> suppliedOwnConfig = (Map<ConfigKey, ?>) flags.remove("config");
         if (suppliedOwnConfig != null) {
-            for (Map.Entry<ConfigKey, Object> entry : suppliedOwnConfig.entrySet()) {
+            for (Map.Entry<ConfigKey, ?> entry : suppliedOwnConfig.entrySet()) {
                 setConfigEvenIfOwned(entry.getKey(), entry.getValue());
             }
         }
 
         if (flags.get("displayName") != null) {
-            _displayName = flags.remove("displayName");
+            _displayName = (String) flags.remove("displayName");
             displayNameAutoGenerated = false;
         } else if (flags.get("name") != null) {
-            _displayName = flags.remove("name");
+            _displayName = (String) flags.remove("name");
             displayNameAutoGenerated = false;
         } else if (isLegacyConstruction()) {
-            _displayName = getClass().getSimpleName()+":"+id.substring(0, 4)
+            _displayName = getClass().getSimpleName()+":"+id.substring(0, 4);
             displayNameAutoGenerated = true;
         }
         
@@ -317,12 +318,12 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         flags = FlagUtils.setAllConfigKeys(flags, this);
         
         // all config keys specified in map should be set as config
-        for (Iterator fi = flags.iterator(); fi.hasNext(); ) {
+        for (Iterator<Map.Entry> fi = flags.entrySet().iterator(); fi.hasNext();) {
             Map.Entry entry = fi.next();
-            Object k = entry.key;
+            Object k = entry.getKey();
             if (k instanceof HasConfigKey) k = ((HasConfigKey)k).getConfigKey();
             if (k instanceof ConfigKey) {
-                setConfigEvenIfOwned(k, entry.value);
+                setConfigEvenIfOwned((ConfigKey)k, entry.getValue());
                 fi.remove();
             }
         }
@@ -342,7 +343,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         return this;
     }
     public <T> AbstractEntity configure(ConfigKey<T> key, String value) {
-        setConfig(key, value);
+        setConfig((ConfigKey)key, value);
         return this;
     }
     public <T> AbstractEntity configure(HasConfigKey<T> key, T value) {
@@ -350,7 +351,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         return this;
     }
     public <T> AbstractEntity configure(HasConfigKey<T> key, String value) {
-        setConfig(key, value);
+        setConfig((ConfigKey)key, value);
         return this;
     }
 
@@ -414,7 +415,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     public AbstractEntity setParent(Entity entity) {
         if (parent != null) {
             // If we are changing to the same parent...
-            if (parent == entity) return this;
+            if (parent.equals(entity)) return this;
             // If we have a parent but changing to orphaned...
             if (entity==null) { clearParent(); return this; }
             
@@ -511,7 +512,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     @Override
     public Entity getParent() {
-        return this.@parent;
+        return parent;
     }
 
     // TODO synchronization: need to synchronize on children, or have children be a synchronized collection
@@ -521,24 +522,26 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
     
     public EntityCollectionReference getChildrenReference() {
-        return this.@children;
+        return children;
     }
     
     @Override
-    public Collection<Group> getGroups() { groups.get(); }
+    public Collection<Group> getGroups() { 
+        return groups.get();
+    }
 
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
      */
     @Override
     public Application getApplication() {
-        if (this.@application!=null) return this.@application;
+        if (application != null) return application;
         Entity parent = getParent();
         Application app = (parent != null) ? parent.getApplication() : null;
         if (app != null) {
             if (getManagementSupport().isFullyManaged())
                 // only do this once fully managed, in case root app becomes parented
-                setApplication(app)
+                setApplication(app);
         }
         return app;
     }
@@ -546,8 +549,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     // FIXME Can this really be deleted? Overridden by AbstractApplication; needs careful review
     /** @deprecated since 0.4.0 should not be needed / leaked outwith brooklyn internals / mgmt support? */
     protected synchronized void setApplication(Application app) {
-        if (getApplication() != null) {
-            if (this.@application.getId() != app.getId()) {
+        if (application != null) {
+            if (application.getId() != app.getId()) {
                 throw new IllegalStateException("Cannot change application of entity (attempted for "+this+" from "+getApplication()+" to "+app);
             }
         }
@@ -697,12 +700,12 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         assertNotYetOwned();
-        configsInternal.setConfig(key, val);
+        return (T) configsInternal.setConfig(key, val);
     }
 
     public <T> T setConfig(ConfigKey<T> key, Task<T> val) {
         assertNotYetOwned();
-        configsInternal.setConfig(key, val);
+        return (T) configsInternal.setConfig(key, val);
     }
 
     public <T> T setConfig(ConfigKey<T> key, DeferredSupplier val) {
@@ -716,7 +719,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
 
     public <T> T setConfig(HasConfigKey<T> key, Task<T> val) {
-        setConfig(key.getConfigKey(), val);
+        return (T) setConfig(key.getConfigKey(), val);
     }
 
     public <T> T setConfig(HasConfigKey<T> key, DeferredSupplier val) {
@@ -766,7 +769,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     public Map<AttributeSensor, Object> getAllAttributes() {
         Map<AttributeSensor, Object> result = Maps.newLinkedHashMap();
         Map<String, Object> attribs = attributesInternal.asMap();
-        for (Map.Entry<?,Object> entry : attribs.entrySet()) {
+        for (Map.Entry<String,Object> entry : attribs.entrySet()) {
             AttributeSensor attribKey = (AttributeSensor) entityType.getSensor(entry.getKey());
             if (attribKey == null) {
                 LOG.warn("When retrieving all attributes of {}, ignoring attribute {} because no matching AttributeSensor found", this, entry.getKey());
@@ -817,8 +820,10 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
 
     protected synchronized SubscriptionTracker getSubscriptionTracker() {
-        if (_subscriptionTracker!=null) return _subscriptionTracker;
-        _subscriptionTracker = new SubscriptionTracker(getSubscriptionContext());
+        if (_subscriptionTracker == null) {
+            _subscriptionTracker = new SubscriptionTracker(getSubscriptionContext());
+        }
+        return _subscriptionTracker;
     }
     
     public synchronized ExecutionContext getExecutionContext() {
@@ -837,11 +842,42 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
             if (result.length() == 0) result.append(getClass().getName());
             Iterable<Object> fieldVals = Iterables.transform(fields, new Function<String, Object>() {
                 public Object apply(String field) {
-                    Object v = this.hasProperty(it) ? this[it] : null;  /* TODO would like to use attributes, config: this.properties[it] */
-                    return (v != null) ? it+"="+v : null;
+                    Object v = getPropertyReflectively(field);  /* TODO would like to use attributes, config: this.properties[it] */
+                    return (v != null) ? field+"="+v : null;
                 }});
             result.append("[").append(Joiner.on(",").skipNulls().join(fieldVals)).append("]");
+            return result.toString();
         }
+    }
+    
+    @Deprecated // Delete when toStringFieldsToInclude is deleted
+    private Object getPropertyReflectively(String name) {
+        Class<?> clazz = getClass();
+        // first try and getX or isX
+        for (String prefix : ImmutableList.of("get", "is")) {
+            String methodName = prefix+Character.toUpperCase(name.charAt(0))+name.substring(1);
+            try {
+                Method method = Reflections.findMethod(clazz, methodName);
+                if (method.getReturnType() != Void.class) {
+                    return method.invoke(this);
+                }
+            } catch (NoSuchMethodException e) {
+                // try something else...
+            } catch (Exception e) {
+                LOG.trace("Error while attempting to get property {} via method {}: {}", new Object[] {name, methodName, e});
+            }
+        }
+        
+        try {
+            Field field = Reflections.findField(clazz, name);
+            return field.get(this);
+        } catch (NoSuchFieldException e) {
+            // not found
+        } catch (Exception e) {
+            LOG.trace("Error while attempting to get property {} via field {}: {}", new Object[] {name, e});
+        }
+        
+        return null;
     }
 
     /**
@@ -905,6 +941,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         if (changed) {
             getManagementSupport().getEntityChangeListener().onPoliciesChanged();
         }
+        
+        return changed;
     }
     
     @Override
@@ -926,9 +964,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     @Override
     public boolean removeAllEnrichers() {
+        boolean changed = false;
         for (AbstractEnricher enricher : enrichers) {
-            removeEnricher(enricher);
+            changed = removeEnricher(enricher) || changed;
         }
+        return changed;
     }
     
     // -------- SENSORS --------------------
@@ -943,52 +983,16 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
             LOG.warn("Strongly discouraged use of emit with sensor event as value "+sensor+" "+val+"; value should be unpacked!",
                 new Throwable("location of discouraged event "+sensor+" emit"));
         }
-        if (LOG.isDebugEnabled()) LOG.debug("Emitting sensor notification {} value {} on {}", sensor.name, val, this);
+        if (LOG.isDebugEnabled()) LOG.debug("Emitting sensor notification {} value {} on {}", new Object[] {sensor.getName(), val, this});
         emitInternal(sensor, val);
     }
     
-    @Override
     public <T> void emitInternal(Sensor<T> sensor, T val) {
         SubscriptionContext subsContext = getSubscriptionContext();
         if (subsContext != null) subsContext.publish(sensor.newEvent(getProxyIfAvailable(), val));
     }
 
     // -------- EFFECTORS --------------
-
-    /** Flag needed internally to prevent invokeMethod from recursing on itself. */
-    private ThreadLocal<Boolean> skipInvokeMethodEffectorInterception = new ThreadLocal() {
-        protected Object initialValue() {
-            return Boolean.FALSE;
-        }
-    };
-
-    /**
-     * Called by groovy for all method invocations; pass-through for everything but effectors;
-     * effectors get wrapped in a new task (parented by current task if there is one).
-     */
-    public Object invokeMethod(String name, Object args) {
-        if (!this.@skipInvokeMethodEffectorInterception.get()) {
-            this.@skipInvokeMethodEffectorInterception.set(true);
-            
-            try {
-                //args should be an array, warn if we got here wrongly (extra defensive as args accepts it, but it shouldn't happen here)
-                if (args==null) {
-                    LOG.warn(this+"."+name+" invoked with incorrect args signature (null)", new Throwable("source of incorrect invocation of "+this+"."+name));
-                } else if (!args.class.isArray()) {
-                    LOG.warn(this+"."+name+" invoked with incorrect args signature (non-array "+args.class+"): "+args, new Throwable("source of incorrect invocation of "+this+"."+name));
-                }
-                Effector eff = entityType.getEffector(name);
-                if (eff != null) {
-                    return EffectorUtils.invokeEffector(this, eff, args)
-                }
-            } finally {
-                this.@skipInvokeMethodEffectorInterception.set(false);
-            }
-        }
-        if (metaClass==null)
-            throw new IllegalStateException("no meta class for "+this+", invoking "+name);
-        metaClass.invokeMethod(this, name, args);
-    }
 
     /** Convenience for finding named effector in {@link #getEffectors()} {@link Map}. */
     public <T> Effector<T> getEffector(String effectorName) {
@@ -1062,10 +1066,10 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     public void invalidateReferences() {
         // TODO move this to EntityMangementSupport,
         // when hierarchy fields can also be moved there
-        this.@parent = null;
-        this.@application = null;
-        this.@children.invalidate();
-        this.@groups.invalidate();
+        parent = null;
+        application = null;
+        children.invalidate();
+        groups.invalidate();
     }
     
     // TODO observed deadlocks -- we should synch on something private instead of on the class
