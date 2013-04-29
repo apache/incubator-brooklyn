@@ -22,6 +22,7 @@ import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -162,21 +163,49 @@ public class JmxFeed extends AbstractFeed {
         return jmxUri;
     }
     
+    @VisibleForTesting
     @SuppressWarnings("unchecked")
-    private Poller<Object> getPoller() {
+    protected Poller<Object> getPoller() {
         return (Poller<Object>) poller;
     }
     
     @Override
     protected void preStart() {
-        helper.connect(jmxConnectionTimeout);
+        /*
+         * All actions on the JmxHelper are done async (through the poller's threading) so we don't 
+         * block on start for a long time (e.g. if the entity is not contactable and doing a rebind 
+         * on restart of brooklyn). Without that, one gets a 120 second pause with it stuck in a 
+         * stack trace like:
+         * 
+         *      at brooklyn.event.feed.jmx.JmxHelper.sleep(JmxHelper.java:640)
+         *      at brooklyn.event.feed.jmx.JmxHelper.connect(JmxHelper.java:320)
+         *      at brooklyn.event.feed.jmx.JmxFeed.preStart(JmxFeed.java:172)
+         *      at brooklyn.event.feed.AbstractFeed.start(AbstractFeed.java:68)
+         *      at brooklyn.event.feed.jmx.JmxFeed$Builder.build(JmxFeed.java:119)
+         *      at brooklyn.entity.java.JavaAppUtils.connectMXBeanSensors(JavaAppUtils.java:109)
+         *      at brooklyn.entity.java.VanillaJavaApp.connectSensors(VanillaJavaApp.java:97)
+         *      at brooklyn.entity.basic.SoftwareProcessImpl.callRebindHooks(SoftwareProcessImpl.java:189)
+         *      at brooklyn.entity.basic.SoftwareProcessImpl.rebind(SoftwareProcessImpl.java:235)
+         *      ...
+         *      at brooklyn.entity.rebind.RebindManagerImpl.rebind(RebindManagerImpl.java:184)
+         */
         
-        for (NotificationFilter filter : notificationSubscriptions.keySet()) {
-            // TODO Could config.getObjectName have wildcards? Is this code safe?
-            Set<JmxNotificationSubscriptionConfig<?>> configs = notificationSubscriptions.get(filter);
-            NotificationListener listener = registerNotificationListener(configs);
-            ObjectName objectName = Iterables.get(configs, 0).getObjectName();
-            notificationListeners.put(objectName, listener);
+        getPoller().submit(new Callable<Void>() {
+               public Void call() {
+                   helper.connect(jmxConnectionTimeout);
+                   return null;
+               }});
+        
+        for (final NotificationFilter filter : notificationSubscriptions.keySet()) {
+            getPoller().submit(new Callable<Void>() {
+                public Void call() {
+                    // TODO Could config.getObjectName have wildcards? Is this code safe?
+                    Set<JmxNotificationSubscriptionConfig<?>> configs = notificationSubscriptions.get(filter);
+                    NotificationListener listener = registerNotificationListener(configs);
+                    ObjectName objectName = Iterables.get(configs, 0).getObjectName();
+                    notificationListeners.put(objectName, listener);
+                    return null;
+                }});
         }
         
         // Setup polling of sensors

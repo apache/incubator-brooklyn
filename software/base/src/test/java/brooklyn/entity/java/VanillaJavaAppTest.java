@@ -4,6 +4,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import java.net.MalformedURLException;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
@@ -13,6 +14,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -29,6 +32,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.Asserts;
@@ -37,11 +41,13 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.crypto.FluentKeySigner;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.crypto.SslTrustUtils;
+import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 public class VanillaJavaAppTest {
 
@@ -242,7 +248,8 @@ public class VanillaJavaAppTest {
         assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), (Integer)port);
     }
 
-    @Test(groups={"Integration"})
+    // FIXME Way test was written requires JmxSensorAdapter; need to rewrite...  
+    @Test(groups={"Integration", "WIP"})
     public void testStartsWithSecureJmxPortSpecifiedInConfig() throws Exception {
         int port = 53406;
         String main = MAIN_CLASS.getCanonicalName();
@@ -261,7 +268,7 @@ public class VanillaJavaAppTest {
         
         assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), (Integer)port);
 
-        // good key+cert succeeds        
+        // good key+cert succeeds
         new AsserterForJmxConnection(javaProcess)
                 .customizeSocketFactory(null, null)
                 .connect();
@@ -288,7 +295,7 @@ public class VanillaJavaAppTest {
         Asserts.assertFails(new Callable<Void>() {
             public Void call() throws Exception {
                 AsserterForJmxConnection asserter = new AsserterForJmxConnection(javaProcess);
-                //FIXME asserter.getEnvironment().put("jmx.remote.profiles", JmxmpAgent.TLS_JMX_REMOTE_PROFILES);
+                asserter.putEnv("jmx.remote.profiles", JmxmpAgent.TLS_JMX_REMOTE_PROFILES);
                 asserter.customizeSocketFactory(SecureKeys.newKeyPair().getPrivate(), null)
                         .connect();
                 return null;
@@ -296,19 +303,25 @@ public class VanillaJavaAppTest {
     }
 
     private static class AsserterForJmxConnection {
-        VanillaJavaApp entity;
-        Map env;
+        final VanillaJavaApp entity;
+        final JMXServiceURL url;
+        final Map<String,Object> env;
         
-        public AsserterForJmxConnection(VanillaJavaApp e) { this.entity = e; }
+        public AsserterForJmxConnection(VanillaJavaApp e) throws MalformedURLException {
+            this.entity = e;
+            
+            JmxHelper jmxHelper = new JmxHelper(entity);
+            this.url = new JMXServiceURL(jmxHelper.getUrl());
+            this.env = Maps.newLinkedHashMap(jmxHelper.getConnectionEnvVars());
+        }
         
-        // FIXME
-//        public JmxSensorAdapter getJmxAdapter() { return entity.sensorRegistry.adapters.find({ it in JmxSensorAdapter }); }
-//        public JmxHelper getJmxHelper() { return getJmxAdapter().helper; }
-//        public String getJmxUrl() { return new JMXServiceURL(getJmxHelper().url); }
-//        public synchronized Map getEnvironment() {
-//            if (env==null) env = new LinkedHashMap(getJmxHelper().getConnectionEnvVars());
-//            return env; 
-//        }
+        public JMXServiceURL getJmxUrl() throws MalformedURLException {
+            return url;
+        }
+        
+        public void putEnv(String key, Object val) {
+            env.put(key, val);
+        }
         
         public AsserterForJmxConnection customizeSocketFactory(PrivateKey customKey, Certificate customCert) throws Exception {
             PrivateKey key = (customKey == null) ? entity.getConfig(UsesJmx.JMX_SSL_ACCESS_KEY) : customKey;
@@ -329,16 +342,13 @@ public class VanillaJavaAppTest {
             SSLContext ctx = SSLContext.getInstance("TLSv1");
             ctx.init(kmf.getKeyManagers(), new TrustManager[] {tms}, null);
             SSLSocketFactory ssf = ctx.getSocketFactory();
-            //FIXME getEnvironment().put(JmxmpAgent.TLS_SOCKET_FACTORY_PROPERTY, ssf);
+            env.put(JmxmpAgent.TLS_SOCKET_FACTORY_PROPERTY, ssf);
             
             return this;
         }
         
-        public JMXConnector connect() {
-            throw new UnsupportedOperationException();
-            //FIXME return JMXConnectorFactory.connect(new JMXServiceURL(getJmxUrl()), getEnvironment());
+        public JMXConnector connect() throws Exception {
+            return JMXConnectorFactory.connect(getJmxUrl(), env);
         }
     }
-    
 }
-
