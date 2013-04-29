@@ -80,7 +80,23 @@ public class MethodEffector<T> extends AbstractEffector<T> {
     }
 
     public T call(Entity entity, Map parameters) {
-        return (T) ((AbstractEntity)entity).invokeMethod(getName(), EffectorUtils.prepareArgsForEffector(this, parameters));
+        Object[] parametersArray = EffectorUtils.prepareArgsForEffector(this, parameters);
+        if (entity instanceof AbstractEntity) {
+            return EffectorUtils.invokeEffector(entity, this, parametersArray);
+        } else {
+            // TODO Should really find method with right signature, rather than just the right args.
+            // TODO prepareArgs can miss things out that have "default values"! Code below will probably fail if that happens.
+            Method[] methods = entity.getClass().getMethods();
+            for (Method method : methods) {
+                if (method.getName().equals(getName()) && parametersArray.length == method.getParameterTypes().length) {
+                    try {
+                        return (T) method.invoke(entity, parametersArray);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error invoking effector "+this+" on entity "+entity, e);
+                    }
+                }
+            }
+            throw new IllegalStateException("Could not find method for effector "+getName()+" with "+parametersArray.length+" parameters on "+entity);
+        }
     }
-
 }
