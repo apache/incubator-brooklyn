@@ -343,11 +343,11 @@ public class JmxFeedTest {
                         }
                     }});
             
-    
+
             Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
                 public void run() {
                     sendNotification(mbean, "one", sequence.getAndIncrement(), "abc");
-                    assertEquals(received.size(), 1);
+                    assertTrue(received.size() > 0, "received size should be bigger than 0");
                     assertEquals(received.get(0).getValue(), "abc");
                 }});
         } finally {
