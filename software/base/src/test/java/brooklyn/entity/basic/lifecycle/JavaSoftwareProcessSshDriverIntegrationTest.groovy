@@ -15,7 +15,6 @@ import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.basic.SoftwareProcessDriver
 import brooklyn.entity.basic.SoftwareProcessImpl
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver
-import brooklyn.event.adapter.FunctionSensorAdapter
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
@@ -68,10 +67,13 @@ class MyEntity extends SoftwareProcessImpl {
     @Override
     protected void connectSensors() {
         super.connectSensors();
-
-        sensorRegistry.register(new FunctionSensorAdapter(
-            { driver.isRunning() } )).
-        poll(SoftwareProcess.SERVICE_UP); 
+        connectServiceUpIsRunning();
+    }
+    
+    @Override
+    protected void disconnectSensors() {
+        super.disconnectSensors();
+        disconnectServiceUpIsRunning();
     }
 }
 

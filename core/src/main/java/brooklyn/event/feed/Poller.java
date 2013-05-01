@@ -28,7 +28,9 @@ public class Poller<V> {
     public static final Logger log = LoggerFactory.getLogger(Poller.class);
 
     private final EntityLocal entity;
+    private final Set<Callable<?>> oneOffJobs = new LinkedHashSet<Callable<?>>();
     private final Set<PollJob<V>> pollJobs = new LinkedHashSet<PollJob<V>>();
+    private final Set<Task> oneOffTasks = new LinkedHashSet<Task>();
     private final Set<ScheduledTask> tasks = new LinkedHashSet<ScheduledTask>();
     private volatile boolean running = false;
     
@@ -60,6 +62,13 @@ public class Poller<V> {
         this.entity = entity;
     }
     
+    public void submit(Callable<?> job) {
+        if (running) {
+            throw new IllegalStateException("Cannot submit additional tasks after poller has started");
+        }
+        oneOffJobs.add(job);
+    }
+
     public void scheduleAtFixedRate(Callable<V> job, PollHandler<? super V> handler, long period) {
         if (running) {
             throw new IllegalStateException("Cannot schedule additional tasks after poller has started");
@@ -79,6 +88,11 @@ public class Poller<V> {
         }
         
         running = true;
+        
+        for (final Callable<?> oneOffJob : oneOffJobs) {
+            BasicTask<?> task = new BasicTask(oneOffJob);
+            oneOffTasks.add(((EntityInternal)entity).getExecutionContext().submit(task));
+        }
         
         for (final PollJob<V> pollJob : pollJobs) {
             if (pollJob.pollPeriod > 0) {
@@ -102,9 +116,13 @@ public class Poller<V> {
         }
         
         running = false;
+        for (Task task : oneOffTasks) {
+            task.cancel(true);
+        }
         for (ScheduledTask task : tasks) {
             task.cancel();
         }
+        oneOffTasks.clear();
         tasks.clear();
     }
 
