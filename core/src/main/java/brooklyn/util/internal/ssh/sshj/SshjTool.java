@@ -393,7 +393,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             } catch (Exception e) {
                 String errorMessage = String.format("(%s) error acquiring %s", toString(), connection);
                 String fullMessage = String.format("%s (attempt %s/%s, in time %s/%s)", 
-                        errorMessage, (i+1), sshTries, Time.makeTimeString(stopwatch.elapsedMillis()), 
+                        errorMessage, (i+1), sshTries, Time.makeTimeString(stopwatch.elapsed(TimeUnit.MILLISECONDS)), 
                         (sshTriesTimeout > 0 ? Time.makeTimeString(sshTriesTimeout) : "unlimited"));
                 try {
                     disconnect();
@@ -403,7 +403,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 if (i + 1 == sshTries) {
                     LOG.warn("<< {}: {}", fullMessage, e.getMessage());
                     throw propagate(e, fullMessage + "; out of retries");
-                } else if (sshTriesTimeout > 0 && stopwatch.elapsedMillis() > sshTriesTimeout) {
+                } else if (sshTriesTimeout > 0 && stopwatch.elapsed(TimeUnit.MILLISECONDS) > sshTriesTimeout) {
                     LOG.warn("<< {}: {}", fullMessage, e.getMessage());
                     throw propagate(e, fullMessage + "; out of time");
                 } else {
