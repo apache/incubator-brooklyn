@@ -449,12 +449,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     @Override
-    @Deprecated // see setParent(Entity)
-    public AbstractEntity setOwner(Entity entity) {
-        return setParent(entity);
-    }
-    
-    @Override
     public void clearParent() {
         if (parent == null) return
         Entity oldParent = parent
@@ -462,12 +456,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         oldParent?.removeChild(getProxyIfAvailable())
     }
     
-    @Override
-    @Deprecated // see clearParent
-    public void clearOwner() {
-        clearParent();
-    }
-
     /**
      * Adds the given entity as a child of this parent <em>and</em> sets this entity as the parent of the child;
      * returns argument passed in, for convenience.
@@ -505,12 +493,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
     
     @Override
-    @Deprecated // see addChild(Entity)
-    public Entity addOwnedChild(Entity child) {
-        return addChild(child);
-    }
-
-    @Override
     public boolean removeChild(Entity child) {
         synchronized (children) {
             boolean changed = children.remove(child)
@@ -523,12 +505,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
     }
 
-    @Override
-    @Deprecated // see removeChild(Entity)
-    public boolean removeOwnedChild(Entity child) {
-        return removeChild(child);
-    }
-    
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
@@ -551,23 +527,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     
     public EntityCollectionReference getChildrenReference() {
         return this.@children;
-    }
-    
-    @Override
-    @Deprecated
-    public Entity getOwner() {
-        return getParent();
-    }
-
-    @Override
-    @Deprecated
-    public Collection<Entity> getOwnedChildren() {
-        return getChildren();
-    }
-    
-    @Deprecated
-    public EntityCollectionReference getOwnedChildrenReference() {
-        return getChildrenReference();
     }
     
     @Override
