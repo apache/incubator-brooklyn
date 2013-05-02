@@ -175,7 +175,7 @@ public class RepeaterTest {
 
         assertFalse result;
 
-        long difference = stopwatch.elapsedMillis();
+        long difference = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         assertTrue(difference >= LIMIT, "Difference was: " + difference);
         assertTrue(difference < 4 * LIMIT, "Difference was: " + difference);
     }

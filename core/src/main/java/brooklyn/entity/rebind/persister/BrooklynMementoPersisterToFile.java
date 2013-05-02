@@ -54,7 +54,7 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
             String xml = Joiner.on("\n").join(lines);
             BrooklynMemento result = serializer.fromString(xml);
             
-            if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; total={}ms", stopwatch.elapsedMillis()); 
+            if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; total={}ms", stopwatch.elapsed(TimeUnit.MILLISECONDS)); 
 
             return result;
         } catch (IOException e) {
@@ -66,11 +66,11 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     public void checkpoint(BrooklynMemento newMemento) {
         Stopwatch stopwatch = new Stopwatch().start();
         synchronized (mutex) {
-            long timeObtainedMutex = stopwatch.elapsedMillis();
+            long timeObtainedMutex = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             super.checkpoint(newMemento);
-            long timeCheckpointed = stopwatch.elapsedMillis();
+            long timeCheckpointed = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             writeMemento();
-            long timeWritten = stopwatch.elapsedMillis();
+            long timeWritten = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             
             if (LOG.isDebugEnabled()) LOG.debug("Checkpointed memento; total={}ms, obtainingMutex={}ms, " +
                     "checkpointing={}ms, writing={}ms", 
@@ -83,11 +83,11 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     public void delta(Delta delta) {
         Stopwatch stopwatch = new Stopwatch().start();
         synchronized (mutex) {
-            long timeObtainedMutex = stopwatch.elapsedMillis();
+            long timeObtainedMutex = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             super.delta(delta);
-            long timeDeltad = stopwatch.elapsedMillis();
+            long timeDeltad = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             writeMemento();
-            long timeWritten = stopwatch.elapsedMillis();
+            long timeWritten = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             
             if (LOG.isDebugEnabled()) LOG.debug("Checkpointed memento; total={}ms, obtainingMutex={}ms, " +
                     "delta'ing={}ms, writing={}", 

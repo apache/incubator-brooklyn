@@ -183,7 +183,7 @@ class EntityExecutionManagerTest {
             assertEquals(storedTasks, [] as Set, "storedTasks="+storedTasks);
         }
 
-        long timeToGc = stopwatch.elapsedMillis();
+        long timeToGc = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         
         assertTrue(timeToGc > (maxTaskAge-earlyReturnGrace), "timeToGc="+timeToGc+"; maxTaskAge="+maxTaskAge);
         assertTrue(timeToGc < (maxTaskAge+maxOverhead), "timeToGc="+timeToGc+"; maxTaskAge="+maxTaskAge);

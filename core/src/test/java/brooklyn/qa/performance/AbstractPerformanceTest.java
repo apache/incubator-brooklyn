@@ -2,6 +2,8 @@ package brooklyn.qa.performance;
 
 import static org.testng.Assert.assertTrue;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -88,8 +90,8 @@ public class AbstractPerformanceTest {
         Stopwatch warmupWatch = new Stopwatch();
         warmupWatch.start();
         for (int i = 0; i < (numIterations/10); i++) {
-            if (warmupWatch.elapsedMillis() >= nextLogTime) {
-                LOG.info("Warm-up "+prefix+" iteration="+i+" at "+warmupWatch.elapsedMillis()+"ms");
+            if (warmupWatch.elapsed(TimeUnit.MILLISECONDS) >= nextLogTime) {
+                LOG.info("Warm-up "+prefix+" iteration="+i+" at "+warmupWatch.elapsed(TimeUnit.MILLISECONDS)+"ms");
                 nextLogTime += logInterval;
             }
             r.run();
@@ -99,19 +101,19 @@ public class AbstractPerformanceTest {
         stopwatch.start();
         nextLogTime = 0;
         for (int i = 0; i < numIterations; i++) {
-            if (stopwatch.elapsedMillis() >= nextLogTime) {
-                LOG.info(prefix+" iteration="+i+" at "+stopwatch.elapsedMillis()+"ms");
+            if (stopwatch.elapsed(TimeUnit.MILLISECONDS) >= nextLogTime) {
+                LOG.info(prefix+" iteration="+i+" at "+stopwatch.elapsed(TimeUnit.MILLISECONDS)+"ms");
                 nextLogTime += logInterval;
             }
             r.run();
         }
-        return stopwatch.elapsedMillis();
+        return stopwatch.elapsed(TimeUnit.MILLISECONDS);
     }
     
     protected long measure(Runnable r) {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
         r.run();
-        return stopwatch.elapsedMillis();
+        return stopwatch.elapsed(TimeUnit.MILLISECONDS);
     }
 }

@@ -367,7 +367,7 @@ public class BasicTaskExecutionTest {
         em.submit(t);
         
         assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
-        long actualDelay = stopwatch.elapsedMillis();
+        long actualDelay = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         
         assertTrue(actualDelay > (delay-earlyReturnGrace), "actualDelay="+actualDelay+"; delay="+delay);
         assertTrue(actualDelay < (delay+maxOverhead), "actualDelay="+actualDelay+"; delay="+delay);
@@ -387,7 +387,7 @@ public class BasicTaskExecutionTest {
             public Task call() {
                 return new BasicTask(new Runnable() {
                     public void run() {
-                        timestamps.add(stopwatch.elapsedMillis());
+                        timestamps.add(stopwatch.elapsed(TimeUnit.MILLISECONDS));
                         if (timestamps.size() >= numTimestamps) latch.countDown();
                     }});
             }};

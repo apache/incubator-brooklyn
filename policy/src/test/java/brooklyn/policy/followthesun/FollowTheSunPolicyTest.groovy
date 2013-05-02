@@ -240,7 +240,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         
         app.subscribe(item1, Movable.CONTAINER, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
-                long eventTime = stopwatch.elapsedMillis()
+                long eventTime = stopwatch.elapsed(TimeUnit.MILLISECONDS)
                 LOG.info("Received $event at $eventTime")
                 eventTimes += eventTime
                 semaphore.release()

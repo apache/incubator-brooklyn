@@ -272,10 +272,10 @@ public class WebAppIntegrationTest {
                 
                 // need to maintain n requests per second for the duration of the window size
                 log.info("Applying load for "+WebAppService.AVG_REQUESTS_PER_SECOND_PERIOD+"ms");
-                while (stopwatch.elapsedMillis() < WebAppService.AVG_REQUESTS_PER_SECOND_PERIOD) {
-                    long preReqsTime = stopwatch.elapsedMillis()
+                while (stopwatch.elapsed(TimeUnit.MILLISECONDS) < WebAppService.AVG_REQUESTS_PER_SECOND_PERIOD) {
+                    long preReqsTime = stopwatch.elapsed(TimeUnit.MILLISECONDS)
                     desiredMsgsPerSec.times { connectToURL url }
-                    sleep(1000 - (stopwatch.elapsedMillis()-preReqsTime))
+                    sleep(1000 - (stopwatch.elapsed(TimeUnit.MILLISECONDS)-preReqsTime))
                     reqsSent += desiredMsgsPerSec
                 }
 

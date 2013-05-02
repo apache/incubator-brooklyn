@@ -198,7 +198,7 @@ public class MementoFileWriter<T> {
         modCount.incrementAndGet();
 
         if (LOG.isTraceEnabled()) LOG.trace("Wrote {}, took {}ms; modified file {} times", 
-                new Object[] {file, stopwatch.elapsedMillis(), modCount});
+                new Object[] {file, stopwatch.elapsed(TimeUnit.MILLISECONDS), modCount});
     }
     
     private void deleteNow() throws IOException {
