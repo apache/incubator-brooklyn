@@ -55,6 +55,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	private transient SoftwareProcessDriver driver;
 	protected transient SensorRegistry sensorRegistry;
 
+    /** @see #connectServiceUpIsRunning() */
+    private volatile FunctionFeed serviceUp;
+
 	public SoftwareProcessImpl() {
         super(MutableMap.of(), null);
     }
@@ -111,9 +114,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected void connectSensors() {
     }
 
-    /** @see #connectServiceUpIsRunning() */
-    private volatile FunctionFeed serviceUp;
-
     /**
      * For connecting the {@link #SERVICE_UP} sensor to the value of the {@code getDriver().isRunning()} expression.
      * <p>
@@ -122,7 +122,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * @see #disconnectServiceUpIsRunning()
      */
     protected void connectServiceUpIsRunning() {
-        FunctionFeed serviceUp = FunctionFeed.builder()
+        serviceUp = FunctionFeed.builder()
                 .entity(this)
                 .period(5000)
                 .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
