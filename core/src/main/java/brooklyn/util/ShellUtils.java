@@ -1,6 +1,7 @@
 package brooklyn.util;
 
 import brooklyn.util.internal.StreamGobbler;
+import com.google.common.base.Throwables;
 import groovy.io.GroovyPrintStream;
 import groovy.time.TimeDuration;
 import org.slf4j.Logger;
@@ -76,18 +77,18 @@ public class ShellUtils {
         }
 
         try {
-            final Process proc = Runtime.getRuntime().exec(cmd, envp, dir);
+            final Process process = Runtime.getRuntime().exec(cmd, envp, dir);
             ByteArrayOutputStream stdoutB = new ByteArrayOutputStream();
             ByteArrayOutputStream stderrB = new ByteArrayOutputStream();
             PrintStream stdoutP = new GroovyPrintStream(stdoutB);
             PrintStream stderrP = new GroovyPrintStream(stderrB);
-            StreamGobbler stdoutG = new StreamGobbler(proc.getInputStream(), stdoutP, log).setLogPrefix("[" + context + ":stdout] ");
+            StreamGobbler stdoutG = new StreamGobbler(process.getInputStream(), stdoutP, log).setLogPrefix("[" + context + ":stdout] ");
             stdoutG.start();
-            StreamGobbler stderrG = new StreamGobbler(proc.getErrorStream(), stderrP, log).setLogPrefix("[" + context + ":stderr] ");
+            StreamGobbler stderrG = new StreamGobbler(process.getErrorStream(), stderrP, log).setLogPrefix("[" + context + ":stderr] ");
             stderrG.start();
             if (input != null) {
-                proc.getOutputStream().write(input.getBytes());
-                proc.getOutputStream().flush();
+                process.getOutputStream().write(input.getBytes());
+                process.getOutputStream().flush();
             }
 
             final long timeout = getTimeoutMs(flags);
@@ -105,7 +106,7 @@ public class ShellUtils {
                             if (log.isDebugEnabled()) {
                                 log.debug("Timeout exceeded for {} {}", context, on("").join(cmd));
                             }
-                            proc.destroy();
+                            process.destroy();
                             killed.set(true);
                         }
                     } catch (Exception e) {
@@ -114,7 +115,7 @@ public class ShellUtils {
             };
 
             if (timeout > 0) timeoutThread.start();
-            int exitCode = proc.waitFor();
+            int exitCode = process.waitFor();
             ended.set(true);
             if (timeout > 0) timeoutThread.interrupt();
 
@@ -134,9 +135,9 @@ public class ShellUtils {
             }
             return stdoutB.toString().split("\n");
         } catch (IOException e) {
-            throw new RuntimeException(e);
+           throw Throwables.propagate(e);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw Throwables.propagate(e);
         }
     }
 }
