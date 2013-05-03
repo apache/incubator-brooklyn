@@ -138,8 +138,8 @@ public class Strings {
         return string;
     }
 
-	/** @deprecated use {@link com.google.common.base.Joiner} */
-	@Deprecated public static String join(Iterable<? extends Object> list, String seperator) {
+    /** convenience for {@link com.google.common.base.Joiner} */
+	public static String join(Iterable<? extends Object> list, String seperator) {
 		boolean app = false;
 		StringBuilder out = new StringBuilder();
 		for (Object s: list) {
@@ -149,8 +149,8 @@ public class Strings {
 		}
 		return out.toString();
 	}
-	/** @deprecated use {@link com.google.common.base.Joiner} */
-	@Deprecated public static String join(Object[] list, String seperator) {
+	/** convenience for {@link com.google.common.base.Joiner} */
+	public static String join(Object[] list, String seperator) {
 		boolean app = false;
 		StringBuilder out = new StringBuilder();
 		for (Object s: list) {

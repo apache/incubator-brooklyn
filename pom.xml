@@ -587,6 +587,7 @@
             <modules>
                 <module>utils/test-support</module>
                 <module>utils/common</module>
+                <module>utils/groovy</module>
                 <module>api</module>
                 <module>usage/test-support</module>
                 <module>core</module>

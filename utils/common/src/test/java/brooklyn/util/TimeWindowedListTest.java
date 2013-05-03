@@ -2,15 +2,17 @@ package brooklyn.util;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.List;
+
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
-class TimeWindowedListTest {
+public class TimeWindowedListTest {
 
     @Test
     public void testKeepsMinVals() {
-        TimeWindowedList list = new TimeWindowedList<Object>([timePeriod:1L, minVals:2]);
+        TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1L, "minVals", 2));
         assertEquals(list.getValues(2L), timestampedValues());
         
         list.add("a", 0L);
@@ -25,18 +27,18 @@ class TimeWindowedListTest {
     
     @Test
     public void testKeepsOnlyRecentVals() {
-        TimeWindowedList list = new TimeWindowedList<Object>([timePeriod:1000L]);
+        TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1000L));
         
         list.add("a", 0L);
         list.add("b", 100L);
         assertEquals(list.getValues(1000L), timestampedValues("a", 0L, "b", 100L));
         assertEquals(list.getValues(1100L), timestampedValues("b", 100L));
-        assertEquals(list.getValues(1101L), []);
+        assertEquals(list.getValues(1101L), Lists.newArrayList());
     }
     
     @Test
     public void testKeepsMinExpiredVals() {
-        TimeWindowedList list = new TimeWindowedList<Object>([timePeriod:1000L, minExpiredVals:1]);
+        TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1000L, "minExpiredVals", 1));
         
         list.add("a", 0L);
         list.add("b", 100L);
@@ -56,7 +58,7 @@ class TimeWindowedListTest {
     
     @Test
     public void testGetsSubSetOfValsIncludingOneMinExpiredVal() {
-        TimeWindowedList list = new TimeWindowedList<Object>([timePeriod:1000L, minExpiredVals:1]);
+        TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1000L, "minExpiredVals", 1));
         
         list.add("a", 0L);
         list.add("b", 100L);
@@ -68,19 +70,19 @@ class TimeWindowedListTest {
     
     @Test
     public void testGetsWindowWithMinWhenEmpty() {
-        TimeWindowedList list = new TimeWindowedList<Object>([timePeriod:1L, minVals:1]);
+        TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1L, "minVals", 1));
         assertEquals(list.getValuesInWindow(1000L, 10L), timestampedValues());
     }
 
     @Test
     public void testGetsWindowWithMinExpiredWhenEmpty() {
-        TimeWindowedList list = new TimeWindowedList<Object>([timePeriod:1L, minExpiredVals:1]);
+        TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1L, "minExpiredVals", 1));
         assertEquals(list.getValuesInWindow(1000L, 10L), timestampedValues());
     }
 
     @Test
     public void testGetsWindowWithMinValsWhenExpired() {
-        TimeWindowedList list = new TimeWindowedList<Object>([timePeriod:1L, minVals:1]);
+        TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 1L, "minVals", 1));
         list.add("a", 0L);
         list.add("b", 1L);
         
@@ -89,7 +91,7 @@ class TimeWindowedListTest {
 
     @Test
     public void testZeroSizeWindowWithOneExpiredContainsOnlyMostRecentValue() {
-        TimeWindowedList list = new TimeWindowedList<Object>([timePeriod:0L, minExpiredVals:1]);
+        TimeWindowedList list = new TimeWindowedList<Object>(MutableMap.of("timePeriod", 0L, "minExpiredVals", 1));
         
         list.add("a", 0L);
         assertEquals(list.getValuesInWindow(0L, 100L), timestampedValues("a", 0L));
@@ -101,14 +103,14 @@ class TimeWindowedListTest {
     }
     
     private <T> List<TimestampedValue<T>> timestampedValues() {
-        return [];
+        return Lists.newArrayList();
     }
     
     private <T> List<TimestampedValue<T>> timestampedValues(T v1, long t1) {
-        return [new TimestampedValue(v1, t1)];
+        return Lists.newArrayList(new TimestampedValue<T>(v1, t1));
     }
     
     private <T> List<TimestampedValue<T>> timestampedValues(T v1, long t1, T v2, long t2) {
-        return [new TimestampedValue(v1, t1), new TimestampedValue(v2, t2)];
+        return Lists.newArrayList(new TimestampedValue<T>(v1, t1), new TimestampedValue<T>(v2, t2));
     }
 }
