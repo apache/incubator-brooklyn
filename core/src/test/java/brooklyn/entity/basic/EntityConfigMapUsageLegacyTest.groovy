@@ -169,6 +169,7 @@ public class EntityConfigMapUsageLegacyTest {
     public void testGetFutureConfigWhenReady() throws Exception {
         TestEntity entity = new TestEntityImpl([parent:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone( {return "aval"} as Callable))
+        Entities.startManagement(app);
         app.start([new SimulatedLocation()])
         
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval")
@@ -179,6 +180,7 @@ public class EntityConfigMapUsageLegacyTest {
         TestEntity entity = new TestEntityImpl([parent:app])
         final CountDownLatch latch = new CountDownLatch(1)
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone( {latch.await(); return "aval"} as Callable))
+        Entities.startManagement(app);
         app.start([new SimulatedLocation()])
         
         Thread t = new Thread( { Thread.sleep(10); latch.countDown() } )
@@ -200,6 +202,7 @@ public class EntityConfigMapUsageLegacyTest {
         TestEntity entity = new TestEntityImpl([parent:app])
         TestEntity entity2 = new TestEntityImpl([parent:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
+        Entities.startManagement(app);
         app.start([new SimulatedLocation()])
         
         entity2.setAttribute(TestEntity.NAME, "aval")
@@ -211,6 +214,7 @@ public class EntityConfigMapUsageLegacyTest {
         TestEntity entity = new TestEntityImpl([parent:app])
         TestEntity entity2 = new TestEntityImpl([parent:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributePostProcessedWhenReady(entity2, TestEntity.NAME, {it}, { it+"mysuffix"}))
+        Entities.startManagement(app);
         app.start([new SimulatedLocation()])
         
         entity2.setAttribute(TestEntity.NAME, "aval")
@@ -222,6 +226,7 @@ public class EntityConfigMapUsageLegacyTest {
         TestEntity entity = new TestEntityImpl([parent:app])
         TestEntity entity2 = new TestEntityImpl([parent:app])
         entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME))
+        Entities.startManagement(app);
         app.start([new SimulatedLocation()])
         
         Thread t = new Thread( { Thread.sleep(10); entity2.setAttribute(TestEntity.NAME, "aval") } )
