@@ -234,11 +234,15 @@ public class Asserts {
         }
     }
     
-    public static void assertFails(Runnable c) {
+    public static void assertFails(Runnable r) {
+        assertFailsWith(toCallable(r), Predicates.alwaysTrue());
+    }
+    
+    public static void assertFails(Callable<?> c) {
         assertFailsWith(c, Predicates.alwaysTrue());
     }
     
-    public static void assertFailsWith(Runnable c, final Closure<Boolean> exceptionChecker) {
+    public static void assertFailsWith(Callable<?> c, final Closure<Boolean> exceptionChecker) {
         assertFailsWith(c, new Predicate<Throwable>() {
             public boolean apply(Throwable input) {
                 return exceptionChecker.call(input);
@@ -262,11 +266,15 @@ public class Asserts {
             }
         });
     }
+
+    public static void assertFailsWith(Runnable r, Predicate<? super Throwable> exceptionChecker) {
+        assertFailsWith(toCallable(r), exceptionChecker);
+    }
     
-    public static void assertFailsWith(Runnable c, Predicate<? super Throwable> exceptionChecker) {
+    public static void assertFailsWith(Callable<?> c, Predicate<? super Throwable> exceptionChecker) {
         boolean failed = false;
         try {
-            c.run();
+            c.call();
         } catch (Throwable e) {
             failed = true;
             if (!exceptionChecker.apply(e)) {

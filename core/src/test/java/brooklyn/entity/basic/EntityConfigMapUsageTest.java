@@ -75,7 +75,7 @@ public class EntityConfigMapUsageTest {
     @Test
     public void testConfigSetToNullIsAvailable() throws Exception {
         TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
-                .configure(strKeyWithDefault, null));
+                .configure(strKeyWithDefault, (String)null));
         
         assertEquals(entity.getConfig(strKeyWithDefault), null);
     }
@@ -83,10 +83,23 @@ public class EntityConfigMapUsageTest {
     @Test
     public void testInheritedConfigSetToNullIsAvailable() throws Exception {
         TestEntity parent = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
-                .configure(strKeyWithDefault, null));
+                .configure(strKeyWithDefault, (String)null));
         TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         assertEquals(entity.getConfig(strKeyWithDefault), null);
+    }
+    
+    @Test
+    public void testInheritedConfigAvailableDeepInHierarchy() throws Exception {
+        TestEntity parent = app.createAndManageChild(EntitySpecs.spec(TestEntity.class)
+                .configure(strKeyWithDefault, "customval"));
+        TestEntity entity = parent.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity2 = entity.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        TestEntity entity3 = entity2.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        
+        assertEquals(entity.getConfig(strKeyWithDefault), "customval");
+        assertEquals(entity2.getConfig(strKeyWithDefault), "customval");
+        assertEquals(entity3.getConfig(strKeyWithDefault), "customval");
     }
     
     @Test

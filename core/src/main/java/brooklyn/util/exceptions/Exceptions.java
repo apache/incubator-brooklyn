@@ -10,20 +10,27 @@ import com.google.common.base.Throwables;
 
 public class Exceptions {
 
-    /** like guava {@link Throwables#propagate(Throwable)}, 
-     * but set interrupted if interrupted exception (why doesn't guava do this?!), 
-     * and throw {@link RuntimeInterruptedException} */
+    /**
+     * Propagate a {@link Throwable} as a {@link RuntimeException}.
+     * <p>
+     * Like Guava {@link Throwables#propagate(Throwable)} but throws {@link RuntimeInterruptedException}
+     * to handle {@link InterruptedException}s.
+     */
     public static RuntimeException propagate(Throwable throwable) {
         if (throwable instanceof InterruptedException)
-            throw new RuntimeInterruptedException((InterruptedException)throwable);
+            throw new RuntimeInterruptedException((InterruptedException) throwable);
         return Throwables.propagate(throwable);
     }
 
-    /** propagates exceptions which are fatal, ie those which one rarely if ever wants to capture
-     * (such as InterruptedException and Errors) */
+    /** 
+     * Propagate exceptions which are fatal.
+     * <p>
+     * Propagates only those exceptions which one rarely (if ever) wants to capture,
+     * such as {@link InterruptedException} and {@link Error}s.
+     */
     public static void propagateIfFatal(Throwable throwable) {
         if (throwable instanceof InterruptedException)
-            throw new RuntimeInterruptedException((InterruptedException)throwable);
+            throw new RuntimeInterruptedException((InterruptedException) throwable);
         if (throwable instanceof Error)
             throw (Error) throwable;
     }

@@ -25,6 +25,7 @@ import brooklyn.util.MutableMap;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class MembershipTrackingPolicyTest {
 
@@ -115,7 +116,24 @@ public class MembershipTrackingPolicyTest {
         assertRecordsEventually(Record.newAdded(e1));
     }
 
+    @Test
+    public void testNotifiedOfExtraTrackedSensors() throws Exception {
+        TestEntity e1 = createAndManageChildOf(group);
+
+        RecordingMembershipTrackingPolicy policy2 = new RecordingMembershipTrackingPolicy(MutableMap.of("group", group, "sensorsToTrack", ImmutableSet.of(TestEntity.NAME)));
+        group.addPolicy(policy2);
+        policy2.setGroup(group);
+
+        e1.setAttribute(TestEntity.NAME, "myname");
+        
+        assertRecordsEventually(policy2, Record.newAdded(e1), Record.newChanged(e1));
+    }
+
     private void assertRecordsEventually(final Record... expected) {
+        assertRecordsEventually(policy, expected);
+    }
+    
+    private void assertRecordsEventually(final RecordingMembershipTrackingPolicy policy, final Record... expected) {
         TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertEquals(policy.records, ImmutableList.copyOf(expected), "actual="+policy.records);
@@ -132,7 +150,7 @@ public class MembershipTrackingPolicyTest {
     static class RecordingMembershipTrackingPolicy extends AbstractMembershipTrackingPolicy {
         final List<Record> records = new CopyOnWriteArrayList<Record>();
         
-        public RecordingMembershipTrackingPolicy(MutableMap<String, BasicGroup> flags) {
+        public RecordingMembershipTrackingPolicy(MutableMap<String, ?> flags) {
             super(flags);
         }
 

@@ -43,6 +43,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.GeneralisedDynamicMBean;
 import brooklyn.test.JmxService;
 import brooklyn.test.TestUtils;
@@ -96,7 +97,7 @@ public class JmxFeedTest {
                         super.start(locs);
                         setAttribute(Attributes.HOSTNAME, "localhost");
                         setAttribute(Attributes.JMX_PORT, 40123);
-                        setAttribute(Attributes.RMI_PORT, 40124);
+                        setAttribute(Attributes.RMI_SERVER_PORT, 40124);
                         setAttribute(Attributes.JMX_CONTEXT);
                     }
         };
@@ -233,9 +234,9 @@ public class JmxFeedTest {
 
     @Test
     public void testJmxNotificationSubscriptionForSensor() throws Exception {
-        String one = "notification.one", two = "notification.two";
-        StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of(one, two), objectName);
-        int sequence = 0;
+        final String one = "notification.one", two = "notification.two";
+        final StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of(one, two), objectName);
+        final AtomicInteger sequence = new AtomicInteger(0);
 
         feed = JmxFeed.builder()
                 .entity(entity)
@@ -243,19 +244,19 @@ public class JmxFeedTest {
                         .objectName(objectName)
                         .notificationFilterByTypeRegex(one))
                 .build();        
-        
-        // Notification updates the sensor
-        sendNotification(mbean, one, sequence++, 123);
 
-        TestUtils.executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        // Notification updates the sensor
+        // Note that subscription is done async, so can't just send notification immediately during test.
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
+                sendNotification(mbean, one, sequence.getAndIncrement(), 123);
                 assertEquals(entity.getAttribute(intAttribute), (Integer)123);
             }});
         
         // But other notification types are ignored
-        sendNotification(mbean, two, sequence++, -1);
+        sendNotification(mbean, two, sequence.getAndIncrement(), -1);
             
-        TestUtils.executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertEquals(entity.getAttribute(intAttribute), (Integer)123);
             }});
@@ -263,10 +264,9 @@ public class JmxFeedTest {
     
     @Test
     public void testJmxNotificationSubscriptionForSensorParsingNotification() throws Exception {
-        String one = "notification.one", two = "notification.two";
-        StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of(one, two), objectName);
-        int sequence = 0;
-        List<Notification> received = Lists.newArrayList();
+        final String one = "notification.one", two = "notification.two";
+        final StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of(one, two), objectName);
+        final AtomicInteger sequence = new AtomicInteger(0);
         
         feed = JmxFeed.builder()
                 .entity(entity)
@@ -280,19 +280,22 @@ public class JmxFeedTest {
                         }))
                 .build();
         
-        Notification notif = sendNotification(mbean, one, sequence++, 123);
         
-        TestUtils.executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        // Notification updates the sensor
+        // Note that subscription is done async, so can't just send notification immediately during test.
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
+                sendNotification(mbean, one, sequence.getAndIncrement(), 123);
                 assertEquals(entity.getAttribute(intAttribute), (Integer)123);
             }});
     }
 
     @Test
     public void testJmxNotificationWildcardSubscriptionUsingListener() throws Exception {
-        String one = "notification.one", two = "notification.two";
-        StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of(one, two), objectName);
-        int sequence = 0;
+        final String one = "notification.one";
+        final String two = "notification.two";
+        final StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of(one, two), objectName);
+        final AtomicInteger sequence = new AtomicInteger(0);
 
         feed = JmxFeed.builder()
                 .entity(entity)
@@ -302,34 +305,35 @@ public class JmxFeedTest {
                 .build();
         
         // Notification updates the sensor
-        sendNotification(mbean, one, sequence++, 123);
+        // Note that subscription is done async, so can't just send notification immediately during test.
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+            public void run() {
+                sendNotification(mbean, one, sequence.getAndIncrement(), 123);
+                assertEquals(entity.getAttribute(intAttribute), (Integer)123);
+            }});
 
-        assertSensorEventually(intAttribute, 123, TIMEOUT_MS);
-        
-        // But other notification types are ignored
-        sendNotification(mbean, two, sequence++, 456);
-
-        // FIXME Is this right, based on comment above?
+        // And wildcard means other notifications also received
+        sendNotification(mbean, two, sequence.getAndIncrement(), 456);
         assertSensorEventually(intAttribute, 456, TIMEOUT_MS);
     }
 
     // Test reproduces functionality used in Monterey, for Venue entity being told of requestActor
     @Test
     public void testSubscribeToJmxNotificationAndEmitCorrespondingNotificationSensor() throws Exception {
-        TestApplication app = new TestApplicationImpl();
-        final EntityWithEmitter entity = new EntityWithEmitter(app);
-        Entities.startManagement(app);
+        TestApplication app2 = new TestApplicationImpl();
+        final EntityWithEmitter entity = new EntityWithEmitter(app2);
+        Entities.startManagement(app2);
         try {
-            app.start(ImmutableList.of(new SimulatedLocation()));
+            app2.start(ImmutableList.of(new SimulatedLocation()));
             
             final List<SensorEvent<String>> received = Lists.newArrayList();
-            app.subscribe(null, EntityWithEmitter.MY_NOTIF, new SensorEventListener<String>() {
+            app2.subscribe(null, EntityWithEmitter.MY_NOTIF, new SensorEventListener<String>() {
                 public void onEvent(SensorEvent<String> event) {
                     received.add(event);
                 }});
     
-            StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of("one"), objectName);
-            int sequence = 0;
+            final StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of("one"), objectName);
+            final AtomicInteger sequence = new AtomicInteger(0);
             
             jmxHelper.connect(TIMEOUT_MS);
             jmxHelper.addNotificationListener(jmxObjectName, new NotificationListener() {
@@ -339,15 +343,15 @@ public class JmxFeedTest {
                         }
                     }});
             
-            Notification notif = sendNotification(mbean, "one", sequence++, "abc");
-    
-            TestUtils.executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+
+            Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
                 public void run() {
-                    assertEquals(received.size(), 1);
+                    sendNotification(mbean, "one", sequence.getAndIncrement(), "abc");
+                    assertTrue(received.size() > 0, "received size should be bigger than 0");
                     assertEquals(received.get(0).getValue(), "abc");
                 }});
         } finally {
-            if (app != null) Entities.destroyAll(app);
+            Entities.destroyAll(app2);
         }
     }
     

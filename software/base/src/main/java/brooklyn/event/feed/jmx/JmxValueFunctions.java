@@ -54,8 +54,8 @@ public class JmxValueFunctions {
         return result;
     }
     
-    public static Map<List<?>, Object> tabularDataToMapOfMaps(TabularData table) {
-        Map<List<?>, Object> result = Maps.newLinkedHashMap();
+    public static Map<List<?>, Map<String, Object>> tabularDataToMapOfMaps(TabularData table) {
+        Map<List<?>, Map<String, Object>> result = Maps.newLinkedHashMap();
         for (Object k : table.keySet()) {
             final Object[] kValues = ((List<?>)k).toArray();
             CompositeData v = (CompositeData) table.get(kValues);

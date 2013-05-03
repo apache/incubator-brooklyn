@@ -18,13 +18,13 @@ define([
                     application:"",
                     entity:"",
                     policy:"",
-                    edit:"",
+                    edit:""
                 }
             }
         },
         getLinkByName:function (name) {
             if (name) return this.get("links")[name]
-        },
+        }
     })
 
     PolicyConfigSummary.Collection = Backbone.Collection.extend({

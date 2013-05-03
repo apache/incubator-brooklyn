@@ -24,7 +24,7 @@ public class SimpleRedisCluster extends ApplicationBuilder {
 
     /** Create entities. */
     protected void doBuild() {
-        createChild(EntitySpecs.spec(RedisCluster.class)
+        addChild(EntitySpecs.spec(RedisCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "Brooklyn"));
     }

@@ -120,7 +120,7 @@ public class DependentConfiguration {
         if (ready.apply(value)) return value;
         BasicTask current = (BasicTask) Tasks.current();
         if (current == null) throw new IllegalStateException("Should only be invoked in a running task");
-        Entity entity = Iterables.find(current.getTags(), Predicates.instanceOf(Entity.class));
+        Entity entity = (Entity)Iterables.find(current.getTags(), Predicates.instanceOf(Entity.class));
         if (entity == null) throw new IllegalStateException("Should only be invoked in a running task with an entity tag; "+
                 current+" has no entity tag ("+current.getStatusDetail(false)+")");
         final AtomicReference<T> data = new AtomicReference<T>();

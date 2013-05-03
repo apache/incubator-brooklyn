@@ -259,25 +259,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         return getProxy()!=null ? getProxy() : this;
     }
     
-    /** @deprecated since 0.4.0 now handled by EntityMangementSupport */
-    public void setBeingManaged() {
-        // no-op
-    }
-    
-    /**
-     * FIXME Temporary workaround for use-case:
-     *  - the load balancing policy test calls app.managementContext.unmanage(itemToStop)
-     *  - concurrently, the policy calls an effector on that item: item.move()
-     *  - The code in AbstractManagementContext.invokeEffectorMethodSync calls manageIfNecessary.
-     *    This detects that the item is not managed, and sets it as managed again. The item is automatically
-     *    added back into the dynamic group, and the policy receives an erroneous MEMBER_ADDED event.
-     * 
-     * @deprecated since 0.4.0 now handled by EntityMangementSupport
-     */
-    public boolean hasEverBeenManaged() {
-        return getManagementSupport().wasDeployed();
-    }
-    
     /** sets fields from flags; can be overridden if needed, subclasses should
      * set custom fields before _invoking_ this super
      * (and they nearly always should invoke the super)
@@ -440,7 +421,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         parent = entity
         //previously tested entity!=null but that should be guaranteed?
         entity.addChild(getProxyIfAvailable())
-        configsInternal.setInheritedConfig(((EntityInternal)entity).getAllConfig());
+        refreshInheritedConfig();
         previouslyOwned = true
         
         getApplication()
@@ -449,12 +430,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
 
     @Override
-    @Deprecated // see setParent(Entity)
-    public AbstractEntity setOwner(Entity entity) {
-        return setParent(entity);
-    }
-    
-    @Override
     public void clearParent() {
         if (parent == null) return
         Entity oldParent = parent
@@ -462,12 +437,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         oldParent?.removeChild(getProxyIfAvailable())
     }
     
-    @Override
-    @Deprecated // see clearParent
-    public void clearOwner() {
-        clearParent();
-    }
-
     /**
      * Adds the given entity as a child of this parent <em>and</em> sets this entity as the parent of the child;
      * returns argument passed in, for convenience.
@@ -505,12 +474,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
     
     @Override
-    @Deprecated // see addChild(Entity)
-    public Entity addOwnedChild(Entity child) {
-        return addChild(child);
-    }
-
-    @Override
     public boolean removeChild(Entity child) {
         synchronized (children) {
             boolean changed = children.remove(child)
@@ -523,12 +486,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         }
     }
 
-    @Override
-    @Deprecated // see removeChild(Entity)
-    public boolean removeOwnedChild(Entity child) {
-        return removeChild(child);
-    }
-    
     /**
      * Adds this as a member of the given group, registers with application if necessary
      */
@@ -554,23 +511,6 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
     }
     
     @Override
-    @Deprecated
-    public Entity getOwner() {
-        return getParent();
-    }
-
-    @Override
-    @Deprecated
-    public Collection<Entity> getOwnedChildren() {
-        return getChildren();
-    }
-    
-    @Deprecated
-    public EntityCollectionReference getOwnedChildrenReference() {
-        return getChildrenReference();
-    }
-    
-    @Override
     public Collection<Group> getGroups() { groups.get() }
 
     /**
@@ -588,6 +528,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
         app
     }
 
+    // FIXME Can this really be deleted? Overridden by AbstractApplication; needs careful review
     /** @deprecated since 0.4.0 should not be needed / leaked outwith brooklyn internals / mgmt support? */
     protected synchronized void setApplication(Application app) {
         if (application) {
@@ -1070,6 +1011,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     public void onManagementStarted() {}
     
+    // FIXME Really deprecated? I don't want folk to have to override createManagementSupport for simple use-cases
     /**
      * Invoked by {@link ManagementContext} when this entity becomes managed at a particular management node,
      * including the initial management started and subsequent management node master-change for this entity.
@@ -1077,6 +1019,7 @@ public abstract class AbstractEntity extends GroovyObjectSupport implements Enti
      */
     public void onManagementBecomingMaster() {}
     
+    // FIXME Really deprecated? I don't want folk to have to override createManagementSupport for simple use-cases
     /**
      * Invoked by {@link ManagementContext} when this entity becomes mastered at a particular management node,
      * including the final management end and subsequent management node master-change for this entity.

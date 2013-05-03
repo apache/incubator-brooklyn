@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.basic.ListConfigKey.ListModification.ListModificationBase;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.text.Identifiers;
 
@@ -104,21 +103,6 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
     }
     
     public interface ListModification<T> extends StructuredModification<ListConfigKey<T>>, List<T> {
-        @SuppressWarnings("serial")
-        class ListModificationBase<T> extends ArrayList<T> implements ListModification<T> {
-            private final boolean clearFirst;
-            public ListModificationBase(Collection<T> delegate, boolean clearFirst) {
-                super(delegate);
-                this.clearFirst = clearFirst;
-            }
-            @SuppressWarnings({ "rawtypes", "unchecked" })
-            @Override
-            public Object applyToKeyInMap(ListConfigKey<T> key, Map target) {
-                if (clearFirst) StructuredModifications.clearing().applyToKeyInMap(key, target);
-                for (T o: this) target.put(key.subKey(), o);
-                return null;
-            }
-        }
     }
     
     public static class ListModifications extends StructuredModifications {
@@ -144,5 +128,23 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
             return new ListModificationBase<T>(items, true);
         }
     }
-  
+
+    @SuppressWarnings("serial")
+    public static class ListModificationBase<T> extends ArrayList<T> implements ListModification<T> {
+        private final boolean clearFirst;
+        public ListModificationBase(Collection<T> delegate, boolean clearFirst) {
+            super(delegate);
+            this.clearFirst = clearFirst;
+        }
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @Override
+        public Object applyToKeyInMap(ListConfigKey<T> key, Map target) {
+            if (clearFirst) {
+                StructuredModification<StructuredConfigKey> clearing = StructuredModifications.clearing();
+                clearing.applyToKeyInMap(key, target);
+            }
+            for (T o: this) target.put(key.subKey(), o);
+            return null;
+        }
+    }
 }

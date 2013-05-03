@@ -1,5 +1,6 @@
-package brooklyn.entity.basic;
+package brooklyn.entity.basic
 
+import brooklyn.util.MutableMap;
 import org.jclouds.util.Throwables2
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -42,7 +43,18 @@ public class SoftwareProcessEntityTest {
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app);
     }
-    
+
+    @Test
+    public void testProcessTemplateWithExtraSubstitutions(){
+        MyService entity = new MyService(app)
+        Entities.manage(entity);
+        entity.start([loc]);
+        SimulatedDriver driver = entity.getDriver();
+        Map<String,Object> substitutions = MutableMap.of("myname","peter");
+        String result = driver.processTemplate("/brooklyn/entity/basic/template_with_extra_substitutions.txt",substitutions);
+        Assert.assertTrue(result.contains("peter"));
+    }
+
     @Test
     public void testBasicSoftwareProcessEntityLifecycle() {
         MyService entity = new MyService(app)

@@ -14,14 +14,12 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.util.MutableMap;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -41,7 +39,7 @@ implements MachineProvisioningLocation<T>, Closeable {
 
     // TODO Synchronization looks very wrong for accessing machines/inUse 
     // e.g. removeChildLocation doesn't synchronize when doing machines.remove(...),
-    // and getMachines() and getInUse() return the real sets risking 
+    // and getMachines() returns the real sets risking 
     // ConcurrentModificationException in the caller if it iterates over them etc.
     
     private Object lock;
@@ -69,6 +67,14 @@ implements MachineProvisioningLocation<T>, Closeable {
                 throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getName()+"' has its parent location set");
 	        addChildLocation(machine);
         }
+    }
+
+    @Override
+    public String toVerboseString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("id", getId()).add("name", getName())
+                .add("machinesAvailable", getAvailable()).add("machinesInUse", getInUse())
+                .toString();
     }
 
     protected void configure(Map properties) {
@@ -123,14 +129,14 @@ implements MachineProvisioningLocation<T>, Closeable {
         return machines;
     }
     
-    protected Set<T> getInUse() {
-        return inUse;
-    }
-    
     public Set<T> getAvailable() {
         Set<T> a = Sets.newLinkedHashSet(machines);
         a.removeAll(inUse);
         return a;
+    }   
+     
+    public Set<T> getInUse() {
+        return Sets.newLinkedHashSet(inUse);
     }   
      
     public Set<T> getAllMachines() {

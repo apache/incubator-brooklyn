@@ -6,7 +6,7 @@
 
     <groupId>io.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
-    <version>0.5.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <version>0.6.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
 
     <name>Brooklyn Parent Project</name>
     <description>
@@ -70,7 +70,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <brooklyn.version>0.5.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+        <brooklyn.version>0.6.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
 
         <cobertura.version>1.9.4.1</cobertura.version>
         <surefire.version>2.13</surefire.version>
@@ -86,11 +86,11 @@
         <xstream.version>1.4.3</xstream.version>
         <jackson.version>1.9.10</jackson.version>
         <jansi.version>1.2.1</jansi.version>
-        <guava.version>13.0.1</guava.version>
+        <guava.version>14.0.1</guava.version>
         <gson.version>2.2.2</gson.version>
         <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
-        <jclouds.version>1.5.4</jclouds.version>
+        <jclouds.version>1.6.0</jclouds.version>
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.46</bouncycastle.version>
         <sshj.version>0.8.1</sshj.version>
@@ -602,7 +602,6 @@
                 <module>systems/whirr/base</module>
                 <module>systems/whirr/hadoop</module>
                 <module>systems/paas/openshift</module>
-                <module>systems/paas/cloudfoundry</module>
             </modules>
         </profile>
         <profile>

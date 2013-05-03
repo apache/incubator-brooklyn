@@ -46,6 +46,7 @@ define([
             'v1/help':'helpPage',
             '*path':'defaultRoute'
         },
+
         showView:function (selector, view) {
             // close the previous view - does binding clean-up and avoids memory leaks
             if (this.currentView) this.currentView.close()
@@ -71,8 +72,13 @@ define([
                     collection:that.applications,
                     locations:that.locations,
                     appRouter:that
-                })
+                });
+                var veryFirstViewLoad = !that.currentView;
                 that.showView("#application-content", homeView);
+                // show add application wizard if none already exist and this is the first page load
+                if (veryFirstViewLoad && that.applications.isEmpty()) {
+                    homeView.createApplication();
+                }
             }})
         },
         applicationsPage:function (app, trail, tab) {

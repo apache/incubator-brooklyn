@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +11,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.MutableList;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
@@ -51,7 +50,7 @@ public class VanillaJavaApp extends SoftwareProcessImpl implements UsesJava, Use
     public static final ConfigKey<Map> JVM_DEFINES = new BasicConfigKey<Map>(Map.class, "vanillaJavaApp.jvmDefines", "JVM system property definitions for the app",
         Maps.newLinkedHashMap());
 
-    protected JmxSensorAdapter jmxAdapter;
+    protected JmxFeed jmxFeed;
 
     public VanillaJavaApp() {
         super(MutableMap.of(), null);
@@ -95,8 +94,7 @@ public class VanillaJavaApp extends SoftwareProcessImpl implements UsesJava, Use
         
         if ( ((VanillaJavaAppDriver)getDriver()).isJmxEnabled() ) {
             jmxPollPeriod = (jmxPollPeriod > 0) ? jmxPollPeriod : 500;
-            jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(MutableMap.of("period", jmxPollPeriod)));
-            JavaAppUtils.connectMXBeanSensors(this, jmxAdapter);
+            jmxFeed = JavaAppUtils.connectMXBeanSensors(this, jmxPollPeriod);
         }
 
         connectServiceUpIsRunning();
@@ -106,6 +104,7 @@ public class VanillaJavaApp extends SoftwareProcessImpl implements UsesJava, Use
     public void disconnectSensors() {
         super.disconnectSensors();
         disconnectServiceUpIsRunning();
+        if (jmxFeed != null) jmxFeed.stop();
     }
     
     @Override

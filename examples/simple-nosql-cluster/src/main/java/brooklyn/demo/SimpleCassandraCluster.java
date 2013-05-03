@@ -24,7 +24,7 @@ public class SimpleCassandraCluster extends ApplicationBuilder {
 
     /** Create entities. */
     protected void doBuild() {
-        createChild(EntitySpecs.spec(CassandraCluster.class)
+        addChild(EntitySpecs.spec(CassandraCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "Brooklyn")
                 .configure("jmxPort", "11099+")

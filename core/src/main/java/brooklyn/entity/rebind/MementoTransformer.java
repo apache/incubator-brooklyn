@@ -15,6 +15,7 @@ import brooklyn.location.Location;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Helpers for transforming references to locations into location ids, and vice versa.
@@ -99,29 +100,35 @@ public class MementoTransformer {
             throw new IllegalStateException("Cannot transform ids to locations of type "+requiredType);
         }
     }
-    
+
     public static <T> T transformIdsToEntities(RebindContext rebindContext, Object value, Class<T> requiredType, boolean removeDanglingRefs) {
+        return transformIdsToEntities(rebindContext, value, TypeToken.of(requiredType), removeDanglingRefs);
+    }
+    
+    public static <T> T transformIdsToEntities(RebindContext rebindContext, Object value, TypeToken<T> requiredType, boolean removeDanglingRefs) {
+        Class<? super T> requiredRawType = requiredType.getRawType();
+        
         if (value == null) {
             return null;
             
-        } else if (Entity.class.isAssignableFrom(requiredType)) {
+        } else if (Entity.class.isAssignableFrom(requiredRawType)) {
             Entity entity = rebindContext.getEntity((String)value);
             if (entity == null) {
                 if (removeDanglingRefs) {
-                    LOG.warn("No entity found for "+value+"; return null for "+requiredType.getSimpleName());
+                    LOG.warn("No entity found for "+value+"; return null for "+requiredRawType.getSimpleName());
                 } else {
                     throw new IllegalStateException("No entity found for "+value);
                 }
             }
             return (T) entity;
             
-        } else if (Iterable.class.isAssignableFrom(requiredType)) {
+        } else if (Iterable.class.isAssignableFrom(requiredRawType)) {
             Collection<Entity> result = Lists.newArrayList();
             for (String id : (Iterable<String>)value) {
                 Entity entity = rebindContext.getEntity(id);
                 if (entity == null) {
                     if (removeDanglingRefs) {
-                        LOG.warn("No entity found for "+id+"; discarding reference from "+requiredType.getSimpleName());
+                        LOG.warn("No entity found for "+id+"; discarding reference from "+requiredRawType.getSimpleName());
                     } else {
                         throw new IllegalStateException("No entity found for "+id);
                     }
@@ -130,7 +137,7 @@ public class MementoTransformer {
                 }
             }
 
-            if (Set.class.isAssignableFrom(requiredType)) {
+            if (Set.class.isAssignableFrom(requiredRawType)) {
                 result = Sets.newLinkedHashSet(result);
             }
             if (!requiredType.isAssignableFrom(result.getClass())) {
@@ -139,19 +146,41 @@ public class MementoTransformer {
             return (T) result;
                 
         } else if (value instanceof Map) {
-            Map<Object,Entity> result = Maps.newLinkedHashMap();
-            for (Map.Entry<?, String> entry : ((Map<?,String>)value).entrySet()) {
-                String id = entry.getValue();
-                Entity entity = rebindContext.getEntity(id);
-                if (entity == null) {
-                    if (removeDanglingRefs) {
-                        LOG.warn("No entity found for "+id+"; discarding reference from "+requiredType.getSimpleName());
-                    } else {
-                        throw new IllegalStateException("No entity found for "+id);
+            // If told explicitly the generics, then use that; but otherwise default to the value being of type Entity
+            TypeToken<?> keyType = requiredType.resolveType(Map.class.getTypeParameters()[0]);
+            TypeToken<?> valueType = requiredType.resolveType(Map.class.getTypeParameters()[1]);
+            boolean keyIsEntity = Entity.class.isAssignableFrom(keyType.getRawType());
+            boolean valueIsEntity = Entity.class.isAssignableFrom(valueType.getRawType()) || !keyIsEntity;
+            
+            Map<Object,Object> result = Maps.newLinkedHashMap();
+            for (Map.Entry<?, ?> entry : ((Map<?,?>)value).entrySet()) {
+                Object key = entry.getKey();
+                Object val = entry.getValue();
+                
+                if (keyIsEntity) {
+                    key = rebindContext.getEntity((String)key);
+                    if (key == null) {
+                        if (removeDanglingRefs) {
+                            LOG.warn("No entity found for "+entry.getKey()+"; discarding reference from "+requiredRawType.getSimpleName());
+                            continue;
+                        } else {
+                            throw new IllegalStateException("No entity found for "+entry.getKey());
+                        }
                     }
-                } else {
-                    result.put(entry.getKey(), entity);
                 }
+                if (valueIsEntity) {
+                    val = rebindContext.getEntity((String)val);
+                    if (val == null) {
+                        if (removeDanglingRefs) {
+                            LOG.warn("No entity found for "+entry.getValue()+"; discarding reference from "+requiredRawType.getSimpleName());
+                            continue;
+                        } else {
+                            throw new IllegalStateException("No entity found for "+entry.getValue());
+                        }
+                    }
+                }
+                
+                result.put(key, val);
             }
             
             if (!requiredType.isAssignableFrom(LinkedHashMap.class)) {
@@ -232,13 +261,15 @@ public class MementoTransformer {
     }
 
     private static Map<?,?> transformEntitiesToIds(Map<?,?> vs) {
-        if (containsType(vs.values(), Entity.class)) {
+        if (containsType(vs.values(), Entity.class) || containsType(vs.keySet(), Entity.class)) {
             // requires transforming for serialization
             Map<Object,Object> result = Maps.newLinkedHashMap();
             for (Map.Entry<?,?> entry : vs.entrySet()) {
                 Object k = entry.getKey();
                 Object v = entry.getValue();
-                result.put(k, ((Entity)v).getId());
+                Object k2 = (k instanceof Entity) ? ((Entity)k).getId() : k;
+                Object v2 = (v instanceof Entity) ? ((Entity)v).getId() : v;
+                result.put(k2, v2);
             }
             return result;
         } else {

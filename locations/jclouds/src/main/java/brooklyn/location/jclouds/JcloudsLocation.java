@@ -158,7 +158,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return getClass().getSimpleName()+"["+name+":"+(identity != null ? identity : null)+
                 (configDescription!=null ? "/"+configDescription : "") + "]";
     }
-        
+
+    @Override
+    public String toVerboseString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("id", getId()).add("name", getName()).add("identity", getIdentity())
+                .add("description", getConfigBag().getDescription()).add("provider", getProvider())
+                .add("region", getRegion()).add("endpoint", getEndpoint())
+                .toString();
+    }
+
     public String getProvider() {
         return getConfig(CLOUD_PROVIDER);
     }
@@ -336,8 +345,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             JcloudsSshMachineLocation sshLocByHostname = registerJcloudsSshMachineLocation(node, vmHostname, setup);
             
             // Apply same securityGroups rules to iptables, if iptables is running on the node
-            mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
-                    (Iterable<Integer>) setup.get(INBOUND_PORTS));
+            String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
+            if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
+                mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
+                        (Iterable<Integer>) setup.get(INBOUND_PORTS));
+            } else {
+                // Otherwise would break CloudStack, where port-forwarding means that jclouds opinion 
+                // of using port 22 is wrong.
+            }
             
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {

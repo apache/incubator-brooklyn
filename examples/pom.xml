@@ -15,7 +15,7 @@
     <parent>
         <groupId>io.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
-        <version>0.5.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
+        <version>0.6.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -35,7 +35,6 @@
         <module>simple-web-cluster</module>
         <module>global-web-fabric</module>
         <module>hadoop-and-whirr</module>
-        <module>portable-cloudfoundry</module>
         <module>simple-messaging-pubsub</module>
         <module>simple-nosql-cluster</module>
     </modules>

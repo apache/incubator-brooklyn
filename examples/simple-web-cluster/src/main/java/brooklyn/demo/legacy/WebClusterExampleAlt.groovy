@@ -27,8 +27,8 @@ import com.google.common.collect.Lists
  * @deprecated in 0.5; see {@link brooklyn.demo.WebClusterExample}
  */
 @Deprecated
-@InheritConstructors
 public class WebClusterExampleAlt extends AbstractApplication {
+
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterExampleAlt)
     
     public static final String WAR_PATH = "classpath://hello-world-webapp.war"
@@ -42,6 +42,9 @@ public class WebClusterExampleAlt extends AbstractApplication {
                 .build());
     }
     
+    public WebClusterExampleAlt(Map properties){
+        super(properties);
+    }
 
     public static void main(String[] argv) {
         List<String> args = Lists.newArrayList(argv);

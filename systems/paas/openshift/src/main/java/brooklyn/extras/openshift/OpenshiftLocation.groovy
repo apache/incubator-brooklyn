@@ -12,6 +12,7 @@ import brooklyn.location.LocationResolver
 import brooklyn.location.basic.AbstractLocation
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions
 
 class OpenshiftLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation {
@@ -19,6 +20,15 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
     public OpenshiftLocation(Map properties = [:]) {
         super(properties);
     }
+
+    @Override
+    public String toVerboseString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("id", getId()).add("name", getName())
+                .add("hostname", getHostname()).add("url", getUrl()).add("user", getUser())
+                .toString();
+    }
+
 
     public String getHostname() {
         return getConfigBag().getStringKey("hostname") ?: "openshift.redhat.com";

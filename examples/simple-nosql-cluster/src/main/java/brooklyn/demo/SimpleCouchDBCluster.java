@@ -24,7 +24,7 @@ public class SimpleCouchDBCluster extends ApplicationBuilder {
 
     /** Create entities. */
     protected void doBuild() {
-        createChild(EntitySpecs.spec(CouchDBCluster.class)
+        addChild(EntitySpecs.spec(CouchDBCluster.class)
                 .configure("initialSize", "2")
                 .configure("clusterName", "Brooklyn")
                 .configure("httpPort", "8000+"));

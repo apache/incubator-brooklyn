@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
+import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.OpenDataException;
@@ -23,11 +25,11 @@ import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.adapter.JmxHelper;
-import brooklyn.event.adapter.JmxObjectNameAdapter;
-import brooklyn.event.adapter.JmxPostProcessors;
-import brooklyn.event.adapter.JmxSensorAdapter;
 import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.event.feed.jmx.JmxAttributePollConfig;
+import brooklyn.event.feed.jmx.JmxFeed;
+import brooklyn.event.feed.jmx.JmxHelper;
+import brooklyn.event.feed.jmx.JmxValueFunctions;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -52,8 +54,9 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
     public static final String OSGI_FRAMEWORK = "osgi.core:type=framework,version=1.5";
     public static final String OSGI_COMPENDIUM = "osgi.compendium:service=cm,version=1.3";
 
-    protected JmxSensorAdapter jmxAdapter;
     protected JmxHelper jmxHelper;
+
+    private JmxFeed jmxFeed;
     
     public KarafContainerImpl() {
         super();
@@ -82,6 +85,15 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
     }
     
     @Override
+    protected void postDriverStart() {
+        super.postDriverStart();
+        uploadPropertyFiles(getConfig(NAMED_PROPERTY_FILES));
+        
+        jmxHelper = new JmxHelper(this);
+        jmxHelper.connect(0); // i.e. don't block
+    }
+    
+    @Override
     protected void connectSensors() {
         super.connectSensors();
 
@@ -92,20 +104,28 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
         
         ConfigToAttributes.apply(this);
 
-        jmxAdapter = sensorRegistry.register(new JmxSensorAdapter(MutableMap.of("period", 500)));
-
-        JmxObjectNameAdapter karafAdminObjectNameAdapter = jmxAdapter.objectName(String.format(KARAF_ADMIN, getConfig(KARAF_NAME.getConfigKey())));
-        karafAdminObjectNameAdapter.attribute("Instances").subscribe(KARAF_INSTANCES, JmxPostProcessors.tabularDataToMap());
+        ObjectName karafAdminObjectName = JmxHelper.createObjectName(String.format(KARAF_ADMIN, getConfig(KARAF_NAME.getConfigKey())));
         
-        // If MBean is unreachable, then mark as service-down
-        karafAdminObjectNameAdapter.reachable().poll(new Function<Boolean,Void>() {
-            @Override public Void apply(Boolean input) {
-                if (input != null && Boolean.FALSE.equals(input) && Boolean.TRUE.equals(getAttribute(SERVICE_UP))) {
-                    LOG.debug("Entity "+this+" is not reachable on JMX");
-                    setAttribute(SERVICE_UP, false);
-                }
-                return null;
-            }});
+        jmxFeed = JmxFeed.builder()
+                .entity(this)
+                .helper(jmxHelper)
+                .period(500, TimeUnit.MILLISECONDS)
+                .pollAttribute(new JmxAttributePollConfig<Map>(KARAF_INSTANCES)
+                        .objectName(karafAdminObjectName)
+                        .attributeName("Instances")
+                        .onSuccess((Function)JmxValueFunctions.tabularDataToMap())
+                        .onError(new Function<Exception,Map>() {
+                                @Override public Map apply(Exception input) {
+                                    // If MBean is unreachable, then mark as service-down
+                                    if (Boolean.TRUE.equals(getAttribute(SERVICE_UP))) {
+                                        LOG.debug("Entity "+this+" is not reachable on JMX");
+                                        setAttribute(SERVICE_UP, false);
+                                    }
+                                    return null;
+                                }}))
+                .build();
+
+        
         
         // INSTANCES aggregates data for the other sensors.
         subscribe(this, KARAF_INSTANCES, new SensorEventListener<Map>() {
@@ -126,14 +146,11 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
                 }});
         
     }
-    
+
     @Override
-    protected void postDriverStart() {
-		super.postDriverStart();
-        uploadPropertyFiles(getConfig(NAMED_PROPERTY_FILES));
-        
-        jmxHelper = new JmxHelper(this);
-        jmxHelper.connect(JmxSensorAdapter.JMX_CONNECTION_TIMEOUT_MS);
+    protected void disconnectSensors() {
+        super.disconnectSensors();
+        if (jmxFeed != null) jmxFeed.stop();
     }
     
     @Override
@@ -181,7 +198,7 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
 
     public Map<Long,Map<String,?>> listBundles() {
         TabularData table = (TabularData) jmxHelper.operation(OSGI_BUNDLE_STATE, "listBundles");
-        Map<List<?>, Map<String, Object>> map = JmxPostProcessors.tabularDataToMapOfMaps(table);
+        Map<List<?>, Map<String, Object>> map = JmxValueFunctions.tabularDataToMapOfMaps(table);
         
         Map<Long,Map<String,?>> result = Maps.newLinkedHashMap();
         for (Map.Entry<List<?>, Map<String, Object>> entry : map.entrySet()) {

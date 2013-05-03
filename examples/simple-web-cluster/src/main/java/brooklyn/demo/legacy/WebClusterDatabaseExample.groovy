@@ -33,7 +33,6 @@ import brooklyn.util.CommandLineUtil
  * @deprecated in 0.5; see {@link brooklyn.demo.WebClusterDatabaseExample}
  */
 @Deprecated
-@InheritConstructors
 public class WebClusterDatabaseExample extends AbstractApplication {
     
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterDatabaseExample)
@@ -62,6 +61,10 @@ public class WebClusterDatabaseExample extends AbstractApplication {
             sizeRange(1, 5).
             metricRange(10, 100).
             build());
+    }
+
+    public WebClusterDatabaseExample(Map properties){
+          super(properties);
     }
 
     public static void main(String[] argv) {

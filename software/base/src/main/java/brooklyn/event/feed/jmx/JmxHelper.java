@@ -298,7 +298,7 @@ public class JmxHelper {
     }
 
     /**
-     * Continuously attempts to connect for for at least the indicated amount of time; or indefinitely if -1. This method
+     * Continuously attempts to connect for at least the indicated amount of time; or indefinitely if -1. This method
      * is useful when you are not sure if the system you are trying to connect to already is up and running.
      *
      * This method doesn't throw an Exception, but returns true on success, false otherwise.

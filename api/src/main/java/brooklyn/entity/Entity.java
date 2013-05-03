@@ -5,11 +5,14 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
@@ -27,7 +30,7 @@ import brooklyn.policy.Policy;
  * 
  * @see brooklyn.entity.basic.AbstractEntity
  */
-public interface Entity extends Serializable, Rebindable<EntityMemento> {
+public interface Entity extends Serializable, Rebindable {
     /**
      * The unique identifier for this entity.
      */
@@ -90,9 +93,14 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
      * 
      * TODO Signature will change to {@code <T extends Entity> T addChild(T child)}, but
      * that currently breaks groovy AbstractEntity subclasses sometimes so deferring that
-     * until (hopefully) the next release.
+     * until (hopefully) the next release. For now use addChild(EntitySpec).
      */
     Entity addChild(Entity child);
+    
+    /** 
+     * Creates an {@link Entity} from the given spec and adds it, setting this entity as the parent,
+     * returning the added child. */
+    <T extends Entity> T addChild(EntitySpec<T> spec);
     
     /** 
      * Removes the specified child {@link Entity}; its parent will be set to null.
@@ -100,42 +108,6 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
      * @return True if the given entity was contained in the set of children
      */
     boolean removeChild(Entity child);
-    
-    /**
-     * @deprecated since 0.5; see getParent()
-     */
-    @Deprecated
-    Entity getOwner();
-
-    /** 
-     * @deprecated since 0.5; see getChildren()
-     */
-    @Deprecated
-    Collection<Entity> getOwnedChildren();
-    
-    /**
-     * @deprecated since 0.5; see setOwner(Entity)
-     */
-    @Deprecated
-    Entity setOwner(Entity group);
-    
-    /**
-     * @deprecated since 0.5; see clearParent()
-     */
-    @Deprecated
-    void clearOwner();
-    
-    /** 
-     * @deprecated since 0.5; see addChild(Entity)
-     */
-    @Deprecated
-    Entity addOwnedChild(Entity child);
-    
-    /** 
-     * @deprecated since 0.5; see removeChild(Entity)
-     */
-    @Deprecated
-    boolean removeOwnedChild(Entity child);
     
     /**
      * @return an immutable thread-safe view of the policies.
@@ -204,4 +176,7 @@ public interface Entity extends Serializable, Rebindable<EntityMemento> {
      * @return True if the policy enricher at this entity; false otherwise
      */
     boolean removeEnricher(Enricher enricher);
+
+    @Override
+    RebindSupport<EntityMemento> getRebindSupport();
 }

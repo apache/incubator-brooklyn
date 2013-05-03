@@ -17,16 +17,14 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.AbstractControllerImpl;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.adapter.ConfigSensorAdapter;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpPollValue;
-import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.internal.TimeExtras;
@@ -100,7 +98,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     public void connectSensors() {
         super.connectSensors();
         
-        ConfigSensorAdapter.apply(this);
+        ConfigToAttributes.apply(this);
         String accessibleRootUrl = inferUrl(true);
 
         // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
