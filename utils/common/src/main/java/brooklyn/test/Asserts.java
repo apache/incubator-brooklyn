@@ -1,7 +1,6 @@
 package brooklyn.test;
 
 import groovy.lang.Closure;
-import groovy.time.TimeDuration;
 
 import java.util.Collection;
 import java.util.Enumeration;
@@ -13,6 +12,8 @@ import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
@@ -59,8 +60,8 @@ public class Asserts {
     }
     
     public static <T> void eventually(Map<String,?> flags, Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
-        TimeDuration timeout = toTimeDuration(flags.get("timeout"), new TimeDuration(0,0,1,0));
-        TimeDuration period = toTimeDuration(flags.get("period"), new TimeDuration(0,0,0,10));
+        Duration timeout = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
+        Duration period = toDuration(flags.get("period"), Duration.millis(10));
         long periodMs = period.toMilliseconds();
         long startTime = System.currentTimeMillis();
         long expireTime = startTime+timeout.toMilliseconds();
@@ -88,8 +89,8 @@ public class Asserts {
     }
 
     public static <T> void continually(Map<String,?> flags, Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
-        TimeDuration duration = toTimeDuration(flags.get("timeout"), new TimeDuration(0,0,1,0));
-        TimeDuration period = toTimeDuration(flags.get("period"), new TimeDuration(0,0,0,10));
+        Duration duration = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
+        Duration period = toDuration(flags.get("period"), Duration.millis(10));
         long periodMs = period.toMilliseconds();
         long startTime = System.currentTimeMillis();
         long expireTime = startTime+duration.toMilliseconds();
@@ -139,10 +140,10 @@ public class Asserts {
      * <ul>
      * <li>abortOnError (boolean, default true)
      * <li>abortOnException - (boolean, default false)
-     * <li>timeout - (a TimeDuration or an integer in millis, defaults to 30*SECONDS)
-     * <li>period - (a TimeDuration or an integer in millis, for fixed retry time; if not set, defaults to exponentially increasing from 1 to 500ms)
-     * <li>minPeriod - (a TimeDuration or an integer in millis; only used if period not explicitly set; the minimum period when exponentially increasing; defaults to 1ms)
-     * <li>maxPeriod - (a TimeDuration or an integer in millis; only used if period not explicitly set; the maximum period when exponentially increasing; defaults to 500ms)
+     * <li>timeout - (a Duration or an integer in millis, defaults to 30*SECONDS)
+     * <li>period - (a Duration or an integer in millis, for fixed retry time; if not set, defaults to exponentially increasing from 1 to 500ms)
+     * <li>minPeriod - (a Duration or an integer in millis; only used if period not explicitly set; the minimum period when exponentially increasing; defaults to 1ms)
+     * <li>maxPeriod - (a Duration or an integer in millis; only used if period not explicitly set; the maximum period when exponentially increasing; defaults to 500ms)
      * <li>maxAttempts - (integer, Integer.MAX_VALUE)
      * </ul>
      * 
@@ -162,10 +163,10 @@ public class Asserts {
         boolean logException = get(flags, "logException", true);
 
         // To speed up tests, default is for the period to start small and increase...
-        TimeDuration duration = toTimeDuration(flags.get("timeout"), new TimeDuration(0,0,30,0));
-        TimeDuration fixedPeriod = toTimeDuration(flags.get("period"), null);
-        TimeDuration minPeriod = (fixedPeriod != null) ? fixedPeriod : toTimeDuration(flags.get("minPeriod"), new TimeDuration(0,0,0,1));
-        TimeDuration maxPeriod = (fixedPeriod != null) ? fixedPeriod : toTimeDuration(flags.get("maxPeriod"), new TimeDuration(0,0,0,500));
+        Duration duration = toDuration(flags.get("timeout"), Duration.THIRTY_SECONDS);
+        Duration fixedPeriod = toDuration(flags.get("period"), null);
+        Duration minPeriod = (fixedPeriod != null) ? fixedPeriod : toDuration(flags.get("minPeriod"), Duration.millis(1));
+        Duration maxPeriod = (fixedPeriod != null) ? fixedPeriod : toDuration(flags.get("maxPeriod"), Duration.millis(500));
         int maxAttempts = get(flags, "maxAttempts", Integer.MAX_VALUE);
         int attempt = 0;
         long startTime = System.currentTimeMillis();
@@ -229,8 +230,8 @@ public class Asserts {
     }
     
     public static void succeedsContinually(Map<String,?> flags, Callable<?> job) {
-        TimeDuration duration = toTimeDuration(flags.get("timeout"), new TimeDuration(0,0,1,0));
-        TimeDuration period = toTimeDuration(flags.get("period"), new TimeDuration(0,0,0,10));
+        Duration duration = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
+        Duration period = toDuration(flags.get("period"), Duration.millis(10));
         long periodMs = period.toMilliseconds();
         long startTime = System.currentTimeMillis();
         long expireTime = startTime+duration.toMilliseconds();
@@ -247,23 +248,15 @@ public class Asserts {
         }
     }
     
-    private static TimeDuration toTimeDuration(Object duration) {
-        return toTimeDuration(duration, null);
+    private static Duration toDuration(Object duration) {
+        return Duration.of(duration);
     }
             
-    private static TimeDuration toTimeDuration(Object duration, TimeDuration defaultVal) {
-        if (duration == null) {
+    private static Duration toDuration(Object duration, Duration defaultVal) {
+        if (duration == null)
             return defaultVal;
-        } else if (duration instanceof TimeDuration) {
-            return (TimeDuration) duration;
-        } else if (duration instanceof Number) {
-            return new TimeDuration(0,0,0,((Number) duration).intValue());
-            // TODO would be nice to have this, but we need to sort out utils / test-utils dependency
-//        } else if (duration instanceof String) {
-//            return Time.parseTimeString((String)duration);
-        } else {
-            throw new IllegalArgumentException("Cannot convert "+duration+" of type "+duration.getClass().getName()+" to a TimeDuration");
-        }
+        else 
+            return Duration.of(duration);
     }
     
     public static void assertFails(Runnable r) {

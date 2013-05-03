@@ -1,8 +1,6 @@
 package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import brooklyn.entity.drivers.EntityDriverManager;
 import groovy.time.TimeDuration;
 
 import java.net.InetAddress;
@@ -18,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
+import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
@@ -35,6 +34,7 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
@@ -238,6 +238,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public void waitForServiceUp() {
         Integer timeout = getConfig(ConfigKeys.START_TIMEOUT);
         waitForServiceUp(timeout, TimeUnit.SECONDS);
+    }
+    public void waitForServiceUp(Duration duration) {
+        waitForServiceUp(duration.toMilliseconds(), TimeUnit.MILLISECONDS);
     }
     public void waitForServiceUp(TimeDuration duration) {
         waitForServiceUp(duration.toMilliseconds(), TimeUnit.MILLISECONDS);

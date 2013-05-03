@@ -90,7 +90,7 @@ public class Duration implements Comparable<Duration> {
     /** tries to convert given object to a Duration, parsing strings, treating numbers as millis, etc;
      * throws IAE if not convertable */
     public static Duration of(Object o) {
-        Preconditions.checkNotNull(o, "Cannot convert null to duration");
+        if (o==null) return null;
         if (o instanceof Duration) return (Duration)o;
         if (o instanceof String) return parse((String)o);
         if (o instanceof Number) return millis((Number)o);

@@ -16,6 +16,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Closer;
@@ -56,7 +57,7 @@ public class ShellUtils {
      * logs I/O at debug (if not null).
      * throws exception if return code non-zero, otherwise returns lines from stdout.
      * <p>
-     * flags:  timeout (TimeDuration), 0 for forever; default 60 seconds
+     * flags:  timeout (Duration), 0 for forever; default 60 seconds
      */
     public static String[] exec(Map flags, final String[] cmd, String[] envp, File dir, String input, final Logger log, final Object context) {
         Closer closer = Closer.create();
@@ -82,6 +83,7 @@ public class ShellUtils {
             long timeout2 = TIMEOUT;
             Object tf = flags.get("timeout");
             if (tf instanceof Number) timeout2=((Number)tf).longValue();
+            else if (tf instanceof Duration) timeout2=((Duration)tf).toMilliseconds();
             else if (tf instanceof TimeDuration) timeout2=((TimeDuration)tf).toMilliseconds();
             if (tf!=null) timeout2 = (Long)tf;
             final long timeout = timeout2;

@@ -326,7 +326,7 @@ public class BasicExecutionManager implements ExecutionManager {
 				task.nextRun = taskScheduled;
 				return submit(taskScheduled);
 			}},
-			task.delay.toMilliseconds(), TimeUnit.MILLISECONDS);
+			task.delay.toNanoseconds(), TimeUnit.NANOSECONDS);
 		} else {
 			task.endTimeUtc = System.currentTimeMillis();
 		}

@@ -12,6 +12,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.time.Duration;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -111,7 +113,9 @@ public class JavaGroovyEquivalents {
         result.put(key1, val1);
         return result;
     }
-    
+
+    /** @deprecated since 0.6.0 use {@link Duration#of(Object)} */
+    @Deprecated
     public static TimeDuration toTimeDuration(Object duration) {
         // TODO Lazy coding here for large number values; but refactoring away from groovy anyway...
         

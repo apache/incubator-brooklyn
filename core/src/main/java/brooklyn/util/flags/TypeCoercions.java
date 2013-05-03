@@ -2,14 +2,12 @@ package brooklyn.util.flags;
 
 import groovy.lang.Closure;
 import groovy.time.TimeDuration;
-import groovy.time.Duration;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,6 +19,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
@@ -28,6 +29,7 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.net.Cidr;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -37,6 +39,8 @@ import com.google.common.primitives.Primitives;
 
 public class TypeCoercions {
 
+    private static final Logger log = LoggerFactory.getLogger(TypeCoercions.class);
+    
     private TypeCoercions() {}
 
     private static Map<Class,Map<Class,Function>> registeredAdapters = Collections.synchronizedMap(
@@ -397,16 +401,24 @@ public class TypeCoercions {
                 };
             }
         });
+        registerAdapter(Object.class, Duration.class, new Function<Object,Duration>() {
+            @Override
+            public Duration apply(final Object input) {
+                return brooklyn.util.time.Duration.of(input);
+            }
+        });
         registerAdapter(Object.class, TimeDuration.class, new Function<Object,TimeDuration>() {
             @Override
             public TimeDuration apply(final Object input) {
+                log.warn("deprecated automatic coercion of Object to TimeDuration (set breakpoint in TypeCoercions to inspect, convert to Duration)");
                 return JavaGroovyEquivalents.toTimeDuration(input);
             }
         });
-        registerAdapter(Duration.class, Long.class, new Function<Duration,Long>() {
+        registerAdapter(TimeDuration.class, Long.class, new Function<TimeDuration,Long>() {
             @Override
-            public Long apply(final Duration duration) {
-                return duration.toMilliseconds();
+            public Long apply(final TimeDuration input) {
+                log.warn("deprecated automatic coercion of TimeDuration to Long (set breakpoint in TypeCoercions to inspect, use Duration instead of Long!)");
+                return input.toMilliseconds();
             }
         });
         registerAdapter(Integer.class, AtomicLong.class, new Function<Integer,AtomicLong>() {

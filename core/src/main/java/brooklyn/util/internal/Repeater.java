@@ -1,7 +1,6 @@
 package brooklyn.util.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import groovy.time.Duration;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -16,6 +15,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
@@ -162,6 +162,10 @@ public class Repeater {
 		Preconditions.checkArgument(duration.toMilliseconds()>0, "period must be positive: %s", duration);
 		this.period = duration.toMilliseconds();
 		return this;
+    }
+    
+    public Repeater every(groovy.time.Duration duration) {
+        return every(Duration.of(duration));
     }
 
     /**

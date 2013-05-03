@@ -1,7 +1,6 @@
 package brooklyn.entity.webapp.tomcat;
 
 import static java.lang.String.format;
-import groovy.time.TimeDuration;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -15,6 +14,7 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
@@ -51,7 +51,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
         ConfigToAttributes.apply(this);
 
         Map<String, Object> flags = new LinkedHashMap<String, Object>();
-        flags.put("period", new TimeDuration(0, 0, 0, 0, 500));
+        flags.put("period", Duration.millis(500));
         
         if (getDriver().isJmxEnabled()) {
             String requestProcessorMbeanName = "Catalina:type=GlobalRequestProcessor,name=\"http-*\"";
@@ -90,7 +90,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     public void waitForServiceUp() {
         // Increases wait-time by overriding this
         LOG.info("Waiting for {} up, via {}", this, jmxFeed == null ? "" : jmxFeed.getJmxUri());
-        waitForServiceUp(new TimeDuration(0, 0, 5, 0, 0));
+        waitForServiceUp(Duration.FIVE_MINUTES);
     }
 
     @Override

@@ -18,7 +18,10 @@ import brooklyn.util.time.Time
  * on this class!
  * 
  * @author alex
+ * 
+ * @deprecated since 0.6.0 - just use brooklyn.util.time.Duration, simpler and easier to configure, and avoids language problems
  */
+@Deprecated
 class TimeExtras {
     public static final Logger log = LoggerFactory.getLogger(TimeExtras.class);
     
