@@ -3,24 +3,28 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
     
-    <artifactId>brooklyn-api</artifactId>
-    <name>Brooklyn API</name>
+    <artifactId>brooklyn-utils-test-support</artifactId>
+    <name>Brooklyn Utilities to Support Testing (listeners etc)</name>
     
     <description>
-        API classes for Brooklyn
+        Test utility classes and methods developed for Brooklyn but not dependendent on Brooklyn or much else
     </description>
 
     <parent>
         <groupId>io.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.6.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <dependencies>
         <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-utils-common</artifactId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
         </dependency>
     </dependencies>
     

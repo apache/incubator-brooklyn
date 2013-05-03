@@ -1,7 +1,5 @@
 package brooklyn.test;
 
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 import groovy.lang.Closure;
 import groovy.time.TimeDuration;
 
@@ -16,8 +14,6 @@ import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.test.TestUtils.BooleanWithMessage;
-
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -31,6 +27,28 @@ public class Asserts {
     private static final Logger log = LoggerFactory.getLogger(Asserts.class);
 
     private Asserts() {}
+    
+    // --- selected routines from testng.Assert for visibility without needing that package
+    
+    /**
+     * Asserts that a condition is true. If it isn't,
+     * an AssertionError, with the given message, is thrown.
+     * @param condition the condition to evaluate
+     * @param message the assertion error message
+     */
+    public static void assertTrue(boolean condition, String message) {
+        if (!condition) fail(message);
+    }
+
+    /**
+     * Fails a test with the given message.
+     * @param message the assertion error message
+     */
+    static public void fail(String message) {
+        throw new AssertionError(message);
+    }
+
+    // --- new routines
     
     public static <T> void eventually(Supplier<? extends T> supplier, Predicate<T> predicate) {
         eventually(ImmutableMap.<String,Object>of(), supplier, predicate);
@@ -98,6 +116,20 @@ public class Asserts {
         succeedsEventually(ImmutableMap.<String,Object>of(), c);
     }
     
+    // FIXME duplication with TestUtils.BooleanWithMessage
+    public static class BooleanWithMessage {
+        boolean value; String message;
+        public BooleanWithMessage(boolean value, String message) {
+            this.value = value; this.message = message;
+        }
+        public boolean asBoolean() {
+            return value;
+        }
+        public String toString() {
+            return message;
+        }
+    }
+
     /**
      * Convenience method for cases where we need to test until something is true.
      *
