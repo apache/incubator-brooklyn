@@ -35,84 +35,143 @@ public class Time {
 		return new SimpleDateFormat(DATE_FORMAT_PREFERRED).format(new Date(date));
 	}
 
-	/** given an elapsed time, makes it readable, eg 44d 6h, or 8s 923ms */
+	/** @deprecated since 0.6.0 use {@link #makeTimeStringRounded(long, unit)} */
+	@Deprecated
     public static String makeTimeString(long t, TimeUnit unit) {
-        long nanos = unit.toNanos(t);
-        return makeTimeStringNano(nanos);
+        return makeTimeStringRounded(t, unit);
     }
-
-	/** given an elapsed time in ms, makes it readable, eg 44d 6h, or 8s 923ms */
-	public static String makeTimeString(long t) {
-		if (t==0) return "0ms";
-		if (t<0) return "-"+makeTimeString(-t);
-		long d = t/MILLIS_IN_DAY, dr = t%MILLIS_IN_DAY;
-		long h = dr/MILLIS_IN_HOUR, hr = dr%MILLIS_IN_HOUR;
-		long m = hr/MILLIS_IN_MINUTE, mr = hr%MILLIS_IN_MINUTE;
-		long s = mr/MILLIS_IN_SECOND, sr = mr%MILLIS_IN_SECOND;
-		long ms = sr;
-		String result = "";                          //@maydo, doesn't do rounding
-		
-		if (d>0) result += d+"d ";
-		if (h>0 || (d>0 && dr>0)) result += h+"h ";
-		if (d==0 && (m>0 || (h>0 && mr>0))) result += m+"m ";
-		if (d>0 || h>0) {
-			//nothing more
-		} else if (m>0) {
-			//seconds only
-			if (mr>0) result += s+"s";
-		} else {
-			//seconds, and millis maybe
-			if (s>=30) result += s+"s";
-			else if (s>=10) {
-				if (sr>0) {
-					int sRound = Math.round(s*10+sr/100);
-					result += sRound/10 +"."+(s%10)+"s";
-				}
-				else result += s+"s";
-			} else {
-				//seconds and millis
-				if (s>=1) result += s+"s ";
-				if (ms>0) result += ms+"ms";
-				else if (s==0) result += "0ms";
-			}
-		}
-		if (result.endsWith(" ")) result=result.substring(0, result.length()-1);
-		return result;
+    /** @see #makeTimeString(long, boolean) */
+    public static String makeTimeStringExact(long t, TimeUnit unit) {
+        long nanos = unit.toNanos(t);
+        return makeTimeStringNanoExact(nanos);
+    }
+    /** @see #makeTimeString(long, boolean) */
+    public static String makeTimeStringRounded(long t, TimeUnit unit) {
+        long nanos = unit.toNanos(t);
+        return makeTimeStringNanoRounded(nanos);
+    }
+    /** @deprecated since 0.6.0 use {@link #makeTimeStringRounded(long)} */
+    @Deprecated
+    public static String makeTimeString(long t) {
+        return makeTimeStringRounded(t);
+    }
+    /** @see #makeTimeString(long, boolean) */
+    public static String makeTimeStringExact(long t) {
+        return makeTimeString(t, false);
+    }
+    /** @see #makeTimeString(long, boolean) */
+    public static String makeTimeStringRounded(long t) {
+        return makeTimeString(t, true);
+    }
+    /** @see #makeTimeString(long, boolean) */
+    public static String makeTimeStringExact(Duration d) {
+        return makeTimeStringNanoExact(d.toNanoseconds());
+    }
+    /** @see #makeTimeString(long, boolean) */
+    public static String makeTimeStringRounded(Duration d) {
+        return makeTimeStringNanoRounded(d.toNanoseconds());
+    }
+    /** given an elapsed time, makes it readable, eg 44d 6h, or 8s 923ms, optionally rounding */
+	public static String makeTimeString(long t, boolean round) {
+	    return makeTimeStringNano(t*1000000L, round);
 	}
-
+	/** @deprecated since 0.6.0 use makeTimeStringNanoRounded */
+	@Deprecated
 	public static String makeTimeStringNano(long tn) {
+	    return makeTimeStringNanoRounded(tn);
+	}
+    /** @see #makeTimeString(long, boolean) */
+	public static String makeTimeStringNanoExact(long tn) {
+	    return makeTimeStringNano(tn, false);
+	}
+    /** @see #makeTimeString(long, boolean) */
+	public static String makeTimeStringNanoRounded(long tn) {
+	    return makeTimeStringNano(tn, true);
+	}
+    /** @see #makeTimeString(long, boolean) */
+	public static String makeTimeStringNano(long tn, boolean round) {
 		long tnm = tn % 1000000;
 		long t = tn/1000000;
-		String result = "";                          //@maydo, doesn't do rounding; oh now i think it does, but check
-		if (t>=100 || (t>0 && tnm==0)) {
-			long d = (t/1000/60/60/24);
-			long h = ( (t % (1000*60*60*24))/1000/60/60 );
-			long m = ( (t % (1000*60*60))/1000/60 );
-			long s = ( (t % (1000*60))/1000 );
-			long ms = ( (t % (1000))/1 );
-			if (d>0) result += d+"d ";
-			if (d>0 || h>0) result += h+"h ";
-			if (d==0 && (h>0 || m>0)) result += m+"m ";
-			if (d==0 && h==0 && (m>0 || s>0)) {
-				if (m>0 || s<10) result += s+"s ";
-				else result += toDecimal(s, ms/1000.d, 1);
-			}
-			if (d==0 && h==0 && m==0 && s<10) result += ms+"ms ";
-		} else {
-			if (t>=10) result += toDecimal(t, tnm/1000000.0d, 1);
-			else if (t>0) result += toDecimal(t, tnm/1000000.0d, 2);
-			else if (tnm==0) result = "0";
-//			else if (tnm%1000==0) result += t+"."+StringUtils.makePaddedString(""+Math.round(tnm/1000.0d),3,"0","");  //normally only microsec precision
-//			//else result += t+"."+makePaddedString(""+(tnm),6,"0","");  //though maybe more somewhere (not that i've seen from nanoTime, but derived maybe)
-			
-			if (result.length()>0) result+="ms";
-			else if (tnm>100*1000) result = Math.round(tnm/1000.0d)+"us";
-			else if (tnm>10*1000) result = toDecimal(tnm/1000, (tnm%1000)/1000.0d, 1) +"us";
-			else if (tnm>1000) result = toDecimal(tnm/1000, (tnm%1000)/1000.0d, 2) +"us";
-			else result = tnm+"ns";
+		String result = "";
+		
+		long d = t/MILLIS_IN_DAY;  t %= MILLIS_IN_DAY;
+		long h = t/MILLIS_IN_HOUR;  t %= MILLIS_IN_HOUR;
+		long m = t/MILLIS_IN_MINUTE;  t %= MILLIS_IN_MINUTE;
+		long s = t/MILLIS_IN_SECOND;  t %= MILLIS_IN_SECOND;
+		long ms = t;
+		
+		int segments = 0;
+		if (d>0) { result += d+"d "; segments++; }
+		if (h>0) { result += h+"h "; segments++; }
+		if (round && segments>=2) return Strings.removeAllFromEnd(result, " ");
+		if (m>0) { result += m+"m "; segments++; }
+		if (round && (segments>=2 || d>0)) return Strings.removeAllFromEnd(result, " ");
+		if (s>0) {
+		    if (ms==0 && tnm==0) {
+		        result += s+"s"; segments++;
+                return result;
+		    }
+		    if (round && segments>0) {
+		        result += s+"s"; segments++;
+		        return result;
+		    }
+            if (round && s>10) {
+                result += toDecimal(s, ms/1000.0, 1)+"s"; segments++;
+                return result;
+            }
+            if (round) {
+                result += toDecimal(s, ms/1000.0, 2)+"s"; segments++;
+                return result;
+            }
+            result += s+"s ";
 		}
-		if (result.endsWith(" ")) result=result.substring(0, result.length()-1);
-		return result;
+		if (round && segments>0)
+		    return Strings.removeAllFromEnd(result, " ");
+		if (ms>0) {
+            if (tnm==0) {
+                result += ms+"ms"; segments++;
+                return result;
+            }
+            if (round && ms>=100) {
+                result += toDecimal(ms, tnm/1000000.0, 1)+"ms"; segments++;
+                return result;
+            }
+            if (round && ms>=10) {
+                result += toDecimal(ms, tnm/1000000.0, 2)+"ms"; segments++;
+                return result;
+            }
+            if (round) {
+                result += toDecimal(ms, tnm/1000000.0, 3)+"ms"; segments++;
+                return result;
+            }
+            result += ms+"ms ";
+		}
+		
+		long us = tnm/1000;
+		long ns = tnm % 1000;
+
+		if (us>0) {
+		    if (ns==0) {
+		        result += us+"us"; segments++;
+		        return result;
+		    }
+            if (round && us>=100) {
+                result += toDecimal(us, ns/1000.0, 1)+"us"; segments++;
+                return result;
+            }
+            if (round && us>=10) {
+                result += toDecimal(us, ns/1000.0, 2)+"us"; segments++;
+                return result;
+            }
+		    if (round) {
+		        result += toDecimal(us, ns/1000.0, 3)+"us"; segments++;
+		        return result;
+		    }
+		    result += us+"us ";
+		}
+
+		if (ns>0) result += ns+"ns";
+		return Strings.removeAllFromEnd(result, " ");
 	}
 	
 	private static String toDecimal(long intPart, double fracPart, int decimalPrecision) {
@@ -126,6 +185,9 @@ public class Time {
 		return intPart + "." + Strings.makePaddedString(""+fpr, decimalPrecision, "0", "");
 	}
 
+	/** @deprecated since 0.6.0 see other makeTimeString methods, they are more clearly defined than this */
+	// looks like this does a complicated '23.002000 ms' syntax?
+	@Deprecated
 	public static String makeTimeStringNanoLong(long tn) {
 		long tnm = tn % 1000000;
 		long t = tn/1000000;
@@ -154,6 +216,11 @@ public class Time {
 			throw Exceptions.propagate(e);
 		}
 	}
+	
+	/** as {@link #sleep(long)} */
+    public static void sleep(Duration duration) {
+        Time.sleep(duration.toMilliseconds());
+    }    
 
 	/**
 	 * Calculates the number of milliseconds past midnight for a given UTC time.
