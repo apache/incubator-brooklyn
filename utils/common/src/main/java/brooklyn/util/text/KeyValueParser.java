@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.text;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.util.text.QuotedStringTokenizer;
 
 /**
  * Parses a String that consists of multiple arguments, which are either single or key-value pairs.

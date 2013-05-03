@@ -16,7 +16,7 @@ import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

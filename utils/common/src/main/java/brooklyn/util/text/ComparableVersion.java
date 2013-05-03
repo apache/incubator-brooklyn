@@ -1,4 +1,5 @@
-package brooklyn.util;
+package brooklyn.util.text;
+
 
 /** takes a version string, and compares to other versions, using {@link NaturalOrderComparator} */
 public class ComparableVersion implements Comparable<String> {

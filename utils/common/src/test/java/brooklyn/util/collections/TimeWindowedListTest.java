@@ -1,10 +1,14 @@
-package brooklyn.util;
+package brooklyn.util.collections;
 
 import static org.testng.Assert.assertEquals;
 
 import java.util.List;
 
 import org.testng.annotations.Test;
+
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.TimeWindowedList;
+import brooklyn.util.collections.TimestampedValue;
 
 import com.google.common.collect.Lists;
 

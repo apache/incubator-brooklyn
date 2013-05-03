@@ -9,7 +9,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import brooklyn.util.Time;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;

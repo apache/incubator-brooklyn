@@ -27,7 +27,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;

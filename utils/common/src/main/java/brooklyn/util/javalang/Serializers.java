@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.javalang;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

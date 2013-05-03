@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.collections;
 
 import java.util.LinkedList;
 import java.util.List;

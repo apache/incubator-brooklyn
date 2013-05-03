@@ -21,7 +21,7 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
 

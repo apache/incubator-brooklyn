@@ -11,8 +11,8 @@ import org.testng.annotations.Test
 
 import brooklyn.location.PortRange
 import brooklyn.location.basic.PortRanges.BasicPortRange
-import brooklyn.util.MutableMap
 import brooklyn.util.ResourceUtils
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshException
 
 import com.google.common.base.Charsets

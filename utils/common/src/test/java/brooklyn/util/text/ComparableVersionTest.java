@@ -1,9 +1,9 @@
-package brooklyn.util;
+package brooklyn.util.text;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.util.NaturalOrderComparator;
+import brooklyn.util.text.NaturalOrderComparator;
 
 public class ComparableVersionTest {
 

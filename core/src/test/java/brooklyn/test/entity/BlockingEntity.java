@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import brooklyn.location.Location;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Throwables;
 

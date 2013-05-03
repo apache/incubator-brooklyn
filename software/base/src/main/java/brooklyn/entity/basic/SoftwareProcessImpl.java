@@ -30,12 +30,12 @@ import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
-import brooklyn.util.MutableSet;
-import brooklyn.util.Time;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;

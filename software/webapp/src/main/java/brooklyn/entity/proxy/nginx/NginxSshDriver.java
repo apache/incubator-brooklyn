@@ -17,8 +17,8 @@ import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 

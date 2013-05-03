@@ -19,10 +19,10 @@ import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestEntity
 import brooklyn.test.entity.TestEntityImpl
-import brooklyn.util.internal.StreamGobbler
 import brooklyn.util.internal.ssh.SshTool
 import brooklyn.util.internal.ssh.cli.SshCliTool
 import brooklyn.util.internal.ssh.sshj.SshjTool
+import brooklyn.util.stream.StreamGobbler;
 
 class StartStopSshDriverTest {
 

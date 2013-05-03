@@ -19,8 +19,8 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.Repeater;
 
 import com.google.common.base.Predicates;

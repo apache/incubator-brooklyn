@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.testng.annotations.Test;
 
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;

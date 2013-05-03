@@ -48,8 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.MutableMap;
 import brooklyn.util.internal.Repeater;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Charsets;

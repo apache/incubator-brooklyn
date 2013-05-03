@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.text;
 
 /*
 NaturalOrderComparator.java -- Perform 'natural order' comparisons of strings in Java.

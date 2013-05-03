@@ -15,7 +15,7 @@ import com.google.common.base.Throwables;
 
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 @Test
 public class ScriptHelperTest {

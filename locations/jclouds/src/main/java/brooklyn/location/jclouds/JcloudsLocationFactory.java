@@ -1,6 +1,6 @@
 package brooklyn.location.jclouds;
 
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;

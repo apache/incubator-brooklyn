@@ -27,8 +27,8 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
-import brooklyn.util.MutableList;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 import com.google.common.collect.ImmutableList;

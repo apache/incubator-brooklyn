@@ -13,7 +13,7 @@ import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.MutableMap
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings
 
 /**

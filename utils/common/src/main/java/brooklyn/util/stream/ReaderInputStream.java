@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.stream;
 
 import java.io.IOException;
 import java.io.InputStream;

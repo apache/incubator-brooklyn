@@ -22,10 +22,10 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ComparableVersion;
-import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.text.ComparableVersion;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;

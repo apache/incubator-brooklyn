@@ -10,7 +10,7 @@ import javax.management.ObjectName;
 import brooklyn.entity.Entity;
 import brooklyn.entity.messaging.Topic;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 public class QpidTopic extends QpidDestination implements Topic {

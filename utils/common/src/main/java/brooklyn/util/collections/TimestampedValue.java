@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.collections;
 
 import com.google.common.base.Objects;
 

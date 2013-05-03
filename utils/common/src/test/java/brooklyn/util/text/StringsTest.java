@@ -5,7 +5,8 @@ package brooklyn.util.text;
 
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
-import brooklyn.util.MutableMap;
+
+import brooklyn.util.collections.MutableMap;
 
 @Test
 public class StringsTest {

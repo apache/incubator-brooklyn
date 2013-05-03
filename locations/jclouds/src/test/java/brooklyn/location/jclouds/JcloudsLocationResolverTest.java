@@ -18,7 +18,7 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.LocationResolverTest;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableMap;
 

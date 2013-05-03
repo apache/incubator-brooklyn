@@ -16,8 +16,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.util.MutableMap;
-import brooklyn.util.MutableSet;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 

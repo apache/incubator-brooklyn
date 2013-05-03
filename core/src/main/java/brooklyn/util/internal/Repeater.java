@@ -12,11 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.MutableMap;
-import brooklyn.util.Time;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Callables;

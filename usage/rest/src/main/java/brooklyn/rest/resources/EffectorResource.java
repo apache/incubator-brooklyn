@@ -27,8 +27,8 @@ import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.util.WebResourceUtils;
-import brooklyn.util.Time;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;

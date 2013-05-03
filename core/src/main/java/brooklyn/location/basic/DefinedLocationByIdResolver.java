@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationRegistry;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 /**
  * looks up based on ID in DefinedLocations map

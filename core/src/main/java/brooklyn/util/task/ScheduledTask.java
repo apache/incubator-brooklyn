@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import brooklyn.management.Task;
 import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Throwables;

@@ -7,7 +7,7 @@ import java.util.Map;
 import org.testng.annotations.Test;
 import org.testng.collections.Maps;
 
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.thoughtworks.xstream.XStream;
 

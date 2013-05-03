@@ -29,7 +29,7 @@ import brooklyn.management.SubscriptionHandle
 import brooklyn.test.TestUtils.BooleanWithMessage
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestApplicationImpl
-import brooklyn.util.MutableMap
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.Repeater
 import brooklyn.util.internal.TimeExtras
 

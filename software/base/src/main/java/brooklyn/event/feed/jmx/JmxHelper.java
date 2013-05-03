@@ -48,8 +48,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.MutableMap;
-import brooklyn.util.Time;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -57,6 +56,7 @@ import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.internal.LanguageUtils;
 import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;

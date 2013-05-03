@@ -16,7 +16,7 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableSet;
+import brooklyn.util.collections.MutableSet;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

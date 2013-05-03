@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.StreamGobbler;
+import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 

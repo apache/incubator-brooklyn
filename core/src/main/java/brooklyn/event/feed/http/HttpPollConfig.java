@@ -5,7 +5,7 @@ import java.util.Map;
 
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.URLParamEncoder;
 
 import com.google.common.base.Function;

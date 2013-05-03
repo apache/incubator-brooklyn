@@ -24,7 +24,7 @@ import com.google.common.base.Objects.ToStringHelper;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.zookeeper.AbstractZookeeperImpl;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 

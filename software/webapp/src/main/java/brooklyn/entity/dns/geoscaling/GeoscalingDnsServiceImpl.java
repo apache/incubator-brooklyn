@@ -14,8 +14,8 @@ import brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.util.MutableMap;
-import brooklyn.util.MutableSet;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 

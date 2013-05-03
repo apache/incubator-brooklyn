@@ -2,9 +2,9 @@ package brooklyn.policy.autoscaling;
 
 import java.util.List;
 
-import brooklyn.util.MutableMap;
-import brooklyn.util.TimeWindowedList;
-import brooklyn.util.TimestampedValue;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.TimeWindowedList;
+import brooklyn.util.collections.TimestampedValue;
 
 import com.google.common.base.Objects;
 

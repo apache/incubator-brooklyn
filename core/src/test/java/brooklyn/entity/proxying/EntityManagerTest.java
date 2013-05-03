@@ -17,7 +17,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class EntityManagerTest {
 

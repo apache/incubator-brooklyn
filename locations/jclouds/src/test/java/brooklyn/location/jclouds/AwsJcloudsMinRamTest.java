@@ -10,7 +10,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsResolver;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class AwsJcloudsMinRamTest {
 

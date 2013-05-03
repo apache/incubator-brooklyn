@@ -5,7 +5,7 @@ import static org.testng.Assert.fail
 
 import org.testng.annotations.Test
 
-import brooklyn.util.MutableMap
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap

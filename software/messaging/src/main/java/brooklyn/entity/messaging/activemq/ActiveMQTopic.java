@@ -4,7 +4,7 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.messaging.Topic;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class ActiveMQTopic extends ActiveMQDestination implements Topic {
     public ActiveMQTopic() {

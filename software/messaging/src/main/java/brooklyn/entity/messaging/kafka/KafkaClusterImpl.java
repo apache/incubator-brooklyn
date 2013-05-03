@@ -33,8 +33,8 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
-import brooklyn.util.MutableList;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 
 import com.google.common.base.Objects;

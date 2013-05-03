@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;

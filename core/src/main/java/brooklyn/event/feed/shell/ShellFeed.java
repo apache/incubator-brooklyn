@@ -23,9 +23,9 @@ import brooklyn.event.feed.Poller;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollValue;
-import brooklyn.util.Time;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.StreamGobbler;
+import brooklyn.util.stream.StreamGobbler;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;

@@ -23,7 +23,7 @@ import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.util.EntityLocationUtils;
 import brooklyn.rest.util.WebResourceUtils;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Function;

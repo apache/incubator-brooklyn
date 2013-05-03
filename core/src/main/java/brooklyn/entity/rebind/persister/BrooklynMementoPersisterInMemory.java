@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import brooklyn.mementos.BrooklynMemento;
-import brooklyn.util.Serializers;
+import brooklyn.util.javalang.Serializers;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;

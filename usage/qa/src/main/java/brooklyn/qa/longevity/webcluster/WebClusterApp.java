@@ -17,7 +17,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Lists;
 

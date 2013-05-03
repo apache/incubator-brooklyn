@@ -1,4 +1,4 @@
-package brooklyn.util;
+package brooklyn.util.internal;
 
 import static org.testng.Assert.assertEquals;
 
@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.testng.annotations.Test;
+
+import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 

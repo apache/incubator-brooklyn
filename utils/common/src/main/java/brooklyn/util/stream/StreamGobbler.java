@@ -1,4 +1,4 @@
-package brooklyn.util.internal;
+package brooklyn.util.stream;
 
 import java.io.Closeable;
 import java.io.IOException;

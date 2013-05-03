@@ -20,7 +20,7 @@ import java.util.Map;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.messaging.Topic;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class KafkaTopic extends AbstractEntity implements Topic {
 

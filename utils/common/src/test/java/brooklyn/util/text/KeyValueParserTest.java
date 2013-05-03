@@ -3,7 +3,7 @@
  * Supplied under license http://www.cloudsoftcorp.com/license/montereyDeveloperEdition
  * or such subsequent license agreed between Cloudsoft Corporation Ltd and the licensee.
  */
-package brooklyn.util;
+package brooklyn.util.text;
 
 import static org.testng.Assert.assertEquals;
 
@@ -13,6 +13,8 @@ import java.util.Map;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import brooklyn.util.text.KeyValueParser;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

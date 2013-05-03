@@ -3,7 +3,7 @@
  * Supplied under license http://www.cloudsoftcorp.com/license/montereyDeveloperEdition
  * or such subsequent license agreed between Cloudsoft Corporation Ltd and the licensee.
  */
-package brooklyn.util;
+package brooklyn.util.time;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
