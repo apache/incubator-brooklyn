@@ -11,7 +11,7 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Maps;
 

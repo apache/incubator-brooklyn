@@ -27,7 +27,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair;
 import brooklyn.policy.loadbalancing.Movable;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;

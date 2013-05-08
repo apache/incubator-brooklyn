@@ -27,7 +27,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.mementos.EntityMemento;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

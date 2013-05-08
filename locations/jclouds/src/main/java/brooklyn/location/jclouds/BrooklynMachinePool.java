@@ -18,7 +18,7 @@ import brooklyn.location.jclouds.pool.MachinePool;
 import brooklyn.location.jclouds.pool.MachineSet;
 import brooklyn.location.jclouds.pool.ReusableMachineTemplate;
 import brooklyn.management.Task;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 
 import com.google.common.base.Throwables;

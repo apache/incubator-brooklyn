@@ -1,6 +1,5 @@
 package brooklyn.policy.loadbalancing
 
-import brooklyn.util.MutableMap;
 
 import java.util.concurrent.locks.ReentrantLock
 
@@ -17,6 +16,7 @@ import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicConfigKey
 import brooklyn.location.Location
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag
 
 import com.google.common.collect.Iterables

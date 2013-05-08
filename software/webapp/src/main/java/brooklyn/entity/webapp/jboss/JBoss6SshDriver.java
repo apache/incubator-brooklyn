@@ -1,6 +1,6 @@
 package brooklyn.entity.webapp.jboss;
 
-import static brooklyn.util.StringUtils.isEmpty;
+import static brooklyn.util.text.Strings.isEmpty;
 import static java.lang.String.format;
 
 import java.util.HashMap;

@@ -13,7 +13,7 @@ import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.management.ManagementContext
-import brooklyn.util.MutableMap
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableMap
 

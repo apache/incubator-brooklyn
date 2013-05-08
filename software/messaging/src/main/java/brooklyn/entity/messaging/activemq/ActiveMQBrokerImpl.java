@@ -12,7 +12,7 @@ import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.jms.JMSBroker;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;

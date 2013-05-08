@@ -21,7 +21,7 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 
 /**

@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.KeyValueParser;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 

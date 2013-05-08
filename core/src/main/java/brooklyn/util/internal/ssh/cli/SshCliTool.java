@@ -17,10 +17,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.StreamGobbler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 

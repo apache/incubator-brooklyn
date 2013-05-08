@@ -101,6 +101,7 @@
         <httpclient.version>4.1.3</httpclient.version>
         <freemarker.version>2.3.19</freemarker.version>
         <osgi-core.version>4.3.0</osgi-core.version>
+        <commons-io.version>2.4</commons-io.version>
      
         <includedTestGroups />
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
@@ -113,6 +114,11 @@
     <dependencyManagement>
         <dependencies>
             <!-- include version numbers for common dependencies (including common brooklyn deps) -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>brooklyn-utils-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>brooklyn-api</artifactId>
@@ -139,6 +145,11 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.ivy</groupId>
                 <artifactId>ivy</artifactId>
@@ -574,6 +585,9 @@
             <id>Essentials</id>
             <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
+                <module>utils/test-support</module>
+                <module>utils/common</module>
+                <module>utils/groovy</module>
                 <module>api</module>
                 <module>usage/test-support</module>
                 <module>core</module>
@@ -591,8 +605,8 @@
             <id>Entities</id>
             <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
-                <module>util/jmx/jmxmp-ssl-agent</module>
-                <module>util/jmx/jmxrmi-agent</module>
+                <module>utils/jmx/jmxmp-ssl-agent</module>
+                <module>utils/jmx/jmxrmi-agent</module>
                 <module>software/base</module>
                 <module>software/osgi</module>
                 <module>software/webapp</module>

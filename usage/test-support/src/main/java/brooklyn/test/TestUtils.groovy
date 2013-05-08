@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicate
 import com.google.common.base.Supplier
@@ -189,10 +190,10 @@ public class TestUtils {
      * <li>abortOnError (boolean, default true)
      * <li>abortOnException - (boolean, default false)
      * <li>useGroovyTruth - (defaults to false; any result code apart from 'false' will be treated as success including null; ignored for Runnables which aren't Callables)
-     * <li>timeout - (a TimeDuration or an integer in millis, defaults to 30*SECONDS)
-     * <li>period - (a TimeDuration or an integer in millis, for fixed retry time; if not set, defaults to exponentially increasing from 1 to 500ms)
-     * <li>minPeriod - (a TimeDuration or an integer in millis; only used if period not explicitly set; the minimum period when exponentially increasing; defaults to 1ms)
-     * <li>maxPeriod - (a TimeDuration or an integer in millis; only used if period not explicitly set; the maximum period when exponentially increasing; defaults to 500ms)
+     * <li>timeout - (a Duration or an integer in millis, defaults to 30*SECONDS)
+     * <li>period - (a Duration or an integer in millis, for fixed retry time; if not set, defaults to exponentially increasing from 1 to 500ms)
+     * <li>minPeriod - (a Duration or an integer in millis; only used if period not explicitly set; the minimum period when exponentially increasing; defaults to 1ms)
+     * <li>maxPeriod - (a Duration or an integer in millis; only used if period not explicitly set; the maximum period when exponentially increasing; defaults to 500ms)
      * <li>maxAttempts - (integer, Integer.MAX_VALUE)
      * </ul>
      *
@@ -221,10 +222,10 @@ public class TestUtils {
         boolean logException = flags.logException ?: true
 
         // To speed up tests, default is for the period to start small and increase...
-        TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,30,0)
-        TimeDuration fixedPeriod = toTimeDuration(flags.period) ?: null
-        TimeDuration minPeriod = fixedPeriod ?: toTimeDuration(flags.minPeriod) ?: new TimeDuration(0,0,0,1)
-        TimeDuration maxPeriod = fixedPeriod ?: toTimeDuration(flags.maxPeriod) ?: new TimeDuration(0,0,0,500)
+        Duration duration = Duration.of(flags.timeout) ?: Duration.THIRTY_SECONDS;
+        Duration fixedPeriod = Duration.of(flags.period) ?: null
+        Duration minPeriod = fixedPeriod ?: Duration.of(flags.minPeriod) ?: Duration.millis(1)
+        Duration maxPeriod = fixedPeriod ?: Duration.of(flags.maxPeriod) ?: Duration.millis(500)
         int maxAttempts = flags.maxAttempts ?: Integer.MAX_VALUE;
         int attempt = 0;
         long startTime = System.currentTimeMillis();
@@ -288,8 +289,8 @@ public class TestUtils {
      */
     @Deprecated
     public static void assertSucceedsContinually(Map flags=[:], Callable<?> job) {
-        TimeDuration duration = toTimeDuration(flags.timeout) ?: new TimeDuration(0,0,1,0)
-        TimeDuration period = toTimeDuration(flags.period) ?: new TimeDuration(0,0,0,10)
+        Duration duration = Duration.of(flags.timeout) ?: Duration.ONE_SECOND
+        Duration period = Duration.of(flags.period) ?: Duration.millis(10)
         long periodMs = period.toMilliseconds()
         long startTime = System.currentTimeMillis()
         long expireTime = startTime+duration.toMilliseconds()
@@ -324,7 +325,7 @@ public class TestUtils {
      */
     @Deprecated
     public static <T> void assertContinually(Map flags=[:], Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg, long durationMs) {
-        flags.put("duration", toTimeDuration(durationMs));
+        flags.put("duration", Duration.millis(durationMs));
         Asserts.continually(flags, supplier, predicate, errMsg);
     }
     
@@ -405,7 +406,7 @@ public class TestUtils {
     @Deprecated
     public static void assertUrlHasText(Map flags=[:], String url, String ...phrases) {
         String contents;
-        TimeDuration timeout = flags.timeout in Number ? flags.timeout*TimeUnit.MILLISECONDS : flags.timeout ?: 30*TimeUnit.SECONDS
+        Duration timeout = Duration.of(flags.timeout) ?: Duration.THIRTY_SECONDS
         executeUntilSucceeds(timeout:timeout, maxAttempts:50) {
             //URLConnection connection = connectToURL(url);
             //connection.getContent();

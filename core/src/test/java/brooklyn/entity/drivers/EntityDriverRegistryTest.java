@@ -11,7 +11,7 @@ import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriverDepende
 import brooklyn.entity.drivers.RegistryEntityDriverFactoryTest.MyOtherSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class EntityDriverRegistryTest {
 

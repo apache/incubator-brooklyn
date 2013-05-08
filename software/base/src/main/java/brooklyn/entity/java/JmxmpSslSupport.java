@@ -11,8 +11,8 @@ import java.util.List;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.util.MutableMap.Builder;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap.Builder;
 import brooklyn.util.crypto.FluentKeySigner;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.exceptions.Exceptions;

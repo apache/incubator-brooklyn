@@ -25,7 +25,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.loadbalancing.BalanceableWorkerPool.ContainerItemPair;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Preconditions;

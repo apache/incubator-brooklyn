@@ -28,8 +28,8 @@ import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.MutableList;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;

@@ -20,7 +20,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.RegistryLocationResolver;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;

@@ -10,7 +10,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class ReflectiveEntityDriverFactoryTest {
 

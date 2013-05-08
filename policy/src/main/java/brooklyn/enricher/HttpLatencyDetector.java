@@ -1,7 +1,5 @@
 package brooklyn.enricher;
 
-import groovy.time.TimeDuration;
-
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +24,7 @@ import brooklyn.util.javalang.Boxing;
 import brooklyn.util.math.MathFunctions;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.StringFunctions;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -43,7 +42,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
 
     private static final Logger log = LoggerFactory.getLogger(HttpLatencyDetector.class);
     
-    public static final TimeDuration LATENCY_WINDOW_DEFAULT_PERIOD = TimeExtras.duration(10, TimeUnit.SECONDS);
+    public static final Duration LATENCY_WINDOW_DEFAULT_PERIOD = Duration.TEN_SECONDS;
 
     public static final AttributeSensor<Double> REQUEST_LATENCY_IN_SECONDS_MOST_RECENT = new BasicAttributeSensor<Double>(Double.class,
             "web.request.latency.last", "Request latency of most recent call, in seconds");
@@ -61,7 +60,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
     final AttributeSensor<String> urlSensor;
     final Function<String,String> urlPostProcessing;
     final AtomicReference<String> url = new AtomicReference<String>(null);
-    final TimeDuration rollupWindowSize;
+    final Duration rollupWindowSize;
     
     protected HttpLatencyDetector(Builder builder) {
         this.periodMillis = builder.periodMillis;
@@ -171,7 +170,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
         String url;
         AttributeSensor<String> urlSensor;
         Function<String, String> urlPostProcessing = Functions.identity();
-        TimeDuration rollupWindowSize = LATENCY_WINDOW_DEFAULT_PERIOD;
+        Duration rollupWindowSize = LATENCY_WINDOW_DEFAULT_PERIOD;
         
         /** indicates that the HttpLatencyDetector should not require "service up";
          * if using this, you must supply a URL sensor or the detector will not know when to run */
@@ -209,7 +208,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
         /** specifies a size of the time window which should be used to give a rolled-up average;
          * defaults to {@link HttpLatencyDetector#LATENCY_WINDOW_DEFAULT_PERIOD} */ 
         public Builder rollup(int windowSize, TimeUnit unit) {
-            this.rollupWindowSize = TimeExtras.duration(windowSize, unit);
+            this.rollupWindowSize = Duration.of(windowSize, unit);
             return this;
         }
         /** specifies that a rolled-up average should _not_ be calculated and emitted 

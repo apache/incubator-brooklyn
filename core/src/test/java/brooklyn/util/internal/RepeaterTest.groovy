@@ -2,11 +2,12 @@ package brooklyn.util.internal
 
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-import groovy.time.TimeDuration
 
 import java.util.concurrent.TimeUnit
 
 import org.testng.annotations.Test
+
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Stopwatch
 
@@ -115,7 +116,7 @@ public class RepeaterTest {
 
     @Test
     public void everyAcceptsDuration() {
-        new Repeater("everyAcceptsDuration").every(new TimeDuration(0, 0, 1, 0));
+        new Repeater("everyAcceptsDuration").every(Duration.ONE_SECOND);
     }
 
     @Test

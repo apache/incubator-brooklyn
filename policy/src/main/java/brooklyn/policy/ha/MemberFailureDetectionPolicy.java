@@ -15,9 +15,9 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.util.MutableMap;
-import brooklyn.util.Time;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

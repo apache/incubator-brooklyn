@@ -14,8 +14,8 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.MutableList;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.Lists;

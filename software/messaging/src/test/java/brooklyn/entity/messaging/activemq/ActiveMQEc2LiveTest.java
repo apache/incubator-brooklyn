@@ -17,7 +17,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 

@@ -3,7 +3,7 @@ package brooklyn.entity.nosql.redis;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Preconditions;
 

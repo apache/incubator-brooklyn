@@ -17,7 +17,7 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.MutableMap
+import brooklyn.util.collections.MutableMap;
 class CombiningEnricherTest {
 
     public static final Logger log = LoggerFactory.getLogger(CombiningEnricherTest.class);

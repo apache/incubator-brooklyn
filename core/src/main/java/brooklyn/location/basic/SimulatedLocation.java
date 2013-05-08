@@ -11,7 +11,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Throwables;

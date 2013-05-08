@@ -1,6 +1,7 @@
 package brooklyn.qa.longevity;
 
-import brooklyn.util.internal.StreamGobbler;
+import brooklyn.util.stream.StreamGobbler;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;

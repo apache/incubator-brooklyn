@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
-import brooklyn.util.MutableList;
+import brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

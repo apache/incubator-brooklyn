@@ -17,7 +17,7 @@ import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsResolver;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.test.TestUtils;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Throwables;

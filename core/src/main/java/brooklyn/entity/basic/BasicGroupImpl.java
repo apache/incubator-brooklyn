@@ -3,7 +3,7 @@ package brooklyn.entity.basic;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class BasicGroupImpl extends AbstractGroupImpl implements BasicGroup {
     

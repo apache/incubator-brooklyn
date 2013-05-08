@@ -12,7 +12,7 @@ import brooklyn.entity.messaging.Queue;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 public class QpidQueue extends QpidDestination implements Queue {

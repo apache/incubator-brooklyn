@@ -10,7 +10,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.messaging.jms.JMSDestination;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 public abstract class ActiveMQDestination extends JMSDestination {

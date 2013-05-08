@@ -14,7 +14,7 @@ import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
 import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

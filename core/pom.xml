@@ -22,15 +22,11 @@
             <artifactId>brooklyn-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-utils-groovy</artifactId>
+            <version>${brooklyn.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-        </dependency>
         <dependency>
             <groupId>net.schmizz</groupId>
             <artifactId>sshj</artifactId>

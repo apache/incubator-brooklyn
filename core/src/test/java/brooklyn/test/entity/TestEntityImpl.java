@@ -14,7 +14,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 /**
  * Mock entity for testing.

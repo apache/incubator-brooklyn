@@ -11,8 +11,8 @@ import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.collections.MutableMap;
 
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {

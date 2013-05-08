@@ -27,7 +27,7 @@ import org.testng.collections.Lists;
 import brooklyn.test.GeneralisedDynamicMBean;
 import brooklyn.test.JmxService;
 import brooklyn.test.TestUtils;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;

@@ -29,7 +29,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 
-import brooklyn.util.StringUtils;
+import brooklyn.util.text.Strings;
 
 public class GeoscalingWebClient {
     public static final Logger log = LoggerFactory.getLogger(GeoscalingWebClient.class);
@@ -76,7 +76,7 @@ public class GeoscalingWebClient {
          * or editRecord("*.foo", "CNAME", "foo.bar.com") to map everything at *.foo.bar.com to foo.bar.com
          */
         public void editRecord(String subdomainPart, String type, String content) {
-            subdomainPart = StringUtils.removeEnd(subdomainPart, "."+name);
+            subdomainPart = Strings.removeFromEnd(subdomainPart, "."+name);
             editSubdomainRecord(id, subdomainPart, type, content);
         }
         

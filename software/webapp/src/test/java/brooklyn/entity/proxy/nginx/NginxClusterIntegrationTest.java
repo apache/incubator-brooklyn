@@ -31,7 +31,7 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.management.EntityManager;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

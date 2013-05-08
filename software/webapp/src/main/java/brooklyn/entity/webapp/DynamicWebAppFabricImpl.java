@@ -8,7 +8,7 @@ import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.group.DynamicFabricImpl;
 import brooklyn.event.AttributeSensor;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

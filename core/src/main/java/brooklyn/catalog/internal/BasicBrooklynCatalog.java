@@ -13,11 +13,11 @@ import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.MutableMap;
-import brooklyn.util.Time;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

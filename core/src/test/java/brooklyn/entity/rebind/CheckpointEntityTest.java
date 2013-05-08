@@ -22,7 +22,7 @@ import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

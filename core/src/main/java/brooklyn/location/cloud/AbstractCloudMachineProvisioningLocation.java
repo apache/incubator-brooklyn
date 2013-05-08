@@ -8,7 +8,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
 

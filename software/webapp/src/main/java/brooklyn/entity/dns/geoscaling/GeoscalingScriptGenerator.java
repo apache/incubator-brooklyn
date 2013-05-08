@@ -8,7 +8,7 @@ import java.util.TimeZone;
 
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.StringUtils;
+import brooklyn.util.text.Strings;
 
 class GeoscalingScriptGenerator {
     
@@ -50,9 +50,9 @@ class GeoscalingScriptGenerator {
     }
     
     private static String escape(String txt) {
-        txt = StringUtils.replace(txt, "\\", "\\\\");
-        txt = StringUtils.replace(txt, "'", "\\'");
-        txt = StringUtils.replace(txt, "\"", "\\\"'");
+        txt = Strings.replaceAllNonRegex(txt, "\\", "\\\\");
+        txt = Strings.replaceAllNonRegex(txt, "'", "\\'");
+        txt = Strings.replaceAllNonRegex(txt, "\"", "\\\"'");
         return txt;
     }
     

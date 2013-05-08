@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.Task;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 
 /**

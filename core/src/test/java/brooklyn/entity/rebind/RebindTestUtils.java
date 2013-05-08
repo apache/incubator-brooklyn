@@ -17,7 +17,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.util.Serializers;
+import brooklyn.util.javalang.Serializers;
 
 public class RebindTestUtils {
 

@@ -31,7 +31,7 @@ import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;

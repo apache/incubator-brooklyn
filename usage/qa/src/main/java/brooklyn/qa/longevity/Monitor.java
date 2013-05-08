@@ -23,8 +23,8 @@ import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.TimeWindowedList;
-import brooklyn.util.TimestampedValue;
+import brooklyn.util.collections.TimeWindowedList;
+import brooklyn.util.collections.TimestampedValue;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;

@@ -10,7 +10,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.messaging.Queue;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class ActiveMQQueue extends ActiveMQDestination implements Queue {
     public static final Logger log = LoggerFactory.getLogger(ActiveMQQueue.class);

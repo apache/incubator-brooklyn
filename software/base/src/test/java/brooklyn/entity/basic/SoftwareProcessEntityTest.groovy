@@ -1,6 +1,7 @@
 package brooklyn.entity.basic
 
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
+
 import org.jclouds.util.Throwables2
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

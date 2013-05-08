@@ -4,7 +4,7 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class RedisShardImpl extends AbstractEntity implements RedisShard {
     public RedisShardImpl() {

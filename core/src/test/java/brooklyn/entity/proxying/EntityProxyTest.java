@@ -23,7 +23,7 @@ import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

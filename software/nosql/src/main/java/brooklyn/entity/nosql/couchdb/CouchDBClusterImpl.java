@@ -27,7 +27,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 /**
  * Implementation of {@link CouchDBCluster}.

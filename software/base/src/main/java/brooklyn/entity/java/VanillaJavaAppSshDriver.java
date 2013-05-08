@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.MutableMap;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 /**

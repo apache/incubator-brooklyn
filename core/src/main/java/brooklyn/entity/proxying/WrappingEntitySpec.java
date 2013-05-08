@@ -8,8 +8,8 @@ import java.util.Set;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.policy.Policy;
-import brooklyn.util.MutableMap;
-import brooklyn.util.MutableSet;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 

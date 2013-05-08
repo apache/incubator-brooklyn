@@ -10,7 +10,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Objects.ToStringHelper;

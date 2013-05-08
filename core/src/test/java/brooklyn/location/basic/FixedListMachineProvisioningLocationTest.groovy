@@ -8,7 +8,7 @@ import org.testng.annotations.Test
 
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.test.TestUtils
-import brooklyn.util.MutableMap
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList
 import com.google.common.io.Closeables

@@ -48,8 +48,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.MutableMap;
-import brooklyn.util.Time;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -57,6 +56,8 @@ import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.internal.LanguageUtils;
 import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
@@ -465,6 +466,9 @@ public class JmxHelper {
         }
     }
 
+    public Set<ObjectInstance> doesMBeanExistsEventually(final ObjectName objectName, Duration timeout) {
+        return doesMBeanExistsEventually(objectName, timeout.toMilliseconds(), TimeUnit.MILLISECONDS);
+    }
     public Set<ObjectInstance> doesMBeanExistsEventually(final ObjectName objectName, TimeDuration timeout) {
         return doesMBeanExistsEventually(objectName, timeout.toMilliseconds(), TimeUnit.MILLISECONDS);
     }
@@ -473,6 +477,9 @@ public class JmxHelper {
         return doesMBeanExistsEventually(objectName, timeoutMillis, TimeUnit.MILLISECONDS);
     }
     
+    public Set<ObjectInstance> doesMBeanExistsEventually(String objectName, Duration timeout) {
+        return doesMBeanExistsEventually(createObjectName(objectName), timeout);
+    }
     public Set<ObjectInstance> doesMBeanExistsEventually(String objectName, TimeDuration timeout) {
         return doesMBeanExistsEventually(createObjectName(objectName), timeout);
     }
@@ -502,6 +509,9 @@ public class JmxHelper {
         }
     }
 
+    public void assertMBeanExistsEventually(ObjectName objectName, Duration timeout) {
+        assertMBeanExistsEventually(objectName, timeout.toMilliseconds(), TimeUnit.MILLISECONDS);
+    }
     public void assertMBeanExistsEventually(ObjectName objectName, TimeDuration timeout) {
         assertMBeanExistsEventually(objectName, timeout.toMilliseconds(), TimeUnit.MILLISECONDS);
     }

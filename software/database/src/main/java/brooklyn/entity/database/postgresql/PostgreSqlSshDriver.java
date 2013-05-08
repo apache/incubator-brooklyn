@@ -14,13 +14,13 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
-import brooklyn.util.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

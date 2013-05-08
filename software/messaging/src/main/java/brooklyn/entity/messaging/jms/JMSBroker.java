@@ -13,7 +13,7 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.Queue;
 import brooklyn.entity.messaging.Topic;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;

@@ -28,7 +28,7 @@ import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.autoscaling.SizeHistory.WindowSummary;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.loadbalancing.LoadBalancingPolicy;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 

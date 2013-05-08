@@ -23,7 +23,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;

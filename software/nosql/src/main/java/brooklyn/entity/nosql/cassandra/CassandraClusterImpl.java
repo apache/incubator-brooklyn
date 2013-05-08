@@ -22,7 +22,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Joiner;

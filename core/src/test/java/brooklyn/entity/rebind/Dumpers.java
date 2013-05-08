@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.collections.Lists;
 import org.testng.collections.Maps;
 
-import brooklyn.util.Serializers;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.javalang.Serializers;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

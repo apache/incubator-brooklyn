@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
-import brooklyn.util.KeyValueParser;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.text.KeyValueParser;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;

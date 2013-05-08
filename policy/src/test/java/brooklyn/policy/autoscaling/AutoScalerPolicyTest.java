@@ -28,7 +28,7 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.test.entity.TestClusterImpl;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Stopwatch;
