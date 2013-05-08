@@ -10,7 +10,9 @@ import org.testng.annotations.Test;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.loadbalancing.MockContainerEntity;
+import brooklyn.policy.loadbalancing.MockContainerEntityImpl;
 import brooklyn.policy.loadbalancing.MockItemEntity;
+import brooklyn.policy.loadbalancing.MockItemEntityImpl;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -19,11 +21,11 @@ public class FollowTheSunModelTest {
 
     private Location loc1 = new SimulatedLocation(DefaultFollowTheSunModel.newHashMap("name","loc1"));
     private Location loc2 = new SimulatedLocation(DefaultFollowTheSunModel.newHashMap("name","loc2"));
-    private MockContainerEntity container1 = new MockContainerEntity();
-    private MockContainerEntity container2 = new MockContainerEntity();
-    private MockItemEntity item1 = new MockItemEntity();
-    private MockItemEntity item2 = new MockItemEntity();
-    private MockItemEntity item3 = new MockItemEntity();
+    private MockContainerEntity container1 = new MockContainerEntityImpl();
+    private MockContainerEntity container2 = new MockContainerEntityImpl();
+    private MockItemEntity item1 = new MockItemEntityImpl();
+    private MockItemEntity item2 = new MockItemEntityImpl();
+    private MockItemEntity item3 = new MockItemEntityImpl();
     
     private DefaultFollowTheSunModel<MockContainerEntity, MockItemEntity> model;
 
