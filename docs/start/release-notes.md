@@ -13,7 +13,7 @@ Thanks also go to Brooklyn's commercial users. Already Brooklyn has been adopted
 New Features
 ------------
 
-The major changes between 0.4.*x* and 0.5 are:
+The major changes between 0.4.x and 0.5 are:
 
 * "Rebind" suppport: allow Brooklyn to restart and re-binding to the entities in the applications.
   The state is automatically persisted as entities change, so Brooklyn can survive unexpected termination
@@ -53,7 +53,7 @@ The major changes between 0.4.*x* and 0.5 are:
 Backwards Compatibility
 ---------------------
 
-For upgrading from 0.4.*x* to 0.5.0:
+When upgrading to 0.5.0 from 0.4.x or 0.5.0-M1:
 
 * Entity classes have been renamed, e.g. `MySqlNode` is now an interface and the implementationis `MySqlNodeImpl`.
 
@@ -66,7 +66,5 @@ For upgrading from 0.4.*x* to 0.5.0:
   * Java's `System.getProperty("user.name")` is used instead of 'root' or 'ubuntu'
 
   * Usernames can be overridden in brooklyn.properties or using system properties. For example, by entering `brooklyn.location.named.acmecloud.user=root` in brooklyn.properties or using the command syntax `-Dbrooklyn.location.named.acmecloud.user=root`.
-
-    `brooklyn.jclouds.aws-ec2.user=root` could also be used to apply user=root to all aws-ec2 VMs.
 
 * Some deprecated code has been deleted. All of this code was commented in 0.4.0 with text such as "will be deleted in 0.5". Where code has been deprecated in 0.5.0, there are javadoc comments indicating what should be used instead. 
