@@ -497,6 +497,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         t.overrideLoginPrivateKey(((CharSequence)v).toString());
                     }})
+            .put(KEY_PAIR, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        if (t instanceof EC2TemplateOptions) {
+                            ((EC2TemplateOptions)t).keyPair(((CharSequence)v).toString());
+                        } else if (t instanceof NovaTemplateOptions) {
+                            ((NovaTemplateOptions)t).keyPairName(((CharSequence)v).toString());
+                        } else {
+                            LOG.info("ignoring keyPair({}) in VM creation because not supported for cloud/type ({})", v, t);
+                        }
+                    }})
             .build();
 
     private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;

@@ -27,6 +27,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Custom password for the user who logs in initially", null);
     public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_DATA = new StringConfigKey("loginUser.privateKeyData", 
             "Custom private key for the user who logs in initially", null);
+    public static final ConfigKey<String> KEY_PAIR = new StringConfigKey("keyPair", 
+            "Custom keypair name to be re-used", null);
     // not supported in jclouds
 //    public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_PASSPHRASE = new StringConfigKey("loginUser.privateKeyPassphrase", 
 //            "Passphrase for the custom private key for the user who logs in initially", null);
