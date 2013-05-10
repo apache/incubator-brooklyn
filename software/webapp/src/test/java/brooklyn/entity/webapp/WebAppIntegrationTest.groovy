@@ -1,5 +1,7 @@
 package brooklyn.entity.webapp
 
+import java.util.concurrent.TimeUnit
+
 import static brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
