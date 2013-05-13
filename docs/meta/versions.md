@@ -73,9 +73,9 @@ This is the archived documentation for Brooklyn {{ site.brooklyn-version }}
 
 ### Version History
 
-* **[0.6.0-SNAPSHOT (master)](/v/0.6.0-SNAPSHOT)**: no major changes yet since 0.5.0-rc.1
+* **[0.6.0-SNAPSHOT (master)](/v/0.6.0-SNAPSHOT)**: no major changes yet since 0.5.0
 
-* **[0.5.0-rc.1](/v/0.5.0-rc.1)**: includes new JS GUI and REST API, rebind/persistence support, cleaner model and naming conventions, more entities (Apr 2013)
+* **[0.5.0](/v/0.5.0/)**: includes new JS GUI and REST API, rebind/persistence support, cleaner model and naming conventions, more entities (May 2013)
 
 * **[0.4.0](/v/0.4.0/)**: initial public GA release of Brooklyn to Maven Central, supporting wide range of entities and examples (Jan 2013)
 
