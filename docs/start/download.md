@@ -31,7 +31,7 @@ First time user? The [getting started]({{ site.url }}/use/guide/quickstart/index
 </tr>
 <tr>
 	<td style='text-align:left'>Release notes</td>
-	<td style='text-align:left'><a href='/start/release-notes.html'>{{ site.brooklyn-version }}</a></td>
+	<td style='text-align:left'><a href='{{ site.url }}/start/release-notes.html'>{{ site.brooklyn-version }}</a></td>
 	<td> - </td>
 </tr>
 </table>
