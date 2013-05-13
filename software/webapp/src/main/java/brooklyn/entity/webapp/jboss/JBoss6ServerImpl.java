@@ -20,6 +20,10 @@ public class JBoss6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 
     private volatile JmxFeed jmxFeed;
     
+    public JBoss6ServerImpl() {
+        this(new LinkedHashMap(), null);
+    }
+
     public JBoss6ServerImpl(Entity parent) {
         this(new LinkedHashMap(), parent);
     }
