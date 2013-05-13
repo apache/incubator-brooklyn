@@ -84,7 +84,7 @@ public class Asserts {
         continually(ImmutableMap.<String,Object>of(), supplier, predicate);
     }
 
-    public static <T> void continually(Map<String,?> flags, Supplier<? extends T> supplier, Predicate<T> predicate) {
+    public static <T> void continually(Map<String,?> flags, Supplier<? extends T> supplier, Predicate<? super T> predicate) {
         continually(flags, supplier, predicate, (String)null);
     }
 
