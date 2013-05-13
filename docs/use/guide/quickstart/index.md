@@ -26,11 +26,7 @@ Expand the `tar.gz` archive. {% if site.brooklyn-version contains 'SNAPSHOT' %}E
 	$ tar -zxf brooklyn-dist-{{ site.version }}-dist.tar.gz
 {% endif %}
 
-<<<<<<< HEAD
 This will create a `brooklyn-{{ site.version }}` folder.
-=======
-This will create a brooklyn-\<version\> folder. At the time of writing this was `brooklyn-0.5.0`.  
->>>>>>> d408b4c... Improved SSH instructions. Changed brooklyn version. (Update Script Miss.)
 
 Let's setup some paths for easy commands.
 
