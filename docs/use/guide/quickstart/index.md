@@ -26,7 +26,11 @@ Expand the `tar.gz` archive. {% if site.brooklyn-version contains 'SNAPSHOT' %}E
 	$ tar -zxf brooklyn-dist-{{ site.version }}-dist.tar.gz
 {% endif %}
 
+<<<<<<< HEAD
 This will create a `brooklyn-{{ site.version }}` folder.
+=======
+This will create a brooklyn-\<version\> folder. At the time of writing this was `brooklyn-0.5.0`.  
+>>>>>>> d408b4c... Improved SSH instructions. Changed brooklyn version. (Update Script Miss.)
 
 Let's setup some paths for easy commands.
 
@@ -70,14 +74,15 @@ Download the template [catalog.xml](catalog.xml) (to `~/.brooklyn`).
 
 catalog.xml is catalog of application or service blueprints. The example file contains two demos which will be automatically downloaded from the web if you run them.
 
-Edit this file (in any text editor) and check that the links to the demo applications' .jars are valid. At the time of writing these were for version `0.5.0-SNAPSHOT`, but if this has changed you may need to update the links. <!-- BROOKLYN VERSION -->
+Edit this file (text editor) and check that the links to the demo applications' .jars are valid. At the time of writing these were for version `0.5.0-SNAPSHOT`, but if this has changed you may need to update the links. <!-- BROOKLYN VERSION -->
 
 ### SSH Key
-If this is a new machine, or you haven't used SSH before, you will need to create keys for Brooklyn to use. (Accept all default options, as this will setup password-less keys in the default location and Brooklyn will find them.)
+If this is a new machine, or you haven't used SSH before, you will need to create keys for Brooklyn to use, and add them your list of authorized_keys (for deployment to localhost). 
 
-	$ ssh-keygen -t rsa
+	$ ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+	$ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
-It is advisable *not* to set a password for this key. If you are using an existing key that already has a password please add it to your `brooklyn.properties` file.
+(If you are using an existing key SSH that has a password, or is not located at `~/.ssh/id_rsa`, please supply the `brooklyn.localhost.private-key-file` and `brooklyn.localhost.private-key-passphrase` in your `brooklyn.properties` file.)
 
 ### 3-2-1 Go!
 
