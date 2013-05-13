@@ -21,7 +21,7 @@ Untar the tgz. Each Distro is timestamped, so your filename will be different.
 
 	$ tar -zxf brooklyn-dist-<version>-<timestamp>-dist.tar.tar.gz
 
-This will create a brooklyn-\<version\> folder. At the time of writing this was `brooklyn-0.5.0`.  
+This will create a brooklyn-\<version\> folder. At the time of writing this was `brooklyn-0.5.0`.  <!-- BROOKLYN_VERSION -->
 
 Let's setup some paths for easy commands.
 
@@ -65,7 +65,7 @@ Download the template [catalog.xml](catalog.xml) (to `~/.brooklyn`).
 
 catalog.xml is catalog of application or service blueprints. The example file contains two demos which will be automatically downloaded from the web if you run them.
 
-Edit this file (text editor) and check that the links to the demo applications' .jars are valid. At the time of writing these were for version `0.5.0`, but if this has changed you may need to update the links.
+Edit this file (text editor) and check that the links to the demo applications' .jars are valid. At the time of writing these were for version `0.5.0`, but if this has changed you may need to update the links. <!-- BROOKLYN_VERSION -->
 
 ### SSH Key
 If this is a new machine, or you haven't used SSH before, you will need to create keys for Brooklyn to use, and add them your list of authorized_keys (for deployment to localhost). 
