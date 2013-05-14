@@ -11,9 +11,9 @@ define(["underscore", "backbone"], function (_, Backbone) {
                 name:"",
                 type:"",
                 description:"",
-                iconUrl:"",
+                iconUrl:""
             }
-        },
+        }
     })
 
     CatalogItem.Collection = Backbone.Collection.extend({

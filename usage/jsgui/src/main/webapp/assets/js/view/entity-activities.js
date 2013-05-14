@@ -2,10 +2,10 @@
  * Displays the list of activities/tasks the entity performed.
  */
 define([
-    "underscore", "jquery", "backbone", "view/viewutils",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "view/viewutils",
     "text!tpl/apps/activities.html", "text!tpl/apps/activity-row-details.html", "text!tpl/apps/activity-full-details.html", 
-    "bootstrap", "formatJson", "jquery-datatables", "datatables-extensions", "brooklyn-utils"
-], function (_, $, Backbone, ViewUtils, ActivitiesHtml, ActivityRowDetailsHtml, ActivityFullDetailsHtml) {
+    "bootstrap", "formatJson", "jquery-datatables", "datatables-extensions"
+], function (_, $, Backbone, Util, ViewUtils, ActivitiesHtml, ActivityRowDetailsHtml, ActivityFullDetailsHtml) {
 
     var ActivitiesView = Backbone.View.extend({
         template:_.template(ActivitiesHtml),
@@ -33,7 +33,7 @@ define([
                 "aoColumnDefs": [
                                  {
                                      "mRender": function ( data, type, row ) {
-                                         return prep(data)
+                                         return Util.prep(data)
                                      },
                                      "aTargets": [ 1, 2, 3 ]
                                  },

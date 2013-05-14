@@ -20,7 +20,7 @@ define([
             "click .policy-start":"callStart",
             "click .policy-stop":"callStop",
             "click .policy-destroy":"callDestroy",
-            "click .show-policy-config-modal":"showPolicyConfigModal",
+            "click .show-policy-config-modal":"showPolicyConfigModal"
         },
         initialize:function () {
             this.$el.html(this.template({ }));
@@ -156,7 +156,7 @@ define([
             this._modal = new PolicyConfigInvokeView({
                 el:"#policy-config-modal",
                 model:this._config.getByCid(cid),
-                policy:this.model,
+                policy:this.model
             });
             this._modal.render().$el.modal('show');
         },

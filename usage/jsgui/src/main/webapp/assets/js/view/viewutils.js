@@ -30,7 +30,7 @@ define([
                                     '</select> / page )'
                 }
             };
-            for (prop in extra) { 
+            for (var prop in extra) {
                 settings[prop] = extra[prop];
             }
             var result = $table.dataTable(settings);
@@ -42,7 +42,7 @@ define([
         },
         addRefreshButton: function($table) {
             this.myDataTableToolbarAddHtml($table,
-            '<i class="refresh table-toolbar-icon icon-refresh handy smallpadside" rel="tooltip" title="Reload content immediately"></i>');
+                '<i class="refresh table-toolbar-icon icon-refresh handy smallpadside" rel="tooltip" title="Reload content immediately"></i>');
         },
         addFilterEmptyButton: function($table) {
             this.myDataTableToolbarAddHtml($table,
@@ -62,13 +62,13 @@ define([
             var oldDisplayDataList = table.dataTable().fnGetData();
             var oldDisplayIndexMap = {}
             var oldDisplayData = {}
-            for (idx in oldDisplayDataList) {
+            for (var idx in oldDisplayDataList) {
                 var data = oldDisplayDataList[idx]
                 oldDisplayIndexMap[data[0]] = idx
                 oldDisplayData[data[0]] = data
             }
-            newDisplayData = {}
-            updateDisplayData = []
+            var newDisplayData = {}
+            var updateDisplayData = []
             ViewUtils.each(collection, function(data,index) { 
                 var newRow = fnConvertData(data, index)
                 if (newRow!=null) {
@@ -84,7 +84,7 @@ define([
                 }
             })
             // first update (so indices don't change)
-            for (prop in updateDisplayData) {
+            for (var prop in updateDisplayData) {
                 var rowProps = updateDisplayData[prop]
                 var oldProps = oldDisplayData[rowProps[0]]
                 for (idx in rowProps) {
@@ -99,13 +99,13 @@ define([
                 }
             }
             // then delete old ones
-            for (prop in oldDisplayIndexMap) {
+            for (var prop in oldDisplayIndexMap) {
                 var index = oldDisplayIndexMap[prop]
 //                log("deleting "+index)
                 table.fnDeleteRow( Number(index), null, false )
             }
             // and now add new ones
-            for (prop in newDisplayData) {
+            for (var prop in newDisplayData) {
 //                log("adding "+newDisplayData[prop])
                 table.fnAddData( newDisplayData[prop] )
             }
@@ -166,7 +166,7 @@ define([
             }
         },
         each: function(collection, fn) {
-            if (typeof collection.each == 'function') {
+            if (_.isFunction(collection.each)) {
                 // some objects (such as backbone collections) are not iterable
                 // (either by "for x in" or "_.each") so call the "each" method explicitly on them 
                 return collection.each(fn)
