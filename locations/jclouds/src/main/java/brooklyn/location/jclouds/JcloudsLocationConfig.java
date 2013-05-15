@@ -91,7 +91,10 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     public static final ConfigKey<Object> USER_METADATA = new BasicConfigKey<Object>(Object.class, "userMetadata", 
             "Arbitrary user metadata, as a map (or String of comma-separated key=value pairs), on supported clouds", null);
-    
+
+    public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = new BasicConfigKey<Boolean>(
+            Boolean.class, "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", false);
+
     public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = new BasicConfigKey<JcloudsLocationCustomizer>(
             JcloudsLocationCustomizer.class, "customizer", "Optional location customizer", null);
 
