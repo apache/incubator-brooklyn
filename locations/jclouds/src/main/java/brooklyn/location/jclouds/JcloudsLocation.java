@@ -347,6 +347,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
             if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
+                if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
+                    sshLocByHostname.execCommands("using urandom instead of random", 
+                        Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
+                
                 mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
                         (Iterable<Integer>) setup.get(INBOUND_PORTS));
             } else {
