@@ -46,7 +46,9 @@ public class MementosGenerators {
             for (Location location : entity.getLocations()) {
                 if (!builder.locations.containsKey(location.getId())) {
                     for (Location locationInHierarchy : TreeUtils.findLocationsInHierarchy(location)) {
-                        builder.locations.put(locationInHierarchy.getId(), locationInHierarchy.getRebindSupport().getMemento());
+                        if (!builder.locations.containsKey(locationInHierarchy.getId())) {
+                            builder.locations.put(locationInHierarchy.getId(), locationInHierarchy.getRebindSupport().getMemento());
+                        }
                     }
                 }
             }

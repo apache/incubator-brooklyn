@@ -26,7 +26,13 @@ public class TreeUtils {
                 }
             }
         }
-        
+
+        Location parentLocation = root.getParentLocation();
+        while (parentLocation != null) {
+            result.add(parentLocation);
+            parentLocation = parentLocation.getParentLocation();
+        }
+
         return result;
     }
 }
