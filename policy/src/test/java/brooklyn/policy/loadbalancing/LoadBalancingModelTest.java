@@ -14,11 +14,11 @@ public class LoadBalancingModelTest {
 
     private static final double PRECISION = 0.00001;
     
-    private MockContainerEntity container1 = new MockContainerEntity();
-    private MockContainerEntity container2 = new MockContainerEntity();
-    private MockItemEntity item1 = new MockItemEntity();
-    private MockItemEntity item2 = new MockItemEntity();
-    private MockItemEntity item3 = new MockItemEntity();
+    private MockContainerEntity container1 = new MockContainerEntityImpl();
+    private MockContainerEntity container2 = new MockContainerEntityImpl();
+    private MockItemEntity item1 = new MockItemEntityImpl();
+    private MockItemEntity item2 = new MockItemEntityImpl();
+    private MockItemEntity item3 = new MockItemEntityImpl();
     
     private DefaultBalanceablePoolModel<MockContainerEntity, MockItemEntity> model;
 

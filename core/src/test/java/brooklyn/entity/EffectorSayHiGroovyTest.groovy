@@ -8,7 +8,10 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import com.google.common.collect.ImmutableMap;
+
 import brooklyn.entity.basic.AbstractEntity
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.DefaultValue
 import brooklyn.entity.basic.Description
@@ -16,28 +19,29 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.ExplicitEffector
 import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.basic.NamedParameter
+import brooklyn.entity.proxying.EntitySpecs
+import brooklyn.entity.proxying.ImplementedBy
 import brooklyn.entity.trait.Startable
-import brooklyn.management.ExecutionContext
 import brooklyn.management.ManagementContext
 import brooklyn.management.Task
-import brooklyn.test.entity.TestApplicationImpl
+import brooklyn.management.internal.EffectorUtils;
+import brooklyn.test.entity.TestApplication
 
 /**
  * Test the operation of the {@link Effector} implementations.
  *
  * TODO clarify test purpose
  */
-public class EffectorSayHiTest {
+public class EffectorSayHiGroovyTest {
     private static final Logger log = LoggerFactory.getLogger(EffectorSayHiTest.class);
 
-    private Application app;
+    private TestApplication app;
     private MyEntity e;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplicationImpl();
-        e = new MyEntity(app);
-        Entities.startManagement(app);
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        e = app.createAndManageChild(EntitySpecs.spec(MyEntity.class));
     }
 
     @AfterMethod(alwaysRun=true)
@@ -87,10 +91,6 @@ public class EffectorSayHiTest {
     @Test
     public void testInvokeEffectors1() {
         assertEquals("hi Bob", e.sayHi1("Bob", "hi"))
-        assertEquals("hello Bob", e.sayHi1("Bob"))
-
-        assertEquals("hi Bob", e.sayHi1(name: "Bob", greeting:"hi"))
-        assertEquals("hello Bob", e.sayHi1(name: "Bob"))
 
         assertEquals("hello Bob", e.SAY_HI_1.call(e, [name:"Bob"]) )
         assertEquals("hello Bob", e.invoke(e.SAY_HI_1, [name:"Bob"]).get() );
@@ -101,13 +101,10 @@ public class EffectorSayHiTest {
     @Test
     public void testInvokeEffectors2() {
         assertEquals("hi Bob", e.sayHi2("Bob", "hi"))
-        assertEquals("hello Bob", e.sayHi2("Bob"))
-
-        assertEquals("hi Bob", e.sayHi2(name: "Bob", greeting:"hi"))
-        assertEquals("hello Bob", e.sayHi2(name: "Bob"))
 
         assertEquals("hello Bob", e.SAY_HI_2.call(e, [name:"Bob"]) )
         assertEquals("hello Bob", e.invoke(e.SAY_HI_2, [name:"Bob"]).get() );
+        
     }
 
     @Test
@@ -120,22 +117,8 @@ public class EffectorSayHiTest {
         assertEquals(tasks.size(), 1)
         assertTrue(tasks.iterator().next().getDescription().contains("sayHi2"))
     }
-
-    @Test
-    public void testCanExcludeNonEffectorTasks() {
-        ManagementContext managementContext = e.getManagementContext()
-        ExecutionContext executionContext = managementContext.getExecutionContext()
-        executionContext.submit( {} as Runnable)
-
-        Set<Task> effectTasks = managementContext.getExecutionManager().getTasksWithAllTags([e,"EFFECTOR"])
-        assertEquals(effectTasks.size(), 0)
-    }
-
-    //TODO test edge/error conditions
-    //(missing parameters, wrong number of params, etc)
 }
-
-interface CanSayHi {
+public interface CanSayHi {
 	//prefer following simple groovy syntax
 	static Effector<String> SAY_HI_1 = new MethodEffector<String>(CanSayHi.&sayHi1);
 	//slightly longer-winded pojo also supported
@@ -162,32 +145,22 @@ interface CanSayHi {
 //	};
 	//following is a workaround, not greatly enamoured of it... but MethodEffector is generally preferred anyway
 		ExplicitEffector.create("sayHi2", String.class, [
-					[ "name", String.class, "person to say hi to" ] as BasicParameterType<String>,
-					[ "greeting", String.class, "what to say as greeting", "hello" ] as BasicParameterType<String>
+					new BasicParameterType<String>("name", String.class, "person to say hi to"),
+					new BasicParameterType<String>("greeting", String.class, "what to say as greeting", "hello")
 				],
-			"says hello", { e, m -> e.sayHi2(m) })
+			"says hello", { e, m ->
+                def args = EffectorUtils.prepareArgsForEffector(SAY_HI_2, m);
+                e.sayHi2(args[0], args[1]) })
 
 	public String sayHi2(String name, String greeting);
 
 }
 
-public class MyEntity extends AbstractEntity implements CanSayHi {
-    MyEntity() {
-    }
+@ImplementedBy(MyEntityImpl.class)
+public interface MyEntity extends Entity, CanSayHi {
+}
 
-    MyEntity(Map flags) {
-        super(flags)
-    }
-
-    MyEntity(Map flags, Entity parent) {
-        super(flags, parent)
-    }
-
-    MyEntity(Entity parent) {
-        super(parent)
-    }
-
+public class MyEntityImpl extends AbstractEntity implements MyEntity {
     public String sayHi1(String name, String greeting) { "$greeting $name" }
 	public String sayHi2(String name, String greeting) { "$greeting $name" }
 }
-

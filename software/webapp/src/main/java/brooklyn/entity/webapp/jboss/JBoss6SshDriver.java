@@ -53,8 +53,12 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
     }
 
     private String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
+        // Ensure never returns null, so if stop called even if install/start was not then don't throw exception.
+        if (expandedInstallDir == null) {
+            return getInstallDir()+"/" + "jboss-"+getVersion();
+        } else {
+            return expandedInstallDir;
+        }
     }
 
     @Override

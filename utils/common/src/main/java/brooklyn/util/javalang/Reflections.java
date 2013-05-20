@@ -465,4 +465,22 @@ public class Reflections {
         }
         throw toThrowIfFails;
     }
+    
+    public static Field findField(Class<?> clazz, String name) throws NoSuchFieldException {
+        if (clazz == null || name == null) {
+            throw new NullPointerException("Must not be null: clazz="+clazz+"; name="+name);
+        }
+        Class<?> clazzToInspect = clazz;
+        NoSuchFieldException toThrowIfFails = null;
+        
+        while (clazzToInspect != null) {
+            try {
+                return clazzToInspect.getDeclaredField(name);
+            } catch (NoSuchFieldException e) {
+                if (toThrowIfFails == null) toThrowIfFails = e;
+                clazzToInspect = clazzToInspect.getSuperclass();
+            }
+        }
+        throw toThrowIfFails;
+    }
 }

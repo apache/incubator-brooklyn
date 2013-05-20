@@ -42,7 +42,7 @@ public class TomcatServerIntegrationTest {
     public void failIfHttpPortInUse() {
         if (isPortInUse(DEFAULT_HTTP_PORT, 5000L)) {
             httpPortLeftOpen = true;
-            fail("someone is already listening on port $DEFAULT_HTTP_PORT; tests assume that port $DEFAULT_HTTP_PORT is free on localhost");
+            fail("someone is already listening on port "+DEFAULT_HTTP_PORT+"; tests assume that port "+DEFAULT_HTTP_PORT+" is free on localhost");
         }
     }
  
