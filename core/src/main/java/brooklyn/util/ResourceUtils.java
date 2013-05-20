@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.Urls;
 import brooklyn.util.text.DataUriSchemeParser;
 import brooklyn.util.text.Strings;
 
@@ -398,21 +399,6 @@ public class ResourceUtils {
     /** returns the items with exactly one "/" between items (whether or not the individual items start or end with /),
      * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any) */
     public static String mergePaths(String ...items) {
-        StringBuilder result = new StringBuilder();
-        for (String item: items) {
-            boolean trimThisMerge = result.length()>0 && !result.toString().endsWith("://") && !result.toString().endsWith(":///") && !result.toString().endsWith(":");
-            if (trimThisMerge) {
-                while (result.charAt(result.length()-1)=='/')
-                    result.deleteCharAt(result.length()-1);
-                result.append('/');
-            }
-            int i = result.length();
-            result.append(item);
-            if (trimThisMerge) {
-                while (result.charAt(i)=='/')
-                    result.deleteCharAt(i);
-            }
-        }
-        return result.toString();
+        return Urls.mergePaths(items);
     }
 }
