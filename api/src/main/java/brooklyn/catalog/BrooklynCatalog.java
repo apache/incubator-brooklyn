@@ -13,7 +13,7 @@ public interface BrooklynCatalog {
     
     /** returns all items in the catalog */
     <T> Iterable<CatalogItem<T>> getCatalogItems();
-    /** convenience for filtering items in the catalog */
+    /** convenience for filtering items in the catalog; see CatalogPredicates for useful filters */
     <T> Iterable<CatalogItem<T>> getCatalogItems(Predicate<? super CatalogItem<T>> filter);
 
     /** returns the classloader which should be used to load classes and entities;
