@@ -95,7 +95,7 @@ public class Urls {
             int i = result.length();
             result.append(item);
             if (trimThisMerge) {
-                while (result.charAt(i)=='/')
+                while (result.length()>i && result.charAt(i)=='/')
                     result.deleteCharAt(i);
             }
         }
