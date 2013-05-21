@@ -88,6 +88,10 @@ The following is supported from the configuration file (with whatever customizat
 
 - Hardware requirements such as ``minRam`` and ``minCores`` can be supplied, or a ``hardwareId``  (jclouds only)
 
+- Specific Secury Groups can be specified using `securityGroups`, if you want to reuse set of existing ones (jclouds only)
+
+- Specific KeyPair can be specified using `keyPair`, if you want to reuse an existing keypair (jclouds only).
+
 - Specific VM images can be specified using ``imageId`` or ``imageNameRegex`` (jclouds only)
 
 - User metadata can be attached, using the syntax ``userMetadata=key=value,key2="value 2"`` (jclouds only)
@@ -100,7 +104,7 @@ The following is supported from the configuration file (with whatever customizat
 - You can specify the user account to use to login to jclouds initially with the ``loginUser`` property.
   Typically this is auto-detected by jclouds
   (often ``root``, or ``ubuntu`` or ``ec2-user`` for known Ubuntu or Amazon Linux images), 
-  but the strategy isn't foolproof, particularly in some private cloud setups. (jclouds only)
+  but the strategy isn't foolproof, particularly in some private cloud setups. (jclouds only). In some cases, you may need to specify a `loginUser.privateKeyFile` if the image you are using doesn't allow ssh password login.
 
 - Public keys can be specified using ``publicKeyFile``, 
   although these can usually be omitted if they follow the common pattern of being
