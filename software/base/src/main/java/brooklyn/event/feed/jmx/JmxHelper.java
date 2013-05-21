@@ -48,12 +48,11 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import brooklyn.util.time.Duration;
@@ -61,6 +60,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class JmxHelper {
@@ -491,18 +491,19 @@ public class JmxHelper {
     /** returns set of beans found, with retry, empty set if none after timeout */
     public Set<ObjectInstance> doesMBeanExistsEventually(final ObjectName objectName, long timeout, TimeUnit timeUnit) {
         final long timeoutMillis = timeUnit.toMillis(timeout);
-        final AtomicReference<Set<ObjectInstance>> beans = new AtomicReference<Set<ObjectInstance>>(Collections.<ObjectInstance>emptySet());
+        final AtomicReference<Set<ObjectInstance>> beans = new AtomicReference<Set<ObjectInstance>>(ImmutableSet.<ObjectInstance>of());
         try {
-            LanguageUtils.repeatUntilSuccess(
-                    MutableMap.of("timeout", timeoutMillis), 
-                    "Wait for "+objectName,
-            		new Callable<Boolean>() {
-                        public Boolean call() {
-                            connect(timeoutMillis);
-                            beans.set(findMBeans(objectName));
-                            return !beans.get().isEmpty();
-                        }
-                    });
+            Repeater.create("Wait for "+objectName)
+                    .limitTimeTo(timeout, timeUnit)
+                    .every(500, TimeUnit.MILLISECONDS)
+                    .until(new Callable<Boolean>() {
+                            public Boolean call() {
+                                connect(timeoutMillis);
+                                beans.set(findMBeans(objectName));
+                                return !beans.get().isEmpty();
+                            }})
+                    .rethrowException()
+                    .run();
             return beans.get();
         } catch (Exception e) {
             throw Exceptions.propagate(e);

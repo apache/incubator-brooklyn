@@ -5,7 +5,9 @@ import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static brooklyn.util.JavaGroovyEquivalents.join;
 import static brooklyn.util.JavaGroovyEquivalents.mapOf;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -23,12 +25,14 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
-import brooklyn.util.internal.LanguageUtils;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.SingleThreadedScheduler;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimaps;
 
 /**
  * A {@link SubscriptionManager} that stores subscription details locally.
@@ -87,9 +91,9 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
         
         if (LOG.isDebugEnabled()) LOG.debug("Creating subscription {} for {} on {} {} in {}", new Object[] {s.id, s.subscriber, producer, sensor, this});
         allSubscriptions.put(s.id, s);
-        LanguageUtils.addToMapOfSets(subscriptionsByToken, makeEntitySensorToken(s.producer, s.sensor), s);
+        addToMapOfSets(subscriptionsByToken, makeEntitySensorToken(s.producer, s.sensor), s);
         if (s.subscriber!=null) {
-            LanguageUtils.addToMapOfSets(subscriptionsBySubscriber, s.subscriber, s);
+            addToMapOfSets(subscriptionsBySubscriber, s.subscriber, s);
         }
         if (!s.subscriberExecutionManagerTagSupplied && s.subscriberExecutionManagerTag!=null) {
             ((BasicExecutionManager) em).setTaskSchedulerForTag(s.subscriberExecutionManagerTag, SingleThreadedScheduler.class);
@@ -121,10 +125,10 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
         if (!(sh instanceof Subscription)) throw new IllegalArgumentException("Only subscription handles of type Subscription supported: sh="+sh+"; type="+(sh != null ? sh.getClass().getCanonicalName() : null));
         Subscription s = (Subscription) sh;
         boolean result = allSubscriptions.remove(s.id) != null;
-        boolean b2 = LanguageUtils.removeFromMapOfCollections(subscriptionsByToken, makeEntitySensorToken(s.producer, s.sensor), s);
+        boolean b2 = removeFromMapOfCollections(subscriptionsByToken, makeEntitySensorToken(s.producer, s.sensor), s);
         assert result==b2;
         if (s.subscriber!=null) {
-            boolean b3 = LanguageUtils.removeFromMapOfCollections(subscriptionsBySubscriber, s.subscriber, s);
+            boolean b3 = removeFromMapOfCollections(subscriptionsBySubscriber, s.subscriber, s);
             assert b3 == b2;
         }
         
@@ -176,5 +180,79 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
     @Override
     public String toString() {
         return tostring;
+    }
+    
+    /**
+     * Copied from LanguageUtils.groovy, to remove dependency.
+     * 
+     * Adds the given value to a collection in the map under the key.
+     * 
+     * A collection (as {@link LinkedHashMap}) will be created if necessary,
+     * synchronized on map for map access/change and set for addition there
+     *
+     * @return the updated set (instance, not copy)
+     * 
+     * @deprecated since 0.5; use {@link HashMultimap}, and {@link Multimaps#synchronizedSetMultimap(com.google.common.collect.SetMultimap)}
+     */
+    @Deprecated
+    private static <K,V> Set<V> addToMapOfSets(Map<K,Set<V>> map, K key, V valueInCollection) {
+        Set<V> coll;
+        synchronized (map) {
+            coll = map.get(key);
+            if (coll==null) {
+                coll = new LinkedHashSet<V>();
+                map.put(key, coll);
+            }
+            if (coll.isEmpty()) {
+                synchronized (coll) {
+                    coll.add(valueInCollection);
+                }
+                //if collection was empty then add to the collection while holding the map lock, to prevent removal
+                return coll;
+            }
+        }
+        synchronized (coll) {
+            if (!coll.isEmpty()) {
+                coll.add(valueInCollection);
+                return coll;
+            }
+        }
+        //if was empty, recurse, because someone else might be removing the collection
+        return addToMapOfSets(map, key, valueInCollection);
+    }
+
+    /**
+     * Copied from LanguageUtils.groovy, to remove dependency.
+     * 
+     * Removes the given value from a collection in the map under the key.
+     *
+     * @return the updated set (instance, not copy)
+     * 
+     * @deprecated since 0.5; use {@link ArrayListMultimap} or {@link HashMultimap}, and {@link Multimaps#synchronizedListMultimap(com.google.common.collect.ListMultimap)} etc
+     */
+    @Deprecated
+    private static <K,V> boolean removeFromMapOfCollections(Map<K,? extends Collection<V>> map, K key, V valueInCollection) {
+        Collection<V> coll;
+        synchronized (map) {
+            coll = map.get(key);
+            if (coll==null) return false;
+        }
+        boolean result;
+        synchronized (coll) {
+            result = coll.remove(valueInCollection);
+        }
+        if (coll.isEmpty()) {
+            synchronized (map) {
+                synchronized (coll) {
+                    if (coll.isEmpty()) {
+                        //only remove from the map if no one is adding to the collection or to the map, and the collection is still in the map
+                        if (map.get(key)==coll) {
+                            map.remove(key);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 }
