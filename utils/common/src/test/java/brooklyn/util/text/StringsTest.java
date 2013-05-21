@@ -3,7 +3,11 @@
  */
 package brooklyn.util.text;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
@@ -186,4 +190,23 @@ public class StringsTest {
         assertEquals(Strings.makeSizeString(23456789012L), "23.5gb");
         assertEquals(Strings.makeSizeString(23456789012345L), "2.35E4gb");
     }
+    
+    @Test
+    public void testDeferredFormat() {
+        ToStringCounter c = new ToStringCounter();
+        FormattedString x = Strings.format("hello %s", c);
+        Assert.assertEquals(c.count, 0);
+        Assert.assertEquals(x.toString(), "hello world");
+        Assert.assertEquals(c.count, 1);
+    }
+
+    private static class ToStringCounter {
+        private int count = 0;
+        @Override
+        public String toString() {
+            count++;
+            return "world";
+        }
+    }
+
 }

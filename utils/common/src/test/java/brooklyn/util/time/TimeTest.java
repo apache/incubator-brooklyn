@@ -1,5 +1,7 @@
 package brooklyn.util.time;
 
+import java.util.Date;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -90,6 +92,22 @@ public class TimeTest {
     
     private void checkRN(long nanos, String expected) {
         Assert.assertEquals(Time.makeTimeStringNanoRounded(nanos), expected);
+    }
+
+    @Test
+    public void testDateRounding() {
+        long x = System.currentTimeMillis();
+        Date d1 = Time.dropMilliseconds(new Date(x));
+        Date d2 = new Date(x - (x%1000));
+        Date d3 = new Date( (x/1000)*1000 );
+        Assert.assertEquals(d1.getTime() % 1000, 0);
+        Assert.assertEquals(d1, d2);
+        Assert.assertEquals(d1, d3);
+    }
+
+    @Test
+    public void testDateRoundingNull() {
+        Assert.assertNull(Time.dropMilliseconds(null));
     }
 
 }

@@ -458,8 +458,10 @@ public class Strings {
 		return s.substring(x+1);
 	}
 
+	/** @deprecated use {@link Time#makeTimeStringRounded(long)} */
+	@Deprecated
 	public static String makeTimeString(long utcMillis) {
-		return Time.makeTimeString(utcMillis);
+		return Time.makeTimeStringRounded(utcMillis);
 	}
 
 	/** returns e.g. { "prefix01", ..., "prefix96" };
@@ -570,5 +572,12 @@ public class Strings {
     public static StringShortener shortener() {
         return new StringShortener();
     }
-    
+
+    /** wraps a call to {@link String#format(String, Object...)} in a toString, i.e. using %s syntax,
+     * useful for places where we want deferred evaluation 
+     * (e.g. as message to {@link Preconditions} to skip concatenation when not needed) */
+    public static FormattedString format(String pattern, Object... args) {
+        return new FormattedString(pattern, args);
+    }
+
 }
