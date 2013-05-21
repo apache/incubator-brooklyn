@@ -25,11 +25,14 @@
             <artifactId>camp-server</artifactId>
             <version>${camp-impl.version}</version>
         </dependency>
+        
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-launcher</artifactId>
             <version>${brooklyn.version}</version>
         </dependency>
+        
+        <!-- demo... -->
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-webapp</artifactId>

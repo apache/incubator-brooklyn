@@ -29,7 +29,10 @@ import com.wordnik.swagger.jaxrs.JaxrsApiReader;
 import com.wordnik.swagger.jaxrs.JaxrsApiSpecParser;
 
 @Produces({"application/json"})
-/** like Swagger ApiListing (and based on that) but:
+/** create a concrete subclass for this annotated with the Path where
+ * this resource should live 
+ * <p>
+ * like Swagger ApiListing (and based on that) but:
  * supports singletons as well as classes;
  * supports simpler Apidoc annotation (doesn't repeat path, in common case);
  * doesn't support listingPath/Class that swagger does (but describes in under /apidoc/name.of.Class
@@ -79,7 +82,8 @@ abstract public class ApidocResource {
     }
     
     @GET
-    @ApiOperation(value = "Returns list of all available API resource endpoints", responseClass = "DocumentationEndPoint", multiValueResponse = true)
+    @ApiOperation(value = "Returns list of all available API resource endpoints", 
+        responseClass = "DocumentationEndPoint", multiValueResponse = true)
     public Response getAllApis(
             @Context ResourceConfig rc,
             @Context HttpHeaders headers,
