@@ -623,6 +623,7 @@
             <activation> <property><name> !brooklyn.explicitModules </name></property> </activation>
             <modules>
                 <module>usage/logback-xml</module>
+                <module>utils/rest-swagger</module>
                 <module>usage/rest</module>
                 <module>usage/jsgui</module>
                 <module>usage/launcher</module>
@@ -648,7 +649,6 @@
         <profile>
             <id>Sandbox</id>
             <modules>
-                <module>sandbox/rest</module>
                 <module>sandbox/database</module>
                 <module>sandbox/mgmt</module>
                 <module>sandbox/web-acceptance</module>
