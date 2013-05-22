@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.util.ssh.CommonCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,10 +97,16 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     }
 
+    /**
+     * Kills the server with SIGINT. Sending SIGKILL is likely to resuult in data corruption.
+     * @see <a href="http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal">http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal</a>
+     */
     @Override
     public void stop() {
-        Map flags = ImmutableMap.of("usePidFile", getPidFile());
-        newScript(flags, STOPPING).execute();
+        // We could also use SIGTERM (15)
+        new ScriptHelper(this, "Sent SIGINT to MongoDB server")
+                .body.append("kill -2 $(cat " + getPidFile() + ")")
+                .execute();
     }
 
     @Override
@@ -108,11 +115,11 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         return newScript(flags, CHECK_RUNNING).execute() == 0;
     }
 
-
     protected String getBaseName() {
         return getOsTag() + "-" + entity.getConfig(MongoDbServer.SUGGESTED_VERSION);
     }
 
+    // IDE note: This is used by MongoDbServer.DOWNLOAD_URL
     public String getOsDir() {
         return (getLocation().getOsDetails().isMac()) ? "osx" : "linux";
     }
