@@ -57,7 +57,10 @@ public class JmxNotificationSubscriptionConfig<T> extends FeedConfig<Object, T, 
         this.notificationFilter = val; return this;
     }
 
-    // FIXME Remove, and rely on caller using JmxNotificationFilters?
+    /**
+     * @deprecated since 0.6.0; use {@code notificationFilter(JmxNotificationFilters.matchesType(val))}
+     * @see JmxNotificationFilters
+     */
     public JmxNotificationSubscriptionConfig<T> notificationFilterByTypeRegex(String val) {
         this.notificationFilter = JmxNotificationFilters.matchesTypeRegex(val);
         return this;
