@@ -71,6 +71,7 @@ import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
@@ -83,6 +84,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Closeables;
+import com.google.common.io.Files;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -497,10 +499,22 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         t.overrideLoginPassword(((CharSequence)v).toString());
                     }})
+            .put(LOGIN_USER_PRIVATE_KEY_FILE, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        String privateKeyFileName = ((CharSequence)v).toString();
+                        String privateKey;
+                        try {
+                            privateKey = Files.toString(new File(privateKeyFileName), Charsets.UTF_8);
+                        } catch (IOException e) {
+                            LOG.error(privateKeyFileName + "not found", e);
+                            throw Throwables.propagate(e);
+                        }
+                        t.overrideLoginPrivateKey(privateKey);
+                    }})
             .put(LOGIN_USER_PRIVATE_KEY_DATA, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         t.overrideLoginPrivateKey(((CharSequence)v).toString());
-                    }})
+                    }})                    
             .put(KEY_PAIR, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof EC2TemplateOptions) {
@@ -611,7 +625,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (config.containsKey(key))
                 code.apply(options, config, config.get(key));
         }
-                
+        
         // Setup the user
         
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
