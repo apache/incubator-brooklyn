@@ -2,11 +2,11 @@ package io.brooklyn.camp.brooklyn;
 
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.CampServer;
-import io.brooklyn.camp.impl.ApplicationComponentTemplate;
-import io.brooklyn.camp.impl.PlatformComponentTemplate;
-import io.brooklyn.camp.impl.PlatformRootSummary;
-import io.brooklyn.camp.util.collection.AbstractResourceListProvider;
-import io.brooklyn.camp.util.collection.BasicResourceListProvider;
+import io.brooklyn.camp.spi.ApplicationComponentTemplate;
+import io.brooklyn.camp.spi.PlatformComponentTemplate;
+import io.brooklyn.camp.spi.PlatformRootSummary;
+import io.brooklyn.camp.spi.collection.AbstractResourceLookup;
+import io.brooklyn.camp.spi.collection.BasicResourceLookup;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.management.ManagementContext;
 
@@ -15,16 +15,17 @@ public class BrooklynCampPlatform extends CampPlatform {
 
     private final ManagementContext bmc;
     private PlatformComponentTemplateBrooklynLookup pct;
-    private BasicResourceListProvider<ApplicationComponentTemplate> act;
+    private BasicResourceLookup<ApplicationComponentTemplate> act;
 
-    public BrooklynCampPlatform(ManagementContext managementContext) {
+    public BrooklynCampPlatform(PlatformRootSummary root, ManagementContext managementContext) {
+        super(root);
         this.bmc = managementContext;
         
         // PCT's come from brooklyn
-        pct = new PlatformComponentTemplateBrooklynLookup(this);
+        pct = new PlatformComponentTemplateBrooklynLookup(root(), getBrooklynManagementContext());
         
         // ACT's are not known in brooklyn (everything comes in as config) -- to be extended to support!
-        act = new BasicResourceListProvider<ApplicationComponentTemplate>();
+        act = new BasicResourceLookup<ApplicationComponentTemplate>();
     }
 
     // --- brooklyn setup
@@ -36,19 +37,12 @@ public class BrooklynCampPlatform extends CampPlatform {
     // --- camp comatibility setup
     
     @Override
-    protected PlatformRootSummary initializeRoot() {
-        return PlatformRootSummary.builder().
-                name("Brooklyn CAMP Platform").
-                build();
-    }
-    
-    @Override
-    public AbstractResourceListProvider<PlatformComponentTemplate> platformComponentTemplates() {
+    public AbstractResourceLookup<PlatformComponentTemplate> platformComponentTemplates() {
         return pct;
     }
 
     @Override
-    public AbstractResourceListProvider<ApplicationComponentTemplate> applicationComponentTemplates() {
+    public AbstractResourceLookup<ApplicationComponentTemplate> applicationComponentTemplates() {
         return act;
     }
 
@@ -60,7 +54,9 @@ public class BrooklynCampPlatform extends CampPlatform {
 //                .location(location)
                 .start();
         
-        BrooklynCampPlatform p = new BrooklynCampPlatform(launcher.getServerDetails().getManagementContext());
+        BrooklynCampPlatform p = new BrooklynCampPlatform(
+                PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
+                launcher.getServerDetails().getManagementContext());
         new CampServer(p, "").start();
     }
 
