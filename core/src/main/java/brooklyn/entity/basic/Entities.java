@@ -3,14 +3,7 @@ package brooklyn.entity.basic;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -94,8 +87,12 @@ public class Entities {
         // TODO why not just get list of tasks with `entity.invoke(effector, parameters))`?
         //      What is advantage of invoking in callingEntity's context?
 
-        if (entitiesToCall == null || Iterables.isEmpty(entitiesToCall)) return null;
-        List<Task<T>> tasks = Lists.newArrayList();
+
+        if (entitiesToCall == null){
+            entitiesToCall = ImmutableList.of();
+        }
+
+         List<Task<T>> tasks = Lists.newArrayList();
 
         for (final Entity entity : entitiesToCall) {
             tasks.add(new BasicTask<T>(
