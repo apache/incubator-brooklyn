@@ -1,6 +1,7 @@
 package brooklyn.location.jclouds;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
 import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse;
@@ -39,18 +40,18 @@ import org.jclouds.ec2.domain.PasswordData;
 import org.jclouds.ec2.services.WindowsClient;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
-import org.jclouds.util.Predicates2;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
 import org.jclouds.ssh.SshClient;
 import org.jclouds.sshj.config.SshjSshClientModule;
+import org.jclouds.util.Predicates2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.internal.Repeater;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.internal.Repeater;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
@@ -186,17 +187,14 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         return findComputeService(conf, true);
     }
     public static ComputeService findComputeService(ConfigBag conf, boolean allowReuse) {
-        Properties properties = new Properties();
-        String provider = conf.get(CLOUD_PROVIDER);
-        String identity = conf.get(ACCESS_IDENTITY);
-        String credential = conf.get(ACCESS_CREDENTIAL);
+        String provider = checkNotNull(conf.get(CLOUD_PROVIDER), "provider must not be null");
+        String identity = checkNotNull(conf.get(ACCESS_IDENTITY), "identity must not be null");
+        String credential = checkNotNull(conf.get(ACCESS_CREDENTIAL), "credential must not be null");
         
-        properties.setProperty(Constants.PROPERTY_PROVIDER, provider);
-        properties.setProperty(Constants.PROPERTY_IDENTITY, identity);
-        properties.setProperty(Constants.PROPERTY_CREDENTIAL, credential);
+        Properties properties = new Properties();
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true));
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true));
-                
+
         // Enable aws-ec2 lazy image fetching, if given a specific imageId; otherwise customize for specific owners; or all as a last resort
         // See https://issues.apache.org/jira/browse/WHIRR-416
         if ("aws-ec2".equals(provider)) {
