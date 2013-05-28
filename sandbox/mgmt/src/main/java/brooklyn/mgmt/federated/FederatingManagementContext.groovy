@@ -20,8 +20,9 @@ import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
 import brooklyn.management.internal.CollectionChangeListener
 import brooklyn.management.internal.LocalManagementContext
-import brooklyn.util.internal.LanguageUtils
 import brooklyn.util.text.Identifiers
+
+import com.thoughtworks.xstream.XStream
 
 public class FederatingManagementContext extends AbstractManagementContext {
     
@@ -118,10 +119,17 @@ public class FederatingManagementContext extends AbstractManagementContext {
     private void moveToManagementPlaneJustThis(Entity e) {
         //FIXME should make it remote
         assert e.entityProxyForManagement == null : "cannot move an entity we do not manage ("+e+")"
-        Entity remoteCopy = LanguageUtils.clone(e);
+        Entity remoteCopy = clone(e);
         e.entityProxyForManagement = remoteCopy; 
     }
     
+    // TODO Copied from groovy LanguageUtils.clone(T), to remove dependency 
+    private <T> T clone(T src) {
+        XStream xstream = new XStream();
+        xstream.setClassLoader(src.getClass().getClassLoader())
+        xstream.fromXML(xstream.toXML(src))
+    }
+
     public boolean isManagedLocally(Entity e) {
         //TODO
         return true

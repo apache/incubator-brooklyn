@@ -33,7 +33,7 @@ import brooklyn.event.feed.jmx.JmxValueFunctions;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.internal.LanguageUtils;
+import brooklyn.util.internal.Repeater;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -189,11 +189,19 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
     @Description("Updates the OSGi Service's properties, adding (and overriding) the given key-value pairs")
     public void installFeature(
             @NamedParameter("featureName") @Description("Name of the feature - see org.apache.karaf:type=features#installFeature()") final String featureName) throws Exception {
-        LanguageUtils.repeatUntilSuccess("Wait for Karaf, to install feature "+featureName, new Callable<Boolean>() {
-            public Boolean call() {
-                jmxHelper.operation(String.format(KARAF_FEATURES, getConfig(KARAF_NAME.getConfigKey())), "installFeature", featureName);
-                return true;
-            }});
+        
+        LOG.info("Installing feature {} via JMX", featureName);
+
+        Repeater.create("Wait for Karaf, to install feature "+featureName)
+                .limitIterationsTo(40)
+                .every(500, TimeUnit.MILLISECONDS)
+                .until(new Callable<Boolean>() {
+                        public Boolean call() {
+                            jmxHelper.operation(String.format(KARAF_FEATURES, getConfig(KARAF_NAME.getConfigKey())), "installFeature", featureName);
+                            return true;
+                        }})
+                .rethrowException()
+                .run();
     }
 
     public Map<Long,Map<String,?>> listBundles() {
