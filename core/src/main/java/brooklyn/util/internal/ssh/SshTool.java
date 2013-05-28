@@ -3,7 +3,6 @@ package brooklyn.util.internal.ssh;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -78,17 +77,6 @@ public interface SshTool {
     //public static ConfigKey<Boolean> PROP_NO_STDOUT_LOGGING = new StringConfigKey("noStdoutLogging", "???", ???);
 
     /**
-     * @deprecated since 0.4; use PROP_PRIVATE_KEY_FILE; if this contains more than one element then it will fail.
-     */
-    public static final ConfigKey<List<String>> PROP_KEY_FILES = new BasicConfigKey(List.class, "keyFiles", "DEPRECATED: see privateKeyFile", Collections.<String>emptyList());
-
-    /**
-     * @deprecated since 0.4; use PROP_PRIVATE_KEY_DATA instead
-     */
-    @Deprecated
-    public static final ConfigKey<String> PROP_PRIVATE_KEY = new StringConfigKey("privateKey", "DEPRECATED: see privateKeyData", null);
-
-    /**
      * @throws SshException
      */
     public void connect();
@@ -123,12 +111,6 @@ public interface SshTool {
      * @see execScript(Map, List, Map)
      */
     public int execScript(Map<String,?> props, List<String> commands);
-
-    /** @deprecated since 0.4; use execScript(...) */
-    public int execShell(Map<String,?> props, List<String> commands);
-    
-    /** @deprecated since 0.4; execScript(...) */
-    public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env);
 
     /**
      * Executes the set of commands using ssh exec.
@@ -195,29 +177,4 @@ public interface SshTool {
      * @return exit code (not supported by all SshTool implementations, sometimes just returning 0)
      */
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File local);
-
-    /**
-     * @deprecated since 0.5; See copyToServer(Map, InputStream, String)
-     */
-    public int transferFileTo(Map<String,?> props, InputStream input, String pathAndFileOnRemoteServer);
-    
-    /**
-     * @deprecated since 0.5; See copyFromServer(Map, InputStream, String)
-     */
-    public int transferFileFrom(Map<String,?> props, String pathAndFileOnRemoteServer, String pathAndFileOnLocalServer);
-
-    /**
-     * @deprecated since 0.5; See copyToServer(Map, InputStream, String)
-     */
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, InputStream input, long size);
-
-    /**
-     * @deprecated since 0.5; See copyToServer(Map, byte[], String)
-     */
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, String contents);
-
-    /**
-     * @deprecated since 0.5; See copyToServer(Map, byte[], String)
-     */
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, byte[] contents);
 }

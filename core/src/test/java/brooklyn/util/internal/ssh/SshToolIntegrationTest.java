@@ -2,6 +2,7 @@ package brooklyn.util.internal.ssh;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -93,69 +94,69 @@ public abstract class SshToolIntegrationTest {
 
     @Test(groups = {"Integration"})
     public void testExecConsecutiveCommands() throws Exception {
-        String out = execShell("echo run1");
-        String out2 = execShell("echo run2");
+        String out = execScript("echo run1");
+        String out2 = execScript("echo run2");
         
         assertTrue(out.contains("run1"), "out="+out);
         assertTrue(out2.contains("run2"), "out="+out);
     }
 
     @Test(groups = {"Integration"})
-    public void testExecShellChainOfCommands() throws Exception {
-        String out = execShell("export MYPROP=abc", "echo val is $MYPROP");
+    public void testExecScriptChainOfCommands() throws Exception {
+        String out = execScript("export MYPROP=abc", "echo val is $MYPROP");
 
         assertTrue(out.contains("val is abc"), "out="+out);
     }
 
     @Test(groups = {"Integration"})
-    public void testExecShellReturningNonZeroExitCode() throws Exception {
-        int exitcode = tool.execShell(MutableMap.<String,Object>of(), ImmutableList.of("exit 123"));
+    public void testExecScriptReturningNonZeroExitCode() throws Exception {
+        int exitcode = tool.execScript(MutableMap.<String,Object>of(), ImmutableList.of("exit 123"));
         assertEquals(exitcode, 123);
     }
 
     @Test(groups = {"Integration"})
-    public void testExecShellReturningZeroExitCode() throws Exception {
-        int exitcode = tool.execShell(MutableMap.<String,Object>of(), ImmutableList.of("date"));
+    public void testExecScriptReturningZeroExitCode() throws Exception {
+        int exitcode = tool.execScript(MutableMap.<String,Object>of(), ImmutableList.of("date"));
         assertEquals(exitcode, 0);
     }
 
     @Test(groups = {"Integration"})
-    public void testExecShellCommandWithEnvVariables() throws Exception {
-        String out = execShell(ImmutableList.of("echo val is $MYPROP2"), ImmutableMap.of("MYPROP2", "myval"));
+    public void testExecScriptCommandWithEnvVariables() throws Exception {
+        String out = execScript(ImmutableList.of("echo val is $MYPROP2"), ImmutableMap.of("MYPROP2", "myval"));
 
         assertTrue(out.contains("val is myval"), "out="+out);
     }
 
     @Test(groups = {"Integration"})
     public void testScriptDataNotLost() throws Exception {
-        String out = execShell("echo `echo foo``echo bar`");
+        String out = execScript("echo `echo foo``echo bar`");
 
         assertTrue(out.contains("foobar"), "out="+out);
     }
 
     @Test(groups = {"Integration"})
-    public void testExecShellWithSleepThenExit() throws Exception {
-        String out = execShell("sleep 5", "exit 0");
+    public void testExecScriptWithSleepThenExit() throws Exception {
+        String out = execScript("sleep 5", "exit 0");
     }
 
     // Really just tests that it returns; the command will be echo'ed automatically so this doesn't assert the command will have been executed
     @Test(groups = {"Integration"})
-    public void testExecShellBigCommand() throws Exception {
+    public void testExecScriptBigCommand() throws Exception {
         String bigstring = Strings.repeat("a", 10000);
-        String out = execShell("echo "+bigstring);
+        String out = execScript("echo "+bigstring);
         
         assertTrue(out.contains(bigstring), "out="+out);
     }
 
     @Test(groups = {"Integration"})
-    public void testExecShellBigChainOfCommand() throws Exception {
+    public void testExecScriptBigChainOfCommand() throws Exception {
         String bigstring = Strings.repeat("abcdefghij", 100); // 1KB
         List<String> cmds = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
             cmds.add("export MYPROP"+i+"="+bigstring);
             cmds.add("echo val"+i+" is $MYPROP"+i);
         }
-        String out = execShell(cmds);
+        String out = execScript(cmds);
         
         for (int i = 0; i < 10; i++) {
             assertTrue(out.contains("val"+i+" is "+bigstring), "out="+out);
@@ -163,24 +164,25 @@ public abstract class SshToolIntegrationTest {
     }
 
     @Test(groups = {"Integration"})
-    public void testExecShellAbortsOnCommandFailure() throws Exception {
+    public void testExecScriptAbortsOnCommandFailure() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int exitcode = tool.execShell(ImmutableMap.of("out", out), ImmutableList.of("export MYPROP=myval", "acmdthatdoesnotexist", "echo val is $MYPROP"));
+        int exitcode = tool.execScript(ImmutableMap.of("out", out), ImmutableList.of("export MYPROP=myval", "acmdthatdoesnotexist", "echo val is $MYPROP"));
         String outstr = new String(out.toByteArray());
 
         assertFalse(outstr.contains("val is myval"), "out="+out);
+        assertNotEquals(exitcode,  0);
     }
     
     @Test(groups = {"Integration"})
-    public void testExecShellWithSleepThenBigCommand() throws Exception {
+    public void testExecScriptWithSleepThenBigCommand() throws Exception {
         String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
-        String out = execShell("export MYPROP="+bigstring, "echo val is $MYPROP");
-        //String out = execShell([ "sleep 5", "export MYPROP="+bigstring, "echo val is \$MYPROP" ])
+        String out = execScript("export MYPROP="+bigstring, "echo val is $MYPROP");
+        //String out = execScript([ "sleep 5", "export MYPROP="+bigstring, "echo val is \$MYPROP" ])
         assertTrue(out.contains("val is "+bigstring), "out="+out);
     }
 
     @Test(groups = {"WIP", "Integration"})
-    public void testExecShellBigConcurrentCommand() throws Exception {
+    public void testExecScriptBigConcurrentCommand() throws Exception {
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         List<ListenableFuture<?>> futures = new ArrayList<ListenableFuture<?>>();
         try {
@@ -192,7 +194,7 @@ public abstract class SshToolIntegrationTest {
                 futures.add(executor.submit(new Runnable() {
                         public void run() {
                             String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
-                            String out = execShell(localtool, ImmutableList.of("export MYPROP="+bigstring, "echo val is $MYPROP"));
+                            String out = execScript(localtool, ImmutableList.of("export MYPROP="+bigstring, "echo val is $MYPROP"));
                             assertTrue(out.contains("val is "+bigstring), "outSize="+out.length()+"; out="+out);
                         }}));
             }
@@ -203,7 +205,7 @@ public abstract class SshToolIntegrationTest {
     }
 
     @Test(groups = {"WIP", "Integration"})
-    public void testExecShellBigConcurrentSleepyCommand() throws Exception {
+    public void testExecScriptBigConcurrentSleepyCommand() throws Exception {
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         List<ListenableFuture<?>> futures = new ArrayList<ListenableFuture<?>>();
         try {
@@ -216,7 +218,7 @@ public abstract class SshToolIntegrationTest {
                 futures.add(executor.submit(new Runnable() {
                         public void run() {
                             String bigstring = Strings.repeat("abcdefghij", 1000); // 10KB
-                            String out = execShell(localtool, ImmutableList.of("sleep 2", "export MYPROP="+bigstring, "echo val is $MYPROP"));
+                            String out = execScript(localtool, ImmutableList.of("sleep 2", "export MYPROP="+bigstring, "echo val is $MYPROP"));
                             assertTrue(out.contains("val is "+bigstring), "out="+out);
                         }}));
             }
@@ -285,27 +287,18 @@ public abstract class SshToolIntegrationTest {
     }
 
     @Test(groups = {"Integration"})
-    public void testCreateFileFromString() throws Exception {
-        String contents = "echo hello world!\n";
-        
-        tool.createFile(MutableMap.<String,Object>of(), remoteFilePath, contents);
-        
-        assertRemoteFileContents(remoteFilePath, contents);
-        assertRemoteFilePermissions(remoteFilePath, "-rw-r--r--");
-
-        // TODO would like to also assert lastModified time, but on jenkins the jvm locale
-        // and the OS locale are different (i.e. different timezones) so the file time-stamp 
-        // is several hours out.
-        //assertRemoteFileLastModifiedIsNow(remoteFilePath);
-    }
-
-    @Test(groups = {"Integration"})
     public void testCopyToServerFromBytes() throws Exception {
         String contents = "echo hello world!\n";
         byte[] contentBytes = contents.getBytes();
         tool.copyToServer(MutableMap.<String,Object>of(), contentBytes, remoteFilePath);
 
         assertRemoteFileContents(remoteFilePath, contents);
+        assertRemoteFilePermissions(remoteFilePath, "-rw-r--r--");
+        
+        // TODO would like to also assert lastModified time, but on jenkins the jvm locale
+        // and the OS locale are different (i.e. different timezones) so the file time-stamp 
+        // is several hours out.
+        //assertRemoteFileLastModifiedIsNow(remoteFilePath);
     }
 
     @Test(groups = {"Integration"})
@@ -321,8 +314,7 @@ public abstract class SshToolIntegrationTest {
     public void testCopyToServerWithPermissions() throws Exception {
         tool.copyToServer(ImmutableMap.of("permissions","0754"), "echo hello world!\n".getBytes(), remoteFilePath);
 
-        String out = execCommands("ls -l "+remoteFilePath);
-        assertTrue(out.contains("-rwxr-xr--"), out);
+        assertRemoteFilePermissions(remoteFilePath, "-rwxr-xr--");
     }
     
     @Test(groups = {"Integration"})
@@ -362,49 +354,6 @@ public abstract class SshToolIntegrationTest {
         assertEquals(actual, ImmutableList.of(contentsWithoutLineBreak));
     }
     
-    @Test(groups = {"Integration"})
-    @Deprecated // tests deprecated code
-    public void testTransferFileToServer() throws Exception {
-        String contents = "echo hello world!\n";
-        ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes());
-        tool.transferFileTo(MutableMap.<String,Object>of(), contentsStream, remoteFilePath);
-
-        assertRemoteFileContents(remoteFilePath, contents);
-    }
-
-    @Test(groups = {"Integration"})
-    @Deprecated // tests deprecated code
-    public void testCreateFileFromBytes() throws Exception {
-        String contents = "echo hello world!\n";
-        byte[] contentBytes = contents.getBytes();
-        tool.createFile(MutableMap.<String,Object>of(), remoteFilePath, contentBytes);
-
-        assertRemoteFileContents(remoteFilePath, contents);
-    }
-
-    @Test(groups = {"Integration"})
-    @Deprecated // tests deprecated code
-    public void testCreateFileFromInputStream() throws Exception {
-        String contents = "echo hello world!\n";
-        ByteArrayInputStream contentsStream = new ByteArrayInputStream(contents.getBytes());
-        tool.createFile(MutableMap.<String,Object>of(), remoteFilePath, contentsStream, contents.length());
-
-        assertRemoteFileContents(remoteFilePath, contents);
-    }
-
-    @Test(groups = {"Integration"})
-    @Deprecated // tests deprecated code
-    public void testTransferFileFromServer() throws Exception {
-        String contentsWithoutLineBreak = "echo hello world!";
-        String contents = contentsWithoutLineBreak+"\n";
-        tool.copyToServer(MutableMap.<String,Object>of(), contents.getBytes(), remoteFilePath);
-        
-        tool.transferFileFrom(MutableMap.<String,Object>of(), remoteFilePath, localFilePath);
-
-        List<String> actual = Files.readLines(new File(localFilePath), Charsets.UTF_8);
-        assertEquals(actual, ImmutableList.of(contentsWithoutLineBreak));
-    }
-    
     // TODO No config options in sshj or scp for auto-creating the parent directories
     @Test(enabled=false, groups = {"Integration"})
     public void testCopyFileToNonExistantDir() throws Exception {
@@ -422,11 +371,11 @@ public abstract class SshToolIntegrationTest {
     // fails if terminal enabled
     @Test(groups = {"Integration"})
     @Deprecated // tests deprecated code
-    public void testExecShellCapturesStderr() throws Exception {
+    public void testExecScriptCapturesStderr() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         String nonExistantCmd = "acmdthatdoesnotexist";
-        tool.execShell(ImmutableMap.of("out", out, "err", err), ImmutableList.of(nonExistantCmd));
+        tool.execScript(ImmutableMap.of("out", out, "err", err), ImmutableList.of(nonExistantCmd));
         assertTrue(new String(err.toByteArray()).contains(nonExistantCmd+": command not found"), "out="+out+"; err="+err);
     }
 
@@ -576,28 +525,12 @@ public abstract class SshToolIntegrationTest {
         return new String(out.toByteArray());
     }
 
-    private String execShell(String... cmds) {
-        return execShell(tool, Arrays.asList(cmds));
+    private String execScript(String... cmds) {
+        return execScript(tool, Arrays.asList(cmds));
     }
 
-    private String execShell(List<String> cmds) {
-        return execShell(tool, cmds);
-    }
-
-    private String execShell(List<String> cmds, Map<String,?> env) {
-        return execShell(tool, cmds, env);
-    }
-
-    private String execShell(SshTool t, List<String> cmds) {
-        return execShell(t, cmds, ImmutableMap.<String,Object>of());
-    }
-
-    private String execShell(SshTool t, List<String> cmds, Map<String,?> env) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int exitcode = t.execShell(ImmutableMap.of("out", out), cmds, env);
-        String outstr = new String(out.toByteArray());
-        assertEquals(exitcode, 0, outstr);
-        return outstr;
+    private String execScript(SshTool t, List<String> cmds) {
+        return execScript(ImmutableMap.<String,Object>of(), t, cmds, ImmutableMap.<String,Object>of());
     }
 
     private String execScript(List<String> cmds) {
