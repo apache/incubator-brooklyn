@@ -22,9 +22,9 @@ import java.util.concurrent.Callable;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-public class MongoDbReplicaSetEc2LiveTest extends AbstractEc2LiveTest {
+public class MongoDBReplicaSetEc2LiveTest extends AbstractEc2LiveTest {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(MongoDbReplicaSetEc2LiveTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(MongoDBReplicaSetEc2LiveTest.class);
     private static final Integer REPLICA_SET_SIZE = 3;
     private static final TimeDuration TIMEOUT = new TimeDuration(0, 0, 180, 0);
 
@@ -33,10 +33,10 @@ public class MongoDbReplicaSetEc2LiveTest extends AbstractEc2LiveTest {
      */
     @Override
     protected void doTest(Location loc) throws Exception {
-        final MongoDbReplicaSet replicaSet = app.createAndManageChild(EntitySpecs.spec(MongoDbReplicaSet.class)
+        final MongoDBReplicaSet replicaSet = app.createAndManageChild(EntitySpecs.spec(MongoDBReplicaSet.class)
                 .configure(DynamicCluster.INITIAL_SIZE, REPLICA_SET_SIZE)
                 .configure("replicaSetName", "mongodb-live-test-replica-set")
-                .configure("memberSpec", EntitySpecs.spec(MongoDbServer.class)
+                .configure("memberSpec", EntitySpecs.spec(MongoDBServer.class)
                         .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf")
                         .configure("port", "27017+")));
 
@@ -57,13 +57,13 @@ public class MongoDbReplicaSetEc2LiveTest extends AbstractEc2LiveTest {
         Entities.dumpInfo(app);
 
         // Test inserting a document and reading from secondaries
-        final String documentId = MongoDbTestHelper.insert(replicaSet.getPrimary(), "meaning-of-life", 42);
+        final String documentId = MongoDBTestHelper.insert(replicaSet.getPrimary(), "meaning-of-life", 42);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 assertEquals(replicaSet.getCurrentSize().intValue(), 3);
-                for (MongoDbServer secondary : replicaSet.getSecondaries()) {
-                    DBObject docOut = MongoDbTestHelper.getById(secondary, documentId);
+                for (MongoDBServer secondary : replicaSet.getSecondaries()) {
+                    DBObject docOut = MongoDBTestHelper.getById(secondary, documentId);
                     assertEquals(docOut.get("meaning-of-life"), 42);
                 }
                 return true;

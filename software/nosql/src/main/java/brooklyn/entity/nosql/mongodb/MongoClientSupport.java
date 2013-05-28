@@ -46,9 +46,9 @@ public class MongoClientSupport implements Closeable {
      * Creates a {@link MongoClientSupport} instance in standalone mode.
      * Returns {@link com.google.common.base.Optional#absent} if the server's host and port are unknown.
      */
-    public static MongoClientSupport forServer(MongoDbServer standlone) throws UnknownHostException {
-        String hostname = standlone.getAttribute(MongoDbServer.HOSTNAME);
-        Integer port = standlone.getAttribute(MongoDbServer.PORT);
+    public static MongoClientSupport forServer(MongoDBServer standlone) throws UnknownHostException {
+        String hostname = standlone.getAttribute(MongoDBServer.HOSTNAME);
+        Integer port = standlone.getAttribute(MongoDBServer.PORT);
         ServerAddress address = new ServerAddress(hostname, port);
         return new MongoClientSupport(address);
     }
@@ -145,7 +145,7 @@ public class MongoClientSupport implements Closeable {
      * @param id The id for the new set member. Must be unique within the set.
      * @return True if successful
      */
-    public boolean addMemberToReplicaSet(MongoDbServer secondary, Integer id) {
+    public boolean addMemberToReplicaSet(MongoDBServer secondary, Integer id) {
         // We need to:
         // - get the existing configuration
         // - update its version
@@ -169,7 +169,7 @@ public class MongoClientSupport implements Closeable {
      * @param server The server to remove
      * @return True if successful
      */
-    public boolean removeMemberFromReplicaSet(MongoDbServer server) {
+    public boolean removeMemberFromReplicaSet(MongoDBServer server) {
         BSONObject existingConfig = getReplicaSetConfig();
         if (existingConfig == null) {
             LOG.warn("Couldn't load config for replica set.");

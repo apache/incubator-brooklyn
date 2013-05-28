@@ -21,13 +21,13 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implements MongoDbDriver {
+public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implements MongoDBDriver {
 
-    public static final Logger log = LoggerFactory.getLogger(MongoDbSshDriver.class);
+    public static final Logger log = LoggerFactory.getLogger(MongoDBSshDriver.class);
 
     private String expandedInstallDir;
 
-    public MongoDbSshDriver(EntityLocal entity, SshMachineLocation machine) {
+    public MongoDBSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -37,7 +37,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     public String getDataDirectory() {
-        return entity.getConfig(MongoDbServer.DATA_DIRECTORY, getRunDir() + "/data");
+        return entity.getConfig(MongoDBServer.DATA_DIRECTORY, getRunDir() + "/data");
     }
 
     @Override
@@ -66,14 +66,14 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
                 .updateTaskAndFailOnNonZeroResultCode()
                 .body.append(command).execute();
 
-        String templateUrl = entity.getConfig(MongoDbServer.MONGODB_CONF_TEMPLATE_URL);
+        String templateUrl = entity.getConfig(MongoDBServer.MONGODB_CONF_TEMPLATE_URL);
         if (!Strings.isNullOrEmpty(templateUrl)) copyTemplate(templateUrl, getConfFile());
     }
 
     @Override
     public void launch() {
         List<String> commands = new LinkedList<String>();
-        Integer port = entity.getAttribute(MongoDbServer.PORT);
+        Integer port = entity.getAttribute(MongoDBServer.PORT);
 
         ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
                 .add("--config", getConfFile())
@@ -83,7 +83,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
                 .add("--port", port.toString())
                 .add("--fork");
 
-        String replicaSetName = entity.getConfig(MongoDbServer.REPLICA_SET_NAME);
+        String replicaSetName = entity.getConfig(MongoDBServer.REPLICA_SET_NAME);
         if (!Strings.isNullOrEmpty(replicaSetName))
             argsBuilder.add("--replSet", replicaSetName);
 
@@ -116,10 +116,10 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     protected String getBaseName() {
-        return getOsTag() + "-" + entity.getConfig(MongoDbServer.SUGGESTED_VERSION);
+        return getOsTag() + "-" + entity.getConfig(MongoDBServer.SUGGESTED_VERSION);
     }
 
-    // IDE note: This is used by MongoDbServer.DOWNLOAD_URL
+    // IDE note: This is used by MongoDBServer.DOWNLOAD_URL
     public String getOsDir() {
         return (getLocation().getOsDetails().isMac()) ? "osx" : "linux";
     }
@@ -147,7 +147,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     protected Integer getServerPort() {
-        return entity.getAttribute(MongoDbServer.PORT);
+        return entity.getAttribute(MongoDBServer.PORT);
     }
 
     private String getConfFile() {

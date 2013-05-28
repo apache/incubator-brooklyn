@@ -18,28 +18,28 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public class MongoDbServerImpl extends SoftwareProcessImpl implements MongoDbServer {
+public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBServer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MongoDbServerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBServerImpl.class);
 
     private FunctionFeed serviceStats;
     private FunctionFeed replicaSetStats;
     private MongoClientSupport client;
 
-    public MongoDbServerImpl() {
+    public MongoDBServerImpl() {
     }
 
-    public MongoDbServerImpl(Map flags){
+    public MongoDBServerImpl(Map flags){
         this(flags, null);
     }
 
-    public MongoDbServerImpl(Map flags, Entity parent) {
+    public MongoDBServerImpl(Map flags, Entity parent) {
         super(flags, parent);
     }
 
     @Override
     public Class getDriverInterface() {
-        return MongoDbDriver.class;
+        return MongoDBDriver.class;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class MongoDbServerImpl extends SoftwareProcessImpl implements MongoDbSer
                         .callable(new Callable<BasicBSONObject>() {
                             @Override
                             public BasicBSONObject call() throws Exception {
-                                return MongoDbServerImpl.this.getAttribute(SERVICE_UP)
+                                return MongoDBServerImpl.this.getAttribute(SERVICE_UP)
                                     ? client.getServerStatus()
                                     : null;
                             }

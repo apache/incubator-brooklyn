@@ -81,11 +81,11 @@ public class ReplicaSetConfig {
     }
 
     /**
-     * Adds a new member to the replica set config using {@link MongoDbServer#HOSTNAME} and {@link MongoDbServer#PORT}
+     * Adds a new member to the replica set config using {@link MongoDBServer#HOSTNAME} and {@link MongoDBServer#PORT}
      * for hostname and port. Doesn't attempt to check that the id is free.
      */
-    public ReplicaSetConfig member(MongoDbServer server, Integer id) {
-        return member(server.getAttribute(MongoDbServer.HOSTNAME), server.getAttribute(MongoDbServer.PORT), id);
+    public ReplicaSetConfig member(MongoDBServer server, Integer id) {
+        return member(server.getAttribute(MongoDBServer.HOSTNAME), server.getAttribute(MongoDBServer.PORT), id);
     }
 
     /**
@@ -109,9 +109,9 @@ public class ReplicaSetConfig {
         return this;
     }
 
-    /** Removes the first entity using {@link MongoDbServer#HOSTNAME} and {@link MongoDbServer#PORT}. */
-    public ReplicaSetConfig remove(MongoDbServer server) {
-        return remove(server.getAttribute(MongoDbServer.HOSTNAME), server.getAttribute(MongoDbServer.PORT));
+    /** Removes the first entity using {@link MongoDBServer#HOSTNAME} and {@link MongoDBServer#PORT}. */
+    public ReplicaSetConfig remove(MongoDBServer server) {
+        return remove(server.getAttribute(MongoDBServer.HOSTNAME), server.getAttribute(MongoDBServer.PORT));
     }
 
     /**

@@ -29,15 +29,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Implementation of {@link MongoDbReplicaSet}.
+ * Implementation of {@link MongoDBReplicaSet}.
  *
  * Replica sets have a <i>minimum</i> of three members.
  *
  * Removal strategy is always {@link #NON_PRIMARY_REMOVAL_STRATEGY}.
  */
-public class MongoDbReplicaSetImpl extends DynamicClusterImpl implements MongoDbReplicaSet {
+public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDBReplicaSet {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MongoDbReplicaSetImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBReplicaSetImpl.class);
 
     // 8th+ members should have 0 votes
     private static final int MIN_MEMBERS = 3;
@@ -49,50 +49,50 @@ public class MongoDbReplicaSetImpl extends DynamicClusterImpl implements MongoDb
     private AbstractMembershipTrackingPolicy policy;
     private final AtomicBoolean mustInitialise = new AtomicBoolean(true);
 
-    public MongoDbReplicaSetImpl() {
+    public MongoDBReplicaSetImpl() {
         this(MutableMap.of(), null);
     }
-    public MongoDbReplicaSetImpl(Map<?, ?> properties) {
+    public MongoDBReplicaSetImpl(Map<?, ?> properties) {
         this(properties, null);
     }
-    public MongoDbReplicaSetImpl(Entity parent) {
+    public MongoDBReplicaSetImpl(Entity parent) {
         this(MutableMap.of(), parent);
     }
-    public MongoDbReplicaSetImpl(Map<?, ?> properties, Entity parent) {
+    public MongoDBReplicaSetImpl(Map<?, ?> properties, Entity parent) {
         super(properties, parent);
     }
 
     /** Manages member addition and removal. */
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-    /** true iff. input is a non-null MongoDbServer with attribute REPLICA_SET_MEMBER_STATUS PRIMARY. */
+    /** true iff. input is a non-null MongoDBServer with attribute REPLICA_SET_MEMBER_STATUS PRIMARY. */
     static final Predicate<Entity> IS_PRIMARY = new Predicate<Entity>() {
         // getPrimary relies on instanceof check
         @Override public boolean apply(@Nullable Entity input) {
             return input != null
-                    && input instanceof MongoDbServer
-                    && ReplicaSetMemberStatus.PRIMARY.equals(input.getAttribute(MongoDbServer.REPLICA_SET_MEMBER_STATUS));
+                    && input instanceof MongoDBServer
+                    && ReplicaSetMemberStatus.PRIMARY.equals(input.getAttribute(MongoDBServer.REPLICA_SET_MEMBER_STATUS));
         }
     };
 
-    /** true iff. input is a non-null MongoDbServer with attribute REPLICA_SET_MEMBER_STATUS SECONDARY. */
+    /** true iff. input is a non-null MongoDBServer with attribute REPLICA_SET_MEMBER_STATUS SECONDARY. */
     static final Predicate<Entity> IS_SECONDARY = new Predicate<Entity>() {
         @Override public boolean apply(@Nullable Entity input) {
             // getSecondaries relies on instanceof check
             return input != null
-                    && input instanceof MongoDbServer
-                    && ReplicaSetMemberStatus.SECONDARY.equals(input.getAttribute(MongoDbServer.REPLICA_SET_MEMBER_STATUS));
+                    && input instanceof MongoDBServer
+                    && ReplicaSetMemberStatus.SECONDARY.equals(input.getAttribute(MongoDBServer.REPLICA_SET_MEMBER_STATUS));
         }
     };
 
     /**
      * {@link Function} for use as the cluster's removal strategy. Chooses any entity with
-     * {@link MongoDbServer#REPLICA_SET_PRIMARY} true last of all.
+     * {@link MongoDBServer#REPLICA_SET_PRIMARY} true last of all.
      */
     private static final Function<Collection<Entity>, Entity> NON_PRIMARY_REMOVAL_STRATEGY = new Function<Collection<Entity>, Entity>() {
         @Override
         public Entity apply(@Nullable Collection<Entity> entities) {
-            checkArgument(entities != null && entities.size() > 0, "Expect list of MongoDbServers to have at least one entry");
+            checkArgument(entities != null && entities.size() > 0, "Expect list of MongoDBServers to have at least one entry");
             return Iterables.tryFind(entities, Predicates.not(IS_PRIMARY)).or(Iterables.get(entities, 0));
         }
     };
@@ -105,18 +105,18 @@ public class MongoDbReplicaSetImpl extends DynamicClusterImpl implements MongoDb
 
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        return getConfig(MEMBER_SPEC, BasicEntitySpec.newInstance(MongoDbServer.class));
+        return getConfig(MEMBER_SPEC, BasicEntitySpec.newInstance(MongoDBServer.class));
     }
 
     /**
-     * Sets {@link MongoDbServer#REPLICA_SET_ENABLED} and {@link MongoDbServer#REPLICA_SET_NAME}.
+     * Sets {@link MongoDBServer#REPLICA_SET_ENABLED} and {@link MongoDBServer#REPLICA_SET_NAME}.
      */
     @Override
     protected Map getCustomChildFlags() {
         return ImmutableMap.builder()
                 .putAll(super.getCustomChildFlags())
-                .put(MongoDbServer.REPLICA_SET_ENABLED, true)
-                .put(MongoDbServer.REPLICA_SET_NAME, getReplicaSetName())
+                .put(MongoDBServer.REPLICA_SET_ENABLED, true)
+                .put(MongoDBServer.REPLICA_SET_NAME, getReplicaSetName())
                 .build();
     }
 
@@ -126,18 +126,18 @@ public class MongoDbReplicaSetImpl extends DynamicClusterImpl implements MongoDb
     }
 
     @Override
-    public MongoDbServer getPrimary() {
-        return (MongoDbServer) Iterables.tryFind(getMembers(), IS_PRIMARY).orNull();
+    public MongoDBServer getPrimary() {
+        return (MongoDBServer) Iterables.tryFind(getMembers(), IS_PRIMARY).orNull();
     }
 
     @Override
-    public Collection<MongoDbServer> getSecondaries() {
+    public Collection<MongoDBServer> getSecondaries() {
         // IS_SECONDARY predicate guarantees cast in transform is safe.
         return FluentIterable.from(getMembers())
                 .filter(IS_SECONDARY)
-                .transform(new Function<Entity, MongoDbServer>() {
-                    @Override public MongoDbServer apply(@Nullable Entity input) {
-                        return MongoDbServer.class.cast(input);
+                .transform(new Function<Entity, MongoDBServer>() {
+                    @Override public MongoDBServer apply(@Nullable Entity input) {
+                        return MongoDBServer.class.cast(input);
                     }
                 })
                 .toList();
@@ -166,8 +166,8 @@ public class MongoDbReplicaSetImpl extends DynamicClusterImpl implements MongoDb
      * Initialises the replica set with the given server as primary if {@link #mustInitialise} is true,
      * otherwise schedules the addition of a new secondary.
      */
-    private void serverAdded(MongoDbServer server) {
-        LOG.debug("Server added: {}. SERVICE_UP: {}", server, server.getAttribute(MongoDbServer.SERVICE_UP));
+    private void serverAdded(MongoDBServer server) {
+        LOG.debug("Server added: {}. SERVICE_UP: {}", server, server.getAttribute(MongoDBServer.SERVICE_UP));
 
         // Set the primary if the replica set hasn't been initialised.
         if (mustInitialise.compareAndSet(true, false)) {
@@ -190,13 +190,13 @@ public class MongoDbReplicaSetImpl extends DynamicClusterImpl implements MongoDb
      * {@link MongoClientSupport}. Otherwise, reschedule the task to run again in three
      * seconds time (in the hope that next time the primary will be available).
      */
-    private Runnable addSecondaryWhenPrimaryIsNonNull(final MongoDbServer secondary) {
+    private Runnable addSecondaryWhenPrimaryIsNonNull(final MongoDBServer secondary) {
         return new Runnable() {
             @Override
             public void run() {
                 // SERVICE_UP is not guaranteed when additional members are added to the set.
-                Boolean isAvailable = secondary.getAttribute(MongoDbServer.SERVICE_UP);
-                MongoDbServer primary = getPrimary();
+                Boolean isAvailable = secondary.getAttribute(MongoDBServer.SERVICE_UP);
+                MongoDBServer primary = getPrimary();
                 if (isAvailable && primary != null) {
                     primary.getClient().addMemberToReplicaSet(secondary, nextMemberId.incrementAndGet());
                 } else {
@@ -207,18 +207,18 @@ public class MongoDbReplicaSetImpl extends DynamicClusterImpl implements MongoDb
         };
     }
 
-    private void serverRemoved(MongoDbServer server) {
+    private void serverRemoved(MongoDBServer server) {
         if (LOG.isInfoEnabled())
             LOG.info("Informing {} primary {} of removal of member: {}",
                     new Object[]{getReplicaSetName(), getPrimary().getId(), server});
         executor.submit(removeMember(server));
     }
 
-    private Runnable removeMember(final MongoDbServer member) {
+    private Runnable removeMember(final MongoDBServer member) {
         return new Runnable() {
             @Override
             public void run() {
-                MongoDbServer primary = getPrimary();
+                MongoDBServer primary = getPrimary();
                 if (primary != null) {
                     primary.getClient().removeMemberFromReplicaSet(member);
                 } else if (LOG.isDebugEnabled()) {
@@ -238,10 +238,10 @@ public class MongoDbReplicaSetImpl extends DynamicClusterImpl implements MongoDb
                 // Ignored
             }
             @Override protected void onEntityAdded(Entity member) {
-                serverAdded((MongoDbServer) member);
+                serverAdded((MongoDBServer) member);
             }
             @Override protected void onEntityRemoved(Entity member) {
-                serverRemoved((MongoDbServer) member);
+                serverRemoved((MongoDBServer) member);
             }
         };
 

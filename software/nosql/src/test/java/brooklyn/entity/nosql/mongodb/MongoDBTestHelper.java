@@ -5,9 +5,9 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MongoDbTestHelper {
+public class MongoDBTestHelper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MongoDbTestHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBTestHelper.class);
 
     private static final String TEST_DB = "brooklyn_test";
     private static final String TEST_COLLECTION = "test_collection";
@@ -16,10 +16,10 @@ public class MongoDbTestHelper {
      * Inserts a new object with { key: value } at given server.
      * @return The new document's id
      */
-    public static String insert(MongoDbServer entity, String key, Object value) throws Exception {
+    public static String insert(MongoDBServer entity, String key, Object value) throws Exception {
         LOG.info("Inserting {}:{} at {}", new Object[]{key, value, entity});
         MongoClient mongoClient = new MongoClient(
-                entity.getAttribute(MongoDbServer.HOSTNAME), entity.getAttribute(MongoDbServer.PORT));
+                entity.getAttribute(MongoDBServer.HOSTNAME), entity.getAttribute(MongoDBServer.PORT));
         try {
             DB db = mongoClient.getDB(TEST_DB);
             DBCollection testCollection = db.getCollection(TEST_COLLECTION);
@@ -33,10 +33,10 @@ public class MongoDbTestHelper {
     }
 
     /** @return The {@link DBObject} representing the object with the given id */
-    public static DBObject getById(MongoDbServer entity, String id) throws Exception {
+    public static DBObject getById(MongoDBServer entity, String id) throws Exception {
         LOG.info("Getting {} from {}", new Object[]{id, entity});
         MongoClient mongoClient = new MongoClient(
-                entity.getAttribute(MongoDbServer.HOSTNAME), entity.getAttribute(MongoDbServer.PORT));
+                entity.getAttribute(MongoDBServer.HOSTNAME), entity.getAttribute(MongoDBServer.PORT));
         // Secondary preferred means the driver will let us read from secondaries too.
         mongoClient.setReadPreference(ReadPreference.secondaryPreferred());
         try {

@@ -3,14 +3,12 @@ package brooklyn.entity.nosql.mongodb;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
-import org.bson.types.ObjectId;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -18,13 +16,9 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 
-public class MongoDbIntegrationTest {
+public class MongoDBIntegrationTest {
 
     private TestApplication app;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
@@ -42,7 +36,7 @@ public class MongoDbIntegrationTest {
 
     @Test(groups = "Integration")
     public void testCanStartAndStop() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
+        MongoDBServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDBServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
@@ -53,26 +47,26 @@ public class MongoDbIntegrationTest {
 
     @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStop" })
     public void testCanReadAndWrite() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
+        MongoDBServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDBServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
-        String id = MongoDbTestHelper.insert(entity, "hello", "world!");
-        DBObject docOut = MongoDbTestHelper.getById(entity, id);
+        String id = MongoDBTestHelper.insert(entity, "hello", "world!");
+        DBObject docOut = MongoDBTestHelper.getById(entity, id);
         assertEquals(docOut.get("hello"), "world!");
     }
 
     @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStop" })
     public void testPollInsertCountSensor() throws Exception {
-        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
+        MongoDBServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDBServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
 
-        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.OPCOUNTERS_INSERTS, 0L);
-        MongoDbTestHelper.insert(entity, "a", Boolean.TRUE);
-        MongoDbTestHelper.insert(entity, "b", Boolean.FALSE);
-        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.OPCOUNTERS_INSERTS, 2L);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDBServer.OPCOUNTERS_INSERTS, 0L);
+        MongoDBTestHelper.insert(entity, "a", Boolean.TRUE);
+        MongoDBTestHelper.insert(entity, "b", Boolean.FALSE);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDBServer.OPCOUNTERS_INSERTS, 2L);
     }
 
 }

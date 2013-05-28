@@ -9,19 +9,19 @@ import brooklyn.util.flags.SetFromFlag;
 import java.util.Collection;
 
 /**
- * A replica set of {@link MongoDbServer}s based on {@link DynamicCluster} which can be resized by a policy if required.
+ * A replica set of {@link MongoDBServer}s based on {@link DynamicCluster} which can be resized by a policy if required.
  */
-@ImplementedBy(MongoDbReplicaSetImpl.class)
-public interface MongoDbReplicaSet extends DynamicCluster {
+@ImplementedBy(MongoDBReplicaSetImpl.class)
+public interface MongoDBReplicaSet extends DynamicCluster {
 
     @SetFromFlag("replicaSetName")
     BasicAttributeSensorAndConfigKey<String> REPLICA_SET_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class,
-            "mongodb.replicaSet.name", "Name of the MongoDb replica set", "BrooklynCluster");
+            "mongodb.replicaSet.name", "Name of the MongoDB replica set", "BrooklynCluster");
 
-    BasicAttributeSensor<MongoDbServer> PRIMARY = new BasicAttributeSensor<MongoDbServer>(MongoDbServer.class,
+    BasicAttributeSensor<MongoDBServer> PRIMARY = new BasicAttributeSensor<MongoDBServer>(MongoDBServer.class,
             "mongodb.replicaSet.primary", "The primary member of the replica set");
 
-    BasicAttributeSensor<Collection<MongoDbServer>> SECONDARIES = new BasicAttributeSensor(
+    BasicAttributeSensor<Collection<MongoDBServer>> SECONDARIES = new BasicAttributeSensor(
             Collection.class, "mongodb.replicaSet.secondaries", "The secondary members of the replica set");
 
     /**
@@ -32,11 +32,11 @@ public interface MongoDbReplicaSet extends DynamicCluster {
     /**
      * @return The primary MongoDB server in the replica set.
      */
-    MongoDbServer getPrimary();
+    MongoDBServer getPrimary();
 
     /**
      * @return The secondary servers in the replica set.
      */
-    Collection<MongoDbServer> getSecondaries();
+    Collection<MongoDBServer> getSecondaries();
 
 }

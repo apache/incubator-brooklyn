@@ -12,21 +12,21 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
-public class MongoDbEc2LiveTest extends AbstractEc2LiveTest {
+public class MongoDBEc2LiveTest extends AbstractEc2LiveTest {
 
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(MongoDbEc2LiveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBEc2LiveTest.class);
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        MongoDbServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDbServer.class)
+        MongoDBServer entity = app.createAndManageChild(EntitySpecs.spec(MongoDBServer.class)
                 .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
         app.start(ImmutableList.of(loc));
 
-        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDbServer.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, MongoDBServer.SERVICE_UP, true);
 
-        String id = MongoDbTestHelper.insert(entity, "hello", "world!");
-        DBObject docOut = MongoDbTestHelper.getById(entity, id);
+        String id = MongoDBTestHelper.insert(entity, "hello", "world!");
+        DBObject docOut = MongoDBTestHelper.getById(entity, id);
         assertEquals(docOut.get("hello"), "world!");
     }
 

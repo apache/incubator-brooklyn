@@ -13,8 +13,8 @@ import org.bson.BasicBSONObject;
 @Catalog(name="MongoDB Server",
     description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",
     iconUrl="classpath:///mongodb-logo.png")
-@ImplementedBy(MongoDbServerImpl.class)
-public interface MongoDbServer extends SoftwareProcess {
+@ImplementedBy(MongoDBServerImpl.class)
+public interface MongoDBServer extends SoftwareProcess {
 
     @SetFromFlag("version")
     BasicConfigKey<String> SUGGESTED_VERSION =
