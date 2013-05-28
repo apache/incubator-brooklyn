@@ -2,20 +2,21 @@ package brooklyn.util.internal
 
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 import brooklyn.util.text.Identifiers
 
+import com.google.common.annotations.Beta
 import com.thoughtworks.xstream.XStream
 
 /**
  * Useful Groovy utility methods.
  * 
- * @deprecated since 0.5; use Java! Class will likely have a major overhaul in 0.6 and may be deleted entirely
+ * @deprecated since 0.5; requires thorough review for what will be kept.
+ *             e.g. consider instead using guava's {@link com.google.common.collect.Multimap} instead of addToMapOfSets etc
  */
 @Deprecated
+@Beta
 public class LanguageUtils {
     // For unique identifiers
     private static final AtomicLong seed = new AtomicLong(0L)
@@ -32,18 +33,6 @@ public class LanguageUtils {
 
     public static <T> T getPropertySafe(Object target, String name, T defaultValue=null) {
         target.hasProperty(name)?.getProperty(target) ?: defaultValue
-    }
-	public static boolean repeatUntilSuccess(String description, Callable<Boolean> action) throws Exception {
-		repeatUntilSuccess([:], description, action)
-	}
-    public static boolean repeatUntilSuccess(Map flags=[:], String description=null, Callable<Boolean> action) throws Exception {
-		Repeater r = new Repeater(description).repeat()
-			.every(500, TimeUnit.MILLISECONDS)
-			.until(action)
-			.rethrowException();
-		if (!flags.timeout) r.limitIterationsTo(40);
-		r.setFromFlags(flags);
-        boolean result = r.run()
     }
 
     //TODO find with annotation

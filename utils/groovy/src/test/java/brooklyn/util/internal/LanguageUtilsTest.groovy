@@ -131,24 +131,4 @@ public class LanguageUtilsTest {
         assertTrue LanguageUtils.hashCode(t1, ["a", "@b"]) == LanguageUtils.hashCode(t2, ["a", "@b"])
         assertEquals 0, LanguageUtils.hashCode(null, ["a", "@b"])
     }
-	
-	@Test
-	public void testRepeatUntilSuccessFlags() {
-	    long start = System.currentTimeMillis();
-	    LanguageUtils.repeatUntilSuccess(period: 1*TimeUnit.MILLISECONDS, timeout: 5000*TimeUnit.MILLISECONDS) { 
-	        System.currentTimeMillis() > start+50 
-	    }
-	    long time = System.currentTimeMillis() - start;
-	    assertTrue(time >= 50, "time="+time);
-	    assertTrue(time <= 1000, "time="+time);
-	}
-	@Test
-	public void testRepeatUntilSuccessDefaults() {
-		long start = System.currentTimeMillis();
-		LanguageUtils.repeatUntilSuccess("sample") {
-			System.currentTimeMillis() >= start
-		}
-		assertTrue System.currentTimeMillis() < start+500
-	}
-
 }
