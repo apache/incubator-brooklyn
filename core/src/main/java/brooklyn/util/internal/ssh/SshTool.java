@@ -83,12 +83,6 @@ public interface SshTool {
     public static final ConfigKey<List<String>> PROP_KEY_FILES = new BasicConfigKey(List.class, "keyFiles", "DEPRECATED: see privateKeyFile", Collections.<String>emptyList());
 
     /**
-     * @deprecated since 0.4; use PROP_PRIVATE_KEY_DATA instead
-     */
-    @Deprecated
-    public static final ConfigKey<String> PROP_PRIVATE_KEY = new StringConfigKey("privateKey", "DEPRECATED: see privateKeyData", null);
-
-    /**
      * @throws SshException
      */
     public void connect();

@@ -93,7 +93,6 @@ public abstract class SshAbstractTool implements SshTool {
             password = getOptionalVal(props, PROP_PASSWORD);
             
             warnOnDeprecated(props, "privateKey", "privateKeyData");
-            privateKeyData = getOptionalVal(props, PROP_PRIVATE_KEY);
             privateKeyData = getOptionalVal(props, PROP_PRIVATE_KEY_DATA);
             privateKeyPassphrase = getOptionalVal(props, PROP_PRIVATE_KEY_PASSPHRASE);
             
