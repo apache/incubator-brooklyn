@@ -102,6 +102,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         protected int sshTriesTimeout = 2*60*1000;  //allow 2 minutesby default (so if too slow trying sshTries times, abort anyway)
         protected long sshRetryDelay = 50L;
         
+        @Override
         public B from(Map<String,?> props) {
             super.from(props);
             sshTries = getOptionalVal(props, PROP_SSH_TRIES);
@@ -126,6 +127,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         public B sshRetryDelay(long val) {
             this.sshRetryDelay = val; return self();
         }
+        @Override
         @SuppressWarnings("unchecked")
         public T build() {
             return (T) new SshjTool(this);
@@ -222,36 +224,11 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     }
     
-    @Override
-    public int transferFileTo(Map<String,?> props, InputStream input, String pathAndFileOnRemoteServer) {
-        return copyToServer(props, input, pathAndFileOnRemoteServer);
-    }
-    
-    @Override
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, InputStream input, long size) {
-        return copyToServer(props, input, (int)size, pathAndFileOnRemoteServer);
-    }
-
-    @Override
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, String contents) {
-        return copyToServer(props, contents.getBytes(), pathAndFileOnRemoteServer);
-    }
-
-    @Override
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, byte[] contents) {
-        return copyToServer(props, contents, pathAndFileOnRemoteServer);
-    }
-
     private int copyToServer(Map<String,?> props, InputStream contents, long length, String pathAndFileOnRemoteServer) {
         acquire(new PutFileAction(props, pathAndFileOnRemoteServer, contents, length));
         return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
     }
 
-    @Override
-    public int transferFileFrom(Map<String,?> props, String pathAndFileOnRemoteServer, String pathAndFileOnLocalServer) {
-        return copyFromServer(props, pathAndFileOnRemoteServer, new File(pathAndFileOnLocalServer));
-    }
-    
     @Override
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
         InputStream contents = acquire(new GetFileAction(pathAndFileOnRemoteServer));
@@ -261,14 +238,6 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
-    }
-
-    public int execShell(Map<String,?> props, List<String> commands) {
-        return execScript(props, commands, Collections.<String,Object>emptyMap());
-    }
-    
-    public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        return execScript(props, commands, env);
     }
 
     @Override

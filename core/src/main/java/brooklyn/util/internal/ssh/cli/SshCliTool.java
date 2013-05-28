@@ -52,6 +52,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         private String sshFlags;
         private String scpExecutable;
 
+        @Override
         @SuppressWarnings("unchecked")
         public B from(Map<String,?> props) {
             super.from(props);
@@ -121,26 +122,6 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     }
     
     @Override
-    public int transferFileTo(Map<String,?> props, InputStream input, String pathAndFileOnRemoteServer) {
-        return copyToServer(props, input, pathAndFileOnRemoteServer);
-    }
-    
-    @Override
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, InputStream input, long size) {
-        return copyToServer(props, input, pathAndFileOnRemoteServer);
-    }
-
-    @Override
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, String contents) {
-        return copyToServer(props, contents.getBytes(), pathAndFileOnRemoteServer);
-    }
-
-    @Override
-    public int createFile(Map<String,?> props, String pathAndFileOnRemoteServer, byte[] contents) {
-        return copyToServer(props, contents, pathAndFileOnRemoteServer);
-    }
-
-    @Override
     public int copyToServer(Map<String,?> props, File f, String pathAndFileOnRemoteServer) {
         if (hasVal(props, PROP_LAST_MODIFICATION_DATE)) {
             LOG.warn("Unsupported ssh feature, setting lastModificationDate for {}:{}", this, pathAndFileOnRemoteServer);
@@ -171,23 +152,8 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     }
 
     @Override
-    public int transferFileFrom(Map<String,?> props, String pathAndFileOnRemoteServer, String pathAndFileOnLocalServer) {
-        return copyFromServer(props, pathAndFileOnRemoteServer, new File(pathAndFileOnLocalServer));
-    }
-
-    @Override
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
         return scpFromServer(props, pathAndFileOnRemoteServer, localFile);
-    }
-
-    @Override
-    public int execShell(Map<String,?> props, List<String> commands) {
-        return execScript(props, commands, Collections.<String,Object>emptyMap());
-    }
-    
-    @Override
-    public int execShell(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        return execScript(props, commands, env);
     }
 
     @Override
