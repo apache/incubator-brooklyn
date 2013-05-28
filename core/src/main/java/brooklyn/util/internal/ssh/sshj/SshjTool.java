@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.direct.PTYMode;
@@ -37,7 +38,6 @@ import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.stream.InputStreamSupplier;
-import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Time;
@@ -46,6 +46,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -193,17 +194,16 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     
     @Override
     public int copyToServer(java.util.Map<String,?> props, byte[] contents, String pathAndFileOnRemoteServer) {
-        return copyToServer(props, new ByteArrayInputStream(contents), contents.length, pathAndFileOnRemoteServer);
+        return copyToServer(props, newInputStreamSupplier(contents), contents.length, pathAndFileOnRemoteServer);
     }
     
     @Override
     public int copyToServer(Map<String,?> props, InputStream contents, String pathAndFileOnRemoteServer) {
-        if (contents instanceof KnownSizeInputStream)
-            return copyToServer(props, contents, ((KnownSizeInputStream)contents).length(), pathAndFileOnRemoteServer);
-        
-        /* sshj needs to know the length of the InputStream to copy the file to perform copy;
-         * for now, write it to a file if we come here with something other than a KnownSizeInputStream.
-         * (we could have a switch where we hold it in memory if less than some max size,
+        /* sshj needs to:
+         *   1) to know the length of the InputStream to copy the file to perform copy; and
+         *   2) re-read the input stream on retry if the first attempt fails.
+         * For now, write it to a file.
+         * (We could have a switch where we hold it in memory if less than some max size,
          * but most the routines should supply a string or byte array or similar,
          * so we probably don't come here too often.)
          */
@@ -217,17 +217,14 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     
     @Override
     public int copyToServer(Map<String,?> props, File localFile, String pathAndFileOnRemoteServer) {
-        try {
-            return copyToServer(props, new FileInputStream(localFile), (int)localFile.length(), pathAndFileOnRemoteServer);
-        } catch (FileNotFoundException e) {
-            throw Exceptions.propagate(e);
-        }
+        return copyToServer(props, newInputStreamSupplier(localFile), (int)localFile.length(), pathAndFileOnRemoteServer);
     }
     
-    private int copyToServer(Map<String,?> props, InputStream contents, long length, String pathAndFileOnRemoteServer) {
-        acquire(new PutFileAction(props, pathAndFileOnRemoteServer, contents, length));
+    private int copyToServer(Map<String,?> props, Supplier<InputStream> contentsSupplier, long length, String pathAndFileOnRemoteServer) {
+        acquire(new PutFileAction(props, pathAndFileOnRemoteServer, contentsSupplier, length));
         return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
     }
+
 
     @Override
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
@@ -444,23 +441,25 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         private final String path;
         private SFTPClient sftp;
-        private int permissionsMask;
-        private long lastModificationDate;
-        private long lastAccessDate;
-        private InputStream contents;
-        private Integer length;
+        private final int permissionsMask;
+        private final long lastModificationDate;
+        private final long lastAccessDate;
+        private final Supplier<InputStream> contentsSupplier;
+        private final Integer length;
         
-        PutFileAction(Map<String,?> props, String path, InputStream contents, long length) {
+        PutFileAction(Map<String,?> props, String path, Supplier<InputStream> contentsSupplier, long length) {
             String permissions = getOptionalVal(props, PROP_PERMISSIONS, "0644");
-            permissionsMask = Integer.parseInt(permissions, 8);
-            lastModificationDate = getOptionalVal(props, PROP_LAST_MODIFICATION_DATE, 0L);
-            lastAccessDate = getOptionalVal(props, PROP_LAST_ACCESS_DATE, 0L);
-            if (lastAccessDate <= 0 ^ lastModificationDate <= 0) {
-                lastAccessDate = Math.max(lastAccessDate, lastModificationDate);
-                lastModificationDate = Math.max(lastAccessDate, lastModificationDate);
+            long lastModificationDateVal = getOptionalVal(props, PROP_LAST_MODIFICATION_DATE, 0L);
+            long lastAccessDateVal = getOptionalVal(props, PROP_LAST_ACCESS_DATE, 0L);
+            if (lastAccessDateVal <= 0 ^ lastModificationDateVal <= 0) {
+                lastAccessDateVal = Math.max(lastAccessDateVal, lastModificationDateVal);
+                lastModificationDateVal = Math.max(lastAccessDateVal, lastModificationDateVal);
             }
+            this.permissionsMask = Integer.parseInt(permissions, 8);
+            this.lastAccessDate = lastAccessDateVal;
+            this.lastModificationDate = lastModificationDateVal;
             this.path = checkNotNull(path, "path");
-            this.contents = checkNotNull(contents, "contents");
+            this.contentsSupplier = checkNotNull(contentsSupplier, "contents");
             this.length = Ints.checkedCast(checkNotNull((long)length, "size"));
         }
 
@@ -472,6 +471,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
 
         @Override
         public Void create() throws Exception {
+            final AtomicReference<InputStream> inputStreamRef = new AtomicReference<InputStream>();
             sftp = acquire(sftpConnection);
             try {
                 sftp.put(new InMemorySourceFile() {
@@ -482,6 +482,8 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                         return length;
                     }
                     @Override public InputStream getInputStream() throws IOException {
+                        InputStream contents = contentsSupplier.get();
+                        inputStreamRef.set(contents);
                         return contents;
                     }
                 }, path);
@@ -492,7 +494,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                             .build());
                 }
             } finally {
-                Closeables.closeQuietly(contents);
+                Closeables.closeQuietly(inputStreamRef.get());
             }
             return null;
         }
@@ -743,6 +745,26 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         public String toString() {
             return "Shell(command=[" + commands + "])";
         }
+    }
+
+    private Supplier<InputStream> newInputStreamSupplier(final byte[] contents) {
+        return new Supplier<InputStream>() {
+            @Override public InputStream get() {
+                return new ByteArrayInputStream(contents);
+            }
+        };
+    }
+
+    private Supplier<InputStream> newInputStreamSupplier(final File file) {
+        return new Supplier<InputStream>() {
+            @Override public InputStream get() {
+                try {
+                    return new FileInputStream(file);
+                } catch (FileNotFoundException e) {
+                    throw Exceptions.propagate(e);
+                }
+            }
+        };
     }
 
 //    protected Payload toPayload(byte[] input) {
