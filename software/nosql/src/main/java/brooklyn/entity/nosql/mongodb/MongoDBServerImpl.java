@@ -47,6 +47,11 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         super.connectSensors();
         connectServiceUpIsRunning();
 
+        // See http://docs.mongodb.org/ecosystem/tools/http-interfaces/#http-console
+        Integer httpConsolePort = getAttribute(MongoDBServer.PORT) + 1000;
+        String httpConsole = String.format("http://%s:%d", getAttribute(HOSTNAME), httpConsolePort);
+        setAttribute(HTTP_INTERFACE_URL, httpConsole);
+
         try {
             client = MongoClientSupport.forServer(this);
         } catch (UnknownHostException e) {

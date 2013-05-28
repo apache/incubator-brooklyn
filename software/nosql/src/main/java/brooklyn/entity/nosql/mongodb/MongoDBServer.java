@@ -38,10 +38,17 @@ public interface MongoDBServer extends SoftwareProcess {
 
     @SetFromFlag("mongodbConfTemplateUrl")
     BasicConfigKey<String> MONGODB_CONF_TEMPLATE_URL = new BasicConfigKey<String>(String.class,
-            "mongodb.config.url", "Template file (in freemarker format) for a a Mongo configuration file",
+            "mongodb.config.url", "Template file (in freemarker format) for a MongoDB configuration file",
             "classpath://brooklyn/entity/nosql/mongodb/default-mongodb.conf");
 
-    // Can also treat this as a Map
+    @SetFromFlag("enableRestInterface")
+    BasicConfigKey<Boolean> ENABLE_REST_INTERFACE = new BasicConfigKey<Boolean>(Boolean.class,
+            "mongodb.config.enable_rest", "Adds --rest to server startup flags when true", Boolean.FALSE);
+
+    // BasicBSONObject are Maps
+    BasicAttributeSensor<String> HTTP_INTERFACE_URL = new BasicAttributeSensor<String>(String.class,
+            "mongodb.server.http_interface", "URL of the server's HTTP console");
+
     BasicAttributeSensor<BasicBSONObject> STATUS = new BasicAttributeSensor<BasicBSONObject>(BasicBSONObject.class,
             "mongodb.server.status", "Server status");
 
@@ -91,9 +98,6 @@ public interface MongoDBServer extends SoftwareProcess {
 
     BasicAttributeSensor<Boolean> REPLICA_SET_SECONDARY = new BasicAttributeSensor<Boolean>(Boolean.class,
             "mongodb.server.replicaSet.isSecondary", "True if this server is a secondary server in the replica set");
-
-    BasicAttributeSensor<String> REPLICA_SET_HOSTS = new BasicAttributeSensor<String>(String.class,
-            "mongodb.server.replicaSet.hosts", "All hosts in the replica set (comma-seperated hostname:port)");
 
     BasicAttributeSensor<String> REPLICA_SET_PRIMARY_NAME = new BasicAttributeSensor<String>(String.class,
             "mongodb.server.replicaSet.primary", "The name of the primary host in the replica set");

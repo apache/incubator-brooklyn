@@ -17,6 +17,7 @@ public class SimpleMongoDBReplicaSet extends ApplicationBuilder {
             .configure("replicaSetName", "simple-replica-set")
             .configure("memberSpec", EntitySpecs.spec(MongoDBServer.class)
                     .configure("mongodbConfTemplateUrl", "classpath:///mongodb.conf")
+                    .configure("enableRestInterface", true)
                     .configure("port", "27017+")));
     }
 

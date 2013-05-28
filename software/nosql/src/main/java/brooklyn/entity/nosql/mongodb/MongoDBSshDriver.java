@@ -87,6 +87,9 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
         if (!Strings.isNullOrEmpty(replicaSetName))
             argsBuilder.add("--replSet", replicaSetName);
 
+        if (Boolean.TRUE.equals(entity.getConfig(MongoDBServer.ENABLE_REST_INTERFACE)))
+            argsBuilder.add("--rest");
+
         String args = Joiner.on(" ").join(argsBuilder.build());
         String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
         commands.add(command);
