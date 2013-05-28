@@ -3,7 +3,6 @@ package brooklyn.util.internal.ssh;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -76,11 +75,6 @@ public interface SshTool {
     //public static ConfigKey<String> PROP_LOG_PREFIX = new StringConfigKey("logPrefix", "???", ???);
     //public static ConfigKey<Boolean> PROP_NO_STDOUT_LOGGING = new StringConfigKey("noStdoutLogging", "???", ???);
     //public static ConfigKey<Boolean> PROP_NO_STDOUT_LOGGING = new StringConfigKey("noStdoutLogging", "???", ???);
-
-    /**
-     * @deprecated since 0.4; use PROP_PRIVATE_KEY_FILE; if this contains more than one element then it will fail.
-     */
-    public static final ConfigKey<List<String>> PROP_KEY_FILES = new BasicConfigKey(List.class, "keyFiles", "DEPRECATED: see privateKeyFile", Collections.<String>emptyList());
 
     /**
      * @throws SshException

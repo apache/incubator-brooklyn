@@ -99,7 +99,6 @@ public abstract class SshAbstractTool implements SshTool {
             // for backwards compatibility accept keyFiles and privateKey
             // but sshj accepts only a single privateKeyFile; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)
             warnOnDeprecated(props, "keyFiles", null);
-            privateKeyFiles.addAll(getOptionalVal(props, PROP_KEY_FILES));
             String privateKeyFile = getOptionalVal(props, PROP_PRIVATE_KEY_FILE);
             if (privateKeyFile != null) privateKeyFiles.add(privateKeyFile);
             
