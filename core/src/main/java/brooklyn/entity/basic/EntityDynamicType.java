@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
@@ -18,6 +19,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
@@ -216,30 +218,54 @@ public class EntityDynamicType {
     protected static Map<String,Effector<?>> findEffectors(Class<? extends Entity> clazz, Entity optionalEntity) {
         try {
             Map<String,Effector<?>> result = Maps.newLinkedHashMap();
-            Map<String,Field> sources = Maps.newLinkedHashMap();
-            for (Field f : clazz.getFields()) {
+            Map<String,Field> fieldSources = Maps.newLinkedHashMap();
+            Map<String,Method> methodSources = Maps.newLinkedHashMap();
+            for (Field f : Reflections.findPublicFieldsOrderedBySuper(clazz)) {
                 if (Effector.class.isAssignableFrom(f.getType())) {
                     if (!Modifier.isStatic(f.getModifiers())) {
                         // require it to be static or we have an instance
-                        LOG.warn("Discouraged/deprecated use of non-static effector "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
+                        LOG.warn("Discouraged/deprecated use of non-static effector field "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
                         if (optionalEntity==null) continue;
                     }
                     Effector<?> eff = (Effector<?>) f.get(optionalEntity);
                     Effector<?> overwritten = result.put(eff.getName(), eff);
-                    Field source = sources.put(eff.getName(), f);
-                    if (overwritten!=null && overwritten!=eff) {
+                    Field overwrittenFieldSource = fieldSources.put(eff.getName(), f);
+                    if (overwritten!=null && !overwritten.equals(eff)) {
                         LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
-                            eff.getName(), optionalEntity!=null ? optionalEntity : clazz, eff, f, overwritten, source});
+                                eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, f, overwritten, 
+                                overwrittenFieldSource});
                     }
                 }
             }
-            
+
+            for (Method m : Reflections.findPublicMethodsOrderedBySuper(clazz)) {
+                brooklyn.entity.annotation.Effector effectorAnnotation = m.getAnnotation(brooklyn.entity.annotation.Effector.class);
+                if (effectorAnnotation != null) {
+                    if (Modifier.isStatic(m.getModifiers())) {
+                        // require it to be static or we have an instance
+                        LOG.warn("Discouraged/deprecated use of static annotated effector method "+m+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
+                        if (optionalEntity==null) continue;
+                    }
+
+                    Effector<?> eff = MethodEffector.create(m);
+                    Effector<?> overwritten = result.put(eff.getName(), eff);
+                    Method overwrittenMethodSource = methodSources.put(eff.getName(), m);
+                    Field overwrittenFieldSource = fieldSources.remove(eff.getName());
+                    if (overwritten != null && !overwritten.equals(eff)) {
+                        LOG.warn("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                                eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, m, overwritten, 
+                                (overwrittenMethodSource != null ? overwrittenMethodSource : overwrittenFieldSource)});
+                    }
+                }
+            }
+
             return result;
         } catch (IllegalAccessException e) {
             throw Throwables.propagate(e);
         }
     }
     
+
     /**
      * Finds the sensors defined on the entity's class, statics and optionally any non-static (discouraged).
      */
@@ -247,7 +273,7 @@ public class EntityDynamicType {
         try {
             Map<String,Sensor<?>> result = Maps.newLinkedHashMap();
             Map<String,Field> sources = Maps.newLinkedHashMap();
-            for (Field f : clazz.getFields()) {
+            for (Field f : Reflections.findPublicFieldsOrderedBySuper((clazz))) {
                 if (Sensor.class.isAssignableFrom(f.getType())) {
                     if (!Modifier.isStatic(f.getModifiers())) {
                         // require it to be static or we have an instance
@@ -302,7 +328,7 @@ public class EntityDynamicType {
                 } else {
                     Field alternativeField = configKeyFields.get(k.getName());
                     // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
-                    Field definitiveField = alternativeField != null ? inferSubbestField(alternativeField, f) : f;
+                    Field definitiveField = alternativeField != null ? Reflections.inferSubbestField(alternativeField, f) : f;
                     boolean skip = false;
                     if (definitiveField != f) {
                         // If they refer to the _same_ instance, just keep the one we already have
@@ -326,16 +352,4 @@ public class EntityDynamicType {
             throw Exceptions.propagate(e);
         }
     }
-    
-    /**
-     * Gets the field that is in the sub-class; or null if one field does not come from a sub-class of the other field's class
-     */
-    private static Field inferSubbestField(Field f1, Field f2) {
-        Class<?> c1 = f1.getDeclaringClass();
-        Class<?> c2 = f2.getDeclaringClass();
-        boolean isSuper1 = c1.isAssignableFrom(c2);
-        boolean isSuper2 = c2.isAssignableFrom(c1);
-        return (isSuper1) ? (isSuper2 ? null : f2) : (isSuper2 ? f1 : null);
-    }
-    
 }

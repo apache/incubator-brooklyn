@@ -5,6 +5,8 @@ import java.util.Map;
 
 import brooklyn.entity.ParameterType;
 
+import com.google.common.base.Objects;
+
 /**
  * TODO javadoc
  */
@@ -44,19 +46,46 @@ public class BasicParameterType<T> implements ParameterType<T> {
 
     private static Object NONE = new Object();
     
+    @Override
     public String getName() { return name; }
 
+    @Override
     public Class<T> getParameterClass() { return type; }
     
+    @Override
     public String getParameterClassName() { return type.getCanonicalName(); }
 
+    @Override
     public String getDescription() { return description; }
 
+    @Override
     public T getDefaultValue() {
         return hasDefaultValue() ? defaultValue : null;
     }
 
     public boolean hasDefaultValue() {
         return defaultValue != NONE;
+    }
+    
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("name", name).add("description", description).add("type", getParameterClassName())
+                .add("defaultValue", defaultValue)
+                .toString();
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(name, description, type, defaultValue);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof ParameterType) &&
+                Objects.equal(name, ((ParameterType<?>)obj).getName()) &&
+                Objects.equal(description, ((ParameterType<?>)obj).getDescription()) &&
+                Objects.equal(type, ((ParameterType<?>)obj).getParameterClass()) &&
+                Objects.equal(defaultValue, ((ParameterType<?>)obj).getDefaultValue());
     }
 }

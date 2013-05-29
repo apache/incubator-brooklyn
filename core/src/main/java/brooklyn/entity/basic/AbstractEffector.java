@@ -44,22 +44,27 @@ public abstract class AbstractEffector<T> implements Effector<T> {
         //setMetaClass(DefaultGroovyMethods.getMetaClass(getClass()));
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public Class<T> getReturnType() {
         return returnType;
     }
 
+    @Override
     public String getReturnTypeName() {
         return returnType.getCanonicalName();
     }
 
+    @Override
     public List<ParameterType<?>> getParameters() {
         return parameters;
     }
 
+    @Override
     public String getDescription() {
         return description;
     }
@@ -84,12 +89,13 @@ public abstract class AbstractEffector<T> implements Effector<T> {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(description, name, parameters, returnType);
+        return Objects.hashCode(name, description, parameters, returnType);
     }
 
     @Override
     public boolean equals(Object obj) {
         return (obj instanceof Effector) &&
+                Objects.equal(name, ((Effector<?>)obj).getName()) &&
                 Objects.equal(description, ((Effector<?>)obj).getDescription()) &&
                 Objects.equal(parameters, ((Effector<?>)obj).getParameters()) &&
                 Objects.equal(returnType, ((Effector<?>)obj).getReturnType());
