@@ -1,6 +1,7 @@
 package brooklyn.entity;
 
 import java.io.Serializable;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
@@ -40,6 +41,12 @@ public interface EntityType extends Serializable {
      * Effectors available on this entity.
      */
     Set<Effector<?>> getEffectors();
+
+    /**
+     * @return the matching effector on this entity
+     * @throws NoSuchElementException If there is no exact match for this signature
+     */
+    Effector<?> getEffector(String name, Class<?>... parameterTypes);
 
     /**
      * The ConfigKey with the given name, or null if not found.
