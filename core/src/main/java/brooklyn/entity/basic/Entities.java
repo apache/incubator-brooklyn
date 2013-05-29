@@ -92,7 +92,7 @@ public class Entities {
             entitiesToCall = ImmutableList.of();
         }
 
-         List<Task<T>> tasks = Lists.newArrayList();
+        List<Task<T>> tasks = Lists.newArrayList();
 
         for (final Entity entity : entitiesToCall) {
             tasks.add(new BasicTask<T>(
