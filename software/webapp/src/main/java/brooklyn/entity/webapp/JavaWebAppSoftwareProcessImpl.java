@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Description;
-import brooklyn.entity.basic.NamedParameter;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaAppUtils;
 
@@ -98,10 +98,10 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
      * @param url  where to get the war, as a URL, either classpath://xxx or file:///home/xxx or http(s)...
      * @param targetName  where to tell the server to serve the WAR, see above
      */
-    @Description("Deploys the given artifact, from a source URL, to a given deployment filename/context")
+    @Effector(description="Deploys the given artifact, from a source URL, to a given deployment filename/context")
     public void deploy(
-            @NamedParameter("url") @Description("URL of WAR file") String url, 
-            @NamedParameter("targetName") @Description("context path where WAR should be deployed (/ for ROOT)") String targetName) {
+            @EffectorParam(name="url", description="URL of WAR file") String url, 
+            @EffectorParam(name="targetName", description="context path where WAR should be deployed (/ for ROOT)") String targetName) {
         try {
             checkNotNull(url, "url");
             checkNotNull(targetName, "targetName");
@@ -122,10 +122,11 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
         }
     }
 
-    /** For the DEPLOYED_WARS to be updated, the input must match the result of the call to deploy */ 
-    @Description("Undeploys the given context/artifact")
+    /** For the DEPLOYED_WARS to be updated, the input must match the result of the call to deploy */
+    @Override
+    @Effector(description="Undeploys the given context/artifact")
     public void undeploy(
-            @NamedParameter("targetName") String targetName) {
+            @EffectorParam(name="targetName") String targetName) {
         try {
             JavaWebAppDriver driver = getDriver();
             driver.undeploy(targetName);

@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Description;
-import brooklyn.entity.basic.NamedParameter;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -160,9 +160,9 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
         if (jmxHelper != null) jmxHelper.disconnect();
     }
 
-    @Description("Updates the OSGi Service's properties, adding (and overriding) the given key-value pairs")
+    @Effector(description="Updates the OSGi Service's properties, adding (and overriding) the given key-value pairs")
     public void updateServiceProperties(
-            @NamedParameter("serviceName") @Description("Name of the OSGi service") String serviceName, 
+            @EffectorParam(name="serviceName", description="Name of the OSGi service") String serviceName, 
             Map<String,String> additionalVals) {
         TabularData table = (TabularData) jmxHelper.operation(OSGI_COMPENDIUM, "getProperties", serviceName);
         
@@ -186,9 +186,9 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
         jmxHelper.operation(OSGI_COMPENDIUM, "update", serviceName, table);
     }
     
-    @Description("Updates the OSGi Service's properties, adding (and overriding) the given key-value pairs")
+    @Effector(description="Updates the OSGi Service's properties, adding (and overriding) the given key-value pairs")
     public void installFeature(
-            @NamedParameter("featureName") @Description("Name of the feature - see org.apache.karaf:type=features#installFeature()") final String featureName) throws Exception {
+            @EffectorParam(name="featureName", description="Name of the feature - see org.apache.karaf:type=features#installFeature()") final String featureName) throws Exception {
         
         LOG.info("Installing feature {} via JMX", featureName);
 
@@ -218,9 +218,9 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
     /**
      * throws URISyntaxException If bundle name is not a valid URI
      */
-    @Description("Deploys the given bundle, returning the bundle id - see osgi.core:type=framework#installBundle()")
+    @Effector(description="Deploys the given bundle, returning the bundle id - see osgi.core:type=framework#installBundle()")
     public long installBundle(
-            @NamedParameter("bundle") @Description("URI of bundle to be deployed") String bundle) throws URISyntaxException {
+            @EffectorParam(name="bundle", description="URI of bundle to be deployed") String bundle) throws URISyntaxException {
         
         // TODO Consider switching to use either:
         //  - org.apache.karaf:type=bundles#install(String), or 
@@ -245,9 +245,9 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
         }
     }
 
-    @Description("Undeploys the bundle with the given id")
+    @Effector(description="Undeploys the bundle with the given id")
     public void uninstallBundle(
-            @NamedParameter("bundleId") @Description("Id of the bundle") Long bundleId) {
+            @EffectorParam(name="bundleId", description="Id of the bundle") Long bundleId) {
         
         // TODO Consider switching to use either:
         //  - org.apache.karaf:type=bundles#install(String), or 

@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.Description;
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.proxy.AbstractControllerImpl;
@@ -162,7 +162,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         reconfigureService();
     }
 
-    @Description("Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")
+    @Effector(description="Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")
     public String getCurrentConfiguration() {
         return getConfigFile();
     }

@@ -3,8 +3,8 @@ package brooklyn.entity.proxy;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.Cluster;
@@ -80,9 +80,9 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
 
     public AttributeSensor getPortNumberSensor();
 
-    @Description("Forces reload of the configuration")
+    @Effector(description="Forces reload of the configuration")
     public void reload();
 
-    @Description("Updates the entities configuration, and then forces reload of that configuration")
+    @Effector(description="Updates the entities configuration, and then forces reload of that configuration")
     public void update();
 }
