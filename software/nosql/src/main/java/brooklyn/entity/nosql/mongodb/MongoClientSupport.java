@@ -37,20 +37,24 @@ public class MongoClientSupport implements Closeable {
 
     private static final BasicBSONObject EMPTY_RESPONSE = new BasicBSONObject();
 
-    public MongoClientSupport(ServerAddress standlone) {
+    public MongoClientSupport(ServerAddress standalone) {
         // We could also use a MongoClient to access an entire replica set. See MongoClient(List<ServerAddress>).
-        client = new MongoClient(standlone, connectionOptions);
+        client = new MongoClient(standalone, connectionOptions);
     }
 
     /**
      * Creates a {@link MongoClientSupport} instance in standalone mode.
      * Returns {@link com.google.common.base.Optional#absent} if the server's host and port are unknown.
      */
-    public static MongoClientSupport forServer(MongoDBServer standlone) throws UnknownHostException {
-        String hostname = standlone.getAttribute(MongoDBServer.HOSTNAME);
-        Integer port = standlone.getAttribute(MongoDBServer.PORT);
+    public static MongoClientSupport forServer(MongoDBServer standalone) throws UnknownHostException {
+        String hostname = standalone.getAttribute(MongoDBServer.HOSTNAME);
+        Integer port = standalone.getAttribute(MongoDBServer.PORT);
         ServerAddress address = new ServerAddress(hostname, port);
         return new MongoClientSupport(address);
+    }
+
+    private ServerAddress getServerAddress() {
+        return client.getServerAddressList().get(0);
     }
 
     private Optional<CommandResult> runDBCommand(String database, String command) {
@@ -63,13 +67,12 @@ public class MongoClientSupport implements Closeable {
         try {
             status = db.command(command);
         } catch (MongoException e) {
-            LOG.warn("Command {} on {} failed: {}",
-                    new Object[]{command, client.getServerAddressList().get(0), e});
+            LOG.warn("Command "+command+" on "+getServerAddress()+" failed", e);
             return Optional.absent();
         }
         if (!status.ok()) {
             LOG.debug("Unexpected result of {} on {}: {}",
-                    new Object[]{command, client.getServerAddressList().get(0), status.getErrorMessage()});
+                    new Object[]{command, getServerAddress(), status.getErrorMessage()});
             return Optional.absent();
         }
         return Optional.of(status);
@@ -112,7 +115,7 @@ public class MongoClientSupport implements Closeable {
         try {
             return client.getDB("local").getCollection("system.replset").findOne();
         } catch (MongoException e) {
-            LOG.warn("Failed to get replica set config on {}: {}", client, e);
+            LOG.error("Failed to get replica set config on "+client, e);
             return null;
         }
     }
@@ -153,7 +156,8 @@ public class MongoClientSupport implements Closeable {
         // - run replSetReconfig with the new configuration.
         BSONObject existingConfig = getReplicaSetConfig();
         if (existingConfig == null) {
-            LOG.warn("Couldn't load existing config for replica set.");
+            LOG.warn("Couldn't load existing config for replica set from {}. Server {} not added.",
+                    getServerAddress(), secondary);
             return false;
         }
 
@@ -172,7 +176,8 @@ public class MongoClientSupport implements Closeable {
     public boolean removeMemberFromReplicaSet(MongoDBServer server) {
         BSONObject existingConfig = getReplicaSetConfig();
         if (existingConfig == null) {
-            LOG.warn("Couldn't load config for replica set.");
+            LOG.warn("Couldn't load existing config for replica set from {}. Server {} not removed.",
+                    getServerAddress(), server);
             return false;
         }
         BasicBSONObject newConfig = ReplicaSetConfig.fromExistingConfig(existingConfig)

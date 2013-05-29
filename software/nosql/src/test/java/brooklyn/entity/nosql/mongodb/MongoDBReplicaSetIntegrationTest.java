@@ -1,9 +1,11 @@
 package brooklyn.entity.nosql.mongodb;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
@@ -16,9 +18,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.Collection;
-import java.util.concurrent.Callable;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 public class MongoDBReplicaSetIntegrationTest {
@@ -30,14 +32,14 @@ public class MongoDBReplicaSetIntegrationTest {
     private static final TimeDuration TIMEOUT = new TimeDuration(0, 0, 180, 0);
 
     @BeforeMethod(alwaysRun=true)
-    public void setUp() throws Exception {
+    public void setUp() {
         LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
         localhostMachineProvisioningLocation = ImmutableList.of(location);
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 
     @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
+    public void tearDown() {
         if (app != null) Entities.destroyAll(app);
     }
 
@@ -55,13 +57,12 @@ public class MongoDBReplicaSetIntegrationTest {
                         .configure("port", "27017+")));
         app.start(localhostMachineProvisioningLocation);
 
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Callable<Boolean>() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Runnable() {
             @Override
-            public Boolean call() {
+            public void run() {
                 assertEquals(replicaSet.getCurrentSize(), size);
                 assertNotNull(replicaSet.getPrimary());
                 assertEquals(replicaSet.getSecondaries().size(), size-1);
-                return true;
             }
         });
         return replicaSet;
@@ -70,53 +71,50 @@ public class MongoDBReplicaSetIntegrationTest {
     @Test(groups = "Integration")
     public void testCanStartAndStopAReplicaSet() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "can-start-and-stop");
-        for (MongoDBServer s : replicaSet.getSecondaries()) {
-            System.err.println(s);
-        }
+        replicaSet.stop();
+        assertFalse(replicaSet.getAttribute(Startable.SERVICE_UP));
     }
 
     @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStopAReplicaSet" })
-    public void testWriteToMasterAndReadFromSecondary() throws Exception {
+    public void testWriteToMasterAndReadFromSecondary() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "master-write-secondary-read");
 
         // Test we can read a document written to the primary from all secondaries
         final String documentId = MongoDBTestHelper.insert(replicaSet.getPrimary(), "meaning-of-life", 42);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Callable<Boolean>() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Runnable() {
             @Override
-            public Boolean call() throws Exception {
+            public void run() {
                 assertEquals(replicaSet.getCurrentSize().intValue(), 3);
                 for (MongoDBServer secondary : replicaSet.getSecondaries()) {
                     DBObject docOut = MongoDBTestHelper.getById(secondary, documentId);
                     assertEquals(docOut.get("meaning-of-life"), 42);
                 }
-                return true;
             }
         });
     }
 
     @Test(groups = "Integration", dependsOnMethods = { "testCanStartAndStopAReplicaSet" })
-    public void testCanResizeAndReadFromNewInstances() throws Exception {
+    public void testCanResizeAndReadFromNewInstances() {
         final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "resize-and-read-from-secondaries");
 
         // Test we can a document written to the primary from all secondaries
         final String documentId = MongoDBTestHelper.insert(replicaSet.getPrimary(), "meaning-of-life", 42);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Callable<Boolean>() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Runnable() {
             @Override
-            public Boolean call() throws Exception {
+            public void run() {
                 assertEquals(replicaSet.getCurrentSize().intValue(), 3);
                 for (MongoDBServer secondary : replicaSet.getSecondaries()) {
                     DBObject docOut = MongoDBTestHelper.getById(secondary, documentId);
                     assertEquals(docOut.get("meaning-of-life"), 42);
                 }
-                return true;
             }
         });
 
         // Resize and confirm new members get data
         replicaSet.resize(5);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Callable<Boolean>() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Runnable() {
             @Override
-            public Boolean call() throws Exception {
+            public void run() {
                 assertEquals(replicaSet.getCurrentSize().intValue(), 5);
                 Collection<MongoDBServer> secondaries = replicaSet.getSecondaries();
                 assertEquals(secondaries.size(), 4);
@@ -124,7 +122,6 @@ public class MongoDBReplicaSetIntegrationTest {
                     DBObject docOut = MongoDBTestHelper.getById(secondary, documentId);
                     assertEquals(docOut.get("meaning-of-life"), 42);
                 }
-                return true;
             }
         });
 

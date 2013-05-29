@@ -107,7 +107,7 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
     @Override
     public void stop() {
         // We could also use SIGTERM (15)
-        new ScriptHelper(this, "Sent SIGINT to MongoDB server")
+        new ScriptHelper(this, "Send SIGINT to MongoDB server")
                 .body.append("kill -2 $(cat " + getPidFile() + ")")
                 .execute();
     }

@@ -62,10 +62,16 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         super(properties, parent);
     }
 
-    /** Manages member addition and removal. */
+    /**
+     * Manages member addition and removal.
+     *
+     * It's important that this is a single thread: the concurrent addition and removal
+     * of members from the set would almost certainly have unintended side effects,
+     * like reconfigurations using outdated ReplicaSetConfig instances.
+     */
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-    /** true iff. input is a non-null MongoDBServer with attribute REPLICA_SET_MEMBER_STATUS PRIMARY. */
+    /** true iff input is a non-null MongoDBServer with attribute REPLICA_SET_MEMBER_STATUS PRIMARY. */
     static final Predicate<Entity> IS_PRIMARY = new Predicate<Entity>() {
         // getPrimary relies on instanceof check
         @Override public boolean apply(@Nullable Entity input) {
@@ -177,8 +183,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             setAttribute(PRIMARY, server);
             setAttribute(Startable.SERVICE_UP, true);
         } else {
-            if (LOG.isInfoEnabled())
-                LOG.info("Scheduling addition of member to {}: {}", getReplicaSetName(), server);
+            if (LOG.isDebugEnabled())
+                LOG.debug("Scheduling addition of member to {}: {}", getReplicaSetName(), server);
             executor.submit(addSecondaryWhenPrimaryIsNonNull(server));
         }
     }
@@ -199,7 +205,14 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 MongoDBServer primary = getPrimary();
                 if (isAvailable && primary != null) {
                     primary.getClient().addMemberToReplicaSet(secondary, nextMemberId.incrementAndGet());
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("{} added to replica set {}", secondary, getReplicaSetName());
+                    }
                 } else {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Rescheduling addition of member {} to replica set {}: service_up={}, primary={}",
+                            new Object[]{secondary, getReplicaSetName(), isAvailable, primary});
+                    }
                     // Could limit number of retries
                     executor.schedule(this, 3, TimeUnit.SECONDS);
                 }
@@ -221,6 +234,9 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 MongoDBServer primary = getPrimary();
                 if (primary != null) {
                     primary.getClient().removeMemberFromReplicaSet(member);
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("Removed {} from replica set {}", member, getReplicaSetName());
+                    }
                 } else if (LOG.isDebugEnabled()) {
                     LOG.debug("Couldn't find primary to remove member from replica set {}: {}", getReplicaSetName(), member);
                 }
@@ -230,7 +246,6 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     @Override
     public void start(Collection<? extends Location> locations) {
-
         // Promises that all the cluster's members have SERVICE_UP true on returning.
         super.start(locations);
         policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", getReplicaSetName() + " membership tracker")) {
@@ -254,7 +269,9 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         // Do we want to remove the members from the replica set?
         //  - if the set is being stopped forever it's irrelevant
         //  - if the set might be restarted I think it just inconveniences us
-        executor.shutdown();
+        // Terminate the executor immediately.
+        // Note that after this the executor will not run if the set is restarted.
+        executor.shutdownNow();
         super.stop();
         setAttribute(Startable.SERVICE_UP, false);
     }
