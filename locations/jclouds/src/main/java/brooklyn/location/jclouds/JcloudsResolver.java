@@ -179,7 +179,7 @@ public class JcloudsResolver implements LocationResolver {
         
         Map allProperties = getAllProperties(registry, properties, locationFlags);
         // filters out all the jclouds properties from allProperties available
-        Map jcloudsProperties = JcloudsPropertiesFromEnv.getJcloudsPropertiesFromEnv(providerOrApi, locationName, allProperties);
+        Map jcloudsProperties = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties(providerOrApi, locationName, allProperties);
         if (isProvider) {
             // providers from ServiceLoader take a location (endpoint already configured)
             return new JcloudsLocationFactory(jcloudsProperties).newLocation(details.parameter);

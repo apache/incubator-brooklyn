@@ -194,7 +194,8 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         Properties properties = new Properties();
         properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true));
         properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true));
-
+        properties.setProperty("jclouds.ssh.max-retries", conf.getStringKey("jclouds.ssh.max-retries") != null ? 
+                conf.getStringKey("jclouds.ssh.max-retries").toString() : "50");
         // Enable aws-ec2 lazy image fetching, if given a specific imageId; otherwise customize for specific owners; or all as a last resort
         // See https://issues.apache.org/jira/browse/WHIRR-416
         if ("aws-ec2".equals(provider)) {
