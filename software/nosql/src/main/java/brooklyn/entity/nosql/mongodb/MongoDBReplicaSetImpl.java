@@ -221,9 +221,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     }
 
     private void serverRemoved(MongoDBServer server) {
-        if (LOG.isInfoEnabled())
-            LOG.info("Informing {} primary {} of removal of member: {}",
-                    new Object[]{getReplicaSetName(), getPrimary().getId(), server});
+        if (LOG.isDebugEnabled())
+            LOG.debug("Scheduling removal of member from {}: {}", getReplicaSetName(), server);
         executor.submit(removeMember(server));
     }
 
