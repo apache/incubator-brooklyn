@@ -21,6 +21,7 @@ import java.util.Collection;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 
 public class MongoDBReplicaSetIntegrationTest {
@@ -140,4 +141,46 @@ public class MongoDBReplicaSetIntegrationTest {
         });
     }
 
+    /**
+     * Test replacing the primary succeeds. More interesting than replacing a secondary
+     * because the removal of a primary must happen _through_ the primary. The flow is:
+     *  - Brooklyn removes the server from the set and stops it
+     *  - The remaining members of the set elect a new primary
+     *  - We remove the original primary from the new primary.
+     */
+    @Test(groups = "Integration"/*, dependsOnMethods = { "testCanStartAndStopAReplicaSet" }*/)
+    public void testReplacePrimary() {
+        final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "replace-primary");
+        final MongoDBServer replaced = replicaSet.getPrimary();
+        replicaSet.replaceMember(replaced.getId());
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(replicaSet.getCurrentSize().intValue(), 3);
+                for (Entity member : replicaSet.getMembers()) {
+                    assertNotEquals(member.getId(), replaced.getId());
+                }
+                assertNotNull(replicaSet.getPrimary());
+            }
+        });
+    }
+
+    @Test(groups = "Integration"/*, dependsOnMethods = { "testCanStartAndStopAReplicaSet" }*/)
+    public void testRemovePrimary() {
+        final MongoDBReplicaSet replicaSet = makeAndStartReplicaSet(3, "remove-primary");
+        final MongoDBServer removed = replicaSet.getPrimary();
+
+        replicaSet.removeMember(removed);
+        removed.stop();
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(replicaSet.getCurrentSize().intValue(), 2);
+                for (Entity member : replicaSet.getMembers()) {
+                    assertNotEquals(member.getId(), removed.getId());
+                }
+                assertNotNull(replicaSet.getPrimary());
+            }
+        });
+    }
 }

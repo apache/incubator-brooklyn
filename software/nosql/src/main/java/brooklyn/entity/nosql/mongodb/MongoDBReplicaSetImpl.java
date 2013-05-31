@@ -230,14 +230,22 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         return new Runnable() {
             @Override
             public void run() {
+                // Wait until the server has been stopped before reconfiguring the set. Quoth the MongoDB doc:
+                // for best results always shut down the mongod instance before removing it from a replica set.
+                Boolean isAvailable = member.getAttribute(MongoDBServer.SERVICE_UP);
+                // Wait for the replica set to elect a new primary if the set is reconfiguring itself.
                 MongoDBServer primary = getPrimary();
-                if (primary != null) {
+                if (primary != null && !isAvailable) {
                     primary.getClient().removeMemberFromReplicaSet(member);
                     if (LOG.isInfoEnabled()) {
                         LOG.info("Removed {} from replica set {}", member, getReplicaSetName());
                     }
-                } else if (LOG.isDebugEnabled()) {
-                    LOG.debug("Couldn't find primary to remove member from replica set {}: {}", getReplicaSetName(), member);
+                } else {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Rescheduling removal of member {} from replica set {}: service_up={}, primary={}",
+                            new Object[]{member, getReplicaSetName(), isAvailable, primary});
+                    }
+                    executor.schedule(this, 3, TimeUnit.SECONDS);
                 }
             }
         };
