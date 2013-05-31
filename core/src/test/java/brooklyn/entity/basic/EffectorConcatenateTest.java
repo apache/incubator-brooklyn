@@ -15,8 +15,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
@@ -37,9 +38,9 @@ public class EffectorConcatenateTest {
     
     public static class MyEntityImpl extends AbstractEntity {
 
-        public static Effector<String> CONCATENATE = new MethodEffector<String>(MyEntityImpl.class, "concatenate");
-        public static Effector<Void> WAIT_A_BIT = new MethodEffector<Void>(MyEntityImpl.class, "waitabit");
-        public static Effector<Void> SPAWN_CHILD = new MethodEffector<Void>(MyEntityImpl.class, "spawnchild");
+        public static MethodEffector<String> CONCATENATE = new MethodEffector<String>(MyEntityImpl.class, "concatenate");
+        public static MethodEffector<Void> WAIT_A_BIT = new MethodEffector<Void>(MyEntityImpl.class, "waitabit");
+        public static MethodEffector<Void> SPAWN_CHILD = new MethodEffector<Void>(MyEntityImpl.class, "spawnchild");
 
         public MyEntityImpl() {
             super();
@@ -57,13 +58,13 @@ public class EffectorConcatenateTest {
         /** latch is await'ed on by the effector when it is in the "waiting" point */
         CountDownLatch continueFromWaitingLatch = new CountDownLatch(1);
         
-        @Description("sample effector concatenating strings")
-        public String concatenate(@NamedParameter("first") @Description("first argument") String first,
-                @NamedParameter("second") @Description("2nd arg") String second) throws Exception {
+        @Effector(description="sample effector concatenating strings")
+        public String concatenate(@EffectorParam(name="first", description="first argument") String first,
+                @EffectorParam(name="second", description="2nd arg") String second) throws Exception {
             return first+second;
         }
         
-        @Description("sample effector doing some waiting")
+        @Effector(description="sample effector doing some waiting")
         public void waitabit() throws Exception {
             waitingTask.set(Tasks.current());
             
@@ -79,7 +80,7 @@ public class EffectorConcatenateTest {
                     }});
         }
         
-        @Description("sample effector that spawns a child task that waits a bit")
+        @Effector(description="sample effector that spawns a child task that waits a bit")
         public void spawnchild() throws Exception {
             // spawn a child, then wait
             BasicExecutionContext.getCurrentExecutionContext().submit(

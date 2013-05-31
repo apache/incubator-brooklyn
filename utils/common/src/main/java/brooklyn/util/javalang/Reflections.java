@@ -11,17 +11,27 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.util.collections.MutableList;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 /**
  * Reflection utilities ("borrowed" from cloudsoft monterey).
@@ -482,5 +492,102 @@ public class Reflections {
             }
         }
         throw toThrowIfFails;
+    }
+    
+    public static List<Field> findPublicFieldsOrderedBySuper(Class<?> clazz) {
+        checkNotNull(clazz, "clazz");
+        MutableList.Builder<Field> result = MutableList.<Field>builder();
+        Stack<Class<?>> tovisit = new Stack<Class<?>>();
+        Set<Class<?>> visited = Sets.newLinkedHashSet();
+        tovisit.push(clazz);
+        
+        while (!tovisit.isEmpty()) {
+            Class<?> nextclazz = tovisit.pop();
+            if (!visited.add(nextclazz)) {
+                continue; // already visited
+            }
+            if (nextclazz.getSuperclass() != null) tovisit.add(nextclazz.getSuperclass());
+            tovisit.addAll(Arrays.asList(nextclazz.getInterfaces()));
+            
+            result.addAll(Iterables.filter(Arrays.asList(nextclazz.getDeclaredFields()), new Predicate<Field>() {
+                @Override public boolean apply(Field input) {
+                    return Modifier.isPublic(input.getModifiers());
+                }}));
+            
+        }
+        
+        List<Field> resultList = result.build();
+        Collections.sort(resultList, new Comparator<Field>() {
+            @Override public int compare(Field f1, Field f2) {
+                Field fsubbest = inferSubbestField(f1, f2);
+                return (fsubbest == null) ? 0 : (fsubbest == f1 ? 1 : -1);
+            }});
+        
+        return resultList;
+    }
+    
+    // TODO I've seen strange behaviour where class.getMethods() does not include methods from interfaces.
+    // Also the ordering guarantees here are useful...
+    public static List<Method> findPublicMethodsOrderedBySuper(Class<?> clazz) {
+        checkNotNull(clazz, "clazz");
+        MutableList.Builder<Method> result = MutableList.<Method>builder();
+        Stack<Class<?>> tovisit = new Stack<Class<?>>();
+        Set<Class<?>> visited = Sets.newLinkedHashSet();
+        tovisit.push(clazz);
+        
+        while (!tovisit.isEmpty()) {
+            Class<?> nextclazz = tovisit.pop();
+            if (!visited.add(nextclazz)) {
+                continue; // already visited
+            }
+            if (nextclazz.getSuperclass() != null) tovisit.add(nextclazz.getSuperclass());
+            tovisit.addAll(Arrays.asList(nextclazz.getInterfaces()));
+            
+            result.addAll(Iterables.filter(Arrays.asList(nextclazz.getDeclaredMethods()), new Predicate<Method>() {
+                @Override public boolean apply(Method input) {
+                    return Modifier.isPublic(input.getModifiers());
+                }}));
+            
+        }
+        
+        List<Method> resultList = result.build();
+        Collections.sort(resultList, new Comparator<Method>() {
+            @Override public int compare(Method m1, Method m2) {
+                Method msubbest = inferSubbestMethod(m1, m2);
+                return (msubbest == null) ? 0 : (msubbest == m1 ? 1 : -1);
+            }});
+        
+        return resultList;
+    }
+    
+    /**
+     * Gets the field that is in the sub-class; or null if one field does not come from a sub-class of the other field's class
+     */
+    public static Field inferSubbestField(Field f1, Field f2) {
+        Class<?> c1 = f1.getDeclaringClass();
+        Class<?> c2 = f2.getDeclaringClass();
+        boolean isSuper1 = c1.isAssignableFrom(c2);
+        boolean isSuper2 = c2.isAssignableFrom(c1);
+        return (isSuper1) ? (isSuper2 ? null : f2) : (isSuper2 ? f1 : null);
+    }
+    
+    /**
+     * Gets the method that is in the sub-class; or null if one method does not come from a sub-class of the other method's class
+     */
+    public static Method inferSubbestMethod(Method m1, Method m2) {
+        Class<?> c1 = m1.getDeclaringClass();
+        Class<?> c2 = m2.getDeclaringClass();
+        boolean isSuper1 = c1.isAssignableFrom(c2);
+        boolean isSuper2 = c2.isAssignableFrom(c1);
+        return (isSuper1) ? (isSuper2 ? null : m2) : (isSuper2 ? m1 : null);
+    }
+    
+    /**
+     * Gets the class that is in the sub-class; or null if neither is a sub-class of the other.
+     */
+    public static Class<?> inferSubbest(Class<?> c1, Class<?> c2) {
+        boolean isSuper1 = c1.isAssignableFrom(c2);
+        boolean isSuper2 = c2.isAssignableFrom(c1);
+        return (isSuper1) ? (isSuper2 ? null : c2) : (isSuper2 ? c1 : null);
     }
 }

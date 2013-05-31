@@ -2,10 +2,9 @@ package brooklyn.entity.proxy.nginx;
 
 import java.util.Collection;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.AbstractGroup;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
@@ -24,7 +23,7 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(UrlMappingImpl.class)
 public interface UrlMapping extends AbstractGroup {
 
-    public static final Effector<Void> DISCARD = new MethodEffector<Void>(UrlMapping.class, "discard");
+    public static final MethodEffector<Void> DISCARD = new MethodEffector<Void>(UrlMapping.class, "discard");
 
     @SetFromFlag("label")
     public static final BasicConfigKey<String> LABEL =
@@ -74,6 +73,6 @@ public interface UrlMapping extends AbstractGroup {
 
     public void recompute();
     
-    @Description("Unmanages the url-mapping, so it is discarded and no longer applies")
+    @Effector(description="Unmanages the url-mapping, so it is discarded and no longer applies")
     public void discard();
 }

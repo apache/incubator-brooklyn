@@ -8,23 +8,19 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import com.google.common.collect.ImmutableMap;
-
+import brooklyn.entity.annotation.EffectorParam
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.BasicParameterType
-import brooklyn.entity.basic.DefaultValue
-import brooklyn.entity.basic.Description
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.ExplicitEffector
 import brooklyn.entity.basic.MethodEffector
-import brooklyn.entity.basic.NamedParameter
 import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.proxying.ImplementedBy
 import brooklyn.entity.trait.Startable
 import brooklyn.management.ManagementContext
 import brooklyn.management.Task
-import brooklyn.management.internal.EffectorUtils;
+import brooklyn.management.internal.EffectorUtils
 import brooklyn.test.entity.TestApplication
 
 /**
@@ -124,10 +120,10 @@ public interface CanSayHi {
 	//slightly longer-winded pojo also supported
 	static Effector<String> SAY_HI_1_ALT = new MethodEffector<String>(CanSayHi.class, "sayHi1");
 
-	@Description("says hello")
+	@brooklyn.entity.annotation.Effector(description="says hello")
 	public String sayHi1(
-		@NamedParameter("name") String name,
-		@NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
+		@EffectorParam(name="name") String name,
+		@EffectorParam(name="greeting", defaultValue="hello", description="what to say") String greeting);
 
 	//finally there is a way to provide a class/closure if needed or preferred for some odd reason
 	static Effector<String> SAY_HI_2 =

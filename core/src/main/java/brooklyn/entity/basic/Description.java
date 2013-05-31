@@ -9,7 +9,13 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER, ElementType.METHOD})
-/** provides runtime access to the description of an effector or paramter, esp for effectors */
+/** 
+ * Provides runtime access to the description of an effector or paramter, esp for effectors.
+ * 
+ * @deprecated since 0.6; use {@link brooklyn.entity.annotation.Effector} annotation instead, with its description member; or use
+ *             {@link brooklyn.entity.annotation.EffectorParam} annotation for effector parameters.
+ */
+@Deprecated
 public @interface Description {
     String value();
 }

@@ -6,15 +6,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.collections.Lists;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -64,16 +63,16 @@ public interface TestEntity extends Entity, Startable, EntityLocal, EntityIntern
     
     public static final BasicAttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
     
-    public static final Effector<Void> MY_EFFECTOR = new MethodEffector<Void>(TestEntity.class, "myEffector");
-    public static final Effector<Object> IDENTITY_EFFECTOR = new MethodEffector<Object>(TestEntity.class, "identityEffector");
+    public static final MethodEffector<Void> MY_EFFECTOR = new MethodEffector<Void>(TestEntity.class, "myEffector");
+    public static final MethodEffector<Object> IDENTITY_EFFECTOR = new MethodEffector<Object>(TestEntity.class, "identityEffector");
     
     public boolean isLegacyConstruction();
     
-    @Description("an example of a no-arg effector")
+    @Effector(description="an example of a no-arg effector")
     public void myEffector();
     
-    @Description("returns the arg passed in")
-    public Object identityEffector(@NamedParameter("arg") @Description("val to return") Object arg);
+    @Effector(description="returns the arg passed in")
+    public Object identityEffector(@EffectorParam(name="arg", description="val to return") Object arg);
     
     public AtomicInteger getCounter();
     

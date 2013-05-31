@@ -22,4 +22,9 @@ public interface ParameterType<T> extends Serializable {
     public String getParameterClassName();
 
     public String getDescription();
+
+    /**
+     * @return The default value for this parameter, if not supplied during an effector call.
+     */
+    public T getDefaultValue();
 }

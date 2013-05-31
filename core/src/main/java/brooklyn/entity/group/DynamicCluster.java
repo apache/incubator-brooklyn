@@ -6,16 +6,15 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
@@ -32,7 +31,7 @@ import com.google.common.base.Function;
 @ImplementedBy(DynamicClusterImpl.class)
 public interface DynamicCluster extends AbstractGroup, Cluster {
 
-    public static final Effector<String> REPLACE_MEMBER = new MethodEffector<String>(DynamicCluster.class, "replaceMember");
+    public static final MethodEffector<String> REPLACE_MEMBER = new MethodEffector<String>(DynamicCluster.class, "replaceMember");
 
     @SetFromFlag("quarantineFailedEntities")
     public static final ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = new BasicConfigKey<Boolean>(
@@ -61,9 +60,9 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
      * @param memberId
      * @throws NoSuchElementException If entity cannot be resolved, or it is not a member 
      */
-    @Description("Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. "+
+    @Effector(description="Replaces the entity with the given ID, if it is a member; first adds a new member, then removes this one. "+
             "Returns id of the new entity; or throws exception if couldn't be replaced.")
-    public String replaceMember(@NamedParameter("memberId") @Description("The entity id of a member to be replaced") String memberId);
+    public String replaceMember(@EffectorParam(name="memberId", description="The entity id of a member to be replaced") String memberId);
     
     public void setRemovalStrategy(Function<Collection<Entity>, Entity> val);
     

@@ -6,13 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -47,10 +46,11 @@ public class RestMockSimpleEntity extends SoftwareProcessImpl {
     public static final AttributeSensor<String> SAMPLE_SENSOR = new BasicAttributeSensor<String>(
             String.class, "brooklyn.rest.mock.sample.sensor", "Mock sample sensor");
 
-    public static final Effector<String> SAMPLE_EFFECTOR = new MethodEffector<String>(RestMockSimpleEntity.class, "sampleEffector");
+    public static final MethodEffector<String> SAMPLE_EFFECTOR = new MethodEffector<String>(RestMockSimpleEntity.class, "sampleEffector");
     
-    public String sampleEffector(@NamedParameter("param1") @Description("param one") String param1, 
-            @NamedParameter("param2") Integer param2) {
+    @Effector
+    public String sampleEffector(@EffectorParam(name="param1", description="param one") String param1, 
+            @EffectorParam(name="param2") Integer param2) {
         log.info("Invoked sampleEffector("+param1+","+param2+")");
         String result = ""+param1+param2;
         setAttribute(SAMPLE_SENSOR, result);

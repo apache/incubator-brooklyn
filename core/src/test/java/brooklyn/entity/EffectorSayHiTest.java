@@ -14,10 +14,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.DefaultValue;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.MethodEffector;
@@ -123,15 +122,15 @@ public class EffectorSayHiTest {
     	static MethodEffector<String> SAY_HI_1 = new MethodEffector<String>(CanSayHi.class, "sayHi1");
         static MethodEffector<String> DELEGATE_SAY_HI_1 = new MethodEffector<String>(CanSayHi.class, "delegateSayHi1");
     
-    	@Description("says hello")
+    	@brooklyn.entity.annotation.Effector(description="says hello")
     	public String sayHi1(
-    		@NamedParameter("name") String name,
-    		@NamedParameter("greeting") @DefaultValue("hello") @Description("what to say") String greeting);
+    		@EffectorParam(name="name") String name,
+    		@EffectorParam(name="greeting", defaultValue="hello", description="what to say") String greeting);
     	
-        @Description("delegate says hello")
+    	@brooklyn.entity.annotation.Effector(description="delegate says hello")
         public String delegateSayHi1(
-            @NamedParameter("name") String name,
-            @NamedParameter("greeting") String greeting);
+            @EffectorParam(name="name") String name,
+            @EffectorParam(name="greeting") String greeting);
     }
 
     @ImplementedBy(MyEntityImpl.class)

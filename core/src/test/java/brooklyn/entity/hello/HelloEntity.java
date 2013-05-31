@@ -1,11 +1,10 @@
 package brooklyn.entity.hello;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractGroup;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -29,8 +28,8 @@ public interface HelloEntity extends AbstractGroup {
     public static Sensor<Void> ITS_MY_BIRTHDAY = new BasicSensor<Void>(Void.TYPE, "my.birthday");
     
     /**  */
-    public static Effector<Void> SET_AGE = new MethodEffector<Void>(HelloEntity.class, "setAge");
+    public static MethodEffector<Void> SET_AGE = new MethodEffector<Void>(HelloEntity.class, "setAge");
     
-    @Description("allows setting the age")
-    public void setAge(@NamedParameter("age") Integer age);
+    @Effector(description="allows setting the age")
+    public void setAge(@EffectorParam(name="age") Integer age);
 }
