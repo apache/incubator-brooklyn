@@ -24,8 +24,9 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
     public TestApplicationImpl() {
         super();
     }
-    public TestApplicationImpl(Map properties) {
-        super(properties);
+
+    public TestApplicationImpl(Map<?,?> flags) {
+        super(flags);
     }
 
     @Override

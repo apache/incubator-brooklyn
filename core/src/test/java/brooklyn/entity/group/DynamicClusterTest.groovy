@@ -352,7 +352,7 @@ class DynamicClusterTest {
         cluster.resize(1)
         cluster.resize(2)
         assertEquals(cluster.currentSize, 2)
-        assertEquals(cluster.children as List, creationOrder)
+        assertEquals(cluster.children as List, creationOrder, "actual="+cluster.getChildren())
         
         // Now stop one
         cluster.resize(1)

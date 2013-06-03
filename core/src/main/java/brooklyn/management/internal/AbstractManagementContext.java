@@ -29,6 +29,10 @@ import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
+import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.internal.storage.DataGrid;
+import brooklyn.internal.storage.impl.BrooklynStorageImpl;
+import brooklyn.internal.storage.impl.PseudoDatagrid;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
@@ -64,6 +68,10 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     private final EntityDriverManager entityDriverManager;
     
     private final DownloadResolverManager downloadsManager;
+
+    private final DataGrid datagrid = new PseudoDatagrid();
+
+    private final BrooklynStorage storage = new BrooklynStorageImpl(datagrid);
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
        this.configMap = brooklynProperties;
@@ -101,6 +109,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     public boolean isRunning() {
         return running;
+    }
+
+    @Override
+    public BrooklynStorage getStorage() {
+        return storage;
     }
     
     @Override

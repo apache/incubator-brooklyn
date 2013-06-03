@@ -5,8 +5,6 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Objects;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.ApplicationBuilder;
@@ -24,13 +22,15 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.javalang.Boxing;
 
+import com.google.common.base.Objects;
+
 /** tests that a group's membership gets updated using subscriptions */
 public class GroupPickUpEntitiesTest {
 
     private TestApplication app;
     private BasicGroup group;
 
-    @BeforeTest
+    @BeforeTest(alwaysRun=true)
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class));
@@ -38,9 +38,9 @@ public class GroupPickUpEntitiesTest {
         group.addPolicy(new FindUpServicesWithNameBob());
     }
 
-    @AfterTest
+    @AfterTest(alwaysRun=true)
     public void teardown() {
-        Entities.destroy(app);
+        if (app != null) Entities.destroyAll(app);
     }
     
     @Test

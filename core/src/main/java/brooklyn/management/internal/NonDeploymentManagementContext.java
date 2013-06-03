@@ -22,6 +22,7 @@ import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindManager;
+import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.LocationRegistry;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ExecutionContext;
@@ -144,6 +145,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         return initialManagementContext.getConfig();
     }
 
+    @Override
+    public BrooklynStorage getStorage() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getStorage();
+    }
+    
     @Override
     public RebindManager getRebindManager() {
         // There was a race where EffectorUtils on invoking an effector calls:

@@ -1,6 +1,7 @@
 package brooklyn.entity.basic;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -19,8 +20,8 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.DeferredSupplier;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Maps;
 
 @SuppressWarnings("deprecation")
 public class EntityConfigMap implements ConfigMap {
@@ -32,25 +33,17 @@ public class EntityConfigMap implements ConfigMap {
 
     private final ConfigMapViewWithStringKeys mapViewWithStringKeys = new ConfigMapViewWithStringKeys(this);
 
-    /*
-     * TODO An alternative implementation approach would be to have:
-     *   setParent(Entity o, Map<ConfigKey,Object> inheritedConfig=[:])
-     * The idea is that the parent could in theory decide explicitly what in its config
-     * would be shared.
-     * I (Aled) am undecided as to whether that would be better...
-     * 
-     * (Alex) i lean toward the config key getting to make the decision
-     */
     /**
      * Map of configuration information that is defined at start-up time for the entity. These
      * configuration parameters are shared and made accessible to the "children" of this
      * entity.
      */
-    private final Map<ConfigKey<?>,Object> ownConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
+    private final Map<ConfigKey<?>,Object> ownConfig;
     private final Map<ConfigKey<?>,Object> inheritedConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
 
-    public EntityConfigMap(AbstractEntity entity) {
-        this.entity = Preconditions.checkNotNull(entity, "entity must be specified");
+    public EntityConfigMap(AbstractEntity entity, Map<ConfigKey<?>, Object> storage) {
+        this.entity = checkNotNull(entity, "entity must be specified");
+        this.ownConfig = checkNotNull(storage, "storage map must be specified");
     }
 
     public <T> T getConfig(ConfigKey<T> key) {
@@ -140,7 +133,13 @@ public class EntityConfigMap implements ConfigMap {
         return oldVal;
     }
     
+    public void setLocalConfig(Map<ConfigKey<?>, ? extends Object> vals) {
+        ownConfig.clear();
+        ownConfig.putAll(vals);
+    }
+    
     public void setInheritedConfig(Map<ConfigKey<?>, ? extends Object> vals) {
+        inheritedConfig.clear();
         inheritedConfig.putAll(vals);
     }
     
@@ -150,7 +149,7 @@ public class EntityConfigMap implements ConfigMap {
 
     @Override
     public EntityConfigMap submap(Predicate<ConfigKey<?>> filter) {
-        EntityConfigMap m = new EntityConfigMap(entity);
+        EntityConfigMap m = new EntityConfigMap(entity, Maps.<ConfigKey<?>, Object>newLinkedHashMap());
         for (Map.Entry<ConfigKey<?>,Object> entry: inheritedConfig.entrySet())
             if (filter.apply(entry.getKey()))
                 m.inheritedConfig.put(entry.getKey(), entry.getValue());
