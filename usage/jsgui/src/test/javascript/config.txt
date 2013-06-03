@@ -14,6 +14,7 @@
         "jquery-wiggle":"js/libs/jquery.wiggle.min",
         "jquery-ba-bbq":"js/libs/jquery.ba-bbq.min",
         "handlebars":"js/libs/handlebars-1.0.rc.1",
+        "brooklyn":"js/libs/brooklyn",
         "brooklyn-utils":"js/libs/brooklyn-utils",
         "datatables-extensions":"js/libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",
