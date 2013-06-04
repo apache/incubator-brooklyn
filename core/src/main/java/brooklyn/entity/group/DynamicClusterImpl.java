@@ -301,7 +301,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return changed;
     }
     
-    protected Map getCustomChildFlags() { return Maps.newLinkedHashMap(); }
+    protected Map getCustomChildFlags() {
+        return getConfig(CUSTOM_CHILD_FLAGS);
+    }
     
     protected Entity addNode() {
         Map creation = Maps.newLinkedHashMap(getCustomChildFlags());

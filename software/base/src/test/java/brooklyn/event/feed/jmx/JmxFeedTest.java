@@ -32,10 +32,11 @@ import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -73,7 +74,7 @@ public class JmxFeedTest {
     private static final int SHORT_WAIT_MS = 250;
     
     private JmxService jmxService;
-    private AbstractApplication app;
+    private TestApplication app;
     private TestEntity entity;
     private JmxFeed feed;
     private JmxHelper jmxHelper;
@@ -86,22 +87,23 @@ public class JmxFeedTest {
     private String attributeName = "myattrib";
     private String opName = "myop";
     
+    public static class TestEntityWithJmx extends TestEntityImpl {
+        @Override public void start(Collection<? extends Location> locs) {
+            super.start(locs);
+            setAttribute(Attributes.HOSTNAME, "localhost");
+            setAttribute(Attributes.JMX_PORT, 40123);
+            setAttribute(Attributes.RMI_SERVER_PORT, 40124);
+            setAttribute(Attributes.JMX_CONTEXT);
+        }
+    }
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         jmxObjectName = new ObjectName(objectName);
         
         // Create an entity and configure it with the above JMX service
-        app = new AbstractApplication() {};
-        entity = new TestEntityImpl(app) {
-            @Override public void start(Collection<? extends Location> locs) {
-                        super.start(locs);
-                        setAttribute(Attributes.HOSTNAME, "localhost");
-                        setAttribute(Attributes.JMX_PORT, 40123);
-                        setAttribute(Attributes.RMI_SERVER_PORT, 40124);
-                        setAttribute(Attributes.JMX_CONTEXT);
-                    }
-        };
-        Entities.startManagement(app);
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class).impl(TestEntityWithJmx.class));
         app.start(ImmutableList.of(new SimulatedLocation()));
 
         jmxHelper = new JmxHelper(entity);

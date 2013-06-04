@@ -3,15 +3,16 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -24,12 +25,14 @@ import com.google.common.collect.ImmutableMap;
 public class AbstractApplicationLegacyTest {
 
     private List<SimulatedLocation> locs;
-    private AbstractApplication app;
+    private TestApplication app;
+    private ManagementContext managementContext;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         locs = ImmutableList.of(new SimulatedLocation());
-        app = new AbstractApplication() {};
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        managementContext = app.getManagementContext();
     }
     
     @AfterMethod(alwaysRun=true)
@@ -40,21 +43,22 @@ public class AbstractApplicationLegacyTest {
     // App and its children will be implicitly managed on first effector call on app
     @Test
     public void testStartAndStopCallsChildren() throws Exception {
-        TestEntity child = new TestEntityImpl(app);
+        // deliberately unmanaged
+        TestApplication app2 = managementContext.getEntityManager().createEntity(EntitySpecs.spec(TestApplication.class));
+        TestEntity child = app2.addChild(EntitySpecs.spec(TestEntity.class));
         
-        app.invoke(AbstractApplication.START, ImmutableMap.of("locations", locs)).get();
+        app2.invoke(AbstractApplication.START, ImmutableMap.of("locations", locs)).get();
         assertEquals(child.getCount(), 1);
         assertEquals(app.getManagementContext().getEntityManager().getEntity(app.getId()), app);
         assertEquals(app.getManagementContext().getEntityManager().getEntity(child.getId()), child);
         
-        app.stop();
+        app2.stop();
         assertEquals(child.getCount(), 0);
     }
     
     @Test
     public void testStartAndStopWhenManagedCallsChildren() {
-        TestEntity child = new TestEntityImpl(app);
-        Entities.startManagement(app);
+        TestEntity child = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
 
         assertEquals(app.getManagementContext().getEntityManager().getEntity(app.getId()), app);
         assertEquals(app.getManagementContext().getEntityManager().getEntity(child.getId()), child);
@@ -68,9 +72,7 @@ public class AbstractApplicationLegacyTest {
     
     @Test
     public void testStartDoesNotStartPremanagedChildren() {
-        Entities.startManagement(app);
-        
-        TestEntity child = new TestEntityImpl(app);
+        TestEntity child = app.addChild(EntitySpecs.spec(TestEntity.class));
         
         app.start(locs);
         assertEquals(child.getCount(), 0);
@@ -78,8 +80,7 @@ public class AbstractApplicationLegacyTest {
     
     @Test
     public void testStartDoesNotStartUnmanagedChildren() {
-        TestEntity child = new TestEntityImpl(app);
-        Entities.startManagement(app);
+        TestEntity child = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         Entities.unmanage(child);
         
         app.start(locs);
@@ -88,8 +89,7 @@ public class AbstractApplicationLegacyTest {
     
     @Test
     public void testStopDoesNotStopUnmanagedChildren() {
-        TestEntity child = new TestEntityImpl(app);
-        Entities.startManagement(app);
+        TestEntity child = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
         app.start(locs);
         assertEquals(child.getCount(), 1);
@@ -102,11 +102,9 @@ public class AbstractApplicationLegacyTest {
     
     @Test
     public void testStopDoesNotStopPremanagedChildren() {
-        Entities.startManagement(app);
-
         app.start(locs);
         
-        TestEntity child = new TestEntityImpl(app);
+        TestEntity child = app.addChild(EntitySpecs.spec(TestEntity.class));
         
         app.stop();
         assertEquals(child.getCount(), 0);

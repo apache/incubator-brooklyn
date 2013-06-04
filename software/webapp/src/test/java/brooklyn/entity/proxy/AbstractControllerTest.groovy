@@ -12,11 +12,14 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.entity.Entity
+import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Attributes
+import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.entity.driver.MockSshDriver
 import brooklyn.entity.group.Cluster
-import brooklyn.entity.group.DynamicClusterImpl
+import brooklyn.entity.group.DynamicCluster
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.entity.trait.Startable
 import brooklyn.event.AttributeSensor
 import brooklyn.location.Location
@@ -25,7 +28,6 @@ import brooklyn.location.MachineProvisioningLocation
 import brooklyn.location.basic.FixedListMachineProvisioningLocation
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.test.entity.TestEntityImpl
 import brooklyn.util.flags.SetFromFlag
 
@@ -52,8 +54,10 @@ public class AbstractControllerTest {
         loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines:machines)
         updates = new CopyOnWriteArrayList();
         
-        app = new TestApplicationImpl()
-        cluster = new DynamicClusterImpl(parent:app, initialSize:0, factory:{flags,parent -> new ClusteredEntity(flags, parent)})
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+                .configure("initialSize", 0)
+                .configure("factory", {flags,parent -> new ClusteredEntity(flags, parent)}));
         
         final AtomicInteger invokeCountForStart = new AtomicInteger(0);
         controller = new AbstractControllerImpl(
@@ -84,7 +88,7 @@ public class AbstractControllerTest {
                 // no-op
             }
         }
-        app.startManagement();
+        Entities.manage(controller);
         app.start([loc])
     }
     

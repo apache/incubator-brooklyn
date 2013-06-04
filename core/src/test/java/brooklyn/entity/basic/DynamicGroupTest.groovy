@@ -1,4 +1,4 @@
-package brooklyn.entity.basic
+package brooklyn.entity.basic;
 
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
@@ -22,7 +22,7 @@ import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.util.time.Duration;
+import brooklyn.util.time.Duration
 
 import com.google.common.base.Predicate
 import com.google.common.base.Predicates
@@ -264,7 +264,7 @@ public class DynamicGroupTest {
         final AtomicInteger concurrentCallsCount = new AtomicInteger(0);
         final List<Exception> exceptions = new CopyOnWriteArrayList<Exception>();
         
-        DynamicGroup group2 = new DynamicGroupImpl(entityFilter:{ it instanceof TestEntity }, app) {
+        DynamicGroup group2 = new DynamicGroupImpl() {
             @Override protected void onEntityAdded(Entity item) {
                 try {
                     onCall("Member added: member="+item);
@@ -294,11 +294,13 @@ public class DynamicGroupTest {
                 notificationCount.incrementAndGet();
             }
         };
+        ((EntityLocal)group2).setConfig(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class));
+        app.addChild(group2);
+        group2.init();
         Entities.manage(group2);
         
         for (int i = 0; i < NUM_CYCLES; i++) {
             TestEntity entity = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
-            Entities.manage(entity);
             Entities.unmanage(entity);
         }
 
@@ -324,7 +326,7 @@ public class DynamicGroupTest {
         final TestEntity e3 = app.createChild(EntitySpecs.spec(TestEntity.class));
         Predicate filter = Predicates.equalTo(e3);
         
-        DynamicGroup group2 = new DynamicGroupImpl(entityFilter:filter, app) {
+        DynamicGroup group2 = new DynamicGroupImpl() {
             @Override public void rescanEntities() {
                 rescanReachedLatch.countDown();
                 rescanLatch.await();
@@ -336,7 +338,10 @@ public class DynamicGroupTest {
                 super.onEntityAdded(item);
             }
         };
-    
+        ((EntityLocal)group2).setConfig(DynamicGroup.ENTITY_FILTER, filter);
+        app.addChild(group2);
+        group2.init();
+        
         Thread t1 = new Thread(new Runnable() {
             @Override public void run() {
                 Entities.manage(group2);

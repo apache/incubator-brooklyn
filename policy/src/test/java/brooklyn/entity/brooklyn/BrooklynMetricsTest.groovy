@@ -24,11 +24,11 @@ class BrooklynMetricsTest {
     SimulatedLocation loc
     BrooklynMetrics brooklynMetrics
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = new SimulatedLocation()
-        brooklynMetrics = new BrooklynMetrics(updatePeriod:10L, parent:app)
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        brooklynMetrics = app.createAndManageChild(EntitySpecs.spec(BrooklynMetrics.class).configure("updatePeriod", 10L));
         Entities.manage(brooklynMetrics);
     }
     

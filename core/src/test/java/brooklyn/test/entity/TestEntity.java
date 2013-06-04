@@ -78,7 +78,9 @@ public interface TestEntity extends Entity, Startable, EntityLocal, EntityIntern
     
     public int getCount();
     
-    public Map getConstructorProperties();
+    public Map<?,?> getConstructorProperties();
+
+    public Map<?,?> getConfigureProperties();
 
     public int getSequenceValue();
 
