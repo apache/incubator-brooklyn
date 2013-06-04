@@ -94,8 +94,8 @@ public class ActiveMQIntegrationTest {
         // Start broker with a configured queue
         // FIXME Not yet using app.createAndManageChild because later in test do activeMQ.queueNames,
         // which is not on interface
-        activeMQ = new ActiveMQBrokerImpl(queue:queueName, app);
-        Entities.manage(activeMQ);
+        activeMQ = app.createAndManageChild(EntitySpecs.spec(ActiveMQBroker.class)
+            .configure("queue", queueName));
         
         activeMQ.start([ testLocation ])
         executeUntilSucceeds {

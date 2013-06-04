@@ -25,8 +25,8 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
     }
 
     @Override
-    public void init() {
-        super.init();
+    public void onManagementStarting() {
+        super.onManagementStarting();
         
         exchange = (getConfig(EXCHANGE_NAME) != null) ? getConfig(EXCHANGE_NAME) : getDefaultExchangeName();
         virtualHost = getConfig(RabbitBroker.VIRTUAL_HOST_NAME);

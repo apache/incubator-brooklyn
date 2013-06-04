@@ -76,7 +76,6 @@ public class QpidIntegrationTest {
     public void canStartupAndShutdownWithHttpManagement() {
         qpid = app.createAndManageChild(EntitySpecs.spec(QpidBroker.class)
                 .configure("httpManagementPort", "8888"));
-        Entities.startManagement(app);
         qpid.start([ testLocation ])
         executeUntilSucceedsWithShutdown(qpid) {
             assertTrue qpid.getAttribute(Startable.SERVICE_UP)

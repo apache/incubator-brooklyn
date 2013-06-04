@@ -51,6 +51,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
 
     @Override
     public void init() {
+        super.init();
         setAttribute(BROKER_ID, Math.abs(hashCode())); // Must be positive for partitioning to work
     }
 
