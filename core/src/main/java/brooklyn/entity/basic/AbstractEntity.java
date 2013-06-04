@@ -962,18 +962,6 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
 
     /**
-     * TODO Calling the above groovy method from java gives compilation error due to use of generics
-     * This method will be removed once that is resolved in groovy (or when this is converted to pure java).
-     */
-    public Task<?> invokeFromJava(Effector eff) {
-        return invokeFromJava(MutableMap.of(), eff);
-    }
-    
-    public Task<?> invokeFromJava(Map parameters, Effector eff) {
-        return invoke(eff, parameters);
-    }
-
-    /**
      * Additional form supplied for when the parameter map needs to be made explicit.
      *
      * @see #invoke(Effector)
