@@ -143,8 +143,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
     private final EntityDynamicType entityType;
     
-    protected transient EntityManagementSupport managementSupport;
-    
+    protected final EntityManagementSupport managementSupport = new EntityManagementSupport(this);
+
     /**
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
@@ -1014,16 +1014,9 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         groups.invalidate();
     }
     
-    // TODO observed deadlocks -- we should synch on something private instead of on the class
-    // Non-final to allow for mocking
     @Override
-    public synchronized EntityManagementSupport getManagementSupport() {
-        if (managementSupport != null) return managementSupport;
-        managementSupport = createManagementSupport();
+    public EntityManagementSupport getManagementSupport() {
         return managementSupport;
-    }
-    protected EntityManagementSupport createManagementSupport() {
-        return new EntityManagementSupport(this);
     }
 
     @Override
