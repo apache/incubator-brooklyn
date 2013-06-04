@@ -1,12 +1,20 @@
 package brooklyn.util.internal
 
 import java.lang.reflect.Field
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong
 
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Identifiers
 
 import com.google.common.annotations.Beta
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.thoughtworks.xstream.XStream
 
 /**
@@ -344,5 +352,21 @@ public class LanguageUtils {
 
     public static int hashCode(Object o, Closure optionalGetter=null, Object[] fieldNames) {
         hashCode(o, optionalGetter, Arrays.asList(fieldNames))
+    }
+    
+    /** Default String representation is simplified name of class, together with selected fields. */
+    public static String toString(Object o, Closure optionalGetter=null, Collection<? extends CharSequence> fieldNames) {
+        if (o==null) return null;
+        Closure get = optionalGetter ?: DEFAULT_FIELD_GETTER
+        
+        StringBuilder result = new StringBuilder();
+        result.append(o.getClass().getSimpleName());
+        if (result.length() == 0) result.append(o.getClass().getName());
+        List<Object> fieldVals = fieldNames.collect {
+                Object v = get.call(o, it);
+                return (v != null) ? it+"="+v : null;
+        }
+        result.append("[").append(Joiner.on(",").skipNulls().join(fieldVals)).append("]");
+        return result.toString();
     }
 }

@@ -2,8 +2,6 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -52,20 +50,15 @@ import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.MutableMap;
-import brooklyn.util.MutableSet;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -833,53 +826,9 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     /** Default String representation is simplified name of class, together with selected fields. */
     @Override
     public String toString() {
-        Collection<String> fields = toStringFieldsToInclude();
-        if (fields.equals(ImmutableSet.of("id", "displayName"))) {
-            return toStringHelper().toString();
-        } else {
-            StringBuilder result = new StringBuilder();
-            result.append(getClass().getSimpleName());
-            if (result.length() == 0) result.append(getClass().getName());
-            Iterable<Object> fieldVals = Iterables.transform(fields, new Function<String, Object>() {
-                public Object apply(String field) {
-                    Object v = getPropertyReflectively(field);  /* TODO would like to use attributes, config: this.properties[it] */
-                    return (v != null) ? field+"="+v : null;
-                }});
-            result.append("[").append(Joiner.on(",").skipNulls().join(fieldVals)).append("]");
-            return result.toString();
-        }
+        return toStringHelper().toString();
     }
     
-    @Deprecated // Delete when toStringFieldsToInclude is deleted
-    private Object getPropertyReflectively(String name) {
-        Class<?> clazz = getClass();
-        // first try and getX or isX
-        for (String prefix : ImmutableList.of("get", "is")) {
-            String methodName = prefix+Character.toUpperCase(name.charAt(0))+name.substring(1);
-            try {
-                Method method = Reflections.findMethod(clazz, methodName);
-                if (method.getReturnType() != Void.class) {
-                    return method.invoke(this);
-                }
-            } catch (NoSuchMethodException e) {
-                // try something else...
-            } catch (Exception e) {
-                LOG.trace("Error while attempting to get property {} via method {}: {}", new Object[] {name, methodName, e});
-            }
-        }
-        
-        try {
-            Field field = Reflections.findField(clazz, name);
-            return field.get(this);
-        } catch (NoSuchFieldException e) {
-            // not found
-        } catch (Exception e) {
-            LOG.trace("Error while attempting to get property {} via field {}: {}", new Object[] {name, e});
-        }
-        
-        return null;
-    }
-
     /**
      * Override this to add to the toString(), e.g. {@code return super.toStringHelper().add("port", port);}
      *
@@ -891,16 +840,6 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 //            .add("name", getDisplayName());
     }
     
-    /**
-     * override this, adding to the collection, to supply fields whose value, if not null, should be included in the toString
-     *
-     * @deprecated In 0.5.0, instead override toStringHelper instead
-     */
-    @Deprecated
-    public Collection<String> toStringFieldsToInclude() {
-        return MutableSet.of("id", "displayName");
-    }
-
     
     // -------- POLICIES --------------------
 
