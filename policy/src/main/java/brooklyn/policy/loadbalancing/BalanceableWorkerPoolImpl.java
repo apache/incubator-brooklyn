@@ -2,7 +2,6 @@ package brooklyn.policy.loadbalancing;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -17,7 +16,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.util.collections.MutableMap;
 
 /**
  * Represents an elastic group of "container" entities, each of which is capable of hosting "item" entities that perform
@@ -78,16 +76,6 @@ public class BalanceableWorkerPoolImpl extends AbstractEntity implements Balance
     };
     
     public BalanceableWorkerPoolImpl() {
-        this(MutableMap.of(), null);
-    }
-    public BalanceableWorkerPoolImpl(Map properties) {
-        this(properties, null);
-    }
-    public BalanceableWorkerPoolImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public BalanceableWorkerPoolImpl(Map properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override

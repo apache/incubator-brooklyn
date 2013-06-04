@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.BasicGroupImpl;
+import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
@@ -29,7 +29,6 @@ import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
@@ -61,38 +60,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     };
     
     public DynamicClusterImpl() {
-        super();
-        setAttribute(SERVICE_UP, false);
     }
     
-    /**
-     * Instantiate a new DynamicCluster.
-     * 
-     * Valid properties are:
-     * <ul>
-     * <li>memberSpec - an {@EntitySpec} that defines entities to be created,
-     * where the entities typically implementing {@link Startable}
-     * <li>factory - an {@EntityFactory} (or {@link Closure}) that creates an {@link Entity},
-     * typically implementing {@link Startable}, taking the {@link Map}
-     * of properties from this cluster as an argument. This property is mandatory.
-     * <li>initialSize - an {@link Integer} that is the number of nodes to start when the cluster's {@link #start(Collection)} method is
-     * called. This property is optional, with a default of 1.
-     * </ul>
-     *
-     * @param properties The properties of the cluster (those corresponding to config keys will be 
-     *                   visible to created children by inheritance, but to set properties on children 
-     *                   explicitly, use the memberSpec or factory)
-     * @param parent the entity that owns this cluster (optional)
-     */
-    public DynamicClusterImpl(Map<?,?> properties, Entity parent) {
-        super(properties, parent);
+    @Override
+    public void init() {
+        super.init();
         setAttribute(SERVICE_UP, false);
-    }
-    public DynamicClusterImpl(Entity parent) {
-        this(Maps.newLinkedHashMap(), parent);
-    }
-    public DynamicClusterImpl(Map<?,?> properties) {
-        this(properties, null);
     }
     
     @Override
@@ -143,7 +116,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public void start(Collection<? extends Location> locs) {
         if (isQuarantineEnabled()) {
-            Group quarantineGroup = new BasicGroupImpl(MutableMap.of("displayName", "quarantine"), this);
+            Group quarantineGroup = addChild(EntitySpecs.spec(BasicGroup.class).displayName("quarantine"));
             Entities.manage(quarantineGroup);
             setAttribute(QUARANTINE_GROUP, quarantineGroup);
         }

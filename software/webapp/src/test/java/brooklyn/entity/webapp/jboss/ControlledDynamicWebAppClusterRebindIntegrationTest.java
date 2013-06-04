@@ -20,19 +20,17 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxy.nginx.NginxControllerImpl;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.entity.webapp.ControlledDynamicWebAppClusterImpl;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;
@@ -67,7 +65,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
     	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        origApp = new TestApplicationImpl();
+        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
     }
 
     @AfterMethod(alwaysRun=true)
@@ -101,16 +99,12 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     
     @Test(groups = {"Integration"})
     public void testRebindsToRunningCluster() throws Exception {
-        NginxController origNginx = new NginxControllerImpl(MutableMap.of("domain", "localhost"), origApp);
+        NginxController origNginx = origApp.createAndManageChild(EntitySpecs.spec(NginxController.class).configure("domain", "localhost"));
 
-        new ControlledDynamicWebAppClusterImpl(
-    			MutableMap.builder()
-    					.put("factory", new JBoss7ServerFactory(MutableMap.of("war", warUrl.toString())))
-    					.put("initialSize", 1)
-    					.put("controller", origNginx)
-    					.build(),
-    			origApp);
-    	Entities.startManagement(origApp, origManagementContext);
+        origApp.createAndManageChild(EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
+    			.configure("memberSpec", EntitySpecs.spec(JBoss7Server.class).configure("war", warUrl.toString()))
+    			.configure("initialSize", 1)
+		        .configure("controller", origNginx));
     	
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         String rootUrl = origNginx.getAttribute(JBoss7Server.ROOT_URL);

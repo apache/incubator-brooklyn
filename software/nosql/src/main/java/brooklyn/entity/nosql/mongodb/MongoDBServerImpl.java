@@ -1,6 +1,5 @@
 package brooklyn.entity.nosql.mongodb;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -27,14 +25,6 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     private MongoClientSupport client;
 
     public MongoDBServerImpl() {
-    }
-
-    public MongoDBServerImpl(Map flags){
-        this(flags, null);
-    }
-
-    public MongoDBServerImpl(Map flags, Entity parent) {
-        super(flags, parent);
     }
 
     @Override

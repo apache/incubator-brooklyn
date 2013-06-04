@@ -32,12 +32,7 @@ public class ElasticCustomLocationTest {
     public static class MockWebService extends TestEntityImpl implements ElasticJavaWebAppService {
         public MockWebService() {
         } 
-        public MockWebService(Map flags) {
-            super(flags, null);
-        } 
-        public MockWebService(Entity parent) {
-            super(MutableMap.of(), parent);
-        } 
+        // TODO Used by asicConfigurableEntityFactory.newEntity2, via MockWebServiceLocation.newWebClusterFactory
         public MockWebService(Map flags, Entity parent) {
             super(flags, parent);
         } 

@@ -1,23 +1,7 @@
 package brooklyn.entity.nosql.mongodb;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.proxying.BasicEntitySpec;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
-import brooklyn.util.collections.MutableMap;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkArgument;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -26,7 +10,26 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import brooklyn.entity.group.DynamicClusterImpl;
+import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.trait.Startable;
+import brooklyn.location.Location;
+import brooklyn.util.collections.MutableMap;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 /**
  * Implementation of {@link MongoDBReplicaSet}.
@@ -50,16 +53,6 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     private final AtomicBoolean mustInitialise = new AtomicBoolean(true);
 
     public MongoDBReplicaSetImpl() {
-        this(MutableMap.of(), null);
-    }
-    public MongoDBReplicaSetImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public MongoDBReplicaSetImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public MongoDBReplicaSetImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
     }
 
     /**

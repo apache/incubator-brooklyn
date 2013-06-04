@@ -42,16 +42,11 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
     private String smartSubdomainName;
 
     public GeoscalingDnsServiceImpl() {
-        this(MutableMap.of(), null);
     }
-    public GeoscalingDnsServiceImpl(Map properties) {
-        this(properties, null);
-    }
-    public GeoscalingDnsServiceImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public GeoscalingDnsServiceImpl(Map properties, Entity parent) {
-        super(properties, parent);
+
+    @Override
+    public void init() {
+        super.init();
         
         // defaulting to randomized subdomains makes deploying multiple applications easier
         if (getConfig(RANDOMIZE_SUBDOMAIN_NAME)==null) setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); 

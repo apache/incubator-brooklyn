@@ -1,7 +1,6 @@
 package brooklyn.entity.webapp;
 
 import java.util.List;
-import java.util.Map;
 
 import brooklyn.enricher.CustomAggregatingEnricher;
 import brooklyn.entity.Entity;
@@ -30,15 +29,6 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
      */
     public DynamicWebAppClusterImpl() {
         super();
-    }
-    public DynamicWebAppClusterImpl(Map properties) {
-        super(properties, null);
-    }
-    public DynamicWebAppClusterImpl(Entity parent) {
-        super(MutableMap.of(), parent);
-    }
-    public DynamicWebAppClusterImpl(Map properties, Entity parent) {
-        super(properties, parent);
     }
     
     @Override

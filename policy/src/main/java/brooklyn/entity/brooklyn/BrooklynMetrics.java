@@ -1,12 +1,10 @@
 package brooklyn.entity.brooklyn;
 
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -49,18 +47,9 @@ public class BrooklynMetrics extends AbstractEntity {
     private ScheduledExecutorService executor;
     
     public BrooklynMetrics() {
-        super();
     }
-    public BrooklynMetrics(Map props) {
-        super(props);
-    }
-    public BrooklynMetrics(Entity parent) {
-        super(parent);
-    }
-    public BrooklynMetrics(Map props, Entity parent) {
-        super(props, parent);
-    }
-    
+
+    @Override
     public void onManagementBecomingMaster() {
         // TODO Don't use own thread pool; use new "feeds" (see FunctionFeed, or variants there of)
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -81,6 +70,7 @@ public class BrooklynMetrics extends AbstractEntity {
      * Invoked by {@link ManagementContext} when this entity becomes mastered at a particular management node,
      * including the final management end and subsequent management node master-change for this entity.
      */
+    @Override
     public void onManagementNoLongerMaster() {
         if (executor != null) executor.shutdownNow();
     }

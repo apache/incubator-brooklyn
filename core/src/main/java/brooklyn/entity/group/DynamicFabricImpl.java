@@ -2,7 +2,6 @@ package brooklyn.entity.group;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
-import groovy.lang.Closure;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,7 +26,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -47,33 +45,12 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     private CustomAggregatingEnricher fabricSizeEnricher;
 
     public DynamicFabricImpl() {
-        this(MutableMap.of(), null);
     }
 
-    public DynamicFabricImpl(Map properties) {
-        this (properties, null);
-    }
-    
-    public DynamicFabricImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-
-    /**
-     * Instantiate a new DynamicFabric.
-     * 
-     * Valid properties are:
-     * <ul>
-     * <li>factory - an {@EntityFactory) (or {@link Closure}) that creates an {@link Entity},
-     * typically a Cluster which implements {@link Startable}, taking the {@link Map}
-     * of properties from this cluster as an argument. This property is mandatory.
-     * </ul>
-     *
-     * @param properties the properties of the fabric and any new entity.
-     * @param parent the entity that owns this fabric (optional)
-     */
-    public DynamicFabricImpl(Map properties, Entity parent) {
-        super(properties, parent);
-
+    @Override
+    public void init() {
+        super.init();
+        
         fabricSizeEnricher = CustomAggregatingEnricher.newSummingEnricher(Changeable.GROUP_SIZE, FABRIC_SIZE);
         addEnricher(fabricSizeEnricher);
         

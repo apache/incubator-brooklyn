@@ -3,7 +3,6 @@ package brooklyn.entity.basic;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;
 
@@ -31,19 +29,11 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     private final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
 
     public AbstractGroupImpl() {
-        this(MutableMap.of(), null);
     }
     
-    public AbstractGroupImpl(Map props) {
-        this(props, null);
-    }
-    
-    public AbstractGroupImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-
-    public AbstractGroupImpl(Map props, Entity parent) {
-        super(props, parent);
+    @Override
+    public void init() {
+        super.init();
         setAttribute(Changeable.GROUP_SIZE, 0);
     }
     

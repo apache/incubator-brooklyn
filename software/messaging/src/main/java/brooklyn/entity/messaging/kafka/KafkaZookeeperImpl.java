@@ -15,16 +15,10 @@
  */
 package brooklyn.entity.messaging.kafka;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects.ToStringHelper;
-
-import brooklyn.entity.Entity;
 import brooklyn.entity.zookeeper.AbstractZookeeperImpl;
-import brooklyn.util.collections.MutableMap;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.
@@ -34,16 +28,6 @@ public class KafkaZookeeperImpl extends AbstractZookeeperImpl implements KafkaZo
     private static final Logger log = LoggerFactory.getLogger(KafkaZookeeperImpl.class);
 
     public KafkaZookeeperImpl() {
-        super();
-    }
-    public KafkaZookeeperImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public KafkaZookeeperImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public KafkaZookeeperImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override

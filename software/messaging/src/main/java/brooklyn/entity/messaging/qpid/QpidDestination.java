@@ -34,16 +34,6 @@ public abstract class QpidDestination extends JMSDestination implements AmqpExch
     protected volatile JmxFeed jmxFeed;
 
     public QpidDestination() {
-        this(MutableMap.of(), null);
-    }
-    public QpidDestination(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public QpidDestination(Map properties) {
-        this(properties, null);
-    }
-    public QpidDestination(Map properties, Entity parent) {
-        super(properties, parent);
     }
 
     // FIXME Should return QpidBroker; won't work if gets a proxy rather than "real" entity
