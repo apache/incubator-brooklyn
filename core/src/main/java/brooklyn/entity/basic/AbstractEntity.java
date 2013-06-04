@@ -160,7 +160,10 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     /**
      * For temporary data, e.g. timestamps etc for calculating real attribute values, such as when
      * calculating averages over time etc.
+     * 
+     * @deprecated since 0.6; use attributes
      */
+    @Deprecated
     protected final Map<String,Object> tempWorkings = Maps.newLinkedHashMap();
 
     protected transient SubscriptionTracker _subscriptionTracker;
