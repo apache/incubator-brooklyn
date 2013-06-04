@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,6 +61,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Default {@link Entity} implementation, which should be extended whenever implementing an entity.
@@ -586,7 +586,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public void addLocations(Collection<? extends Location> newLocations) {
         synchronized (locations) {
-            Set newLocationsWithDuplicatesRemoved = new LinkedHashSet();
+            Set<Location> newLocationsWithDuplicatesRemoved = Sets.newLinkedHashSet();
             newLocationsWithDuplicatesRemoved.addAll(newLocations);
             newLocationsWithDuplicatesRemoved.removeAll(locations);
             locations.addAll(newLocationsWithDuplicatesRemoved);
@@ -596,13 +596,17 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     @Override
     public void removeLocations(Collection<? extends Location> newLocations) {
-        locations.removeAll(newLocations);
+        synchronized (locations) {
+            locations.removeAll(newLocations);
+        }
         
         getManagementSupport().getEntityChangeListener().onLocationsChanged();
     }
 
     public Location firstLocation() {
-        return Iterables.get(locations, 0);
+        synchronized (locations) {
+            return Iterables.get(locations, 0);
+        }
     }
     
     /**
