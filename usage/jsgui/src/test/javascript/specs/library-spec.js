@@ -11,8 +11,8 @@ define([
     describe('Test the libraries', function () {
 
         describe('underscore.js', function () {
-            it('must be version 1.3.3', function () {
-                expect(_.VERSION).toEqual('1.3.3')
+            it('must be version 1.4.4', function () {
+                expect(_.VERSION).toEqual('1.4.4')
             })
         })
 
