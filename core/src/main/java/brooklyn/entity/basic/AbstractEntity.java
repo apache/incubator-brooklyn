@@ -459,9 +459,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      * returns argument passed in, for convenience.
      */
     @Override
-    public Entity addChild(Entity child) {
-    // see comment in interface:
-//    public <T extends Entity> T addChild(T child) {
+    public <T extends Entity> T addChild(T child) {
         synchronized (children) {
             if (child == null) throw new NullPointerException("child must not be null (for entity "+this+")");
             if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child "+child+" to "+this+"; it is already an ancestor");
@@ -487,7 +485,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
             throw new IllegalArgumentException("Attempt to create child of "+this+" with entity spec "+spec+
                 " failed because spec has different parent: "+spec.getParent());
         }
-        return (T) addChild(getEntityManager().createEntity(spec));
+        return addChild(getEntityManager().createEntity(spec));
     }
     
     @Override

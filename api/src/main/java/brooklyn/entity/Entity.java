@@ -12,7 +12,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
@@ -90,12 +89,8 @@ public interface Entity extends Serializable, Rebindable {
     /** 
      * Add a child {@link Entity}, and set this entity as its parent,
      * returning the added child.
-     * 
-     * TODO Signature will change to {@code <T extends Entity> T addChild(T child)}, but
-     * that currently breaks groovy AbstractEntity subclasses sometimes so deferring that
-     * until (hopefully) the next release. For now use addChild(EntitySpec).
      */
-    Entity addChild(Entity child);
+    <T extends Entity> T addChild(T child);
     
     /** 
      * Creates an {@link Entity} from the given spec and adds it, setting this entity as the parent,
