@@ -3,7 +3,7 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "model/entity", "model/application", "formatJson",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "model/entity", "model/application", "formatJson",
     "model/location", "text!tpl/app-add-wizard/modal-wizard.html",
     
     "text!tpl/app-add-wizard/create.html",
@@ -17,15 +17,20 @@ define([
     
     "text!tpl/app-add-wizard/preview.html",
     
-    "bootstrap", "brooklyn-utils"
+    "bootstrap"
     
-], function (_, $, Backbone, Entity, Application, FormatJSON, Location, ModalHtml, 
+], function (_, $, Backbone, Util, Entity, Application, FormatJSON, Location, ModalHtml,
 		CreateHtml, 
 		CreateStepTemplateEntryHtml, CreateEntityEntryHtml, 
 		RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml, 
 		DeployLocationRowHtml, DeployLocationOptionHtml,  
 		PreviewHtml
 		) {
+
+    function setVisibility(obj, isVisible) {
+        if (isVisible) obj.show();
+        else obj.hide();
+    }
 
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
@@ -346,7 +351,7 @@ define([
                     return true
                 }
             } else {
-                log("NOT IMPLEMENTED YET")
+                Util.log("NOT IMPLEMENTED YET")
                 // TODO - other tabs not implemented yet 
                 // do nothing, show error return false below
             }

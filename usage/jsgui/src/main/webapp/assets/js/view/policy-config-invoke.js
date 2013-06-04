@@ -2,8 +2,8 @@
  * Render a policy configuration key as a modal for reconfiguring.
  */
 define([
-    "underscore", "jquery", "backbone", "text!tpl/apps/policy-config-modal.html", "bootstrap"
-], function (_, $, Backbone, PolicyConfigModalHtml) {
+    "underscore", "jquery", "backbone", "brooklyn-utils", "text!tpl/apps/policy-config-modal.html", "bootstrap"
+], function (_, $, Backbone, Util, PolicyConfigModalHtml) {
 
     var PolicyConfigInvokeView = Backbone.View.extend({
         template:_.template(PolicyConfigModalHtml),
@@ -20,7 +20,7 @@ define([
                     description:that.model.get("description"),
                     type:that.model.get("type"),
                     value:data,
-                    policyName:that.options.policy.get("name"),
+                    policyName:that.options.policy.get("name")
                 }));
             });
             that.model = this.model;
@@ -44,8 +44,8 @@ define([
                 error:function(data) {
                     that.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
                     // TODO render the error better than poor-man's flashing
-                    log("ERROR setting config");
-                    log(data);
+                    Util.log("ERROR setting config");
+                    Util.log(data);
                 }});
             // un-delegate events
             that.undelegateEvents();

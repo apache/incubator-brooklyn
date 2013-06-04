@@ -2,9 +2,12 @@
  * Render an entity effector as a modal.
  */
 define([
-    "underscore", "jquery", "backbone", "text!tpl/apps/effector-modal.html", "text!tpl/apps/param.html",
-    "text!tpl/apps/param-list.html", "brooklyn-utils"
-], function (_, $, Backbone, EffectorModalHtml, ParamHtml, ParamListHtml) {
+    "underscore", "jquery", "backbone", "brooklyn-utils",
+
+    "text!tpl/apps/effector-modal.html",
+    "text!tpl/apps/param.html",
+    "text!tpl/apps/param-list.html"
+], function (_, $, Backbone, Util, EffectorModalHtml, ParamHtml, ParamListHtml) {
 
     var EffectorInvokeView = Backbone.View.extend({
         template:_.template(EffectorModalHtml),
@@ -76,8 +79,8 @@ define([
                     // TODO render the error better than poor-man's flashing
                     // (would just be connection error -- with timeout=0 we get a task even for invalid input)
                     
-                    log("ERROR invoking effector")
-                    log(data)
+                    Util.log("ERROR invoking effector")
+                    Util.log(data)
                 }})
             // un-delegate events
             this.undelegateEvents()
