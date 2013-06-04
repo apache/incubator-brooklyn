@@ -13,16 +13,15 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
-import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
-import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -35,7 +34,7 @@ public class RebindLocationTest {
 
     private ClassLoader classLoader = getClass().getClassLoader();
     private ManagementContext managementContext;
-    private MyApplication origApp;
+    private TestApplication origApp;
     private MyEntity origE;
     private File mementoDir;
     
@@ -43,9 +42,8 @@ public class RebindLocationTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = new MyApplicationImpl();
-        origE = new MyEntityImpl(origApp);
-        Entities.startManagement(origApp, managementContext);
+        origApp = ApplicationBuilder.newManagedApp(EntitySpecs.spec(TestApplication.class), managementContext);
+        origE = origApp.createAndManageChild(EntitySpecs.spec(MyEntity.class));
     }
 
     @AfterMethod
@@ -58,7 +56,7 @@ public class RebindLocationTest {
         MyLocation origLoc = new MyLocation(MutableMap.of("name", "mylocname"));
         origApp.start(ImmutableList.of(origLoc));
 
-        MyApplication newApp = (MyApplication) rebind();
+        TestApplication newApp = (TestApplication) rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
 
         assertEquals(newApp.getLocations().size(), 1, "locs="+newE.getLocations());
@@ -73,7 +71,7 @@ public class RebindLocationTest {
         MyLocation origLoc = new MyLocation(MutableMap.of("name", "mylocname"));
         origApp.start(ImmutableList.of(origLoc));
         
-        MyApplication newApp = (MyApplication) rebind();
+        TestApplication newApp = (TestApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.getId(), origLoc.getId());
@@ -85,7 +83,7 @@ public class RebindLocationTest {
         MyLocationCustomProps origLoc = new MyLocationCustomProps(MutableMap.of("name", "mylocname", "myfield", "myval"));
         origApp.start(ImmutableList.of(origLoc));
 
-        MyApplication newApp = (MyApplication) rebind();
+        TestApplication newApp = (TestApplication) rebind();
         MyLocationCustomProps newLoc2 = (MyLocationCustomProps) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc2.getId(), origLoc.getId());
@@ -99,7 +97,7 @@ public class RebindLocationTest {
     	MyLocation origLoc = new MyLocation(MutableMap.of("myfield", "myval"));
         origApp.start(ImmutableList.of(origLoc));
 
-        MyApplication newApp = (MyApplication) rebind();
+        TestApplication newApp = (TestApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.myfield, "myval");
@@ -114,7 +112,7 @@ public class RebindLocationTest {
         assertEquals(origLoc.myAtomicLong.get(), 124L);
         ((EntityInternal)origApp).getManagementContext().getRebindManager().getChangeListener().onChanged(origLoc);
         
-        MyApplication newApp = (MyApplication) rebind();
+        TestApplication newApp = (TestApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         // should get _modified_ value, not the one in the config map
@@ -127,7 +125,7 @@ public class RebindLocationTest {
         origLoc.myTransientFieldNotSetFromFlag = "myval";
         origApp.start(ImmutableList.of(origLoc));
 
-        MyApplication newApp = (MyApplication) rebind();
+        TestApplication newApp = (TestApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
 
         // transient fields normally not persisted
@@ -139,7 +137,7 @@ public class RebindLocationTest {
         MyLocation origLoc = new MyLocation(MutableMap.of("myTransientFieldSetFromFlag", "myval"));
         origApp.start(ImmutableList.of(origLoc));
 
-        MyApplication newApp = (MyApplication) rebind();
+        TestApplication newApp = (TestApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.myTransientFieldSetFromFlag, null);
@@ -153,7 +151,7 @@ public class RebindLocationTest {
 
         RebindTestUtils.waitForPersisted(origApp);
         MyLocation.myStaticFieldNotSetFromFlag = "mynewval";
-        MyApplication newApp = (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        TestApplication newApp = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         // static fields normally not persisted (we see new value)
@@ -167,7 +165,7 @@ public class RebindLocationTest {
 
         RebindTestUtils.waitForPersisted(origApp);
         MyLocation.myStaticFieldSetFromFlag = "mynewval"; // not auto-checkpointed
-        MyApplication newApp = (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        TestApplication newApp = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.myStaticFieldSetFromFlag, "mynewval");
@@ -192,9 +190,9 @@ public class RebindLocationTest {
         assertEquals(newLoc.myfield, "myval");
     }
 
-    private MyApplication rebind() throws Exception {
+    private TestApplication rebind() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
-        return (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
     
     public static class MyLocation extends AbstractLocation {

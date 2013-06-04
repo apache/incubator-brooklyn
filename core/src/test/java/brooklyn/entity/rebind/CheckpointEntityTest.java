@@ -15,14 +15,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
-import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
-import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -37,16 +36,15 @@ public class CheckpointEntityTest {
     private ClassLoader classLoader = getClass().getClassLoader();
     private ManagementContext managementContext;
     private File mementoDir;
-    private MyApplication origApp;
+    private TestApplication origApp;
     private MyEntity origE;
     
     @BeforeMethod
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = new MyApplicationImpl();
-        origE = new MyEntityImpl(MutableMap.of("myconfig", "myval"), origApp);
-        Entities.startManagement(origApp, managementContext);
+        origApp = ApplicationBuilder.newManagedApp(EntitySpecs.spec(TestApplication.class), managementContext);
+        origE = origApp.createAndManageChild(EntitySpecs.spec(MyEntity.class).configure("myconfig", "myval"));
     }
 
     @AfterMethod
@@ -56,7 +54,7 @@ public class CheckpointEntityTest {
 
     @Test
     public void testAutoCheckpointsOnManageApp() throws Exception {
-        MyApplication newApp = rebind();
+        TestApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         // Assert has expected entities and config
@@ -68,10 +66,10 @@ public class CheckpointEntityTest {
     
     @Test
     public void testAutoCheckpointsOnManageDynamicEntity() throws Exception {
-        final MyEntity origE2 = new MyEntityImpl(MutableMap.of("myconfig", "myval2"), origApp);
+        final MyEntity origE2 = origApp.createAndManageChild(EntitySpecs.spec(MyEntity.class).configure("myconfig", "myval2"));
         Entities.manage(origE2);
         
-        MyApplication newApp = rebind();
+        TestApplication newApp = rebind();
         MyEntity newE2 = (MyEntity) Iterables.find(newApp.getChildren(), new Predicate<Entity>() {
                 @Override public boolean apply(@Nullable Entity input) {
                     return origE2.getId().equals(input.getId());
@@ -87,7 +85,7 @@ public class CheckpointEntityTest {
     public void testAutoCheckpointsOnUnmanageEntity() throws Exception {
         Entities.unmanage(origE);
         
-        MyApplication newApp = rebind();
+        TestApplication newApp = rebind();
         
         // Assert does not container unmanaged entity
         assertEquals(ImmutableList.copyOf(newApp.getChildren()), Collections.emptyList());
@@ -100,15 +98,15 @@ public class CheckpointEntityTest {
         origE.setAttribute(MyEntity.MY_SENSOR, "mysensorval");
         
         // Assert persisted the modified config/attributes
-        MyApplication newApp = rebind();
+        TestApplication newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "mynewval");
         assertEquals(newE.getAttribute(MyEntity.MY_SENSOR), "mysensorval");
     }
     
-    private MyApplication rebind() throws Exception {
+    private TestApplication rebind() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
-        return (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
 }
