@@ -1,5 +1,8 @@
 <configuration>
 
     <include resource="brooklyn/logback-default.xml"/>
-    
+
+    <!-- MongoDB Java driver spams log with stacktraces at WARN when connections error -->
+    <logger name="com.mongodb" level="ERROR"/>
+
 </configuration>

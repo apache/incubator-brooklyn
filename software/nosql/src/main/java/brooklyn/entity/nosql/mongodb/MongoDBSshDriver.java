@@ -1,17 +1,16 @@
 package brooklyn.entity.nosql.mongodb;
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.downloadUrlAs;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.util.ssh.CommonCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
@@ -22,13 +21,13 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implements MongoDbDriver {
+public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implements MongoDBDriver {
 
-    public static final Logger log = LoggerFactory.getLogger(MongoDbSshDriver.class);
+    public static final Logger log = LoggerFactory.getLogger(MongoDBSshDriver.class);
 
     private String expandedInstallDir;
 
-    public MongoDbSshDriver(EntityLocal entity, SshMachineLocation machine) {
+    public MongoDBSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -37,9 +36,8 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         return expandedInstallDir;
     }
 
-    @Override
     public String getDataDirectory() {
-        return entity.getConfig(MongoDbServer.DATA_DIRECTORY, getRunDir() + "/data");
+        return entity.getConfig(MongoDBServer.DATA_DIRECTORY, getRunDir() + "/data");
     }
 
     @Override
@@ -50,7 +48,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName());
 
         List<String> commands = new LinkedList<String>();
-        commands.addAll(downloadUrlAs(urls, saveAs));
+        commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
         commands.add(CommonCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
 
@@ -68,21 +66,31 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
                 .updateTaskAndFailOnNonZeroResultCode()
                 .body.append(command).execute();
 
-        String templateUrl = entity.getConfig(MongoDbServer.MONGODB_CONF_TEMPLATE_URL);
+        String templateUrl = entity.getConfig(MongoDBServer.MONGODB_CONF_TEMPLATE_URL);
         if (!Strings.isNullOrEmpty(templateUrl)) copyTemplate(templateUrl, getConfFile());
     }
 
     @Override
     public void launch() {
         List<String> commands = new LinkedList<String>();
-        Integer port = entity.getAttribute(MongoDbServer.PORT);
-        String args = Joiner.on(" ").join(ImmutableList.of(
-                "--config", getConfFile(),
-                "--pidfilepath", getPidFile(),
-                "--logpath", getLogFile(),
-                "--dbpath", getDataDirectory(),
-                "--port", port,
-                "--fork"));
+        Integer port = entity.getAttribute(MongoDBServer.PORT);
+
+        ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
+                .add("--config", getConfFile())
+                .add("--pidfilepath", getPidFile())
+                .add("--dbpath", getDataDirectory())
+                .add("--logpath", getLogFile())
+                .add("--port", port.toString())
+                .add("--fork");
+
+        String replicaSetName = entity.getConfig(MongoDBServer.REPLICA_SET_NAME);
+        if (!Strings.isNullOrEmpty(replicaSetName))
+            argsBuilder.add("--replSet", replicaSetName);
+
+        if (Boolean.TRUE.equals(entity.getConfig(MongoDBServer.ENABLE_REST_INTERFACE)))
+            argsBuilder.add("--rest");
+
+        String args = Joiner.on(" ").join(argsBuilder.build());
         String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
         commands.add(command);
         log.info(command);
@@ -92,10 +100,16 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     }
 
+    /**
+     * Kills the server with SIGINT. Sending SIGKILL is likely to resuult in data corruption.
+     * @see <a href="http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal">http://docs.mongodb.org/manual/tutorial/manage-mongodb-processes/#sending-a-unix-int-or-term-signal</a>
+     */
     @Override
     public void stop() {
-        Map flags = ImmutableMap.of("usePidFile", getPidFile());
-        newScript(flags, STOPPING).execute();
+        // We could also use SIGTERM (15)
+        new ScriptHelper(this, "Send SIGINT to MongoDB server")
+                .body.append("kill -2 $(cat " + getPidFile() + ")")
+                .execute();
     }
 
     @Override
@@ -104,11 +118,11 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         return newScript(flags, CHECK_RUNNING).execute() == 0;
     }
 
-
     protected String getBaseName() {
-        return getOsTag() + "-" + entity.getConfig(MongoDbServer.SUGGESTED_VERSION);
+        return getOsTag() + "-" + entity.getConfig(MongoDBServer.SUGGESTED_VERSION);
     }
 
+    // IDE note: This is used by MongoDBServer.DOWNLOAD_URL
     public String getOsDir() {
         return (getLocation().getOsDetails().isMac()) ? "osx" : "linux";
     }
@@ -136,7 +150,7 @@ public class MongoDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     protected Integer getServerPort() {
-        return entity.getAttribute(MongoDbServer.PORT);
+        return entity.getAttribute(MongoDBServer.PORT);
     }
 
     private String getConfFile() {
