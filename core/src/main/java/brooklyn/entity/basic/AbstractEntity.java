@@ -521,10 +521,6 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         return children.get();
     }
 
-    public EntityCollectionReference<Entity> getChildrenReference() {
-        return children;
-    }
-    
     @Override
     public Collection<Group> getGroups() { 
         return groups.get();
