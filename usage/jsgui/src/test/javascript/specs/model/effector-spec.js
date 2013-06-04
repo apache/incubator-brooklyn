@@ -23,7 +23,7 @@ define([
             var param1 = new EffectorParam.Model(effector1.getParameterByName("locations"))
             expect(param1.get("name")).toBe("locations")
             expect(param1.get("type")).toBe("java.util.Collection")
-            expect(param1.get("description")).toBe(null)
+            expect(param1.get("description")).toBe("")
         })
     })
 })

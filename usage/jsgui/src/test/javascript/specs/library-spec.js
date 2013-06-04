@@ -30,8 +30,8 @@ define([
         })
 
         describe('backbone', function () {
-            it('must be version 0.9.2', function () {
-                expect(Backbone.VERSION).toEqual('0.9.2')
+            it('must be version 1.0.0', function () {
+                expect(Backbone.VERSION).toEqual('1.0.0')
             })
         })
     })
