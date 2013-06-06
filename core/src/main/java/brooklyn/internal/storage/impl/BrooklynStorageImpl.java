@@ -3,6 +3,7 @@ package brooklyn.internal.storage.impl;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGrid;
@@ -32,6 +33,11 @@ public class BrooklynStorageImpl implements BrooklynStorage {
         return simpleMap.put(id, value);
     }
 
+    @Override
+    public AtomicLong createAtomicLong(String id) {
+        return datagrid.createAtomicLong(id);
+    }
+    
     @Override
     public <T> Reference<T> createReference(final String id) {
         // FIXME Use of NULL is necessary for ConcurrentHashMap that doesn't accept null values; but

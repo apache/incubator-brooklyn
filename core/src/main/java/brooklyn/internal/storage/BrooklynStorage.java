@@ -2,6 +2,7 @@ package brooklyn.internal.storage;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 public interface BrooklynStorage {
 
@@ -10,6 +11,12 @@ public interface BrooklynStorage {
     Object get(String id);
 
     Object put(String id, Object value);
+
+    /**
+     * Creates a reference to a long, backed by the storage-medium. 
+     * If already exists with this id, returns it; otherwise creates a new atomic long.
+     */
+    public AtomicLong createAtomicLong(String id);
 
     /**
      * Creates a reference to a value, backed by the storage-medium. If a reference with this 
