@@ -36,6 +36,11 @@ public interface Entity extends Serializable, Rebindable {
     String getId();
     
     /**
+     * Returns the creation time for this entity, in UTC.
+     */
+    long getCreationTime();
+    
+    /**
      * A display name; recommended to be a concise single-line description.
      */
     String getDisplayName();

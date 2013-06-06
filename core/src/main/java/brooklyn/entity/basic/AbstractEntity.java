@@ -126,6 +126,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     private Set<Group> groups = Sets.newLinkedHashSet();
     private Set<Entity> children = Sets.newLinkedHashSet();
 
+    private final long creationTimeUtc;
+
     Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
     Collection<AbstractPolicy> policies = Lists.newCopyOnWriteArrayList();
     Collection<AbstractEnricher> enrichers = Lists.newCopyOnWriteArrayList();
@@ -202,6 +204,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      */
     @Deprecated
     public AbstractEntity(Map flags, Entity parent) {
+        creationTimeUtc = System.currentTimeMillis();
+        
         if (flags==null) {
             throw new IllegalArgumentException("Flags passed to entity "+this+" must not be null (try no-arguments or empty map)");
         }
@@ -392,6 +396,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
                 attributesInternal.update(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    @Override
+    public long getCreationTime() {
+        return creationTimeUtc;
     }
 
     @Override

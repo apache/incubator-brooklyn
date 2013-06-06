@@ -49,13 +49,18 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     private final Object mutex = new Object[0];
     
     private static final Function<Collection<Entity>, Entity> defaultRemovalStrategy = new Function<Collection<Entity>, Entity>() {
-        public Entity apply(Collection<Entity> contenders) {
-            // choose last (i.e. newest) entity that is stoppable
-            Entity result = null;
-            for (Entity it : contenders) {
-                if (it instanceof Startable) result = it;
+        @Override public Entity apply(Collection<Entity> contenders) {
+            // choose newest entity that is stoppable
+            long newestTime = 0;
+            Entity newest = null;
+            
+            for (Entity contender : contenders) {
+                if (contender instanceof Startable && contender.getCreationTime() > newestTime) {
+                    newest = contender;
+                    newestTime = contender.getCreationTime();
+                }
             }
-            return result;
+            return newest;
         }
     };
     
