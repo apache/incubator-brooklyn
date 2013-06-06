@@ -1,6 +1,8 @@
 package brooklyn.internal.storage.impl;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -9,6 +11,8 @@ import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.Reference;
 
+import com.google.common.collect.ImmutableList;
+
 public class BrooklynStorageImpl implements BrooklynStorage {
 
     private static final Object NULL = new Object();
@@ -16,11 +20,13 @@ public class BrooklynStorageImpl implements BrooklynStorage {
     private final DataGrid datagrid;
     private final Map<String,Object> simpleMap;
     private Map<String, Object> refsMap;
+    private Map<String, Object> listsMap;
     
     public BrooklynStorageImpl(DataGrid datagrid) {
         this.datagrid = datagrid;
         this.simpleMap = datagrid.createMap("simple");
         this.refsMap = datagrid.createMap("refs");
+        this.listsMap = datagrid.createMap("lists");
     }
     
     @Override
@@ -59,11 +65,30 @@ public class BrooklynStorageImpl implements BrooklynStorage {
             }
             @Override
             public String toString() {
-                return ""+get();
+                return "id="+get();
             }
         };
     }
     
+    @Override
+    public <T> Reference<List<T>> createNonConcurrentList(final String id) {
+        // For happens-before (for different threads calling get and set), relies on 
+        // underlying map (e.g. from datagrid) having some synchronization
+        return new Reference<List<T>>() {
+            @Override public List<T> get() {
+                List<T> result = (List<T>) listsMap.get(id);
+                return (result == null ? ImmutableList.<T>of() : Collections.unmodifiableList(result));
+            }
+            @Override public List<T> set(List<T> val) {
+                return (List<T>) listsMap.put(id, val);
+            }
+            @Override
+            public String toString() {
+                return "id="+get();
+            }
+        };
+    }
+
     @Override
     public <T> Set<T> createSet(final String id) {
         LiveSet.Mutator<T> mutator = new LiveSet.Mutator<T>() {

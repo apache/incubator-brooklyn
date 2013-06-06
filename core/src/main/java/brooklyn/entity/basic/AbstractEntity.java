@@ -4,10 +4,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +49,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
@@ -125,17 +126,13 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     private Reference<Entity> parent = new BasicReference<Entity>();
     private Set<Group> groups = Sets.newLinkedHashSet();
     private Set<Entity> children = Sets.newLinkedHashSet();
+    private Reference<List<Location>> locations = new BasicReference<List<Location>>(ImmutableList.<Location>of()); // dups removed in addLocations
 
     private final long creationTimeUtc;
 
     Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
     Collection<AbstractPolicy> policies = Lists.newCopyOnWriteArrayList();
     Collection<AbstractEnricher> enrichers = Lists.newCopyOnWriteArrayList();
-    Collection<Location> locations =
-        new ConcurrentLinkedQueue<Location>();
-        // prefer above, because we want to preserve order, FEB 2013
-        // with duplicates removed in addLocations
-        //Collections.newSetFromMap(new ConcurrentHashMap<Location,Boolean>())
 
     // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
     // orphaning (i.e. removing ownership). This flag notes if the entity has previously had a parent, and if an attempt is made to
@@ -373,16 +370,19 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         Entity oldParent = parent.get();
         Set<Group> oldGroups = groups;
         Set<Entity> oldChildren = children;
+        List<Location> oldLocations = locations.get();
         EntityConfigMap oldConfig = configsInternal;
         AttributeMap oldAttribs = attributesInternal;
         
         parent = managementContext.getStorage().createReference(id+"-parent");
         groups = managementContext.getStorage().createSet(id+"-groups");
         children = managementContext.getStorage().createSet(id+"-children");
+        locations = managementContext.getStorage().createNonConcurrentList(id+"-locations");
         
         if (oldParent != null) parent.set(oldParent);
         if (oldGroups != null) groups.addAll(oldGroups);
         if (oldChildren.size() > 0) children.addAll(oldChildren);
+        if (oldLocations.size() > 0) locations.set(ImmutableList.copyOf(oldLocations));
         
         configsInternal = new EntityConfigMap(this, managementContext.getStorage().<ConfigKey<?>, Object>createMap(id+"-config"));
         if (oldConfig.getLocalConfig().size() > 0) {
@@ -622,24 +622,28 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public Collection<Location> getLocations() {
         synchronized (locations) {
-            return ImmutableList.copyOf(locations);
+            return ImmutableList.copyOf(locations.get());
         }
     }
 
     @Override
     public void addLocations(Collection<? extends Location> newLocations) {
         synchronized (locations) {
-            Set<Location> newLocationsWithDuplicatesRemoved = Sets.newLinkedHashSet(newLocations);
-            newLocationsWithDuplicatesRemoved.removeAll(locations);
-            locations.addAll(newLocationsWithDuplicatesRemoved);
+            List<Location> oldLocations = locations.get();
+            Set<Location> truelyNewLocations = Sets.newLinkedHashSet(newLocations);
+            truelyNewLocations.removeAll(oldLocations);
+            if (truelyNewLocations.size() > 0) {
+                locations.set(ImmutableList.<Location>builder().addAll(oldLocations).addAll(truelyNewLocations).build());
+            }
         }
         getManagementSupport().getEntityChangeListener().onLocationsChanged();
     }
 
     @Override
-    public void removeLocations(Collection<? extends Location> newLocations) {
+    public void removeLocations(Collection<? extends Location> removedLocations) {
         synchronized (locations) {
-            locations.removeAll(newLocations);
+            List<Location> oldLocations = locations.get();
+            locations.set(MutableList.<Location>builder().addAll(oldLocations).removeAll(removedLocations).buildImmutable());
         }
         getManagementSupport().getEntityChangeListener().onLocationsChanged();
     }
@@ -647,14 +651,14 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     @Override
     public void clearLocations() {
         synchronized (locations) {
-            locations.clear();
+            locations.set(ImmutableList.<Location>of());
         }
         getManagementSupport().getEntityChangeListener().onLocationsChanged();
     }
 
     public Location firstLocation() {
         synchronized (locations) {
-            return Iterables.get(locations, 0);
+            return Iterables.get(locations.get(), 0);
         }
     }
     

@@ -1,8 +1,11 @@
 package brooklyn.internal.storage;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.google.common.annotations.Beta;
 
 public interface BrooklynStorage {
 
@@ -48,6 +51,30 @@ public interface BrooklynStorage {
      */
     <T> Set<T> createSet(String id);
 
+    /**
+     * Creates a list backed by the storage-medium. If a list with this name has already been
+     * created, then that existing list will be returned.
+     * 
+     * The returned list is not a live view. Changes are made by calling reference.set(), and
+     * the view is refreshed by calling reference.get(). Changes are thread-safe, but callers
+     * must be cafeful not to overwrite other's changes. For example, the code below could overwrite
+     * another threads changes that are made to the map between the call to get() and the subsequent
+     * call to set().
+     * 
+     * <pre>
+     * {@code
+     * Reference<List<String>> ref = storage.<String>createNonConcurrentList("myid");
+     * List<String> newval = ImmutableList.<String>builder().addAll(ref.get()).add("another").builder();
+     * ref.set(newval);
+     * }
+     * </pre>
+     * 
+     * @param id
+     * @return
+     */
+    @Beta
+    <T> Reference<List<T>> createNonConcurrentList(String id);
+    
     /**
      * Creates a map backed by the storage-medium. If a map with this name has already been
      * created, then that existing map will be returned.

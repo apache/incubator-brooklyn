@@ -8,6 +8,13 @@ public class BasicReference<T> implements Reference<T >{
 
     private final AtomicReference<T> ref = new AtomicReference<T>();
     
+    public BasicReference() {
+    }
+    
+    public BasicReference(T val) {
+        set(val);
+    }
+    
     @Override
     public T get() {
         return ref.get();

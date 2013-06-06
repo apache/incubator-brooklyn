@@ -109,5 +109,9 @@ public class MutableList<V> extends ArrayList<V> {
         public MutableList<V> build() {
           return new MutableList<V>(result);
         }
+        
+        public ImmutableList<V> buildImmutable() {
+            return ImmutableList.copyOf(result);
+        }
     }
 }
