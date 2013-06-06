@@ -1,7 +1,7 @@
 package brooklyn.internal.storage.impl;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -40,12 +40,8 @@ public class PseudoDatagrid implements DataGrid {
         }
     }
     
-    // FIXME If not a LinkedHashMap, tests fail because assumes ordered in:
-    //  - DynamicCluster removal strategy for members when shrinking
-    //  - ListConfigKey.ListModificationBase (assumes insertion order, so list is split up as separate entries in the map)
-    //  But that ordering assumption won't hold for datagrids 
     // TODO Not doing Maps.newConcurrentMap() because needs to store null values
     private <K,V> Map<K,V> newMap() {
-        return Collections.synchronizedMap(new LinkedHashMap<K, V>());
+        return Collections.synchronizedMap(new HashMap<K, V>());
     }
 }
