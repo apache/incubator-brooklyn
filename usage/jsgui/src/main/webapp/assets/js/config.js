@@ -29,9 +29,6 @@ require.config({
         "underscore":{
             exports:"_"
         },
-        "formatJson":{
-            exports:"FormatJSON"
-        },
         "backbone":{
             deps:[ "underscore", "jquery" ],
             exports:"Backbone"
