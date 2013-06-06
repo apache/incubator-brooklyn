@@ -1,13 +1,13 @@
 package brooklyn.entity.java;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.ListConfigKey;
 import brooklyn.event.basic.MapConfigKey;
+import brooklyn.event.basic.SetConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 public interface UsesJava {
@@ -37,8 +37,8 @@ public interface UsesJava {
      * </ul> 
      */
     @SetFromFlag("javaOpts")
-    public static final ListConfigKey<String> JAVA_OPTS = new ListConfigKey<String>(String.class, 
-            "java.opts", "Java command line options", new ArrayList<String>());
+    public static final SetConfigKey<String> JAVA_OPTS = new SetConfigKey<String>(String.class, 
+            "java.opts", "Java command line options", ImmutableSet.<String>of());
 
     /**
      * @deprecated Use JAVA_SYSPROPS instead; was deprecated in 0.4.0

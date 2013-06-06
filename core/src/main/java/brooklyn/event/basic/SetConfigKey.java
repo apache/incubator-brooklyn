@@ -1,19 +1,21 @@
 package brooklyn.event.basic;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.ListConfigKey.ListModification;
+import brooklyn.event.basic.ListConfigKey.ListModifications;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.text.Identifiers;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /** A config key representing a list of values. 
  * If a value is set on this key, it is _added_ to the list.
@@ -24,29 +26,26 @@ import com.google.common.collect.Lists;
  * use the relevant {@link ListModification} in {@link ListModifications}.
  * <p>  
  * Specific values can be added in a replaceable way by referring to a subkey.
- * 
- * @deprecated since 0.6; use SetConfigKey. The ListConfigKey no longer guarantees order
  */
 //TODO Create interface
-@Deprecated
-public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implements StructuredConfigKey {
+public class SetConfigKey<V> extends BasicConfigKey<Set<? extends V>> implements StructuredConfigKey {
 
     private static final long serialVersionUID = 751024268729803210L;
-    private static final Logger log = LoggerFactory.getLogger(ListConfigKey.class);
+    private static final Logger log = LoggerFactory.getLogger(SetConfigKey.class);
     
     public final Class<V> subType;
 
-    public ListConfigKey(Class<V> subType, String name) {
+    public SetConfigKey(Class<V> subType, String name) {
         this(subType, name, name, null);
     }
 
-    public ListConfigKey(Class<V> subType, String name, String description) {
+    public SetConfigKey(Class<V> subType, String name, String description) {
         this(subType, name, description, null);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ListConfigKey(Class<V> subType, String name, String description, List<? extends V> defaultValue) {
-        super((Class)List.class, name, description, defaultValue);
+    public SetConfigKey(Class<V> subType, String name, String description, Set<? extends V> defaultValue) {
+        super((Class)Set.class, name, description, defaultValue);
         this.subType = subType;
     }
 
@@ -55,6 +54,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
         return new SubElementConfigKey<V>(this, subType, getName()+"."+subName, "element of "+getName()+", uid "+subName, null);
     }
 
+    @Override
     public boolean isSubKey(Object contender) {
         return contender instanceof ConfigKey && isSubKey((ConfigKey<?>)contender);
     }
@@ -63,14 +63,15 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
         return (contender instanceof SubElementConfigKey && this.equals(((SubElementConfigKey<?>) contender).parent));
     }
 
+    @Override
     @SuppressWarnings("unchecked")
-    public List<V> extractValue(Map<?,?> vals, ExecutionContext exec) {
-        List<V> result = Lists.newArrayList();
+    public Set<V> extractValue(Map<?,?> vals, ExecutionContext exec) {
+        Set<V> result = Sets.newLinkedHashSet();
         for (Object k : vals.keySet()) {
             if (isSubKey(k))
                 result.add( ((SubElementConfigKey<V>) k).extractValue(vals, exec) );
         }
-        return Collections.unmodifiableList(result);
+        return Collections.unmodifiableSet(result);
     }
 
     @Override
@@ -90,7 +91,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
         if (value instanceof StructuredModification) {
             return ((StructuredModification)value).applyToKeyInMap(this, target);
         } else  if (value instanceof Collection) {
-            String warning = "Discouraged undecorated setting of a collection to ListConfigKey "+this+": use ListModification.{set,add}. " +
+            String warning = "Discouraged undecorated setting of a collection to SetConfigKey "+this+": use SetModification.{set,add}. " +
             		"Defaulting to 'add'. Look at debug logging for call stack.";
             log.warn(warning);
             if (log.isDebugEnabled())
@@ -99,49 +100,49 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
                 applyValueToMap(v, target);
             return null;
         } else {
-            // just add to list, using anonymous key
+            // just add to set, using anonymous key
             target.put(subKey(), value);
             return null;
         }
     }
     
-    public interface ListModification<T> extends StructuredModification<ListConfigKey<T>>, List<T> {
+    public interface SetModification<T> extends StructuredModification<SetConfigKey<T>>, Set<T> {
     }
     
-    public static class ListModifications extends StructuredModifications {
-        /** when passed as a value to a ListConfigKey, causes each of these items to be added.
+    public static class SetModifications extends StructuredModifications {
+        /** when passed as a value to a SetConfigKey, causes each of these items to be added.
          * if you have just one, no need to wrap in a mod. */
-        // to prevent confusion (e.g. if a list is passed) we require two objects here.
-        public static final <T> ListModification<T> add(final T o1, final T o2, final T ...oo) {
-            List<T> l = new ArrayList<T>();
+        // to prevent confusion (e.g. if a set is passed) we require two objects here.
+        public static final <T> SetModification<T> add(final T o1, final T o2, final T ...oo) {
+            Set<T> l = new LinkedHashSet<T>();
             l.add(o1); l.add(o2);
             for (T o: oo) l.add(o);
-            return new ListModificationBase<T>(l, false);
+            return new SetModificationBase<T>(l, false);
         }
-        /** when passed as a value to a ListConfigKey, causes each of these items to be added */
-        public static final <T> ListModification<T> addAll(final Collection<T> items) { 
-            return new ListModificationBase<T>(items, false);
+        /** when passed as a value to a SetConfigKey, causes each of these items to be added */
+        public static final <T> SetModification<T> addAll(final Collection<T> items) { 
+            return new SetModificationBase<T>(items, false);
         }
-        /** when passed as a value to a ListConfigKey, causes the items to be added as a single element in the list */
-        public static final <T> ListModification<T> addItem(final T item) {
-            return new ListModificationBase<T>(Collections.singletonList(item), false);
+        /** when passed as a value to a SetConfigKey, causes the items to be added as a single element in the set */
+        public static final <T> SetModification<T> addItem(final T item) {
+            return new SetModificationBase<T>(Collections.singleton(item), false);
         }
-        /** when passed as a value to a ListConfigKey, causes the list to be cleared and these items added */
-        public static final <T> ListModification<T> set(final Collection<T> items) { 
-            return new ListModificationBase<T>(items, true);
+        /** when passed as a value to a SetConfigKey, causes the set to be cleared and these items added */
+        public static final <T> SetModification<T> set(final Collection<T> items) { 
+            return new SetModificationBase<T>(items, true);
         }
     }
 
     @SuppressWarnings("serial")
-    public static class ListModificationBase<T> extends ArrayList<T> implements ListModification<T> {
+    public static class SetModificationBase<T> extends LinkedHashSet<T> implements SetModification<T> {
         private final boolean clearFirst;
-        public ListModificationBase(Collection<T> delegate, boolean clearFirst) {
+        public SetModificationBase(Collection<T> delegate, boolean clearFirst) {
             super(delegate);
             this.clearFirst = clearFirst;
         }
         @SuppressWarnings({ "rawtypes", "unchecked" })
         @Override
-        public Object applyToKeyInMap(ListConfigKey<T> key, Map target) {
+        public Object applyToKeyInMap(SetConfigKey<T> key, Map target) {
             if (clearFirst) {
                 StructuredModification<StructuredConfigKey> clearing = StructuredModifications.clearing();
                 clearing.applyToKeyInMap(key, target);

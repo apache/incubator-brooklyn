@@ -343,8 +343,7 @@ public class RebindEntityTest {
         assertEquals(newE.getConfig(TestEntity.CONF_MAP_PLAIN), ImmutableMap.of("akey", "aval"));
     }
 
-    
-    @Test
+    @Test // ListConfigKey deprecated, as order no longer guaranteed
     public void testRestoresListConfigKey() throws Exception {
         TestEntity origE = origApp.createAndManageChild(EntitySpecs.spec(TestEntity.class)
                 .configure(TestEntity.CONF_LIST_THING.subKey(), "val1")
@@ -353,7 +352,20 @@ public class RebindEntityTest {
         TestApplication newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
 
-        assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("val1", "val2"));
+        //assertEquals(newE.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("val1", "val2"));
+        assertEquals(ImmutableSet.copyOf(newE.getConfig(TestEntity.CONF_LIST_THING)), ImmutableSet.of("val1", "val2"));
+    }
+
+    @Test
+    public void testRestoresSetConfigKey() throws Exception {
+        TestEntity origE = origApp.createAndManageChild(EntitySpecs.spec(TestEntity.class)
+                .configure(TestEntity.CONF_SET_THING.subKey(), "val1")
+                .configure(TestEntity.CONF_SET_THING.subKey(), "val2"));
+        
+        TestApplication newApp = rebind();
+        final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
+
+        assertEquals(newE.getConfig(TestEntity.CONF_SET_THING), ImmutableSet.of("val1", "val2"));
     }
 
     @Test
