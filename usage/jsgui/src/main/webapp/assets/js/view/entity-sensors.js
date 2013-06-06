@@ -36,8 +36,7 @@ define([
                                  { // name (with tooltip)
                                      "mRender": function ( data, type, row ) {
                                          // name (column 1) should have tooltip title
-                                         return '<span class="sensor-name" '+ 
-                                             'rel="tooltip" title="<b>'+
+                                         return '<span class="sensor-name" rel="tooltip" title="<b>'+
                                              Util.prep(data['description'])+'</b><br/>('+
                                              Util.prep(data['type'])+')" data-placement="left">'+
                                              Util.prep(data['name'])+'</span>';

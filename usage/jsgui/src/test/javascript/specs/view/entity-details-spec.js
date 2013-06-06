@@ -41,7 +41,7 @@ define([
 //    })
 
     describe('view/entity-details-spec/Summary', function () {
-        var entity, view, app
+        var entity, view, app, jqueryAjax;
 
         beforeEach(function () {
             entity = new EntitySummary.Model
@@ -50,11 +50,23 @@ define([
             app = new Application.Model
             app.url = "fixtures/application.json"
             app.fetch({async:false})
+
+            // entity-summary calls $.ajax on a sensor url that doesn't exist in tests.
+            // make $.ajax a black hole for the creation of the view. Note it's important
+            // that this is done _after_ the fetches above!
+            jqueryAjax = $.ajax;
+            $.ajax = function() {};
+
             view = new EntitySummaryView({
                 model:entity,
                 application:app
             }).render()
         })
+
+        // Restore $.ajax
+        afterEach(function() {
+            $.ajax = jqueryAjax;
+        });
 
         it('must render textarea contents', function () {
             expect(view.$("textarea").length).toBe(1)

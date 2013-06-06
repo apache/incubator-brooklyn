@@ -1,5 +1,5 @@
 define([
-    "underscore", "jquery", "backbone", "model/location", 
+    "underscore", "jquery", "backbone", "model/location", "formatJson",
     "text!tpl/catalog/page.html", 
     "text!tpl/catalog/details-generic.html",
     "text!tpl/catalog/nav-entry.html", 
@@ -7,8 +7,8 @@ define([
     "view/catalog-details-location",
     "view/catalog-add-location-modal", 
     
-    "formatJson", "bootstrap", "jquery-form"
-], function (_, $, Backbone, Location, 
+    "bootstrap", "jquery-form"
+], function (_, $, Backbone, Location, FormatJSON,
         CatalogPageHtml, 
         DetailsGenericHtml, 
         EntryHtml,

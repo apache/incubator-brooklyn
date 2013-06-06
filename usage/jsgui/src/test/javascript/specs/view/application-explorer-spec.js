@@ -2,8 +2,9 @@
  * Tests for application tree - view explorer.
  */
 define([
-    "underscore", "jquery", "model/app-tree", "view/application-explorer"
-], function (_, $, AppTree, ApplicationExplorerView) {
+    "underscore", "jquery", "model/app-tree", "view/application-explorer",
+    "model/entity-summary", "model/application"
+], function (_, $, AppTree, ApplicationExplorerView, EntitySummary, Application) {
 
     describe('view/application-explorer-spec', function () {
 
@@ -13,9 +14,23 @@ define([
             apps.url = 'fixtures/application-tree.json'
             apps.fetch({async:false})
 
+            var entityFetch, applicationFetch;
+
             beforeEach(function () {
+                // ApplicationTree makes fetch requests to EntitySummary and Application models
+                // with hard-coded URLs, causing long stacktraces in mvn output. This workaround
+                // turns their fetch methods into empty functions.
+                entityFetch = EntitySummary.Model.prototype.fetch;
+                applicationFetch = Application.Model.prototype.fetch;
+                EntitySummary.Model.prototype.fetch = Application.Model.prototype.fetch = function() {};
+
                 view = new ApplicationExplorerView({ collection:apps }).render()
             })
+
+            afterEach(function() {
+                EntitySummary.Model.prototype.fetch = entityFetch;
+                Application.Model.prototype.fetch = applicationFetch;
+            });
 
             it('must contain div.row with two spans: #tree and #details', function () {
                 expect(view.$el.is('#application-explorer')).toBeTruthy()

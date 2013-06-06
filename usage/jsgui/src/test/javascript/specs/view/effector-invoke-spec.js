@@ -2,7 +2,7 @@ define([
     "underscore", "view/effector-invoke", "model/effector-summary", "model/entity"
 ], function (_, EffectorInvokeView, EffectorSummary, Entity) {
 
-    var modalView, collection = new EffectorSummary.Collection()
+    var collection = new EffectorSummary.Collection()
     collection.url = "fixtures/effector-summary-list.json"
     collection.fetch()
     
@@ -10,7 +10,7 @@ define([
     entityFixture.url = 'fixtures/entity.json'
     entityFixture.fetch({async:true})
 
-    modalView = new EffectorInvokeView({
+    var modalView = new EffectorInvokeView({
         tagName:"div",
         className:"modal",
         model:collection.at(0),
