@@ -2,14 +2,9 @@ package brooklyn.util.internal;
 
 import static org.testng.Assert.*
 
-import org.testng.annotations.Test
-
-import java.util.Date
-import java.util.Set
-import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.Test
 
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
 
@@ -130,5 +125,11 @@ public class LanguageUtilsTest {
         assertTrue LanguageUtils.hashCode(t1, ["a", "b"]) == LanguageUtils.hashCode(t2, ["a", "b"])
         assertTrue LanguageUtils.hashCode(t1, ["a", "@b"]) == LanguageUtils.hashCode(t2, ["a", "@b"])
         assertEquals 0, LanguageUtils.hashCode(null, ["a", "@b"])
+    }
+    
+    @Test
+    public void testToString() {
+        TestingFields t1 = [];
+        assertEquals(LanguageUtils.toString(t1, ["a", "b"]), "TestingFields[a=6,b=-7]");
     }
 }

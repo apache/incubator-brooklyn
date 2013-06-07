@@ -244,7 +244,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             LOG.debug("Updating {} in response to changes", this);
             reconfigureService();
             LOG.debug("Reloading {} in response to changes", this);
-            invokeFromJava(RELOAD);
+            invoke(RELOAD);
         }
         setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
     }

@@ -118,8 +118,7 @@ public abstract class ApplicationBuilder {
      */
     protected final <T extends Entity> T addChild(T entity) {
         checkDuringManage();
-        app.addChild(entity);
-        return entity;
+        return app.addChild(entity);
     }
 
     /**
