@@ -2,14 +2,9 @@ package brooklyn.util.internal;
 
 import static org.testng.Assert.*
 
-import org.testng.annotations.Test
-
-import java.util.Date
-import java.util.Set
-import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.Test
 
 import brooklyn.util.internal.LanguageUtils.FieldVisitor
 
@@ -131,24 +126,10 @@ public class LanguageUtilsTest {
         assertTrue LanguageUtils.hashCode(t1, ["a", "@b"]) == LanguageUtils.hashCode(t2, ["a", "@b"])
         assertEquals 0, LanguageUtils.hashCode(null, ["a", "@b"])
     }
-	
-	@Test
-	public void testRepeatUntilSuccessFlags() {
-	    long start = System.currentTimeMillis();
-	    LanguageUtils.repeatUntilSuccess(period: 1*TimeUnit.MILLISECONDS, timeout: 5000*TimeUnit.MILLISECONDS) { 
-	        System.currentTimeMillis() > start+50 
-	    }
-	    long time = System.currentTimeMillis() - start;
-	    assertTrue(time >= 50, "time="+time);
-	    assertTrue(time <= 1000, "time="+time);
-	}
-	@Test
-	public void testRepeatUntilSuccessDefaults() {
-		long start = System.currentTimeMillis();
-		LanguageUtils.repeatUntilSuccess("sample") {
-			System.currentTimeMillis() >= start
-		}
-		assertTrue System.currentTimeMillis() < start+500
-	}
-
+    
+    @Test
+    public void testToString() {
+        TestingFields t1 = [];
+        assertEquals(LanguageUtils.toString(t1, ["a", "b"]), "TestingFields[a=6,b=-7]");
+    }
 }

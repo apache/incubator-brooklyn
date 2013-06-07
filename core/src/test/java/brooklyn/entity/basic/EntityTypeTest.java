@@ -6,12 +6,18 @@ import static brooklyn.entity.basic.AbstractEntity.SENSOR_ADDED;
 import static brooklyn.entity.basic.AbstractEntity.SENSOR_REMOVED;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+
+import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
@@ -22,10 +28,12 @@ import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public class EntityTypeTest {
     private static final AttributeSensor<String> TEST_SENSOR = new BasicAttributeSensor<String>(String.class, "test.sensor");
@@ -54,6 +62,34 @@ public class EntityTypeTest {
     public void testGetSimpleName() throws Exception {
         TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         assertEquals(entity2.getEntityType().getSimpleName(), TestEntity.class.getSimpleName());
+    }
+
+    @Test
+    public void testGetEffectors() throws Exception {
+        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        Set<Effector<?>> effectors = entity2.getEntityType().getEffectors();
+        
+        class MatchesNamePredicate implements Predicate<Effector<?>> {
+            private final String name;
+            public MatchesNamePredicate(String name) {
+                this.name = name;
+            }
+            @Override public boolean apply(@Nullable Effector<?> input) {
+                return name.equals(input.getName());
+            }
+        };
+        
+        assertNotNull(Iterables.find(effectors, new MatchesNamePredicate("myEffector")), null);
+        assertNotNull(Iterables.find(effectors, new MatchesNamePredicate("identityEffector")), null);
+    }
+
+    @Test
+    public void testGetEffector() throws Exception {
+        TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
+        Effector<?> effector = entity2.getEntityType().getEffector("myEffector");
+        Effector<?> effector2 = entity2.getEntityType().getEffector("identityEffector", Object.class);
+        assertEquals(effector.getName(), "myEffector");
+        assertEquals(effector2.getName(), "identityEffector");
     }
 
     @Test

@@ -1,1 +1,2 @@
 brooklyn.location.jclouds.JcloudsResolver
+brooklyn.location.jclouds.JcloudsByonLocationResolver

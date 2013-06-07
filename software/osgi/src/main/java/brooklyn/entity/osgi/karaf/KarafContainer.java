@@ -4,11 +4,10 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 import brooklyn.catalog.Catalog;
-import brooklyn.entity.Effector;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
@@ -34,11 +33,11 @@ public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
     public static final String MVN_SCHEME = "mvn";
     public static final String HTTP_SCHEME = "http";
 
-    public static final Effector<Map<Long,Map<String,?>>> LIST_BUNDLES = new MethodEffector(KarafContainer.class, "listBundles");
-    public static final Effector<Long> INSTALL_BUNDLE = new MethodEffector<Long>(KarafContainer.class, "installBundle");
-    public static final Effector<Void> UNINSTALL_BUNDLE = new MethodEffector<Void>(KarafContainer.class, "uninstallBundle");
-    public static final Effector<Void> INSTALL_FEATURE = new MethodEffector<Void>(KarafContainer.class, "installFeature");
-    public static final Effector<Void> UPDATE_SERVICE_PROPERTIES = new MethodEffector<Void>(KarafContainer.class, "updateServiceProperties");
+    public static final MethodEffector<Map<Long,Map<String,?>>> LIST_BUNDLES = new MethodEffector(KarafContainer.class, "listBundles");
+    public static final MethodEffector<Long> INSTALL_BUNDLE = new MethodEffector<Long>(KarafContainer.class, "installBundle");
+    public static final MethodEffector<Void> UNINSTALL_BUNDLE = new MethodEffector<Void>(KarafContainer.class, "uninstallBundle");
+    public static final MethodEffector<Void> INSTALL_FEATURE = new MethodEffector<Void>(KarafContainer.class, "installFeature");
+    public static final MethodEffector<Void> UPDATE_SERVICE_PROPERTIES = new MethodEffector<Void>(KarafContainer.class, "updateServiceProperties");
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(
@@ -97,27 +96,27 @@ public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
     public static final BasicAttributeSensor<String> KARAF_STATE = new BasicAttributeSensor<String>(
             String.class, "karaf.admin.state", "Karaf instance state");
 
-    @Description("Updates the OSGi Service's properties, adding (and overriding) the given key-value pairs")
+    @Effector(description="Updates the OSGi Service's properties, adding (and overriding) the given key-value pairs")
     public void updateServiceProperties(
-            @NamedParameter("serviceName") @Description("Name of the OSGi service") String serviceName, 
+            @EffectorParam(name="serviceName", description="Name of the OSGi service") String serviceName, 
             Map<String,String> additionalVals);
     
-    @Description("Installs the given OSGi feature")
+    @Effector(description="Installs the given OSGi feature")
     public void installFeature(
-            @NamedParameter("featureName") @Description("Name of the feature - see org.apache.karaf:type=features#installFeature()") final String featureName) 
+            @EffectorParam(name="featureName", description="Name of the feature - see org.apache.karaf:type=features#installFeature()") final String featureName) 
             throws Exception;
 
-    @Description("Lists all the karaf bundles")
+    @Effector(description="Lists all the karaf bundles")
     public Map<Long,Map<String,?>> listBundles();
     
     /**
      * throws URISyntaxException If bundle name is not a valid URI
      */
-    @Description("Deploys the given bundle, returning the bundle id - see osgi.core:type=framework#installBundle()")
+    @Effector(description="Deploys the given bundle, returning the bundle id - see osgi.core:type=framework#installBundle()")
     public long installBundle(
-            @NamedParameter("bundle") @Description("URI of bundle to be deployed") String bundle) throws URISyntaxException;
+            @EffectorParam(name="bundle", description="URI of bundle to be deployed") String bundle) throws URISyntaxException;
 
-    @Description("Undeploys the bundle with the given id")
+    @Effector(description="Undeploys the bundle with the given id")
     public void uninstallBundle(
-            @NamedParameter("bundleId") @Description("Id of the bundle") Long bundleId);
+            @EffectorParam(name="bundleId", description="Id of the bundle") Long bundleId);
 }

@@ -4,7 +4,7 @@
  */
 define([
     "underscore", "jquery", "backbone", "model/app-tree", "./entity-details", "model/entity-summary",
-    "model/application", "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html", "brooklyn-utils"
+    "model/application", "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html"
 ], function (_, $, Backbone, AppTree, EntityDetailsView, EntitySummary, Application, TreeItemHtml, EntityDetailsEmptyHtml) {
 
     var ApplicationTreeView = Backbone.View.extend({

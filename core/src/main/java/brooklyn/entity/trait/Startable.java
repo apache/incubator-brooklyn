@@ -1,14 +1,13 @@
 package brooklyn.entity.trait;
 
-import brooklyn.entity.Effector;
-import brooklyn.entity.basic.Description;
+import java.util.Collection;
+
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
-
-import java.util.Collection;
 
 /**
  * This interface describes an {@link brooklyn.entity.Entity} that can be started and stopped.
@@ -21,25 +20,25 @@ public interface Startable {
 
     AttributeSensor<Boolean> SERVICE_UP = new BasicAttributeSensor<Boolean>(Boolean.class, "service.isUp", "Service has been started successfully and is running");
 
-    Effector<Void> START = new MethodEffector<Void>(Startable.class, "start");
-    Effector<Void> STOP = new MethodEffector<Void>(Startable.class, "stop");
-    Effector<Void> RESTART = new MethodEffector<Void>(Startable.class,"restart");
+    MethodEffector<Void> START = new MethodEffector<Void>(Startable.class, "start");
+    MethodEffector<Void> STOP = new MethodEffector<Void>(Startable.class, "stop");
+    MethodEffector<Void> RESTART = new MethodEffector<Void>(Startable.class,"restart");
 
     /**
      * Start the entity in the given collection of locations.
      */
-    @Description("Start the process/service represented by an entity")
-    void start(@NamedParameter("locations") Collection<? extends Location> locations);
+    @Effector(description="Start the process/service represented by an entity")
+    void start(@EffectorParam(name="locations") Collection<? extends Location> locations);
 
     /**
      * Stop the entity.
      */
-    @Description("Stop the process/service represented by an entity")
+    @Effector(description="Stop the process/service represented by an entity")
     void stop();
 
     /**
      * Restart the entity.
      */
-    @Description("Restart the process/service represented by an entity")
+    @Effector(description="Restart the process/service represented by an entity")
     void restart();
 }

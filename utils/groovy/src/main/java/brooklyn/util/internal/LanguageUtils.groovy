@@ -1,21 +1,30 @@
 package brooklyn.util.internal
 
 import java.lang.reflect.Field
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong
 
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Identifiers
 
+import com.google.common.annotations.Beta
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.thoughtworks.xstream.XStream
 
 /**
  * Useful Groovy utility methods.
  * 
- * @deprecated since 0.5; use Java! Class will likely have a major overhaul in 0.6 and may be deleted entirely
+ * @deprecated since 0.5; requires thorough review for what will be kept.
+ *             e.g. consider instead using guava's {@link com.google.common.collect.Multimap} instead of addToMapOfSets etc
  */
 @Deprecated
+@Beta
 public class LanguageUtils {
     // For unique identifiers
     private static final AtomicLong seed = new AtomicLong(0L)
@@ -32,18 +41,6 @@ public class LanguageUtils {
 
     public static <T> T getPropertySafe(Object target, String name, T defaultValue=null) {
         target.hasProperty(name)?.getProperty(target) ?: defaultValue
-    }
-	public static boolean repeatUntilSuccess(String description, Callable<Boolean> action) throws Exception {
-		repeatUntilSuccess([:], description, action)
-	}
-    public static boolean repeatUntilSuccess(Map flags=[:], String description=null, Callable<Boolean> action) throws Exception {
-		Repeater r = new Repeater(description).repeat()
-			.every(500, TimeUnit.MILLISECONDS)
-			.until(action)
-			.rethrowException();
-		if (!flags.timeout) r.limitIterationsTo(40);
-		r.setFromFlags(flags);
-        boolean result = r.run()
     }
 
     //TODO find with annotation
@@ -355,5 +352,21 @@ public class LanguageUtils {
 
     public static int hashCode(Object o, Closure optionalGetter=null, Object[] fieldNames) {
         hashCode(o, optionalGetter, Arrays.asList(fieldNames))
+    }
+    
+    /** Default String representation is simplified name of class, together with selected fields. */
+    public static String toString(Object o, Closure optionalGetter=null, Collection<? extends CharSequence> fieldNames) {
+        if (o==null) return null;
+        Closure get = optionalGetter ?: DEFAULT_FIELD_GETTER
+        
+        StringBuilder result = new StringBuilder();
+        result.append(o.getClass().getSimpleName());
+        if (result.length() == 0) result.append(o.getClass().getName());
+        List<Object> fieldVals = fieldNames.collect {
+                Object v = get.call(o, it);
+                return (v != null) ? it+"="+v : null;
+        }
+        result.append("[").append(Joiner.on(",").skipNulls().join(fieldVals)).append("]");
+        return result.toString();
     }
 }

@@ -9,7 +9,12 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-/** provides runtime access to the name of a paramter, esp for effectors; typically matches any default value supplied in the code */
+/** 
+ * Provides runtime access to the name of a paramter, esp for effectors; typically matches any default value supplied in the code
+ * 
+ * @deprecated since 0.6; use {@link brooklyn.entity.annotation.EffectorParam} annotation instead, with its defaultValue member.
+ */
+@Deprecated
 public @interface DefaultValue {
     String value();
 }

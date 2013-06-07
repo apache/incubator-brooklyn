@@ -7,11 +7,14 @@ import java.util.Map;
 
 import org.codehaus.groovy.runtime.MethodClosure;
 
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Lists;
 
@@ -19,15 +22,108 @@ import com.google.common.collect.Lists;
  * see Effector*Test for usage example
  */
 public class MethodEffector<T> extends AbstractEffector<T> {
+    
+    @SuppressWarnings("rawtypes")
+    public static Effector<?> create(Method m) {
+        return new MethodEffector(m);
+    }
+    
     protected static class AnnotationsOnMethod {
-        Class<?> clazz;
-        String name;
-        String description;
-        Class<?> returnType;
-        List<ParameterType<?>> parameters;
+        final Class<?> clazz;
+        final String name;
+        final String description;
+        final Class<?> returnType;
+        final List<ParameterType<?>> parameters;
+
+        public AnnotationsOnMethod(Class<?> clazz, String methodName) {
+            this(clazz, inferBestMethod(clazz, methodName));
+        }
+
+        public AnnotationsOnMethod(Class<?> clazz, Method method) {
+            this.clazz = clazz;
+            this.name = method.getName();
+            this.returnType = method.getReturnType();
+
+            // Get the description
+            brooklyn.entity.annotation.Effector effectorAnnotation = method.getAnnotation(brooklyn.entity.annotation.Effector.class);
+            Description methodDescriptionAnnotation = method.getAnnotation(Description.class);
+            String effDescription = (effectorAnnotation != null) ? effectorAnnotation.description() : null;
+            String effLegacyDescription = (methodDescriptionAnnotation != null) ? methodDescriptionAnnotation.value() : null;
+
+            if (methodDescriptionAnnotation != null) {
+                if (!Strings.isEmpty(effDescription) && !effDescription.equals(effLegacyDescription)) {
+                    LOG.warn("Deprecated use of @Description on effector "+method+"; preferring @Effector annotation's description");
+                } else {
+                    LOG.warn("Deprecated use of @Description on effector "+method);
+                }
+            }
+            description = (Strings.isEmpty(effDescription)) ? effLegacyDescription : effDescription;
+
+            // Get the parameters
+            parameters = Lists.newArrayList();
+            int numParameters = method.getParameterTypes().length;
+            for (int i = 0; i < numParameters; i++) {
+                parameters.add(toParameterType(method, i));
+            }
+        }
+
+        protected static ParameterType<?> toParameterType(Method method, int paramIndex) {
+            Annotation[] anns = method.getParameterAnnotations()[paramIndex];
+            Class<?> type = method.getParameterTypes()[paramIndex];
+            EffectorParam paramAnnotation = findAnnotation(anns, EffectorParam.class);
+            NamedParameter nameAnnotation = findAnnotation(anns, NamedParameter.class);
+            Description descriptionAnnotation = findAnnotation(anns, Description.class);
+            DefaultValue dvAnnotation = findAnnotation(anns, DefaultValue.class);
+
+            String paramName = (paramAnnotation == null) ? null : paramAnnotation.name();
+            String legacyName = (nameAnnotation != null) ? nameAnnotation.value() : null;
+            if (nameAnnotation != null) {
+                if (paramName != null && paramName.equals(legacyName)) {
+                    LOG.warn("Deprecated use of @NamedParameter on parameter in effector "+method+"; preferring @EffectorParam annotation's name");
+                } else {
+                    LOG.warn("Deprecated use of @NamedParameter on parameter in effector "+method);
+                }
+            }
+            // TODO if blank, could do "param"+(i+1); would that be better?
+            // TODO this will now give "" if name is blank, rather than previously null. Is that ok?!
+            String name = (paramAnnotation != null) ? paramAnnotation.name() : 
+                    (nameAnnotation != null ? nameAnnotation.value() : null);
+
+            String paramDescription = (paramAnnotation == null || EffectorParam.MAGIC_STRING_MEANING_NULL.equals(paramAnnotation.description())) ? null : paramAnnotation.description();
+            String legacyDescription = (descriptionAnnotation != null) ? descriptionAnnotation.value() : null;
+            if (descriptionAnnotation != null) {
+                if (paramDescription != null && !paramDescription.equals(legacyDescription)) {
+                    LOG.warn("Deprecated use of @Description on parameter in effector "+method+"; preferring @EffectorParam annotation's description");
+                } else {
+                    LOG.warn("Deprecated use of @Description on parameter in effector "+method);
+                }
+            }
+            String description = (paramDescription != null) ? paramDescription : legacyDescription;
+
+            String paramDefaultValue = (paramAnnotation == null || EffectorParam.MAGIC_STRING_MEANING_NULL.equals(paramAnnotation.defaultValue())) ? null : paramAnnotation.defaultValue();
+            String legacyDefaultValue = (dvAnnotation != null) ? dvAnnotation.value() : null;
+            if (dvAnnotation != null) {
+                if (paramDefaultValue != null && !paramDefaultValue.equals(legacyDefaultValue)) {
+                    LOG.warn("Deprecated use of @DefaultValue on parameter in effector "+method+"; preferring @EffectorParam annotation's default value");
+                } else {
+                    LOG.warn("Deprecated use of @DefaultValue on parameter in effector "+method);
+                }
+            }
+            Object defaultValue = (paramDefaultValue != null) ? 
+                    TypeCoercions.coerce(paramDefaultValue, type) :
+                    (legacyDefaultValue != null ? TypeCoercions.coerce(legacyDefaultValue, type) : null);
+
+            return new BasicParameterType(name, type, description, defaultValue);
+        }
         
-        AnnotationsOnMethod(Class<?> clazz, String methodName) {
-            name = methodName;
+        protected static <T extends Annotation> T findAnnotation(Annotation[] anns, Class<T> type) {
+            for (Annotation ann : anns) {
+                if (type.isInstance(ann)) return (T) ann;
+            }
+            return null;
+        }
+        
+        protected static Method inferBestMethod(Class<?> clazz, String methodName) {
             Method best = null;
             for (Method it : clazz.getMethods()) { 
                 if (it.getName().equals(methodName)) {
@@ -37,32 +133,7 @@ public class MethodEffector<T> extends AbstractEffector<T> {
             if (best==null) {
                 throw new IllegalStateException("Cannot find method "+methodName+" on "+clazz.getCanonicalName());
             }
-            Description methodDescriptoinAnnotation = best.getAnnotation(Description.class);
-            description = (methodDescriptoinAnnotation != null) ? methodDescriptoinAnnotation.value() : null;
-            
-            returnType = best.getReturnType();
-            parameters = Lists.newArrayList();
-            Annotation[][] parameterAnnotations = best.getParameterAnnotations();
-            Class<?>[] parameterTypes = best.getParameterTypes();
-            for (int i = 0; i < parameterAnnotations.length; i++) {
-                Annotation[] anns = parameterAnnotations[i];
-                Class<?> type = parameterTypes[i];
-                NamedParameter nameAnnotation = findAnnotation(anns, NamedParameter.class);
-                Description descriptionAnnotation = findAnnotation(anns, Description.class);
-                DefaultValue dvAnnotation = findAnnotation(anns, DefaultValue.class);
-                String name = nameAnnotation != null ? nameAnnotation.value() : null; /* ?: "param"+(i+1) */
-                String description = descriptionAnnotation != null ? descriptionAnnotation.value() : null;
-                Object defaultValue = (dvAnnotation != null) ? TypeCoercions.coerce(dvAnnotation.value(), type) : null;
-                BasicParameterType parameterType = new BasicParameterType(name, type, description, defaultValue);
-                parameters.add(parameterType);
-            }
-        }
-
-        public static <T extends Annotation> T findAnnotation(Annotation[] anns, Class<T> type) {
-            for (Annotation ann : anns) {
-                if (type.isInstance(ann)) return (T) ann;
-            }
-            return null;
+            return best;
         }
     }
 
@@ -70,7 +141,11 @@ public class MethodEffector<T> extends AbstractEffector<T> {
     public MethodEffector(Class<?> whereEffectorDefined, String methodName) {
         this(new AnnotationsOnMethod(whereEffectorDefined, methodName), null);
     }
-    
+
+    public MethodEffector(Method method) {
+        this(new AnnotationsOnMethod(method.getDeclaringClass(), method), null);
+    }
+
     public MethodEffector(MethodClosure mc) {
         this(new AnnotationsOnMethod((Class)mc.getDelegate(), mc.getMethod()), null);
     }

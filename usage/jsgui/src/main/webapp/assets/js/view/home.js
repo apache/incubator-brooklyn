@@ -3,10 +3,12 @@
  */
 
 define([
-    "underscore", "jquery", "backbone", "./application-add-wizard", "model/location",
-    "text!tpl/home/applications.html", "text!tpl/home/summaries.html", "text!tpl/home/app-entry.html", 
+    "underscore", "jquery", "backbone", "brooklyn-utils", "./application-add-wizard", "model/location",
+    "text!tpl/home/applications.html",
+    "text!tpl/home/summaries.html",
+    "text!tpl/home/app-entry.html",
     "bootstrap"
-], function (_, $, Backbone, AppAddWizard, Location, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
+], function (_, $, Backbone, Util, AppAddWizard, Location, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
 
     var HomeView = Backbone.View.extend({
         tagName:"div",
@@ -28,7 +30,7 @@ define([
             this._appViews = {}
             this.summariesView = new HomeView.HomeSummariesView({
             	applications:this.collection,
-            	locations:this.options.locations,
+            	locations:this.options.locations
         	})
             this.renderSummaries()
             this.collection.on('reset', this.render, this)
@@ -40,7 +42,7 @@ define([
             } else {
             	requirejs(["googlemaps"], function (GoogleMaps) {
             	    _.defer( function() {
-            	        log("loading google maps")
+            	        Util.log("loading google maps")
             			var map = GoogleMaps.addMapToCanvas(id[0],
             			        // brooklyn bridge
 //            			        40.7063, -73.9971, 14

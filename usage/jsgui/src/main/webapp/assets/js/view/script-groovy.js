@@ -1,5 +1,5 @@
 define([
-    "underscore", "jquery", "backbone",
+    "underscore", "jquery", "backbone", "brooklyn-utils",
     "view/viewutils",
     "text!tpl/script/groovy.html", 
     
@@ -7,9 +7,8 @@ define([
     "jquery-wiggle",
     "jquery-ba-bbq",
     "handlebars",
-    "bootstrap",
-    "brooklyn-utils",
-], function (_, $, Backbone, ViewUtils, GroovyHtml) {
+    "bootstrap"
+], function (_, $, Backbone, Util, ViewUtils, GroovyHtml) {
 
     var ScriptGroovyView = Backbone.View.extend({
         tagName:"div",
@@ -61,19 +60,19 @@ define([
                 data:script,
                 contentType:"application/text",
                 success:function (data) {
-                    $(".output .throbber", this.$el).hide()
+                    $(".output .throbber", that.$el).hide()
                     that.updateTextareaWithData($(".output .result"), data.result, true);
                     that.updateTextareaWithData($(".output .error"), data.problem, false);
                     that.updateTextareaWithData($(".output .stdout"), data.stdout, false);
                     that.updateTextareaWithData($(".output .stderr"), data.stderr, false);
                 },
                 error: function(data) {
-                    $(".output .throbber", this.$el).hide()
+                    $(".output .throbber", that.$el).hide()
                     $("#groovy-ui-container div.error").val("ERROR: "+data)
                     $(".output .error").show()
                     
-                    log("ERROR submitting groovy script")
-                    log(data)
+                    Util.log("ERROR submitting groovy script")
+                    Util.log(data)
                 }})
         }
         

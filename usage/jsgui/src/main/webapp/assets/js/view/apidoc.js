@@ -1,14 +1,13 @@
 define([
-    "underscore", "jquery", "backbone",
-    "text!tpl/script/swagger.html", 
+    "underscore", "jquery", "backbone", "brooklyn-utils",
+    "text!tpl/script/swagger.html",
     
     "jquery-slideto",
     "jquery-wiggle",
     "jquery-ba-bbq",
     "handlebars",
-    "bootstrap",
-    "brooklyn-utils"
-], function (_, $, Backbone, SwaggerHtml) {
+    "bootstrap"
+], function (_, $, Backbone, Util, SwaggerHtml) {
 
     var ApidocView = Backbone.View.extend({
         tagName:"div",
@@ -24,30 +23,30 @@ define([
         },
         
         loadSwagger: function() {
-            require( [
-                    "/assets/js/libs/swagger.js",
-                    "/assets/js/libs/swagger-ui.js" ],
-                    function() {
+            require([
+               "/assets/js/libs/swagger.js",
+                "/assets/js/libs/swagger-ui.js"
+            ], function() {
                         
-            var swaggerUi = new SwaggerUi({
-                basePath:"",
-                discoveryUrl:"/v1/apidoc",
-                dom_id:"swagger-ui-container",
-                supportHeaderParams: false,
-                supportedSubmitMethods: ['get', 'post', 'put'],
-                onComplete: function(swaggerApi, swaggerUi){
-                        log("Loaded SwaggerUI")
-                        log(swaggerApi);
-                        log(swaggerUi);
-                },
-                onFailure: function(data) {
-                        log("Unable to Load SwaggerUI");
-                        log(data);
-                },
-                docExpansion: "none"
-            });
+                var swaggerUi = new SwaggerUi({
+                    basePath:"",
+                    discoveryUrl:"/v1/apidoc",
+                    dom_id:"swagger-ui-container",
+                    supportHeaderParams: false,
+                    supportedSubmitMethods: ['get', 'post', 'put'],
+                    onComplete: function(swaggerApi, swaggerUi){
+                        Util.log("Loaded SwaggerUI");
+                        Util.log(swaggerApi);
+                        Util.log(swaggerUi);
+                    },
+                    onFailure: function(data) {
+                        Util.log("Unable to Load SwaggerUI");
+                        Util.log(data);
+                    },
+                    docExpansion: "none"
+                });
 
-            swaggerUi.load();
+                swaggerUi.load();
             })
             
         }

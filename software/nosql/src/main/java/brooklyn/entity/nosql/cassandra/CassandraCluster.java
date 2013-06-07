@@ -5,7 +5,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.Description;
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -40,7 +40,7 @@ public interface CassandraCluster extends DynamicCluster {
      */
     String getClusterName();
 
-    @Description("Updates the cluster members")
+    @Effector(description="Updates the cluster members")
     void update();
 
 }

@@ -9,9 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.Description;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
@@ -45,13 +43,13 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         return super.isLegacyConstruction();
     }
     
-    @Description("an example of a no-arg effector")
+    @Override
     public void myEffector() {
         if (LOG.isTraceEnabled()) LOG.trace("In myEffector for {}", this);
     }
     
-    @Description("returns the arg passed in")
-    public Object identityEffector(@NamedParameter("arg") @Description("val to return") Object arg) {
+    @Override
+    public Object identityEffector(Object arg) {
         if (LOG.isTraceEnabled()) LOG.trace("In identityEffector for {}", this);
         return arg;
     }

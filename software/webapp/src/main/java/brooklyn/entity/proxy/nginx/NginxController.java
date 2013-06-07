@@ -4,7 +4,7 @@ import java.util.Map;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.Description;
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.AbstractController;
@@ -83,7 +83,7 @@ public interface NginxController extends AbstractController, HasShortName {
 
     boolean isSticky();
 
-    @Description("Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")
+    @Effector(description="Gets the current server configuration (by brooklyn recalculating what the config should be); does not affect the server")
     String getCurrentConfiguration();
 
     String getConfigFile();

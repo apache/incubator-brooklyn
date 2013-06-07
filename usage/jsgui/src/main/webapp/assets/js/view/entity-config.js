@@ -4,10 +4,10 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone",
+    "underscore", "jquery", "backbone", "brooklyn-utils",
     "view/viewutils", "model/config-summary", "text!tpl/apps/config.html",
-    "jquery-datatables", "datatables-extensions", "brooklyn-utils"
-], function (_, $, Backbone, ViewUtils, ConfigSummary, ConfigHtml) {
+    "jquery-datatables", "datatables-extensions"
+], function (_, $, Backbone, Util, ViewUtils, ConfigSummary, ConfigHtml) {
 
     var EntityConfigView = Backbone.View.extend({
         template:_.template(ConfigHtml),
@@ -38,9 +38,9 @@ define([
                                          // name (column 1) should have tooltip title
                                          return '<span class="config-name" '+ 
                                              'rel="tooltip" title="<b>'+
-                                             prep(data['description'])+'</b><br/>('+
-                                             prep(data['type'])+')" data-placement="left">'+
-                                             prep(data['name'])+'</span>';
+                                             Util.prep(data['description'])+'</b><br/>('+
+                                             Util.prep(data['type'])+')" data-placement="left">'+
+                                             Util.prep(data['name'])+'</span>';
                                      },
                                      "aTargets": [ 1 ]
                                  },
@@ -51,10 +51,10 @@ define([
                                          var icon="icon-file"
                                          var title="JSON direct link"
                                          var actionsText = 
-                                             "<a href='"+prep(link)+"'"+
-                                             " class='"+prep(icon)+"'"+
-                                             " title='"+prep(title)+"'>"+
-                                             prep(text)+"</a>\n";
+                                             "<a href='"+Util.prep(link)+"'"+
+                                             " class='"+Util.prep(icon)+"'"+
+                                             " title='"+Util.prep(title)+"'>"+
+                                                 Util.prep(text)+"</a>\n";
                                          //just one action here
                                          return actionsText;
                                      },
@@ -62,12 +62,12 @@ define([
                                  },
                                  { // value
                                      "mRender": function ( data, type, row ) {
-                                         return prep(roundIfNumberToNumDecimalPlaces(data, 4))
+                                         return Util.prep(Util.roundIfNumberToNumDecimalPlaces(data, 4))
                                      },
                                      "aTargets": [ 3 ]
                                  },
                                  // ID in column 0 is standard (assumed in ViewUtils)
-                                 { "bVisible": false,  "aTargets": [ 0 ] /* hide id column */ },
+                                 { "bVisible": false,  "aTargets": [ 0 ] /* hide id column */ }
                              ]            
             });
             ViewUtils.addFilterEmptyButton(that.table);

@@ -2,10 +2,9 @@ package brooklyn.entity.webapp;
 
 import java.util.Set;
 
-import brooklyn.entity.Effector;
-import brooklyn.entity.basic.Description;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.NamedParameter;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -15,8 +14,8 @@ public interface JavaWebAppSoftwareProcess extends SoftwareProcess, JavaWebAppSe
     public static final AttributeSensor<Set<String>> DEPLOYED_WARS = new BasicAttributeSensor(
             Set.class, "webapp.deployedWars", "Names of archives/contexts that are currently deployed");
 
-    public static final Effector<Void> DEPLOY = new MethodEffector<Void>(JavaWebAppSoftwareProcess.class, "deploy");
-    public static final Effector<Void> UNDEPLOY = new MethodEffector<Void>(JavaWebAppSoftwareProcess.class, "undeploy");
+    public static final MethodEffector<Void> DEPLOY = new MethodEffector<Void>(JavaWebAppSoftwareProcess.class, "deploy");
+    public static final MethodEffector<Void> UNDEPLOY = new MethodEffector<Void>(JavaWebAppSoftwareProcess.class, "undeploy");
 
     /**
      * Deploys the given artifact, from a source URL, to a given deployment filename/context.
@@ -43,15 +42,15 @@ public interface JavaWebAppSoftwareProcess extends SoftwareProcess, JavaWebAppSe
      * @param url  where to get the war, as a URL, either classpath://xxx or file:///home/xxx or http(s)...
      * @param targetName  where to tell the server to serve the WAR, see above
      */
-    @Description("Deploys the given artifact, from a source URL, to a given deployment filename/context")
+    @Effector(description="Deploys the given artifact, from a source URL, to a given deployment filename/context")
     public void deploy(
-            @NamedParameter("url") @Description("URL of WAR file") String url, 
-            @NamedParameter("targetName") @Description("context path where WAR should be deployed (/ for ROOT)") String targetName);
+            @EffectorParam(name="url", description="URL of WAR file") String url, 
+            @EffectorParam(name="targetName", description="context path where WAR should be deployed (/ for ROOT)") String targetName);
 
     /** 
      * For the DEPLOYED_WARS to be updated, the input must match the result of the call to deploy
      */
-    @Description("Undeploys the given context/artifact")
+    @Effector(description="Undeploys the given context/artifact")
     public void undeploy(
-            @NamedParameter("targetName") String targetName);
+            @EffectorParam(name="targetName") String targetName);
 }

@@ -22,7 +22,6 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.logging.Log;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.ComputeMetadata;
@@ -715,11 +714,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (setup.getDescription()==null) setCreationString(setup);
             
             String id = (String) checkNotNull(setup.getStringKey("id"), "id");
-            String hostname = (String) checkNotNull(setup.getStringKey("hostname"), "hostname");
+            String hostname = (String) setup.getStringKey("hostname");
             String user = checkNotNull(getUser(setup), "user");
             
             LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}", 
-                    new Object[] {id, user, hostname, getProvider()});
+                    new Object[] {id, user, (hostname != null ? hostname : "<unspecified>"), getProvider()});
             
             // can we allow re-use ?  previously didn't
             ComputeService computeService = JcloudsUtil.findComputeService(setup, false);
@@ -735,6 +734,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
             }
             // TODO confirm we can SSH ?
+
+            if (hostname == null) {
+                hostname = getPublicHostname(node, setup);
+            }
 
             return registerJcloudsSshMachineLocation(node, hostname, setup);
             

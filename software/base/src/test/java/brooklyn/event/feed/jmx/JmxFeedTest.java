@@ -242,7 +242,7 @@ public class JmxFeedTest {
                 .entity(entity)
                 .subscribeToNotification(new JmxNotificationSubscriptionConfig<Integer>(intAttribute)
                         .objectName(objectName)
-                        .notificationFilterByTypeRegex(one))
+                        .notificationFilter(JmxNotificationFilters.matchesType(one)))
                 .build();        
 
         // Notification updates the sensor
@@ -272,7 +272,7 @@ public class JmxFeedTest {
                 .entity(entity)
                 .subscribeToNotification(new JmxNotificationSubscriptionConfig<Integer>(intAttribute)
                         .objectName(objectName)
-                        .notificationFilterByTypeRegex(one)
+                        .notificationFilter(JmxNotificationFilters.matchesType(one))
                         .onNotification(new Function<Notification, Integer>() {
                             public Integer apply(Notification notif) {
                                 return (Integer) notif.getUserData();
@@ -291,7 +291,7 @@ public class JmxFeedTest {
     }
 
     @Test
-    public void testJmxNotificationWildcardSubscriptionUsingListener() throws Exception {
+    public void testJmxNotificationMultipleSubscriptionUsingListener() throws Exception {
         final String one = "notification.one";
         final String two = "notification.two";
         final StandardEmitterMBean mbean = jmxService.registerMBean(ImmutableList.of(one, two), objectName);
@@ -301,7 +301,7 @@ public class JmxFeedTest {
                 .entity(entity)
                 .subscribeToNotification(new JmxNotificationSubscriptionConfig<Integer>(intAttribute)
                         .objectName(objectName)
-                        .notificationFilterByTypeRegex(".*"))
+                        .notificationFilter(JmxNotificationFilters.matchesTypes(one, two)))
                 .build();
         
         // Notification updates the sensor
