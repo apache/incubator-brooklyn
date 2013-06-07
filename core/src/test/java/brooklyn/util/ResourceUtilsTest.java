@@ -147,11 +147,4 @@ public class ResourceUtilsTest {
         assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
     }
 
-    @Test
-    public void testMergePaths() throws Exception {
-        assertEquals(ResourceUtils.mergePaths("a","b"), "a/b");
-        assertEquals(ResourceUtils.mergePaths("/a//","/b/"), "/a/b/");
-        assertEquals(ResourceUtils.mergePaths("foo://","/b/"), "foo:///b/");
-    }
-
 }
