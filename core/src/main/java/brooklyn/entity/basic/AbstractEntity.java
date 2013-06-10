@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -127,8 +128,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     private Set<Group> groups = Sets.newLinkedHashSet();
     private Set<Entity> children = Sets.newLinkedHashSet();
     private Reference<List<Location>> locations = new BasicReference<List<Location>>(ImmutableList.<Location>of()); // dups removed in addLocations
-
-    private final long creationTimeUtc;
+    private Reference<Long> creationTimeUtc = new BasicReference<Long>(System.currentTimeMillis());
 
     Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
     Collection<AbstractPolicy> policies = Lists.newCopyOnWriteArrayList();
@@ -201,8 +201,6 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      */
     @Deprecated
     public AbstractEntity(Map flags, Entity parent) {
-        creationTimeUtc = System.currentTimeMillis();
-        
         if (flags==null) {
             throw new IllegalArgumentException("Flags passed to entity "+this+" must not be null (try no-arguments or empty map)");
         }
@@ -373,24 +371,33 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         List<Location> oldLocations = locations.get();
         EntityConfigMap oldConfig = configsInternal;
         AttributeMap oldAttribs = attributesInternal;
+        long oldCreationTimeUtc = creationTimeUtc.get();
         
-        parent = managementContext.getStorage().createReference(id+"-parent");
-        groups = managementContext.getStorage().createSet(id+"-groups");
-        children = managementContext.getStorage().createSet(id+"-children");
-        locations = managementContext.getStorage().createNonConcurrentList(id+"-locations");
-        
+        parent = managementContext.getStorage().getReference(id+"-parent");
+        groups = Collections.newSetFromMap(managementContext.getStorage().<Group,Boolean>getMap(id+"-groups"));
+        children = Collections.newSetFromMap(managementContext.getStorage().<Entity,Boolean>getMap(id+"-children"));
+        locations = managementContext.getStorage().getNonConcurrentList(id+"-locations");
+        creationTimeUtc = managementContext.getStorage().getReference(id+"-creationTime");
+
+        // Only override stored defaults if we have actual values. We might be in setManagementContext
+        // because we are reconstituting an existing entity in a new brooklyn management-node (in which
+        // case believe what is already in the storage), or we might be in the middle of creating a new 
+        // entity. Normally for a new entity (using EntitySpec creation approach), this will get called
+        // before setting the parent etc. However, for backwards compatibility we still support some
+        // things calling the entity's constructor directly.
         if (oldParent != null) parent.set(oldParent);
-        if (oldGroups != null) groups.addAll(oldGroups);
+        if (oldGroups.size() > 0) groups.addAll(oldGroups);
         if (oldChildren.size() > 0) children.addAll(oldChildren);
         if (oldLocations.size() > 0) locations.set(ImmutableList.copyOf(oldLocations));
+        if (creationTimeUtc.isNull()) creationTimeUtc.set(oldCreationTimeUtc);
         
-        configsInternal = new EntityConfigMap(this, managementContext.getStorage().<ConfigKey<?>, Object>createMap(id+"-config"));
+        configsInternal = new EntityConfigMap(this, managementContext.getStorage().<ConfigKey<?>, Object>getMap(id+"-config"));
         if (oldConfig.getLocalConfig().size() > 0) {
             configsInternal.setLocalConfig(oldConfig.getLocalConfig());
         }
         refreshInheritedConfig();
         
-        attributesInternal = new AttributeMap(this, managementContext.getStorage().<Collection<String>, Object>createMap(id+"-attributes"));
+        attributesInternal = new AttributeMap(this, managementContext.getStorage().<Collection<String>, Object>getMap(id+"-attributes"));
         if (oldAttribs.asRawMap().size() > 0) {
             for (Map.Entry<Collection<String>,Object> entry : oldAttribs.asRawMap().entrySet()) {
                 attributesInternal.update(entry.getKey(), entry.getValue());
@@ -400,7 +407,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     @Override
     public long getCreationTime() {
-        return creationTimeUtc;
+        return creationTimeUtc.get();
     }
 
     @Override
@@ -457,9 +464,9 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      */
     @Override
     public AbstractEntity setParent(Entity entity) {
-        if (parent.get() != null) {
+        if (!parent.isNull()) {
             // If we are changing to the same parent...
-            if (parent.get().equals(entity)) return this;
+            if (parent.contains(entity)) return this;
             // If we have a parent but changing to orphaned...
             if (entity==null) { clearParent(); return this; }
             
@@ -490,9 +497,9 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     @Override
     public void clearParent() {
-        if (parent.get() == null) return;
+        if (parent.isNull()) return;
         Entity oldParent = parent.get();
-        parent.set(null);
+        parent.clear();
         if (oldParent != null) oldParent.removeChild(getProxyIfAvailable());
     }
     
@@ -1072,7 +1079,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     public void invalidateReferences() {
         // TODO move this to EntityMangementSupport,
         // when hierarchy fields can also be moved there
-        parent.set(null);
+        parent.clear();
         application = null;
         children.clear();
         groups.clear();

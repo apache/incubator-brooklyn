@@ -2,24 +2,10 @@ package brooklyn.internal.storage;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.annotations.Beta;
 
 public interface BrooklynStorage {
-
-    // TODO Add createList, if it is required
-
-    Object get(String id);
-
-    Object put(String id, Object value);
-
-    /**
-     * Creates a reference to a long, backed by the storage-medium. 
-     * If already exists with this id, returns it; otherwise creates a new atomic long.
-     */
-    public AtomicLong createAtomicLong(String id);
 
     /**
      * Creates a reference to a value, backed by the storage-medium. If a reference with this 
@@ -34,22 +20,7 @@ public interface BrooklynStorage {
      * @param id
      * @return
      */
-    <T> Reference<T> createReference(String id);
-
-    /**
-     * Creates a set backed by the storage-medium. If a set with this name has already been
-     * created, then that existing set will be returned.
-     * 
-     * The returned set is a live view: changes made to the set will be persisted, and changes 
-     * that others make will be reflected in the set.
-     * 
-     * The set is thread-safe: {@link Set#iterator()} will iterate over a snapshot view of the
-     * contents.
-     * 
-     * @param id
-     * @return
-     */
-    <T> Set<T> createSet(String id);
+    <T> Reference<T> getReference(String id);
 
     /**
      * Creates a list backed by the storage-medium. If a list with this name has already been
@@ -57,7 +28,7 @@ public interface BrooklynStorage {
      * 
      * The returned list is not a live view. Changes are made by calling reference.set(), and
      * the view is refreshed by calling reference.get(). Changes are thread-safe, but callers
-     * must be cafeful not to overwrite other's changes. For example, the code below could overwrite
+     * must be careful not to overwrite other's changes. For example, the code below could overwrite
      * another threads changes that are made to the map between the call to get() and the subsequent
      * call to set().
      * 
@@ -69,11 +40,25 @@ public interface BrooklynStorage {
      * }
      * </pre>
      * 
+     * TODO Aled says: Is getNonConcurrentList necessary?
+     *   The purpose of this method, rather than just using
+     *   {@code Reference ref = getReference(id); ref.set(ImmutableList.of())}
+     *   is to allow control of the serialization of the things inside the list 
+     *   (e.g. switching the Location object to serialize a proxy object of some sort). 
+     *   I don't want us to have to do deep inspection of every object being added to any map/ref. 
+     *   Feels like we can use normal serialization unless the top-level object matches an 
+     *   instanceof for special things like Entity, Location, etc.
+     * 
+     * Peter responds:
+     *   What I'm a bit scared of is that we need to write some kind of meta serialization mechanism 
+     *   on top of the mechanisms provided by e.g. Hazelcast or Infinispan. Hazelcast has a very 
+     *   extensive serialization library where you can plug in all kinds of serialization mechanisms.
+     * 
      * @param id
      * @return
      */
     @Beta
-    <T> Reference<List<T>> createNonConcurrentList(String id);
+    <T> Reference<List<T>> getNonConcurrentList(String id);
     
     /**
      * Creates a map backed by the storage-medium. If a map with this name has already been
@@ -88,5 +73,5 @@ public interface BrooklynStorage {
      * @param id
      * @return
      */
-    <K,V> Map<K,V> createMap(String id);
+    <K,V> Map<K,V> getMap(String id);
 }

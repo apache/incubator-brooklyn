@@ -1,136 +1,78 @@
 package brooklyn.internal.storage.impl;
 
-import java.util.Collection;
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ConcurrentMap;
 
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.Reference;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
 public class BrooklynStorageImpl implements BrooklynStorage {
 
-    private static final Object NULL = new Object();
-
     private final DataGrid datagrid;
-    private final Map<String,Object> simpleMap;
-    private Map<String, Object> refsMap;
-    private Map<String, Object> listsMap;
+    private final Map<String, Object> refsMap;
+    private final Map<String, Object> listsMap;
+    private final ConcurrentMap<String, WeakReference<Reference<?>>> refsCache;
+    private final ConcurrentMap<String, WeakReference<Reference<?>>> listRefsCache;
     
     public BrooklynStorageImpl(DataGrid datagrid) {
         this.datagrid = datagrid;
-        this.simpleMap = datagrid.createMap("simple");
-        this.refsMap = datagrid.createMap("refs");
-        this.listsMap = datagrid.createMap("lists");
+        this.refsMap = datagrid.getMap("refs");
+        this.listsMap = datagrid.getMap("lists");
+        this.refsCache = Maps.newConcurrentMap();
+        this.listRefsCache = Maps.newConcurrentMap();
     }
     
     @Override
-    public Object get(String id) {
-        return simpleMap.get(id);
-    }
-
-    @Override
-    public Object put(String id, Object value) {
-        return simpleMap.put(id, value);
-    }
-
-    @Override
-    public AtomicLong createAtomicLong(String id) {
-        return datagrid.createAtomicLong(id);
-    }
-    
-    @Override
-    public <T> Reference<T> createReference(final String id) {
-        // FIXME Use of NULL is necessary for ConcurrentHashMap that doesn't accept null values; but
-        // won't work for a real datagrid backend!
-        
-        // TODO What synchronization do we want to guarantee "happens-before" for get/set calls in different threads?
-        
-        return new Reference<T>() {
-            private final Object syncgate = new Object(); // to guarantee happens-before, for different threads calling get & set
-            
-            @Override public T get() {
-                synchronized (syncgate) {}
-                T result = (T) refsMap.get(id);
-                return (result == NULL ? null : result);
-            }
-            @Override public T set(T val) {
-                synchronized (syncgate) {}
-                return (T) refsMap.put(id, (val != null ? val : NULL));
-            }
-            @Override
-            public String toString() {
-                return "id="+get();
-            }
-        };
-    }
-    
-    @Override
-    public <T> Reference<List<T>> createNonConcurrentList(final String id) {
-        // For happens-before (for different threads calling get and set), relies on 
-        // underlying map (e.g. from datagrid) having some synchronization
-        return new Reference<List<T>>() {
-            @Override public List<T> get() {
-                List<T> result = (List<T>) listsMap.get(id);
-                return (result == null ? ImmutableList.<T>of() : Collections.unmodifiableList(result));
-            }
-            @Override public List<T> set(List<T> val) {
-                return (List<T>) listsMap.put(id, val);
-            }
-            @Override
-            public String toString() {
-                return "id="+get();
-            }
-        };
-    }
-
-    @Override
-    public <T> Set<T> createSet(final String id) {
-        LiveSet.Mutator<T> mutator = new LiveSet.Mutator<T>() {
-            private Map<T,Boolean> map() {
-                return datagrid.<T,Boolean>createMap(id);
-            }
-            @Override public Set<T> refresh() {
-                return map().keySet();
-            }
-            @Override public boolean add(T o) {
-                return map().put(o, true) != null;
-            }
-            @Override public boolean addAll(Collection<? extends T> c) {
-                Map<T,Boolean> map = map();
-                boolean modified = false;
-                for (T element : c) {
-                    Boolean pref = map.put(element, true);
-                    modified = modified || (pref != null);
+    public <T> Reference<T> getReference(final String id) {
+        // Can use different ref instances; no need to always return same one. Caching is an
+        // optimisation to just avoid extra object creation.
+        WeakReference<Reference<?>> weakRef = refsCache.get(id);
+        Reference<?> ref = (weakRef != null) ? weakRef.get() : null;
+        if (ref == null) {
+            ref = new BackedReference<T>(refsMap, id) {
+                @Override protected void finalize() {
+                    // TODO Don't like using finalize due to performance overhead, but not
+                    // optimising yet. Could use PhantomReference instead; see
+                    // http://java.dzone.com/articles/finalization-and-phantom
+                    refsCache.remove(id);
                 }
-                return modified;
-            }
-            @Override public boolean remove(Object o) {
-                return map().remove(o) != null;
-            }
-            @Override public boolean removeAll(Collection<?> c) {
-                return map().keySet().removeAll(c);
-            }
-            @Override public boolean retainAll(Collection<?> c) {
-                return map().keySet().retainAll(c);
-            }
-            @Override public void clear() {
-                map().clear();
-            }
-        };
-        return new LiveSet<T>(mutator);
+            };
+            refsCache.putIfAbsent(id, new WeakReference<Reference<?>>(ref));
+        }
+        return (Reference<T>) ref;
+    }
+    
+    @Override
+    public <T> Reference<List<T>> getNonConcurrentList(final String id) {
+        WeakReference<Reference<?>> weakRef = listRefsCache.get(id);
+        Reference<?> ref = (weakRef != null) ? weakRef.get() : null;
+        if (ref == null) {
+            ref = new BackedReference<List<T>>(listsMap, id) {
+                @Override public List<T> get() {
+                    List<T> result = super.get();
+                    return (result == null ? ImmutableList.<T>of() : Collections.unmodifiableList(result));
+                }
+                @Override protected void finalize() {
+                    listRefsCache.remove(id);
+                }
+            };
+            listRefsCache.putIfAbsent(id, new WeakReference<Reference<?>>(ref));
+        }
+        return (Reference<List<T>>) ref;
     }
 
     @Override
-    public <K, V> Map<K, V> createMap(final String id) {
+    public <K, V> Map<K, V> getMap(final String id) {
         LiveMap.Mutator<K,V> mutator = new LiveMap.Mutator<K,V>() {
             private Map<K,V> map() {
-                return datagrid.<K,V>createMap(id);
+                return datagrid.<K,V>getMap(id);
             }
             @Override public Map<K, V> refresh() {
                 return map();
@@ -152,4 +94,5 @@ public class BrooklynStorageImpl implements BrooklynStorage {
         };
         return new LiveMap<K,V>(mutator);
     }
+    
 }
