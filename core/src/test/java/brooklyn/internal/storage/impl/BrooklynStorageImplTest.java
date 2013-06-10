@@ -29,9 +29,9 @@ public class BrooklynStorageImplTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        // TODO Note that PseudoDatagrid's ConcurrentMap currently returns snapshot for entrySet() and values()
+        // TODO Note that InmemoryDatagrid's ConcurrentMap currently returns snapshot for entrySet() and values()
         // so the tests here aren't particularly good for confirming it'll work against a real datagrid...
-        datagrid = new PseudoDatagrid();
+        datagrid = new InmemoryDatagrid();
         storage = new BrooklynStorageImpl(datagrid);
     }
 

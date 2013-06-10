@@ -7,7 +7,12 @@ import brooklyn.internal.storage.DataGrid;
 
 import com.google.common.collect.Maps;
 
-public class PseudoDatagrid implements DataGrid {
+/**
+ * A simple implementation of datagrid backed by in-memory (unpersisted) maps, within a single JVM.
+ * 
+ * @author aled
+ */
+public class InmemoryDatagrid implements DataGrid {
 
     private final Map<String,Map<?,?>> maps = Maps.newLinkedHashMap();
 

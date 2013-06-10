@@ -32,7 +32,7 @@ import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.impl.BrooklynStorageImpl;
-import brooklyn.internal.storage.impl.PseudoDatagrid;
+import brooklyn.internal.storage.impl.InmemoryDatagrid;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
@@ -69,7 +69,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     private final DownloadResolverManager downloadsManager;
 
-    private final DataGrid datagrid = new PseudoDatagrid();
+    private final DataGrid datagrid = new InmemoryDatagrid();
 
     private final BrooklynStorage storage = new BrooklynStorageImpl(datagrid);
 
