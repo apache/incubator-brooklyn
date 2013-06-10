@@ -8,7 +8,7 @@ define([
     apps.fetch({async:true})
 
     describe('view/application-tree renders the list of applications as a tree', function () {
-        var view, entityFetch, applicationFetch;
+        var view, entityFetch, applicationFetch, defer;
 
         beforeEach(function () {
             // ApplicationTree makes fetch requests to EntitySummary and Application models
@@ -16,7 +16,8 @@ define([
             // turns their fetch methods into empty functions.
             entityFetch = EntitySummary.Model.prototype.fetch;
             applicationFetch = Application.Model.prototype.fetch;
-            EntitySummary.Model.prototype.fetch = Application.Model.prototype.fetch = function() {};
+            defer = _.defer;
+            _.defer = EntitySummary.Model.prototype.fetch = Application.Model.prototype.fetch = function() {};
 
             view = new ApplicationTreeView({
                 collection:apps
@@ -27,6 +28,7 @@ define([
         afterEach(function() {
             EntitySummary.Model.prototype.fetch = entityFetch;
             Application.Model.prototype.fetch = applicationFetch;
+            _.defer = defer;
         });
 
         it("builds the entity tree for each application", function () {

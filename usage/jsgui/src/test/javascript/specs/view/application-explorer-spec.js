@@ -14,7 +14,7 @@ define([
             apps.url = 'fixtures/application-tree.json'
             apps.fetch({async:false})
 
-            var entityFetch, applicationFetch;
+            var entityFetch, applicationFetch, defer;
 
             beforeEach(function () {
                 // ApplicationTree makes fetch requests to EntitySummary and Application models
@@ -22,14 +22,15 @@ define([
                 // turns their fetch methods into empty functions.
                 entityFetch = EntitySummary.Model.prototype.fetch;
                 applicationFetch = Application.Model.prototype.fetch;
-                EntitySummary.Model.prototype.fetch = Application.Model.prototype.fetch = function() {};
-
+                defer = _.defer;
+                _.defer = EntitySummary.Model.prototype.fetch = Application.Model.prototype.fetch = function() {};
                 view = new ApplicationExplorerView({ collection:apps }).render()
             })
 
             afterEach(function() {
                 EntitySummary.Model.prototype.fetch = entityFetch;
                 Application.Model.prototype.fetch = applicationFetch;
+                _.defer = defer;
             });
 
             it('must contain div.row with two spans: #tree and #details', function () {
