@@ -232,6 +232,7 @@ public class EntityManagementSupport {
         nonDeploymentManagementContext.getSubscriptionManager().stopDelegatingForPublishing();
         
         entity.onManagementNoLongerMaster();
+        entity.onManagementStopped();
     }
     
     public void onManagementStopped(ManagementTransitionInfo info) {

@@ -74,4 +74,9 @@ public interface BrooklynStorage {
      * @return
      */
     <K,V> Map<K,V> getMap(String id);
+
+    /**
+     * Removes the data stored against this id, whether it is a map, ref or whatever.
+     */
+    void remove(String id);
 }

@@ -32,6 +32,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
 import brooklyn.internal.storage.impl.BasicReference;
 import brooklyn.location.Location;
@@ -674,7 +675,6 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      */
     @Override
     public void destroy() {
-        // TODO we need some way of deleting stale items
     }
 
     @Override
@@ -1075,14 +1075,24 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      */
     public void onManagementNoLongerMaster() {}
 
+    /**
+     * Invoked by {@link EntityManagementSupport} when this entity is fully unmanaged.
+     */
+    public void onManagementStopped() {
+        BrooklynStorage storage = ((ManagementContextInternal)getManagementContext()).getStorage();
+        storage.remove(id+"-parent");
+        storage.remove(id+"-groups");
+        storage.remove(id+"-children");
+        storage.remove(id+"-locations");
+        storage.remove(id+"-creationTime");
+    }
+    
     /** For use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */
     public void invalidateReferences() {
+        // TODO Just rely on GC of this entity instance, to get rid of the children map etc.
+        //      Don't clear it, as it's persisted.
         // TODO move this to EntityMangementSupport,
-        // when hierarchy fields can also be moved there
-        parent.clear();
         application = null;
-        children.clear();
-        groups.clear();
     }
     
     @Override

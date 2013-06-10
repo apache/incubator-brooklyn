@@ -9,4 +9,9 @@ public interface DataGrid {
      * in the datagrid.
      */
     <K,V> Map<K,V> getMap(String id);
+
+    /**
+     * Deletes the map for this id, if it exists; otherwise a no-op.
+     */
+    void remove(String id);
 }

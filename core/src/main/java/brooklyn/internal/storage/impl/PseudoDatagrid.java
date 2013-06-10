@@ -34,4 +34,11 @@ public class PseudoDatagrid implements DataGrid {
     private <K,V> Map<K,V> newMap() {
         return Collections.synchronizedMap(new HashMap<K, V>());
     }
+
+    @Override
+    public void remove(String id) {
+        synchronized (maps) {
+            maps.remove(id);
+        }
+    }
 }

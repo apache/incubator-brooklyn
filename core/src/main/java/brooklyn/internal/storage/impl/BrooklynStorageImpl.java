@@ -95,4 +95,12 @@ public class BrooklynStorageImpl implements BrooklynStorage {
         return new LiveMap<K,V>(mutator);
     }
     
+    @Override
+    public void remove(String id) {
+        datagrid.remove(id);
+        refsMap.remove(id);
+        listsMap.remove(id);
+        refsCache.remove(id);
+        listRefsCache.remove(id);
+    }
 }
