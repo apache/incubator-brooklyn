@@ -1,8 +1,7 @@
 package brooklyn.internal.storage.impl;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import brooklyn.internal.storage.DataGrid;
 
@@ -14,9 +13,9 @@ public class PseudoDatagrid implements DataGrid {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <K, V> Map<K, V> getMap(String id) {
+    public <K, V> ConcurrentMap<K, V> getMap(String id) {
         synchronized (maps) {
-            Map<K, V> result = (Map<K, V>) maps.get(id);
+            ConcurrentMap<K, V> result = (ConcurrentMap<K, V>) maps.get(id);
             if (result == null) {
                 result = newMap();
                 maps.put(id, result);
@@ -31,8 +30,9 @@ public class PseudoDatagrid implements DataGrid {
     // 
     // Could write a decorator that switches null values for a null marker, and back again.
     //
-    private <K,V> Map<K,V> newMap() {
-        return Collections.synchronizedMap(new HashMap<K, V>());
+    private <K,V> ConcurrentMap<K,V> newMap() {
+        //return Collections.synchronizedMap(new HashMap<K, V>());
+        return new ConcurrentMapAcceptingNullVals<K,V>(Maps.<K,V>newConcurrentMap());
     }
 
     @Override

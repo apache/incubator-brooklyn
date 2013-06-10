@@ -16,8 +16,8 @@ import com.google.common.collect.Maps;
 public class BrooklynStorageImpl implements BrooklynStorage {
 
     private final DataGrid datagrid;
-    private final Map<String, Object> refsMap;
-    private final Map<String, Object> listsMap;
+    private final ConcurrentMap<String, Object> refsMap;
+    private final ConcurrentMap<String, Object> listsMap;
     private final ConcurrentMap<String, WeakReference<Reference<?>>> refsCache;
     private final ConcurrentMap<String, WeakReference<Reference<?>>> listRefsCache;
     

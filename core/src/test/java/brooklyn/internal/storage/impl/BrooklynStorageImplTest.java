@@ -29,6 +29,8 @@ public class BrooklynStorageImplTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        // TODO Note that PseudoDatagrid's ConcurrentMap currently returns snapshot for entrySet() and values()
+        // so the tests here aren't particularly good for confirming it'll work against a real datagrid...
         datagrid = new PseudoDatagrid();
         storage = new BrooklynStorageImpl(datagrid);
     }
@@ -104,9 +106,7 @@ public class BrooklynStorageImplTest {
         assertEqualsCommutative(map, storage.getMap("mykey"), ImmutableMap.of());
     }
     
-    // TODO For PseudoDatagrid, not using ConcurrentHashMap because needs to accept null values.
-    // So these concurrency tests fail.
-    @Test(enabled=false)
+    @Test
     public void testMapEntrySetIterator() throws Exception {
         Map<Object,Object> map = storage.getMap("mykey");
         map.put("k1", "v1");
@@ -150,9 +150,7 @@ public class BrooklynStorageImplTest {
         assertEqualsCommutative(map, storage.getMap("mykey"), ImmutableMap.of("k2", "v2"));
     }
     
-    // TODO For PseudoDatagrid, not using ConcurrentHashMap because needs to accept null values.
-    // So these concurrency tests fail.
-    @Test(enabled=false)
+    @Test
     public void testMapKeySetIterator() throws Exception {
         Map<Object,Object> map = storage.getMap("mykey");
         map.put("k1", "v1");
@@ -196,7 +194,8 @@ public class BrooklynStorageImplTest {
         assertEqualsCommutative(map, storage.getMap("mykey"), ImmutableMap.of("k2", "v2"));
     }
     
-    // TODO Not yet supporting live view of map.values()
+    // TODO InmemoryDatagrid.getMap().values() returning snapshot, so iter.remove not supported.
+    // Want to test against a real datagrid instead.
     @Test(enabled=false)
     public void testMapValuesIterator() throws Exception {
         Map<Object,Object> map = storage.getMap("mykey");
