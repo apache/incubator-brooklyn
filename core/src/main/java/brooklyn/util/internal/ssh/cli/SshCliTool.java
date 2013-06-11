@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshException;
@@ -166,6 +167,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         String separator = getOptionalVal(props, PROP_SEPARATOR);
         String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
         Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
+        Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
         String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
 
         String scriptContents = toScript(props, commands, env);
@@ -178,7 +180,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         String cmd = 
                 (runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null"+separator+
                 "RESULT=$?"+separator+
-                "echo Executed "+scriptPath+", result $RESULT"+separator+ 
+                (noExtraOutput==null || !noExtraOutput ? "echo Executed "+scriptPath+", result $RESULT"+separator : "")+ 
                 "rm -f "+scriptPath+" < /dev/null"+separator+
                 "exit $RESULT";
         Integer result = sshExec(props, cmd);
@@ -192,7 +194,10 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
 
     @Override
     public int execCommands(Map<String,?> props, List<String> commands, Map<String,?> env) {
-        return execScript(props, commands, env);
+        Map<String,Object> props2 = new MutableMap<String,Object>();
+        if (props!=null) props2.putAll(props);
+        props2.put(SshTool.PROP_NO_EXTRA_OUTPUT.getName(), true);
+        return execScript(props2, commands, env);
     }
     
     private int scpToServer(Map<String,?> props, File local, String remote) {

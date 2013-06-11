@@ -274,6 +274,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
         String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
+        Boolean noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
         Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
         
         String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
@@ -285,14 +286,15 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
         
         // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
-        List<String> cmds = ImmutableList.of(
-                (runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null",
-                "RESULT=$?",
-                "echo \"Executed "+scriptPath+", result $RESULT\"", 
-                "rm -f "+scriptPath+" < /dev/null", 
-                "exit $RESULT");
+        ImmutableList.Builder<String> cmds = ImmutableList.<String>builder()
+                .add((runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null")
+                .add("RESULT=$?");
+        if (noExtraOutput==null || !noExtraOutput)
+            cmds.add("echo Executed "+scriptPath+", result $RESULT"); 
+        cmds.add("rm -f "+scriptPath+" < /dev/null"); 
+        cmds.add("exit $RESULT");
         
-        Integer result = acquire(new ShellAction(cmds, out, err));
+        Integer result = acquire(new ShellAction(cmds.build(), out, err));
         return result != null ? result : -1;
     }
 
