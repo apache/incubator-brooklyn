@@ -149,7 +149,7 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
             }
         }
 
-        getLocations().clear();
+        clearLocations();
         setAttribute(SERVICE_UP, false);
 
         if (errors.size() != 0) {

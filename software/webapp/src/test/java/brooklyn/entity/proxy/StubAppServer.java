@@ -17,6 +17,7 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class StubAppServer extends AbstractEntity implements Startable {
@@ -51,7 +52,7 @@ public class StubAppServer extends AbstractEntity implements Startable {
     }
     
     private void startInLocation(MachineLocation loc) {
-        getLocations().add((Location)loc);
+        addLocations(ImmutableList.of((Location)loc));
         setAttribute(HOSTNAME, loc.getAddress().getHostName());
         setAttribute(HTTP_PORT, nextPort.getAndIncrement());
         setAttribute(SERVICE_UP, true);

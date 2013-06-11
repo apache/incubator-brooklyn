@@ -26,6 +26,8 @@ public interface EntityInternal extends Entity {
 
     void removeLocations(Collection<? extends Location> locations);
 
+    void clearLocations();
+
     /**
      * 
      * Like {@link setAttribute(AttributeSensor, T)}, except does not publish an attribute-change event.
