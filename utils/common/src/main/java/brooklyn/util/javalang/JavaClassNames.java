@@ -43,7 +43,7 @@ public class JavaClassNames {
      * useful to mimic Class.getResource(path) behaviour, cf Class.resolveName where the first argument below is the class. */
     public static String resolveName(Object context, String path) {
         Preconditions.checkNotNull(path, "path must not be null");
-        if (path==null || path.startsWith("/") || Urls.isUrlWithProtocol(path)) return path;
+        if (path.startsWith("/") || Urls.isUrlWithProtocol(path)) return path;
         Preconditions.checkNotNull(context, "context must not be null when path is relative");
         return packagePath(context)+path;
     }

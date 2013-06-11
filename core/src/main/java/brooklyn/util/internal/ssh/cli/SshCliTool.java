@@ -245,8 +245,6 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     }
     
     private int sshExec(Map<String,?> props, String command) {
-        File tempCmdFile = writeTempFile(command);
-        tempCmdFile.setExecutable(true);
         File tempKeyFile = null;
         try {
             List<String> cmd = Lists.newArrayList();
@@ -279,15 +277,15 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
             }
             cmd.add((Strings.isEmpty(getUsername()) ? "" : getUsername()+"@")+getHostAddress());
             
-            cmd.add(tempCmdFile.getAbsolutePath());
+            cmd.add("bash -c \""+command+"\"");
             // previously we tried these approaches:
             //cmd.add("$(<"+tempCmdFile.getAbsolutePath()+")");
             // only pays attention to the first word; the "; echo Executing ..." get treated as arguments
             // to the script in the first word, when invoked from java (when invoked from prompt the behaviour is as desired)
             //cmd.add("\""+command+"\"");
             // only works if command is a single word
-            //cmd.add("bash -c \""+command+"\"");
-            // this is a viable alternative, but seems safer to write to a script, esp since the code was already there
+            //cmd.add(tempCmdFile.getAbsolutePath());
+            // above of course only works if the metafile is copied across
             
             if (LOG.isTraceEnabled()) LOG.trace("Executing ssh with command: {} (with {})", command, cmd);
             int result = execProcess(props, cmd);
@@ -296,7 +294,6 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
             return result;
             
         } finally {
-            tempCmdFile.delete();
             if (tempKeyFile != null) tempKeyFile.delete();
         }
     }
