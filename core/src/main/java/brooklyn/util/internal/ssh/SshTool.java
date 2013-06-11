@@ -9,6 +9,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicConfigKey.BooleanConfigKey;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.util.stream.KnownSizeInputStream;
 
@@ -58,6 +59,8 @@ public interface SshTool {
     // NB -- items above apply for _session_ (a tool), below apply for a _call_
     // TODO would be nice to track which arguments are used, so we can indicate whether extras are supplied
 
+    public static final ConfigKey<Boolean> PROP_RUN_AS_ROOT = new BooleanConfigKey("runAsRoot", "When running a script, whether to run as root", Boolean.FALSE);
+    
     public static final ConfigKey<OutputStream> PROP_OUT_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "out", "Stream to which to capture stdout");
     public static final ConfigKey<OutputStream> PROP_ERR_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "err", "Stream to which to capture stderr");
     

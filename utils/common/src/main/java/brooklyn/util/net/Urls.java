@@ -88,7 +88,7 @@ public class Urls {
         for (String item: items) {
             boolean trimThisMerge = result.length()>0 && !result.toString().endsWith("://") && !result.toString().endsWith(":///") && !result.toString().endsWith(":");
             if (trimThisMerge) {
-                while (result.charAt(result.length()-1)=='/')
+                while (result.length()>0 && result.charAt(result.length()-1)=='/')
                     result.deleteCharAt(result.length()-1);
                 result.append('/');
             }

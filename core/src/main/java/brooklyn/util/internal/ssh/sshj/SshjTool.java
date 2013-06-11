@@ -37,6 +37,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.ssh.CommonCommands;
 import brooklyn.util.stream.InputStreamSupplier;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
@@ -273,6 +274,8 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
         String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
+        Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
+        
         String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
         
         String scriptContents = toScript(props, commands, env);
@@ -283,7 +286,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
         List<String> cmds = ImmutableList.of(
-                scriptPath+" < /dev/null",
+                (runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null",
                 "RESULT=$?",
                 "echo \"Executed "+scriptPath+", result $RESULT\"", 
                 "rm -f "+scriptPath+" < /dev/null", 

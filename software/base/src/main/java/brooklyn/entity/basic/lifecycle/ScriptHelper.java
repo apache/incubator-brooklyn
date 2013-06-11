@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.mutex.WithMutexes;
@@ -234,6 +235,10 @@ public class ScriptHelper {
         return this;
     }
     
+    public <T> ScriptHelper setFlag(ConfigKey<T> flag, T value) {
+        return setFlag(flag.getName(), value);
+    }
+    
     public List<String> getLines() {
         List<String> result = new LinkedList<String>();
         result.addAll(header.lines);
@@ -250,5 +255,5 @@ public class ScriptHelper {
         if (stderr==null) throw new IllegalStateException("output not available on "+this+"; ensure gatherOutput(true) is set");
         return stderr.toString();
     }
-    
+
 }
