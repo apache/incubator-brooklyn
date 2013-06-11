@@ -54,7 +54,6 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         private String scpExecutable;
 
         @Override
-        @SuppressWarnings("unchecked")
         public B from(Map<String,?> props) {
             super.from(props);
             sshExecutable = getOptionalVal(props, PROP_SSH_EXECUTABLE);
@@ -182,7 +181,6 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
                 "echo Executed "+scriptPath+", result $RESULT"+separator+ 
                 "rm -f "+scriptPath+" < /dev/null"+separator+
                 "exit $RESULT";
-        
         Integer result = sshExec(props, cmd);
         return result != null ? result : -1;
     }
@@ -248,6 +246,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     
     private int sshExec(Map<String,?> props, String command) {
         File tempCmdFile = writeTempFile(command);
+        tempCmdFile.setExecutable(true);
         File tempKeyFile = null;
         try {
             List<String> cmd = Lists.newArrayList();
@@ -279,8 +278,16 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
                 cmd.add("-tt");
             }
             cmd.add((Strings.isEmpty(getUsername()) ? "" : getUsername()+"@")+getHostAddress());
-            cmd.add("$(<"+tempCmdFile.getAbsolutePath()+")");
+            
+            cmd.add(tempCmdFile.getAbsolutePath());
+            // previously we tried these approaches:
+            //cmd.add("$(<"+tempCmdFile.getAbsolutePath()+")");
+            // only pays attention to the first word; the "; echo Executing ..." get treated as arguments
+            // to the script in the first word, when invoked from java (when invoked from prompt the behaviour is as desired)
             //cmd.add("\""+command+"\"");
+            // only works if command is a single word
+            //cmd.add("bash -c \""+command+"\"");
+            // this is a viable alternative, but seems safer to write to a script, esp since the code was already there
             
             if (LOG.isTraceEnabled()) LOG.trace("Executing ssh with command: {} (with {})", command, cmd);
             int result = execProcess(props, cmd);

@@ -446,7 +446,7 @@ public abstract class SshToolIntegrationTest {
 
     @Test(groups = {"Integration"})
     public void testRunAsRoot() {
-        final SshTool localtool = newSshTool(MutableMap.of("host", "localhost", SshTool.PROP_ALLOCATE_PTY.getName(), true));
+        final SshTool localtool = newSshTool(MutableMap.of("host", "localhost"));
         tools.add(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -485,6 +485,12 @@ public abstract class SshToolIntegrationTest {
             SshException se = Exceptions.getFirstThrowableOfType(e, SshException.class);
             if (se == null) throw e;
         }
+    }
+    
+    @Test(groups = {"Integration"})
+    public void testExecScriptEchosExecute() throws Exception {
+        String out = execScript("date");
+        assertTrue(out.toString().contains("Executed"), "Executed did not display: "+out);
     }
     
     private void assertRemoteFileContents(String remotePath, String expectedContents) {
@@ -540,22 +546,22 @@ public abstract class SshToolIntegrationTest {
         return new String(out.toByteArray());
     }
 
-    private String execScript(String... cmds) {
+    protected String execScript(String... cmds) {
         return execScript(tool, Arrays.asList(cmds));
     }
 
-    private String execScript(SshTool t, List<String> cmds) {
+    protected String execScript(SshTool t, List<String> cmds) {
         return execScript(ImmutableMap.<String,Object>of(), t, cmds, ImmutableMap.<String,Object>of());
     }
 
-    private String execScript(List<String> cmds) {
+    protected String execScript(List<String> cmds) {
         return execScript(cmds, ImmutableMap.<String,Object>of());
     }
     
-    private String execScript(List<String> cmds, Map<String,?> env) {
+    protected String execScript(List<String> cmds, Map<String,?> env) {
         return execScript(MutableMap.<String,Object>of(), tool, cmds, env);
     }
-    private String execScript(Map<String, ?> props, SshTool tool, List<String> cmds, Map<String,?> env) {
+    protected String execScript(Map<String, ?> props, SshTool tool, List<String> cmds, Map<String,?> env) {
         Map<String, Object> props2 = new LinkedHashMap<String, Object>(props);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         props2.put("out", out);
