@@ -20,6 +20,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.ssh.CommonCommands;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
@@ -165,6 +166,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     public int execScript(Map<String,?> props, List<String> commands, Map<String,?> env) {
         String separator = getOptionalVal(props, PROP_SEPARATOR);
         String scriptDir = getOptionalVal(props, PROP_SCRIPT_DIR);
+        Boolean runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
         String scriptPath = scriptDir+"/brooklyn-"+System.currentTimeMillis()+"-"+Identifiers.makeRandomId(8)+".sh";
 
         String scriptContents = toScript(props, commands, env);
@@ -175,7 +177,7 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         
         // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
         String cmd = 
-                scriptPath+" < /dev/null"+separator+
+                (runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null"+separator+
                 "RESULT=$?"+separator+
                 "echo Executed "+scriptPath+", result $RESULT"+separator+ 
                 "rm -f "+scriptPath+" < /dev/null"+separator+

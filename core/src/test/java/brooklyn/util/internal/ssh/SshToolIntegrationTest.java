@@ -444,6 +444,21 @@ public abstract class SshToolIntegrationTest {
         assertEquals(0, exitcode);
     }
 
+    @Test(groups = {"Integration"})
+    public void testRunAsRoot() {
+        final SshTool localtool = newSshTool(MutableMap.of("host", "localhost", SshTool.PROP_ALLOCATE_PTY.getName(), true));
+        tools.add(localtool);
+        Map<String,Object> props = new LinkedHashMap<String, Object>();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        props.put("out", out);
+        props.put("err", err);
+        props.put(SshTool.PROP_RUN_AS_ROOT.getName(), true);
+        int exitcode = localtool.execScript(props, Arrays.asList("whoami"), null);
+        assertTrue(out.toString().contains("root"), "not running as root; whoami is: "+out+" (err is '"+err+"')");
+        assertEquals(0, exitcode);
+    }
+
     // Requires setting up an extra ssh key, with a passphrase, and adding it to ~/.ssh/authorized_keys
     @Test(groups = {"Integration"})
     public void testSshKeyWithPassphrase() throws Exception {

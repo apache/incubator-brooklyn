@@ -217,4 +217,15 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         }
     }
     
+    public static class BooleanConfigKey extends BasicConfigKey<Boolean> {
+        private static final long serialVersionUID = 3207099275514012099L;
+
+        public BooleanConfigKey(String name) {
+            super(Boolean.class, name);
+        }
+        public BooleanConfigKey(String name, String description, Boolean defaultValue) {
+            super(Boolean.class, name, description, defaultValue);
+        }
+    }
+    
 }
