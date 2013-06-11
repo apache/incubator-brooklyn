@@ -1,6 +1,7 @@
 package brooklyn.entity.group;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -104,7 +105,10 @@ public class MembershipTrackingPolicyTest {
         assertRecordsContinually(Record.newAdded(e1));
         
         policy.resume();
-        assertRecordsEventually(Record.newAdded(e1), Record.newAdded(e1), Record.newAdded(e2));
+        
+        // Order of members set is non-deterministic, so could get [e1,e1,e2] or [e1,e2,e1] 
+        assertRecordsEventually(policy, ImmutableList.of(Record.newAdded(e1), Record.newAdded(e1), Record.newAdded(e2)), 
+                ImmutableList.of(Record.newAdded(e1), Record.newAdded(e2), Record.newAdded(e1)));
     }
 
     @Test
@@ -134,9 +138,16 @@ public class MembershipTrackingPolicyTest {
     }
     
     private void assertRecordsEventually(final RecordingMembershipTrackingPolicy policy, final Record... expected) {
+        assertRecordsEventually(policy, ImmutableList.copyOf(expected));
+    }
+    
+    private void assertRecordsEventually(final RecordingMembershipTrackingPolicy policy, final List<Record>... validExpecteds) {
         TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
-                assertEquals(policy.records, ImmutableList.copyOf(expected), "actual="+policy.records);
+                for (List<Record> validExpected : validExpecteds) {
+                    if (policy.records.equals(validExpected)) return;
+                }
+                fail("actual="+policy.records+"; valid: "+validExpecteds);
             }});
     }
     
