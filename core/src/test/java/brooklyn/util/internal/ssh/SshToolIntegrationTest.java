@@ -446,7 +446,7 @@ public abstract class SshToolIntegrationTest {
 
     @Test(groups = {"Integration"})
     public void testRunAsRoot() {
-        final SshTool localtool = newSshTool(MutableMap.of("host", "localhost", SshTool.PROP_ALLOCATE_PTY.getName(), true));
+        final SshTool localtool = newSshTool(MutableMap.of("host", "localhost"));
         tools.add(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -485,6 +485,28 @@ public abstract class SshToolIntegrationTest {
             SshException se = Exceptions.getFirstThrowableOfType(e, SshException.class);
             if (se == null) throw e;
         }
+    }
+    
+    @Test(groups = {"Integration"})
+    public void testExecScriptEchosExecute() throws Exception {
+        String out = execScript("date");
+        assertTrue(out.toString().contains("Executed"), "Executed did not display: "+out);
+    }
+    
+    @Test(groups = {"Integration"})
+    public void testExecScriptEchosDontExecuteWhenToldNoExtraOutput() throws Exception {
+        final SshTool localtool = newSshTool(MutableMap.of("host", "localhost"));
+        tools.add(localtool);
+        Map<String,Object> props = new LinkedHashMap<String, Object>();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        props.put("out", out);
+        props.put("err", err);
+        props.put(SshTool.PROP_NO_EXTRA_OUTPUT.getName(), true);
+        int exitcode = localtool.execScript(props, Arrays.asList("echo hello world"), null);
+        assertFalse(out.toString().contains("Executed"), "Executed should not have displayed: "+out);
+        assertEquals(out.toString().trim(), "hello world");
+        assertEquals(0, exitcode);
     }
     
     private void assertRemoteFileContents(String remotePath, String expectedContents) {
@@ -526,36 +548,36 @@ public abstract class SshToolIntegrationTest {
         assertTrue(Math.abs(minute - expectedMinute) <= 1, "ls="+lsout+"; lsparts="+Arrays.toString(lsparts)+"; expected="+expected+"; expectedMinute="+expectedMinute+"; minute="+minute+"; zone="+expected.getTimeZone());
     }
 
-    private String execCommands(String... cmds) {
+    protected String execCommands(String... cmds) {
         return execCommands(Arrays.asList(cmds));
     }
     
-    private String execCommands(List<String> cmds) {
+    protected String execCommands(List<String> cmds) {
         return execCommands(cmds, ImmutableMap.<String,Object>of());
     }
 
-    private String execCommands(List<String> cmds, Map<String,?> env) {
+    protected String execCommands(List<String> cmds, Map<String,?> env) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         tool.execCommands(ImmutableMap.of("out", out), cmds, env);
         return new String(out.toByteArray());
     }
 
-    private String execScript(String... cmds) {
+    protected String execScript(String... cmds) {
         return execScript(tool, Arrays.asList(cmds));
     }
 
-    private String execScript(SshTool t, List<String> cmds) {
+    protected String execScript(SshTool t, List<String> cmds) {
         return execScript(ImmutableMap.<String,Object>of(), t, cmds, ImmutableMap.<String,Object>of());
     }
 
-    private String execScript(List<String> cmds) {
+    protected String execScript(List<String> cmds) {
         return execScript(cmds, ImmutableMap.<String,Object>of());
     }
     
-    private String execScript(List<String> cmds, Map<String,?> env) {
+    protected String execScript(List<String> cmds, Map<String,?> env) {
         return execScript(MutableMap.<String,Object>of(), tool, cmds, env);
     }
-    private String execScript(Map<String, ?> props, SshTool tool, List<String> cmds, Map<String,?> env) {
+    protected String execScript(Map<String, ?> props, SshTool tool, List<String> cmds, Map<String,?> env) {
         Map<String, Object> props2 = new LinkedHashMap<String, Object>(props);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         props2.put("out", out);

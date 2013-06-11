@@ -18,13 +18,19 @@ public class JavaClassNamesTest {
     }
     
     @Test
-    public void resolveName() {
+    public void testResolveName() {
         Assert.assertEquals(JavaClassNames.resolveName(this, "foo.txt"), "/brooklyn/util/javalang/foo.txt");
         Assert.assertEquals(JavaClassNames.resolveName(JavaClassNamesTest.class, "foo.txt"), "/brooklyn/util/javalang/foo.txt");
         Assert.assertEquals(JavaClassNames.resolveName(this, "/foo.txt"), "/foo.txt");
         Assert.assertEquals(JavaClassNames.resolveName(this, "/bar/foo.txt"), "/bar/foo.txt");
         Assert.assertEquals(JavaClassNames.resolveName(this, "bar/foo.txt"), "/brooklyn/util/javalang/bar/foo.txt");
-        Assert.assertEquals(JavaClassNames.resolveName(this, null), null);
     }
-    
+
+    @Test
+    public void testResolveClasspathUrls() {
+        Assert.assertEquals(JavaClassNames.resolveClasspathUrl(this, "foo.txt"), "classpath://brooklyn/util/javalang/foo.txt");
+        Assert.assertEquals(JavaClassNames.resolveClasspathUrl(JavaClassNamesTest.class, "/foo.txt"), "classpath://foo.txt");
+        Assert.assertEquals(JavaClassNames.resolveClasspathUrl(JavaClassNamesTest.class, "http://localhost/foo.txt"), "http://localhost/foo.txt");
+    }
+
 }

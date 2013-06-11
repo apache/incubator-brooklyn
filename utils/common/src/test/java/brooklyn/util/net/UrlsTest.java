@@ -24,4 +24,14 @@ public class UrlsTest {
         assertEquals(Urls.mergePaths("/","a","b","/"), "/a/b/");
     }
 
+    @Test
+    public void testIsUrlWithProtocol() {
+        Assert.assertTrue(Urls.isUrlWithProtocol("http://localhost/"));
+        Assert.assertTrue(Urls.isUrlWithProtocol("protocol:"));
+        Assert.assertFalse(Urls.isUrlWithProtocol("protocol"));
+        Assert.assertFalse(Urls.isUrlWithProtocol(":/"));
+        Assert.assertFalse(Urls.isUrlWithProtocol("1:/"));
+        Assert.assertFalse(Urls.isUrlWithProtocol(null));
+    }
+    
 }

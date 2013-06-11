@@ -11,6 +11,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.JavaClassNames;
 
 @Catalog(name="JBoss Application Server 7", description="AS7: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.png")
 @ImplementedBy(JBoss7ServerImpl.class)
@@ -60,7 +61,7 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
     
     BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "webapp.jboss.templateConfigurationUrl", "Template file (in freemarker format) for the standalone.xml file", 
-            "classpath://brooklyn/entity/webapp/jboss/jboss7-standalone.xml");
+            JavaClassNames.resolveClasspathUrl(JBoss7Server.class, "jboss7-standalone.xml"));
 
     BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             new BasicAttributeSensor<Integer>(Integer.class, "webapp.jboss.managementStatus", "HTTP response code for the management server");

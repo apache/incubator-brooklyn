@@ -8,11 +8,12 @@ import java.util.TimeZone;
 
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Strings;
 
 class GeoscalingScriptGenerator {
     
-    private static final String PHP_SCRIPT_TEMPLATE_RESOURCE = "classpath://brooklyn/entity/dns/geoscaling/template.php";
+    private static final String PHP_SCRIPT_TEMPLATE_RESOURCE = JavaClassNames.resolveClasspathUrl(GeoscalingScriptGenerator.class, "template.php");
     private static final String HOSTS_DECLARATIONS_MARKER = "/* HOST DECLARATIONS TO BE SUBSTITUTED HERE */";
     private static final String DATESTAMP_MARKER = "DATESTAMP";
 

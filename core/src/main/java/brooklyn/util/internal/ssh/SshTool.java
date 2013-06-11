@@ -64,6 +64,8 @@ public interface SshTool {
     public static final ConfigKey<OutputStream> PROP_OUT_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "out", "Stream to which to capture stdout");
     public static final ConfigKey<OutputStream> PROP_ERR_STREAM = new BasicConfigKey<OutputStream>(OutputStream.class, "err", "Stream to which to capture stderr");
     
+    public static final BooleanConfigKey PROP_NO_EXTRA_OUTPUT = new BooleanConfigKey("noExtraOutput", "Suppresses any decorative output such as result code which some tool commands insert", false);
+    
     public static final ConfigKey<String> PROP_SEPARATOR = new StringConfigKey("separator", "string to insert between caller-supplied commands being executed as commands", " ; ");
     
     public static final ConfigKey<String> PROP_SCRIPT_DIR = new StringConfigKey("scriptDir", "directory where scripts should be copied", "/tmp");
