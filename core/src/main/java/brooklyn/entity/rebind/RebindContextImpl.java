@@ -1,11 +1,13 @@
 package brooklyn.entity.rebind;
 
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.policy.Policy;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 public class RebindContextImpl implements RebindContext {
@@ -31,6 +33,11 @@ public class RebindContextImpl implements RebindContext {
         policies.put(id, policy);
     }
     
+    @Override
+    public Set<Entity> getEntities() {
+        return ImmutableSet.copyOf(entities.values());
+    }
+
     @Override
     public Entity getEntity(String id) {
         return entities.get(id);

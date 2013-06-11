@@ -15,6 +15,8 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
+import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.internal.storage.DataGrid;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
@@ -41,12 +43,22 @@ public class LocalManagementContext extends AbstractManagementContext {
      * Creates a LocalManagement with default BrooklynProperties.
      */
     public LocalManagementContext() {
-        this(BrooklynProperties.Factory.newDefault());
+        super();
+        this.locationManager = new LocalLocationManager(this);
+    }
+
+    public LocalManagementContext(DataGrid datagrid) {
+        super(datagrid);
+        this.locationManager = new LocalLocationManager(this);
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
         super(brooklynProperties);
-        configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
+        this.locationManager = new LocalLocationManager(this);
+    }
+    
+    public LocalManagementContext(DataGrid datagrid, BrooklynProperties brooklynProperties) {
+        super(datagrid, brooklynProperties);
         this.locationManager = new LocalLocationManager(this);
     }
     
@@ -92,6 +104,11 @@ public class LocalManagementContext extends AbstractManagementContext {
     public synchronized LocalLocationManager getLocationManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
         return locationManager;
+    }
+    
+    @Override
+    public InternalEntityFactory getEntityFactory() {
+        return getEntityManager().getEntityFactory();
     }
 
     @Override
@@ -141,5 +158,11 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public String toString() {
         return tostring;
+    }
+
+    @Override
+    @Deprecated
+    public Entity getRealEntity(String entityId) {
+        return entityManager.getRealEntity(entityId);
     }
 }

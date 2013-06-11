@@ -26,7 +26,7 @@ import com.google.common.collect.Sets;
  * 
  * @author aled
  */
-public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
+public class EntityProxyImpl implements java.lang.reflect.InvocationHandler, EntityProxy {
     
     // TODO Currently the proxy references the real entity and invokes methods on it directly.
     // As we work on remoting/distribution, this will be replaced by RPC.
@@ -40,6 +40,13 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
     static {
         for (Method m : Object.class.getMethods()) {
             OBJECT_METHODS.add(new MethodSignature(m));
+        }
+    }
+
+    private static final Set<MethodSignature> ENTITY_PROXY_METHODS = Sets.newLinkedHashSet();
+    static {
+        for (Method m : EntityProxy.class.getMethods()) {
+            ENTITY_PROXY_METHODS.add(new MethodSignature(m));
         }
     }
 
@@ -65,6 +72,7 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
         return delegate.toString();
     }
     
+    @Override
     public Object invoke(Object proxy, final Method m, final Object[] args) throws Throwable {
         if (proxy == null) {
             throw new IllegalArgumentException("Static methods not supported via proxy on entity "+delegate);
@@ -74,6 +82,8 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
 
         Object result;
         if (OBJECT_METHODS.contains(sig)) {
+            result = m.invoke(this, args);
+        } else if (ENTITY_PROXY_METHODS.contains(sig)) {
             result = m.invoke(this, args);
         } else if (ENTITY_NON_EFFECTOR_METHODS.contains(sig)) {
             result = m.invoke(delegate, args);

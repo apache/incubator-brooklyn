@@ -3,7 +3,6 @@ package brooklyn.entity.basic;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +52,7 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.task.DeferredSupplier;
@@ -244,7 +244,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
     @Override
     public boolean equals(Object o) {
-        return o != null && (o == this || o == selfProxy);
+        return (o == this || o == selfProxy) || 
+                (o instanceof Entity && Objects.equal(id, ((Entity)o).getId()));
     }
     
     protected boolean isLegacyConstruction() {
@@ -376,8 +377,8 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         String oldDisplayName = displayName.get();
         
         parent = managementContext.getStorage().getReference(id+"-parent");
-        groups = Collections.newSetFromMap(managementContext.getStorage().<Group,Boolean>getMap(id+"-groups"));
-        children = Collections.newSetFromMap(managementContext.getStorage().<Entity,Boolean>getMap(id+"-children"));
+        groups = SetFromLiveMap.create(managementContext.getStorage().<Group,Boolean>getMap(id+"-groups"));
+        children = SetFromLiveMap.create(managementContext.getStorage().<Entity,Boolean>getMap(id+"-children"));
         locations = managementContext.getStorage().getNonConcurrentList(id+"-locations");
         creationTimeUtc = managementContext.getStorage().getReference(id+"-creationTime");
         displayName = managementContext.getStorage().getReference(id+"-displayName");

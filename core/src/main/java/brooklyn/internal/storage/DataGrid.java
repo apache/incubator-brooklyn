@@ -4,6 +4,8 @@ import java.util.concurrent.ConcurrentMap;
 
 public interface DataGrid {
 
+    <S,T> void registerSerializer(Serializer<S,T> serializer, Class<S> originalClazz, Class<T> serializedClazz);
+    
     /**
      * If a map already exists with this id, returns it; otherwise creates a new map stored
      * in the datagrid.

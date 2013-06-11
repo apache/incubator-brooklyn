@@ -1,5 +1,7 @@
 package brooklyn.management.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Collection;
@@ -29,9 +31,11 @@ import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
+import brooklyn.internal.rebind.RebindFromDatagridManagerImpl;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.impl.BrooklynStorageImpl;
+import brooklyn.internal.storage.impl.EntitySerializer;
 import brooklyn.internal.storage.impl.InmemoryDatagrid;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
@@ -61,7 +65,9 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected Iterable<URL> baseClassPathForScanning;
 
     // TODO leaking "this" reference; yuck
-    private final RebindManager rebindManager = new RebindManagerImpl(this);
+    private final RebindManager rebindManager;
+    
+    private final RebindFromDatagridManagerImpl rebindFromDatagridManager;
     
     protected volatile BrooklynGarbageCollector gc;
 
@@ -69,14 +75,34 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     private final DownloadResolverManager downloadsManager;
 
-    private final DataGrid datagrid = new InmemoryDatagrid();
+    private final BrooklynStorage storage;
 
-    private final BrooklynStorage storage = new BrooklynStorageImpl(datagrid);
+    public AbstractManagementContext(){
+        this(BrooklynProperties.Factory.newDefault());
+    }
 
-    public AbstractManagementContext(BrooklynProperties brooklynProperties){
-       this.configMap = brooklynProperties;
-       this.entityDriverManager = new BasicEntityDriverManager();
-       this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
+    public AbstractManagementContext(DataGrid datagrid) {
+        this(datagrid, BrooklynProperties.Factory.newDefault());
+    }
+
+    public AbstractManagementContext(BrooklynProperties brooklynProperties) {
+        this(new InmemoryDatagrid(), brooklynProperties);
+    }
+    
+    public AbstractManagementContext(DataGrid datagrid, BrooklynProperties brooklynProperties) {
+        datagrid.registerSerializer(new EntitySerializer(this), Entity.class, EntitySerializer.EntityPointer.class);
+        this.storage = new BrooklynStorageImpl(datagrid);
+        
+        rebindManager = new RebindManagerImpl(this);
+        rebindFromDatagridManager = new RebindFromDatagridManagerImpl(this);
+
+        this.configMap = brooklynProperties;
+        
+        // TODO Why do this? It's moved here from LocalManagementContext
+        configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
+
+        this.entityDriverManager = new BasicEntityDriverManager();
+        this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
     }
     
     static {
@@ -107,6 +133,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         // group itself has been told that it is unmanaged).
     }
     
+    @Override
     public boolean isRunning() {
         return running;
     }
@@ -121,14 +148,21 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return rebindManager;
     }
 
+    public RebindFromDatagridManagerImpl getRebindFromDatagridManager() {
+        return rebindFromDatagridManager;
+    }
+
+    @Override
     public long getTotalEffectorInvocations() {
         return totalEffectorInvocationCount.get();
     }
     
+    @Override
     public ExecutionContext getExecutionContext(Entity e) { 
         return new BasicExecutionContext(MutableMap.of("tag", e), getExecutionManager());
     }
     
+    @Override
     public SubscriptionContext getSubscriptionContext(Entity e) {
         return new BasicSubscriptionContext(getSubscriptionManager(), e);
     }

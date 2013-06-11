@@ -35,6 +35,15 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         return result;
     }
 
+    public static <V> MutableSet<V> of(V v1, V v2, V v3, V v4) {
+        MutableSet<V> result = new MutableSet<V>();
+        result.add(v1);
+        result.add(v2);
+        result.add(v3);
+        result.add(v4);
+        return result;
+    }
+
     public static <V> MutableSet<V> copyOf(Iterable<? extends V> orig) {
         return new MutableSet<V>(orig);
     }
