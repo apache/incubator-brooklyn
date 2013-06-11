@@ -81,6 +81,18 @@ public class Urls {
         }
     }
 
+    /** returns true if the string begins with a non-empty string of letters followed by a colon,
+     * i.e. "protocol:" returns true, but "/" returns false */
+    public static boolean isUrlWithProtocol(String x) {
+        if (x==null) return false;
+        for (int i=0; i<x.length(); i++) {
+            char c = x.charAt(i);
+            if (c==':') return i>0;
+            if (!Character.isLetter(c)) return false; 
+        }
+        return false;
+    }
+    
     /** returns the items with exactly one "/" between items (whether or not the individual items start or end with /),
      * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any) */
     public static String mergePaths(String ...items) {
