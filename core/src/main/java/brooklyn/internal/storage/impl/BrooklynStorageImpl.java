@@ -70,29 +70,7 @@ public class BrooklynStorageImpl implements BrooklynStorage {
 
     @Override
     public <K, V> Map<K, V> getMap(final String id) {
-        LiveMap.Mutator<K,V> mutator = new LiveMap.Mutator<K,V>() {
-            private Map<K,V> map() {
-                return datagrid.<K,V>getMap(id);
-            }
-            @Override public Map<K, V> refresh() {
-                return map();
-            }
-            @Override public V put(K k, V v) {
-                return map().put(k, v);
-            }
-
-            @Override public void putAll(Map<? extends K, ? extends V> m) {
-                map().putAll(m);
-            }
-
-            @Override public V remove(Object o) {
-                return map().remove(o);
-            }
-            @Override public void clear() {
-                map().clear();
-            }
-        };
-        return new LiveMap<K,V>(mutator);
+        return datagrid.<K,V>getMap(id);
     }
     
     @Override

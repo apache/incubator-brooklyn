@@ -106,7 +106,9 @@ public class BrooklynStorageImplTest {
         assertEqualsCommutative(map, storage.getMap("mykey"), ImmutableMap.of());
     }
     
-    @Test
+    // TODO InmemoryDatagrid's map.entrySet() returns an immutable snapshot
+    // Want to test against a real datagrid instead.
+    @Test(enabled=false)
     public void testMapEntrySetIterator() throws Exception {
         Map<Object,Object> map = storage.getMap("mykey");
         map.put("k1", "v1");

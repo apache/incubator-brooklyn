@@ -324,7 +324,7 @@ class DynamicClusterTest {
         cluster.start([loc])
         cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
-        assertEquals(cluster.members.size, 2)
+        assertEquals(cluster.getMembers().size(), 2)
         assertEquals(Iterables.size(Iterables.filter(cluster.children, Predicates.instanceOf(FailingEntity.class))), 3)
         cluster.members.each {
             assertFalse(((FailingEntity)it).failOnStart)
