@@ -1,13 +1,10 @@
 package brooklyn.entity.nosql.redis;
 
-import java.util.Map;
-
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
@@ -16,7 +13,6 @@ import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -34,16 +30,6 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
     private transient SshFeed sshFeed;
 
     public RedisStoreImpl() {
-        this(MutableMap.of(), null);
-    }
-    public RedisStoreImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public RedisStoreImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public RedisStoreImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override

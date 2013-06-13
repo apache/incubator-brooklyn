@@ -6,13 +6,12 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.messaging.jms.JMSBroker;
+import brooklyn.entity.messaging.jms.JMSBrokerImpl;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
@@ -20,7 +19,7 @@ import com.google.common.base.Predicates;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
  */
-public class ActiveMQBrokerImpl extends JMSBroker<ActiveMQQueue, ActiveMQTopic> implements ActiveMQBroker {
+public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTopic> implements ActiveMQBroker {
 	private static final Logger log = LoggerFactory.getLogger(ActiveMQBrokerImpl.class);
 
     private volatile JmxFeed jmxFeed;
@@ -28,15 +27,6 @@ public class ActiveMQBrokerImpl extends JMSBroker<ActiveMQQueue, ActiveMQTopic> 
     public ActiveMQBrokerImpl() {
         super();
     }
-    public ActiveMQBrokerImpl(Map properties) {
-        this(properties, null);
-    }
-    public ActiveMQBrokerImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-	public ActiveMQBrokerImpl(Map properties, Entity parent) {
-		super(properties, parent);
-	}
 
 	public void setBrokerUrl() {
 		setAttribute(BROKER_URL, String.format("tcp://%s:%d", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)));
@@ -54,18 +44,18 @@ public class ActiveMQBrokerImpl extends JMSBroker<ActiveMQQueue, ActiveMQTopic> 
         return Boolean.TRUE.equals(getConfig(USE_JMX));
     }
 
+    @Override
 	public ActiveMQQueue createQueue(Map properties) {
-		ActiveMQQueue result = new ActiveMQQueue(properties);
+		ActiveMQQueue result = addChild(EntitySpecs.spec(ActiveMQQueue.class).configure(properties));
         Entities.manage(result);
-        result.init();
         result.create();
         return result;
 	}
 
+    @Override
 	public ActiveMQTopic createTopic(Map properties) {
-		ActiveMQTopic result = new ActiveMQTopic(properties);
+		ActiveMQTopic result = addChild(EntitySpecs.spec(ActiveMQTopic.class).configure(properties));
         Entities.manage(result);
-        result.init();
         result.create();
         return result;
 	}

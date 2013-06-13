@@ -15,11 +15,6 @@
  */
 package brooklyn.entity.zookeeper;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.ObjectName;
@@ -27,20 +22,13 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Apache Zookeeper instance.
@@ -53,16 +41,6 @@ public abstract class AbstractZookeeperImpl extends SoftwareProcessImpl implemen
     private volatile JmxFeed jmxFeed;
 
     public AbstractZookeeperImpl() {
-        super();
-    }
-    public AbstractZookeeperImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public AbstractZookeeperImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public AbstractZookeeperImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override

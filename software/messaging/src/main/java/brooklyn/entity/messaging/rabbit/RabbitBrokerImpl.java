@@ -1,15 +1,13 @@
 package brooklyn.entity.messaging.rabbit;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.entity.proxying.EntitySpecs;
 
 import com.google.common.base.Objects.ToStringHelper;
 
@@ -25,15 +23,6 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
 
     public RabbitBrokerImpl() {
         super();
-    }
-    public RabbitBrokerImpl(Map properties) {
-        this(properties, null);
-    }
-    public RabbitBrokerImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public RabbitBrokerImpl(Map properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override
@@ -67,7 +56,7 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
     }
 
     public RabbitQueue createQueue(Map properties) {
-        RabbitQueue result = new RabbitQueue(properties, this);
+        RabbitQueue result = addChild(EntitySpecs.spec(RabbitQueue.class).configure(properties));
         Entities.manage(result);
         result.create();
         return result;

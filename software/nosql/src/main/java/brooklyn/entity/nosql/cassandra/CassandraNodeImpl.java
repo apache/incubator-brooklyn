@@ -14,12 +14,10 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -38,16 +36,6 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     private static final Logger log = LoggerFactory.getLogger(CassandraNodeImpl.class);
 
     public CassandraNodeImpl() {
-        this(MutableMap.of(), null);
-    }
-    public CassandraNodeImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public CassandraNodeImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public CassandraNodeImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
     }
 
     public Integer getGossipPort() { return getAttribute(CassandraNode.GOSSIP_PORT); }

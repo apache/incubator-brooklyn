@@ -3,6 +3,7 @@ package brooklyn.entity.group;
 import groovy.lang.Closure;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import brooklyn.config.ConfigKey;
@@ -24,6 +25,7 @@ import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
@@ -55,6 +57,10 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
     public static final ConfigKey<Function<Collection<Entity>, Entity>> REMOVAL_STRATEGY = new BasicConfigKey(
             Function.class, "dynamiccluster.removalstrategy", "strategy for deciding what to remove when down-sizing", null);
     
+    @SetFromFlag("customChildFlags")
+    public static final ConfigKey<Map> CUSTOM_CHILD_FLAGS = new BasicConfigKey<Map>(
+            Map.class, "dynamiccluster.customChildFlags", "Additional flags to be passed to children when they are being created", ImmutableMap.of());
+
     /**
      * 
      * @param memberId

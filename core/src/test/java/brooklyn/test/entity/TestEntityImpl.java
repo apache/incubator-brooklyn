@@ -20,9 +20,10 @@ import brooklyn.util.collections.MutableMap;
 public class TestEntityImpl extends AbstractEntity implements TestEntity {
 	protected static final Logger LOG = LoggerFactory.getLogger(TestEntityImpl.class);
 
-    int sequenceValue = 0;
-    AtomicInteger counter = new AtomicInteger(0);
-    Map constructorProperties;
+	protected int sequenceValue = 0;
+	protected AtomicInteger counter = new AtomicInteger(0);
+	protected Map<?,?> constructorProperties;
+	protected Map<?,?> configureProperties;
 
     public TestEntityImpl() {
         super();
@@ -36,6 +37,11 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public TestEntityImpl(Map properties, Entity parent) {
         super(properties, parent);
         this.constructorProperties = properties;
+    }
+    
+    public AbstractEntity configure(Map flags) {
+        this.configureProperties = flags;
+        return super.configure(flags);
     }
     
     @Override
@@ -65,8 +71,13 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     }
 
     @Override
-    public Map getConstructorProperties() {
+    public Map<?,?> getConstructorProperties() {
         return constructorProperties;
+    }
+    
+    @Override
+    public Map<?,?> getConfigureProperties() {
+        return configureProperties;
     }
     
     @Override

@@ -11,12 +11,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -33,12 +33,13 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
     List<TestEntity> entities;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() {
         super.setUp();
         
         entities = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
-            entities.add(new TestEntityImpl(app));
+            entities.add(app.createAndManageChild(EntitySpecs.spec(TestEntity.class)));
         }
         entity = entities.get(0);
         

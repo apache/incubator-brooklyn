@@ -5,6 +5,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
+import brooklyn.entity.messaging.jms.JMSBroker;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
@@ -15,7 +16,7 @@ import brooklyn.util.flags.SetFromFlag;
  */
 @Catalog(name="ActiveMQ Broker", description="ActiveMQ is an open source message broker which fully implements the Java Message Service 1.1 (JMS)", iconUrl="classpath:///activemq-logo.png")
 @ImplementedBy(ActiveMQBrokerImpl.class)
-public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx {
+public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx, JMSBroker<ActiveMQQueue, ActiveMQTopic> {
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "5.7.0");

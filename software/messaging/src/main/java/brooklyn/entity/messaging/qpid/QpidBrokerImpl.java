@@ -3,9 +3,7 @@ package brooklyn.entity.messaging.qpid;
 import static java.lang.String.format;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.MalformedObjectNameException;
@@ -14,39 +12,28 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.messaging.jms.JMSBroker;
+import brooklyn.entity.messaging.jms.JMSBrokerImpl;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.collect.Sets;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
  */
-public class QpidBrokerImpl extends JMSBroker<QpidQueue, QpidTopic> implements QpidBroker {
+public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implements QpidBroker {
     private static final Logger log = LoggerFactory.getLogger(QpidBrokerImpl.class);
 
     private volatile JmxFeed jmxFeed;
 
     public QpidBrokerImpl() {
         super();
-    }
-    public QpidBrokerImpl(Map properties) {
-        this(properties, null);
-    }
-    public QpidBrokerImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public QpidBrokerImpl(Map properties, Entity parent) {
-        super(properties, parent);
     }
 
     public String getVirtualHost() { return getAttribute(VIRTUAL_HOST_NAME); }
@@ -78,17 +65,15 @@ public class QpidBrokerImpl extends JMSBroker<QpidQueue, QpidTopic> implements Q
     }
     
     public QpidQueue createQueue(Map properties) {
-        QpidQueue result = new QpidQueue(properties, this);
+        QpidQueue result = addChild(EntitySpecs.spec(QpidQueue.class).configure(properties));
         Entities.manage(result);
-        result.init();
         result.create();
         return result;
     }
 
     public QpidTopic createTopic(Map properties) {
-        QpidTopic result = new QpidTopic(properties, this);
+        QpidTopic result = addChild(EntitySpecs.spec(QpidTopic.class).configure(properties));
         Entities.manage(result);
-        result.init();
         result.create();
         return result;
     }

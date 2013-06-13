@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -43,10 +42,6 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
         super();
     }
     
-    public UrlMappingImpl(Map<?,?> props, Entity parent) {
-        super(props, parent);
-    }
-
     @Override
     public String getUniqueLabel() {
         String l = getConfig(LABEL);

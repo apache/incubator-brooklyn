@@ -8,6 +8,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpServer;
+import brooklyn.entity.messaging.jms.JMSBroker;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
@@ -19,7 +20,7 @@ import brooklyn.util.flags.SetFromFlag;
  */
 @Catalog(name="Qpid Broker", description="Apache Qpid is an open-source messaging system, implementing the Advanced Message Queuing Protocol (AMQP)", iconUrl="classpath:///qpid-logo.jpeg")
 @ImplementedBy(QpidBrokerImpl.class)
-public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, AmqpServer {
+public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, AmqpServer, JMSBroker<QpidQueue, QpidTopic> {
 
     /* Qpid runtime file locations for convenience. */
 

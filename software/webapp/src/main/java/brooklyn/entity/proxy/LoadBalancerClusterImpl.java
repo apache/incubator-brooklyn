@@ -1,7 +1,6 @@
 package brooklyn.entity.proxy;
 
 import java.util.Collection;
-import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
@@ -30,10 +29,7 @@ public class LoadBalancerClusterImpl extends DynamicClusterImpl implements LoadB
         super();
     }
 
-    public LoadBalancerClusterImpl(Map<?, ?> flags, Entity parent) {
-        super(flags, parent);
-    }
-
+    @Override
     public void start(Collection<? extends Location> locs) {
         super.start(locs);
         

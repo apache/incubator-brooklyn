@@ -5,7 +5,6 @@ package brooklyn.entity.nosql.cassandra;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -43,16 +42,6 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
     private AbstractMembershipTrackingPolicy policy;
 
     public CassandraClusterImpl() {
-        this(MutableMap.of(), null);
-    }
-    public CassandraClusterImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public CassandraClusterImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public CassandraClusterImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override

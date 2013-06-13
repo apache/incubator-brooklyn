@@ -1,7 +1,5 @@
 package brooklyn.policy.loadbalancing;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +10,6 @@ import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;
 
@@ -55,26 +52,22 @@ public class ItemsInContainersGroupImpl extends DynamicGroupImpl implements Item
     };
 
     public ItemsInContainersGroupImpl() {
-        this(MutableMap.of(), null);
     }
-    public ItemsInContainersGroupImpl(Map props) {
-        this(props, null);
-    }
-    public ItemsInContainersGroupImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public ItemsInContainersGroupImpl(Map props, Entity parent) {
-        super(props, parent);
+    
+    @Override
+    public void init() {
+        super.init();
         setEntityFilter(new Predicate<Entity>() {
             @Override public boolean apply(Entity e) {
                 return acceptsEntity(e);
             }});
     }
-
+    
     protected Predicate<? super Entity> getItemFilter() {
         return getConfig(ITEM_FILTER);
     }
     
+    @Override
     protected boolean acceptsEntity(Entity e) {
         if (e instanceof Movable) {
             return acceptsItem((Movable)e, ((Movable)e).getAttribute(Movable.CONTAINER));

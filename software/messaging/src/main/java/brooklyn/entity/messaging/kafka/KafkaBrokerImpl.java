@@ -23,15 +23,14 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
@@ -49,18 +48,10 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     public KafkaBrokerImpl() {
         super();
     }
-    public KafkaBrokerImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public KafkaBrokerImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public KafkaBrokerImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
-    }
 
     @Override
     public void init() {
+        super.init();
         setAttribute(BROKER_ID, Math.abs(hashCode())); // Must be positive for partitioning to work
     }
 
@@ -74,7 +65,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     public Zookeeper getZookeeper() { return getConfig(ZOOKEEPER); }
 
     public KafkaTopic createTopic(Map<?, ?> properties) {
-        KafkaTopic result = new KafkaTopic(properties, this);
+        KafkaTopic result = addChild(EntitySpecs.spec(KafkaTopic.class).configure(properties));
         Entities.manage(result);
         result.create();
         return result;

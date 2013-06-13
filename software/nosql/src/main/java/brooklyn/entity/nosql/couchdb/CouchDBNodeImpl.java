@@ -15,8 +15,6 @@
  */
 package brooklyn.entity.nosql.couchdb;
 
-import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -24,15 +22,12 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -45,16 +40,6 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
     private static final Logger log = LoggerFactory.getLogger(CouchDBNodeImpl.class);
 
     public CouchDBNodeImpl() {
-        this(MutableMap.of(), null);
-    }
-    public CouchDBNodeImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public CouchDBNodeImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public CouchDBNodeImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
     }
 
     public Integer getHttpPort() { return getAttribute(CouchDBNode.HTTP_PORT); }

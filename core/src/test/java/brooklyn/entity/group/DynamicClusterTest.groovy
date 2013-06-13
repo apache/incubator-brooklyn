@@ -51,23 +51,6 @@ class DynamicClusterTest {
         loc2 = new SimulatedLocation()
     }
 
-    @Deprecated // tests deprecated way of doing things
-    @Test    
-    public void constructorOkayWithoutNewEntityFactoryArgument() {
-        new DynamicClusterImpl(app);
-    }
-
-    @Deprecated // tests deprecated way of doing things
-    @Test
-    public void constructorRequiresThatNewEntityArgumentIsAnEntityFactory() {
-        try {
-            new DynamicClusterImpl(factory:"error", app)
-            fail();
-        } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
-        }
-    }
-
     @Test
     public void creationOkayWithoutNewEntityFactoryArgument() {
         app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class));

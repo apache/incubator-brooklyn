@@ -13,14 +13,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyService;
-import brooklyn.entity.rebind.RebindEntityTest.MyApplication;
-import brooklyn.entity.rebind.RebindEntityTest.MyApplicationImpl;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -32,7 +32,7 @@ public class SoftwareProcessEntityRebindTest {
 
     private ClassLoader classLoader = getClass().getClassLoader();
     private ManagementContext managementContext;
-    private MyApplication origApp;
+    private TestApplication origApp;
     private MyService origE;
     private File mementoDir;
     
@@ -40,8 +40,7 @@ public class SoftwareProcessEntityRebindTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
-        origApp = new MyApplicationImpl();
-        Entities.startManagement(origApp, managementContext);
+        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
 
     @AfterMethod
@@ -51,14 +50,13 @@ public class SoftwareProcessEntityRebindTest {
     
     @Test
     public void testReleasesLocationOnStopAfterRebinding() throws Exception {
-        origE = new MyService(MutableMap.of(), origApp);
-        Entities.manage(origE);
+        origE = origApp.createAndManageChild(EntitySpecs.spec(MyService.class));
         
         MyProvisioningLocation origLoc = new MyProvisioningLocation(MutableMap.of("name", "mylocname"));
         origApp.start(ImmutableList.of(origLoc));
         assertEquals(origLoc.inUseCount.get(), 1);
         
-        MyApplication newApp = (MyApplication) rebind();
+        TestApplication newApp = (TestApplication) rebind();
         MyProvisioningLocation newLoc = (MyProvisioningLocation) Iterables.getOnlyElement(newApp.getLocations());
         assertEquals(newLoc.inUseCount.get(), 1);
         
@@ -66,9 +64,9 @@ public class SoftwareProcessEntityRebindTest {
         assertEquals(newLoc.inUseCount.get(), 0);
     }
 
-    private MyApplication rebind() throws Exception {
+    private TestApplication rebind() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
-        return (MyApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
     
     public static class MyProvisioningLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {

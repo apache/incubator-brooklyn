@@ -130,7 +130,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         return processTemplate(templateConfigUrl, Collections.EMPTY_MAP);
     }
 
-    public String processTemplate(String templateConfigUrl, Map<String,Object> extraSubstitutions) {
+    public String processTemplate(String templateConfigUrl, Map<String,? extends Object> extraSubstitutions) {
         Map<String, Object> config = getEntity().getApplication().getManagementContext().getConfig().asMapWithStringKeys();
         Map<String, Object> substitutions = ImmutableMap.<String, Object>builder()
                 .putAll(config)

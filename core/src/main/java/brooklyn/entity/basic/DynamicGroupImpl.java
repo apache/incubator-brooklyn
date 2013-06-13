@@ -4,7 +4,6 @@ import groovy.lang.Closure;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +15,9 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.management.internal.CollectionChangeListener;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Maps;
 
 public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup {
     public static final Logger log = LoggerFactory.getLogger(DynamicGroupImpl.class);
@@ -30,42 +27,11 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     private volatile MyEntitySetChangeListener setChangeListener = null;
 
     public DynamicGroupImpl() {
-        super();
-        setAttribute(RUNNING, true);
     }
-    public DynamicGroupImpl(Entity parent) {
-        this(Maps.newLinkedHashMap(), parent);
-    }
-    public DynamicGroupImpl(Map<?,?> properties) {
-        this(properties, (Entity)null);
-    }
-    public DynamicGroupImpl(Entity parent, Closure<Boolean> entityFilter) {
-        this(Maps.newLinkedHashMap(), parent, entityFilter);
-    }
-    public DynamicGroupImpl(Map<?,?> properties, Entity parent, Closure<Boolean> entityFilter) {
-        this(MutableMap.builder().putAll(properties).put("entityFilter", entityFilter).build(), parent);
-        // (entityFilter != null ? GroovyJavaMethods.<Entity>predicateFromClosure(entityFilter) : null)
-    }
-    public DynamicGroupImpl(Closure<Boolean> entityFilter) {
-        this(Maps.newLinkedHashMap(), null, entityFilter);
-    }
-    public DynamicGroupImpl(Map<?,?> properties, Closure<Boolean> entityFilter) {
-        this(properties, null, entityFilter);
-    }
-    public DynamicGroupImpl(Map<?,?> properties, Entity parent, Predicate<? super Entity> entityFilter) {
-        this(MutableMap.builder().putAll(properties).put("entityFilter", entityFilter).build(), parent);
-    }
-    public DynamicGroupImpl(Entity parent, Predicate<? super Entity> entityFilter) {
-        this(MutableMap.of("entityFilter", entityFilter), parent);
-    }
-    public DynamicGroupImpl(Predicate<? super Entity> entityFilter) {
-        this(MutableMap.of("entityFilter", entityFilter), (Entity)null);
-    }
-    public DynamicGroupImpl(Map<?,?> properties, Predicate<? super Entity> entityFilter) {
-        this(MutableMap.builder().putAll(properties).put("entityFilter", entityFilter).build(), (Entity)null);
-    }
-    public DynamicGroupImpl(Map<?,?> properties, Entity parent) {
-        super(properties, parent);
+    
+    @Override
+    public void init() {
+        super.init();
         setAttribute(RUNNING, true);
     }
     

@@ -19,7 +19,6 @@ import org.osgi.jmx.JmxConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcessImpl;
@@ -60,18 +59,6 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
     
     public KarafContainerImpl() {
         super();
-    }
-
-    public KarafContainerImpl(Map properties) {
-        super(properties, null);
-    }
-
-    public KarafContainerImpl(Entity parent) {
-        super(Maps.newLinkedHashMap(), parent);
-    }
-
-    public KarafContainerImpl(Map properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override

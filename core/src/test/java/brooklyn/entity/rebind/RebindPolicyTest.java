@@ -10,12 +10,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.management.ManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -33,8 +33,7 @@ public class RebindPolicyTest {
     public void setUp() throws Exception {
         mementoDir = Files.createTempDir();
         managementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
-        origApp = new TestApplicationImpl();
-        Entities.startManagement(origApp, managementContext);
+        origApp = ApplicationBuilder.newManagedApp(EntitySpecs.spec(TestApplication.class), managementContext);
     }
 
     @AfterMethod

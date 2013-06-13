@@ -17,7 +17,6 @@ package brooklyn.entity.messaging.kafka;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,6 @@ import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 
 import com.google.common.base.Objects;
@@ -50,21 +48,13 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     public static final Logger log = LoggerFactory.getLogger(KafkaClusterImpl.class);
 
     public KafkaClusterImpl() {
-        this(MutableMap.of(), null);
-    }
-    public KafkaClusterImpl(Map<?, ?> flags) {
-        this(flags, null);
-    }
-    public KafkaClusterImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public KafkaClusterImpl(Map<?, ?> flags, Entity parent) {
-        super(flags, parent);
-        setAttribute(SERVICE_UP, false);
     }
 
     @Override
     public void init() {
+        super.init();
+        
+        setAttribute(SERVICE_UP, false);
         ConfigToAttributes.apply(this, BROKER_SPEC);
         ConfigToAttributes.apply(this, ZOOKEEPER);
         ConfigToAttributes.apply(this, ZOOKEEPER_SPEC);

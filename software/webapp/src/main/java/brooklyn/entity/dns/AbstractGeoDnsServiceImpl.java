@@ -53,15 +53,6 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     public AbstractGeoDnsServiceImpl() {
         super();
     }
-    public AbstractGeoDnsServiceImpl(Map properties) {
-        super(properties, null);
-    }
-    public AbstractGeoDnsServiceImpl(Entity parent) {
-        super(MutableMap.of(), parent);
-    }
-    public AbstractGeoDnsServiceImpl(Map properties, Entity parent) {
-        super(properties, parent);
-    }
     
     @Override
     public Map<Entity, HostGeoInfo> getTargetHosts() {

@@ -10,7 +10,6 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.BasicGroup
-import brooklyn.entity.basic.BasicGroupImpl
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.AttributeSensor
@@ -19,7 +18,6 @@ import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.test.entity.TestEntityImpl
 
 import com.google.common.base.Function
 
@@ -43,7 +41,6 @@ class CustomAggregatingEnricherTest {
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
         target = new BasicAttributeSensor<Integer>(Long.class, "target sensor")
         
-        Entities.startManagement(app);
         app.start([new SimulatedLocation()])
     }
     
@@ -185,8 +182,7 @@ class CustomAggregatingEnricherTest {
     @Test
     public void testAggregatesNewMembersOfGroup() {
         try {
-            BasicGroup group = new BasicGroupImpl(parent:app)
-            Entities.manage(group);
+            BasicGroup group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class));
             TestEntity p1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class))
             TestEntity p2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class))
             log.debug("created $group and the entities it will contain $p1 $p2")
@@ -228,9 +224,9 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAggregatesExistingMembersOfGroup() {
-        BasicGroup group = new BasicGroupImpl(app);
-        TestEntity p1 = new TestEntityImpl(group); 
-        TestEntity p2 = new TestEntityImpl(group);
+        BasicGroup group = app.addChild(EntitySpecs.spec(BasicGroup.class));
+        TestEntity p1 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class).parent(group)); 
+        TestEntity p2 = app.getManagementContext().getEntityManager().createEntity(EntitySpecs.spec(TestEntity.class).parent(group)); 
         group.addMember(p1)
         group.addMember(p2)
         p1.setAttribute(intSensor, 1)
@@ -254,7 +250,7 @@ class CustomAggregatingEnricherTest {
     
     @Test
     public void testAppliesFilterWhenAggregatingMembersOfGroup() {
-        BasicGroup group = new BasicGroupImpl(app)
+        BasicGroup group = app.createAndManageChild(EntitySpecs.spec(BasicGroup.class));
         TestEntity p1 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         TestEntity p2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         TestEntity p3 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));

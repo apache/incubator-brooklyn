@@ -13,11 +13,10 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 
@@ -33,10 +32,7 @@ public class ActiveMQEc2LiveTest extends AbstractEc2LiveTest {
         String content = "01234567890123456789012345678901";
 
         // Start broker with a configured queue
-        // FIXME Not yet using app.createAndManageChild because later in test do activeMQ.queueNames,
-        // which is not on interface
-        ActiveMQBrokerImpl activeMQ = new ActiveMQBrokerImpl(MutableMap.of("queue", queueName), app);
-        Entities.manage(activeMQ);
+        ActiveMQBroker activeMQ = app.createAndManageChild(EntitySpecs.spec(ActiveMQBroker.class).configure("queue", queueName));
         
         app.start(ImmutableList.of(loc));
         

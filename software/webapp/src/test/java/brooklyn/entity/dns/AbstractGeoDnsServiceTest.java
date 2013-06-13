@@ -20,6 +20,7 @@ import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -76,9 +77,9 @@ public class AbstractGeoDnsServiceTest {
         
         testEntities = app.createAndManageChild(EntitySpecs.spec(DynamicGroup.class)
             .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
-        geoDns = new GeoDnsTestService(MutableMap.of("pollPeriod", 10), app);
+        geoDns = app.createAndManageChild(EntitySpecs.spec(GeoDnsTestService.class)
+                .configure(GeoDnsTestService.POLL_PERIOD, 10L));
         geoDns.setTargetEntityProvider(testEntities);
-        Entities.startManagement(geoDns);
     }
 
     @AfterMethod(alwaysRun=true)
@@ -92,8 +93,8 @@ public class AbstractGeoDnsServiceTest {
         app.start( ImmutableList.of(WEST_CHILD_WITH_LOCATION, EAST_CHILD_WITH_LOCATION) );
         
         waitForTargetHosts(geoDns);
-        assertTrue(geoDns.targetHostsByName.containsKey("West child with location"), "targets="+geoDns.targetHostsByName);
-        assertTrue(geoDns.targetHostsByName.containsKey("East child with location"), "targets="+geoDns.targetHostsByName);
+        assertTrue(geoDns.getTargetHostsByName().containsKey("West child with location"), "targets="+geoDns.getTargetHostsByName());
+        assertTrue(geoDns.getTargetHostsByName().containsKey("East child with location"), "targets="+geoDns.getTargetHostsByName());
     }
     
     @Test
@@ -101,8 +102,8 @@ public class AbstractGeoDnsServiceTest {
         app.start( ImmutableList.of(WEST_CHILD, EAST_CHILD) );
         
         waitForTargetHosts(geoDns);
-        assertTrue(geoDns.targetHostsByName.containsKey("West child"), "targets="+geoDns.targetHostsByName);
-        assertTrue(geoDns.targetHostsByName.containsKey("East child"), "targets="+geoDns.targetHostsByName);
+        assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());
+        assertTrue(geoDns.getTargetHostsByName().containsKey("East child"), "targets="+geoDns.getTargetHostsByName());
     }
     
     //TODO
@@ -120,28 +121,35 @@ public class AbstractGeoDnsServiceTest {
             .every(500, TimeUnit.MILLISECONDS)
             .until(new Callable<Boolean>() {
                 public Boolean call() {
-                    return service.targetHostsByName.size() == 2;
+                    return service.getTargetHostsByName().size() == 2;
                 }})
             .limitIterationsTo(20)
             .run();
     }
     
+    @ImplementedBy(GeoDnsTestServiceImpl.class)
+    public static interface GeoDnsTestService extends AbstractGeoDnsService {
+        public Map<String, HostGeoInfo> getTargetHostsByName();
+    }
     
-    private static class GeoDnsTestService extends AbstractGeoDnsServiceImpl {
+    public static class GeoDnsTestServiceImpl extends AbstractGeoDnsServiceImpl implements GeoDnsTestService {
         public Map<String, HostGeoInfo> targetHostsByName = new LinkedHashMap<String, HostGeoInfo>();
 
-        public GeoDnsTestService(Entity parent) {
-            super(MutableMap.of(), parent);
+        public GeoDnsTestServiceImpl() {
         }
 
-        public GeoDnsTestService(Map properties, Entity parent) {
-            super(properties, parent);
+        @Override
+        public Map<String, HostGeoInfo> getTargetHostsByName() {
+            return targetHostsByName;
         }
         
         @Override
         protected boolean addTargetHost(Entity e) {
             //ignore geo lookup, override parent menu
-            log.info("TestService adding target host $e");
+            log.info("TestService adding target host {}", e);
+            if (e.getLocations().isEmpty()) {
+                return false;
+            }
             Location l = Iterables.getOnlyElement(e.getLocations());
             HostGeoInfo geoInfo = new HostGeoInfo("127.0.0.1", l.getName(), 
                 (Double) l.findLocationProperty("latitude"), (Double) l.findLocationProperty("longitude"));

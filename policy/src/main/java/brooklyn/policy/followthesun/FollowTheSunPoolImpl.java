@@ -2,7 +2,6 @@ package brooklyn.policy.followthesun;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -18,7 +17,6 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.loadbalancing.Movable;
-import brooklyn.util.collections.MutableMap;
 
 public class FollowTheSunPoolImpl extends AbstractEntity implements FollowTheSunPool {
 
@@ -75,16 +73,6 @@ public class FollowTheSunPoolImpl extends AbstractEntity implements FollowTheSun
     };
 
     public FollowTheSunPoolImpl() {
-        this(MutableMap.of(), null);
-    }
-    public FollowTheSunPoolImpl(Map properties) {
-        this(properties, null);
-    }
-    public FollowTheSunPoolImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public FollowTheSunPoolImpl(Map properties, Entity parent) {
-        super(properties, parent);
     }
 
     @Override

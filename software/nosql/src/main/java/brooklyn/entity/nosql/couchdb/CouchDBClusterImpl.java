@@ -16,7 +16,6 @@
 package brooklyn.entity.nosql.couchdb;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.util.collections.MutableMap;
 
 /**
  * Implementation of {@link CouchDBCluster}.
@@ -37,16 +35,6 @@ public class CouchDBClusterImpl extends DynamicClusterImpl implements CouchDBClu
     private static final Logger log = LoggerFactory.getLogger(CouchDBClusterImpl.class);
 
     public CouchDBClusterImpl() {
-        this(MutableMap.of(), null);
-    }
-    public CouchDBClusterImpl(Map<?, ?> properties) {
-        this(properties, null);
-    }
-    public CouchDBClusterImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-    public CouchDBClusterImpl(Map<?, ?> properties, Entity parent) {
-        super(properties, parent);
     }
 
     /**

@@ -1,9 +1,6 @@
 package brooklyn.entity.basic;
 
-import java.util.Map;
-
 import brooklyn.entity.Entity;
-import brooklyn.util.collections.MutableMap;
 
 public class BasicGroupImpl extends AbstractGroupImpl implements BasicGroup {
     
@@ -11,18 +8,6 @@ public class BasicGroupImpl extends AbstractGroupImpl implements BasicGroup {
         super();
     }
 
-    public BasicGroupImpl(Entity parent) {
-        this(MutableMap.of(), parent);
-    }
-
-    public BasicGroupImpl(Map flags) {
-        this(flags, null);
-    }
-    
-    public BasicGroupImpl(Map flags, Entity parent) {
-        super(flags, parent);
-    }
-    
     @Override
     public Entity addChild(Entity child) {
         Entity result = super.addChild(child);

@@ -3,7 +3,6 @@ package brooklyn.qa.performance
 import static brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
-import java.util.List;
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -13,12 +12,12 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.SensorEventListener
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.management.SubscriptionManager
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
-import brooklyn.test.entity.TestEntityImpl
 
 public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
 
@@ -37,7 +36,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
         
         entities = []
         for (int i = 0; i < 10; i++) {
-            entities += new TestEntityImpl(parent:app)
+            entities += app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         }
         entity = entities[0]
         app.start([loc])
