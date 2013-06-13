@@ -37,6 +37,8 @@ import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.impl.BrooklynStorageImpl;
 import brooklyn.internal.storage.impl.EntitySerializer;
 import brooklyn.internal.storage.impl.InmemoryDatagrid;
+import brooklyn.internal.storage.impl.LocationSerializer;
+import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
@@ -91,6 +93,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     public AbstractManagementContext(DataGrid datagrid, BrooklynProperties brooklynProperties) {
         datagrid.registerSerializer(new EntitySerializer(this), Entity.class, EntitySerializer.EntityPointer.class);
+        datagrid.registerSerializer(new LocationSerializer(this), Location.class, LocationSerializer.LocationPointer.class);
         this.storage = new BrooklynStorageImpl(datagrid);
         
         rebindManager = new RebindManagerImpl(this);
@@ -124,6 +127,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     private volatile boolean running = true;
     
+    @Override
     public void terminate() {
         running = false;
         rebindManager.stop();

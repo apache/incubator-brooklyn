@@ -3,6 +3,7 @@ package brooklyn.internal.rebind;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +25,7 @@ import brooklyn.entity.rebind.RebindContextImpl;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
 import brooklyn.location.Location;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoPersister.Delta;
@@ -106,6 +108,7 @@ public class RebindFromDatagridManagerImpl {
             Location location = newLocation(id, type, reflections);
             locations.put(id, location);
             rebindContext.registerLocation(id, location);
+            ((LocalManagementContext)managementContext).prePreManage(location); // FIXME
         }
         
         // Instantiate entities
@@ -139,6 +142,8 @@ public class RebindFromDatagridManagerImpl {
             Location location = rebindContext.getLocation(id);
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", id);
 
+            ((AbstractLocation)location).setManagementContext(managementContext);
+
             // FIXME
             //((AbstractLocation)location).rebind();
             //location.getRebindSupport().reconstruct(rebindContext, locMemento);
@@ -167,6 +172,12 @@ public class RebindFromDatagridManagerImpl {
             //entity.getRebindSupport().reconstruct(rebindContext, entityMemento);
         }
         
+        // Manage the top-level locations (causing everything under them to become managed)
+        LOG.info("RebindManager managing locations");
+        for (Location location : findTopLevelLocations(locations.values())) {
+            Entities.manage(location, managementContext);
+        }
+        
         // Manage the top-level apps (causing everything under them to become managed)
         LOG.info("RebindManager managing entities");
         List<Application> apps = Lists.newArrayList();
@@ -180,6 +191,16 @@ public class RebindFromDatagridManagerImpl {
         return Collections.unmodifiableList(apps);
     }
     
+    private List<Location> findTopLevelLocations(Collection<Location> locations) {
+        List<Location> result = new ArrayList<Location>();
+        for (Location contender : locations) {
+            if (contender.getParentLocation() == null) {
+                result.add(contender);
+            }
+        }
+        return result;
+    }
+
     private Entity newEntity(String entityId, String entityType, Reflections reflections) {
         Class<? extends Entity> entityClazz = (Class<? extends Entity>) reflections.loadClass(entityType);
         

@@ -214,6 +214,7 @@ public class RebindEntityTest {
     @Test
     public void testHandlesReferencingOtherLocations() throws Exception {
         MyLocation origLoc = new MyLocation();
+        Entities.manage(origLoc, origManagementContext);
         MyEntityReffingOthers origE = origApp.createAndManageChild(EntitySpecs.spec(MyEntityReffingOthers.class)
                     .configure("locationRef", origLoc));
         origE.setAttribute(MyEntityReffingOthers.LOCATION_REF_SENSOR, origLoc);
