@@ -100,7 +100,7 @@ class OpenshiftExpressJavaWebAppCluster extends AbstractEntity implements Starta
     }
     
     public void startInLocation(OpenshiftLocation ol) {
-        locations << ol
+        addLocations([ol])
         
         String war = getConfig(ROOT_WAR);
         if (!war) throw new IllegalStateException("A WAR file is required to start ${this}")

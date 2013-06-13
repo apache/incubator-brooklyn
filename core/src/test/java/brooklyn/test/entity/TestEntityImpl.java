@@ -85,9 +85,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         LOG.trace("Starting {}", this);
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         counter.incrementAndGet();
-        // FIXME: Shouldn't need to clear() the locations, but for the dirty workaround implemented in DynamicFabric
-        getLocations().clear(); ;
-        getLocations().addAll(locs);
+        addLocations(locs);
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
     }
 

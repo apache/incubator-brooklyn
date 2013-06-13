@@ -580,14 +580,15 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
     @Override
     public Collection<Location> getLocations() {
-        return locations;
+        synchronized (locations) {
+            return ImmutableList.copyOf(locations);
+        }
     }
 
     @Override
     public void addLocations(Collection<? extends Location> newLocations) {
         synchronized (locations) {
-            Set<Location> newLocationsWithDuplicatesRemoved = Sets.newLinkedHashSet();
-            newLocationsWithDuplicatesRemoved.addAll(newLocations);
+            Set<Location> newLocationsWithDuplicatesRemoved = Sets.newLinkedHashSet(newLocations);
             newLocationsWithDuplicatesRemoved.removeAll(locations);
             locations.addAll(newLocationsWithDuplicatesRemoved);
         }
@@ -599,7 +600,14 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         synchronized (locations) {
             locations.removeAll(newLocations);
         }
-        
+        getManagementSupport().getEntityChangeListener().onLocationsChanged();
+    }
+    
+    @Override
+    public void clearLocations() {
+        synchronized (locations) {
+            locations.clear();
+        }
         getManagementSupport().getEntityChangeListener().onLocationsChanged();
     }
 

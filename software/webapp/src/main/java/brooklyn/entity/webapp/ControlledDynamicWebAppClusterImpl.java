@@ -143,7 +143,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         }
         getCluster().stop();
 
-        super.getLocations().clear();
+        clearLocations();
         setAttribute(SERVICE_UP, false);
     }
 
