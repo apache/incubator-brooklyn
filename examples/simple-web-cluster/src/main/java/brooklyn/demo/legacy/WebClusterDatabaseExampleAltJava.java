@@ -60,9 +60,7 @@ public class WebClusterDatabaseExampleAltJava extends AbstractApplication {
                 "password="+DB_PASSWORD;
     }
 
-    public WebClusterDatabaseExampleAltJava() { this(new LinkedHashMap()); }
-    public WebClusterDatabaseExampleAltJava(Map props) {
-        super(props);
+    public WebClusterDatabaseExampleAltJava() {
     }
     
     ControlledDynamicWebAppCluster web = new ControlledDynamicWebAppClusterImpl(this);

@@ -97,7 +97,7 @@ class TestApplication extends AbstractApplication {
 
         TestGroupEntity addChild(Entity child) {
             super.addChild(child)
-            setAttribute(CHILDREN, children.size())
+            setAttribute(CHILDREN, getChildren().size())
             return this
         }
 

@@ -1,10 +1,7 @@
 package brooklyn.entity.basic;
 
-import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +12,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.AbstractManagementContext;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -37,49 +32,16 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
     private volatile Application application;
     
-    public AbstractApplication(){
-        this(new LinkedHashMap());
-        log.debug("Using the AbstractApplication no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
-                       "potentially bypassing explicitly loaded properties");
+    public AbstractApplication() {
     }
 
-    /** Usual constructor, takes a set of properties;
-     * also (experimental) permits defining a brooklynProperties source */
+    /**
+     * 
+     * @deprecated since 0.6; use EntitySpec so no-arg constructor
+     */
+    @Deprecated
     public AbstractApplication(Map properties) {
         super(properties);
-
-        if (properties.containsKey("mgmt")) {
-            mgmt = (ManagementContext) properties.remove("mgmt");
-        }
-
-        // TODO decide whether this is the best way to inject properties like this
-        Object propsSource=null;
-        if (properties.containsKey("brooklynProperties")) {
-            propsSource = properties.remove("brooklynProperties");
-        } else if (properties.containsKey("brooklyn.properties")) {
-            propsSource = properties.remove("brooklyn.properties");
-        } 
-        if (propsSource instanceof String) {
-            Properties p = new Properties();
-            try {
-                p.load(new ResourceUtils(this).getResourceFromUrl((String)propsSource));
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid brooklyn properties source "+propsSource+": "+e, e);
-            }
-            propsSource = p;
-        }
-        if (propsSource instanceof BrooklynProperties) {
-            brooklynProperties = (BrooklynProperties) propsSource;
-        } else if (propsSource instanceof Map) {
-            brooklynProperties = BrooklynProperties.Factory.newEmpty().addFromMap((Map)propsSource);
-        } else {
-            if (propsSource!=null) 
-                throw new IllegalArgumentException("Invalid brooklyn properties source "+propsSource);
-            brooklynProperties = BrooklynProperties.Factory.newDefault();
-        }
-
-        setAttribute(SERVICE_UP, false);
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.CREATED);
     }
 
     /** 

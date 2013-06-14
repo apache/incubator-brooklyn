@@ -27,7 +27,7 @@ public class AttributeMapTest {
     public void setUp() {
         app = new TestApplicationImpl()
         TestEntity e = new TestEntityImpl(app)
-        map = new AttributeMap(e)
+        map = new AttributeMap(e, Collections.synchronizedMap(new LinkedHashMap()));
         Entities.startManagement(app);
     }
     

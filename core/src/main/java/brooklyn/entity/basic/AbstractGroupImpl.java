@@ -2,16 +2,20 @@ package brooklyn.entity.basic;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityReferences.EntityCollectionReference;
 import brooklyn.entity.trait.Changeable;
+import brooklyn.management.internal.ManagementContextInternal;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 
 /**
@@ -26,9 +30,27 @@ import com.google.common.base.Predicate;
  */
 public abstract class AbstractGroupImpl extends AbstractEntity implements AbstractGroup {
     private static final Logger log = LoggerFactory.getLogger(AbstractGroup.class);
-    private final EntityCollectionReference<Entity> _members = new EntityCollectionReference<Entity>(this);
+    
+    private Set<Entity> members = Sets.newLinkedHashSet();
 
     public AbstractGroupImpl() {
+    }
+    
+    @Override
+    public void setManagementContext(ManagementContextInternal managementContext) {
+        super.setManagementContext(managementContext);
+        
+        Set<Entity> oldMembers = members;
+        
+        members = Collections.newSetFromMap(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-members"));
+
+        // Only override stored defaults if we have actual values. We might be in setManagementContext
+        // because we are reconstituting an existing entity in a new brooklyn management-node (in which
+        // case believe what is already in the storage), or we might be in the middle of creating a new 
+        // entity. Normally for a new entity (using EntitySpec creation approach), this will get called
+        // before setting the parent etc. However, for backwards compatibility we still support some
+        // things calling the entity's constructor directly.
+        if (oldMembers.size() > 0) members.addAll(oldMembers);
     }
     
     @Override
@@ -42,9 +64,9 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
      */
     @Override
     public boolean addMember(Entity member) {
-        synchronized (_members) {
+        synchronized (members) {
 	        member.addGroup(this);
-	        boolean changed = _members.add(member);
+	        boolean changed = members.add(member);
 	        if (changed) {
                 log.debug("Group {} got new member {}", this, member);
 	            emit(MEMBER_ADDED, member);
@@ -61,8 +83,8 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
      */
     @Override
     public boolean removeMember(Entity member) {
-        synchronized (_members) {
-            boolean changed = (member != null && _members.remove(member));
+        synchronized (members) {
+            boolean changed = (member != null && members.remove(member));
             if (changed) {
                 log.debug("Group {} lost member {}", this, member);
 	            emit(MEMBER_REMOVED, member);
@@ -75,12 +97,15 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         }
     }
     
+    @Override
     public void setMembers(Collection<Entity> m) {
         setMembers(m, null);
     }
+    
+    @Override
     public void setMembers(Collection<Entity> mm, Predicate<Entity> filter) {
-        synchronized (_members) {
-            log.debug("Group {} members set explicitly to {} (of which some possibly filtered)", this, _members);
+        synchronized (members) {
+            log.debug("Group {} members set explicitly to {} (of which some possibly filtered)", this, members);
             List<Entity> mmo = new ArrayList<Entity>(getMembers());
             for (Entity m: mmo) {
                 if (!(mm.contains(m) && (filter==null || filter.apply(m))))
@@ -98,25 +123,24 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         }
     }
  
-    // Declared so can be overridden (the default auto-generated getter is final!)
     @Override
     public Collection<Entity> getMembers() {
-        synchronized (_members) {
-            return _members.get();
+        synchronized (members) {
+            return ImmutableSet.<Entity>copyOf(members);
         }
     }
 
     @Override
     public boolean hasMember(Entity e) {
-        synchronized (_members) {
-            return _members.contains(e);
+        synchronized (members) {
+            return members.contains(e);
         }
     }
 
     @Override
     public Integer getCurrentSize() {
-        synchronized (_members) {
-            return _members.size();
+        synchronized (members) {
+            return members.size();
         }
     }
 }

@@ -2,13 +2,13 @@ package brooklyn.management.internal;
 
 import java.net.URL;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 
@@ -38,4 +38,6 @@ public interface ManagementContextInternal extends ManagementContext {
     <T> T invokeEffectorMethodSync(final Entity entity, final Effector<T> eff, final Object args) throws ExecutionException;
     
     <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters);
+
+    BrooklynStorage getStorage();
 }

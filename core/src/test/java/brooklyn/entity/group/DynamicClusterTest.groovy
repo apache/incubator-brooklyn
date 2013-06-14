@@ -30,6 +30,7 @@ import brooklyn.util.exceptions.Exceptions
 import brooklyn.util.internal.TimeExtras
 
 import com.google.common.base.Predicates
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 
@@ -323,7 +324,7 @@ class DynamicClusterTest {
         cluster.start([loc])
         cluster.resize(3)
         assertEquals(cluster.currentSize, 2)
-        assertEquals(cluster.members.size, 2)
+        assertEquals(cluster.getMembers().size(), 2)
         assertEquals(Iterables.size(Iterables.filter(cluster.children, Predicates.instanceOf(FailingEntity.class))), 3)
         cluster.members.each {
             assertFalse(((FailingEntity)it).failOnStart)
@@ -352,12 +353,12 @@ class DynamicClusterTest {
         cluster.resize(1)
         cluster.resize(2)
         assertEquals(cluster.currentSize, 2)
-        assertEquals(cluster.children as List, creationOrder)
+        assertEquals(ImmutableSet.copyOf(cluster.getChildren()), ImmutableSet.copyOf(creationOrder), "actual="+cluster.getChildren())
         
         // Now stop one
         cluster.resize(1)
         assertEquals(cluster.currentSize, 1)
-        assertEquals(cluster.children, creationOrder.subList(0, 1))
+        assertEquals(ImmutableList.copyOf(cluster.getChildren()), creationOrder.subList(0, 1))
     }
         
     @Test
