@@ -4,30 +4,44 @@
     <h2><%= entity.get('name') %></h2>
   </div>
 
-  <div class="id inforow">
-    <div class="name">ID</div>
-    <div class="value"><%= entity.get('id') %></div>
+  <div class="inforow">
+<!-- 
+    <div class="left">
+        TODO nice big icon for status here; derived as:
+        running (with optional overlay if service-not-(yet)-up)
+        starting, stopping, stopped, on-fire (all with optional overlay if service-up)
+    </div>
+-->
+    <div class="right">
+        <div class="info-name-value id">
+            <div class="name">ID</div>
+            <div class="value"><%= entity.get('id') %></div>
+        </div>
+<!-- TODO
+        <div class="info-name-value location">
+            <div class="name">Location</div>
+            <div class="value"><i>Loading...</i></div>
+        </div>
+ -->
+        
+        <div class="info-name-value serviceUp hide">
+            <div class="name">Service Up</div>
+            <div class="value"><i>Loading...</i></div>
+        </div>
+        <div class="info-name-value status hide">
+            <div class="name">Expected State</div>
+            <div class="value"><i>Loading...</i></div>
+        </div>
+        <!-- TODO parent, app, children -->
+    </div>
   </div>
 
-  <div class="status inforow hide">
-    <div class="name">Status</div>
-    <div class="value"><i>Loading...</i></div>
-  </div>
-  <div class="serviceUp inforow hide">
-    <div class="name">Available</div>
-    <div class="value"><i>Loading...</i></div>
-  </div>
+
   <!-- TODO
-	<div class="toggler-region location inforow">
-		<div class="name">Location</div>
-		<div class="value"><i>Loading...</i></div>
-	</div>
-	-->
-  <!-- TODO
-    parent, app, children
     map
   -->
 
+  <!-- TODO hide the json -->  
   <div class="toggler-region json">
     <div class="toggler-header">
       <div class="toggler-icon icon-chevron-down"></div>

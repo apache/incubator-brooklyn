@@ -7,7 +7,7 @@ import com.google.common.base.CaseFormat;
  *
  * @startuml img/entity-lifecycle.png
  * title Entity Lifecycle
- *
+ * 
  * (*) ->  "CREATED"
  *     if "Exception" then
  *     ->  "ON_FIRE"
@@ -40,10 +40,8 @@ public enum Lifecycle {
     STARTING,
 
     /**
-     * The entity service is running.
-     *
-     * This stage is entered when the service is fully active. All sensors should be producing data, and clients can
-     * connect to the entity,
+     * The entity service is expected to be running. In healthy operation, {@link Attributes#SERVICE_UP} will be true,
+     * or will shortly be true if all service start actions have been completed and we are merely waiting for it to be running. 
      */
     RUNNING,
 
@@ -56,10 +54,11 @@ public enum Lifecycle {
     STOPPING,
 
     /**
-     * The entity is no longer running.
+     * The entity is not expected to be active.
      *
-     * The entity is now removed from the location it was started in, and is no longer providing any sensor data apart from
-     * basic entity attributes.
+     * This stage is entered when an entity is stopped, or may be entered when an entity is 
+     * fully created but not started. It may or may not be removed from the location(s) it was assigned,
+     * and it will typically not be providing new sensor data apart.
      */
     STOPPED,
 
@@ -73,8 +72,7 @@ public enum Lifecycle {
     /**
      * Entity error state.
      *
-     * This stage is reachable from any other stage if an error occurs or an exception is thrown. It is not generally possible
-     * to recover from this state.
+     * This stage is reachable from any other stage if an error occurs or an exception is thrown.
      */
     ON_FIRE;
 

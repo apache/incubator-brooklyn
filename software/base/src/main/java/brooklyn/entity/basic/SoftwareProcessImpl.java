@@ -522,6 +522,5 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         
         driver.restart();
         postDriverRestart();
-        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
     }
 }

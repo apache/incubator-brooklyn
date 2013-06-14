@@ -139,9 +139,9 @@ define([
             $(".toggler-icon", root).toggleClass("icon-chevron-left").toggleClass("icon-chevron-down");
             var next = root.next();
             if (root.hasClass("user-hidden")) {
-                next.hide('fast');
+                next.slideUp('fast');
             } else {
-                next.show('fast');
+                next.slideDown('fast');
             }
         },
         updateTextareaWithData: function($div, data, alwaysShow, minPx, maxPx) {

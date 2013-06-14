@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -90,11 +91,13 @@ public interface Attributes {
     /*
      * Lifecycle attributes
      */
+    AttributeSensor<Boolean> SERVICE_UP = new BasicAttributeSensor<Boolean>(Boolean.class, "service.isUp", 
+            "Whether the service is active and availability (confirmed and monitored)");
     
     BasicAttributeSensor<Lifecycle> SERVICE_STATE = new BasicAttributeSensor<Lifecycle>(
-            Lifecycle.class, "service.state", "Service lifecycle state");
+            Lifecycle.class, "service.state", "Expected lifecycle state of the service");
     
 	/** optional */
     BasicAttributeSensor<String> LOG_FILE_LOCATION = new BasicAttributeSensor<String>(
-            String.class, "log.location", "log file location");
+            String.class, "log.location", "Log file location");
 }
