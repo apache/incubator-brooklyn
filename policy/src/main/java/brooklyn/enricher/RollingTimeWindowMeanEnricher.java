@@ -3,11 +3,14 @@ package brooklyn.enricher;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.util.time.Duration;
 
 /**
  * Transforms {@link Sensor} data into a rolling average based on a time window.
@@ -47,13 +50,20 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
     private final LinkedList<Long> timestamps = new LinkedList<Long>();
     volatile ConfidenceQualifiedNumber lastAverage = new ConfidenceQualifiedNumber(0d,0d);
     
-    long timePeriod;
+    Duration timePeriod;
     
     public RollingTimeWindowMeanEnricher(Entity producer, AttributeSensor<T> source, 
-        AttributeSensor<Double> target, long timePeriod) {
+        AttributeSensor<Double> target, Duration timePeriod) {
         super(producer, source, target);
-        this.timePeriod = timePeriod;
+        this.timePeriod = Preconditions.checkNotNull(timePeriod, "timePeriod");
     }
+
+    /** @deprecated since 0.6.0 use Duration parameter rather than long with millis */
+    public RollingTimeWindowMeanEnricher(Entity producer, AttributeSensor<T> source, 
+            AttributeSensor<Double> target, long timePeriod) {
+        this(producer, source, target, Duration.millis(timePeriod));
+    }
+
 
     @Override
     public void onEvent(SensorEvent<T> event) {
@@ -81,13 +91,13 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
 
         
         long lastTimestamp = timestamps.get(timestamps.size()-1);
-        Double confidence = ((double)(timePeriod - (now - lastTimestamp))) / timePeriod;
+        Double confidence = ((double)(timePeriod.toMilliseconds() - (now - lastTimestamp))) / timePeriod.toMilliseconds();
         if (confidence <= 0.0d) {
             double lastValue = values.get(values.size()-1).doubleValue();
             return lastAverage = new ConfidenceQualifiedNumber(lastValue, 0.0d);
         }
         
-        long start = (now - timePeriod);
+        long start = (now - timePeriod.toMilliseconds());
         long end;
         double weightedAverage = 0.0d;
         
@@ -99,7 +109,7 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
             Long timestamp = timestampsIter.next();
             if (val!=null && timestamp >= start) {
                 end = timestamp;
-                weightedAverage += ((end - start) / (confidence * timePeriod)) * val.doubleValue();
+                weightedAverage += ((end - start) / (confidence * timePeriod.toMilliseconds())) * val.doubleValue();
                 start = timestamp;
             }
         }
@@ -111,7 +121,7 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
      * Discards out-of-date values, but keeps at least one value.
      */
     private void pruneValues(long now) {
-        while(timestamps.size() > 1 && timestamps.get(0) < (now - timePeriod)) {
+        while(timestamps.size() > 1 && timestamps.get(0) < (now - timePeriod.toMilliseconds())) {
             timestamps.removeFirst();
             values.removeFirst();
         }

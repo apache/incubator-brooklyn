@@ -165,7 +165,7 @@ public class AbstractControllerTest {
     }
 
     private void assertEventuallyAddressesMatch(final Collection<Entity> expectedMembers) {
-        executeUntilSucceeds(timeout:5000) {
+        executeUntilSucceeds(timeout:15000) {
             List<Collection<String>> u = new ArrayList(updates);
             Collection<String> last = Iterables.getLast(u, null);
             Collection<String> expectedAddresses = locationsToAddresses(1234, expectedMembers);

@@ -1,5 +1,6 @@
 package brooklyn.util.stream;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -68,6 +69,14 @@ public class KnownSizeInputStream extends InputStream {
 
     public boolean markSupported() {
         return target.markSupported();
+    }
+
+    public static KnownSizeInputStream of(String contents) {
+        return of(contents.getBytes());
+    }
+
+    public static KnownSizeInputStream of(byte[] contents) {
+        return new KnownSizeInputStream(new ByteArrayInputStream(contents), contents.length);
     }
     
 }

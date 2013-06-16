@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -51,7 +52,9 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
         ConfigToAttributes.apply(this);
 
         Map<String, Object> flags = new LinkedHashMap<String, Object>();
-        flags.put("period", Duration.millis(500));
+        // might be high, and should be configurable, but not changing it here
+        Duration period = Duration.millis(500);
+        flags.put("period", period);
         
         if (getDriver().isJmxEnabled()) {
             String requestProcessorMbeanName = "Catalina:type=GlobalRequestProcessor,name=\"http-*\"";
@@ -79,6 +82,8 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
                             .onError(Functions.constant(false)))
                     .build();
             
+            JavaAppUtils.connectMXBeanSensors(this);
+            JavaAppUtils.connectJavaAppServerPolicies(this);
         } else {
             // if not using JMX
             LOG.warn("Tomcat running without JMX monitoring; limited visibility of service available");

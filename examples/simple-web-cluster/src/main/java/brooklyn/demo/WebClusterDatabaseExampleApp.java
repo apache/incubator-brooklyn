@@ -27,6 +27,7 @@ import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
+import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
@@ -94,6 +95,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
         ControlledDynamicWebAppCluster web = addChild(
                 EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                         .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
+                        .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpecs.spec(TomcatServer.class))
                         .configure(JavaWebAppService.ROOT_WAR, getConfig(WAR_PATH))
                         .configure(JavaEntityMethods.javaSysProp("brooklyn.example.db.url"), 
                                 formatString("jdbc:%s%s?user=%s\\&password=%s", 

@@ -136,7 +136,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
         if (rollupWindowSize!=null) {
             entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity,
                 REQUEST_LATENCY_IN_SECONDS_MOST_RECENT, REQUEST_LATENCY_IN_SECONDS_IN_WINDOW,
-                rollupWindowSize.toMilliseconds()));
+                rollupWindowSize));
         }
     }
 
