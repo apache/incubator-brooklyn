@@ -7,13 +7,16 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.management.ManagementContext
+import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.entity.TestApplication
-import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableMap
 import brooklyn.util.text.Strings
 
 /**
@@ -24,11 +27,16 @@ import brooklyn.util.text.Strings
 public class MySqlIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(MySqlIntegrationTest.class);
-    TestApplication tapp
-
+    
+    protected BrooklynProperties brooklynProperties;
+    protected ManagementContext managementContext;
+    protected TestApplication tapp;
+    
     @BeforeMethod(alwaysRun = true)
-    public void before() {
-        tapp = ApplicationBuilder.newManagedApp(TestApplication.class);
+    public void setUp() {
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        managementContext = new LocalManagementContext(brooklynProperties);
+        tapp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
 
     @AfterMethod(alwaysRun=true)
