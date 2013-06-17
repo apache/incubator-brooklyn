@@ -51,6 +51,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.LocationCreationUtils;
@@ -122,14 +123,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         super(conf);
     }
 
-    /** @deprecated since 0.5.0 use map-based constructor */
-    @Deprecated
-    public JcloudsLocation(String identity, String credential, String providerLocationId) {
-        this(MutableMap.of(ACCESS_IDENTITY, identity, ACCESS_CREDENTIAL, credential, 
-                CLOUD_REGION_ID, providerLocationId));
-    }
-    
-    protected void configure(Map properties) {
+    @Override
+    public void configure(Map properties) {
         super.configure(properties);
         
         if (getConfigBag().containsKey("providerLocationId")) {
@@ -776,19 +771,31 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             setup.getDescription(), 
                             Entities.sanitize(sshConfig)
                     });
-        return new JcloudsSshMachineLocation(
-                MutableMap.builder()
-                        .put("address", vmHostname) 
-                        .put("displayName", vmHostname)
-                        .put("user", getUser(setup))
-                        // don't think "config" does anything
-                        .putAll(sshConfig)
-                        // FIXME remove "config" -- inserted directly, above
-                        .put("config", sshConfig)
-                        
-                        .build(),
-                this, 
-                node);
+        
+        if (isManaged()) {
+            return getManagementContext().getLocationManager().createLocation(LocationSpec.spec(JcloudsSshMachineLocation.class)
+                            .configure("address", vmHostname) 
+                            .configure("displayName", vmHostname)
+                            .configure("user", getUser(setup))
+                            // don't think "config" does anything
+                            .configure(sshConfig)
+                            // FIXME remove "config" -- inserted directly, above
+                            .configure("config", sshConfig)
+                            .configure("jcloudsLocation", this)
+                            .configure("node", node));
+        } else {
+            return new JcloudsSshMachineLocation(MutableMap.builder()
+                    .put("address", vmHostname) 
+                    .put("displayName", vmHostname)
+                    .put("user", getUser(setup))
+                    // don't think "config" does anything
+                    .putAll(sshConfig)
+                    // FIXME remove "config" -- inserted directly, above
+                    .put("config", sshConfig)
+                    .build(),
+                    this,
+                    node);
+        }
     }
 
     // -------------- give back the machines------------------

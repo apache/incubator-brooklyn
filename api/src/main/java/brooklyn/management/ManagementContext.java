@@ -150,4 +150,6 @@ public interface ManagementContext {
      */
     @Deprecated
     void unmanage(Entity e);
+
+    LocationManager getLocationManager();
 }

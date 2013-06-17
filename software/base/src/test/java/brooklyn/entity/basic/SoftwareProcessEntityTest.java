@@ -13,10 +13,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 
@@ -29,16 +31,19 @@ public class SoftwareProcessEntityTest {
 //  NB: These tests don't actually require ssh to localhost -- only that 'localhost' resolves.
 
     private static final Logger LOG = LoggerFactory.getLogger(SoftwareProcessEntityTest.class);
-    
+
+    private LocalManagementContext managementContext;
     private SshMachineLocation machine;
     private FixedListMachineProvisioningLocation<SshMachineLocation> loc;
     private TestApplication app;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        managementContext = new LocalManagementContext();
         machine = new SshMachineLocation(MutableMap.of("address", "localhost"));
         loc = new FixedListMachineProvisioningLocation<SshMachineLocation>(MutableMap.of("machines", ImmutableList.of(machine)));
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        Entities.manage(loc, managementContext);
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
 
     @AfterMethod(alwaysRun=true)
@@ -48,7 +53,7 @@ public class SoftwareProcessEntityTest {
 
     @Test
     public void testProcessTemplateWithExtraSubstitutions() throws Exception {
-        MyServiceImpl entity = new MyServiceImpl(app);
+        MyService entity = app.createAndManageChild(EntitySpecs.spec(MyService.class));
         Entities.manage(entity);
         entity.start(ImmutableList.of(loc));
         SimulatedDriver driver = (SimulatedDriver) entity.getDriver();
@@ -59,8 +64,7 @@ public class SoftwareProcessEntityTest {
 
     @Test
     public void testBasicSoftwareProcessEntityLifecycle() throws Exception {
-        MyServiceImpl entity = new MyServiceImpl(app);
-        Entities.manage(entity);
+        MyService entity = app.createAndManageChild(EntitySpecs.spec(MyService.class));
         entity.start(ImmutableList.of(loc));
         SimulatedDriver d = (SimulatedDriver) entity.getDriver();
         Assert.assertTrue(d.isRunning());
@@ -71,8 +75,7 @@ public class SoftwareProcessEntityTest {
     
     @Test
     public void testShutdownIsIdempotent() throws Exception {
-        MyServiceImpl entity = new MyServiceImpl(app);
-        Entities.manage(entity);
+        MyService entity = app.createAndManageChild(EntitySpecs.spec(MyService.class));
         entity.start(ImmutableList.of(loc));
         entity.stop();
         
@@ -127,6 +130,7 @@ public class SoftwareProcessEntityTest {
 
     @ImplementedBy(MyServiceImpl.class)
     public interface MyService extends SoftwareProcess {
+        public SoftwareProcessDriver getDriver();
     }
     
     public static class MyServiceImpl extends SoftwareProcessImpl implements MyService {

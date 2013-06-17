@@ -1,5 +1,6 @@
 package brooklyn.extras.openshift
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import brooklyn.entity.basic.ConfigurableEntityFactory
 import brooklyn.entity.webapp.ElasticJavaWebAppService
 import brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation
@@ -8,6 +9,7 @@ import brooklyn.location.Location
 import brooklyn.location.LocationRegistry
 import brooklyn.location.LocationResolver
 import brooklyn.location.basic.AbstractLocation
+import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap
 
 import com.google.common.base.Objects
@@ -51,6 +53,14 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
     }
     
     public static class Resolver implements LocationResolver {
+        
+        private ManagementContext managementContext;
+    
+        @Override
+        public void init(ManagementContext managementContext) {
+            this.managementContext = checkNotNull(managementContext, "managementContext");
+        }
+        
         @Override
         public String getPrefix() {
             return "openshift";

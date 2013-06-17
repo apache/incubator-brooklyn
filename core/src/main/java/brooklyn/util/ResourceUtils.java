@@ -234,6 +234,8 @@ public class ResourceUtils {
         }
         address = subUrl.substring(atIndex + 1, colonIndex);
         path = subUrl.substring(colonIndex+1);
+        
+        // TODO messy way to get an SCP session 
         SshMachineLocation machine = new SshMachineLocation(MutableMap.builder()
                 .putIfNotNull("user", user)
                 .put("address", InetAddress.getByName(address))

@@ -2,7 +2,6 @@ package brooklyn.management.internal;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static brooklyn.util.GroovyJavaMethods.elvis;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.location.Location;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
@@ -32,6 +32,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
     private LocalEntityManager entityManager;
+    private final LocalLocationManager locationManager;
     
     private final String shortid = Identifiers.getBase64IdFromValue(System.identityHashCode(this), 5);
     private final String tostring = "LocalManagementContext("+shortid+")";
@@ -46,10 +47,15 @@ public class LocalManagementContext extends AbstractManagementContext {
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
         super(brooklynProperties);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
+        this.locationManager = new LocalLocationManager(this);
     }
-
+    
     public void prePreManage(Entity entity) {
         getEntityManager().prePreManage(entity);
+    }
+
+    public void prePreManage(Location location) {
+        getLocationManager().prePreManage(location);
     }
 
     @Override
@@ -72,6 +78,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         getEntityManager().manageIfNecessary(entity, context);
     }
     
+    @Override
     public synchronized LocalEntityManager getEntityManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
         
@@ -79,6 +86,12 @@ public class LocalManagementContext extends AbstractManagementContext {
             entityManager = new LocalEntityManager(this);
         }
         return entityManager;
+    }
+
+    @Override
+    public synchronized LocalLocationManager getLocationManager() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return locationManager;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package brooklyn.location.jclouds;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -13,9 +15,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.KeyValueParser;
@@ -51,6 +55,13 @@ public class JcloudsByonLocationResolver implements LocationResolver {
 
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("provider", "region", "hosts", "name", "user");
 
+    private ManagementContext managementContext;
+
+    @Override
+    public void init(ManagementContext managementContext) {
+        this.managementContext = checkNotNull(managementContext, "managementContext");
+    }
+    
     public FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> newLocationFromString(String spec) {
         return newLocationFromString(Maps.newLinkedHashMap(), spec);
     }
@@ -138,7 +149,8 @@ public class JcloudsByonLocationResolver implements LocationResolver {
 
         log.debug("Created Jclouds BYON location "+name+": "+machines);
         
-        return new FixedListMachineProvisioningLocation<JcloudsSshMachineLocation>(flags);
+        return managementContext.getLocationManager().createLocation(LocationSpec.spec(FixedListMachineProvisioningLocation.class)
+                .configure(flags));
     }
     
     @Override

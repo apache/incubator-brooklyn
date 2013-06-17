@@ -3,7 +3,14 @@ package brooklyn.entity.basic;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,7 +47,6 @@ import brooklyn.util.task.ParallelTask;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -576,4 +582,22 @@ public class Entities {
         };
     }
 
+    /**
+     * Registers the given location (and all its children) with the management context. 
+     * @throws IllegalStateException if the parent location is not already managed
+     * 
+     * @return True if the location is now managed; false if it was already managed
+     */
+    public static boolean manage(Location loc, ManagementContext managementContext) {
+        Location parent = loc.getParentLocation();
+        if (parent != null && !managementContext.getLocationManager().isManaged(parent)) {
+            throw new IllegalStateException("Can't manage "+loc+" because its parent is not yet managed ("+parent+")");
+        }
+        if (managementContext.getLocationManager().isManaged(loc)) {
+            return false;
+        } else {
+            managementContext.getLocationManager().manage(loc);
+            return true;
+        }
+    }
 }

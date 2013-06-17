@@ -1,5 +1,7 @@
 package brooklyn.location.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.net.InetAddress;
 import java.util.List;
@@ -14,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.location.LocationSpec;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.KeyValueParser;
@@ -48,6 +52,13 @@ public class ByonLocationResolver implements LocationResolver {
 
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("hosts", "name", "user");
 
+    private ManagementContext managementContext;
+
+    @Override
+    public void init(ManagementContext managementContext) {
+        this.managementContext = checkNotNull(managementContext, "managementContext");
+    }
+    
     public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(String spec) {
         return newLocationFromString(Maps.newLinkedHashMap(), spec);
     }
@@ -128,8 +139,9 @@ public class ByonLocationResolver implements LocationResolver {
         }
 
         log.debug("Created BYON location "+name+": "+machines);
-        
-        return new FixedListMachineProvisioningLocation<SshMachineLocation>(flags);
+
+        return managementContext.getLocationManager().createLocation(LocationSpec.spec(FixedListMachineProvisioningLocation.class)
+                .configure(flags));
     }
     
     @Override

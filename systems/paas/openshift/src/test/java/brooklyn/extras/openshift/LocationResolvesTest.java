@@ -26,5 +26,4 @@ public class LocationResolvesTest {
         LocationRegistry reg = managementContext.getLocationRegistry();
         Assert.assertNotNull(reg.resolve("openshift"));
     }
-    
 }

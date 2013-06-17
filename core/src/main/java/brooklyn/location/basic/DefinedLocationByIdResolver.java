@@ -1,5 +1,7 @@
 package brooklyn.location.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.management.ManagementContext;
 
 /**
  * looks up based on ID in DefinedLocations map
@@ -19,12 +22,21 @@ public class DefinedLocationByIdResolver implements LocationResolver {
 
     public static final String ID = "id";
     
+    private ManagementContext managementContext;
+
+    @Override
+    public void init(ManagementContext managementContext) {
+        this.managementContext = checkNotNull(managementContext, "managementContext");
+    }
+    
     @SuppressWarnings("rawtypes")
     @Override
     public Location newLocationFromString(Map properties, String spec) {
         throw new UnsupportedOperationException("This class must have the RegistryLocationResolver.newLocationFromString method invoked");
     }
+    
     @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         String id = spec;
         if (spec.toLowerCase().startsWith(ID+":")) {

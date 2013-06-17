@@ -16,6 +16,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
@@ -138,6 +139,10 @@ public class BrooklynGarbageCollector {
     
     public void onUnmanaged(Entity entity) {
         executionManager.deleteTag(entity);
+    }
+    
+    public void onUnmanaged(Location loc) {
+        // No-op currently; no tasks are tracked through their location
     }
     
     public void onTaskDone(Task<?> task) {

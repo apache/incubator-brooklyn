@@ -12,13 +12,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.management.ManagementContext;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
@@ -63,6 +66,12 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
 
     final private ConfigBag configBag = new ConfigBag();
 
+    private volatile ManagementContext managementContext;
+    private volatile boolean managed;
+
+    private boolean _legacyConstruction;
+
+    private boolean inConstruction;
 
     /**
      * Construct a new instance of an AbstractLocation.
@@ -89,29 +98,57 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     public AbstractLocation() {
         this(Maps.newLinkedHashMap());
     }
+    
     public AbstractLocation(Map properties) {
-        configure(properties);
-        boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
-        if (!deferConstructionChecks) {
-        	FlagUtils.checkRequiredFields(this);
+        
+        _legacyConstruction = !InternalLocationFactory.FactoryConstructionTracker.isConstructing();
+        
+        if (_legacyConstruction) {
+            LOG.warn("Deprecated use of old-style location construction for "+getClass().getName()+"; instead use LocationManager().createLocation(spec)");
+            configure(properties);
+            
+            boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
+            if (!deferConstructionChecks) {
+                FlagUtils.checkRequiredFields(this);
+            }
         }
+        
+        inConstruction = false;
     }
 
-    /** @deprecated in 0.5.0, not used or exposed; use configure(Map) */
-    public final void configure() {
-        configure(Maps.newLinkedHashMap());
+    protected void assertNotYetManaged() {
+        if (!inConstruction && (managementContext == null || !managementContext.getLocationManager().isManaged(this))) {
+            LOG.warn("configuration being made to {} after deployment; may not be supported in future versions", this);
+        }
+        //throw new IllegalStateException("Cannot set configuration "+key+" on active location "+this)
+    }
+
+    public void setManagementContext(ManagementContext managementContext) {
+        this.managementContext = managementContext;
     }
     
-    /** will set fields from flags. The unused configuration can be found via the 
+    protected ManagementContext getManagementContext() {
+        return managementContext;
+    }
+    
+    /**
+     * Will set fields from flags. The unused configuration can be found via the 
      * {@linkplain ConfigBag#getUnusedConfig()}.
      * This can be overridden for custom initialization but note the following. 
      * <p>
-     * if you require fields to be initialized you must do that in this method,
-     * with a guard (as in FixedListMachineProvisioningLocation).  you must *not*
-     * rely on field initializers because they may not run until *after* this method
-     * (this method is invoked by the constructor in this class, so initializers
-     * in subclasses will not have run when this overridden method is invoked.) */ 
-    protected void configure(Map properties) {
+     * For new-style locations (i.e. not calling constructor directly, this will
+     * be invoked automatically by brooklyn-core post-construction).
+     * <p>
+     * For legacy location use, this will be invoked by the constructor in this class.
+     * Therefore if over-riding you must *not* rely on field initializers because they 
+     * may not run until *after* this method (this method is invoked by the constructor 
+     * in this class, so initializers in subclasses will not have run when this overridden 
+     * method is invoked.) If you require fields to be initialized you must do that in 
+     * this method with a guard (as in FixedListMachineProvisioningLocation).
+     */ 
+    public void configure(Map properties) {
+        assertNotYetManaged();
+        
         boolean firstTime = (id==null);
         if (firstTime) {
             // pick a random ID if one not set
@@ -136,6 +173,41 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
             Preconditions.checkArgument(properties.get("displayName") instanceof String, "'displayName' property should be a string");
             name = (String) properties.remove("displayName");
         }
+    }
+
+    /**
+     * Called by framework (in new-style locations) after configuring, setting parent, etc,
+     * but before a reference to this location is shared with other locations.
+     * 
+     * To preserve backwards compatibility for if the location is constructed directly, one
+     * can call the code below, but that means it will be called after references to this 
+     * location have been shared with other entities.
+     * <pre>
+     * {@code
+     * if (isLegacyConstruction()) {
+     *     init();
+     * }
+     * }
+     * </pre>
+     */
+    public void init() {
+        // no-op
+    }
+
+    public boolean isManaged() {
+        return managementContext != null && managed;
+    }
+
+    public void onManagementStarted() {
+        this.managed = true;
+    }
+    
+    public void onManagementStopped() {
+        this.managed = false;
+    }
+    
+    protected boolean isLegacyConstruction() {
+        return _legacyConstruction;
     }
     
     @Override
@@ -173,6 +245,8 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         if (parent == parentLocation) {
             return; // no-op; already have desired parent
         }
+        
+        // TODO Should we support a location changing parent? The resulting unmanage/manage might cause problems.
         if (parentLocation != null) {
             Location oldParent = parentLocation;
             parentLocation = null;
@@ -201,7 +275,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     public void setParentLocation(Location parent) {
         setParent(parent);
     }
-
+    
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
         if (hasConfig(key, false)) return getConfigBag().get(key);
@@ -282,7 +356,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         }
         return false;
     }
-    
+
     /**
      * @deprecated since 0.6
      * @see addChild(Location)
@@ -291,25 +365,35 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     public void addChildLocation(Location child) {
         addChild(child);
     }
+
+    protected <T extends Location> T addChild(LocationSpec<T> spec) {
+        T child = managementContext.getLocationManager().createLocation(spec);
+        addChild(child);
+        return child;
+    }
     
     public void addChild(Location child) {
-        // Previously, setParent delegated to addChildLocation and we sometimes ended up with
-        // duplicate entries here. Instead this now uses a similar scheme to 
-        // AbstractLocation.setParent/addChild (with any weaknesses for distribution that such a 
-        // scheme might have...).
-        // 
-        // We continue to use a list to allow identical-looking locations, but they must be different 
-        // instances.
-        
-        for (Location contender : childLocations) {
-                if (contender == child) {
-                        // don't re-add; no-op
-                        return;
-                }
-        }
-        
+    	// Previously, setParent delegated to addChildLocation and we sometimes ended up with
+    	// duplicate entries here. Instead this now uses a similar scheme to 
+    	// AbstractLocation.setParent/addChild (with any weaknesses for distribution that such a 
+    	// scheme might have...).
+    	// 
+    	// We continue to use a list to allow identical-looking locations, but they must be different 
+    	// instances.
+    	
+    	for (Location contender : childLocations) {
+    		if (contender == child) {
+    			// don't re-add; no-op
+    			return;
+    		}
+    	}
+    	
         childLocations.add(child);
         child.setParent(this);
+        
+        if (isManaged()) {
+            managementContext.getLocationManager().manage(child);
+        }
     }
     
     /**
@@ -328,6 +412,10 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
                 Closeables.closeQuietly((Closeable)child);
             }
             child.setParent(null);
+            
+            if (isManaged()) {
+                managementContext.getLocationManager().unmanage(child);
+            }
         }
         return removed;
     }
