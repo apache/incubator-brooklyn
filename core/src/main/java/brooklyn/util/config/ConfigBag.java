@@ -36,6 +36,35 @@ public class ConfigBag {
     private Map<String,Object> unusedConfig = new LinkedHashMap<String,Object>();
     private boolean sealed = false;
 
+    /** creates a new ConfigBag instance, empty and ready for population */
+    public static ConfigBag newInstance() {
+        return new ConfigBag();
+    }
+    
+    /** creates a new ConfigBag instance which includes all of the supplied ConfigBag's values,
+     * but which tracks usage separately (already used values are marked as such,
+     * but uses in the original set will not be marked here, and vice versa) */
+    public static ConfigBag newInstanceCopying(final ConfigBag configBag) {
+        return new ConfigBag().copy(configBag).setDescription(configBag.getDescription());
+    }
+    
+    /** creates a new ConfigBag instance which includes all of the supplied ConfigBag's values,
+     * plus an additional set of <ConfigKey,Object> or <String,Object> pairs
+     * <p>
+     * values from the original set which are used here will be marked as used in the original set
+     * (note: this applies even for values which are overridden and the overridden value is used);
+     * however subsequent uses in the original set will not be marked here
+     */
+    public static ConfigBag newInstanceExtending(final ConfigBag configBag, Map<?,?> flags) {
+        return new ConfigBag() {
+            @Override
+            public void markUsed(String key) {
+                super.markUsed(key);
+                configBag.markUsed(key);
+            }
+        }.copy(configBag).putAll(flags);
+    }
+
     public ConfigBag setDescription(String description) {
         if (sealed) 
             throw new IllegalStateException("Cannot set description to '"+description+"': this config bag has been sealed and is now immutable.");
@@ -210,35 +239,6 @@ public class ConfigBag {
         for (String flag: usedFlags)
             markUsed(flag);
         return this;
-    }
-
-    /** creates a new ConfigBag instance, empty and ready for population */
-    public static ConfigBag newInstance() {
-        return new ConfigBag();
-    }
-    
-    /** creates a new ConfigBag instance which includes all of the supplied ConfigBag's values,
-     * but which tracks usage separately (already used values are marked as such,
-     * but uses in the original set will not be marked here, and vice versa) */
-    public static ConfigBag newInstanceCopying(final ConfigBag configBag) {
-        return new ConfigBag().copy(configBag).setDescription(configBag.getDescription());
-    }
-    
-    /** creates a new ConfigBag instance which includes all of the supplied ConfigBag's values,
-     * plus an additional set of <ConfigKey,Object> or <String,Object> pairs
-     * <p>
-     * values from the original set which are used here will be marked as used in the original set
-     * (note: this applies even for values which are overridden and the overridden value is used);
-     * however subsequent uses in the original set will not be marked here
-     */
-    public static ConfigBag newInstanceExtending(final ConfigBag configBag, Map<?,?> flags) {
-        return new ConfigBag() {
-            @Override
-            public void markUsed(String key) {
-                super.markUsed(key);
-                configBag.markUsed(key);
-            }
-        }.copy(configBag).putAll(flags);
     }
 
     public boolean isUnused(ConfigKey<?> key) {
