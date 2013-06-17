@@ -13,8 +13,12 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -23,6 +27,7 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -108,8 +113,9 @@ public class HttpFeed extends AbstractFeed {
         private Map<String, String> baseUriVars = Maps.newLinkedHashMap();
         private Map<String, String> headers = Maps.newLinkedHashMap();
         private boolean suspended = false;
+        private Credentials credentials;
         private volatile boolean built;
-        
+
         public Builder entity(EntityLocal val) {
             this.entity = val;
             return this;
@@ -167,6 +173,10 @@ public class HttpFeed extends AbstractFeed {
             this.suspended = startsSuspended;
             return this;
         }
+        public Builder credentials(String username, String password) {
+            this.credentials = new UsernamePasswordCredentials(username, password);
+            return this;
+        }
         public HttpFeed build() {
             built = true;
             HttpFeed result = new HttpFeed(this);
@@ -185,15 +195,15 @@ public class HttpFeed extends AbstractFeed {
         final Supplier<URI> uriProvider;
         final Map<String,String> headers;
         final byte[] body;
+        final Optional<Credentials> credentials;
 
-        private HttpPollIdentifier(String method, URI uri, Map<String,String> headers, byte[] body) {
-            this(method, Suppliers.ofInstance(uri), headers, body);
-        }
-        private HttpPollIdentifier(String method, Supplier<URI> uriProvider, Map<String,String> headers, byte[] body) {
+        private HttpPollIdentifier(String method, Supplier<URI> uriProvider, Map<String, String> headers, byte[] body,
+                                   Optional<Credentials> credentials) {
             this.method = checkNotNull(method, "method").toLowerCase();
             this.uriProvider = checkNotNull(uriProvider, "uriProvider");
             this.headers = checkNotNull(headers, "headers");
             this.body = body;
+            this.credentials = checkNotNull(credentials, "credentials");
             
             if (!(this.method.equals("get") || this.method.equals("post"))) {
                 throw new IllegalArgumentException("Unsupported HTTP method (only supports GET and POST): "+method);
@@ -205,7 +215,7 @@ public class HttpFeed extends AbstractFeed {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(method, uriProvider, headers, body);
+            return Objects.hashCode(method, uriProvider, headers, body, credentials);
         }
         
         @Override
@@ -217,7 +227,8 @@ public class HttpFeed extends AbstractFeed {
             return Objects.equal(method, o.method) &&
                     Objects.equal(uriProvider, o.uriProvider) &&
                     Objects.equal(headers, o.headers) &&
-                    Objects.equal(body, o.body);
+                    Objects.equal(body, o.body) &&
+                    Objects.equal(credentials, o.credentials);
         }
     }
     
@@ -235,6 +246,8 @@ public class HttpFeed extends AbstractFeed {
             String method = config.getMethod();
             Map<String,String> headers = config.buildHeaders(baseHeaders);
             byte[] body = config.getBody();
+
+            Optional<Credentials> credentials = Optional.fromNullable(builder.credentials);
             
             Supplier<URI> baseUriProvider = builder.baseUriProvider;
             if (builder.baseUri!=null) {
@@ -248,13 +261,21 @@ public class HttpFeed extends AbstractFeed {
             }
             checkNotNull(baseUriProvider);
 
-            polls.put(new HttpPollIdentifier(method, baseUriProvider, headers, body), configCopy);
+            polls.put(new HttpPollIdentifier(method, baseUriProvider, headers, body, credentials), configCopy);
         }
     }
 
     @Override
     protected void preStart() {
         for (final HttpPollIdentifier pollInfo : polls.keySet()) {
+            // Though HttpClients are thread safe and can take advantage of connection pooling
+            // and authentication caching, the httpcomponents documentation says:
+            //    "While HttpClient instances are thread safe and can be shared between multiple
+            //     threads of execution, it is highly recommended that each thread maintains its
+            //     own dedicated instance of HttpContext.
+            //  http://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
+            final HttpClient httpClient = createHttpClient(pollInfo);
+
             Set<HttpPollConfig<?>> configs = polls.get(pollInfo);
             long minPeriod = Integer.MAX_VALUE;
             Set<AttributePollHandler<? super HttpPollValue>> handlers = Sets.newLinkedHashSet();
@@ -262,21 +283,6 @@ public class HttpFeed extends AbstractFeed {
             for (HttpPollConfig<?> config : configs) {
                 handlers.add(new AttributePollHandler<HttpPollValue>(config, entity, this));
                 if (config.getPeriod() > 0) minPeriod = Math.min(minPeriod, config.getPeriod());
-            }
-            
-            final DefaultHttpClient httpClient = new DefaultHttpClient();
-            URI uri = pollInfo.uriProvider.get();
-            // TODO if supplier returns null, we may wish to defer initialization until url available?
-            if (uri!=null && "https".equalsIgnoreCase(uri.getScheme())) {
-                try {
-                    int port = (uri.getPort() >= 0) ? uri.getPort() : 443;
-                    SSLSocketFactory socketFactory = new SSLSocketFactory(new TrustAllStrategy(), SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-                    Scheme sch = new Scheme("https", port, socketFactory);
-                    httpClient.getConnectionManager().getSchemeRegistry().register(sch);
-                } catch (Exception e) {
-                    log.warn("Error in HTTP Feed of {}, setting trust for uri {}", entity, uri);
-                    throw Exceptions.propagate(e);
-                }
             }
 
             Callable<HttpPollValue> pollJob;
@@ -301,6 +307,35 @@ public class HttpFeed extends AbstractFeed {
         }
     }
 
+    private HttpClient createHttpClient(HttpPollIdentifier pollIdentifier) {
+        final DefaultHttpClient httpClient = new DefaultHttpClient();
+
+        URI uri = pollIdentifier.uriProvider.get();
+        // TODO if supplier returns null, we may wish to defer initialization until url available?
+        if (uri != null && "https".equalsIgnoreCase(uri.getScheme())) {
+            try {
+                int port = (uri.getPort() >= 0) ? uri.getPort() : 443;
+                SSLSocketFactory socketFactory = new SSLSocketFactory(
+                        new TrustAllStrategy(), SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+                Scheme sch = new Scheme("https", port, socketFactory);
+                httpClient.getConnectionManager().getSchemeRegistry().register(sch);
+            } catch (Exception e) {
+                log.warn("Error in HTTP Feed of {}, setting trust for uri {}", entity, uri);
+                throw Exceptions.propagate(e);
+            }
+        }
+
+        // Set credentials
+        if (uri != null && pollIdentifier.credentials.isPresent()) {
+            String hostname = uri.getHost();
+            int port = uri.getPort();
+            httpClient.getCredentialsProvider().setCredentials(
+                    new AuthScope(hostname, port), pollIdentifier.credentials.get());
+        }
+
+        return httpClient;
+    }
+
     @SuppressWarnings("unchecked")
     private Poller<HttpPollValue> getPoller() {
         return (Poller<HttpPollValue>) poller;
@@ -311,7 +346,7 @@ public class HttpFeed extends AbstractFeed {
         for (Map.Entry<String,String> entry : headers.entrySet()) {
             httpGet.addHeader(entry.getKey(), entry.getValue());
         }
-        
+
         long startTime = System.currentTimeMillis();
         HttpResponse httpResponse = httpClient.execute(httpGet);
         try {
