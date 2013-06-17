@@ -5,12 +5,12 @@ import java.security.cert.Certificate;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicConfigKey.BooleanConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 public interface UsesJmx extends UsesJava {
@@ -18,7 +18,7 @@ public interface UsesJmx extends UsesJava {
     public static final int DEFAULT_JMX_PORT = 1099;   // RMI port?
 
     @SetFromFlag("useJmx")
-    public static final ConfigKey<Boolean> USE_JMX = new BooleanConfigKey("jmx.enabled", "JMX enabled", Boolean.TRUE);
+    public static final ConfigKey<Boolean> USE_JMX = ConfigKeys.newKey("jmx.enabled", "JMX enabled", Boolean.TRUE);
 
     @SetFromFlag("jmxPort")
     public static final PortAttributeSensorAndConfigKey JMX_PORT = Attributes.JMX_PORT;
@@ -33,12 +33,12 @@ public interface UsesJmx extends UsesJava {
     @SetFromFlag("jmxContext")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_CONTEXT = Attributes.JMX_CONTEXT;
 
-    public static final AttributeSensor<String> JMX_URL = new StringAttributeSensor("jmx.url", "JMX URL");
+    public static final AttributeSensor<String> JMX_URL = Sensors.newStringSensor("jmx.url", "JMX URL");
 
     /** forces JMX to be secured, using JMXMP so it gets through firewalls _and_ SSL/TLS
      * (NB: there is not currently any corresponding JMXMP without SSL/TLS) */
     @SetFromFlag("jmxSecure")
-    public static final ConfigKey<Boolean> JMX_SSL_ENABLED = new BooleanConfigKey("jmx.ssl.enabled", "JMX over JMXMP enabled with SSL/TLS", Boolean.FALSE);
+    public static final ConfigKey<Boolean> JMX_SSL_ENABLED = ConfigKeys.newKey("jmx.ssl.enabled", "JMX over JMXMP enabled with SSL/TLS", Boolean.FALSE);
 
     /*
      * Synopsis of how the keys work for JMX_SSL:

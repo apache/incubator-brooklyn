@@ -7,7 +7,7 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
+import brooklyn.event.basic.Sensors;
 
 /**
  * Mock application for testing.
@@ -16,7 +16,7 @@ import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 @ImplementedBy(TestApplicationImpl.class)
 public interface TestApplication extends StartableApplication, EntityLocal, EntityInternal {
 
-    public static final AttributeSensor<String> MY_ATTRIBUTE = new StringAttributeSensor("test.myattribute", "Test attribute sensor");
+    public static final AttributeSensor<String> MY_ATTRIBUTE = Sensors.newStringSensor("test.myattribute", "Test attribute sensor");
 
     public <T extends Entity> T createChild(EntitySpec<T> spec);
 

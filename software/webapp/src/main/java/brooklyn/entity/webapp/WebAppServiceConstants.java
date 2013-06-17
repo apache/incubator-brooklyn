@@ -6,11 +6,9 @@ import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.DoubleAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
@@ -37,20 +35,20 @@ public interface WebAppServiceConstants {
     public static final Integer REQUESTS_PER_SECOND_WINDOW_PERIOD = 10 * 1000;
 
     public static final AttributeSensor<Integer> REQUEST_COUNT =
-            new IntegerAttributeSensor("webapp.reqs.total", "Request count");
+            Sensors.newIntegerSensor("webapp.reqs.total", "Request count");
     public static final brooklyn.event.basic.BasicAttributeSensor<Integer> ERROR_COUNT =
             new brooklyn.event.basic.BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.errors", "Request errors");
-    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME =
-            new IntegerAttributeSensor("webapp.reqs.processingTime.total", "Total processing time, reported by webserver (millis)");
+    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = Sensors.newIntegerSensor(
+            "webapp.reqs.processingTime.total", "Total processing time, reported by webserver (millis)");
     public static final AttributeSensor<Integer> MAX_PROCESSING_TIME =
-            new IntegerAttributeSensor("webapp.reqs.processingTime.max", "Max processing time for any single request, reported by webserver (millis)");
+            Sensors.newIntegerSensor("webapp.reqs.processingTime.max", "Max processing time for any single request, reported by webserver (millis)");
 
     /** the fraction of time represented by the most recent delta to TOTAL_PROCESSING_TIME, ie 0.4 if 800 millis were accumulated in last 2s;
      * easily configured with {@link WebAppServiceMethods#connectWebAppServerPolicies(brooklyn.entity.basic.EntityLocal, brooklyn.util.time.Duration)} */
     public static final AttributeSensor<Double> PROCESSING_TIME_FRACTION_LAST =
-            new DoubleAttributeSensor("webapp.reqs.processingTime.fraction.last", "Fraction of time spent processing, reported by webserver (percentage, last datapoint)");
+            Sensors.newDoubleSensor("webapp.reqs.processingTime.fraction.last", "Fraction of time spent processing, reported by webserver (percentage, last datapoint)");
     public static final AttributeSensor<Double> PROCESSING_TIME_FRACTION_IN_WINDOW =
-            new DoubleAttributeSensor("webapp.reqs.processingTime.fraction.windowed", "Fraction of time spent processing, reported by webserver (percentage, over time window)");
+            Sensors.newDoubleSensor("webapp.reqs.processingTime.fraction.windowed", "Fraction of time spent processing, reported by webserver (percentage, over time window)");
 
     public static final AttributeSensor<Long> BYTES_RECEIVED =
             new BasicAttributeSensor<Long>(Long.class, "webapp.reqs.bytes.received", "Total bytes received by the webserver");
@@ -59,14 +57,14 @@ public interface WebAppServiceConstants {
 
     /** req/second computed from the delta of the last request count and an associated timestamp */
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND_LAST =
-            new DoubleAttributeSensor("webapp.reqs.perSec.last", "Reqs/sec (last datapoint)");
+            Sensors.newDoubleSensor("webapp.reqs.perSec.last", "Reqs/sec (last datapoint)");
     /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_LAST */
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND = REQUESTS_PER_SECOND_LAST;
 
     /** rolled-up req/second for a window, 
      * easily configured with {@link WebAppServiceMethods#connectWebAppServerPolicies(brooklyn.entity.basic.EntityLocal, brooklyn.util.time.Duration)} */
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW =
-            new DoubleAttributeSensor("webapp.reqs.perSec.windowed", "Reqs/sec (over time window)");
+            Sensors.newDoubleSensor("webapp.reqs.perSec.windowed", "Reqs/sec (over time window)");
     /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_WINDOW_PERIOD */
     public static final Integer AVG_REQUESTS_PER_SECOND_PERIOD = REQUESTS_PER_SECOND_WINDOW_PERIOD;
     /** @deprecated since 0.5.0, use REQUESTS_PER_SECOND_IN_WINDOW */
@@ -79,7 +77,7 @@ public interface WebAppServiceConstants {
 //this class is added because the ROOT_URL relies on a static initialization which unfortunately can't be added to
 //an interface.
 class RootUrl {
-    public static final AttributeSensor<String> ROOT_URL = new StringAttributeSensor("webapp.url", "URL");
+    public static final AttributeSensor<String> ROOT_URL = Sensors.newStringSensor("webapp.url", "URL");
 
     static {
         RendererHints.register(ROOT_URL, new RendererHints.NamedActionWithUrl("Open"));

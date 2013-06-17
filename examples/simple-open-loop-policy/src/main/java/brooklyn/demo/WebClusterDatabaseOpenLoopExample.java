@@ -60,7 +60,7 @@ public class WebClusterDatabaseOpenLoopExample extends ApplicationBuilder {
     public static final String CLICKATELL_APIID = "3411519";
     public static final String SMS_RECEIVER = "441234567890";
 
-    public static final BasicAttributeSensor<Integer> APPSERVERS_COUNT = new IntegerAttributeSensor( 
+    public static final BasicAttributeSensor<Integer> APPSERVERS_COUNT = Sensors.newIntegerSensor( 
             "appservers.count", "Number of app servers deployed");
 
     public static final BasicNotificationSensor<MaxPoolSizeReachedEvent> MAX_SIZE_REACHED = new BasicNotificationSensor<MaxPoolSizeReachedEvent>(

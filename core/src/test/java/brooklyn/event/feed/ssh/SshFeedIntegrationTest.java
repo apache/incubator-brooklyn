@@ -11,8 +11,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.function.FunctionFeedTest;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -27,8 +26,8 @@ import com.google.common.io.Closeables;
 
 public class SshFeedIntegrationTest {
 
-    final static AttributeSensor<String> SENSOR_STRING = new StringAttributeSensor("aString", "");
-    final static AttributeSensor<Integer> SENSOR_INT = new IntegerAttributeSensor("aLong", "");
+    final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
+    final static AttributeSensor<Integer> SENSOR_INT = Sensors.newIntegerSensor("aLong", "");
 
     private LocalhostMachineProvisioningLocation loc;
     private SshMachineLocation machine;

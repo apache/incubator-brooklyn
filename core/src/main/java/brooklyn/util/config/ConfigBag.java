@@ -189,7 +189,7 @@ public class ConfigBag {
             value = getStringKey(key.getName(), remove);
         else
             value = key.getDefaultValue();
-        return TypeCoercions.coerce(value, key.getType());
+        return TypeCoercions.coerce(value, key.getTypeToken());
     }
 
     protected Object getStringKey(String key, boolean remove) {

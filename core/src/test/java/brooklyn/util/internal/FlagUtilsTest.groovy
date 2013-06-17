@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
 import brooklyn.config.ConfigKey
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.trait.Configurable
 import brooklyn.event.basic.BasicConfigKey
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey
 import brooklyn.util.config.ConfigBag
 import brooklyn.util.flags.FlagUtils
 import brooklyn.util.flags.SetFromFlag
@@ -214,9 +214,9 @@ class WithSpecialFieldTypes {
 
 class FooCK implements Configurable {
     @SetFromFlag
-    public static ConfigKey<String> CK1 = new StringConfigKey("ck1");
+    public static ConfigKey<String> CK1 = ConfigKeys.newStringKey("ck1");
     
-    public static ConfigKey<String> CK2 = new StringConfigKey("ck2");
+    public static ConfigKey<String> CK2 = ConfigKeys.newStringKey("ck2");
 
     @SetFromFlag
     int f1;

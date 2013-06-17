@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshAbstractTool;
@@ -38,9 +38,9 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     
     private static final Logger LOG = LoggerFactory.getLogger(SshCliTool.class);
 
-    public static final ConfigKey<String> PROP_SSH_EXECUTABLE = new StringConfigKey("sshExecutable", "command to execute for ssh (defaults to \"ssh\", but could be overridden to sshg3 for Tectia for example)", "ssh");
-    public static final ConfigKey<String> PROP_SSH_FLAGS = new StringConfigKey("sshFlags", "flags to pass to ssh, as a space separated list", "");
-    public static final ConfigKey<String> PROP_SCP_EXECUTABLE = new StringConfigKey("scpExecutable", "command to execute for scp (defaults to \"scp\", but could be overridden to scpg3 for Tectia for example)", "scp");
+    public static final ConfigKey<String> PROP_SSH_EXECUTABLE = ConfigKeys.newStringKey("sshExecutable", "command to execute for ssh (defaults to \"ssh\", but could be overridden to sshg3 for Tectia for example)", "ssh");
+    public static final ConfigKey<String> PROP_SSH_FLAGS = ConfigKeys.newStringKey("sshFlags", "flags to pass to ssh, as a space separated list", "");
+    public static final ConfigKey<String> PROP_SCP_EXECUTABLE = ConfigKeys.newStringKey("scpExecutable", "command to execute for scp (defaults to \"scp\", but could be overridden to scpg3 for Tectia for example)", "scp");
 
     public static Builder<SshCliTool,?> builder() {
         return new ConcreteBuilder();

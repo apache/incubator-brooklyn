@@ -6,6 +6,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
@@ -14,7 +15,6 @@ import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -30,15 +30,15 @@ public interface UrlMapping extends AbstractGroup {
 
     @SetFromFlag("label")
     public static final ConfigKey<String> LABEL =
-        new StringConfigKey("urlmapping.label", "optional human-readable label to identify a server", null);
+        ConfigKeys.newStringKey("urlmapping.label", "optional human-readable label to identify a server", null);
 
     @SetFromFlag("domain")
     public static final ConfigKey<String> DOMAIN =
-        new StringConfigKey("urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule; required.", null);
+        ConfigKeys.newStringKey("urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule; required.", null);
 
     @SetFromFlag("path")
     public static final ConfigKey<String> PATH =
-        new StringConfigKey("urlmapping.path", 
+        ConfigKeys.newStringKey("urlmapping.path", 
                 "URL path (pattern) for this URL map rule. Currently only supporting regex matches "+ 
                 "(if not supplied, will match all paths at the indicated domain)", null);
 

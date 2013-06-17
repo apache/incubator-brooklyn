@@ -18,7 +18,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -56,7 +56,7 @@ public class SensorSummaryTest {
   
   @Test
   public void testEscapesUriForSensorName() throws IOException {
-      Sensor<String> sensor = new StringAttributeSensor("name with space");
+      Sensor<String> sensor = Sensors.newStringSensor("name with space");
       SensorSummary summary = new SensorSummary(entity, sensor);
       URI selfUri = summary.getLinks().get("self");
       
@@ -69,7 +69,7 @@ public class SensorSummaryTest {
   // and the NamedActionWithUrl did not have equals/hashCode
   @Test
   public void testSensorWithMultipleOpenUrlActionsRegistered() throws IOException {
-      AttributeSensor<String> sensor = new StringAttributeSensor("sensor1");
+      AttributeSensor<String> sensor = Sensors.newStringSensor("sensor1");
       entity.setAttribute(sensor, "http://myval");
       RendererHints.register(sensor, new RendererHints.NamedActionWithUrl("Open"));
       RendererHints.register(sensor, new RendererHints.NamedActionWithUrl("Open"));

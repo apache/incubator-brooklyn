@@ -10,10 +10,10 @@ import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -89,7 +89,7 @@ public class SensorPropagatingEnricherTest {
     
     @Test
     public void testPropagatingAsDifferentSensor() {
-        final BasicAttributeSensor<String> ANOTHER_ATTRIBUTE = new StringAttributeSensor("another.attribute", "");
+        final AttributeSensor<String> ANOTHER_ATTRIBUTE = Sensors.newStringSensor("another.attribute", "");
         app.addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(entity, ImmutableMap.of(TestEntity.NAME, ANOTHER_ATTRIBUTE)));
 
         // name propagated as different attribute

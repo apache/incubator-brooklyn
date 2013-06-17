@@ -2,18 +2,18 @@ package brooklyn.entity.webapp.jboss;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.javalang.JavaClassNames;
 
@@ -23,7 +23,7 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
-            new StringConfigKey(SoftwareProcess.SUGGESTED_VERSION, "7.1.1.Final");
+            ConfigKeys.newKey(SoftwareProcess.SUGGESTED_VERSION, "7.1.1.Final");
     // note: 7.1.2.Final fixes many bugs but is not available for download,
     // see https://community.jboss.org/thread/197780
     // 7.2.0.Final should be out during Q3 2012
@@ -68,5 +68,5 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
             JavaClassNames.resolveClasspathUrl(JBoss7Server.class, "jboss7-standalone.xml"));
 
     AttributeSensor<Integer> MANAGEMENT_STATUS =
-            new IntegerAttributeSensor("webapp.jboss.managementStatus", "HTTP response code for the management server");
+            Sensors.newIntegerSensor("webapp.jboss.managementStatus", "HTTP response code for the management server");
 }

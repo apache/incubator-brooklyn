@@ -4,14 +4,14 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableMap;
@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 @ImplementedBy(DynamicFabricImpl.class)
 public interface DynamicFabric extends AbstractGroup, Startable, Fabric {
 
-    public static final BasicAttributeSensor<Integer> FABRIC_SIZE = new IntegerAttributeSensor("fabric.size", "Fabric size");
+    public static final AttributeSensor<Integer> FABRIC_SIZE = Sensors.newIntegerSensor("fabric.size", "Fabric size");
     
     @SetFromFlag("memberSpec")
     public static final ConfigKey<EntitySpec<?>> MEMBER_SPEC = new BasicConfigKey(
@@ -34,12 +34,12 @@ public interface DynamicFabric extends AbstractGroup, Startable, Fabric {
             EntityFactory.class, "dynamicfabric.factory", "factory for creating new cluster members", null);
 
     @SetFromFlag("displayNamePrefix")
-    public static final ConfigKey<String> DISPLAY_NAME_PREFIX = new StringConfigKey(
-            "dynamicfabric.displayNamePrefix", "Display name prefix, for created children", null);
+    public static final ConfigKey<String> DISPLAY_NAME_PREFIX = ConfigKeys.newStringKey(
+            "dynamicfabric.displayNamePrefix", "Display name prefix, for created children");
 
     @SetFromFlag("displayNameSuffix")
-    public static final ConfigKey<String> DISPLAY_NAME_SUFFIX = new StringConfigKey(
-            "dynamicfabric.displayNameSuffix", "Display name suffix, for created children", null);
+    public static final ConfigKey<String> DISPLAY_NAME_SUFFIX = ConfigKeys.newStringKey(
+            "dynamicfabric.displayNameSuffix", "Display name suffix, for created children");
 
     @SetFromFlag("customChildFlags")
     public static final ConfigKey<Map> CUSTOM_CHILD_FLAGS = new BasicConfigKey<Map>(

@@ -5,17 +5,17 @@ import org.apache.whirr.Cluster;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 @ImplementedBy(WhirrInstanceImpl.class)
 public interface WhirrInstance extends AbstractGroup {
 
     @SetFromFlag("role")
-    public static final ConfigKey<String> ROLE = new StringConfigKey(
+    public static final ConfigKey<String> ROLE = ConfigKeys.newStringKey(
             "whirr.instance.role", "Apache Whirr instance role", null);
 
     @SetFromFlag("instance")

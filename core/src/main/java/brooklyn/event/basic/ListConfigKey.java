@@ -29,7 +29,7 @@ import com.google.common.collect.Lists;
  */
 //TODO Create interface
 @Deprecated
-public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implements StructuredConfigKey {
+public class ListConfigKey<V> extends BasicConfigKey<List<V>> implements StructuredConfigKey {
 
     private static final long serialVersionUID = 751024268729803210L;
     private static final Logger log = LoggerFactory.getLogger(ListConfigKey.class);
@@ -46,7 +46,7 @@ public class ListConfigKey<V> extends BasicConfigKey<List<? extends V>> implemen
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ListConfigKey(Class<V> subType, String name, String description, List<? extends V> defaultValue) {
-        super((Class)List.class, name, description, defaultValue);
+        super((Class)List.class, name, description, (List<V>)defaultValue);
         this.subType = subType;
     }
 

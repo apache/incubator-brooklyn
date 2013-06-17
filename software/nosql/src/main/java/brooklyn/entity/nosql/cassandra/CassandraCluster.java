@@ -6,14 +6,13 @@ package brooklyn.entity.nosql.cassandra;
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -28,11 +27,11 @@ public interface CassandraCluster extends DynamicCluster {
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
 
-    ConfigKey<String> SEEDS = new StringConfigKey("cassandra.cluster.seeds", "List of seed node hosts in cluster", null);
+    ConfigKey<String> SEEDS = ConfigKeys.newStringKey("cassandra.cluster.seeds", "List of seed node hosts in cluster");
 
-    AttributeSensor<String> HOSTNAME = new StringAttributeSensor("cassandra.cluster.hostname", "Hostname to connect to cluster with");
+    AttributeSensor<String> HOSTNAME = Sensors.newStringSensor("cassandra.cluster.hostname", "Hostname to connect to cluster with");
 
-    AttributeSensor<Integer> THRIFT_PORT = new IntegerAttributeSensor("cassandra.cluster.thrift.port", "Cassandra Thrift RPC port to connect to cluster with");
+    AttributeSensor<Integer> THRIFT_PORT = Sensors.newIntegerSensor("cassandra.cluster.thrift.port", "Cassandra Thrift RPC port to connect to cluster with");
 
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraCluster.class, "update");
 

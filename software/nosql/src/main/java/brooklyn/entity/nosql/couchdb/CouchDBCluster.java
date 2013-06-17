@@ -18,9 +18,8 @@ package brooklyn.entity.nosql.couchdb;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -34,9 +33,9 @@ public interface CouchDBCluster extends DynamicCluster {
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "couchdb.cluster.name", "Name of the CouchDB cluster", "BrooklynCluster");
 
-    AttributeSensor<String> HOSTNAME = new StringAttributeSensor("couchdb.cluster.hostname", "Hostname to connect to cluster with");
+    AttributeSensor<String> HOSTNAME = Sensors.newStringSensor("couchdb.cluster.hostname", "Hostname to connect to cluster with");
 
-    AttributeSensor<Integer> HTTP_PORT = new IntegerAttributeSensor("couchdb.cluster.http.port", "CouchDB HTTP port to connect to cluster with");
+    AttributeSensor<Integer> HTTP_PORT = Sensors.newIntegerSensor("couchdb.cluster.http.port", "CouchDB HTTP port to connect to cluster with");
 
     /**
      * The name of the cluster.

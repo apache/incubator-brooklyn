@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -15,9 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.trait.Configurable;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 
 @SuppressWarnings({"unchecked"})
@@ -36,7 +34,7 @@ public class ConfigUtils {
      * but in entity config or at the root (brooklyn.properties) there are longer names (e.g. "brooklyn.ssh.config.user"),
      * and we wish to convert from the shorter names to the longer names. */
     public static <T> ConfigKey<T> prefixedKey(String prefix, ConfigKey<T> key) {
-        return new BasicConfigKey<T>(key.getType(), prefix+key.getName(), key.getDescription(), key.getDefaultValue());
+        return ConfigKeys.newPrefixedKey(prefix, key);
     }
     
     /** removes the given prefix from the key for configuration purposes; logs warning and does nothing if there is no such prefix.
@@ -48,7 +46,7 @@ public class ConfigUtils {
         String newName = key.getName();
         if (newName.startsWith(prefix)) newName = newName.substring(prefix.length());
         else log.warn("Cannot remove prefix "+prefix+" from key "+key+" (ignoring)");
-        return new BasicConfigKey<T>(key.getType(), newName, key.getDescription(), key.getDefaultValue());
+        return new BasicConfigKey<T>(key.getTypeToken(), newName, key.getDescription(), key.getDefaultValue());
     }
     
     

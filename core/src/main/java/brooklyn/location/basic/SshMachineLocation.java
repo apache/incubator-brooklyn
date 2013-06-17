@@ -28,7 +28,6 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
@@ -113,8 +112,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<String> SSH_HOST = ConfigKeys.SSH_CONFIG_HOST;
     public static final ConfigKey<Integer> SSH_PORT = ConfigKeys.SSH_CONFIG_PORT;
     
-    public static final ConfigKey<String> SSH_EXECUTABLE = new StringConfigKey("sshExecutable", "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
-    public static final ConfigKey<String> SCP_EXECUTABLE = new StringConfigKey("scpExecutable", "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
+    public static final ConfigKey<String> SSH_EXECUTABLE = ConfigKeys.newStringKey("sshExecutable", "Allows an `ssh` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
+    public static final ConfigKey<String> SCP_EXECUTABLE = ConfigKeys.newStringKey("scpExecutable", "Allows an `scp` executable file to be specified, to be used in place of the default (programmatic) java ssh client", null);
     
     // TODO remove
     public static final ConfigKey<String> PASSWORD = SshTool.PROP_PASSWORD;
@@ -122,7 +121,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<String> PRIVATE_KEY_DATA = SshTool.PROP_PRIVATE_KEY_DATA;
     public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = SshTool.PROP_PRIVATE_KEY_PASSPHRASE;
     
-    public static final ConfigKey<String> SCRIPT_DIR = new StringConfigKey("scriptDir", "directory where scripts should be placed and executed on the SSH target machine", null);
+    public static final ConfigKey<String> SCRIPT_DIR = ConfigKeys.newStringKey("scriptDir", "directory where scripts should be placed and executed on the SSH target machine", null);
     public static final ConfigKey<Map<String,Object>> SSH_ENV_MAP = new MapConfigKey<Object>(Object.class, "env", "environment variables to pass to the remote SSH shell session", null);
     
     public static final ConfigKey<Boolean> ALLOCATE_PTY = SshTool.PROP_ALLOCATE_PTY;
@@ -134,7 +133,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<OutputStream> STDERR = new BasicConfigKey<OutputStream>(OutputStream.class, "err");
     public static final ConfigKey<Boolean> NO_STDOUT_LOGGING = new BasicConfigKey<Boolean>(Boolean.class, "noStdoutLogging", "whether to disable logging of stdout from SSH commands (e.g. for verbose commands)", false);
     public static final ConfigKey<Boolean> NO_STDERR_LOGGING = new BasicConfigKey<Boolean>(Boolean.class, "noStderrLogging", "whether to disable logging of stderr from SSH commands (e.g. for verbose commands)", false);
-    public static final ConfigKey<String> LOG_PREFIX = new StringConfigKey("logPrefix");
+    public static final ConfigKey<String> LOG_PREFIX = ConfigKeys.newStringKey("logPrefix");
     
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
 
