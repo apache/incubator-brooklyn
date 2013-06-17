@@ -293,7 +293,7 @@ public class Entities {
             }
         }
 
-        for (Location it : loc.getChildLocations()) {
+        for (Location it : loc.getChildren()) {
             dumpInfo(it, out, currentIndentation+tab, tab);
         }
 

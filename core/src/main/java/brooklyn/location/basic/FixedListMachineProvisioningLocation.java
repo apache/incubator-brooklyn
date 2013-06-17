@@ -62,9 +62,9 @@ implements MachineProvisioningLocation<T>, Closeable {
         for (MachineLocation location: machines) {
             // FIXME Bad casting
             Location machine = (Location) location;
-            Location parent = machine.getParentLocation();
+            Location parent = machine.getParent();
             if (parent != null && !parent.equals(this))
-                throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getName()+"' has its parent location set");
+                throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getDisplayName()+"' has its parent location set");
 	        addChildLocation(machine);
         }
     }
@@ -72,7 +72,7 @@ implements MachineProvisioningLocation<T>, Closeable {
     @Override
     public String toVerboseString() {
         return Objects.toStringHelper(this).omitNullValues()
-                .add("id", getId()).add("name", getName())
+                .add("id", getId()).add("name", getDisplayName())
                 .add("machinesAvailable", getAvailable()).add("machinesInUse", getInUse())
                 .toString();
     }
@@ -104,7 +104,7 @@ implements MachineProvisioningLocation<T>, Closeable {
                 throw new IllegalArgumentException("Cannot add "+machine+" to "+toString()+", because already contained");
             }
             
-            Location existingParent = ((Location)machine).getParentLocation();
+            Location existingParent = ((Location)machine).getParent();
             if (existingParent != null && !existingParent.equals(this))
                 throw new IllegalStateException("Machine "+machine+" must not have a parent location to be added to "+toString()+", but parent is already set to '"+existingParent+"'");
             addChildLocation((Location)machine);

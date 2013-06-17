@@ -75,7 +75,7 @@ public class RebindLocationTest {
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc.getId(), origLoc.getId());
-        assertEquals(newLoc.getName(), origLoc.getName());
+        assertEquals(newLoc.getDisplayName(), origLoc.getDisplayName());
     }
     
     @Test
@@ -87,7 +87,7 @@ public class RebindLocationTest {
         MyLocationCustomProps newLoc2 = (MyLocationCustomProps) Iterables.get(newApp.getLocations(), 0);
         
         assertEquals(newLoc2.getId(), origLoc.getId());
-        assertEquals(newLoc2.getName(), origLoc.getName());
+        assertEquals(newLoc2.getDisplayName(), origLoc.getDisplayName());
         assertEquals(newLoc2.rebound, true);
         assertEquals(newLoc2.myfield, "myval");
     }
@@ -175,16 +175,16 @@ public class RebindLocationTest {
     public void testHandlesFieldReferencingOtherLocations() throws Exception {
     	MyLocation origOtherLoc = new MyLocation();
     	MyLocationReffingOthers origLoc = new MyLocationReffingOthers(MutableMap.of("otherLocs", ImmutableList.of(origOtherLoc), "myfield", "myval"));
-    	origOtherLoc.setParentLocation(origLoc);
+    	origOtherLoc.setParent(origLoc);
     	
         origApp.start(ImmutableList.of(origLoc));
 
         Application newApp = rebind();
         MyLocationReffingOthers newLoc = (MyLocationReffingOthers) Iterables.get(newApp.getLocations(), 0);
         
-        assertEquals(newLoc.getChildLocations().size(), 1);
-        assertTrue(Iterables.get(newLoc.getChildLocations(), 0) instanceof MyLocation, "children="+newLoc.getChildLocations());
-        assertEquals(newLoc.otherLocs, ImmutableList.copyOf(newLoc.getChildLocations()));
+        assertEquals(newLoc.getChildren().size(), 1);
+        assertTrue(Iterables.get(newLoc.getChildren(), 0) instanceof MyLocation, "children="+newLoc.getChildren());
+        assertEquals(newLoc.otherLocs, ImmutableList.copyOf(newLoc.getChildren()));
         
         // Confirm this didn't override other values (e.g. setting other fields back to their defaults, as was once the case!)
         assertEquals(newLoc.myfield, "myval");

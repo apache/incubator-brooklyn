@@ -116,7 +116,7 @@ public class JcloudsByonLocationResolver implements RegistryLocationResolver {
                     .build();
             try {
                 JcloudsSshMachineLocation machine = jcloudsLocation.rebindMachine(jcloudsLocation.getConfigBag().putAll(machineFlags));
-                machine.setParentLocation(null);
+                machine.setParent(null);
                 machines.add(machine);
             } catch (NoMachinesAvailableException e) {
                 log.warn("Error rebinding to jclouds machine "+hostIdentifier+" in "+jcloudsLocation, e);

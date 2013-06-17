@@ -76,7 +76,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
-                assertEquals(model.getContainerLocation(containerA).getName(), "custom location for "+containerA);
+                assertEquals(model.getContainerLocation(containerA).getDisplayName(), "custom location for "+containerA);
             }});
     }
     

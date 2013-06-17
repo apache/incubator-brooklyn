@@ -77,7 +77,7 @@ public class LocationResource extends AbstractBrooklynRestResource {
       for (Map.Entry<Location,Integer> count: counts.entrySet()) {
           Location l = count.getKey();
           Map<String,Object> m = MutableMap.<String,Object>of(
-                  "name", l.getName(),
+                  "name", l.getDisplayName(),
                   "leafEntityCount", count.getValue(),
                   "latitude", l.getLocationProperty("latitude"),
                   "longitude", l.getLocationProperty("longitude")

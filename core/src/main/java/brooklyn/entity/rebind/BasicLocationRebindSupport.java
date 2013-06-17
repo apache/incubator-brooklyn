@@ -77,7 +77,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         for (String childId : memento.getChildren()) {
             Location child = rebindContext.getLocation(childId);
             if (child != null) {
-            	location.addChildLocation(child);
+            	location.addChild(child);
             } else {
             	LOG.warn("Ignoring child {} of location {}({}), as cannot be found", new Object[] {childId, memento.getType(), memento.getId()});
             }
@@ -87,7 +87,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     protected void setParent(RebindContext rebindContext, LocationMemento memento) {
         Location parent = (memento.getParent() != null) ? rebindContext.getLocation(memento.getParent()) : null;
         if (parent != null) {
-            location.setParentLocation(parent);
+            location.setParent(parent);
         } else if (memento.getParent() != null) {
         	LOG.warn("Ignoring parent {} of location {}({}), as cannot be found", new Object[] {memento.getParent(), memento.getType(), memento.getId()});
         }

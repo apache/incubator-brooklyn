@@ -165,7 +165,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     }
     
     protected Entity addCluster(Location location) {
-        String locationName = elvis(location.getLocationProperty("displayName"), location.getName(), null);
+        String locationName = elvis(location.getLocationProperty("displayName"), location.getDisplayName(), null);
         Map creation = Maps.newLinkedHashMap();
         creation.putAll(getCustomChildFlags());
         if (truth(getDisplayNamePrefix()) || truth(getDisplayNameSuffix())) {

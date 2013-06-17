@@ -191,7 +191,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             flags.putAll(getSshFlags());
         flags.putAll(flags2);
         Map<String, String> environment = (Map<String, String>) ((flags.get("env") != null) ? flags.get("env") : getShellEnvironment());
-        if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getName());
+        if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getDisplayName());
         return getMachine().execScript(flags, summaryForLogging, script, environment);
     }
 

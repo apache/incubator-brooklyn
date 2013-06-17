@@ -102,7 +102,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
             running = true;
             addLocations(locs);
             Location loc = Iterables.get(locs, 0);
-            String locName = (loc.getName() != null) ? loc.getName() : loc.toString();
+            String locName = (loc.getDisplayName() != null) ? loc.getDisplayName() : loc.toString();
             emit(Attributes.LOCATION_CHANGED, null);
             setAttribute(SERVICE_UP, true);
         } finally {

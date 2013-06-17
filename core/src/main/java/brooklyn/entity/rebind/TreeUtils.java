@@ -20,17 +20,17 @@ public class TreeUtils {
         while (tovisit.size() > 0) {
             Location current = tovisit.pop();
             result.add(current);
-            for (Location child : current.getChildLocations()) {
+            for (Location child : current.getChildren()) {
                 if (child != null) {
                     tovisit.push(child);
                 }
             }
         }
 
-        Location parentLocation = root.getParentLocation();
+        Location parentLocation = root.getParent();
         while (parentLocation != null) {
             result.add(parentLocation);
-            parentLocation = parentLocation.getParentLocation();
+            parentLocation = parentLocation.getParent();
         }
 
         return result;

@@ -66,7 +66,7 @@ public class HostGeoInfo implements Serializable {
         if (!(latitude instanceof Double) || !(longitude instanceof Double))
             throw new IllegalArgumentException("Passed location specifies invalid type of lat/long");
         
-        HostGeoInfo result = new HostGeoInfo(address.getHostAddress(), l.getName(), (Double) latitude, (Double) longitude);
+        HostGeoInfo result = new HostGeoInfo(address.getHostAddress(), l.getDisplayName(), (Double) latitude, (Double) longitude);
         if (l instanceof AbstractLocation) {
             ((AbstractLocation)l).setHostGeoInfo(result);
         }
@@ -96,7 +96,7 @@ public class HostGeoInfo implements Serializable {
             return null;
         if (l instanceof AddressableLocation)
             return ((AddressableLocation) l).getAddress();
-        return findIpAddress(l.getParentLocation());
+        return findIpAddress(l.getParent());
     }
     
     

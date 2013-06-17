@@ -63,8 +63,8 @@ public class FollowTheSunPolicy extends AbstractPolicy {
             Collection<Location> locs = e.getLocations();
             if (locs.isEmpty()) return null;
             Location contender = Iterables.get(locs, 0);
-            while (contender.getParentLocation() != null && !(contender instanceof MachineProvisioningLocation)) {
-                contender = contender.getParentLocation();
+            while (contender.getParent() != null && !(contender instanceof MachineProvisioningLocation)) {
+                contender = contender.getParent();
             }
             return contender;
         }

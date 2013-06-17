@@ -24,15 +24,15 @@ public class LocalhostResolverTest {
     public void testResolvesName() throws Exception {
         Location location = resolve("localhost");
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
-        assertEquals(location.getName(), "localhost");
+        assertEquals(location.getDisplayName(), "localhost");
 
         Location location2 = resolve("localhost:()");
         assertTrue(location2 instanceof LocalhostMachineProvisioningLocation);
-        assertEquals(location2.getName(), "localhost");
+        assertEquals(location2.getDisplayName(), "localhost");
 
         Location location3 = resolve("localhost:(name=myname)");
         assertTrue(location3 instanceof LocalhostMachineProvisioningLocation);
-        assertEquals(location3.getName(), "myname");
+        assertEquals(location3.getDisplayName(), "myname");
     }
     
     private void assertThrowsIllegalArgument(String val) {

@@ -163,7 +163,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     @Override
     public String toVerboseString() {
         return Objects.toStringHelper(this).omitNullValues()
-                .add("id", getId()).add("name", getName()).add("identity", getIdentity())
+                .add("id", getId()).add("name", getDisplayName()).add("identity", getIdentity())
                 .add("description", getConfigBag().getDescription()).add("provider", getProvider())
                 .add("region", getRegion()).add("endpoint", getEndpoint())
                 .toString();
@@ -753,7 +753,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     
     protected JcloudsSshMachineLocation registerJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, ConfigBag setup) throws IOException {
         JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(node, vmHostname, setup);
-        machine.setParentLocation(this);
+        machine.setParent(this);
         vmInstanceIds.put(machine, node.getId());
         return machine;
     }

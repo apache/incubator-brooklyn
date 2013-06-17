@@ -28,32 +28,42 @@ public interface Location extends Serializable, Rebindable{
      * Get the name assigned to this location.
      *
      * @return the name assigned to the location.
+     * @since 0.6 (previously getName())
      */
-    String getName();
+    String getDisplayName();
 
     /**
      * Get the 'parent' of this location. Locations are organized into a tree hierarchy, and this method will return a reference
      * to the parent of this location, or {@code null} if this location is the tree root.
      *
      * @return a reference to the parent of this location, or {@code null} if this location is the tree root.
+     * @since 0.6 (previously getParentLocation())
      */
-    Location getParentLocation();
+    Location getParent();
 
     /**
      * Get the 'children' of this location. Locations are organized into a tree hierarchy, and this method will return a
      * collection containing the children of this location. This collection is an unmodifiable view of the data.
      *
      * @return a collection containing the children of this location.
+     * @since 0.6 (previously getChildLocations())
      */
-    Collection<Location> getChildLocations();
+    Collection<Location> getChildren();
 
     /**
-     * @return meta-data about the location (usually a long line, or a small number of lines).
-     * 
-     * @since 0.6
+     * @deprecated since 0.6
+     * @see #getDisplayName()
      */
-    String toVerboseString();
-        
+    @Deprecated
+    String getName();
+
+    /**
+     * @deprecated since 0.6
+     * @see #getParent()
+     */
+    @Deprecated
+    Location getParentLocation();
+
     /**
      * Set the 'parent' of this location. If this location was previously a child of a different location, it is removed from
      * the other location first. It is valid to pass in {@code null} to indicate that the location should be disconnected
@@ -62,9 +72,32 @@ public interface Location extends Serializable, Rebindable{
      * Adds this location as a child of the new parent (see {@code getChildLocations()}).
      *
      * @param newParent the new parent location object, or {@code null} to clear the parent reference.
+     * @since 0.6 (previously setParentLocation(Location))
      */
+    void setParent(Location newParent);
+
+    /**
+     * @deprecated since 0.6
+     * @see #setParent(Location)
+     */
+    @Deprecated
     void setParentLocation(Location newParent);
 
+
+    /**
+     * @deprecated since 0.6
+     * @see #getChildren()
+     */
+    @Deprecated
+    Collection<Location> getChildLocations();
+
+    /**
+     * @return meta-data about the location (usually a long line, or a small number of lines).
+     * 
+     * @since 0.6
+     */
+    String toVerboseString();
+    
     /**
      * Answers true if this location equals or is an ancestor of the given location.
      */
@@ -99,13 +132,6 @@ public interface Location extends Serializable, Rebindable{
      */
     @Deprecated
     Object getLocationProperty(String key);
-    
-//    /**
-//     * Returns the location properties of this immediate location (i.e. not including those from the parent hierarchy).
-//     * @deprecated since 0.5.0, use getAllConfig
-//     */
-//    @Deprecated
-//    Map<String,?> getLocationProperties();
     
     /**
      * Like {@link #getLocationProperty}, but if the property is not defined on this location, searches recursively up

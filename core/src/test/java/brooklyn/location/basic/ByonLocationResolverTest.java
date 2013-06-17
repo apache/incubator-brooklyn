@@ -96,7 +96,7 @@ public class ByonLocationResolverTest {
                 return input.getAddress().getHostName();
             }}));
         assertEquals(actualHosts, expectedHosts);
-        assertEquals(cluster.getName(), expectedName);
+        assertEquals(cluster.getDisplayName(), expectedName);
     }
 
     private void assertByonClusterWithUsersEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<UserHostTuple> expectedHosts, String expectedName) {
@@ -105,7 +105,7 @@ public class ByonLocationResolverTest {
                 return new UserHostTuple(((SshMachineLocation)input).getUser(), input.getAddress().getHostName());
             }}));
         assertEquals(actualHosts, expectedHosts);
-        assertEquals(cluster.getName(), expectedName);
+        assertEquals(cluster.getDisplayName(), expectedName);
     }
 
     private void assertThrowsIllegalArgument(String val) {

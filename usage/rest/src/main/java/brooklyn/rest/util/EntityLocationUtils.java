@@ -50,7 +50,7 @@ public class EntityLocationUtils {
     protected Location getMostGeneralLocatedLocation(Location l) {
         if (l==null) return null;
         if (!isLocatedLocation(l)) return null;
-        Location ll = getMostGeneralLocatedLocation(l.getParentLocation());
+        Location ll = getMostGeneralLocatedLocation(l.getParent());
         if (ll!=null) return ll;
         return l;
     }

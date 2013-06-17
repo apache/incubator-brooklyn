@@ -24,7 +24,7 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
     @Override
     public String toVerboseString() {
         return Objects.toStringHelper(this).omitNullValues()
-                .add("id", getId()).add("name", getName())
+                .add("id", getId()).add("name", getDisplayName())
                 .add("hostname", getHostname()).add("url", getUrl()).add("user", getUser())
                 .toString();
     }

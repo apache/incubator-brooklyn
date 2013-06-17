@@ -42,13 +42,13 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     @Override
     public String toVerboseString() {
         return Objects.toStringHelper(this).omitNullValues()
-                .add("id", getId()).add("name", getName())
+                .add("id", getId()).add("name", getDisplayName())
                 .add("user", getUser()).add("address", getAddress()).add("port", getConfig(SSH_PORT))
                 .add("node", getNode())
                 .add("jcloudsId", getJcloudsId())
                 .add("privateAddresses", node.getPrivateAddresses())
                 .add("publicAddresses", node.getPublicAddresses())
-                .add("parentLocation", getParentLocation())
+                .add("parentLocation", getParent())
                 .add("osDetails", getOsDetails())
                 .toString();
     }

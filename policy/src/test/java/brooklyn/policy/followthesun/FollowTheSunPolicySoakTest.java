@@ -195,7 +195,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                 Entities.unmanage(containerToStop);
                 containers.remove(location, containerToStop);
                 
-                MockContainerEntity containerToAdd = newContainer(app, location, "container-"+location.getName()+"-new."+i+"."+j);
+                MockContainerEntity containerToAdd = newContainer(app, location, "container-"+location.getDisplayName()+"-new."+i+"."+j);
                 containers.put(location, containerToAdd);
             }
 
@@ -211,7 +211,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                     
                     Iterable<String> itemLocNames = Iterables.transform(itemLocs, new Function<Location, String>() {
                         public String apply(Location input) {
-                            return (input != null) ? input.getName() : null;
+                            return (input != null) ? input.getDisplayName() : null;
                         }});
                     String errMsg;
                     if (verbose) {

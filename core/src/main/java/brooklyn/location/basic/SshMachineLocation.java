@@ -215,7 +215,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 	        }
         
 	        if (getHostGeoInfo() == null) {
-	            Location parentLocation = getParentLocation();
+	            Location parentLocation = getParent();
 	            if ((parentLocation instanceof HasHostGeoInfo) && ((HasHostGeoInfo)parentLocation).getHostGeoInfo()!=null)
 	                setHostGeoInfo( ((HasHostGeoInfo)parentLocation).getHostGeoInfo() );
 	            else
@@ -642,9 +642,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Override
     public String toVerboseString() {
         return Objects.toStringHelper(this).omitNullValues()
-                .add("id", getId()).add("name", getName())
+                .add("id", getId()).add("name", getDisplayName())
                 .add("user", getUser()).add("address", getAddress()).add("port", getConfig(SSH_PORT))
-                .add("parentLocation", getParentLocation())
+                .add("parentLocation", getParent())
                 .toString();
     }
 
