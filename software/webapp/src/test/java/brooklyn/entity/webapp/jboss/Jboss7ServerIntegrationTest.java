@@ -1,7 +1,22 @@
 package brooklyn.entity.webapp.jboss;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.entity.webapp.HttpsSslConfig;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.Asserts;
+import brooklyn.test.HttpTestUtils;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.util.crypto.FluentKeySigner;
+import brooklyn.util.crypto.SecureKeys;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Closeables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,26 +24,8 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpecs;
-import brooklyn.entity.webapp.HttpsSslConfig;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.util.crypto.FluentKeySigner;
-import brooklyn.util.crypto.SecureKeys;
-import brooklyn.util.internal.TimeExtras;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Closeables;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * TODO re-write this like WebAppIntegrationTest, rather than being jboss7 specific.
@@ -36,8 +33,6 @@ import com.google.common.io.Closeables;
 public class Jboss7ServerIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(Jboss7ServerIntegrationTest.class);
     
-    static { TimeExtras.init(); }
-
     private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication app;
@@ -96,7 +91,7 @@ public class Jboss7ServerIntegrationTest {
         
         HttpTestUtils.assertUrlUnreachable(httpsUrl);
 
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 assertNotNull(server.getAttribute(JBoss7Server.REQUEST_COUNT));
                 assertNotNull(server.getAttribute(JBoss7Server.ERROR_COUNT));
@@ -168,7 +163,7 @@ public class Jboss7ServerIntegrationTest {
         //HttpTestUtils.assertHttpStatusCodeEventuallyEquals(httpsUrl, 200);
         //HttpTestUtils.assertContentContainsText(httpsUrl, "Hello");
         
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 assertNotNull(server.getAttribute(JBoss7Server.REQUEST_COUNT));
                 assertNotNull(server.getAttribute(JBoss7Server.ERROR_COUNT));
@@ -178,4 +173,20 @@ public class Jboss7ServerIntegrationTest {
                 assertNotNull(server.getAttribute(JBoss7Server.BYTES_SENT));
             }});
     }
+
+    @Test(groups = {"Integration"})
+    public void testUsingPortOffsets() throws Exception {
+        final JBoss7Server serverA = app.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+                .configure("portIncrement", 100));
+        final JBoss7Server serverB = app.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
+                .configure("portIncrement", 200));
+        app.start(ImmutableList.of(localhostProvisioningLocation));
+
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                assertNotNull(serverA.getAttribute(JBoss7Server.BYTES_SENT));
+                assertNotNull(serverB.getAttribute(JBoss7Server.BYTES_SENT));
+            }});
+    }
+
 }

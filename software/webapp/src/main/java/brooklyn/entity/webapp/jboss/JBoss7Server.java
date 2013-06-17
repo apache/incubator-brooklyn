@@ -68,6 +68,15 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
             "webapp.jboss.templateConfigurationUrl", "Template file (in freemarker format) for the standalone.xml file", 
             JavaClassNames.resolveClasspathUrl(JBoss7Server.class, "jboss7-standalone.xml"));
 
+    @SetFromFlag("managementUser")
+    ConfigKey<String> MANAGEMENT_USER = ConfigKeys.newConfigKey("webapp.jboss.managementUser",
+            "A user to be placed in the management realm. Brooklyn will use this user to poll sensors",
+            "brooklyn");
+
+    @SetFromFlag("managementPassword")
+    ConfigKey<String> MANAGEMENT_PASSWORD =
+            ConfigKeys.newStringConfigKey("webapp.jboss.managementPassword", "Password for MANAGEMENT_USER.");
+
     AttributeSensor<Integer> MANAGEMENT_STATUS =
             Sensors.newIntegerSensor("webapp.jboss.managementStatus", "HTTP response code for the management server");
 }
