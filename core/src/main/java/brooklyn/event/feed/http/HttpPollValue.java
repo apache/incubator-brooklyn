@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Objects;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
@@ -135,5 +136,12 @@ public class HttpPollValue {
             }
         }
         return content;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(getClass())
+                .add("responseCode", responseCode)
+                .toString();
     }
 }

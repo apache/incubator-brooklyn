@@ -17,17 +17,39 @@ public class DelegatingPollHandler<V> implements PollHandler<V> {
         super();
         this.delegates = ImmutableList.copyOf(delegates);
     }
-    
+
+    @Override
+    public boolean checkSuccess(V val) {
+        for (AttributePollHandler<? super V> delegate : delegates) {
+            if (!delegate.checkSuccess(val))
+                return false;
+        }
+        return true;
+    }
+
     @Override
     public void onSuccess(V val) {
         for (AttributePollHandler<? super V> delegate : delegates) {
             delegate.onSuccess(val);
         }
     }
-    
-    public void onError(Exception error) {
+
+    @Override
+    public void onFailure(V val) {
         for (AttributePollHandler<? super V> delegate : delegates) {
-            delegate.onError(error);
+            delegate.onFailure(val);
+        }
+    }
+
+    @Override
+    public void onError(Exception error) {
+        onException(error);
+    }
+
+    @Override
+    public void onException(Exception exception) {
+        for (AttributePollHandler<? super V> delegate : delegates) {
+            delegate.onException(exception);
         }
     }
 }

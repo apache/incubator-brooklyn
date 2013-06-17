@@ -16,10 +16,9 @@ import brooklyn.event.feed.function.FunctionFeedTest;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
@@ -74,7 +73,7 @@ public class SshFeedIntegrationTest {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
                 assertTrue(val != null && val.contains("hello"), "val="+val);
@@ -93,7 +92,7 @@ public class SshFeedIntegrationTest {
                         .onSuccess(SshValueFunctions.stderr()))
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
                 assertTrue(val != null && val.contains(cmd), "val="+val);
@@ -108,13 +107,13 @@ public class SshFeedIntegrationTest {
                 .poll(new SshPollConfig<String>(SENSOR_STRING)
                         .command("exit 123")
                         .failOnNonZeroResultCode(true)
-                        .onError(new FunctionFeedTest.ToStringFunction()))
+                        .onFailure(new FunctionFeedTest.ToStringFunction()))
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
-                assertTrue(val != null && val.contains("Exit status 123"), "val="+val);
+                assertTrue(val != null && val.contains("Exit status 123"), "val=" + val);
             }});
     }
 }

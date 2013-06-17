@@ -10,8 +10,11 @@ import brooklyn.util.net.URLParamEncoder;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+
+import javax.annotation.Nullable;
 
 public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConfig<T>> {
 
@@ -20,9 +23,16 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
     private Map<String, String> vars = ImmutableMap.<String,String>of();
     private Map<String, String> headers = ImmutableMap.<String,String>of();
     private byte[] body;
+
+    private static final Predicate<HttpPollValue> DEFAULT_SUCCESS = new Predicate<HttpPollValue>() {
+        @Override
+        public boolean apply(@Nullable HttpPollValue input) {
+            return input != null && input.getResponseCode() >= 200 && input.getResponseCode() <= 399;
+        }};
     
     public HttpPollConfig(AttributeSensor<T> sensor) {
         super(sensor);
+        super.checkSuccess(DEFAULT_SUCCESS);
     }
 
     public HttpPollConfig(HttpPollConfig<T> other) {

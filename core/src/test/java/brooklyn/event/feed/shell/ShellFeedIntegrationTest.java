@@ -20,10 +20,9 @@ import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.test.Asserts;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -78,10 +77,10 @@ public class ShellFeedIntegrationTest {
                         .onError(new FunctionFeedTest.ToStringFunction()))
                 .build();
 
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
-                assertTrue(val != null && val.contains("timed out after 1ms"), "val="+val);
+                assertTrue(val != null && val.contains("timed out after 1ms"), "val=" + val);
             }});
     }
     
@@ -95,7 +94,7 @@ public class ShellFeedIntegrationTest {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
                 assertTrue(val != null && val.contains("hello MYVAL"), "val="+val);
@@ -111,7 +110,7 @@ public class ShellFeedIntegrationTest {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
                 assertTrue(val != null && val.contains("hello"), "val="+val);
@@ -129,7 +128,7 @@ public class ShellFeedIntegrationTest {
                         .onSuccess(SshValueFunctions.stderr()))
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
                 assertTrue(val != null && val.contains(cmd), "val="+val);
@@ -146,7 +145,7 @@ public class ShellFeedIntegrationTest {
                         .onError(new FunctionFeedTest.ToStringFunction()))
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
                 assertTrue(val != null && val.contains("Exit status 123"), "val="+val);
@@ -169,7 +168,7 @@ public class ShellFeedIntegrationTest {
                             }}))
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 Long val = entity.getAttribute(SENSOR_LONG);
                 assertTrue(val != null && val >= 0, "val="+val);

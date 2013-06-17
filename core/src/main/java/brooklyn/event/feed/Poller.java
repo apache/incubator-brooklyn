@@ -49,9 +49,13 @@ public class Poller<V> {
                 public void run() {
                     try {
                         V val = job.call();
-                        handler.onSuccess(val);
+                        if (handler.checkSuccess(val)) {
+                            handler.onSuccess(val);
+                        } else {
+                            handler.onFailure(val);
+                        }
                     } catch (Exception e) {
-                        handler.onError(e);
+                        handler.onException(e);
                     }
                 }
             };
