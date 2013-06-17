@@ -11,6 +11,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatabaseNode;
@@ -22,21 +23,27 @@ import brooklyn.entity.database.postgresql.PostgreSqlNode;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 
 public class RubyRepIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(RubyRepIntegrationTest.class);
+    protected BrooklynProperties brooklynProperties;
+    protected ManagementContext managementContext;
     protected TestApplication tapp;
-
+    
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        tapp = ApplicationBuilder.newManagedApp(TestApplication.class);
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        managementContext = new LocalManagementContext(brooklynProperties);
+        tapp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        if (tapp != null) Entities.destroy(tapp);
+        if (tapp != null) Entities.destroyAll(tapp);
         tapp = null;
     }
 

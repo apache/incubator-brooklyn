@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
+import brooklyn.location.LocationResolver;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.KeyValueParser;
 
@@ -27,7 +28,7 @@ import com.google.common.collect.Sets;
  * 
  * @author alex, aled
  */
-public class LocalhostResolver implements RegistryLocationResolver {
+public class LocalhostResolver implements LocationResolver {
     
     public static final String LOCALHOST = "localhost";
     

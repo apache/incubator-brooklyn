@@ -151,7 +151,7 @@ public class AbstractGeoDnsServiceTest {
                 return false;
             }
             Location l = Iterables.getOnlyElement(e.getLocations());
-            HostGeoInfo geoInfo = new HostGeoInfo("127.0.0.1", l.getName(), 
+            HostGeoInfo geoInfo = new HostGeoInfo("127.0.0.1", l.getDisplayName(), 
                 (Double) l.findLocationProperty("latitude"), (Double) l.findLocationProperty("longitude"));
             targetHosts.put(e, geoInfo);
             return true;

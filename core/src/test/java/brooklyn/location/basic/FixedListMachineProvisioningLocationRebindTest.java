@@ -58,7 +58,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
     	
     	assertEquals(newLoc.getId(), origLoc.getId());
-    	assertEquals(newLoc.getName(), origLoc.getName());
+    	assertEquals(newLoc.getDisplayName(), origLoc.getDisplayName());
     	assertEquals(newLoc.getHostGeoInfo(), origLoc.getHostGeoInfo());
     	assertEquals(newLoc.getLocationProperty("user"), origLoc.getLocationProperty("user"));
     	assertEquals(newLoc.getLocationProperty("privateKeyPassphrase"), origLoc.getLocationProperty("privateKeyPassphrase"));
@@ -71,9 +71,9 @@ public class FixedListMachineProvisioningLocationRebindTest {
     	TestApplication newApp = rebind();
     	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
     	
-    	assertLocationIdsEqual(newLoc.getChildLocations(), origLoc.getChildLocations());
-    	assertEquals(Iterables.get(newLoc.getChildLocations(), 0).getParentLocation(), newLoc);
-    	assertEquals(Iterables.get(newLoc.getChildLocations(), 1).getParentLocation(), newLoc);
+    	assertLocationIdsEqual(newLoc.getChildren(), origLoc.getChildren());
+    	assertEquals(Iterables.get(newLoc.getChildren(), 0).getParent(), newLoc);
+    	assertEquals(Iterables.get(newLoc.getChildren(), 1).getParent(), newLoc);
     }
 
     @Test

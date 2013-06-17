@@ -267,7 +267,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         
     public void installJava() {
         try {
-            getLocation().acquireMutex("install:" + getLocation().getName(), "installing Java at " + getLocation());
+            getLocation().acquireMutex("install:" + getLocation().getDisplayName(), "installing Java at " + getLocation());
             log.debug("checking for java at " + entity + " @ " + getLocation());
             int result = getLocation().execCommands("check java", Arrays.asList("which java"));
             if (result == 0) {
@@ -302,7 +302,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         } catch (Exception e) {
             Throwables.propagate(e);
         } finally {
-            getLocation().releaseMutex("install:" + getLocation().getName());
+            getLocation().releaseMutex("install:" + getLocation().getDisplayName());
         }
 
         // //this works on ubuntu (surprising that jdk not in default repos!)

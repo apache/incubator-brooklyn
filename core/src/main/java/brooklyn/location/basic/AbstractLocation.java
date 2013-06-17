@@ -120,7 +120,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         
         if (properties.containsKey(PARENT_LOCATION.getName())) {
             // need to ensure parent's list of children is also updated
-            setParentLocation(configBag.get(PARENT_LOCATION));
+            setParent(configBag.get(PARENT_LOCATION));
             
             // don't include parentLocation in configBag, as breaks rebind
             configBag.remove(PARENT_LOCATION);
@@ -137,92 +137,34 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         }
     }
     
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public Location getParentLocation() { return parentLocation; }
-    public Collection<Location> getChildLocations() { return childLocationsReadOnly; }
+    @Override
+    public String getId() {
+        return id;
+    }
+    
+    @Override
+    public String getDisplayName() {
+        return name;
+    }
+    
+    @Override
+    @Deprecated
+    public String getName() {
+        return getDisplayName();
+    }
+    
+    @Override
+    public Location getParent() {
+        return parentLocation;
+    }
+    
+    @Override
+    public Collection<Location> getChildren() {
+        return childLocationsReadOnly;
+    }
 
     @Override
-    public <T> T getConfig(ConfigKey<T> key) {
-        if (hasConfig(key)) return getConfigBag().get(key);
-        if (getParentLocation()!=null) return getParentLocation().getConfig(key);
-        return key.getDefaultValue();
-    }
-    @Override
-    public boolean hasConfig(ConfigKey<?> key) {
-        return getConfigBag().containsKey(key);
-    }
-    @Override
-    public Map<String,Object> getAllConfig() {
-        return getConfigBag().getAllConfig();
-    }
-    
-    public ConfigBag getConfigBag() {
-        return configBag;
-    }
-    
-    public <T> T setConfig(ConfigKey<T> key, T value) {
-        return configBag.put(key, value);
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean equals(Object o) {
-        if (! (o instanceof Location)) {
-            return false;
-        }
-
-        Location l = (Location) o;
-		return getId().equals(l.getId());
-    }
-
-    public int hashCode() {
-        return getId().hashCode();
-    }
-
-    public boolean containsLocation(Location potentialDescendent) {
-        Location loc = potentialDescendent;
-        while (loc != null) {
-            if (this == loc) return true;
-            loc = loc.getParentLocation();
-        }
-        return false;
-    }
-    
-    public void addChildLocation(Location child) {
-    	// Previously, setParentLocation delegated to addChildLocation and we sometimes ended up with
-    	// duplicate entries here. Instead this now uses a similar scheme to 
-    	// AbstractEntity.setParent/addChild (with any weaknesses for distribution that such a 
-    	// scheme might have...).
-    	// 
-    	// We continue to use a list to allow identical-looking locations, but they must be different 
-    	// instances.
-    	
-    	for (Location contender : childLocations) {
-    		if (contender == child) {
-    			// don't re-add; no-op
-    			return;
-    		}
-    	}
-    	
-        childLocations.add(child);
-        child.setParentLocation(this);
-    }
-    
-    protected boolean removeChildLocation(Location child) {
-        boolean removed = childLocations.remove(child);
-        if (removed) {
-            if (child instanceof Closeable) {
-                Closeables.closeQuietly((Closeable)child);
-            }
-            child.setParentLocation(null);
-        }
-        return removed;
-    }
-
-    public void setParentLocation(Location parent) {
+    public void setParent(Location parent) {
         if (parent == this) {
             throw new IllegalArgumentException("Location cannot be its own parent: "+this);
         }
@@ -239,7 +181,127 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
             ((AbstractLocation)parentLocation).addChildLocation(this); // FIXME Nasty cast
         }
     }
+
+    @Override
+    @Deprecated
+    public Location getParentLocation() {
+        return getParent();
+    }
     
+    @Override
+    @Deprecated
+    public Collection<Location> getChildLocations() {
+        return getChildren();
+    }
+
+    @Override
+    @Deprecated
+    public void setParentLocation(Location parent) {
+        setParent(parent);
+    }
+
+    @Override
+    public <T> T getConfig(ConfigKey<T> key) {
+        if (hasConfig(key)) return getConfigBag().get(key);
+        if (getParent()!=null) return getParent().getConfig(key);
+        return key.getDefaultValue();
+    }
+    @Override
+    public boolean hasConfig(ConfigKey<?> key) {
+        return getConfigBag().containsKey(key);
+    }
+    @Override
+    public Map<String,Object> getAllConfig() {
+        return getConfigBag().getAllConfig();
+    }
+    
+    public ConfigBag getConfigBag() {
+        return configBag;
+    }
+    
+    @Override
+    public <T> T setConfig(ConfigKey<T> key, T value) {
+        return configBag.put(key, value);
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (! (o instanceof Location)) {
+            return false;
+        }
+
+        Location l = (Location) o;
+		return getId().equals(l.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
+    @Override
+    public boolean containsLocation(Location potentialDescendent) {
+        Location loc = potentialDescendent;
+        while (loc != null) {
+            if (this == loc) return true;
+            loc = loc.getParent();
+        }
+        return false;
+    }
+    
+    /**
+     * @deprecated since 0.6
+     * @see addChild(Location)
+     */
+    @Deprecated
+    public void addChildLocation(Location child) {
+        addChild(child);
+    }
+    
+    public void addChild(Location child) {
+        // Previously, setParent delegated to addChildLocation and we sometimes ended up with
+        // duplicate entries here. Instead this now uses a similar scheme to 
+        // AbstractLocation.setParent/addChild (with any weaknesses for distribution that such a 
+        // scheme might have...).
+        // 
+        // We continue to use a list to allow identical-looking locations, but they must be different 
+        // instances.
+        
+        for (Location contender : childLocations) {
+                if (contender == child) {
+                        // don't re-add; no-op
+                        return;
+                }
+        }
+        
+        childLocations.add(child);
+        child.setParent(this);
+    }
+    
+    /**
+     * @deprecated since 0.6
+     * @see removeChild(Location)
+     */
+    @Deprecated
+    protected boolean removeChildLocation(Location child) {
+        return removeChild(child);
+    }
+    
+    protected boolean removeChild(Location child) {
+        boolean removed = childLocations.remove(child);
+        if (removed) {
+            if (child instanceof Closeable) {
+                Closeables.closeQuietly((Closeable)child);
+            }
+            child.setParent(null);
+        }
+        return removed;
+    }
+
     @Override
     @Deprecated
     public boolean hasLocationProperty(String key) { return configBag.containsKey(key); }
@@ -277,7 +339,9 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         return Objects.toStringHelper(getClass()).add("id", id).add("name", name);
     }
     
-    public HostGeoInfo getHostGeoInfo() { return hostGeoInfo; }    
+    @Override
+    public HostGeoInfo getHostGeoInfo() { return hostGeoInfo; }
+    
     public void setHostGeoInfo(HostGeoInfo hostGeoInfo) {
         if (hostGeoInfo!=null) { 
             this.hostGeoInfo = hostGeoInfo;

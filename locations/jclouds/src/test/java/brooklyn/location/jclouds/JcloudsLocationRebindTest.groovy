@@ -109,12 +109,12 @@ public class JcloudsLocationRebindTest {
         
         // Confirm the re-bound machine is wired up
         assertTrue(machine2.isSshable())
-        assertEquals(ImmutableSet.copyOf(loc2.getChildLocations()), ImmutableSet.of(machine2))
+        assertEquals(ImmutableSet.copyOf(loc2.getChildren()), ImmutableSet.of(machine2))
         
         // Confirm can release the re-bound machine via the new jclouds location
         loc2.release(machine2)
         assertFalse(machine2.isSshable())
-        assertEquals(ImmutableSet.copyOf(loc2.getChildLocations()), Collections.emptySet())
+        assertEquals(ImmutableSet.copyOf(loc2.getChildren()), Collections.emptySet())
     }
     
     @Test(groups = [ "Live" ])
@@ -138,12 +138,12 @@ public class JcloudsLocationRebindTest {
         
         // Confirm the re-bound machine is wired up
         assertTrue(machine2.isSshable())
-        assertEquals(ImmutableSet.copyOf(loc2.getChildLocations()), ImmutableSet.of(machine2))
+        assertEquals(ImmutableSet.copyOf(loc2.getChildren()), ImmutableSet.of(machine2))
         
         // Confirm can release the re-bound machine via the new jclouds location
         loc2.release(machine2)
         assertFalse(machine2.isSshable())
-        assertEquals(ImmutableSet.copyOf(loc2.getChildLocations()), Collections.emptySet())
+        assertEquals(ImmutableSet.copyOf(loc2.getChildren()), Collections.emptySet())
     }
 
     // Useful for debugging; accesss a hard-coded existing instance so don't need to wait for provisioning a new one
@@ -160,7 +160,7 @@ public class JcloudsLocationRebindTest {
         
         // Confirm the re-bound machine is wired up
         assertTrue(machine.isSshable())
-        assertEquals(ImmutableSet.copyOf(loc.getChildLocations()), ImmutableSet.of(machine))
+        assertEquals(ImmutableSet.copyOf(loc.getChildren()), ImmutableSet.of(machine))
     }
     
     // Use this utility method to ensure machines are released on tearDown

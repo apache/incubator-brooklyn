@@ -1,16 +1,14 @@
 package brooklyn.entity.database.rubyrep;
 
-
 import static java.util.Arrays.asList;
 
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import brooklyn.entity.database.postgresql.PostgreSqlNode;
 import brooklyn.entity.proxying.EntitySpecs;
-import brooklyn.location.basic.LocationRegistry;
+import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.collect.ImmutableSet;
@@ -69,13 +67,12 @@ public class RubyRepRackspaceLiveTest extends RubyRepIntegrationTest {
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", 9111));
 
-        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
         brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
         brooklynProperties.put("inboundPorts", new int[] {22, 9111});
-        LocationRegistry locationRegistry = new LocationRegistry(brooklynProperties);
+        Location loc = managementContext.getLocationRegistry().resolve("jclouds:cloudservers-uk");
         
-        startInLocation(tapp, db1, db2, locationRegistry.resolve("cloudservers-uk"));
+        startInLocation(tapp, db1, db2, loc);
 
         //hack to get the port for mysql open; is the inbounds property not respected on rackspace??
         for (DatabaseNode node : ImmutableSet.of(db1, db2)) {

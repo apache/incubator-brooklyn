@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationRegistry;
+import brooklyn.location.LocationResolver;
 
 /**
  * Allows you to say, in your brooklyn.properties:
@@ -26,7 +27,7 @@ import brooklyn.location.LocationRegistry;
  * <p>
  * then you can simply refer to:   foo   or   named:foo   (or bob-aws-east or named:bob-aws-east)   in any location spec
  */
-public class NamedLocationResolver implements RegistryLocationResolver {
+public class NamedLocationResolver implements LocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(NamedLocationResolver.class);
 

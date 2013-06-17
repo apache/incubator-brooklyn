@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
+import brooklyn.location.LocationResolver;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.KeyValueParser;
@@ -37,7 +38,7 @@ import com.google.common.collect.Sets;
  * @author aled
  */
 @SuppressWarnings({"unchecked","rawtypes"})
-public class ByonLocationResolver implements RegistryLocationResolver {
+public class ByonLocationResolver implements LocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(ByonLocationResolver.class);
     

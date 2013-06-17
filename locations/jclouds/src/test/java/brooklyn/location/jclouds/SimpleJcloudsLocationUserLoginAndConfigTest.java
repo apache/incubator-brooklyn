@@ -9,14 +9,14 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsResolver;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.test.TestUtils;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Identifiers;
 
@@ -28,11 +28,23 @@ public class SimpleJcloudsLocationUserLoginAndConfigTest {
     
     private static final Logger log = LoggerFactory.getLogger(SimpleJcloudsLocationUserLoginAndConfigTest.class);
     
+    private LocalManagementContext managementContext;
+
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        managementContext = new LocalManagementContext();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (managementContext != null) managementContext.terminate();
+    }
+
     @SuppressWarnings("rawtypes")
     @Test(groups="Live")
     public void testJcloudsCreateBogStandard() throws Exception {
         log.info("TEST testJcloudsCreateBogStandard");
-        JcloudsLocation l = JcloudsResolver.resolve("aws-ec2:us-east-1");
+        JcloudsLocation l = resolve("aws-ec2:us-east-1");
         JcloudsSshMachineLocation m1 = l.obtain();
         try {
             Map details = MutableMap.of("id", m1.getJcloudsId(), "hostname", m1.getAddress().getHostAddress(), "user", m1.getUser());
@@ -55,7 +67,7 @@ public class SimpleJcloudsLocationUserLoginAndConfigTest {
     @Test(groups="Live")
     public void testJcloudsCreateBogStandardWithUserBrooklyn() throws Exception {
         log.info("TEST testJcloudsCreateBogStandardWithUserBrooklyn");
-        JcloudsLocation l = JcloudsResolver.resolve("aws-ec2:us-east-1");
+        JcloudsLocation l = resolve("aws-ec2:us-east-1");
         JcloudsSshMachineLocation m1 = l.obtain(MutableMap.of("user", "brooklyn"));
         try {
             Map details = MutableMap.of("id", m1.getJcloudsId(), "hostname", m1.getAddress().getHostAddress(), "user", m1.getUser());
@@ -80,7 +92,7 @@ public class SimpleJcloudsLocationUserLoginAndConfigTest {
     @Test(groups="Live")
     public void testJcloudsCreateUserMetadata() throws Exception {
         log.info("TEST testJcloudsCreateBogStandard");
-        JcloudsLocation l = JcloudsResolver.resolve("aws-ec2:us-east-1");
+        JcloudsLocation l = resolve("aws-ec2:us-east-1");
         String key = "brooklyn-test-user-data";
         String value = "test-"+Identifiers.makeRandomId(4);
         JcloudsSshMachineLocation m1 = l.obtain(MutableMap.of("userMetadata", key+"="+value));
@@ -113,9 +125,9 @@ public class SimpleJcloudsLocationUserLoginAndConfigTest {
     @Test(groups="Live")
     public void testJcloudsMissingUser() throws Exception {
         log.info("TEST testJcloudsMissingUser");
-        final JcloudsLocation l = JcloudsResolver.resolve("aws-ec2:us-east-1");
-        TestUtils.assertFails(new Runnable() {
-            public void run() {
+        final JcloudsLocation l = resolve("aws-ec2:us-east-1");
+        Asserts.assertFails(new Runnable() {
+            @Override public void run() {
                 try {
                     // wait up to 30s for login (override default of 5m so test runs faster)
                     l.obtain(MutableMap.of("imageId", EC2_CENTOS_IMAGE,
@@ -133,7 +145,7 @@ public class SimpleJcloudsLocationUserLoginAndConfigTest {
     @Test(groups="Live")
     public void testJcloudsWithSpecificLoginUserAndSameUser() throws Exception {
         log.info("TEST testJcloudsWithSpecificLoginUserAndSameUser");
-        JcloudsLocation l = JcloudsResolver.resolve("aws-ec2:us-east-1");
+        JcloudsLocation l = resolve("aws-ec2:us-east-1");
         JcloudsSshMachineLocation m1 = l.obtain(MutableMap.of("imageId", EC2_CENTOS_IMAGE,
                 "loginUser", "ec2-user",
                 "user", "ec2-user",
@@ -161,7 +173,7 @@ public class SimpleJcloudsLocationUserLoginAndConfigTest {
     @Test(groups="Live")
     public void testJcloudsWithSpecificLoginUserAndNewUser() throws Exception {
         log.info("TEST testJcloudsWithSpecificLoginUserAndNewUser");
-        JcloudsLocation l = JcloudsResolver.resolve("aws-ec2:us-east-1");
+        JcloudsLocation l = resolve("aws-ec2:us-east-1");
         JcloudsSshMachineLocation m1 = l.obtain(MutableMap.of("imageId", EC2_CENTOS_IMAGE,
                 "loginUser", "ec2-user",
                 "user", "newbob",
@@ -189,7 +201,7 @@ public class SimpleJcloudsLocationUserLoginAndConfigTest {
     @Test(groups="Live")
     public void testJcloudsWithSpecificLoginUserAndDefaultUser() throws Exception {
         log.info("TEST testJcloudsWithSpecificLoginUserAndDefaultUser");
-        JcloudsLocation l = JcloudsResolver.resolve("aws-ec2:us-east-1");
+        JcloudsLocation l = resolve("aws-ec2:us-east-1");
         JcloudsSshMachineLocation m1 = l.obtain(MutableMap.of("imageId", EC2_CENTOS_IMAGE,
                 "loginUser", "ec2-user",
                 "waitForSshable", 30*1000));
@@ -222,5 +234,7 @@ public class SimpleJcloudsLocationUserLoginAndConfigTest {
         return new String(stdout.toByteArray());
     }
 
-
+    private JcloudsLocation resolve(String spec) {
+        return (JcloudsLocation) managementContext.getLocationRegistry().resolve("jclouds:"+spec);
+    }
 }

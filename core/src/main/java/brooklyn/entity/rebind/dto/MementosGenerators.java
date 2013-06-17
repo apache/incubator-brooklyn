@@ -162,7 +162,7 @@ public class MementosGenerators {
 
         builder.type = location.getClass().getName();
         builder.id = location.getId();
-        builder.displayName = location.getName();
+        builder.displayName = location.getDisplayName();
         builder.copyConfig(persistableConfig);
         builder.locationConfig.putAll(persistableFlags);
 
@@ -176,10 +176,10 @@ public class MementosGenerators {
             }
         }
         
-        Location parentLocation = location.getParentLocation();
+        Location parentLocation = location.getParent();
         builder.parent = (parentLocation != null) ? parentLocation.getId() : null;
         
-        for (Location child : location.getChildLocations()) {
+        for (Location child : location.getChildren()) {
             builder.children.add(child.getId()); 
         }
         

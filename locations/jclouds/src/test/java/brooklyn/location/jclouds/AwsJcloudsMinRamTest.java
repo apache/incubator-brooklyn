@@ -2,23 +2,32 @@ package brooklyn.location.jclouds;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.LocationRegistry;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsResolver;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 
 public class AwsJcloudsMinRamTest {
 
     private static final Logger log = LoggerFactory.getLogger(AwsJcloudsMinRamTest.class);
     
+    private LocalManagementContext managementContext;
+
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        managementContext = new LocalManagementContext();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (managementContext != null) managementContext.terminate();
+    }
+
     @Test(groups="Live")
     public void testJcloudsCreateWithMinRam() throws Exception {
-        JcloudsLocation l = JcloudsResolver.resolve("aws-ec2:us-east-1");
+        JcloudsLocation l = (JcloudsLocation) managementContext.getLocationRegistry().resolve("jclouds:aws-ec2:us-east-1");
         l.configure(MutableMap.of("minRam", "4096"));
         
         JcloudsSshMachineLocation m1 = l.obtain();

@@ -36,11 +36,11 @@ public class FixedListMachineProvisioningLocationTest {
     @Test
     public void testSetsChildLocations() {
         // Available machines should be listed as children
-		assertEquals(ImmutableList.copyOf(provisioner.getChildLocations()), ImmutableList.of(machine));
+		assertEquals(ImmutableList.copyOf(provisioner.getChildren()), ImmutableList.of(machine));
         
         // In-use machines should also be listed as children
         provisioner.obtain();
-        assertEquals(ImmutableList.copyOf(provisioner.getChildLocations()), ImmutableList.of(machine));
+        assertEquals(ImmutableList.copyOf(provisioner.getChildren()), ImmutableList.of(machine));
     }
 
     @Test
@@ -99,7 +99,7 @@ public class FixedListMachineProvisioningLocationTest {
         provisioner2 = new FixedListMachineProvisioningLocation<SshMachineLocation>(machines:[]);
         provisioner2.addMachine(machine2)
         
-        assertEquals(provisioner2.getChildLocations() as List, [machine2]);
+        assertEquals(provisioner2.getChildren() as List, [machine2]);
         assertEquals(provisioner2.getAvailable(), [machine2] as Set);
         
         SshMachineLocation obtained = provisioner2.obtain();
@@ -118,7 +118,7 @@ public class FixedListMachineProvisioningLocationTest {
     public void testCanRemoveAvailableMachineFromPool() {
         provisioner.removeMachine(machine)
         
-        assertEquals(provisioner.getChildLocations() as List, []);
+        assertEquals(provisioner.getChildren() as List, []);
         assertEquals(provisioner.getAvailable(), [] as Set);
         
         try {
@@ -135,7 +135,7 @@ public class FixedListMachineProvisioningLocationTest {
         provisioner.removeMachine(obtained)
         
         // Continue to know about the machine until it is returned
-        assertEquals(provisioner.getChildLocations() as List, [machine]);
+        assertEquals(provisioner.getChildren() as List, [machine]);
         assertEquals(provisioner.getAvailable(), [] as Set);
 
         // When released, the machine is then removed entirely

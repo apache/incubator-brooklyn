@@ -11,7 +11,6 @@ import org.testng.annotations.Test
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.proxying.EntitySpecs
-import brooklyn.location.basic.LocationRegistry
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.jclouds.JcloudsLocation
 
@@ -69,13 +68,10 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
         MySqlNode mysql = tapp.createAndManageChild(EntitySpecs.spec(MySqlNode.class)
                 .configure("creationScriptContents", CREATION_SCRIPT));
 
-        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
         brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
         brooklynProperties.put("inboundPorts", "22, 3306");
-        LocationRegistry locationRegistry = new LocationRegistry(brooklynProperties);
-
-        JcloudsLocation jcloudsLocation = (JcloudsLocation) locationRegistry.resolve("cloudservers-uk");
+        JcloudsLocation jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve("jclouds:cloudservers-uk");
 
         tapp.start(asList(jcloudsLocation));
 

@@ -6,11 +6,14 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
+import brooklyn.config.BrooklynProperties
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.VogellaExampleAccess
 import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation
+import brooklyn.management.ManagementContext
+import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.entity.TestApplication
 
 /**
@@ -21,11 +24,16 @@ import brooklyn.test.entity.TestApplication
 public class PostgreSqlIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(PostgreSqlIntegrationTest.class);
-    TestApplication tapp
-
+    
+    protected BrooklynProperties brooklynProperties;
+    protected ManagementContext managementContext;
+    protected TestApplication tapp;
+    
     @BeforeMethod(alwaysRun = true)
-    public void before() {
-        tapp = ApplicationBuilder.newManagedApp(TestApplication.class);
+    public void setUp() {
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        managementContext = new LocalManagementContext(brooklynProperties);
+        tapp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
 
     @AfterMethod(alwaysRun = true)
