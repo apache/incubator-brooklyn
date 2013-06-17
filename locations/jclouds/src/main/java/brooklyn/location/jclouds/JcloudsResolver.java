@@ -57,19 +57,23 @@ public class JcloudsResolver implements LocationResolver {
             // it is suggested not to maintain this list here, instead to require aws-ec2 explicitly named.
             "eu-west-1","us-east-1","us-west-1","us-west-2","ap-southeast-1","ap-northeast-1","sa-east-1");
          
-    /** @deprecated use {@link #resolveWithDefaultProperties(String)} */
+    /** @deprecated since 0.5; use {@link #resolveWithDefaultProperties(String)} */
     public static JcloudsLocation resolve(String spec) {
         return resolveWithDefaultProperties(spec);
     }
     
+    /** @deprecated since 0.6; use {@code managementContext.getLocationRegistry().resolve(spec)} */
     public static JcloudsLocation resolveWithDefaultProperties(String spec) {
         BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
         return resolveWithProperties(spec, properties);
     }
+    
+    /** @deprecated since 0.6; use {@code managementContext.getLocationRegistry().resolve(spec)} */
     public static JcloudsLocation resolveWithProperties(String spec, Map properties) {
         return (JcloudsLocation) new JcloudsResolver().newLocationFromString(properties, spec);
     }
 
+    /** @deprecated since 0.6; use {@link #newLocationFromString(String, LocationRegistry, Map, Map)} */
     public JcloudsLocation newLocationFromString(String spec) {
         return newLocationFromString(new LinkedHashMap(), spec);
     }

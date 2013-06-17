@@ -21,7 +21,10 @@ public interface LocationResolver {
      * commonly it is a BrooklynProperties instance, read from .brooklyn/brooklyn.properties
      * <p>
      * @throws NoSuchElementException if not found
+     * 
+     * @deprecated since 0.6; use {@link #newLocationFromString(Map, String, LocationRegistry)}
      */ 
+    @Deprecated
     Location newLocationFromString(@SuppressWarnings("rawtypes") Map properties, String spec);
 
     /**
@@ -32,5 +35,5 @@ public interface LocationResolver {
      * introduced to support locations which refer to other locations, e.g. NamedLocationResolver  
      **/ 
     @SuppressWarnings("rawtypes")
-    Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry);
+    Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry);
 }

@@ -3,15 +3,19 @@ package brooklyn.location.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.location.MachineLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils;
 
 import com.google.common.base.Function;
@@ -24,9 +28,21 @@ public class ByonLocationResolverTest {
 
     private static final Logger log = LoggerFactory.getLogger(ByonLocationResolverTest.class);
     
+    private LocalManagementContext managementContext;
+
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        managementContext = new LocalManagementContext();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (managementContext != null) managementContext.terminate();
+    }
+
     @Test
     public void testThrowsOnInvalid() throws Exception {
-        assertThrowsIllegalArgument("wrongprefix:(hosts=\"1.1.1.1\")");
+        assertThrowsNoSuchElement("wrongprefix:(hosts=\"1.1.1.1\")");
         assertThrowsIllegalArgument("byon"); // no hosts
         assertThrowsIllegalArgument("byon:()"); // no hosts
         assertThrowsIllegalArgument("byon:(hosts=\"\")"); // empty hosts
@@ -108,6 +124,15 @@ public class ByonLocationResolverTest {
         assertEquals(cluster.getDisplayName(), expectedName);
     }
 
+    private void assertThrowsNoSuchElement(String val) {
+        try {
+            resolve(val);
+            fail();
+        } catch (NoSuchElementException e) {
+            // success
+        }
+    }
+    
     private void assertThrowsIllegalArgument(String val) {
         try {
             resolve(val);
@@ -118,7 +143,7 @@ public class ByonLocationResolverTest {
     }
     
     private FixedListMachineProvisioningLocation<SshMachineLocation> resolve(String val) {
-        return new ByonLocationResolver().newLocationFromString(val);
+        return (FixedListMachineProvisioningLocation<SshMachineLocation>) managementContext.getLocationRegistry().resolve(val);
     }
     
     private static class UserHostTuple {

@@ -3,66 +3,61 @@ package brooklyn.location.jclouds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.location.LocationRegistry;
-import brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.location.basic.LocationResolverTest;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.util.collections.MutableMap;
-
-import com.google.common.collect.ImmutableMap;
 
 public class JcloudsLocationResolverTest {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(JcloudsLocationResolverTest.class);
     
     private BrooklynProperties brooklynProperties;
-    private ManagementContext managementContext;
-    private LocationRegistry registry;
+    private LocalManagementContext managementContext;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         brooklynProperties = BrooklynProperties.Factory.newEmpty();
-        managementContext = new LocalManagementContext(brooklynProperties);
-        registry = new BasicLocationRegistry(managementContext);
         
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.identity", "aws-ec2-id");
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.credential", "aws-ec2-cred");
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.identity", "cloudservers-uk-id");
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.credential", "cloudservers-uk-cred");
+        
+        managementContext = new LocalManagementContext(brooklynProperties);
     }
     
-    public static final Map AWS_PROPS = MutableMap.of("brooklyn.jclouds.aws-ec2.identity", "x",
-                                             "brooklyn.jclouds.aws-ec2.credential", "x");
-
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (managementContext != null) managementContext.terminate();
+    }
+    
     @Test
     public void testJcloudsLoads() {
-        Assert.assertTrue(LocationResolverTest.resolve(AWS_PROPS, "jclouds:aws-ec2") instanceof JcloudsLocation);
+        Assert.assertTrue(resolve("jclouds:aws-ec2") instanceof JcloudsLocation);
     }
 
     @Test
     public void testJcloudsImplicitLoads() {
-        Assert.assertTrue(LocationResolverTest.resolve(AWS_PROPS, "aws-ec2") instanceof JcloudsLocation);
+        Assert.assertTrue(resolve("aws-ec2") instanceof JcloudsLocation);
     }
 
     @Test
     public void testJcloudsLocationLoads() {
-        Assert.assertTrue(LocationResolverTest.resolve(AWS_PROPS, "aws-ec2:eu-west-1") instanceof JcloudsLocation);
+        Assert.assertTrue(resolve("aws-ec2:eu-west-1") instanceof JcloudsLocation);
     }
 
     @Test
     public void testJcloudsRegionOnlyLoads() {
-        Assert.assertTrue(LocationResolverTest.resolve(AWS_PROPS, "eu-west-1") instanceof JcloudsLocation);
+        Assert.assertTrue(resolve("eu-west-1") instanceof JcloudsLocation);
     }
 
     @Test
@@ -116,13 +111,13 @@ public class JcloudsLocationResolverTest {
         }
     }
     
-    private JcloudsLocation resolve(String spec) {
-        return new JcloudsResolver().newLocationFromString(ImmutableMap.of(), spec, registry);
-    }
-    
     @Test(expectedExceptions={ NoSuchElementException.class, IllegalArgumentException.class },
             expectedExceptionsMessageRegExp=".*insufficient.*")
     public void testJcloudsOnlyFails() {
-        LocationResolverTest.resolve("jclouds");
+        resolve("jclouds");
+    }
+    
+    private JcloudsLocation resolve(String spec) {
+        return (JcloudsLocation) managementContext.getLocationRegistry().resolve(spec);
     }
 }
