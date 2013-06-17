@@ -49,7 +49,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
     
     protected String getTemplateConfigurationUrl() {
-        return entity.getAttribute(JBoss7Server.TEMPLATE_CONFIGURATION_URL);
+        return entity.getConfig(JBoss7Server.TEMPLATE_CONFIGURATION_URL);
     }
 
     protected String getLogFileLocation() {
@@ -80,11 +80,11 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
 
     private Integer getPortIncrement() {
-        return entity.getAttribute(JBoss7Server.PORT_INCREMENT);
+        return entity.getConfig(JBoss7Server.PORT_INCREMENT);
     }
 
     private Integer getDeploymentTimeoutSecs() {
-        return entity.getAttribute(JBoss7Server.DEPLOYMENT_TIMEOUT);
+        return entity.getConfig(JBoss7Server.DEPLOYMENT_TIMEOUT);
     }
 
     private String getExpandedInstallDir() {

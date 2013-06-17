@@ -198,5 +198,5 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     protected Object resolveValue(Object v, ExecutionContext exec) throws ExecutionException, InterruptedException {
         return Tasks.resolveValue(v, type, exec, "config "+name);
     }
-        
+
 }

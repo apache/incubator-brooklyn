@@ -52,8 +52,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         super.connectSensors();
 
         HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, 
-                // TODO really increment???
-                getAttribute(MANAGEMENT_HTTP_PORT) + getAttribute(PORT_INCREMENT));
+                getAttribute(MANAGEMENT_HTTP_PORT) + getConfig(PORT_INCREMENT));
         
         String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource",
                 hp.getHostText(), hp.getPort());
@@ -64,6 +63,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                 .entity(this)
                 .period(200)
                 .baseUri(managementUri)
+                .credentials(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                 .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
                         .onSuccess(HttpValueFunctions.responseCode()))
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
@@ -110,7 +110,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     public int getPortOffset() {
-        return getAttribute(PORT_INCREMENT);
+        return getConfig(PORT_INCREMENT);
     }
     
     public boolean isWelcomeRootEnabled() {
@@ -135,7 +135,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
 
     public int getDeploymentTimeoutSecs() {
-        return getAttribute(DEPLOYMENT_TIMEOUT);
+        return getConfig(DEPLOYMENT_TIMEOUT);
     }
 
     public boolean isHttpEnabled() {
