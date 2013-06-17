@@ -26,4 +26,45 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
     }
     
     protected T convertConfigToSensor(T value, Entity entity) { return value; }
+    
+    public static class StringAttributeSensorAndConfigKey extends BasicAttributeSensorAndConfigKey<String> {
+
+        public StringAttributeSensorAndConfigKey(BasicAttributeSensorAndConfigKey<String> orig, String defaultValue) {
+            super(orig, defaultValue);
+        }
+
+        public StringAttributeSensorAndConfigKey(String name, String description, String defaultValue) {
+            super(String.class, name, description, defaultValue);
+        }
+
+        public StringAttributeSensorAndConfigKey(String name, String description) {
+            super(String.class, name, description);
+        }
+
+        public StringAttributeSensorAndConfigKey(String name) {
+            super(String.class, name);
+        }
+        
+    }
+    
+    public static class IntegerAttributeSensorAndConfigKey extends BasicAttributeSensorAndConfigKey<Integer> {
+
+        public IntegerAttributeSensorAndConfigKey(BasicAttributeSensorAndConfigKey<Integer> orig, Integer defaultValue) {
+            super(orig, defaultValue);
+        }
+
+        public IntegerAttributeSensorAndConfigKey(String name, String description, Integer defaultValue) {
+            super(Integer.class, name, description, defaultValue);
+        }
+
+        public IntegerAttributeSensorAndConfigKey(String name, String description) {
+            super(Integer.class, name, description);
+        }
+
+        public IntegerAttributeSensorAndConfigKey(String name) {
+            super(Integer.class, name);
+        }
+        
+    }
+
 }

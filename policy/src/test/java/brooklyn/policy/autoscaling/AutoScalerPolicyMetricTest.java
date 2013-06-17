@@ -14,9 +14,10 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.EntitySpecs;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
@@ -30,7 +31,7 @@ public class AutoScalerPolicyMetricTest {
     private static long TIMEOUT_MS = 10000;
     private static long SHORT_WAIT_MS = 250;
     
-    private static final BasicAttributeSensor<Integer> MY_ATTRIBUTE = new BasicAttributeSensor<Integer>(Integer.class, "autoscaler.test.intAttrib");
+    private static final AttributeSensor<Integer> MY_ATTRIBUTE = new IntegerAttributeSensor("autoscaler.test.intAttrib");
     TestApplication app;
     TestCluster tc;
     

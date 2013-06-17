@@ -4,9 +4,9 @@ import java.util.Collection;
 
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 
 /**
@@ -18,7 +18,7 @@ import brooklyn.location.Location;
  */
 public interface Startable {
 
-    AttributeSensor<Boolean> SERVICE_UP = new BasicAttributeSensor<Boolean>(Boolean.class, "service.isUp", "Service has been started successfully and is running");
+    AttributeSensor<Boolean> SERVICE_UP = Attributes.SERVICE_UP;
 
     MethodEffector<Void> START = new MethodEffector<Void>(Startable.class, "start");
     MethodEffector<Void> STOP = new MethodEffector<Void>(Startable.class, "stop");

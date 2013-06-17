@@ -95,6 +95,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 	public void restart() {
 	    boolean previouslyRunning = isRunning();
         try {
+            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
             stop();
         } catch (Exception e) {
             if (previouslyRunning) {
@@ -103,7 +104,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 log.debug(getEntity() + " restart: stop failed (but was not previously running, so not a surprise)", e);
             }
         }
+        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
         launch();
+        getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
 	}
 	
 	public EntityLocal getEntity() { return entity; } 

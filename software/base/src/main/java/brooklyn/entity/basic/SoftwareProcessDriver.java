@@ -44,6 +44,8 @@ public interface SoftwareProcessDriver extends EntityDriver {
 
     /**
      * @see Startable#restart()
+     * 
+     * Unlike the other methods, the driver here is responsible for updating the SERVICE_STATE sensor.
      */
     void restart();
     

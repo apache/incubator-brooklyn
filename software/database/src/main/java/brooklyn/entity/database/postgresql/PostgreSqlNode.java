@@ -9,6 +9,12 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
+/**
+ * 
+ * Usage notes:
+ * <li> On OS X you may need to increase kernel/memory settings, as per http://willbryant.net/software/mac_os_x/postgres_initdb_fatal_shared_memory_error_on_leopard .
+ * <li> (You will also need to enable passwordless sudo.)
+ */
 @Catalog(name="PostgreSQL Node", description="PostgreSQL is an object-relational database management system (ORDBMS)", iconUrl="classpath:///postgresql-logo.jpeg")
 @ImplementedBy(PostgreSqlNodeImpl.class)
 public interface PostgreSqlNode extends DatabaseNode {

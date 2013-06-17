@@ -47,7 +47,7 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
     public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = 
         new BasicConfigKey<ProxySslConfig>(ProxySslConfig.class, "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
 
-    public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
+    public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
     
     public static final BasicAttributeSensor<Set<String>> SERVER_POOL_TARGETS = new BasicAttributeSensor(
             Set.class, "proxy.serverpool.targets", "The downstream targets in the server pool");

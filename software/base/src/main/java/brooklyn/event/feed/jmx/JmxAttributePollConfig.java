@@ -14,6 +14,7 @@ public class JmxAttributePollConfig<T> extends PollConfig<Object, T, JmxAttribut
     private ObjectName objectName;
     private String attributeName;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public JmxAttributePollConfig(AttributeSensor<T> sensor) {
         super(sensor);
         onSuccess((Function)Functions.identity());

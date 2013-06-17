@@ -1,17 +1,33 @@
 package brooklyn.entity.webapp;
 
+import java.util.concurrent.TimeUnit;
+
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
+import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.enricher.TimeWeightedDeltaEnricher;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.util.time.Duration;
 
 public class WebAppServiceMethods implements WebAppServiceConstants {
     
     public static void connectWebAppServerPolicies(EntityLocal entity) {
-        entity.addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(entity,
-                WebAppServiceConstants.REQUEST_COUNT, WebAppServiceConstants.REQUESTS_PER_SECOND_LAST));
+        connectWebAppServerPolicies(entity, Duration.TEN_SECONDS);
+    }
+    
+    public static void connectWebAppServerPolicies(EntityLocal entity, Duration windowPeriod) {
+        entity.addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(entity, REQUEST_COUNT, REQUESTS_PER_SECOND_LAST));
         
-        entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity,
-            WebAppServiceConstants.REQUESTS_PER_SECOND_LAST, WebAppServiceConstants.REQUESTS_PER_SECOND_IN_WINDOW,
-            WebAppServiceConstants.REQUESTS_PER_SECOND_WINDOW_PERIOD));
+        if (windowPeriod!=null) {
+            entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity, REQUESTS_PER_SECOND_LAST, 
+                    REQUESTS_PER_SECOND_IN_WINDOW, windowPeriod));
+        }
+        
+        entity.addEnricher(new TimeFractionDeltaEnricher<Integer>(entity, TOTAL_PROCESSING_TIME, PROCESSING_TIME_FRACTION_LAST, TimeUnit.MILLISECONDS));
+        
+        if (windowPeriod!=null) {
+            entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity, PROCESSING_TIME_FRACTION_LAST, 
+                    PROCESSING_TIME_FRACTION_IN_WINDOW, windowPeriod));
+        }
+
     }
 }

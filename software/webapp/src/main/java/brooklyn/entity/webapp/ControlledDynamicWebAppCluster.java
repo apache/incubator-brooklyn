@@ -5,6 +5,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.group.Cluster;
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
@@ -86,12 +87,12 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
     /** factory (or closure) to create the web server, given flags */
     @SetFromFlag("factory")
     public static BasicAttributeSensorAndConfigKey<ConfigurableEntityFactory<? extends WebAppService>> FACTORY = new BasicAttributeSensorAndConfigKey(
-            ConfigurableEntityFactory.class, "controlleddynamicweballcluster.factory", "factory (or closure) to create the web server");
+            ConfigurableEntityFactory.class, DynamicCluster.FACTORY.getName(), "factory (or closure) to create the web server");
 
     /** Spec for web server entiites to be created */
     @SetFromFlag("memberSpec")
     public static BasicAttributeSensorAndConfigKey<EntitySpec<? extends WebAppService>> MEMBER_SPEC = new BasicAttributeSensorAndConfigKey(
-            EntitySpec.class, "controlleddynamicweballcluster.memberSpec", "Spec for web server entiites to be created");
+            EntitySpec.class, DynamicCluster.MEMBER_SPEC.getName(), "Spec for web server entiites to be created");
 
     public static AttributeSensor<DynamicWebAppCluster> CLUSTER = new BasicAttributeSensor<DynamicWebAppCluster>(
             DynamicWebAppCluster.class, "controlleddynamicweballcluster.cluster", "Underlying web-app cluster");

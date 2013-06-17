@@ -215,6 +215,9 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         public StringConfigKey(String name, String description, String defaultValue) {
             super(String.class, name, description, defaultValue);
         }
+        public StringConfigKey(ConfigKey<String> orig, String defaultValue) {
+            super(orig, defaultValue);
+        }
     }
     
     public static class BooleanConfigKey extends BasicConfigKey<Boolean> {
@@ -225,6 +228,9 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         }
         public BooleanConfigKey(String name, String description, Boolean defaultValue) {
             super(Boolean.class, name, description, defaultValue);
+        }
+        public BooleanConfigKey(ConfigKey<Boolean> orig, Boolean defaultValue) {
+            super(orig, defaultValue);
         }
     }
     

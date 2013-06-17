@@ -26,13 +26,19 @@ import com.google.common.collect.Sets;
 public class ConfigBag {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigBag.class);
+
+    /** an immutable, empty ConfigBag */
+    public static final ConfigBag EMPTY = new ConfigBag().setDescription("immutable empty config bag").seal();
     
     protected String description;
     
     private Map<String,Object> config = new LinkedHashMap<String,Object>();
     private Map<String,Object> unusedConfig = new LinkedHashMap<String,Object>();
+    private boolean sealed = false;
 
     public ConfigBag setDescription(String description) {
+        if (sealed) 
+            throw new IllegalStateException("Cannot set description to '"+description+"': this config bag has been sealed and is now immutable.");
         this.description = description;
         return this;
     }
@@ -106,6 +112,8 @@ public class ConfigBag {
      * (e.g. when copying a map) where we want to put a string key directly 
      * @return */
     public Object putStringKey(String key, Object value) {
+        if (sealed) 
+            throw new IllegalStateException("Cannot insert "+key+"="+value+": this config bag has been sealed and is now immutable.");
         boolean isNew = !config.containsKey(key);
         boolean isUsed = !isNew && !unusedConfig.containsKey(key);
         Object old = config.put(key, value);
@@ -145,7 +153,8 @@ public class ConfigBag {
     }
 
     protected <T> T get(ConfigKey<T> key, boolean remove) {
-        // TODO for now, no evaluation / closure content / smart (self-extracting) keys are supported
+        // TODO for now, no evaluation -- closure content / smart (self-extracting) keys are NOT supported
+        // (need a clean way to inject that behaviour, as well as desired TypeCoercions)
         Object value;
         if (config.containsKey(key.getName()))
             value = getStringKey(key.getName(), remove);
@@ -167,20 +176,13 @@ public class ConfigBag {
         unusedConfig.remove(key);
     }
 
-    /** @deprecated don't use, remove ASAP */
-    // TODO remove
-    public void markFlagUsed(String key) {
-        markUsed(key);
-    }
-
     public ConfigBag removeAll(ConfigKey<?> ...keys) {
         for (ConfigKey<?> key: keys) remove(key);
         return this;
     }
 
     public void remove(ConfigKey<?> key) {
-        config.remove(key.getName());
-        unusedConfig.remove(key.getName());
+        remove(key.getName());
     }
 
     public ConfigBag removeAll(Iterable<String> keys) {
@@ -189,11 +191,15 @@ public class ConfigBag {
     }
 
     public void remove(String key) {
+        if (sealed) 
+            throw new IllegalStateException("Cannot remove "+key+": this config bag has been sealed and is now immutable.");
         config.remove(key);
         unusedConfig.remove(key);
     }
 
     public ConfigBag copy(ConfigBag other) {
+        if (sealed) 
+            throw new IllegalStateException("Cannot copy "+other+" to "+this+": this config bag has been sealed and is now immutable.");
         putAll(other.getAllConfig());
         markAll(Sets.difference(other.getAllConfig().keySet(), other.getUnusedConfig().keySet()));
         setDescription(other.getDescription());
@@ -206,6 +212,11 @@ public class ConfigBag {
         return this;
     }
 
+    /** creates a new ConfigBag instance, empty and ready for population */
+    public static ConfigBag newInstance() {
+        return new ConfigBag();
+    }
+    
     /** creates a new ConfigBag instance which includes all of the supplied ConfigBag's values,
      * but which tracks usage separately (already used values are marked as such,
      * but uses in the original set will not be marked here, and vice versa) */
@@ -232,5 +243,17 @@ public class ConfigBag {
 
     public boolean isUnused(ConfigKey<?> key) {
         return unusedConfig.containsKey(key.getName());
+    }
+    
+    /** makes this config bag immutable; any attempts to change subsequently 
+     * (apart from marking fields as used) will throw an exception
+     * <p>
+     * copies will be unsealed however
+     * <p>
+     * returns this for convenience (fluent usage) */
+    public ConfigBag seal() {
+        sealed = true;
+        config = getAllConfig();
+        return this;
     }
 }

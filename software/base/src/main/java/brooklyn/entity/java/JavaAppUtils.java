@@ -15,6 +15,7 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 
@@ -24,16 +25,20 @@ public class JavaAppUtils {
     
     @SuppressWarnings("unchecked")
     public static JmxFeed connectMXBeanSensors(EntityLocal entity) {
-        return connectMXBeanSensors(entity, 500);
+        return connectMXBeanSensors(entity, Duration.FIVE_SECONDS);
     }
     
     public static JmxFeed connectMXBeanSensors(EntityLocal entity, long jmxPollPeriodMs) {
+        return connectMXBeanSensors(entity, Duration.millis(jmxPollPeriodMs));
+    }
+    
+    public static JmxFeed connectMXBeanSensors(EntityLocal entity, Duration jmxPollPeriod) {
         if (Boolean.TRUE.equals(entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED))) {
             // TODO Could we reuse the result of compositeDataToMemoryUsage?
             
             JmxFeed jmxFeed = JmxFeed.builder()
                     .entity(entity)
-                    .period(jmxPollPeriodMs, TimeUnit.MILLISECONDS)
+                    .period(jmxPollPeriod)
                     
                     .pollAttribute(new JmxAttributePollConfig<Long>(UsesJavaMXBeans.USED_HEAP_MEMORY)
                             .objectName(ManagementFactory.MEMORY_MXBEAN_NAME)
@@ -87,9 +92,10 @@ public class JavaAppUtils {
                             .period(60, TimeUnit.SECONDS)
                             .attributeName("Uptime"))
                             
-                    .pollAttribute(new JmxAttributePollConfig<Long>(UsesJavaMXBeans.PROCESS_CPU_TIME)
+                    .pollAttribute(new JmxAttributePollConfig<Double>(UsesJavaMXBeans.PROCESS_CPU_TIME)
                             .objectName(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME)
-                            .attributeName("ProcessCpuTime"))
+                            .attributeName("ProcessCpuTime")
+                            .onSuccess((Function)times(0.001*0.001)))   // nanos to millis
                     .pollAttribute(new JmxAttributePollConfig<Double>(UsesJavaMXBeans.SYSTEM_LOAD_AVERAGE)
                             .objectName(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME)
                             .attributeName("SystemLoadAverage"))
@@ -121,14 +127,26 @@ public class JavaAppUtils {
     }
     
     public static void connectJavaAppServerPolicies(EntityLocal entity) {
-        entity.addEnricher(new TimeFractionDeltaEnricher<Long>(entity, UsesJavaMXBeans.PROCESS_CPU_TIME, 
-                UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION, TimeUnit.NANOSECONDS));
+        connectJavaAppServerPolicies(entity, Duration.TEN_SECONDS);
+    }
+    public static void connectJavaAppServerPolicies(EntityLocal entity, Duration windowPeriod) {
+        entity.addEnricher(new TimeFractionDeltaEnricher<Double>(entity, UsesJavaMXBeans.PROCESS_CPU_TIME, 
+                UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_LAST, TimeUnit.MILLISECONDS));
 
         entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity,
-                UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION, UsesJavaMXBeans.AVG_PROCESS_CPU_TIME_FRACTION,
-                UsesJavaMXBeans.AVG_PROCESS_CPU_TIME_FRACTION_PERIOD));
+                UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_LAST, UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_IN_WINDOW,
+                windowPeriod));
     }
     
+    private static Function<Number,Double> times(final double x) {
+        return new Function<Number,Double>() {
+            @Override public Double apply(Number input) {
+                if (input==null) return null;
+                return x*input.doubleValue();
+            }
+        };
+    }
+        
     private static Function<CompositeData, MemoryUsage> compositeDataToMemoryUsage() {
         return new Function<CompositeData, MemoryUsage>() {
             @Override public MemoryUsage apply(CompositeData input) {

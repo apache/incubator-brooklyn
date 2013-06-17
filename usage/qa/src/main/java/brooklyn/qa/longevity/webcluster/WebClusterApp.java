@@ -13,7 +13,8 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.jboss.JBoss7ServerFactory;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.DoubleAttributeSensor;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
@@ -31,10 +32,10 @@ public class WebClusterApp extends ApplicationBuilder {
 
     @Override
     protected void doBuild() {
-        final BasicAttributeSensor<Double> sinusoidalLoad =
-                new BasicAttributeSensor<Double>(Double.class, "brooklyn.qa.sinusoidalLoad", "Sinusoidal server load");
-        BasicAttributeSensor<Double> averageLoad =
-                new BasicAttributeSensor<Double>(Double.class, "brooklyn.qa.averageLoad", "Average load in cluster");
+        final AttributeSensor<Double> sinusoidalLoad =
+                new DoubleAttributeSensor("brooklyn.qa.sinusoidalLoad", "Sinusoidal server load");
+        AttributeSensor<Double> averageLoad =
+                new DoubleAttributeSensor("brooklyn.qa.averageLoad", "Average load in cluster");
 
         NginxController nginxController = createChild(BasicEntitySpec.newInstance(NginxController.class)
                 // .configure("domain", "webclusterexample.brooklyn.local")

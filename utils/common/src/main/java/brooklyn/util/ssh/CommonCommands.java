@@ -251,6 +251,7 @@ public class CommonCommands {
 
     /**
      * Returns the command that installs Java 1.6.
+     * See also: JavaSoftwareProcessSshDriver.installJava, which does a much more thorough job.
      *
      * @return the command that install Java 1.6.
      */

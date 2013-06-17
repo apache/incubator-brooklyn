@@ -20,6 +20,8 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
@@ -39,8 +41,8 @@ public class HttpFeedTest {
 
     private static final Logger log = LoggerFactory.getLogger(HttpFeedTest.class);
     
-    final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
-    final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
+    final static BasicAttributeSensor<String> SENSOR_STRING = new StringAttributeSensor("aString", "");
+    final static BasicAttributeSensor<Integer> SENSOR_INT = new IntegerAttributeSensor( "aLong", "");
 
     private static final long TIMEOUT_MS = 10*1000;
     

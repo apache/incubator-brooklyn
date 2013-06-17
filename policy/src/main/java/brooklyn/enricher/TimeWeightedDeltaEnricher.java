@@ -17,13 +17,18 @@ import com.google.common.base.Functions;
 
 /**
  * Converts an absolute sensor into a delta sensor (i.e. the diff between the current and previous value),
- * presented as a units/timeUnit based on the event timing
+ * presented as a units/timeUnit based on the event timing.
+ * <p>
+ * NB for time (e.g. "total milliseconds consumed") use {@link TimeFractionDeltaEnricher}
  */
 public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTransformingEnricher<T,Double> {
     private static final Logger LOG = LoggerFactory.getLogger(TimeWeightedDeltaEnricher.class);
     
     Number lastValue;
     long lastTime = -1;
+    /** unitMillis is the number of milliseconds to apply for the conversion from input to output;
+     * e.g. 1000 for counting things per second; 
+     * NB for time (e.g. "total milliseconds consumed") use {@link TimeFractionDeltaEnricher} */ 
     int unitMillis;
     Function<Double,Double> postProcessor;
     

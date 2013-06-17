@@ -21,6 +21,7 @@ import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
@@ -93,6 +94,9 @@ public class JmxFeed extends AbstractFeed {
         public Builder helper(JmxHelper val) {
             this.helper = val;
             return this;
+        }
+        public Builder period(Duration duration) {
+            return period(duration.toMilliseconds(), TimeUnit.MILLISECONDS);
         }
         public Builder period(long millis) {
             return period(millis, TimeUnit.MILLISECONDS);

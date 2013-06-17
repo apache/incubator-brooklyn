@@ -7,7 +7,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.LongAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -55,18 +57,18 @@ public interface CassandraNode extends SoftwareProcess, UsesJmx {
     BasicAttributeSensorAndConfigKey<String> CASSANDRA_CONFIG_FILE_NAME = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "cassandra.config.fileName", "Name for the copied config file", "cassandra.yaml");
 
-    BasicAttributeSensor<Long> TOKEN = new BasicAttributeSensor<Long>(Long.class, "cassandra.token", "Cassandra Token");
+    AttributeSensor<Long> TOKEN = new LongAttributeSensor("cassandra.token", "Cassandra Token");
 
-    BasicAttributeSensor<Integer> PEERS = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.peers", "Number of peers in cluster");
+    AttributeSensor<Integer> PEERS = new IntegerAttributeSensor( "cassandra.peers", "Number of peers in cluster");
 
     /* Metrics for read/write performance. */
 
-    BasicAttributeSensor<Long> READ_PENDING = new BasicAttributeSensor<Long>(Long.class, "cassandra.read.pending", "Current pending ReadStage tasks");
-    BasicAttributeSensor<Integer> READ_ACTIVE = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.read.active", "Current active ReadStage tasks");
-    BasicAttributeSensor<Long> READ_COMPLETED = new BasicAttributeSensor<Long>(Long.class, "cassandra.read.completed", "Total completed ReadStage tasks");
-    BasicAttributeSensor<Long> WRITE_PENDING = new BasicAttributeSensor<Long>(Long.class, "cassandra.write.pending", "Current pending MutationStage tasks");
-    BasicAttributeSensor<Integer> WRITE_ACTIVE = new BasicAttributeSensor<Integer>(Integer.class, "cassandra.write.active", "Current active MutationStage tasks");
-    BasicAttributeSensor<Long> WRITE_COMPLETED = new BasicAttributeSensor<Long>(Long.class, "cassandra.write.completed", "Total completed MutationStage tasks");
+    AttributeSensor<Long> READ_PENDING = new LongAttributeSensor("cassandra.read.pending", "Current pending ReadStage tasks");
+    AttributeSensor<Integer> READ_ACTIVE = new IntegerAttributeSensor("cassandra.read.active", "Current active ReadStage tasks");
+    AttributeSensor<Long> READ_COMPLETED = new LongAttributeSensor("cassandra.read.completed", "Total completed ReadStage tasks");
+    AttributeSensor<Long> WRITE_PENDING = new LongAttributeSensor("cassandra.write.pending", "Current pending MutationStage tasks");
+    AttributeSensor<Integer> WRITE_ACTIVE = new IntegerAttributeSensor("cassandra.write.active", "Current active MutationStage tasks");
+    AttributeSensor<Long> WRITE_COMPLETED = new LongAttributeSensor("cassandra.write.completed", "Total completed MutationStage tasks");
 
     ConfigKey<String> SEEDS = CassandraCluster.SEEDS;
 
