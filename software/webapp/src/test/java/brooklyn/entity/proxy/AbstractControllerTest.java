@@ -1,6 +1,5 @@
 package brooklyn.entity.proxy;
 
-import static brooklyn.test.TestUtils.executeUntilSucceeds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -9,11 +8,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,7 +29,6 @@ import brooklyn.entity.driver.MockSshDriver;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpecs;
-import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
@@ -41,16 +37,18 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntityImpl;
-import brooklyn.util.collections.CollectionUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class AbstractControllerTest {
 
@@ -117,10 +115,10 @@ public class AbstractControllerTest {
     @Test
     public void testUpdateCalledWithAddressesOfNewChildren() {
         // First child
-        Entities.invokeEffectorWithArgs(null, cluster, Resizable.RESIZE, 1);
+        cluster.resize(1);
         EntityLocal child = (EntityLocal) cluster.getChildren().iterator().next();
         
-        List u = new ArrayList(updates);
+        List<Collection<String>> u = Lists.newArrayList(updates);
         assertTrue(u.isEmpty(), "expected empty list but got "+u);
         
         child.setAttribute(ClusteredEntity.HTTP_PORT, 1234);
@@ -129,14 +127,12 @@ public class AbstractControllerTest {
 
         // Second child
         cluster.resize(2);
-        executeUntilSucceeds(new Callable() {
+        Asserts.succeedsEventually(new Runnable() {
             @Override
-            public Object call() throws Exception {
-                return cluster.getChildren().size() == 2;
+            public void run() {
+                assertEquals(cluster.getChildren().size(), 2);
             }});
-        Iterator<Entity> ci = cluster.getChildren().iterator();
-        ci.next();
-        EntityLocal child2 = (EntityLocal) ci.next();
+        EntityLocal child2 = (EntityLocal) Iterables.getOnlyElement(MutableSet.builder().addAll(cluster.getChildren()).remove(child).build());
         
         child2.setAttribute(ClusteredEntity.HTTP_PORT, 1234);
         child2.setAttribute(Startable.SERVICE_UP, true);
@@ -193,24 +189,17 @@ public class AbstractControllerTest {
     }
 
     private void assertEventuallyAddressesMatch(final Collection<Entity> expectedMembers) {
-        executeUntilSucceeds(MutableMap.of("timeout", 15000),
-                new Runnable() {
-                    
-                    @Override
-                    public void run() {
-            List<Collection<String>> u = new ArrayList(updates);
-            Collection<String> last = Iterables.getLast(u, null);
-            Collection<String> expectedAddresses = locationsToAddresses(1234, expectedMembers);
-            log.debug("test "+u.size()+" updates, expecting "+expectedAddresses+"; actual "+last);
-            assertTrue(u.size() > 0);
-            assertTrue(CollectionUtils.last(u) == expectedAddresses, "actual="+last+" expected="+expectedAddresses);
-        }} );
+        Asserts.succeedsEventually(MutableMap.of("timeout", 15000), new Runnable() {
+                @Override public void run() {
+                    List<Collection<String>> u = Lists.newArrayList(updates);
+                    Collection<String> last = Iterables.getLast(u, null);
+                    Collection<String> expectedAddresses = locationsToAddresses(1234, expectedMembers);
+                    log.debug("test "+u.size()+" updates, expecting "+expectedAddresses+"; actual "+last);
+                    assertTrue(u.size() > 0);
+                    assertEquals(ImmutableSet.copyOf(Iterables.getLast(u)), ImmutableSet.copyOf(expectedAddresses), "actual="+last+" expected="+expectedAddresses);
+                }} );
     }
 
-    private Collection<String> locationsToAddresses(int port, Entity... entities) {
-        return locationsToAddresses(port, Arrays.asList(entities));
-    }
-        
     private Collection<String> locationsToAddresses(int port, Collection<Entity> entities) {
         Set<String> result = MutableSet.of();
         for (Entity e: entities) {
@@ -218,40 +207,40 @@ public class AbstractControllerTest {
         }
         return result;
     }
-}
 
-class ClusteredEntity extends TestEntityImpl {
-    public static class Factory implements EntityFactory<ClusteredEntity> {
-        @Override
-        public ClusteredEntity newEntity(Map flags, Entity parent) {
-            return new ClusteredEntity(flags, parent);
+    public static class ClusteredEntity extends TestEntityImpl {
+        public static class Factory implements EntityFactory<ClusteredEntity> {
+            @Override
+            public ClusteredEntity newEntity(Map flags, Entity parent) {
+                return new ClusteredEntity(flags, parent);
+            }
         }
-    }
-    public ClusteredEntity(Map flags, Entity parent) { super(flags,parent); }
-    public ClusteredEntity(Entity parent) { super(MutableMap.of(),parent); }
-    public ClusteredEntity(Map flags) { super(flags,null); }
-    public ClusteredEntity() { super(MutableMap.of(),null); }
-    
-    @SetFromFlag("hostname")
-    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
-    
-    @SetFromFlag("port")
-    public static final AttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT;
-    
-    MachineProvisioningLocation provisioner;
-    
-    public void start(Collection<? extends Location> locs) {
-        provisioner = (MachineProvisioningLocation) locs.iterator().next();
-        MachineLocation machine;
-        try {
-            machine = provisioner.obtain(MutableMap.of());
-        } catch (NoMachinesAvailableException e) {
-            throw Exceptions.propagate(e);
+        public ClusteredEntity(Map flags, Entity parent) { super(flags,parent); }
+        public ClusteredEntity(Entity parent) { super(MutableMap.of(),parent); }
+        public ClusteredEntity(Map flags) { super(flags,null); }
+        public ClusteredEntity() { super(MutableMap.of(),null); }
+        
+        @SetFromFlag("hostname")
+        public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
+        
+        @SetFromFlag("port")
+        public static final AttributeSensor<Integer> HTTP_PORT = Attributes.HTTP_PORT;
+        
+        MachineProvisioningLocation provisioner;
+        
+        public void start(Collection<? extends Location> locs) {
+            provisioner = (MachineProvisioningLocation) locs.iterator().next();
+            MachineLocation machine;
+            try {
+                machine = provisioner.obtain(MutableMap.of());
+            } catch (NoMachinesAvailableException e) {
+                throw Exceptions.propagate(e);
+            }
+            addLocations(Arrays.asList(machine));
+            setAttribute(HOSTNAME, machine.getAddress().getHostName());
         }
-        addLocations(Arrays.asList(machine));
-        setAttribute(HOSTNAME, machine.getAddress().getHostName());
-    }
-    public void stop() {
-        if (provisioner!=null) provisioner.release((MachineLocation) firstLocation());
+        public void stop() {
+            if (provisioner!=null) provisioner.release((MachineLocation) firstLocation());
+        }
     }
 }
