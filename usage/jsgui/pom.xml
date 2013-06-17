@@ -107,14 +107,21 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <!--Tests simulate Firefox 3-->
                     <browserVersion>FIREFOX_3</browserVersion>
+
+                    <!--Configures output file names-->
                     <junitXmlReportFileName>TEST-FIREFOX_3-jasmine.xml</junitXmlReportFileName>
                     <manualSpecRunnerHtmlFileName>FIREFOX_3-ManualSpecRunner.html</manualSpecRunnerHtmlFileName>
                     <specRunnerHtmlFileName>FIREFOX_3-SpecRunner.html</specRunnerHtmlFileName>
-                    <jsSrcDir>${project.basedir}/src/main/webapp/assets</jsSrcDir>
-                    <jsTestSrcDir>${project.basedir}/src/test/javascript/specs</jsTestSrcDir>
+
+                    <!--Uses the require.js test spec-->
                     <specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
                     <scriptLoaderPath>js/libs/require.js</scriptLoaderPath>
+
+                    <!--Sources-->
+                    <jsSrcDir>${project.basedir}/src/main/webapp/assets</jsSrcDir>
+                    <jsTestSrcDir>${project.basedir}/src/test/javascript/specs</jsTestSrcDir>
                     <customRunnerConfiguration>
                         ${project.basedir}/src/test/javascript/config.txt
                     </customRunnerConfiguration>

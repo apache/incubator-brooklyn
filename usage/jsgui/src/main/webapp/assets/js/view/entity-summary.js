@@ -5,7 +5,7 @@
 define([
     "underscore", "jquery", "backbone", "view/viewutils",
     "text!tpl/apps/summary.html", "formatJson"
-], function (_, $, Backbone, ViewUtils, SummaryHtml) {
+], function (_, $, Backbone, ViewUtils, SummaryHtml, FormatJSON) {
 
     var EntitySummaryView = Backbone.View.extend({
         template:_.template(SummaryHtml),

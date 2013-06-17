@@ -47,7 +47,7 @@ define([
             var cid = $(eventName.currentTarget).attr("id")
             this._modal = new EffectorInvokeView({
                 el:"#effector-modal",
-                model:this._effectors.getByCid(cid),
+                model:this._effectors.get(cid),
                 entity:this.model
             })
             this._modal.render().$el.modal('show')

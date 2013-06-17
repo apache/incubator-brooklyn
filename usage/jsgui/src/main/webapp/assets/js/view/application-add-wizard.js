@@ -3,28 +3,23 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils", "model/entity", "model/application", "formatJson",
-    "model/location", "text!tpl/app-add-wizard/modal-wizard.html",
-    
+    "underscore", "jquery", "backbone", "brooklyn-utils", "formatJson",
+    "model/entity", "model/application", "model/location",
+    "text!tpl/app-add-wizard/modal-wizard.html",
     "text!tpl/app-add-wizard/create.html",
     "text!tpl/app-add-wizard/create-step-template-entry.html", 
     "text!tpl/app-add-wizard/create-entity-entry.html", 
     "text!tpl/app-add-wizard/required-config-entry.html",
     "text!tpl/app-add-wizard/edit-config-entry.html",
-    
-    "text!tpl/app-add-wizard/deploy.html", 
+    "text!tpl/app-add-wizard/deploy.html",
     "text!tpl/app-add-wizard/deploy-location-row.html", "text!tpl/app-add-wizard/deploy-location-option.html",
-    
     "text!tpl/app-add-wizard/preview.html",
-    
     "bootstrap"
     
-], function (_, $, Backbone, Util, Entity, Application, FormatJSON, Location, ModalHtml,
-		CreateHtml, 
-		CreateStepTemplateEntryHtml, CreateEntityEntryHtml, 
-		RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml, 
-		DeployLocationRowHtml, DeployLocationOptionHtml,  
-		PreviewHtml
+], function (_, $, Backbone, Util, FormatJSON, Entity, Application, Location,
+             ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
+             RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
+             DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
 		) {
 
     function setVisibility(obj, isVisible) {

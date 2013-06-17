@@ -71,7 +71,7 @@ public class LocationResource extends AbstractBrooklynRestResource {
   @GET
   @Path("/usage/LocatedLocations")
   @ApiOperation(value = "Return a summary of all usage", notes="interim API, expected to change")
-  public Map<String,Map<String,Object>> get() {
+  public Map<String,Map<String,Object>> getLocatedLocations() {
       Map<String,Map<String,Object>> result = new LinkedHashMap<String,Map<String,Object>>();
       Map<Location, Integer> counts = new EntityLocationUtils(mgmt()).countLeafEntitiesByLocatedLocations();
       for (Map.Entry<Location,Integer> count: counts.entrySet()) {

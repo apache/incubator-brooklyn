@@ -43,17 +43,19 @@ define([
         unfade: function() {
             this.$el.fadeTo(500,1);
         },
+
         extractParamsFromTable:function () {
             var parameters = {}
+
             // iterate over the rows
             this.$(".effector-param").each(function (index) {
                 var key = $(this).find(".param-name").text(),
                     value = $(this).find(".param-value").val()
-                // we need to create an object out of the input so it will send as the server expects: java Map
-                parameters[key] = $.parseJSON(value)
+                parameters[key] = value;
             })
             return parameters
         },
+
         invokeEffector:function () {
             var that = this
             var url = this.model.getLinkByName("self")

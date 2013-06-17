@@ -1,8 +1,8 @@
 define([
-    'underscore', 'jquery', 'backbone', "model/application", "model/app-tree", "model/location",
+    'brooklyn', 'underscore', 'jquery', 'backbone', "model/application", "model/app-tree", "model/location",
     "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy", 
     "text!tpl/help/page.html"
-], function (_, $, Backbone, Application, AppTree, Location, 
+], function (Brooklyn, _, $, Backbone, Application, AppTree, Location,
         HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
         HelpHtml) {
 
@@ -28,7 +28,14 @@ define([
         }
         var old = this._periodicFunctions[uid]
         if (old) clearInterval(old)
-        this._periodicFunctions[uid] = setInterval(callback, interval)
+
+        // Wrap callback in function that checks whether updates are enabled
+        var periodic = function() {
+            if (Brooklyn.refresh) {
+                callback();
+            }
+        };
+        this._periodicFunctions[uid] = setInterval(periodic, interval)
     }
 
 
