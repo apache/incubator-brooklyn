@@ -12,12 +12,13 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Iterables
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location
-import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.SshMachineLocation
 import brooklyn.location.jclouds.CredentialsFromEnv;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 
 /**
@@ -36,33 +37,43 @@ class CarrenzaLocationLiveTest {
     private static final String LOCATION_ID = "jclouds:"+PROVIDER+":"+ENDPOINT;
     private static final String WINDOWS_IMAGE_ID = "https://myvdc.carrenza.net/api/v1.0/vAppTemplate/vappTemplate-2bd5b0ff-ecd9-405e-8306-2f4f6c092a1b"
     
+    private BrooklynProperties brooklynProperties;
+    private LocalManagementContext managementContext;
     private JcloudsLocation loc;
     private Collection<SshMachineLocation> machines = []
     
+    // TODO Has not been tested since updating ot remove use of deleted LocationRegistry!
     @BeforeMethod(groups = "Live")
     public void setUp() {
         System.out.println("classpath="+System.getProperty("java.class.path"));
         
         CredentialsFromEnv creds = getCredentials();
-        
-        List<Location> locations = new LocationRegistry(
-                ImmutableMap.builder()
-                        .put("identity", creds.getIdentity())
-                        .put("credential", creds.getCredential())
-                        .put("jclouds.endpoint", ENDPOINT)
-                        .put("imageId", WINDOWS_IMAGE_ID)
-                        .put("noDefaultSshKeys", true)
-                        .put("userName", "Administrator")
-                        .put("dontCreateUser", true)
-                        .put("overrideLoginUser", "Administrator")
-                        .put("waitForSshable", false)
-                        .put("runAsRoot", false)
-                        .put("inboundPorts", [22, 3389])
-                        .put("natMapping", [("192.168.0.100"):"195.3.186.200", ("192.168.0.101"):"195.3.186.42"])
-                        .build())
-                .getLocationsById(ImmutableList.of(LOCATION_ID));
 
-        loc = (JcloudsLocation) Iterables.get(locations, 0);
+        brooklynProperties = BrooklynProperties.Factory.newDefault();
+        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".image-description-regex");
+        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".image-name-regex");
+        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".image-id");
+        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".inboundPorts");
+        brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".hardware-id");
+
+        // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
+        brooklynProperties.remove("brooklyn.ssh.config.scriptHeader");
+        
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".identity", creds.getIdentity())
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".credential", creds.getCredential())
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".jclouds.endpoint", ENDPOINT)
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".imageId", WINDOWS_IMAGE_ID)
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".noDefaultSshKeys", true)
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".userName", "Administrator")
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".dontCreateUser", true)
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".overrideLoginUser", "Administrator")
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".waitForSshable", false)
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".runAsRoot", false)
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".inboundPorts", [22, 3389])
+        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".natMapping", [("192.168.0.100"):"195.3.186.200", ("192.168.0.101"):"195.3.186.42"])
+
+        managementContext = new LocalManagementContext(brooklynProperties);
+        loc = (JcloudsLocation) managementContext.getLocationRegistry().resolve(LOCATION_ID);
     }
     
     protected CredentialsFromEnv getCredentials() {

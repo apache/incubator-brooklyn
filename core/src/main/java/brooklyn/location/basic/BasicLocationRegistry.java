@@ -1,5 +1,7 @@
 package brooklyn.location.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -13,7 +15,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.config.ConfigUtils;
@@ -44,9 +45,6 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
 //        QuotedStringTokenizer.builder().addDelimiterChars(",").buildList((String)id);
     }
 
-    /** @deprecated only for compatibility with legacy {@link LocationRegistry} */
-    private final Map properties;
-
     private final ManagementContext mgmt;
     /** map of defined locations by their ID */
     private final Map<String,LocationDefinition> definedLocations = new LinkedHashMap<String, LocationDefinition>();
@@ -54,27 +52,11 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
     protected final Map<String,LocationResolver> resolvers = new LinkedHashMap<String, LocationResolver>();
 
     public BasicLocationRegistry(ManagementContext mgmt) {
-        this.mgmt = mgmt;
-        this.properties = null;
+        this.mgmt = checkNotNull(mgmt, "mgmt");
         findServices();
         findDefinedLocations();
     }
 
-    @Deprecated
-    protected BasicLocationRegistry(){
-        this(BrooklynProperties.Factory.newDefault());
-        if (log.isDebugEnabled())
-            log.debug("Using the LocationRegistry no arg constructor will rely on the properties defined in ~/.brooklyn/brooklyn.properties, " +
-                    "potentially bypassing explicitly loaded properties", new Throwable("source of no-arg LocationRegistry constructor"));
-    }
-
-    @Deprecated
-    protected BasicLocationRegistry(Map properties) {
-        this.properties = properties;
-        this.mgmt = null;
-        findServices();
-    }
-    
     protected void findServices() {
         ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class);
         for (LocationResolver r: loader)
@@ -192,7 +174,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
             } else if (resolver != null) {
                 if (!locationFlags.isEmpty())
                     log.warn("Ignoring location flags "+locationFlags+" when instantiating "+spec);
-                return resolver.newLocationFromString(properties, spec);
+                return resolver.newLocationFromString(MutableMap.of(), spec);
             }
 
             throw new NoSuchElementException("No resolver found for '"+spec+"'");
@@ -285,8 +267,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
     }
 
     public Map getProperties() {
-        if (mgmt!=null) return mgmt.getConfig().asMapWithStringKeys();
-        return properties;
+        return mgmt.getConfig().asMapWithStringKeys();
     }
 
     @VisibleForTesting

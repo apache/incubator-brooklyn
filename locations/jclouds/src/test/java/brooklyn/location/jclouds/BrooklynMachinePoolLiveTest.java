@@ -1,19 +1,17 @@
 package brooklyn.location.jclouds;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.location.basic.LocationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.jclouds.BrooklynMachinePool;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsResolver;
 import brooklyn.location.jclouds.pool.MachinePoolPredicates;
 import brooklyn.location.jclouds.pool.MachineSet;
 import brooklyn.location.jclouds.pool.ReusableMachineTemplate;
+import brooklyn.management.internal.LocalManagementContext;
 
 public class BrooklynMachinePoolLiveTest {
 
@@ -46,6 +44,18 @@ public class BrooklynMachinePoolLiveTest {
         { registerTemplates(USUAL_VM, ANYONE_NOT_TINY_VM, VM_LARGE1, VM_SMALL1); }
     }
     
+    private LocalManagementContext managementContext;
+
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        managementContext = new LocalManagementContext();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (managementContext != null) managementContext.terminate();
+    }
+   
     @Test(groups="Live")
     public void buildClaimAndDestroy() {
         SamplePool p = new SamplePool(resolve("aws-ec2:us-west-1"));
@@ -68,8 +78,7 @@ public class BrooklynMachinePoolLiveTest {
     }
     
 
-    private static JcloudsLocation resolve(String spec) {
-        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-        return (JcloudsLocation) new LocationRegistry(brooklynProperties).resolve(JcloudsResolver.JCLOUDS+":"+spec);
+    private JcloudsLocation resolve(String spec) {
+        return (JcloudsLocation) managementContext.getLocationRegistry().resolve(JcloudsResolver.JCLOUDS+":"+spec);
     }
 }
