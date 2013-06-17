@@ -95,7 +95,8 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
         ControlledDynamicWebAppCluster web = addChild(
                 EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                         .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
-                        .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpecs.spec(TomcatServer.class))
+                        // to specify a diferrent appserver:
+//                        .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpecs.spec(TomcatServer.class))
                         .configure(JavaWebAppService.ROOT_WAR, getConfig(WAR_PATH))
                         .configure(JavaEntityMethods.javaSysProp("brooklyn.example.db.url"), 
                                 formatString("jdbc:%s%s?user=%s\\&password=%s", 
