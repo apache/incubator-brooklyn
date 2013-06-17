@@ -15,7 +15,9 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpecs;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
@@ -28,8 +30,8 @@ import com.google.common.collect.ImmutableList;
 
 public class HttpFeedSslIntegrationTest {
 
-    final static BasicAttributeSensor<String> SENSOR_STRING = new BasicAttributeSensor<String>(String.class, "aString", "");
-    final static BasicAttributeSensor<Integer> SENSOR_INT = new BasicAttributeSensor<Integer>(Integer.class, "aLong", "");
+    final static AttributeSensor<String> SENSOR_STRING = new StringAttributeSensor("aString", "");
+    final static AttributeSensor<Integer> SENSOR_INT = new IntegerAttributeSensor("aLong", "");
 
     private static final long TIMEOUT_MS = 10*1000;
     

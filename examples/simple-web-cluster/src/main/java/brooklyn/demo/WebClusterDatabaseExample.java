@@ -20,7 +20,8 @@ import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
@@ -44,7 +45,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
     public static final String DB_USERNAME = "brooklyn";
     public static final String DB_PASSWORD = "br00k11n";
     
-    public static final BasicAttributeSensor<Integer> APPSERVERS_COUNT = new BasicAttributeSensor<Integer>(Integer.class, 
+    public static final AttributeSensor<Integer> APPSERVERS_COUNT = new IntegerAttributeSensor( 
             "appservers.count", "Number of app servers deployed");
 
     @Override

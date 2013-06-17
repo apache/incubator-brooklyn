@@ -21,7 +21,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
@@ -45,7 +45,7 @@ public class AbstractLoadBalancingPolicyTest {
     protected static final long CONTAINER_STARTUP_DELAY_MS = 100;
     
     public static final AttributeSensor<Integer> TEST_METRIC =
-        new BasicAttributeSensor<Integer>(Integer.class, "test.metric", "Dummy workrate for test entities");
+        new IntegerAttributeSensor("test.metric", "Dummy workrate for test entities");
     
     public static final ConfigKey<Double> LOW_THRESHOLD_CONFIG_KEY = new BasicConfigKey<Double>(Double.class, TEST_METRIC.getName()+".threshold.low", "desc", 0.0);
     public static final ConfigKey<Double> HIGH_THRESHOLD_CONFIG_KEY = new BasicConfigKey<Double>(Double.class, TEST_METRIC.getName()+".threshold.high", "desc", 0.0);

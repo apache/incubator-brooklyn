@@ -2,6 +2,7 @@ package brooklyn.entity.proxy.nginx;
 
 import java.util.Collection;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.AbstractGroup;
@@ -10,8 +11,10 @@ import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -26,34 +29,34 @@ public interface UrlMapping extends AbstractGroup {
     public static final MethodEffector<Void> DISCARD = new MethodEffector<Void>(UrlMapping.class, "discard");
 
     @SetFromFlag("label")
-    public static final BasicConfigKey<String> LABEL =
-        new BasicConfigKey<String>(String.class, "urlmapping.label", "optional human-readable label to identify a server");
+    public static final ConfigKey<String> LABEL =
+        new StringConfigKey("urlmapping.label", "optional human-readable label to identify a server", null);
 
     @SetFromFlag("domain")
-    public static final BasicConfigKey<String> DOMAIN =
-        new BasicConfigKey<String>(String.class, "urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule; required.");
+    public static final ConfigKey<String> DOMAIN =
+        new StringConfigKey("urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule; required.", null);
 
     @SetFromFlag("path")
-    public static final BasicConfigKey<String> PATH =
-        new BasicConfigKey<String>(String.class, "urlmapping.path", 
+    public static final ConfigKey<String> PATH =
+        new StringConfigKey("urlmapping.path", 
                 "URL path (pattern) for this URL map rule. Currently only supporting regex matches "+ 
-                "(if not supplied, will match all paths at the indicated domain)");
+                "(if not supplied, will match all paths at the indicated domain)", null);
 
     @SetFromFlag("ssl")
-    public static final BasicConfigKey<ProxySslConfig> SSL_CONFIG = AbstractController.SSL_CONFIG;
+    public static final ConfigKey<ProxySslConfig> SSL_CONFIG = AbstractController.SSL_CONFIG;
             
     @SetFromFlag("rewrites")
-    public static final BasicConfigKey<Collection<UrlRewriteRule>> REWRITES =
+    public static final ConfigKey<Collection<UrlRewriteRule>> REWRITES =
         new BasicConfigKey(Collection.class, "urlmapping.rewrites", "Set of URL rewrite rules to apply");
 
     @SetFromFlag("target")
-    public static final BasicConfigKey<Entity> TARGET_PARENT =
+    public static final ConfigKey<Entity> TARGET_PARENT =
         new BasicConfigKey<Entity>(Entity.class, "urlmapping.target.parent", "optional target entity whose children will be pointed at by this mapper");
 
-    public static final BasicAttributeSensor<Collection<String>> TARGET_ADDRESSES =
+    public static final AttributeSensor<Collection<String>> TARGET_ADDRESSES =
         new BasicAttributeSensor(Collection.class, "urlmapping.target.addresses", "set of addresses which should be forwarded to by this URL mapping");
         
-    public static final BasicAttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;    
+    public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;    
 
     public String getUniqueLabel();
 

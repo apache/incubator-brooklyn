@@ -29,7 +29,7 @@ import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
@@ -80,7 +80,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     public static final String DB_USERNAME = "brooklyn";
     public static final String DB_PASSWORD = "br00k11n";
     
-    BasicAttributeSensor<Integer> APPSERVERS_COUNT = new BasicAttributeSensor<Integer>(Integer.class, 
+    AttributeSensor<Integer> APPSERVERS_COUNT = new IntegerAttributeSensor( 
             "appservers.count", "Number of app servers deployed");
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW = 
             WebAppServiceConstants.REQUESTS_PER_SECOND_IN_WINDOW;

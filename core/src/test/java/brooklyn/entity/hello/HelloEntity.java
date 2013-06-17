@@ -8,21 +8,22 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
+import brooklyn.event.basic.BasicConfigKey.StringConfigKey;
 import brooklyn.event.basic.BasicSensor;
 
 @ImplementedBy(HelloEntityImpl.class)
 public interface HelloEntity extends AbstractGroup {
 
     /** records name of the person represented by this entity */
-    public static ConfigKey<String> MY_NAME = new BasicConfigKey<String>(String.class, "my.name");
+    public static ConfigKey<String> MY_NAME = new StringConfigKey("my.name");
     
     /** this "person"'s favourite name */
-    public static AttributeSensor<String> FAVOURITE_NAME = new BasicAttributeSensor<String>(String.class, "my.favourite.name");
+    public static AttributeSensor<String> FAVOURITE_NAME = new StringAttributeSensor("my.favourite.name");
     
     /** records age (in years) of the person represented by this entity */
-    public static AttributeSensor<Integer> AGE = new BasicAttributeSensor<Integer>(Integer.class, "my.age");
+    public static AttributeSensor<Integer> AGE = new IntegerAttributeSensor("my.age");
     
     /** emits a "birthday" event whenever age is changed (tests non-attribute events) */    
     public static Sensor<Void> ITS_MY_BIRTHDAY = new BasicSensor<Void>(Void.TYPE, "my.birthday");

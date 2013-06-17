@@ -22,7 +22,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class EntityTypeTest {
-    private static final AttributeSensor<String> TEST_SENSOR = new BasicAttributeSensor<String>(String.class, "test.sensor");
+    private static final AttributeSensor<String> TEST_SENSOR = new StringAttributeSensor("test.sensor");
     private TestApplication app;
     private AbstractEntity entity;
     private EntitySubscriptionTest.RecordingSensorEventListener listener;

@@ -1,5 +1,7 @@
 package brooklyn.entity.nosql.mongodb;
 
+import org.bson.BasicBSONObject;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -7,11 +9,12 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.BooleanAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.DoubleAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
-import org.bson.BasicBSONObject;
 
 @Catalog(name="MongoDB Server",
     description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",
@@ -55,7 +58,7 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<BasicBSONObject> STATUS = new BasicAttributeSensor<BasicBSONObject>(BasicBSONObject.class,
             "mongodb.server.status", "Server status");
 
-    AttributeSensor<Double> UPTIME_SECONDS = new BasicAttributeSensor<Double>(Double.class,
+    AttributeSensor<Double> UPTIME_SECONDS = new DoubleAttributeSensor(
             "mongodb.server.uptime", "Server uptime in seconds");
 
     AttributeSensor<Long> OPCOUNTERS_INSERTS = new BasicAttributeSensor<Long>(Long.class,
@@ -96,10 +99,10 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<ReplicaSetMemberStatus> REPLICA_SET_MEMBER_STATUS = new BasicAttributeSensor<ReplicaSetMemberStatus>(
             ReplicaSetMemberStatus.class, "mongodb.server.replicaSet.memberStatus", "The status of this server in the replica set");
 
-    AttributeSensor<Boolean> REPLICA_SET_PRIMARY = new BasicAttributeSensor<Boolean>(Boolean.class,
+    AttributeSensor<Boolean> REPLICA_SET_PRIMARY = new BooleanAttributeSensor(
             "mongodb.server.replicaSet.isPrimary", "True if this server is the write master for the replica set");
 
-    AttributeSensor<Boolean> REPLICA_SET_SECONDARY = new BasicAttributeSensor<Boolean>(Boolean.class,
+    AttributeSensor<Boolean> REPLICA_SET_SECONDARY = new BooleanAttributeSensor(
             "mongodb.server.replicaSet.isSecondary", "True if this server is a secondary server in the replica set");
 
     AttributeSensor<String> REPLICA_SET_PRIMARY_NAME = new BasicAttributeSensor<String>(String.class,

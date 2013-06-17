@@ -6,6 +6,8 @@ import java.util.Map;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.BooleanAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -28,7 +30,7 @@ public interface Attributes {
      * @deprecated since 0.5; see {@link ConfigKeys#SUGGESTED_VERSION}
      */
     @Deprecated
-    BasicAttributeSensor<String> VERSION = new BasicAttributeSensor<String>(String.class, "version", "Version information");
+    AttributeSensor<String> VERSION = new StringAttributeSensor( "version", "Version information");
 
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "download.url", "URL pattern for downloading the installer (will substitute things like ${version} automatically)");
@@ -48,7 +50,7 @@ public interface Attributes {
     PortAttributeSensorAndConfigKey RMI_SERVER_PORT = new PortAttributeSensorAndConfigKey(
             "rmi.server.port", "RMI server port", PortRanges.fromString("9001, 39001+"));
 
-     BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
+    BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "jmx.user", "JMX username");
     
     BasicAttributeSensorAndConfigKey<String> JMX_PASSWORD = new BasicAttributeSensorAndConfigKey<String>(
@@ -64,10 +66,10 @@ public interface Attributes {
      * Port number attributes.
      */
 
-    BasicAttributeSensor<List<Integer>> PORT_NUMBERS = new BasicAttributeSensor(
+    AttributeSensor<List<Integer>> PORT_NUMBERS = new BasicAttributeSensor(
             List.class, "port.list", "List of port numbers");
     
-    BasicAttributeSensor<List<Sensor<Integer>>> PORT_SENSORS = new BasicAttributeSensor(
+    AttributeSensor<List<Sensor<Integer>>> PORT_SENSORS = new BasicAttributeSensor(
             List.class, "port.list.sensors", "List of port number attributes");
 
     PortAttributeSensorAndConfigKey HTTP_PORT = new PortAttributeSensorAndConfigKey(
@@ -85,19 +87,19 @@ public interface Attributes {
      * Location/connection attributes.
      */
 
-    BasicAttributeSensor<String> HOSTNAME = new BasicAttributeSensor<String>(String.class, "host.name", "Host name");
-    BasicAttributeSensor<String> ADDRESS = new BasicAttributeSensor<String>(String.class, "host.address", "Host IP address");
+    AttributeSensor<String> HOSTNAME = new StringAttributeSensor( "host.name", "Host name");
+    AttributeSensor<String> ADDRESS = new StringAttributeSensor( "host.address", "Host IP address");
 	
     /*
      * Lifecycle attributes
      */
-    AttributeSensor<Boolean> SERVICE_UP = new BasicAttributeSensor<Boolean>(Boolean.class, "service.isUp", 
+    AttributeSensor<Boolean> SERVICE_UP = new BooleanAttributeSensor( "service.isUp", 
             "Whether the service is active and availability (confirmed and monitored)");
     
     BasicAttributeSensor<Lifecycle> SERVICE_STATE = new BasicAttributeSensor<Lifecycle>(
             Lifecycle.class, "service.state", "Expected lifecycle state of the service");
     
 	/** optional */
-    BasicAttributeSensor<String> LOG_FILE_LOCATION = new BasicAttributeSensor<String>(
+    AttributeSensor<String> LOG_FILE_LOCATION = new BasicAttributeSensor<String>(
             String.class, "log.location", "Log file location");
 }

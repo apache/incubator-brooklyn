@@ -41,6 +41,8 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
@@ -79,8 +81,8 @@ public class JmxFeedTest {
     private JmxFeed feed;
     private JmxHelper jmxHelper;
     
-    private AttributeSensor<Integer> intAttribute = new BasicAttributeSensor<Integer>(Integer.class, "brooklyn.test.intAttribute", "Brooklyn testing int attribute");
-    private BasicAttributeSensor<String> stringAttribute = new BasicAttributeSensor<String>(String.class, "brooklyn.test.stringAttribute", "Brooklyn testing string attribute");
+    private AttributeSensor<Integer> intAttribute = new IntegerAttributeSensor("brooklyn.test.intAttribute", "Brooklyn testing int attribute");
+    private AttributeSensor<String> stringAttribute = new StringAttributeSensor("brooklyn.test.stringAttribute", "Brooklyn testing string attribute");
     private BasicAttributeSensor<Map> mapAttribute = new BasicAttributeSensor<Map>(Map.class, "brooklyn.test.mapAttribute", "Brooklyn testing map attribute");
     private String objectName = "Brooklyn:type=MyTestMBean,name=myname";
     private ObjectName jmxObjectName;

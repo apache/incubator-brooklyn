@@ -47,6 +47,16 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
         }
     }
 
+    public static class LongAttributeSensor extends BasicAttributeSensor<Long> {
+        public LongAttributeSensor(String name) {
+            super(Long.class, name);
+        }
+        
+        public LongAttributeSensor(String name, String description) {
+            super(Long.class, name, description);
+        }
+    }
+
     public static class BooleanAttributeSensor extends BasicAttributeSensor<Boolean> {
         public BooleanAttributeSensor(String name) {
             super(Boolean.class, name);
