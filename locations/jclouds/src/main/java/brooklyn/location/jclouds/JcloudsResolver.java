@@ -18,8 +18,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
+import brooklyn.location.LocationResolver;
 import brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.location.basic.RegistryLocationResolver;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
 
@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings("rawtypes")
-public class JcloudsResolver implements RegistryLocationResolver {
+public class JcloudsResolver implements LocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(JcloudsResolver.class);
     

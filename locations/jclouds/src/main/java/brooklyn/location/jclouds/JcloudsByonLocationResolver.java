@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
+import brooklyn.location.LocationResolver;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import brooklyn.location.basic.RegistryLocationResolver;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.KeyValueParser;
@@ -41,7 +41,7 @@ import com.google.common.collect.Sets;
  * @author aled
  */
 @SuppressWarnings({"unchecked","rawtypes"})
-public class JcloudsByonLocationResolver implements RegistryLocationResolver {
+public class JcloudsByonLocationResolver implements LocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(JcloudsByonLocationResolver.class);
     

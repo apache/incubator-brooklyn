@@ -8,12 +8,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationRegistry;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.location.LocationResolver;
 
 /**
  * looks up based on ID in DefinedLocations map
  */
-public class DefinedLocationByIdResolver implements RegistryLocationResolver {
+public class DefinedLocationByIdResolver implements LocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(DefinedLocationByIdResolver.class);
 

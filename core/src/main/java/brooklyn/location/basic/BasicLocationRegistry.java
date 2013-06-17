@@ -20,6 +20,7 @@ import brooklyn.config.ConfigPredicates;
 import brooklyn.config.ConfigUtils;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
+import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
@@ -31,7 +32,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 @SuppressWarnings({"rawtypes","unchecked"})
-public class BasicLocationRegistry implements brooklyn.location.LocationRegistry {
+public class BasicLocationRegistry implements LocationRegistry {
 
     public static final Logger log = LoggerFactory.getLogger(BasicLocationRegistry.class);
 
@@ -65,16 +66,19 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         if (resolvers.isEmpty()) log.warn("No location resolvers detected: is src/main/resources correclty included?");
     }
 
+    @Override
     public Map<String,LocationDefinition> getDefinedLocations() {
         synchronized (definedLocations) {
             return ImmutableMap.<String,LocationDefinition>copyOf(definedLocations);
         }
     }
     
+    @Override
     public LocationDefinition getDefinedLocation(String id) {
         return definedLocations.get(id);
     }
 
+    @Override
     public LocationDefinition getDefinedLocationByName(String name) {
         synchronized (definedLocations) {
             for (LocationDefinition l: definedLocations.values()) {
@@ -148,14 +152,17 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
     /** to catch circular references */
     protected ThreadLocal<Set<String>> specsSeen = new ThreadLocal<Set<String>>();
     
+    @Override
     public boolean canResolve(String spec) {
         return getSpecResolver(spec) != null;
     }
 
+    @Override
     public final Location resolve(String spec) {
         return resolve(spec, new MutableMap());
     }
 
+    @Override
     public Location resolve(String spec, Map locationFlags) {
         try {
             Set<String> seenSoFar = specsSeen.get();
@@ -169,12 +176,8 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
             
             LocationResolver resolver = getSpecResolver(spec);
 
-            if (resolver instanceof RegistryLocationResolver) {
-                return ((RegistryLocationResolver)resolver).newLocationFromString(locationFlags, spec, this);
-            } else if (resolver != null) {
-                if (!locationFlags.isEmpty())
-                    log.warn("Ignoring location flags "+locationFlags+" when instantiating "+spec);
-                return resolver.newLocationFromString(MutableMap.of(), spec);
+            if (resolver != null) {
+                return resolver.newLocationFromString(locationFlags, spec, this);
             }
 
             throw new NoSuchElementException("No resolver found for '"+spec+"'");
@@ -200,7 +203,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
     protected LocationResolver getSpecFirstResolver(String spec, String ...resolversToCheck) {
         for (String resolverId: resolversToCheck) {
             LocationResolver resolver = resolvers.get(resolverId);
-            if (resolver!=null && (resolver instanceof RegistryLocationResolver) && ((RegistryLocationResolver)resolver).accepts(spec, this))
+            if (resolver!=null && resolver.accepts(spec, this))
                 return resolver;
         }
         return null;
@@ -226,6 +229,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
      * For legacy compatibility this also accepts nested lists, but that is deprecated
      * (and triggers a warning).
      */
+    @Override
     public List<Location> resolve(Iterable<?> spec) {
         List<Location> result = new ArrayList<Location>();
         for (Object id : spec) {
@@ -266,6 +270,7 @@ public class BasicLocationRegistry implements brooklyn.location.LocationRegistry
         }
     }
 
+    @Override
     public Map getProperties() {
         return mgmt.getConfig().asMapWithStringKeys();
     }
