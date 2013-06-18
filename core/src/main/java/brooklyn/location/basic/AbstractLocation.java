@@ -174,11 +174,11 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
         if (parentLocation != null) {
             Location oldParent = parentLocation;
             parentLocation = null;
-            ((AbstractLocation)oldParent).removeChildLocation(this); // FIXME Nasty cast
+            ((AbstractLocation)oldParent).removeChild(this); // FIXME Nasty cast
         }
         if (parent != null) {
             parentLocation = parent;
-            ((AbstractLocation)parentLocation).addChildLocation(this); // FIXME Nasty cast
+            ((AbstractLocation)parentLocation).addChild(this); // FIXME Nasty cast
         }
     }
 
