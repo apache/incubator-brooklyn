@@ -144,18 +144,18 @@ implements MachineProvisioningLocation<T>, Closeable {
     }   
      
     @Override
-    public void addChildLocation(Location child) {
-        super.addChildLocation(child);
+    public void addChild(Location child) {
+        super.addChild(child);
         machines.add((T)child);
     }
 
     @Override
-    protected boolean removeChildLocation(Location child) {
+    protected boolean removeChild(Location child) {
         if (inUse.contains(child)) {
             throw new IllegalStateException("Child location "+child+" is in use; cannot remove from "+this);
         }
         machines.remove(child);
-        return super.removeChildLocation(child);
+        return super.removeChild(child);
     }
 
     public boolean canProvisionMore() { return false; }
