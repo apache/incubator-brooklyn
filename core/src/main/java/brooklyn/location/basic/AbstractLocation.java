@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,8 @@ import brooklyn.util.text.Identifiers;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
@@ -90,7 +93,6 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
      * <li>iso3166 - list of iso3166-2 code strings
      * <li>timeZone
      * <li>abbreviatedName
-     * <li>displayName
      * </ul>
      * 
      * @param properties
@@ -172,6 +174,19 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
             //FIXME could this be a GString?
             Preconditions.checkArgument(properties.get("displayName") instanceof String, "'displayName' property should be a string");
             name = (String) properties.remove("displayName");
+        }
+        
+        // TODO Explicitly dealing with iso3166 here because want custom splitter rule comma-separated string.
+        // Is there a better way to do it (e.g. more similar to latitude, where configKey+TypeCoercion is enough)?
+        if (truth(properties.get("iso3166"))) {
+            Object rawCodes = properties.remove("iso3166");
+            Set<String> codes;
+            if (rawCodes instanceof CharSequence) {
+                codes = ImmutableSet.copyOf(Splitter.on(",").trimResults().split((CharSequence)rawCodes));
+            } else {
+                codes = TypeCoercions.coerce(rawCodes, Set.class);
+            }
+            configBag.put(LocationConfigKeys.ISO_3166, codes);
         }
     }
 

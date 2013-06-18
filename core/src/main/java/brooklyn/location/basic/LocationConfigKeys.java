@@ -1,8 +1,12 @@
 package brooklyn.location.basic;
 
+import java.util.Set;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
+
+import com.google.common.reflect.TypeToken;
 
 public class LocationConfigKeys {
 
@@ -18,6 +22,8 @@ public class LocationConfigKeys {
     public static final ConfigKey<String> CLOUD_PROVIDER = ConfigKeys.newStringConfigKey("provider");
     public static final ConfigKey<String> CLOUD_ENDPOINT = ConfigKeys.newStringConfigKey("endpoint");
     public static final ConfigKey<String> CLOUD_REGION_ID = ConfigKeys.newStringConfigKey("region");
+
+    public static final ConfigKey<Set<String>> ISO_3166 = ConfigKeys.newConfigKey(new TypeToken<Set<String>>() {}, "iso3166", "ISO-3166 or ISO-3166-2 location codes"); 
 
     public static final ConfigKey<String> USER = ConfigKeys.newStringConfigKey("user", 
             "user account for normal access to the remote machine, defaulting to local user", System.getProperty("user.name"));
