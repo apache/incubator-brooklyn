@@ -47,5 +47,4 @@ public interface LocationRegistry {
     public List<Location> resolve(Iterable<?> spec);
     
     public Map getProperties();
-
 }

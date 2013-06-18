@@ -47,6 +47,8 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         public static BrooklynProperties newDefault() {
             BrooklynProperties properties = new BrooklynProperties();
 
+            addDefaultProperties(properties);
+
             addGlobalProperties(properties);
 
             properties.addEnvironmentVars();
@@ -56,10 +58,27 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
             return properties;
         }
 
+        private static void addDefaultProperties(BrooklynProperties p) {
+            // TODO Could also read from http://brooklyn.io, for up-to-date values?
+            // But might that make unit tests run very badly when developer is offline?
+            String classpath = "classpath://location-metadata.properties";
+            
+            try {
+                p.addFrom(new ResourceUtils(BrooklynProperties.class).getResourceFromUrl(classpath));
+            } catch (Exception e) {
+                LOG.info("Could not load {}; continuing", classpath);
+                if (LOG.isTraceEnabled()) LOG.trace("Could not load "+classpath+"; continuing", e);
+            }
+        }
+        
         private static void addGlobalProperties(BrooklynProperties p) {
             String userHome = System.getProperty("user.home");
+            File globalLocationMetadataFile = new File(userHome+File.separatorChar+".brooklyn"+File.separatorChar+"location-metadata.properties");
             File globalPropertiesFile = new File(userHome+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
 
+            if (globalLocationMetadataFile.exists()) {
+                p.addFrom(globalLocationMetadataFile);
+            }
             if (globalPropertiesFile.exists()) {
                 p.addFrom(globalPropertiesFile);
             }

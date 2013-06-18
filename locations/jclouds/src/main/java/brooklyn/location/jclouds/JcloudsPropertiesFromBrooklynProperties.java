@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.collections.Lists;
 import org.testng.internal.annotations.Sets;
 
 import brooklyn.config.ConfigKey;
@@ -46,14 +45,13 @@ public class JcloudsPropertiesFromBrooklynProperties {
 
     public static final Logger log = LoggerFactory.getLogger(JcloudsPropertiesFromBrooklynProperties.class);
 
-    public static Map<String, Object> getJcloudsProperties(String providerOrApi, Map<String, Object> properties) {
-        return getJcloudsProperties(providerOrApi, null, properties);
-    }
-    /*
+    /**
+     * Finds the properties that apply to this provider/region, stripping off the prefixes.
+     * <p>
      * This implementation considers only named properties and provider-specific properties
-     * Legacy properties are not supported 
+     * Legacy properties are not supported.
      */
-    public static Map<String, Object> getJcloudsProperties(String providerOrApi, String locationName, Map<String, Object> properties) {
+    public static Map<String, Object> getJcloudsProperties(String providerOrApi, String regionName, String locationName, Map<String, Object> properties) {
         if(Strings.isNullOrEmpty(locationName) && Strings.isNullOrEmpty(providerOrApi)) {
             throw new IllegalArgumentException("Neither cloud provider/API nor location name have been specified correctly");
         }
@@ -62,6 +60,7 @@ public class JcloudsPropertiesFromBrooklynProperties {
         // named properties are preferred over providerOrApi properties
         jcloudsProperties.put("provider", provider);
         properties = sanitize(provider, properties);
+        jcloudsProperties.putAll(getRegionJcloudsProperties(providerOrApi, regionName, properties));
         jcloudsProperties.putAll(getProviderOrApiJcloudsProperties(providerOrApi, properties));
         jcloudsProperties.putAll(getNamedJcloudsProperties(locationName, properties));
         String brooklynDataDir = (String) properties.get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
@@ -79,6 +78,14 @@ public class JcloudsPropertiesFromBrooklynProperties {
         return provider;
     }
     
+    private static Map<String, Object> getRegionJcloudsProperties(String providerOrApi, String regionName, Map<String, Object> properties) {
+        if(providerOrApi == null) return Maps.newHashMap();
+        String prefix = (regionName != null) ? 
+                String.format("brooklyn.jclouds.%s:%s.", providerOrApi, regionName) :
+                String.format("brooklyn.jclouds.%s.", providerOrApi);
+        return ConfigUtils.filterForPrefixAndStrip(properties, prefix).asMapWithStringKeys();
+    }
+
     private static Map<String, Object> getProviderOrApiJcloudsProperties(String providerOrApi, Map<String, Object> properties) {
         if(providerOrApi == null) return Maps.newHashMap();
         String prefix = String.format("brooklyn.jclouds.%s.", providerOrApi);

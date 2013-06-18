@@ -42,7 +42,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
     
     @Test
     public void testProviderOrApiProperties() {
-        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", sampleProviderOrApiProps());
+        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", null, null, sampleProviderOrApiProps());
         Assert.assertEquals(map.get("identity"), "bob");
         Assert.assertEquals(map.get("credential"), "s3cr3t");
         Assert.assertEquals(map.get("provider"), "FooServers");
@@ -50,7 +50,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
 
     @Test
     public void testNamedProperties() {
-        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", "cloudfirst", sampleNamedProps());
+        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", null, "cloudfirst", sampleNamedProps());
         Assert.assertEquals(map.get("provider"), "openstack-nova");
         Assert.assertEquals(map.get("identity"), "myId");
         Assert.assertEquals(map.get("credential"), "password");
@@ -63,7 +63,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
         Map<String, Object> allProperties = Maps.newHashMap();
         allProperties.putAll(sampleProviderOrApiProps());
         allProperties.putAll(sampleNamedProps());
-        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", "cloudfirst", allProperties);
+        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", null, "cloudfirst", allProperties);
         Assert.assertEquals(map.get("provider"), "openstack-nova");
         Assert.assertEquals(map.get("identity"), "myId");
         Assert.assertEquals(map.get("credential"), "password");
@@ -76,7 +76,7 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
         Map<String, Object> allProperties = Maps.newHashMap();
         allProperties.putAll(unsupportedNamedProps());
         allProperties.putAll(unsupportedSampleProviderOrApiProps());
-        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", "cloudfirst", allProperties);
+        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", null, "cloudfirst", allProperties);
         Assert.assertNull(map.get("image-id"));
         Assert.assertNull(map.get("hardware-id"));
     }

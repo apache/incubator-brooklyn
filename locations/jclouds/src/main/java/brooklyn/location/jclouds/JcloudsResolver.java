@@ -169,6 +169,7 @@ public class JcloudsResolver implements LocationResolver {
 
         boolean isProvider = details.isProvider();
         String providerOrApi = details.providerOrApi;
+        String regionName = details.parameter;
         
         if (Strings.isEmpty(providerOrApi)) {
             throw new IllegalArgumentException("Cloud provider/API type not specified in spec \""+spec+"\"");
@@ -179,18 +180,20 @@ public class JcloudsResolver implements LocationResolver {
         
         Map allProperties = getAllProperties(registry, properties, locationFlags);
         // filters out all the jclouds properties from allProperties available
-        Map jcloudsProperties = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties(providerOrApi, locationName, allProperties);
+        Map jcloudsProperties = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties(providerOrApi, regionName, locationName, allProperties);
         if (isProvider) {
             // providers from ServiceLoader take a location (endpoint already configured)
-            return new JcloudsLocationFactory(jcloudsProperties).newLocation(details.parameter);
+            jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionName);
+            return new JcloudsLocation(jcloudsProperties);
+
         } else {
             // other "providers" are APIs so take an _endpoint_ (but not a location)
-            return new JcloudsLocationFactory(jcloudsProperties).newLocation(null);          
+            return new JcloudsLocation(jcloudsProperties);
         }
     }
 
-    private Map getAllProperties(brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
-        Map<?, ?> allProperties = Maps.newHashMap();
+    private Map getAllProperties(brooklyn.location.LocationRegistry registry, Map<?,?> properties, Map<?,?> locationFlags) {
+        Map<Object,Object> allProperties = Maps.newHashMap();
         if (registry!=null) allProperties.putAll(registry.getProperties());
         allProperties.putAll(properties);
         allProperties.putAll(locationFlags);
