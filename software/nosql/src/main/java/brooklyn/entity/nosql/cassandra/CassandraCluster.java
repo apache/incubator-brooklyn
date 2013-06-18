@@ -27,7 +27,7 @@ public interface CassandraCluster extends DynamicCluster {
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, "cassandra.cluster.name", "Name of the Cassandra cluster", "BrooklynCluster");
 
-    ConfigKey<String> SEEDS = ConfigKeys.newStringKey("cassandra.cluster.seeds", "List of seed node hosts in cluster");
+    ConfigKey<String> SEEDS = ConfigKeys.newStringConfigKey("cassandra.cluster.seeds", "List of seed node hosts in cluster");
 
     AttributeSensor<String> HOSTNAME = Sensors.newStringSensor("cassandra.cluster.hostname", "Hostname to connect to cluster with");
 

@@ -34,7 +34,7 @@ public interface RedisStore extends SoftwareProcess, DataStore {
     PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", 6379);
 
     @SetFromFlag("redisConfigTemplateUrl")
-    ConfigKey<String> REDIS_CONFIG_TEMPLATE_URL = ConfigKeys.newKey(
+    ConfigKey<String> REDIS_CONFIG_TEMPLATE_URL = ConfigKeys.newConfigKey(
             "redis.config.templateUrl", "Template file (in freemarker format) for the redis.conf config file", 
             "classpath://brooklyn/entity/nosql/redis/redis.conf");
 

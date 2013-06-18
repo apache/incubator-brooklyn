@@ -34,11 +34,11 @@ public interface DynamicFabric extends AbstractGroup, Startable, Fabric {
             EntityFactory.class, "dynamicfabric.factory", "factory for creating new cluster members", null);
 
     @SetFromFlag("displayNamePrefix")
-    public static final ConfigKey<String> DISPLAY_NAME_PREFIX = ConfigKeys.newStringKey(
+    public static final ConfigKey<String> DISPLAY_NAME_PREFIX = ConfigKeys.newStringConfigKey(
             "dynamicfabric.displayNamePrefix", "Display name prefix, for created children");
 
     @SetFromFlag("displayNameSuffix")
-    public static final ConfigKey<String> DISPLAY_NAME_SUFFIX = ConfigKeys.newStringKey(
+    public static final ConfigKey<String> DISPLAY_NAME_SUFFIX = ConfigKeys.newStringConfigKey(
             "dynamicfabric.displayNameSuffix", "Display name suffix, for created children");
 
     @SetFromFlag("customChildFlags")

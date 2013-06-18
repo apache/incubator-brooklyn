@@ -55,7 +55,7 @@ public interface TestEntity extends Entity, Startable, EntityLocal, EntityIntern
     }
     
     @SetFromFlag("confName")
-    public static final ConfigKey<String> CONF_NAME = ConfigKeys.newStringKey("test.confName", "Configuration key, my name", "defaultval");
+    public static final ConfigKey<String> CONF_NAME = ConfigKeys.newStringConfigKey("test.confName", "Configuration key, my name", "defaultval");
     public static final BasicConfigKey<Map> CONF_MAP_PLAIN = new BasicConfigKey<Map>(Map.class, "test.confMapPlain", "Configuration key that's a plain map", MutableMap.of());
     public static final BasicConfigKey<List> CONF_LIST_PLAIN = new BasicConfigKey<List>(List.class, "test.confListPlain", "Configuration key that's a plain list", Lists.newArrayList());
     public static final MapConfigKey<String> CONF_MAP_THING = new MapConfigKey<String>(String.class, "test.confMapThing", "Configuration key that's a map thing");

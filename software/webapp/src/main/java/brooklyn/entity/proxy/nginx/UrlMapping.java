@@ -30,15 +30,15 @@ public interface UrlMapping extends AbstractGroup {
 
     @SetFromFlag("label")
     public static final ConfigKey<String> LABEL =
-        ConfigKeys.newStringKey("urlmapping.label", "optional human-readable label to identify a server", null);
+        ConfigKeys.newStringConfigKey("urlmapping.label", "optional human-readable label to identify a server", null);
 
     @SetFromFlag("domain")
     public static final ConfigKey<String> DOMAIN =
-        ConfigKeys.newStringKey("urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule; required.", null);
+        ConfigKeys.newStringConfigKey("urlmapping.domain", "domain (hostname, e.g. www.foo.com) to present for this URL map rule; required.", null);
 
     @SetFromFlag("path")
     public static final ConfigKey<String> PATH =
-        ConfigKeys.newStringKey("urlmapping.path", 
+        ConfigKeys.newStringConfigKey("urlmapping.path", 
                 "URL path (pattern) for this URL map rule. Currently only supporting regex matches "+ 
                 "(if not supplied, will match all paths at the indicated domain)", null);
 

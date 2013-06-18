@@ -214,9 +214,9 @@ class WithSpecialFieldTypes {
 
 class FooCK implements Configurable {
     @SetFromFlag
-    public static ConfigKey<String> CK1 = ConfigKeys.newStringKey("ck1");
+    public static ConfigKey<String> CK1 = ConfigKeys.newStringConfigKey("ck1");
     
-    public static ConfigKey<String> CK2 = ConfigKeys.newStringKey("ck2");
+    public static ConfigKey<String> CK2 = ConfigKeys.newStringConfigKey("ck2");
 
     @SetFromFlag
     int f1;

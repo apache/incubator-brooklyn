@@ -18,7 +18,7 @@ public interface UsesJmx extends UsesJava {
     public static final int DEFAULT_JMX_PORT = 1099;   // RMI port?
 
     @SetFromFlag("useJmx")
-    public static final ConfigKey<Boolean> USE_JMX = ConfigKeys.newKey("jmx.enabled", "JMX enabled", Boolean.TRUE);
+    public static final ConfigKey<Boolean> USE_JMX = ConfigKeys.newConfigKey("jmx.enabled", "JMX enabled", Boolean.TRUE);
 
     @SetFromFlag("jmxPort")
     public static final PortAttributeSensorAndConfigKey JMX_PORT = Attributes.JMX_PORT;
@@ -38,7 +38,7 @@ public interface UsesJmx extends UsesJava {
     /** forces JMX to be secured, using JMXMP so it gets through firewalls _and_ SSL/TLS
      * (NB: there is not currently any corresponding JMXMP without SSL/TLS) */
     @SetFromFlag("jmxSecure")
-    public static final ConfigKey<Boolean> JMX_SSL_ENABLED = ConfigKeys.newKey("jmx.ssl.enabled", "JMX over JMXMP enabled with SSL/TLS", Boolean.FALSE);
+    public static final ConfigKey<Boolean> JMX_SSL_ENABLED = ConfigKeys.newConfigKey("jmx.ssl.enabled", "JMX over JMXMP enabled with SSL/TLS", Boolean.FALSE);
 
     /*
      * Synopsis of how the keys work for JMX_SSL:

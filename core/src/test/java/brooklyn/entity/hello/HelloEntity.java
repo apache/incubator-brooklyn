@@ -16,7 +16,7 @@ import brooklyn.event.basic.Sensors;
 public interface HelloEntity extends AbstractGroup {
 
     /** records name of the person represented by this entity */
-    public static ConfigKey<String> MY_NAME = ConfigKeys.newStringKey("my.name");
+    public static ConfigKey<String> MY_NAME = ConfigKeys.newStringConfigKey("my.name");
     
     /** this "person"'s favourite name */
     public static AttributeSensor<String> FAVOURITE_NAME = Sensors.newStringSensor("my.favourite.name");

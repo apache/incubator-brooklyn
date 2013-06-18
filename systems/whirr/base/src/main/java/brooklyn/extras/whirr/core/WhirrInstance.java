@@ -15,7 +15,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface WhirrInstance extends AbstractGroup {
 
     @SetFromFlag("role")
-    public static final ConfigKey<String> ROLE = ConfigKeys.newStringKey(
+    public static final ConfigKey<String> ROLE = ConfigKeys.newStringConfigKey(
             "whirr.instance.role", "Apache Whirr instance role", null);
 
     @SetFromFlag("instance")

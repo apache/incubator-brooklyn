@@ -38,9 +38,9 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
     
     private static final Logger LOG = LoggerFactory.getLogger(SshCliTool.class);
 
-    public static final ConfigKey<String> PROP_SSH_EXECUTABLE = ConfigKeys.newStringKey("sshExecutable", "command to execute for ssh (defaults to \"ssh\", but could be overridden to sshg3 for Tectia for example)", "ssh");
-    public static final ConfigKey<String> PROP_SSH_FLAGS = ConfigKeys.newStringKey("sshFlags", "flags to pass to ssh, as a space separated list", "");
-    public static final ConfigKey<String> PROP_SCP_EXECUTABLE = ConfigKeys.newStringKey("scpExecutable", "command to execute for scp (defaults to \"scp\", but could be overridden to scpg3 for Tectia for example)", "scp");
+    public static final ConfigKey<String> PROP_SSH_EXECUTABLE = ConfigKeys.newStringConfigKey("sshExecutable", "command to execute for ssh (defaults to \"ssh\", but could be overridden to sshg3 for Tectia for example)", "ssh");
+    public static final ConfigKey<String> PROP_SSH_FLAGS = ConfigKeys.newStringConfigKey("sshFlags", "flags to pass to ssh, as a space separated list", "");
+    public static final ConfigKey<String> PROP_SCP_EXECUTABLE = ConfigKeys.newStringConfigKey("scpExecutable", "command to execute for scp (defaults to \"scp\", but could be overridden to scpg3 for Tectia for example)", "scp");
 
     public static Builder<SshCliTool,?> builder() {
         return new ConcreteBuilder();

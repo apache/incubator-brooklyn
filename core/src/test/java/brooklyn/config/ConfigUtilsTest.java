@@ -10,8 +10,8 @@ import brooklyn.entity.basic.ConfigKeys;
 
 public class ConfigUtilsTest {
 
-    public static final ConfigKey<String> S1 = ConfigKeys.newStringKey("s1");
-    public final ConfigKey<String> S2 = ConfigKeys.newStringKey("s2");
+    public static final ConfigKey<String> S1 = ConfigKeys.newStringConfigKey("s1");
+    public final ConfigKey<String> S2 = ConfigKeys.newStringConfigKey("s2");
     
     @Test
     public void testGetStaticKeys() {

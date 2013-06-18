@@ -22,7 +22,7 @@ public interface MySqlNode extends DatabaseNode, HasShortName {
 
     // NOTE MySQL changes the minor version number of their GA release frequently, check for latest version if install fails
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newKey(SoftwareProcess.SUGGESTED_VERSION, "5.5.30");
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.5.30");
 
     //http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-osx10.6-x86_64.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
     //http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-linux2.6-i686.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
@@ -32,7 +32,7 @@ public interface MySqlNode extends DatabaseNode, HasShortName {
 
     /** download mirror, if desired; defaults to Austria which seems one of the fastest */
     @SetFromFlag("mirrorUrl")
-    public static final ConfigKey<String> MIRROR_URL = ConfigKeys.newStringKey("mysql.install.mirror.url", "URL of mirror", 
+    public static final ConfigKey<String> MIRROR_URL = ConfigKeys.newStringConfigKey("mysql.install.mirror.url", "URL of mirror", 
 //        "http://mysql.mirrors.pair.com/"   // Pennsylvania
 //        "http://gd.tuwien.ac.at/db/mysql/"
         "http://www.mirrorservice.org/sites/ftp.mysql.com/" //UK mirror service
@@ -42,13 +42,13 @@ public interface MySqlNode extends DatabaseNode, HasShortName {
     public static final PortAttributeSensorAndConfigKey MYSQL_PORT = new PortAttributeSensorAndConfigKey("mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+"));
 
     @SetFromFlag("creationScriptContents")
-    public static final ConfigKey<String> CREATION_SCRIPT_CONTENTS = ConfigKeys.newStringKey("mysql.creation.script.contents", "MySQL creation script (SQL contents)", "");
+    public static final ConfigKey<String> CREATION_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey("mysql.creation.script.contents", "MySQL creation script (SQL contents)", "");
 
     @SetFromFlag("creationScriptUrl")
-    public static final ConfigKey<String> CREATION_SCRIPT_URL = ConfigKeys.newStringKey("mysql.creation.script.url", "URL where MySQL creation script can be found", "");
+    public static final ConfigKey<String> CREATION_SCRIPT_URL = ConfigKeys.newStringConfigKey("mysql.creation.script.url", "URL where MySQL creation script can be found", "");
 
     @SetFromFlag("dataDir")
-    public static final ConfigKey<String> DATA_DIR = ConfigKeys.newStringKey(
+    public static final ConfigKey<String> DATA_DIR = ConfigKeys.newStringConfigKey(
             "mysql.datadir", "Directory for writing data files", null);
 
     @SetFromFlag("serverConf")

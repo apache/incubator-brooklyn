@@ -32,47 +32,47 @@ public interface SshTool {
      * and have this prefix pre-prended to the config keys in this class. */
     public static final String BROOKLYN_CONFIG_KEY_PREFIX = "brooklyn.ssh.config.";
     
-    public static final ConfigKey<String> PROP_TOOL_CLASS = newStringKey("tool.class", "SshTool implementation to use", null);
+    public static final ConfigKey<String> PROP_TOOL_CLASS = newStringConfigKey("tool.class", "SshTool implementation to use", null);
     
-    public static final ConfigKey<String> PROP_HOST = newStringKey("host", "Host to connect to (required)", null);
-    public static final ConfigKey<Integer> PROP_PORT = newKey("port", "Port on host to connect to", 22);
-    public static final ConfigKey<String> PROP_USER = newKey("user", "User to connect as", System.getProperty("user.name"));
-    public static final ConfigKey<String> PROP_PASSWORD = newStringKey("password", "Password to use to connect", null);
+    public static final ConfigKey<String> PROP_HOST = newStringConfigKey("host", "Host to connect to (required)", null);
+    public static final ConfigKey<Integer> PROP_PORT = newConfigKey("port", "Port on host to connect to", 22);
+    public static final ConfigKey<String> PROP_USER = newConfigKey("user", "User to connect as", System.getProperty("user.name"));
+    public static final ConfigKey<String> PROP_PASSWORD = newStringConfigKey("password", "Password to use to connect", null);
     
-    public static final ConfigKey<String> PROP_PRIVATE_KEY_FILE = newStringKey("privateKeyFile", "the path of an ssh private key file; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)", null);
-    public static final ConfigKey<String> PROP_PRIVATE_KEY_DATA = newStringKey("privateKeyData", "the private ssh key (e.g. contents of an id_rsa.pub or id_dsa.pub file)", null);
-    public static final ConfigKey<String> PROP_PRIVATE_KEY_PASSPHRASE = newStringKey("privateKeyPassphrase", "the passphrase for the ssh private key", null);
-    public static final ConfigKey<Boolean> PROP_STRICT_HOST_KEY_CHECKING = newKey("strictHostKeyChecking", "whether to check the remote host's identification; defaults to false", false);
-    public static final ConfigKey<Boolean> PROP_ALLOCATE_PTY = newKey("allocatePTY", "whether to allocate PTY (vt100); if true then stderr is sent to stdout, but sometimes required for sudo'ing due to requiretty", false);
+    public static final ConfigKey<String> PROP_PRIVATE_KEY_FILE = newStringConfigKey("privateKeyFile", "the path of an ssh private key file; leave blank to use defaults (i.e. ~/.ssh/id_rsa and id_dsa)", null);
+    public static final ConfigKey<String> PROP_PRIVATE_KEY_DATA = newStringConfigKey("privateKeyData", "the private ssh key (e.g. contents of an id_rsa.pub or id_dsa.pub file)", null);
+    public static final ConfigKey<String> PROP_PRIVATE_KEY_PASSPHRASE = newStringConfigKey("privateKeyPassphrase", "the passphrase for the ssh private key", null);
+    public static final ConfigKey<Boolean> PROP_STRICT_HOST_KEY_CHECKING = newConfigKey("strictHostKeyChecking", "whether to check the remote host's identification; defaults to false", false);
+    public static final ConfigKey<Boolean> PROP_ALLOCATE_PTY = newConfigKey("allocatePTY", "whether to allocate PTY (vt100); if true then stderr is sent to stdout, but sometimes required for sudo'ing due to requiretty", false);
 
-    public static final ConfigKey<Integer> PROP_CONNECT_TIMEOUT = newKey("connectTimeout", "The timeout when establishing an SSH connection; if 0 then uses default", 0);
-    public static final ConfigKey<Integer> PROP_SESSION_TIMEOUT = newKey("sessionTimeout", "The timeout for an ssh session; if 0 then uses default", 0);
-    public static final ConfigKey<Integer> PROP_SSH_TRIES = newKey("sshTries", "Max number of attempts to connect when doing ssh operations", 4);
-    public static final ConfigKey<Integer> PROP_SSH_TRIES_TIMEOUT = newKey("sshTriesTimeout", "Timeout when attempting to connect for ssh operations; so if too slow trying sshTries times, will abort anyway", 2*60*1000);
-    public static final ConfigKey<Long> PROP_SSH_RETRY_DELAY = newKey("sshRetryDelay", "Time (in milliseconds) before first ssh-retry, after which it will do exponential backoff", 50L);
+    public static final ConfigKey<Integer> PROP_CONNECT_TIMEOUT = newConfigKey("connectTimeout", "The timeout when establishing an SSH connection; if 0 then uses default", 0);
+    public static final ConfigKey<Integer> PROP_SESSION_TIMEOUT = newConfigKey("sessionTimeout", "The timeout for an ssh session; if 0 then uses default", 0);
+    public static final ConfigKey<Integer> PROP_SSH_TRIES = newConfigKey("sshTries", "Max number of attempts to connect when doing ssh operations", 4);
+    public static final ConfigKey<Integer> PROP_SSH_TRIES_TIMEOUT = newConfigKey("sshTriesTimeout", "Timeout when attempting to connect for ssh operations; so if too slow trying sshTries times, will abort anyway", 2*60*1000);
+    public static final ConfigKey<Long> PROP_SSH_RETRY_DELAY = newConfigKey("sshRetryDelay", "Time (in milliseconds) before first ssh-retry, after which it will do exponential backoff", 50L);
 
-    public static final ConfigKey<File> PROP_LOCAL_TEMP_DIR = newKey("localTempDir", "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
+    public static final ConfigKey<File> PROP_LOCAL_TEMP_DIR = newConfigKey("localTempDir", "The directory on the local machine (i.e. running brooklyn) for writing temp files", 
             new File(System.getProperty("java.io.tmpdir"), "tmpssh"));
     
     // NB -- items above apply for _session_ (a tool), below apply for a _call_
     // TODO would be nice to track which arguments are used, so we can indicate whether extras are supplied
 
-    public static final ConfigKey<Boolean> PROP_RUN_AS_ROOT = newKey("runAsRoot", "When running a script, whether to run as root", Boolean.FALSE);
+    public static final ConfigKey<Boolean> PROP_RUN_AS_ROOT = newConfigKey("runAsRoot", "When running a script, whether to run as root", Boolean.FALSE);
     
-    public static final ConfigKey<OutputStream> PROP_OUT_STREAM = newKey(OutputStream.class, "out", "Stream to which to capture stdout");
-    public static final ConfigKey<OutputStream> PROP_ERR_STREAM = newKey(OutputStream.class, "err", "Stream to which to capture stderr");
+    public static final ConfigKey<OutputStream> PROP_OUT_STREAM = newConfigKey(OutputStream.class, "out", "Stream to which to capture stdout");
+    public static final ConfigKey<OutputStream> PROP_ERR_STREAM = newConfigKey(OutputStream.class, "err", "Stream to which to capture stderr");
     
-    public static final ConfigKey<Boolean> PROP_NO_EXTRA_OUTPUT = newKey("noExtraOutput", "Suppresses any decorative output such as result code which some tool commands insert", false);
+    public static final ConfigKey<Boolean> PROP_NO_EXTRA_OUTPUT = newConfigKey("noExtraOutput", "Suppresses any decorative output such as result code which some tool commands insert", false);
     
-    public static final ConfigKey<String> PROP_SEPARATOR = newKey("separator", "string to insert between caller-supplied commands being executed as commands", " ; ");
+    public static final ConfigKey<String> PROP_SEPARATOR = newConfigKey("separator", "string to insert between caller-supplied commands being executed as commands", " ; ");
     
-    public static final ConfigKey<String> PROP_SCRIPT_DIR = newKey("scriptDir", "directory where scripts should be copied", "/tmp");
-    public static final ConfigKey<String> PROP_SCRIPT_HEADER = newKey("scriptHeader", "lines to insert at the start of scripts generated for caller-supplied commands for script execution", "#!/bin/bash -e\n");
-    public static final ConfigKey<String> PROP_DIRECT_HEADER = newKey("directHeader", "commands to run remotely before any caller-supplied commands for direct execution", "exec bash -e");
+    public static final ConfigKey<String> PROP_SCRIPT_DIR = newConfigKey("scriptDir", "directory where scripts should be copied", "/tmp");
+    public static final ConfigKey<String> PROP_SCRIPT_HEADER = newConfigKey("scriptHeader", "lines to insert at the start of scripts generated for caller-supplied commands for script execution", "#!/bin/bash -e\n");
+    public static final ConfigKey<String> PROP_DIRECT_HEADER = newConfigKey("directHeader", "commands to run remotely before any caller-supplied commands for direct execution", "exec bash -e");
 
-    public static final ConfigKey<String> PROP_PERMISSIONS = newKey("permissions", "Default permissions for files copied/created on remote machine; must be four-digit octal string, default '0644'", "0644");
-    public static final ConfigKey<Long> PROP_LAST_MODIFICATION_DATE = newKey("lastModificationDate", "Last-modification-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to current)", 0L);
-    public static final ConfigKey<Long> PROP_LAST_ACCESS_DATE = newKey("lastAccessDate", "Last-access-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to lastModificationDate)", 0L);
+    public static final ConfigKey<String> PROP_PERMISSIONS = newConfigKey("permissions", "Default permissions for files copied/created on remote machine; must be four-digit octal string, default '0644'", "0644");
+    public static final ConfigKey<Long> PROP_LAST_MODIFICATION_DATE = newConfigKey("lastModificationDate", "Last-modification-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to current)", 0L);
+    public static final ConfigKey<Long> PROP_LAST_ACCESS_DATE = newConfigKey("lastAccessDate", "Last-access-date to be set on files copied/created (should be UTC/1000, ie seconds since 1970; defaults to lastModificationDate)", 0L);
 
     // TODO Could define the following in SshMachineLocation, or some such?
     //public static ConfigKey<String> PROP_LOG_PREFIX = newStringKey("logPrefix", "???", ???);

@@ -34,7 +34,7 @@ public class ConfigUtils {
      * but in entity config or at the root (brooklyn.properties) there are longer names (e.g. "brooklyn.ssh.config.user"),
      * and we wish to convert from the shorter names to the longer names. */
     public static <T> ConfigKey<T> prefixedKey(String prefix, ConfigKey<T> key) {
-        return ConfigKeys.newPrefixedKey(prefix, key);
+        return ConfigKeys.newConfigKeyWithPrefix(prefix, key);
     }
     
     /** removes the given prefix from the key for configuration purposes; logs warning and does nothing if there is no such prefix.
