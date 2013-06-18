@@ -34,14 +34,14 @@ brooklyn can read configuration from a variety of places:
 * ``-D`` defines on the brooklyn (java) command-line
 * shell environment variables
 
-Default properties are described in the Javadoc and code of classes ``CredentialsFromEnv`` and ``BrooklynSystemProperties``,
+Default properties are described in the Javadoc and code of the class ``BrooklynProperties``,
 but some of the most common ones are:
  
 {% highlight properties %}
 brooklyn.jclouds.aws-ec2.identity=AKA50M30N3S1DFR0MAW55
 brooklyn.jclouds.aws-ec2.credential=aT0Ps3cr3tC0D3wh1chAW5w1llG1V3y0uTOus333
-brooklyn.jclouds.private-key-file=~/my/id_rsa       # use specified key (default is ~/.ssh/id_rsa)
-brooklyn.jclouds.public-key-file=~/my/id_rsa.pub    # (optional, inferred from previous if omitted)
+brooklyn.jclouds.aws-ec2.privateKeyFile=~/path/to/id_rsa       # use specified key (default is ~/.ssh/id_rsa)
+brooklyn.jclouds.aws-ec2.publicKeyFile=~/path/to/id_rsa.pub    # (optional, inferred from previous if omitted)
 {% endhighlight %} 
 
 These can be specified as a shell environment variable or as a Java system property,

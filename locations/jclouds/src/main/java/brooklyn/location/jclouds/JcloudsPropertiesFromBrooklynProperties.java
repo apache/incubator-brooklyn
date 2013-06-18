@@ -115,7 +115,7 @@ public class JcloudsPropertiesFromBrooklynProperties {
         
         for (ConfigKey<?> configKey : configKeys) {
             String camelCaseName = configKey.getName();
-            String hyphenCaseName = CredentialsFromEnv.convertFromCamelToProperty(camelCaseName);
+            String hyphenCaseName = convertFromCamelToProperty(camelCaseName);
             deprecatedKeys.add("brooklyn.jclouds."+camelCaseName);
             deprecatedKeys.add(camelCaseName);
             
@@ -132,6 +132,17 @@ public class JcloudsPropertiesFromBrooklynProperties {
         }
     }
     
+    private static String convertFromCamelToProperty(String word) {
+        StringBuilder result = new StringBuilder();
+        for (char c: word.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                result.append("-");
+            }
+            result.append(Character.toLowerCase(c));
+        }
+        return result.toString();
+    }
+
     private static Set<ConfigKey<?>> getSupportedConfigKeysOn(Class<?> clazz) {
         return ImmutableSet.copyOf(Iterables.transform(ConfigUtils.getStaticKeysOnClass(clazz),
                 new Function<HasConfigKey<?>,ConfigKey<?>>() {

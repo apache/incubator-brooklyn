@@ -2,24 +2,18 @@ package brooklyn.location.jclouds;
 
 import static org.testng.Assert.*
 
-import org.slf4j.Logger;
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Iterables
-
-import brooklyn.config.BrooklynProperties;
-import brooklyn.location.Location
+import brooklyn.config.BrooklynProperties
 import brooklyn.location.basic.SshMachineLocation
-import brooklyn.location.jclouds.CredentialsFromEnv;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.management.internal.LocalManagementContext
+import brooklyn.util.collections.MutableMap
+
+import com.google.common.collect.ImmutableList
 
 /**
  * Tests vcloud, with Carrenza. Uses the cloudsoft test account (hard-coding its NAT Mapping, 
@@ -47,8 +41,6 @@ class CarrenzaLocationLiveTest {
     public void setUp() {
         System.out.println("classpath="+System.getProperty("java.class.path"));
         
-        CredentialsFromEnv creds = getCredentials();
-
         brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".image-description-regex");
         brooklynProperties.remove("brooklyn.jclouds."+PROVIDER+".image-name-regex");
@@ -59,8 +51,6 @@ class CarrenzaLocationLiveTest {
         // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
         brooklynProperties.remove("brooklyn.ssh.config.scriptHeader");
         
-        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".identity", creds.getIdentity())
-        brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".credential", creds.getCredential())
         brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".jclouds.endpoint", ENDPOINT)
         brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".imageId", WINDOWS_IMAGE_ID)
         brooklynProperties.put("brooklyn.jclouds."+PROVIDER+".noDefaultSshKeys", true)
@@ -74,10 +64,6 @@ class CarrenzaLocationLiveTest {
 
         managementContext = new LocalManagementContext(brooklynProperties);
         loc = (JcloudsLocation) managementContext.getLocationRegistry().resolve(LOCATION_ID);
-    }
-    
-    protected CredentialsFromEnv getCredentials() {
-        return new CredentialsFromEnv(PROVIDER);
     }
     
     @AfterMethod(groups = "Live")

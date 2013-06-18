@@ -99,8 +99,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // TODO test (and fix) ability to set config keys from flags
 
-    // TODO retire CredentialsFromEnv
-    // TODO check how/if fields used in JCloudsLocationFactory
     // TODO need a way to define imageId (and others?) with a specific location
 
     // TODO we say config is inherited, but it isn't the case for many "deep" / jclouds properties
