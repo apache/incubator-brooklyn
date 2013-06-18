@@ -1,23 +1,27 @@
 package brooklyn.location.jclouds;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.internal.annotations.Sets;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.basic.LocationConfigKeys;
 
+import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * <p>
@@ -55,11 +59,13 @@ public class JcloudsPropertiesFromBrooklynProperties {
         if(Strings.isNullOrEmpty(locationName) && Strings.isNullOrEmpty(providerOrApi)) {
             throw new IllegalArgumentException("Neither cloud provider/API nor location name have been specified correctly");
         }
+        warnOfDeprecated(properties);
+
         Map<String, Object> jcloudsProperties = Maps.newHashMap();
         String provider = getProviderName(providerOrApi, locationName, properties);
+        
         // named properties are preferred over providerOrApi properties
         jcloudsProperties.put("provider", provider);
-        properties = sanitize(provider, properties);
         jcloudsProperties.putAll(getRegionJcloudsProperties(providerOrApi, regionName, properties));
         jcloudsProperties.putAll(getProviderOrApiJcloudsProperties(providerOrApi, properties));
         jcloudsProperties.putAll(getNamedJcloudsProperties(locationName, properties));
@@ -67,7 +73,8 @@ public class JcloudsPropertiesFromBrooklynProperties {
         if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
             jcloudsProperties.put("localTempDir", new File(brooklynDataDir));
         }
-        return sanitizeJcloudsProperties(jcloudsProperties);
+        //return sanitizeJcloudsProperties(jcloudsProperties);
+        return jcloudsProperties;
     }
 
     private static String getProviderName(String providerOrApi, String locationName, Map<String, Object> properties) {
@@ -81,7 +88,7 @@ public class JcloudsPropertiesFromBrooklynProperties {
     private static Map<String, Object> getRegionJcloudsProperties(String providerOrApi, String regionName, Map<String, Object> properties) {
         if(providerOrApi == null) return Maps.newHashMap();
         String prefix = (regionName != null) ? 
-                String.format("brooklyn.jclouds.%s:%s.", providerOrApi, regionName) :
+                String.format("brooklyn.jclouds.%s@%s.", providerOrApi, regionName) :
                 String.format("brooklyn.jclouds.%s.", providerOrApi);
         return ConfigUtils.filterForPrefixAndStrip(properties, prefix).asMapWithStringKeys();
     }
@@ -102,49 +109,36 @@ public class JcloudsPropertiesFromBrooklynProperties {
         return Iterables.get(Splitter.on(":").split((String) properties.get(String.format("brooklyn.location.named.%s", locationName))), 1);
     }
 
-    private static Map<String, Object> sanitize(String provider, Map<String, Object> properties) {
-        Map<String, Object> sanitizedProperties = Maps.newHashMap(properties);
+    private static void warnOfDeprecated(Map<String, Object> properties) {
+        Set<String> deprecatedKeys = Sets.newLinkedHashSet();
+        Set<ConfigKey<?>> configKeys = Sets.union(JcloudsLocation.getAllSupportedProperties(), getSupportedConfigKeysOn(LocationConfigKeys.class));
+        
+        for (ConfigKey<?> configKey : configKeys) {
+            String camelCaseName = configKey.getName();
+            String hyphenCaseName = CredentialsFromEnv.convertFromCamelToProperty(camelCaseName);
+            deprecatedKeys.add("brooklyn.jclouds."+camelCaseName);
+            deprecatedKeys.add(camelCaseName);
+            
+            if (!camelCaseName.equals(hyphenCaseName)) {
+                deprecatedKeys.add("brooklyn.jclouds."+hyphenCaseName);
+                deprecatedKeys.add(hyphenCaseName);
+            }
+        }
         
         for (String key : properties.keySet()) {
-            Iterable<String> splittedKey = Splitter.on(".").split(key);
-            if(!Iterables.get(splittedKey, 0).equals("brooklyn")) {
-                log.warn("Key doesn't start with 'brooklyn' prefix - Unsupported old-style property for '{}', it will be ignored.", new Object[] {key});
-                sanitizedProperties.remove(key);
-            } else if(key.startsWith("brooklyn.jclouds.") && !Iterables.get(splittedKey, 2).equals(provider)) {
-                log.warn("Key doesn't start with 'brooklyn.jclouds.{PROVIDER} prefix' - Unsupported old-style property for '{}', it will be ignored.", new Object[] {key});
-                sanitizedProperties.remove(key);
-            } 
+            if (deprecatedKeys.contains(key)) {
+                log.warn("Deprecated use of configuration key '{}'; will be ignored; keys should be prefixed with brooklyn.jclouds.{PROVIDER} or brooklyn.jclouds.named.{NAME}", key);
+            }
         }
-        return sanitizedProperties;
     }
     
-    private static Map<String, Object> sanitizeJcloudsProperties(Map<String, Object> properties) {
-        Map<String, Object> sanitizedProperties = Maps.newHashMap(properties);
-        Set<String> supportedProperties = Sets.newHashSet();
-        Field[] fields = JcloudsLocation.class.getFields();
-        for (Field field : fields) {
-            if(field.getType().equals(ConfigKey.class)) {
-                try {
-                    String property = ((ConfigKey<?>)JcloudsLocation.class.getField(field.getName()).get(JcloudsLocation.class)).getName();
-                    supportedProperties.add(property);
-                } catch (Exception e) {
-                    throw Throwables.propagate(e);
-                }
-            }
-        }
-        for (ConfigKey<?> configKey : JcloudsLocation.SUPPORTED_TEMPLATE_BUILDER_PROPERTIES.keySet()) {
-            supportedProperties.add(configKey.getName());
-        }
-        for (ConfigKey<?> configKey : JcloudsLocation.SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.keySet()) {
-            supportedProperties.add(configKey.getName());
-        }
-        for (String key : properties.keySet()) {
-            if (!supportedProperties.contains(key)) {
-                log.warn("Key '{}' is unsupported by JcloudsLocation.", new Object[] { key });
-                sanitizedProperties.remove(key);
-            }
-        }
-        return sanitizedProperties;
+    private static Set<ConfigKey<?>> getSupportedConfigKeysOn(Class<?> clazz) {
+        return ImmutableSet.copyOf(Iterables.transform(ConfigUtils.getStaticKeysOnClass(clazz),
+                new Function<HasConfigKey<?>,ConfigKey<?>>() {
+                    @Override @Nullable
+                    public ConfigKey<?> apply(@Nullable HasConfigKey<?> input) {
+                        return input.getConfigKey();
+                    }
+                }));
     }
-
 }

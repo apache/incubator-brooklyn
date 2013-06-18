@@ -70,15 +70,4 @@ public class JcloudsPropertiesFromBrooklynPropertiesTest {
         Assert.assertEquals(map.get("imageId"), "RegionOne/1");
         Assert.assertEquals(map.get("securityGroups"), "universal");
     }
-    
-    @Test
-    public void testUnsupportedProperties() {
-        Map<String, Object> allProperties = Maps.newHashMap();
-        allProperties.putAll(unsupportedNamedProps());
-        allProperties.putAll(unsupportedSampleProviderOrApiProps());
-        Map<String, Object> map = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties("FooServers", null, "cloudfirst", allProperties);
-        Assert.assertNull(map.get("image-id"));
-        Assert.assertNull(map.get("hardware-id"));
-    }
-
 }
