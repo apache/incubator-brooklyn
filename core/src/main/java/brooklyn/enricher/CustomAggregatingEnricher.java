@@ -149,7 +149,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         Function<Collection<N>, T> aggregator = new Function<Collection<N>, T>() {
             @Override public T apply(Collection<N> vals) {
                 Object result = (vals == null || vals.isEmpty()) ? 0 : sum(vals);
-                return TypeCoercions.castPrimitive(result, target.getType());
+                return TypeCoercions.castPrimitive(result, (Class<T>)target.getType());
             }
         };
         return new CustomAggregatingEnricher<N,T>(flags, source, target, aggregator);

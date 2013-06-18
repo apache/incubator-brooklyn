@@ -2,6 +2,8 @@ package brooklyn.config;
 
 import java.util.Collection;
 
+import com.google.common.reflect.TypeToken;
+
 /**
  * Represents the name of a piece of typed configuration data for an entity.
  * <p>
@@ -24,9 +26,19 @@ public interface ConfigKey<T> {
     Collection<String> getNameParts();
 
     /**
-     * Returns the type of the configuration parameter data.
+     * Returns the Guava TypeToken, including info on generics.
      */
-    Class<T> getType();
+    TypeToken<T> getTypeToken();
+    
+    /**
+     * Returns the type of the configuration parameter data.
+     * <p> 
+     * This returns a "super" of T only in the case where T is generified, 
+     * and in such cases it returns the Class instance for the unadorned T ---
+     * i.e. for List<String> this returns Class<List> ---
+     * this is of course because there is no actual Class<List<String>> instance.
+     */
+    Class<? super T> getType();
 
     /**
      * Returns the name of of the configuration parameter data type, as a {@link String}.

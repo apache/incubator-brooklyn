@@ -6,11 +6,10 @@ import java.util.Map;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.BooleanAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 
 import com.google.common.collect.ImmutableList;
@@ -30,7 +29,7 @@ public interface Attributes {
      * @deprecated since 0.5; see {@link ConfigKeys#SUGGESTED_VERSION}
      */
     @Deprecated
-    AttributeSensor<String> VERSION = new StringAttributeSensor( "version", "Version information");
+    AttributeSensor<String> VERSION = Sensors.newStringSensor( "version", "Version information");
 
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "download.url", "URL pattern for downloading the installer (will substitute things like ${version} automatically)");
@@ -87,17 +86,17 @@ public interface Attributes {
      * Location/connection attributes.
      */
 
-    AttributeSensor<String> HOSTNAME = new StringAttributeSensor( "host.name", "Host name");
-    AttributeSensor<String> ADDRESS = new StringAttributeSensor( "host.address", "Host IP address");
+    AttributeSensor<String> HOSTNAME = Sensors.newStringSensor( "host.name", "Host name");
+    AttributeSensor<String> ADDRESS = Sensors.newStringSensor( "host.address", "Host IP address");
 	
     /*
      * Lifecycle attributes
      */
-    AttributeSensor<Boolean> SERVICE_UP = new BooleanAttributeSensor( "service.isUp", 
+    AttributeSensor<Boolean> SERVICE_UP = Sensors.newBooleanSensor("service.isUp", 
             "Whether the service is active and availability (confirmed and monitored)");
     
-    BasicAttributeSensor<Lifecycle> SERVICE_STATE = new BasicAttributeSensor<Lifecycle>(
-            Lifecycle.class, "service.state", "Expected lifecycle state of the service");
+    AttributeSensor<Lifecycle> SERVICE_STATE = Sensors.newSensor(Lifecycle.class,
+            "service.state", "Expected lifecycle state of the service");
     
 	/** optional */
     AttributeSensor<String> LOG_FILE_LOCATION = new BasicAttributeSensor<String>(

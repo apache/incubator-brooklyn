@@ -14,7 +14,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicAttributeSensor.DoubleAttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
@@ -44,12 +44,11 @@ public class HttpLatencyDetector extends AbstractEnricher {
     
     public static final Duration LATENCY_WINDOW_DEFAULT_PERIOD = Duration.TEN_SECONDS;
 
-    public static final AttributeSensor<Double> REQUEST_LATENCY_IN_SECONDS_MOST_RECENT = new DoubleAttributeSensor(
+    public static final AttributeSensor<Double> REQUEST_LATENCY_IN_SECONDS_MOST_RECENT = Sensors.newDoubleSensor(
             "web.request.latency.last", "Request latency of most recent call, in seconds");
 
-    public static final AttributeSensor<Double> REQUEST_LATENCY_IN_SECONDS_IN_WINDOW
-            = new DoubleAttributeSensor("web.request.latency.windowed",
-                    "Request latency over time window, in seconds");
+    public static final AttributeSensor<Double> REQUEST_LATENCY_IN_SECONDS_IN_WINDOW = Sensors.newDoubleSensor(
+            "web.request.latency.windowed", "Request latency over time window, in seconds");
 
     HttpFeed httpFeed = null;
     final long periodMillis;

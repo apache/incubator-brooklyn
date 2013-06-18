@@ -3,6 +3,8 @@ package brooklyn.event;
 import java.io.Serializable;
 import java.util.List;
 
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.entity.Entity;
 
 /**
@@ -16,21 +18,32 @@ import brooklyn.entity.Entity;
 public interface Sensor<T> extends Serializable {
     /**
      * Returns the Java {@link Class} for the sensor data.
+     * <p>
+     * This returns a "super" of T only in the case where T is generified, 
+     * and in such cases it returns the Class instance for the unadorned T ---
+     * i.e. for List<String> this returns Class<List> ---
+     * this is of course because there is no actual Class<List<String>> instance.
      */
-    Class<T> getType();
- 
+    Class<? super T> getType();
+    
+    /**
+     * Returns the Guava TypeToken (including generics info)
+     */
+    TypeToken<T> getTypeToken();
+    
     /**
      * Returns the type of the sensor data, as a {@link String} representation of the class name.
+     * (Useful for contexts where Type is not accessible.)
      */
     String getTypeName();
- 
+
     /**
      * Returns the name of the sensor, in a dot-separated namespace.
      */
     String getName();
- 
+    
     /**
-     * Returns the constitient parts of the sensor name as a {@link List}.
+     * Returns the constituent parts of the sensor name as a {@link List}.
      */
     List<String> getNameParts();
  

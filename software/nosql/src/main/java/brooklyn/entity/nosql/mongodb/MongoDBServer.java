@@ -9,11 +9,10 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.BooleanAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.DoubleAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MongoDB Server",
@@ -58,34 +57,34 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<BasicBSONObject> STATUS = new BasicAttributeSensor<BasicBSONObject>(BasicBSONObject.class,
             "mongodb.server.status", "Server status");
 
-    AttributeSensor<Double> UPTIME_SECONDS = new DoubleAttributeSensor(
+    AttributeSensor<Double> UPTIME_SECONDS = Sensors.newDoubleSensor(
             "mongodb.server.uptime", "Server uptime in seconds");
 
-    AttributeSensor<Long> OPCOUNTERS_INSERTS = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> OPCOUNTERS_INSERTS = Sensors.newLongSensor(
             "mongodb.server.opcounters.insert", "Server inserts");
 
-    AttributeSensor<Long> OPCOUNTERS_QUERIES = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> OPCOUNTERS_QUERIES = Sensors.newLongSensor(
             "mongodb.server.opcounters.query", "Server queries");
 
-    AttributeSensor<Long> OPCOUNTERS_UPDATES = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> OPCOUNTERS_UPDATES = Sensors.newLongSensor(
             "mongodb.server.opcounters.update", "Server updates");
 
-    AttributeSensor<Long> OPCOUNTERS_DELETES = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> OPCOUNTERS_DELETES = Sensors.newLongSensor(
             "mongodb.server.opcounters.delete", "Server deletes");
 
-    AttributeSensor<Long> OPCOUNTERS_GETMORE = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> OPCOUNTERS_GETMORE = Sensors.newLongSensor(
             "mongodb.server.opcounters.getmore", "Server getmores");
 
-    AttributeSensor<Long> OPCOUNTERS_COMMAND = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> OPCOUNTERS_COMMAND = Sensors.newLongSensor(
             "mongodb.server.opcounters.command", "Server commands");
 
-    AttributeSensor<Long> NETWORK_BYTES_IN = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> NETWORK_BYTES_IN = Sensors.newLongSensor(
             "mongodb.server.network.bytesIn", "Server incoming network traffic (in bytes)");
 
-    AttributeSensor<Long> NETWORK_BYTES_OUT = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> NETWORK_BYTES_OUT = Sensors.newLongSensor(
             "mongodb.server.network.bytesOut", "Server outgoing network traffic (in bytes)");
 
-    AttributeSensor<Long> NETWORK_NUM_REQUESTS = new BasicAttributeSensor<Long>(Long.class,
+    AttributeSensor<Long> NETWORK_NUM_REQUESTS = Sensors.newLongSensor(
             "mongodb.server.network.numRequests", "Server network requests");
 
 
@@ -99,10 +98,10 @@ public interface MongoDBServer extends SoftwareProcess {
     AttributeSensor<ReplicaSetMemberStatus> REPLICA_SET_MEMBER_STATUS = new BasicAttributeSensor<ReplicaSetMemberStatus>(
             ReplicaSetMemberStatus.class, "mongodb.server.replicaSet.memberStatus", "The status of this server in the replica set");
 
-    AttributeSensor<Boolean> REPLICA_SET_PRIMARY = new BooleanAttributeSensor(
+    AttributeSensor<Boolean> REPLICA_SET_PRIMARY = Sensors.newBooleanSensor(
             "mongodb.server.replicaSet.isPrimary", "True if this server is the write master for the replica set");
 
-    AttributeSensor<Boolean> REPLICA_SET_SECONDARY = new BooleanAttributeSensor(
+    AttributeSensor<Boolean> REPLICA_SET_SECONDARY = Sensors.newBooleanSensor(
             "mongodb.server.replicaSet.isSecondary", "True if this server is a secondary server in the replica set");
 
     AttributeSensor<String> REPLICA_SET_PRIMARY_NAME = new BasicAttributeSensor<String>(String.class,

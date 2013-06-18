@@ -24,7 +24,6 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     
     private static final Splitter dots = Splitter.on('.');
 
-    // TODO For use with generics; TODO accept some form of ParameterizedType
     @Beta
     public static <T> Builder<T> builder(TypeToken<T> type) {
         return new Builder<T>().type(type);
@@ -36,7 +35,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     
     public static class Builder<T> {
         private String name;
-        private Class<T> type;
+        private TypeToken<T> type;
         private String description;
         private T defaultValue;
         private boolean reconfigurable;
@@ -45,11 +44,10 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
             this.name = val; return this;
         }
         public Builder<T> type(Class<T> val) {
-            this.type = val; return this;
+            this.type = TypeToken.of(val); return this;
         }
-        @SuppressWarnings("unchecked")
         public Builder<T> type(TypeToken<T> val) {
-            this.type = (Class<T>) val.getRawType(); return this;
+            this.type = val; return this;
         }
         public Builder<T> description(String val) {
             this.description = val; return this;
@@ -66,7 +64,8 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     }
     
     private String name;
-    private Class<T> type;
+    private TypeToken<T> typeToken;
+    private Class<? super T> type;
     private String description;
     private T defaultValue;
     private boolean reconfigurable;
@@ -74,35 +73,31 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicConfigKey() { /* for gson */ }
 
-    // TODO How to do this without cast; the but T in TypeToken could be a ParameterizedType 
-    // so it really could be a super-type of T rather than Class<T>!
-    @SuppressWarnings("unchecked")
-    public BasicConfigKey(TypeToken<T> type, String name) {
-        this((Class<T>) type.getRawType(), name);
-    }
-
-    @SuppressWarnings("unchecked")
-    public BasicConfigKey(TypeToken<T> type, String name, String description) {
-        this((Class<T>) type.getRawType(), name, description);
-    }
-
-    @SuppressWarnings("unchecked")
-    public BasicConfigKey(TypeToken<T> type, String name, String description, T defaultValue) {
-        this((Class<T>) type.getRawType(), name, description, defaultValue);
-    }
-
     public BasicConfigKey(Class<T> type, String name) {
+        this(TypeToken.of(type), name);
+    }
+
+    public BasicConfigKey(Class<T> type, String name, String description) {
+        this(TypeToken.of(type), name, description);
+    }
+
+    public BasicConfigKey(Class<T> type, String name, String description, T defaultValue) {
+        this(TypeToken.of(type), name, description, defaultValue);
+    }
+
+    public BasicConfigKey(TypeToken<T> type, String name) {
         this(type, name, name, null);
     }
     
-    public BasicConfigKey(Class<T> type, String name, String description) {
+    public BasicConfigKey(TypeToken<T> type, String name, String description) {
         this(type, name, description, null);
     }
     
-    public BasicConfigKey(Class<T> type, String name, String description, T defaultValue) {
+    public BasicConfigKey(TypeToken<T> type, String name, String description, T defaultValue) {
         this.description = description;
         this.name = checkNotNull(name, "name");
-        this.type = checkNotNull(type, "type");
+        this.typeToken = checkNotNull(type, "type");
+        this.type = typeToken.getRawType();
         this.defaultValue = defaultValue;
         this.reconfigurable = false;
     }
@@ -110,6 +105,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     public BasicConfigKey(ConfigKey<T> key, T defaultValue) {
         this.description = key.getDescription();
         this.name = checkNotNull(key.getName(), "name");
+        this.typeToken = checkNotNull(key.getTypeToken(), "type");
         this.type = checkNotNull(key.getType(), "type");
         this.defaultValue = defaultValue;
         this.reconfigurable = false;
@@ -117,29 +113,33 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
 
     protected BasicConfigKey(Builder<T> builder) {
         this.name = checkNotNull(builder.name, "name");
-        this.type = checkNotNull(builder.type, "type");
+        this.typeToken = checkNotNull(builder.type, "type");
+        this.type = typeToken.getRawType();
         this.description = builder.description;
         this.defaultValue = builder.defaultValue;
         this.reconfigurable = builder.reconfigurable;
     }
     
     /** @see ConfigKey#getName() */
-    public String getName() { return name; }
+    @Override public String getName() { return name; }
 
     /** @see ConfigKey#getTypeName() */
-    public String getTypeName() { return type.getName(); }
+    @Override public String getTypeName() { return type.getName(); }
 
     /** @see ConfigKey#getType() */
-    public Class<T> getType() { return type; }
+    @Override public Class<? super T> getType() { return type; }
 
+    /** @see ConfigKey#getTypeToken() */
+    @Override public TypeToken<T> getTypeToken() { return typeToken; }
+    
     /** @see ConfigKey#getDescription() */
-    public String getDescription() { return description; }
+    @Override public String getDescription() { return description; }
 
     /** @see ConfigKey#getDefaultValue() */
-    public T getDefaultValue() { return defaultValue; }
+    @Override public T getDefaultValue() { return defaultValue; }
 
     /** @see ConfigKey#hasDefaultValue() */
-    public boolean hasDefaultValue() {
+    @Override public boolean hasDefaultValue() {
         return defaultValue != null;
     }
 
@@ -149,7 +149,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     }
     
     /** @see ConfigKey#getNameParts() */
-    public Collection<String> getNameParts() {
+    @Override public Collection<String> getNameParts() {
         return Lists.newArrayList(dots.split(name));
     }
  
@@ -198,40 +198,5 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     protected Object resolveValue(Object v, ExecutionContext exec) throws ExecutionException, InterruptedException {
         return Tasks.resolveValue(v, type, exec, "config "+name);
     }
-    
-    /** attempt to resolve the given value as the given type, waiting on futures,
-     * and coercing as allowed by TypeCoercions 
-     * @deprecated in 0.4.0, use Tasks.resolveValue */
-    public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec) throws ExecutionException, InterruptedException {
-        return Tasks.resolveValue(v, type, exec);
-    }
-    
-    public static class StringConfigKey extends BasicConfigKey<String> {
-        private static final long serialVersionUID = 8207099275514012088L;
         
-        public StringConfigKey(String name) {
-            super(String.class, name);
-        }
-        public StringConfigKey(String name, String description, String defaultValue) {
-            super(String.class, name, description, defaultValue);
-        }
-        public StringConfigKey(ConfigKey<String> orig, String defaultValue) {
-            super(orig, defaultValue);
-        }
-    }
-    
-    public static class BooleanConfigKey extends BasicConfigKey<Boolean> {
-        private static final long serialVersionUID = 3207099275514012099L;
-
-        public BooleanConfigKey(String name) {
-            super(Boolean.class, name);
-        }
-        public BooleanConfigKey(String name, String description, Boolean defaultValue) {
-            super(Boolean.class, name, description, defaultValue);
-        }
-        public BooleanConfigKey(ConfigKey<Boolean> orig, Boolean defaultValue) {
-            super(orig, defaultValue);
-        }
-    }
-    
 }

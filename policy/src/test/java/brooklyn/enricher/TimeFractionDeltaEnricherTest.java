@@ -14,9 +14,8 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
-import brooklyn.event.basic.BasicAttributeSensor.DoubleAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
 import brooklyn.event.basic.BasicSensorEvent;
+import brooklyn.event.basic.Sensors;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -37,8 +36,8 @@ public class TimeFractionDeltaEnricherTest {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         producer = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
         
-        intSensor = new IntegerAttributeSensor("int sensor");
-        fractionSensor = new DoubleAttributeSensor("fraction sensor");
+        intSensor = Sensors.newIntegerSensor("int sensor");
+        fractionSensor = Sensors.newDoubleSensor("fraction sensor");
     }
 
     @AfterMethod(alwaysRun=true)

@@ -36,9 +36,9 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicSensorEvent;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.EntityMemento;
@@ -141,7 +141,7 @@ public class RebindEntityTest {
     
     @Test
     public void testRestoresEntitySensors() throws Exception {
-        AttributeSensor<String> myCustomAttribute = new StringAttributeSensor("my.custom.attribute");
+        AttributeSensor<String> myCustomAttribute = Sensors.newStringSensor("my.custom.attribute");
         
         MyEntity origE = origApp.createAndManageChild(EntitySpecs.spec(MyEntity.class));
         origE.setAttribute(myCustomAttribute, "myval");

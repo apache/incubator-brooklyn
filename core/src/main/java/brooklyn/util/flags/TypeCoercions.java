@@ -36,6 +36,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Primitives;
+import com.google.common.reflect.TypeToken;
 
 public class TypeCoercions {
 
@@ -45,8 +46,7 @@ public class TypeCoercions {
 
     private static Map<Class,Map<Class,Function>> registeredAdapters = Collections.synchronizedMap(
             new LinkedHashMap<Class,Map<Class,Function>>());
-    
-    
+        
     /** attempts to coerce 'value' to 'targetType', 
      * using a variety of strategies,
      * including looking at:
@@ -58,9 +58,17 @@ public class TypeCoercions {
      * 
      * registeredAdapters.get(targetType).findFirst({ k,v -> k.isInstance(value) }, { k,v -> v.apply(value) })
      **/
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T coerce(Object value, Class<T> targetType) {
+        return coerce(value, TypeToken.of(targetType));
+    }
+
+    /** see {@link #coerce(Object, Class)} */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <T> T coerce(Object value, TypeToken<T> targetTypeToken) {
         if (value==null) return null;
+        // does not actually cast generified contents; that is left to the caller
+        Class<? super T> targetType = targetTypeToken.getRawType();
+        
         if (targetType.isInstance(value)) return (T) value;
 
         //deal with primitive->primitive casting
@@ -68,12 +76,12 @@ public class TypeCoercions {
             // Don't just rely on Java to do its normal casting later; if caller writes
             // long `l = coerce(new Integer(1), Long.class)` then letting java do its casting will fail,
             // because an Integer will not automatically be unboxed and cast to a long
-            return castPrimitive(value, targetType);
+            return castPrimitive(value, (Class<T>)targetType);
         }
 
         //deal with string->primitive
         if (value instanceof String && isPrimitiveOrBoxer(targetType)) {
-            return stringToPrimitive((String)value, targetType);
+            return stringToPrimitive((String)value, (Class<T>)targetType);
         }
 
         //deal with primitive->string

@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 
@@ -19,7 +19,7 @@ public class AutoScalerPolicyReconfigurationTest {
     
     private static long TIMEOUT_MS = 10000;
     
-    private static final AttributeSensor<Integer> MY_ATTRIBUTE = new IntegerAttributeSensor("autoscaler.test.intAttrib");
+    private static final AttributeSensor<Integer> MY_ATTRIBUTE = Sensors.newIntegerSensor("autoscaler.test.intAttrib");
     TestApplication app;
     TestCluster tc;
     

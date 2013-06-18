@@ -259,7 +259,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         Object value = get(key.getName());
         if (value==null) return null;
         // no evaluation / key extraction here
-        return TypeCoercions.coerce(value, key.getType());
+        return TypeCoercions.coerce(value, key.getTypeToken());
     }
 
     @Override

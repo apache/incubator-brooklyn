@@ -41,7 +41,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         "import brooklyn.event.basic.BasicConfigKey\n" +
         "" +
         "class DummyEntity extends AbstractEntity {\n" +
-        "  public static final BasicConfigKey<String> DUMMY_CFG = [ String, \"dummy.config\", \"Dummy Config\" ]\n" +
+        "  public static final BasicConfigKey<String> DUMMY_CFG = [ String, \"dummy.config\", \"Dummy Config\", \"xxx\" ]\n" +
         "  public DummyEntity(Map properties=[:], Entity parent=null) {\n" +
         "        super(properties, parent)" +
         "  }" +
@@ -59,7 +59,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     CatalogEntitySummary entity = client().resource(response.getLocation())
         .get(CatalogEntitySummary.class);
-    assertTrue(entity.toString().contains("dummy.config"));
+    assertTrue(entity.toString().contains("dummy.config"), "ENTITY was: "+entity);
   }
 
   @Test
@@ -100,7 +100,6 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
               URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStoreImpl"))
               .get(CatalogEntitySummary.class);
       assertTrue(details.toString().contains("redis.port"));
-      assertTrue(details.toString().contains("run.dir"));
   }
 
   @Test

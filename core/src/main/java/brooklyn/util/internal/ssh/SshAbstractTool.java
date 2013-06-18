@@ -183,13 +183,13 @@ public abstract class SshAbstractTool implements SshTool {
     protected static <T> T getMandatoryVal(Map<String,?> map, ConfigKey<T> keyC) {
         String key = keyC.getName();
         checkArgument(map.containsKey(key), "must contain key '"+keyC+"'");
-        return TypeCoercions.coerce(map.get(key), keyC.getType());
+        return TypeCoercions.coerce(map.get(key), keyC.getTypeToken());
     }
     
     protected static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC) {
         String key = keyC.getName();
         if (map.containsKey(key)) {
-            return TypeCoercions.coerce(map.get(key), keyC.getType());
+            return TypeCoercions.coerce(map.get(key), keyC.getTypeToken());
         } else {
             return keyC.getDefaultValue();
         }
@@ -199,7 +199,7 @@ public abstract class SshAbstractTool implements SshTool {
     protected static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC, T defaultValue) {
         String key = keyC.getName();
         if (map.containsKey(key)) {
-            return TypeCoercions.coerce(map.get(key), keyC.getType());
+            return TypeCoercions.coerce(map.get(key), keyC.getTypeToken());
         } else {
             return defaultValue;
         }

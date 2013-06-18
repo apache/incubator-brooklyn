@@ -14,6 +14,7 @@ import brooklyn.event.SensorEvent;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Parent for all {@link Sensor}s.
@@ -24,7 +25,8 @@ public class BasicSensor<T> implements Sensor<T> {
     
     private static final Splitter dots = Splitter.on('.');
 
-    private Class<T> type;
+    private TypeToken<T> typeToken;
+    private Class<? super T> type;
     private String name;
     private String description;
     private transient List<String> nameParts;
@@ -38,13 +40,21 @@ public class BasicSensor<T> implements Sensor<T> {
     }
     
     public BasicSensor(Class<T> type, String name, String description) {
-        this.type = checkNotNull(type, "type");
+        this(TypeToken.of(type), name, description);
+    }
+    
+    public BasicSensor(TypeToken<T> typeToken, String name, String description) {
+        this.typeToken = checkNotNull(typeToken, "typeToken");
+        this.type = typeToken.getRawType();
         this.name = checkNotNull(name, "name");
         this.description = description;
     }
 
+    /** @see Sensor#getTypeToken() */
+    public TypeToken<T> getTypeToken() { return typeToken; }
+    
     /** @see Sensor#getType() */
-    public Class<T> getType() { return type; }
+    public Class<? super T> getType() { return type; }
  
     /** @see Sensor#getTypeName() */
     public String getTypeName() { 

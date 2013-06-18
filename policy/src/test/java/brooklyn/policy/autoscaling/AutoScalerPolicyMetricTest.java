@@ -17,8 +17,8 @@ import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.test.entity.TestEntity;
@@ -31,7 +31,7 @@ public class AutoScalerPolicyMetricTest {
     private static long TIMEOUT_MS = 10000;
     private static long SHORT_WAIT_MS = 250;
     
-    private static final AttributeSensor<Integer> MY_ATTRIBUTE = new IntegerAttributeSensor("autoscaler.test.intAttrib");
+    private static final AttributeSensor<Integer> MY_ATTRIBUTE = Sensors.newIntegerSensor("autoscaler.test.intAttrib");
     TestApplication app;
     TestCluster tc;
     

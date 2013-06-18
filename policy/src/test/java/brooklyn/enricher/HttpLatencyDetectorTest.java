@@ -12,7 +12,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.StringAttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 public class HttpLatencyDetectorTest {
 
     private static final Logger log = LoggerFactory.getLogger(HttpLatencyDetectorTest.class);
-    public static final AttributeSensor<String> TEST_URL = new StringAttributeSensor( "test.url");
+    public static final AttributeSensor<String> TEST_URL = Sensors.newStringSensor( "test.url");
     
     private LocalhostMachineProvisioningLocation loc;
     private TestApplication app;

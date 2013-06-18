@@ -22,11 +22,9 @@ import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.DoubleAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor.IntegerAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -53,18 +51,18 @@ public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Ka
     @SetFromFlag("zookeeper")
     ConfigKey<Zookeeper> ZOOKEEPER = new BasicConfigKey<Zookeeper>(Zookeeper.class, "kafka.broker.zookeeper", "Kafka zookeeper entity");
 
-    AttributeSensor<Integer> BROKER_ID = new IntegerAttributeSensor("kafka.broker.id", "Kafka unique broker ID");
+    AttributeSensor<Integer> BROKER_ID = Sensors.newIntegerSensor("kafka.broker.id", "Kafka unique broker ID");
 
-    AttributeSensor<Long> FETCH_REQUEST_COUNT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.fetch.total", "Fetch request count");
-    AttributeSensor<Long> TOTAL_FETCH_TIME = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.fetch.time.total", "Total fetch request processing time (millis)");
-    AttributeSensor<Double> MAX_FETCH_TIME = new DoubleAttributeSensor("kafka.broker.fetch.time.max", "Max fetch request processing time (millis)");
+    AttributeSensor<Long> FETCH_REQUEST_COUNT = Sensors.newLongSensor("kafka.broker.fetch.total", "Fetch request count");
+    AttributeSensor<Long> TOTAL_FETCH_TIME = Sensors.newLongSensor("kafka.broker.fetch.time.total", "Total fetch request processing time (millis)");
+    AttributeSensor<Double> MAX_FETCH_TIME = Sensors.newDoubleSensor("kafka.broker.fetch.time.max", "Max fetch request processing time (millis)");
 
-    AttributeSensor<Long> PRODUCE_REQUEST_COUNT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.produce.total", "Produce request count");
-    AttributeSensor<Long> TOTAL_PRODUCE_TIME = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.produce.time.total", "Total produce request processing time (millis)");
-    AttributeSensor<Double> MAX_PRODUCE_TIME = new DoubleAttributeSensor("kafka.broker.produce.time.max", "Max produce request processing time (millis)");
+    AttributeSensor<Long> PRODUCE_REQUEST_COUNT = Sensors.newLongSensor("kafka.broker.produce.total", "Produce request count");
+    AttributeSensor<Long> TOTAL_PRODUCE_TIME = Sensors.newLongSensor("kafka.broker.produce.time.total", "Total produce request processing time (millis)");
+    AttributeSensor<Double> MAX_PRODUCE_TIME = Sensors.newDoubleSensor("kafka.broker.produce.time.max", "Max produce request processing time (millis)");
 
-    AttributeSensor<Long> BYTES_RECEIVED = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.bytes.received", "Total bytes received");
-    AttributeSensor<Long> BYTES_SENT = new BasicAttributeSensor<Long>(Long.class, "kafka.broker.bytes.sent", "Total bytes sent");
+    AttributeSensor<Long> BYTES_RECEIVED = Sensors.newLongSensor("kafka.broker.bytes.received", "Total bytes received");
+    AttributeSensor<Long> BYTES_SENT = Sensors.newLongSensor("kafka.broker.bytes.sent", "Total bytes sent");
 
     Integer getKafkaPort();
 
