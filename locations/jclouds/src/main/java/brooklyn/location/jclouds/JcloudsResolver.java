@@ -178,9 +178,14 @@ public class JcloudsResolver implements LocationResolver {
             throw new NoSuchElementException("Cloud provider/API type "+providerOrApi+" is not supported by jclouds");
         }
         
+        // For everything in brooklyn.properties, only use things with correct prefix (and remove that prefix).
+        // But for everything passed in via locationFlags, pass those as-is.
+        // TODO Should revisit the locationFlags: where are these actually used? Reason accepting properties without
+        //      full prefix is that the map's context is explicitly this location, rather than being generic properties.
         Map allProperties = getAllProperties(registry, properties, locationFlags);
-        // filters out all the jclouds properties from allProperties available
         Map jcloudsProperties = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties(providerOrApi, regionName, locationName, allProperties);
+        jcloudsProperties.putAll(locationFlags);
+        
         if (isProvider) {
             // providers from ServiceLoader take a location (endpoint already configured)
             jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionName);
