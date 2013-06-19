@@ -62,6 +62,8 @@ add-app .tab-content-scroller {
     overflow: auto;
     margin: 4px;
     padding: 3px;
+    clear: right;
+    float: left;   
 }
 #application-content div.template-lozenge div.icon {
 	margin: 2px 8px 2px 2px;
