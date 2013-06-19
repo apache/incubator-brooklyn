@@ -864,6 +864,7 @@ tr.app-add-wizard-config-entry {
 	width: 100%;
 	cursor: auto;
 	margin-bottom: 2px;
+	min-height: 500px;
 }
 
 /* catalog */
