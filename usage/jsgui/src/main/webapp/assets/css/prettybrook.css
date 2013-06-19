@@ -157,6 +157,7 @@ ul.dropdown-menu {
 .nav-tabs {
 	border-bottom: 1px solid #DDD;
 	padding-left: 8px;
+	padding-right: 8px;
 }
 
 .nav-tabs>li>a {
