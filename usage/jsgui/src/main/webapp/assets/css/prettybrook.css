@@ -34,9 +34,6 @@ add-app .tab-content-scroller {
 #application-content div#details {
 	margin-left: 8px !important;
 }
-#application-content ul.nav-tabs {
-    margin: 15px 15px 0px 15px;
-}
 #application-content .deploy,
 #application-content .preview {
 	padding: 15px;
