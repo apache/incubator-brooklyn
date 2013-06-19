@@ -30,6 +30,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Predicates;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
@@ -60,7 +61,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
 
     private static final Logger LOG = LoggerFactory.getLogger(NginxControllerImpl.class);
     static { TimeExtras.init(); }
-    
+
     private volatile HttpFeed httpFeed;
     
     public NginxControllerImpl() {
@@ -106,16 +107,19 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                 .entity(this)
                 .period(getConfig(HTTP_POLL_PERIOD))
                 .baseUri(accessibleRootUrl)
-                .baseUriVars(ImmutableMap.of("include-runtime","true"))
+                .baseUriVars(ImmutableMap.of("include-runtime", "true"))
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
+                        // Any response from Nginx is good.
+                        .checkSuccess(Predicates.alwaysTrue())
                         .onSuccess(new Function<HttpPollValue, Boolean>() {
-                                @Override public Boolean apply(HttpPollValue input) {
+                                @Override
+                                public Boolean apply(HttpPollValue input) {
                                     // Accept any nginx response (don't assert specific version), so that sub-classing
                                     // for a custom nginx build is not strict about custom version numbers in headers
                                     List<String> actual = input.getHeaderLists().get("Server");
                                     return actual != null && actual.size() == 1 && actual.get(0).startsWith("nginx");
                                 }})
-                        .onError(Functions.constant(false)))
+                        .onException(Functions.constant(false)))
                 .build();
 
         // Can guarantee that parent/managementContext has been set
@@ -245,7 +249,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         if (ssl) {
             verifyConfig(globalSslConfig);
             appendSslConfig("global", config, "    ", globalSslConfig, true, true);
-        };
+        }
         
         // If no servers, then defaults to returning 404
         // TODO Give nicer page back 

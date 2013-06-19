@@ -24,7 +24,7 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
     private Map<String, String> headers = ImmutableMap.<String,String>of();
     private byte[] body;
 
-    private static final Predicate<HttpPollValue> DEFAULT_SUCCESS = new Predicate<HttpPollValue>() {
+    public static final Predicate<HttpPollValue> DEFAULT_SUCCESS = new Predicate<HttpPollValue>() {
         @Override
         public boolean apply(@Nullable HttpPollValue input) {
             return input != null && input.getResponseCode() >= 200 && input.getResponseCode() <= 399;
