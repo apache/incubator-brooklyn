@@ -59,7 +59,7 @@ add-app .tab-content-scroller {
     border: 3px solid #EEE;
     border-radius: 4px;
     width: 212px;
-    overflow: scroll;
+    overflow: auto;
     margin: 4px;
     padding: 3px;
 }
@@ -81,7 +81,7 @@ add-app .tab-content-scroller {
 	float: left;
 }
 #application-content .template-lozenge .blurb {
-    overflow-y: scroll;
+    overflow-y: auto;
     height: 80px;
 }
 #application-content .template-lozenge .title {
@@ -101,7 +101,7 @@ add-app .tab-content-scroller {
 	max-height: 40px;
 	white-space: nowrap;
 	overflow-x: hidden;
-	overflow-y: scroll;
+	overflow-y: auto;
 }
 div#create-step-template-entries {
 	width: 472px;
@@ -435,8 +435,8 @@ input[type="color"]:focus,.uneditable-input:focus {
 	margin-bottom: 0px;
 }
 .tab-content-scroller {
-    overflow: scroll;
     height: auto;
+    overflow: auto;
 }
 .tab-content {
 	padding: 12px 18px 18px 18px;
@@ -486,7 +486,7 @@ ol.tree {
 }
 .navbar_main {
 	padding: 0px 8px 6px 2px;
-	overflow-x: scroll;
+	overflow-x: auto;
 	margin: 0;
 	white-space: nowrap;
 }
@@ -615,7 +615,7 @@ overflow: scroll;
 }
 .table-scroll-wrapper {
     width: 100%;
-    overflow: scroll;
+    overflow: auto;
     background-color: #ececec;
 	border-style: solid;
 	border-color: #e8e8e8;
@@ -882,9 +882,8 @@ tr.app-add-wizard-config-entry {
 .accordion-body {
 	border-top: 1px dashed lightgray;
     padding: 8px 8px 12px 8px;
-    max-height: 400px;'
-    overflow-x: scroll;
-    overflow-y: scroll;
+    overflow: auto;
+    max-height: 400px;
     background-color: white;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
