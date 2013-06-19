@@ -21,6 +21,13 @@
 .add-app .modal-body {
     padding: 0;
 }
+.add-app .modal-header{
+	border-bottom: 0;
+}
+
+add-app .tab-content-scroller {
+    overflow: auto !important;
+}
 #application-content div#application-explorer {
     padding-left: 52px;
 }
@@ -36,8 +43,14 @@
 }
 #application-content .tab-content {
     max-height: 720px;
-    overflow: scroll;
+    overflow: auto;
 }
+
+#modal-container .tab-content {
+    max-height: 300px;
+    overflow: auto;
+}
+
 #application-content .template-lozenge {
     cursor: hand; cursor: pointer;
 }
