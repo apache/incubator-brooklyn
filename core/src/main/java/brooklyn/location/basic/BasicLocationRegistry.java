@@ -55,7 +55,7 @@ public class BasicLocationRegistry implements LocationRegistry {
     public BasicLocationRegistry(ManagementContext mgmt) {
         this.mgmt = checkNotNull(mgmt, "mgmt");
         findServices();
-        findDefinedLocations();
+        updateDefinedLocations();
     }
 
     protected void findServices() {
@@ -102,7 +102,7 @@ public class BasicLocationRegistry implements LocationRegistry {
         }
     }
     
-    protected void findDefinedLocations() {
+    public void updateDefinedLocations() {
         synchronized (definedLocations) {
             // first read all properties starting  brooklyn.location.named.xxx
             // (would be nice to move to a better way, then deprecate this approach, but first

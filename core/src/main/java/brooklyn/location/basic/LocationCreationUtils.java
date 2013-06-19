@@ -17,6 +17,7 @@ public class LocationCreationUtils {
     /** uses reflection to create a location with of the given type, 
      * with the given parent, assuming a Map constructor */
     public static <T extends AbstractLocation> T newSubLocationOfType(Map<?,?> newFlags, AbstractLocation parent, Class<T> newLocationType) {
+        // TODO shouldn't have to copy config bag as it should be inherited (but currently it is not used inherited everywhere; just most places)
         ConfigBag newConfig = ConfigBag.newInstanceCopying(parent.getConfigBag()).
                 configure(AbstractLocation.PARENT_LOCATION, parent).
                 putAll(newFlags);

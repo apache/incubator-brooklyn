@@ -5,6 +5,7 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 import java.io.Closeable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -149,6 +150,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     
     @Override
     @Deprecated
+    /** @since 0.6.0 (?) - use getDisplayName */
     public String getName() {
         return getDisplayName();
     }
@@ -202,20 +204,48 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
 
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
-        if (hasConfig(key)) return getConfigBag().get(key);
+        if (hasConfig(key, false)) return getConfigBag().get(key);
         if (getParent()!=null) return getParent().getConfig(key);
         return key.getDefaultValue();
     }
     @Override
+    @Deprecated
     public boolean hasConfig(ConfigKey<?> key) {
-        return getConfigBag().containsKey(key);
+        return hasConfig(key, false);
     }
     @Override
-    public Map<String,Object> getAllConfig() {
-        return getConfigBag().getAllConfig();
+    public boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
+        boolean locally = getRawLocalConfigBag().containsKey(key);
+        if (locally) return true;
+        if (!includeInherited) return false;
+        if (getParent()!=null) return getParent().hasConfig(key, true);
+        return false;
     }
     
+    @Override
+    @Deprecated
+    public Map<String,Object> getAllConfig() {
+        return getAllConfig(false);
+    }
+    @Override
+    public Map<String,Object> getAllConfig(boolean includeInherited) {
+        Map<String,Object> result = null;
+        if (includeInherited) {
+            Location p = getParent();
+            if (p!=null) result = getParent().getAllConfig(true);
+        }
+        if (result==null) {
+            result = new LinkedHashMap<String, Object>();
+        }
+        result.putAll(getConfigBag().getAllConfig());
+        return result;
+    }
+    
+    /** @deprecated since 0.6.0 use {@link #getRawLocalConfigBag()} */
     public ConfigBag getConfigBag() {
+        return configBag;
+    }
+    public ConfigBag getRawLocalConfigBag() {
         return configBag;
     }
     

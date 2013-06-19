@@ -362,10 +362,13 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 if (LOG.isTraceEnabled()) LOG.trace("<< ({}) acquired {}", toString(), returnVal);
                 return returnVal;
             } catch (Exception e) {
+                // uninformative net.schmizz.sshj.connection.ConnectionException: 
+                //    Request failed (reason=UNKNOWN) may mean remote Subsytem is disabled (e.g. for FTP)
+                // if key is missing, get a UserAuth error
                 String errorMessage = String.format("(%s) error acquiring %s", toString(), connection);
                 String fullMessage = String.format("%s (attempt %s/%s, in time %s/%s)", 
-                        errorMessage, (i+1), sshTries, Time.makeTimeString(stopwatch.elapsed(TimeUnit.MILLISECONDS)), 
-                        (sshTriesTimeout > 0 ? Time.makeTimeString(sshTriesTimeout) : "unlimited"));
+                        errorMessage, (i+1), sshTries, Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), 
+                        (sshTriesTimeout > 0 ? Time.makeTimeStringRounded(sshTriesTimeout) : "unlimited"));
                 try {
                     disconnect();
                 } catch (Exception e2) {
