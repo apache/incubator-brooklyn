@@ -935,6 +935,11 @@ tr.app-add-wizard-config-entry {
 }
 
 /* swagger */
+
+swagger-ui-container{
+	margin-bottom: 3em;
+}
+
 .swagger-ui-wrap {
 	max-width: 960px;
 	margin-left: auto;
