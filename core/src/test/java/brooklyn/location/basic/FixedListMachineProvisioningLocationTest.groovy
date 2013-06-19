@@ -8,9 +8,10 @@ import org.testng.annotations.Test
 
 import brooklyn.location.NoMachinesAvailableException
 import brooklyn.test.TestUtils
-import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableMap
 
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 import com.google.common.io.Closeables
 
 /**
@@ -189,6 +190,16 @@ public class FixedListMachineProvisioningLocationTest {
         assertEquals(obtained, desiredMachine);
     }
 
+    @Test
+    public void testAddAndRemoveChildUpdatesMachinesSet() throws Exception {
+        SshMachineLocation anotherMachine = new SshMachineLocation(address:Inet4Address.getByName('192.168.144.201'));
+        provisioner.addChild(anotherMachine);
+        assertEquals(provisioner.getAllMachines(), ImmutableSet.of(machine, anotherMachine));
+        
+        provisioner.removeChild(anotherMachine);
+        assertEquals(provisioner.getAllMachines(), ImmutableSet.of(machine));
+    }
+    
     private static void assertUserAndHost(SshMachineLocation l, String user, String host) {
         assertEquals(l.getUser(), user);
         assertEquals(l.getAddress().getHostAddress(), host);
