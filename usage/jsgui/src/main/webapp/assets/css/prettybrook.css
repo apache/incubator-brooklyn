@@ -118,7 +118,7 @@ div#create-step-template-entries {
 }
 
 .navbar .nav>li>a:hover {
-	background-color: #A8B8B0 !important;
+	background-color: #A8B8B0;
 	foreground-color: #261;
 	color: #261;
 	text-decoration: none;
