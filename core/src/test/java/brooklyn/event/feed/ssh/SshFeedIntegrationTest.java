@@ -2,6 +2,8 @@ package brooklyn.event.feed.ssh;
 
 import static org.testng.Assert.assertTrue;
 
+import javax.annotation.Nullable;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -20,6 +22,8 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.Asserts;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
 
@@ -57,6 +61,7 @@ public class SshFeedIntegrationTest {
                 .machine(machine)
                 .poll(new SshPollConfig<Integer>(SENSOR_INT)
                         .command("exit 123")
+                        .checkSuccess(Predicates.alwaysTrue())
                         .onSuccess(SshValueFunctions.exitStatus()))
                 .build();
 
@@ -89,7 +94,7 @@ public class SshFeedIntegrationTest {
                 .machine(machine)
                 .poll(new SshPollConfig<String>(SENSOR_STRING)
                         .command(cmd)
-                        .onSuccess(SshValueFunctions.stderr()))
+                        .onFailure(SshValueFunctions.stderr()))
                 .build();
         
         Asserts.succeedsEventually(new Runnable() {
@@ -100,14 +105,17 @@ public class SshFeedIntegrationTest {
     }
     
     @Test(groups="Integration")
-    public void testFailsOnNonZeroWhenConfigured() throws Exception {
+    public void testFailsOnNonZero() throws Exception {
         feed = SshFeed.builder()
                 .entity(entity)
                 .machine(machine)
                 .poll(new SshPollConfig<String>(SENSOR_STRING)
                         .command("exit 123")
-                        .failOnNonZeroResultCode(true)
-                        .onFailure(new FunctionFeedTest.ToStringFunction()))
+                        .onFailure(new Function<SshPollValue, String>() {
+                            @Override
+                            public String apply(SshPollValue input) {
+                                return "Exit status " + input.getExitStatus();
+                            }}))
                 .build();
         
         Asserts.succeedsEventually(new Runnable() {

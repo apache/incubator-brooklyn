@@ -4,26 +4,35 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
 
 public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<T>> {
 
     private String command;
     private Map<String,String> env = Maps.newLinkedHashMap();
-    private boolean failOnNonZeroResultCode;
-    
+
+    public static final Predicate<SshPollValue> DEFAULT_SUCCESS = new Predicate<SshPollValue>() {
+        @Override
+        public boolean apply(@Nullable SshPollValue input) {
+            return input != null && input.getExitStatus() == 0;
+        }};
+
     public SshPollConfig(AttributeSensor<T> sensor) {
         super(sensor);
+        super.checkSuccess(DEFAULT_SUCCESS);
     }
 
     public SshPollConfig(SshPollConfig<T> other) {
         super(other);
         command = other.command;
         env = other.env;
-        failOnNonZeroResultCode = other.failOnNonZeroResultCode;
     }
     
     public String getCommand() {
@@ -34,10 +43,12 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
         return env;
     }
 
+    /** @deprecated since 0.6; default is true, see FeedConfig.checkSuccess */
+    @Deprecated
     public boolean isFailOnNonZeroResultCode() {
-        return failOnNonZeroResultCode;
+        return super.getCheckSuccess().equals(DEFAULT_SUCCESS);
     }
-    
+
     public SshPollConfig<T> command(String val) {
         this.command = val;
         return this;
@@ -54,12 +65,20 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
         }
         return this;
     }
-    
+
+    /** @deprecated since 0.6; see FeedConfig.checkSuccess instead. */
+    @Deprecated
     public SshPollConfig<T> failOnNonZeroResultCode(boolean val) {
-        this.failOnNonZeroResultCode = val;
+        if (val) {
+            super.checkSuccess(DEFAULT_SUCCESS);
+        } else {
+            super.checkSuccess(Predicates.alwaysTrue());
+        }
         return this;
     }
-    
+
+    /** @deprecated since 0.6; see FeedConfig.checkSuccess instead. */
+    @Deprecated
     public SshPollConfig<T> failOnNonZeroResultCode() {
         return failOnNonZeroResultCode(true);
     }
