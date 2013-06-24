@@ -6,10 +6,10 @@ import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicLong
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
@@ -17,9 +17,7 @@ import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 import brooklyn.test.TestUtils
 
-import com.google.common.base.Stopwatch
 import com.google.common.base.Throwables
-import com.google.common.collect.Lists
 
 /**
  * Test the operation of the {@link BasicTask} class.
@@ -31,18 +29,20 @@ public class BasicTaskExecutionTest {
  
     private static final int TIMEOUT_MS = 10*1000
     
-    private ExecutionManager em
-    private Map data
-
-    public static final int MAX_OVERHEAD_MS = 750;
-    public static final int EARLY_RETURN_GRACE = 25; // saw 13ms early return on jenkins!
+    private BasicExecutionManager em;
+    private Map data;
 
     @BeforeMethod
     public void setUp() {
-        em = new BasicExecutionManager()
+        em = new BasicExecutionManager("mycontext");
 //        assertTrue em.allTasks.isEmpty()
         data = Collections.synchronizedMap(new HashMap())
         data.clear()
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (em != null) em.shutdownNow();
     }
     
     @Test
@@ -348,128 +348,5 @@ public class BasicTaskExecutionTest {
         assertTrue(submitter.endTimeUtc <= tb.endTimeUtc)
         
         log.debug "BasicTask {} was submitted by {}", tb, submitter
-    }
-    
-    @Test
-    public void testScheduledTaskExecutedAfterDelay() {
-        int delay = 100;
-        final CountDownLatch latch = new CountDownLatch(1);
-        
-        Callable<Task> taskFactory = new Callable<Task>() {
-            public Task call() {
-                return new BasicTask(new Runnable() {
-                    public void run() {
-                        latch.countDown();
-                    }});
-            }};
-        ScheduledTask t = new ScheduledTask(taskFactory).delay(delay);
-
-        Stopwatch stopwatch = new Stopwatch().start();
-        em.submit(t);
-        
-        assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
-        long actualDelay = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-        
-        assertTrue(actualDelay > (delay-EARLY_RETURN_GRACE), "actualDelay="+actualDelay+"; delay="+delay);
-        assertTrue(actualDelay < (delay+MAX_OVERHEAD_MS), "actualDelay="+actualDelay+"; delay="+delay);
-    }
-
-    @Test
-    public void testScheduledTaskExecutedAtRegularPeriod() {
-        int period = 100;
-        int numTimestamps = 4;
-        final CountDownLatch latch = new CountDownLatch(1);
-        final List<Long> timestamps = Collections.synchronizedList(Lists.newArrayList());
-        final Stopwatch stopwatch = new Stopwatch().start();
-        
-        Callable<Task> taskFactory = new Callable<Task>() {
-            public Task call() {
-                return new BasicTask(new Runnable() {
-                    public void run() {
-                        timestamps.add(stopwatch.elapsed(TimeUnit.MILLISECONDS));
-                        if (timestamps.size() >= numTimestamps) latch.countDown();
-                    }});
-            }};
-        ScheduledTask t = new ScheduledTask(taskFactory).delay(1).period(period);
-        em.submit(t);
-        
-        assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
-        
-        synchronized (timestamps) {
-            long prev = timestamps.get(0);
-            for (long timestamp : timestamps.subList(1, timestamps.size())) {
-                assertTrue(timestamp > prev+period-EARLY_RETURN_GRACE, "timestamps="+timestamps);
-                assertTrue(timestamp < prev+period+MAX_OVERHEAD_MS, "timestamps="+timestamps);
-                prev = timestamp;
-            }
-        }
-    }
-
-    @Test
-    public void testCanCancelScheduledTask() {
-        int period = 1;
-        long checkPeriod = 250;
-        final List<Long> timestamps = Collections.synchronizedList(Lists.newArrayList());
-        
-        Callable<Task> taskFactory = new Callable<Task>() {
-            public Task call() {
-                return new BasicTask(new Runnable() {
-                    public void run() {
-                        timestamps.add(System.currentTimeMillis());
-                    }});
-            }};
-        ScheduledTask t = new ScheduledTask(taskFactory).period(period);
-        em.submit(t);
-
-        t.cancel();
-        long cancelTime = System.currentTimeMillis();
-        int countImmediatelyAfterCancel = timestamps.size();
-        Thread.sleep(checkPeriod);
-        int countWellAfterCancel = timestamps.size();
-
-        // should have at most 1 more execution after cancel
-        log.info("testCanCancelScheduledTask saw "+countImmediatelyAfterCancel+" then cancel then "+countWellAfterCancel+" total");                
-        assertTrue(countWellAfterCancel - countImmediatelyAfterCancel <= 2, "timestamps="+timestamps+"; cancelTime="+cancelTime);
-    }
-
-    // Previously, when we used a CopyOnWriteArraySet, performance for submitting new tasks was
-    // terrible, and it degraded significantly as the number of previously executed tasks increased
-    // (e.g. 9s for first 1000; 26s for next 1000; 42s for next 1000).
-    @Test
-    public void testExecutionManagerPerformance() {
-        final int NUM_TASKS = 1000
-        final int NUM_TIMES = 10
-        final int MAX_ACCEPTABLE_TIME = 7500 // saw 5601ms on buildhive
-        
-        long tWarmup = execTasksAndWaitForDone(NUM_TASKS, ["A"])
-        
-        List<Long> times = []
-        for (i in 1..NUM_TIMES) {
-            times << execTasksAndWaitForDone(NUM_TASKS, ["A"])
-        }
-        
-        assertNull( times.find({ it > MAX_ACCEPTABLE_TIME}), "warmup=$tWarmup; times=$times")
-    }
-    
-    private long execTasksAndWaitForDone(int numTasks, List tags) {
-        List<Task> tasks = []
-        long startTimestamp = System.currentTimeMillis()
-        for (i in 1..numTasks) {
-            Task t = new BasicTask({ /*no-op*/ })
-            em.submit tags:tags, t
-            tasks << t
-        }
-        long submittedTimestamp = System.currentTimeMillis()
-
-        for (Task t in tasks) {
-            t.get();
-        }
-        long endTimestamp = System.currentTimeMillis()
-        long submitTime = submittedTimestamp - startTimestamp
-        long totalTime = endTimestamp - startTimestamp
-        
-        println "Executed $numTasks tasks; ${totalTime}ms total; ${submitTime}ms to submit"
-
-        return totalTime
     }
 }
