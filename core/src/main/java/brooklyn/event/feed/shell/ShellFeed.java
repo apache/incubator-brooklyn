@@ -181,22 +181,7 @@ public class ShellFeed extends AbstractFeed {
             Set<AttributePollHandler<SshPollValue>> handlers = Sets.newLinkedHashSet();
 
             for (ShellPollConfig<?> config : configs) {
-                AttributePollHandler<SshPollValue> handler;
-                if (config.isFailOnNonZeroResultCode()) {
-                    handler = new AttributePollHandler<SshPollValue>(config, entity, this) {
-                        @Override public void onSuccess(SshPollValue val) {
-                            if (val.getExitStatus() == 0) {
-                                super.onSuccess(val);
-                            } else {
-                                onError(new Exception("Exit status "+val.getExitStatus()));
-                            }
-                        }
-                    };
-                } else {
-                    handler = new AttributePollHandler<SshPollValue>(config, entity, this);
-                }
-                handlers.add(handler);
-                
+                handlers.add(new AttributePollHandler<SshPollValue>(config, entity, this));
                 if (config.getPeriod() > 0) minPeriod = Math.min(minPeriod, config.getPeriod());
             }
             

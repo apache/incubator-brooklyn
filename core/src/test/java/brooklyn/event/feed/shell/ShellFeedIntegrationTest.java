@@ -61,7 +61,7 @@ public class ShellFeedIntegrationTest {
                 .entity(entity)
                 .poll(new ShellPollConfig<Integer>(SENSOR_INT)
                         .command("exit 123")
-                        .onSuccess(SshValueFunctions.exitStatus()))
+                        .onFailure(SshValueFunctions.exitStatus()))
                 .build();
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_INT, 123);
@@ -74,7 +74,7 @@ public class ShellFeedIntegrationTest {
                 .poll(new ShellPollConfig<String>(SENSOR_STRING)
                         .command("sleep 10")
                         .timeout(1, TimeUnit.MILLISECONDS)
-                        .onError(new FunctionFeedTest.ToStringFunction()))
+                        .onException(new FunctionFeedTest.ToStringFunction()))
                 .build();
 
         Asserts.succeedsEventually(new Runnable() {
@@ -125,7 +125,7 @@ public class ShellFeedIntegrationTest {
                 .entity(entity)
                 .poll(new ShellPollConfig<String>(SENSOR_STRING)
                         .command(cmd)
-                        .onSuccess(SshValueFunctions.stderr()))
+                        .onFailure(SshValueFunctions.stderr()))
                 .build();
         
         Asserts.succeedsEventually(new Runnable() {
@@ -136,13 +136,16 @@ public class ShellFeedIntegrationTest {
     }
     
     @Test(groups="Integration")
-    public void testFailsOnNonZeroWhenConfigured() throws Exception {
+    public void testFailsOnNonZero() throws Exception {
         feed = ShellFeed.builder()
                 .entity(entity)
                 .poll(new ShellPollConfig<String>(SENSOR_STRING)
                         .command("exit 123")
-                        .failOnNonZeroResultCode(true)
-                        .onError(new FunctionFeedTest.ToStringFunction()))
+                        .onFailure(new Function<SshPollValue, String>() {
+                            @Override
+                            public String apply(SshPollValue input) {
+                                return "Exit status " + input.getExitStatus();
+                            }}))
                 .build();
         
         Asserts.succeedsEventually(new Runnable() {
@@ -159,7 +162,6 @@ public class ShellFeedIntegrationTest {
                 .entity(entity)
                 .poll(new ShellPollConfig<Long>(SENSOR_LONG)
                         .command("df -P | tail -1")
-                        .failOnNonZeroResultCode(true)
                         .onSuccess(new Function<SshPollValue, Long>() {
                             public Long apply(SshPollValue input) {
                                 String[] parts = input.getStdout().split("[ \\t]+");
