@@ -308,7 +308,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 configure(SshTool.PROP_HOST, address.getHostName()).
                 putAll(props);
 
-            for (Map.Entry<String,Object> entry: getConfigBag().getAllConfig().entrySet()) {
+            for (Map.Entry<String,Object> entry: getAllConfig(true).entrySet()) {
                 String key = entry.getKey();
                 if (key.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                     key = Strings.removeFromStart(key, SshTool.BROOKLYN_CONFIG_KEY_PREFIX);
@@ -350,7 +350,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     (rootCause!=null && !rootCause.isEmpty() ? " ("+rootCause+")" : "")+". \n"+
                     "Ensure that passwordless and passphraseless ssh access is enabled using standard keys from ~/.ssh or " +
                     "as configured in brooklyn.properties. " +
-                    "Check that the target host is accessible, that correct permissions are set on your keys, " +
+                    "Check that the target host is accessible, " +
+                    "that credentials are correct (location and permissions if using a key), " +
+                    "that the SFTP subsystem is available on the remote side, " +
                     "and that there is sufficient random noise in /dev/random on both ends. " +
                     "To debug less common causes, see the original error in the trace or log, and/or enable 'net.schmizz' (sshj) logging."
                     , e);
@@ -472,8 +474,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         	if (logPrefix == null) {
         		String hostname = getAddress().getHostName();
         		Integer port = execFlags.peek(SshTool.PROP_PORT); 
-        		if (port == null) port = getConfigBag().get(ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT));
-        		if (port == null) port = getConfigBag().get(ConfigUtils.prefixedKey(SSHCONFIG_PREFIX, SshTool.PROP_PORT));
+        		if (port == null) port = getConfig(ConfigUtils.prefixedKey(SshTool.BROOKLYN_CONFIG_KEY_PREFIX, SshTool.PROP_PORT));
+        		if (port == null) port = getConfig(ConfigUtils.prefixedKey(SSHCONFIG_PREFIX, SshTool.PROP_PORT));
         		logPrefix = (user != null ? user+"@" : "") + hostname + (port != null ? ":"+port : "");
         	}
         	

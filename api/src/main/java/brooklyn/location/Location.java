@@ -103,15 +103,25 @@ public interface Location extends Serializable, Rebindable{
      */
     boolean containsLocation(Location potentialDescendent);
 
-    /** Returns configuration set at this location or inherited */
+    /** Returns configuration set at this location or inherited or default */
     <T> T getConfig(ConfigKey<T> key);
     
-    /** True iff the indication config key is set _at_ this location (not parents) */
+    /** True iff the indication config key is set _at_ this location (not parents) 
+     * @deprecated since 0.6.0 use {@link #hasConfig(ConfigKey, boolean)} */
+    @Deprecated
     boolean hasConfig(ConfigKey<?> key);
 
-    /** Returns all config set _at_ this location (not inherited) */
+    /** Returns all config set _at_ this location (not inherited)
+     * @deprecated since 0.6.0 use {@link #getAllConfig(boolean) */
+    @Deprecated
     Map<String,Object> getAllConfig();
 
+    /** True iff the indication config key is set, either inherited (second argument true) or locally-only (second argument false) */
+    boolean hasConfig(ConfigKey<?> key, boolean includeInherited);
+
+    /** Returns all config set, either inherited (argument true) or locally-only (argument false) */
+    public Map<String,Object> getAllConfig(boolean includeInherited);
+    
     /**
      * Returns {@code true} iff this location contains a property with the specified {@code key}. The
      * property's value can be obtained by calling {@link #getLocationProperty}. This method only interrogates the

@@ -8,15 +8,20 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import junit.framework.Assert;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
+import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -104,6 +109,61 @@ public class ByonLocationResolverTest {
         assertByonClusterWithUsersEquals(resolve("byon:(hosts=\"1.1.1.1\",user=bob)"), ImmutableSet.of(new UserHostTuple("bob", "1.1.1.1")), null);
         assertByonClusterWithUsersEquals(resolve("byon:(user=\"bob\",hosts=\"myuser@1.1.1.1,1.1.1.1\")"), 
                 ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("bob", "1.1.1.1")), null);
+    }
+
+    @Test
+    public void testResolvesUserArg2() throws Exception {
+        String spec = "byon:(hosts=\"1.1.1.1\",user=bob)";
+        FixedListMachineProvisioningLocation<SshMachineLocation> ll = resolve(spec);
+        SshMachineLocation l = ll.obtain();
+        Assert.assertEquals("bob", l.getUser());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testResolvesUserArg3() throws Exception {
+        String spec = "byon:(hosts=\"1.1.1.1\")";
+        managementContext.getLocationRegistry().getProperties().putAll(MutableMap.of(
+                "brooklyn.location.named.foo", spec,
+                "brooklyn.location.named.foo.user", "bob"));
+        ((BasicLocationRegistry)managementContext.getLocationRegistry()).updateDefinedLocations();
+        
+        MachineProvisioningLocation<SshMachineLocation> ll = (MachineProvisioningLocation<SshMachineLocation>) 
+                new NamedLocationResolver().newLocationFromString(MutableMap.of(), "named:foo", managementContext.getLocationRegistry());
+        SshMachineLocation l = ll.obtain(MutableMap.of());
+        Assert.assertEquals("bob", l.getUser());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    /** private key should be inherited, so confirm that happens correctly */
+    public void testResolvesPrivateKeyArgInheritance() throws Exception {
+        String spec = "byon:(hosts=\"1.1.1.1\")";
+        managementContext.getLocationRegistry().getProperties().putAll(MutableMap.of(
+                "brooklyn.location.named.foo", spec,
+                "brooklyn.location.named.foo.user", "bob",
+                "brooklyn.location.named.foo.privateKeyFile", "/tmp/x"));
+        ((BasicLocationRegistry)managementContext.getLocationRegistry()).updateDefinedLocations();
+        
+        MachineProvisioningLocation<SshMachineLocation> ll = (MachineProvisioningLocation<SshMachineLocation>) 
+                new NamedLocationResolver().newLocationFromString(MutableMap.of(), "named:foo", managementContext.getLocationRegistry());
+        
+        Assert.assertEquals("/tmp/x", ll.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE));
+        Assert.assertTrue(ll.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, false));
+        Assert.assertEquals("/tmp/x", ll.getAllConfig(false).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
+        Assert.assertEquals("/tmp/x", ((AbstractLocation)ll).getRawLocalConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
+
+        SshMachineLocation l = ll.obtain(MutableMap.of());
+        
+        Assert.assertEquals("/tmp/x", l.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE));
+        
+        Assert.assertTrue(l.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, true));
+        Assert.assertFalse(l.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, false));
+
+        Assert.assertNull(l.getAllConfig(false).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
+        Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
+        
+        Assert.assertNull(l.getRawLocalConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
     }
 
     private void assertByonClusterEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<String> expectedHosts, String expectedName) {

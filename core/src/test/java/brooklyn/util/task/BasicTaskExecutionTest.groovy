@@ -34,6 +34,9 @@ public class BasicTaskExecutionTest {
     private ExecutionManager em
     private Map data
 
+    public static final int MAX_OVERHEAD_MS = 750;
+    public static final int EARLY_RETURN_GRACE = 25; // saw 13ms early return on jenkins!
+
     @BeforeMethod
     public void setUp() {
         em = new BasicExecutionManager()
@@ -350,8 +353,6 @@ public class BasicTaskExecutionTest {
     @Test
     public void testScheduledTaskExecutedAfterDelay() {
         int delay = 100;
-        int maxOverhead = 500;
-        int earlyReturnGrace = 25; // saw 13ms early return on jenkins!
         final CountDownLatch latch = new CountDownLatch(1);
         
         Callable<Task> taskFactory = new Callable<Task>() {
@@ -369,15 +370,13 @@ public class BasicTaskExecutionTest {
         assertTrue(latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
         long actualDelay = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         
-        assertTrue(actualDelay > (delay-earlyReturnGrace), "actualDelay="+actualDelay+"; delay="+delay);
-        assertTrue(actualDelay < (delay+maxOverhead), "actualDelay="+actualDelay+"; delay="+delay);
+        assertTrue(actualDelay > (delay-EARLY_RETURN_GRACE), "actualDelay="+actualDelay+"; delay="+delay);
+        assertTrue(actualDelay < (delay+MAX_OVERHEAD_MS), "actualDelay="+actualDelay+"; delay="+delay);
     }
 
     @Test
     public void testScheduledTaskExecutedAtRegularPeriod() {
         int period = 100;
-        int maxOverhead = 250;
-        int earlyReturnGrace = 25; // saw 13ms early return on jenkins!
         int numTimestamps = 4;
         final CountDownLatch latch = new CountDownLatch(1);
         final List<Long> timestamps = Collections.synchronizedList(Lists.newArrayList());
@@ -399,8 +398,8 @@ public class BasicTaskExecutionTest {
         synchronized (timestamps) {
             long prev = timestamps.get(0);
             for (long timestamp : timestamps.subList(1, timestamps.size())) {
-                assertTrue(timestamp > prev+period-earlyReturnGrace, "timestamps="+timestamps);
-                assertTrue(timestamp < prev+period+maxOverhead, "timestamps="+timestamps);
+                assertTrue(timestamp > prev+period-EARLY_RETURN_GRACE, "timestamps="+timestamps);
+                assertTrue(timestamp < prev+period+MAX_OVERHEAD_MS, "timestamps="+timestamps);
                 prev = timestamp;
             }
         }
@@ -409,15 +408,14 @@ public class BasicTaskExecutionTest {
     @Test
     public void testCanCancelScheduledTask() {
         int period = 1;
-        int maxOverhead = 250;
-        int earlyReturnGrace = 25; // saw 13ms early return on jenkins!
-        final AtomicLong lastTimestamp = new AtomicLong();
+        long checkPeriod = 250;
+        final List<Long> timestamps = Collections.synchronizedList(Lists.newArrayList());
         
         Callable<Task> taskFactory = new Callable<Task>() {
             public Task call() {
                 return new BasicTask(new Runnable() {
                     public void run() {
-                        lastTimestamp.set(System.currentTimeMillis());
+                        timestamps.add(System.currentTimeMillis());
                     }});
             }};
         ScheduledTask t = new ScheduledTask(taskFactory).period(period);
@@ -425,9 +423,13 @@ public class BasicTaskExecutionTest {
 
         t.cancel();
         long cancelTime = System.currentTimeMillis();
-        Thread.sleep(maxOverhead);
-                
-        assertTrue(lastTimestamp.get() < cancelTime+maxOverhead, "last="+lastTimestamp+"; cancelTime="+cancelTime);
+        int countImmediatelyAfterCancel = timestamps.size();
+        Thread.sleep(checkPeriod);
+        int countWellAfterCancel = timestamps.size();
+
+        // should have at most 1 more execution after cancel
+        log.info("testCanCancelScheduledTask saw "+countImmediatelyAfterCancel+" then cancel then "+countWellAfterCancel+" total");                
+        assertTrue(countWellAfterCancel - countImmediatelyAfterCancel <= 2, "timestamps="+timestamps+"; cancelTime="+cancelTime);
     }
 
     // Previously, when we used a CopyOnWriteArraySet, performance for submitting new tasks was

@@ -36,7 +36,7 @@ public class NamedLocationResolver implements LocationResolver {
     @SuppressWarnings("rawtypes")
     @Override
     public Location newLocationFromString(Map properties, String spec) {
-        throw new UnsupportedOperationException("This class must have the RegistryLocationResolver.newLocationFromString method invoked");
+        throw new UnsupportedOperationException("Use RegistryLocationResolver.newLocationFromString (registry required as an argument)");
     }
     @SuppressWarnings({ "rawtypes" })
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
