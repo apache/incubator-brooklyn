@@ -30,7 +30,7 @@ public abstract class AbstractFeed {
     private final Object pollerStateMutex = new Object(); 
 
     public AbstractFeed(EntityLocal entity) {
-        this.entity = checkNotNull(entity, "entity");;
+        this.entity = checkNotNull(entity, "entity");
         this.poller = new Poller<Object>(entity);
     }
     

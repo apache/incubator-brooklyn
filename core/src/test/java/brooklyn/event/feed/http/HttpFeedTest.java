@@ -1,8 +1,8 @@
 package brooklyn.event.feed.http;
 
-import static brooklyn.test.TestUtils.executeUntilSucceeds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.net.URL;
 import java.util.concurrent.Callable;
@@ -24,7 +24,6 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
@@ -112,6 +111,57 @@ public class HttpFeedTest {
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
     }
 
+    @Test
+    public void testUsesFailureHandlerOn4xx() throws Exception {
+        server = new MockWebServer();
+        for (int i = 0; i < 100; i++) {
+            server.enqueue(new MockResponse()
+                    .setResponseCode(401)
+                    .setBody("Unauthorised"));
+        }
+        server.play();
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUrl(server.getUrl("/"))
+                .poll(new HttpPollConfig<Integer>(SENSOR_INT)
+                        .period(100)
+                        .onSuccess(HttpValueFunctions.responseCode())
+                        .onFailure(HttpValueFunctions.responseCode()))
+                .poll(new HttpPollConfig<String>(SENSOR_STRING)
+                        .period(100)
+                        .onSuccess(HttpValueFunctions.stringContentsFunction())
+                        .onFailure(Functions.constant("Failed")))
+                .build();
+
+        assertSensorEventually(SENSOR_INT, 401, TIMEOUT_MS);
+        assertSensorEventually(SENSOR_STRING, "Failed", TIMEOUT_MS);
+
+        server.shutdown();
+    }
+
+    @Test
+    public void testUsesExceptionHandlerOn4xxAndNoFailureHandler() throws Exception {
+        server = new MockWebServer();
+        for (int i = 0; i < 100; i++) {
+            server.enqueue(new MockResponse()
+                    .setResponseCode(401)
+                    .setBody("Unauthorised"));
+        }
+        server.play();
+        feed = HttpFeed.builder()
+                .entity(entity)
+                .baseUrl(server.getUrl("/"))
+                .poll(new HttpPollConfig<Integer>(SENSOR_INT)
+                        .period(100)
+                        .onSuccess(HttpValueFunctions.responseCode())
+                        .onException(Functions.constant(-1)))
+                .build();
+
+        assertSensorEventually(SENSOR_INT, -1, TIMEOUT_MS);
+
+        server.shutdown();
+    }
+
     @Test(groups="Integration")
     // marked integration as it takes a wee while
     public void testSuspendResume() throws Exception {
@@ -134,10 +184,10 @@ public class HttpFeedTest {
             Assert.fail("Request count continued to increment while feed was suspended, from "+countWhenSuspended+" to "+server.getRequestCount());
         
         feed.resume();
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
-                assertTrue(server.getRequestCount() > countWhenSuspended+1, 
-                        "Request count failed to increment when feed was resumed, from "+countWhenSuspended+", still at "+server.getRequestCount());        
+                assertTrue(server.getRequestCount() > countWhenSuspended + 1,
+                        "Request count failed to increment when feed was resumed, from " + countWhenSuspended + ", still at " + server.getRequestCount());
             }
         });
     }
@@ -199,10 +249,11 @@ public class HttpFeedTest {
     }
     
     private <T> void assertSensorEventually(final AttributeSensor<T> sensor, final T expectedVal, long timeout) {
-        executeUntilSucceeds(ImmutableMap.of("timeout", timeout), new Callable<Void>() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", timeout), new Callable<Void>() {
             public Void call() {
                 assertEquals(entity.getAttribute(sensor), expectedVal);
                 return null;
-            }});
+            }
+        });
     }
 }

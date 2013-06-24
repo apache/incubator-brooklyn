@@ -2,6 +2,7 @@ package brooklyn.event.feed.function;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -10,6 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Functions;
+import com.google.common.base.Predicates;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -25,10 +28,9 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.test.Asserts;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -69,11 +71,12 @@ public class FunctionFeedTest {
                         )
                 .build();
         
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 Integer val = entity.getAttribute(SENSOR_INT);
-                assertTrue(val != null && val > 2, "val="+val);
-            }});
+                assertTrue(val != null && val > 2, "val=" + val);
+            }
+        });
     }
     
     @Test
@@ -90,7 +93,7 @@ public class FunctionFeedTest {
     }
     
     @Test
-    public void testCallsOnErrorWithExceptionFromCallable() throws Exception {
+    public void testCallsOnExceptionWithExceptionFromCallable() throws Exception {
         final String errMsg = "my err msg";
         
         feed = FunctionFeed.builder()
@@ -98,14 +101,45 @@ public class FunctionFeedTest {
                 .poll(new FunctionPollConfig<Object, String>(SENSOR_STRING)
                         .period(1)
                         .callable(new ExceptionCallable(errMsg))
-                        .onError(new ToStringFunction()))
+                        .onException(new ToStringFunction()))
                 .build();
 
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
-                assertTrue(val != null && val.contains(errMsg), "val="+val);
-            }});
+                assertTrue(val != null && val.contains(errMsg), "val=" + val);
+            }
+        });
+    }
+
+    @Test
+    public void testCallsOnFailureWithResultOfCallable() throws Exception {
+        feed = FunctionFeed.builder()
+                .entity(entity)
+                .poll(new FunctionPollConfig<Integer, Integer>(SENSOR_INT)
+                        .period(1)
+                        .callable(Callables.returning(1))
+                        .checkSuccess(Predicates.alwaysFalse())
+                        .onSuccess(new AddOneFunction())
+                        .onFailure(Functions.constant(-1)))
+                .build();
+
+        EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_INT, -1);
+    }
+
+    @Test
+    public void testCallsOnExceptionWhenCheckSuccessIsFalseButNoFailureHandler() throws Exception {
+        feed = FunctionFeed.builder()
+                .entity(entity)
+                .poll(new FunctionPollConfig<Integer, Integer>(SENSOR_INT)
+                        .period(1)
+                        .callable(Callables.returning(1))
+                        .checkSuccess(Predicates.alwaysFalse())
+                        .onSuccess(new AddOneFunction())
+                        .onException(Functions.constant(-1)))
+                .build();
+
+        EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_INT, -1);
     }
     
     @Test
@@ -134,7 +168,7 @@ public class FunctionFeedTest {
                         .onSuccess(new ToStringFunction()))
                 .build();
 
-        TestUtils.executeUntilSucceeds(MutableMap.of(), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 assertEquals(ints.subList(0, 2), ImmutableList.of(0, 1));
                 assertEquals(strings.subList(0, 2), ImmutableList.of("0", "1"));

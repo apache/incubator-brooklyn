@@ -101,7 +101,12 @@
             <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-security</artifactId>
+            <version>${jetty.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
   <!-- add maxmind geo-ip library; exact copy of source included as required by LGPL2 -->

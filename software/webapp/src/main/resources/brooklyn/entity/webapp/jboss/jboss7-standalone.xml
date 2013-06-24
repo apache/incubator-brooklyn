@@ -44,15 +44,9 @@
             <native-interface security-realm="ManagementRealm">
                 <socket-binding native="management-native"/>
             </native-interface>
-            [#if entity.httpManagementInterfaceSecurityRealm != ""]
-            <http-interface security-realm="${entity.httpManagementInterfaceSecurityRealm}">
+            <http-interface security-realm="ManagementRealm">
                 <socket-binding http="management-http"/>
             </http-interface>
-            [#else]
-            <http-interface>
-                <socket-binding http="management-http"/>
-            </http-interface>
-            [/#if]
         </management-interfaces>
     </management>
     <profile>

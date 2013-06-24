@@ -20,6 +20,9 @@ import brooklyn.rest.security.provider.DelegatingSecurityProvider;
 
 import com.sun.jersey.core.util.Base64;
 
+/**
+ * Provides basic HTTP authentication.
+ */
 public class BrooklynPropertiesSecurityFilter implements Filter {
     
     /** session attribute set for authenticated users; for reference

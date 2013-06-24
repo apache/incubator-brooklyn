@@ -36,7 +36,13 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         this.sensor = checkNotNull(config.getSensor(), "sensor");
         this.feed = checkNotNull(feed, "feed");
     }
-    
+
+    @Override
+    public boolean checkSuccess(V val) {
+        // Always true if no checkSuccess predicate was configured.
+        return !config.hasCheckSuccessHandler() || config.getCheckSuccess().apply(val);
+    }
+
     @Override
     public void onSuccess(V val) {
         if (lastWasFailure) {
@@ -55,63 +61,88 @@ public class AttributePollHandler<V> implements PollHandler<V> {
             if (feed.isConnected()) {
                 log.warn("unable to compute "+entity+"->"+sensor+"; on val="+val, e);
             } else {
-                if (log.isDebugEnabled()) log.debug("unable to compute "+entity+" ->"+sensor+"; val="+val+" (when deactive)", e);
+                if (log.isDebugEnabled()) log.debug("unable to compute "+entity+" ->"+sensor+"; val="+val+" (when inactive)", e);
             }
         }
     }
 
     @Override
-    public void onError(Exception error) {
-        if (!feed.isConnected()) {
-            if (log.isDebugEnabled()) log.debug("error reading {} from {} (while not connected or not yet connected): {}", new Object[] {this, entity, error});
-        } else if (lastWasFailure) {
-            if (log.isDebugEnabled()) log.debug("recurring error reading "+this+" from "+entity, error);
+    public void onFailure(V val) {
+        if (!config.hasFailureHandler()) {
+            onException(new Exception("checkSuccess of "+this+" from "+entity+" was false but poller has no failure handler"));
         } else {
-            // if we see an error once it is up, log it as a warning the first time until it corrects itself
-            log.warn("Error reading "+entity+"->"+sensor+": "+error);
-            if (log.isDebugEnabled())
-                log.debug("details for error reading "+entity+"->"+sensor+": "+error, error);
-        }
-        lastWasFailure = true;
-        
-        if (hasErrorHandler()) {
+            if (lastWasFailure) {
+                if (log.isDebugEnabled())
+                    log.debug("Recurring failure reading " + this + " from " + entity + ". Got: " + val);
+            } else {
+                log.warn("Read of " + entity + "->" + sensor + " failed. Got: " + val);
+                lastWasFailure = true;
+            }
+
             try {
-                Object v = transformError(error);
+                Object v = coerce(config.getOnFailure().apply(val));
                 if (v != PollConfig.UNSET) {
                     entity.setAttribute(sensor, v);
                 }
             } catch (Exception e) {
                 if (feed.isConnected()) {
-                    log.warn("unable to compute "+entity+"->"+sensor+"; on error="+error, e);
+                    log.warn("unable to compute " + entity + "->" + sensor + "; on val=" + val, e);
                 } else {
-                    if (log.isDebugEnabled()) log.debug("unable to compute "+entity+" ->"+sensor+"; error="+error+" (when deactive)", e);
+                    if (log.isDebugEnabled())
+                        log.debug("unable to compute " + entity + " ->" + sensor + "; val=" + val + " (when inactive)", e);
                 }
             }
         }
     }
-    
+
+    /**
+     * @deprecated since 0.6; use {@link #onException(Exception)}
+     */
+    @Override
+    public void onError(Exception error) {
+        onException(error);
+    }
+
+    @Override
+    public void onException(Exception exception) {
+        if (!feed.isConnected()) {
+            if (log.isDebugEnabled()) log.debug("exception reading {} from {} (while not connected or not yet connected): {}", new Object[] {this, entity, exception});
+        } else if (lastWasFailure) {
+            if (log.isDebugEnabled()) log.debug("recurring exception reading "+this+" from "+entity, exception);
+        } else {
+            // if we see an error once it is up, log it as a warning the first time until it corrects itself
+            log.warn("Exception reading "+entity+"->"+sensor+": "+exception);
+            if (log.isDebugEnabled())
+                log.debug("details for exception reading "+entity+"->"+sensor+": "+exception, exception);
+        }
+        lastWasFailure = true;
+
+        if (config.hasExceptionHandler()) {
+            try {
+                Object v = transformError(exception);
+                if (v != PollConfig.UNSET) {
+                    entity.setAttribute(sensor, v);
+                }
+            } catch (Exception e) {
+                if (feed.isConnected()) {
+                    log.warn("unable to compute "+entity+"->"+sensor+"; on exception="+exception, e);
+                } else {
+                    if (log.isDebugEnabled()) log.debug("unable to compute "+entity+" ->"+sensor+"; exception="+exception+" (when inactive)", e);
+                }
+            }
+        }
+    }
+
     /**
      * Does post-processing on the result of the actual poll, to convert it to the attribute's new value.
      * Or returns PollConfig.UNSET if the post-processing indicates that the attribute should not be changed.
      */
     protected Object transformValue(Object val) {
-        Function<? super V,?> f = config.getOnSuccess();
-        Object v;
-        if (f != null) {
-            v = f.apply((V)val);
+        if (config.hasSuccessHandler()) {
+            return coerce(config.getOnSuccess().apply((V)val));
         } else {
-            v = val;
+            return coerce(val);
         }
-        
-        if (v != PollConfig.UNSET) {
-            return TypeCoercions.coerce(v, sensor.getType());
-        } else {
-            return v;
-        }
-    }
-    
-    protected boolean hasErrorHandler() {
-        return (config.getOnError() != null);
     }
     
     /**
@@ -119,11 +150,12 @@ public class AttributePollHandler<V> implements PollHandler<V> {
      * Or returns PollConfig.UNSET if the post-processing indicates that the attribute should not be changed.
      */
     protected Object transformError(Exception error) throws Exception {
-        Function<? super Exception,?> f = config.getOnError();
-        if (f == null) throw new IllegalStateException("Attribute poll handler has no error handler, but attempted to transform error", error);
-        
-        Object v = f.apply(error);
-        
+        if (!config.hasExceptionHandler())
+            throw new IllegalStateException("Attribute poll handler has no error handler, but attempted to transform error", error);
+        return coerce(config.getOnException().apply(error));
+    }
+
+    private Object coerce(Object v) {
         if (v != PollConfig.UNSET) {
             return TypeCoercions.coerce(v, sensor.getType());
         } else {

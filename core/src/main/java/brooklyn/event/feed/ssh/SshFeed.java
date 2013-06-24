@@ -167,7 +167,7 @@ public class SshFeed extends AbstractFeed {
                             if (val.getExitStatus() == 0) {
                                 super.onSuccess(val);
                             } else {
-                                onError(new Exception("Exit status "+val.getExitStatus()));
+                                onException(new Exception("Exit status "+val.getExitStatus()));
                             }
                         }
                     };
