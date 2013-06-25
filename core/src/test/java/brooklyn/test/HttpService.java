@@ -5,10 +5,19 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.security.KeyStore;
 
+import com.google.common.base.Optional;
+import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
+import org.eclipse.jetty.security.authentication.DigestAuthenticator;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.security.Credential;
+import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,17 +49,51 @@ public class HttpService {
     private final Server server;
     private volatile Thread shutdownHook;
 
-    public HttpService(PortRange portRange, boolean httpsEnabled) throws Exception {
+    private Optional<? extends SecurityHandler> securityHandler = Optional.absent();
+
+    public HttpService(PortRange portRange) {
+        this(portRange, false);
+    }
+
+    public HttpService(PortRange portRange, boolean httpsEnabled) {
         this.httpsEnabled = httpsEnabled;
         addr = LocalhostMachineProvisioningLocation.getLocalhostInetAddress();
         actualPort = LocalhostMachineProvisioningLocation.obtainPort(addr, portRange);
         server = new Server(actualPort);
-        
+    }
+
+    /**
+     * Enables basic HTTP authentication on the server.
+     */
+    public HttpService basicAuthentication(String username, String password) {
+        HashLoginService l = new HashLoginService();
+        l.putUser(username, Credential.getCredential(password), new String[]{"user"});
+        l.setName("test-realm");
+
+        Constraint constraint = new Constraint(Constraint.__BASIC_AUTH, "user");
+        constraint.setAuthenticate(true);
+
+        ConstraintMapping constraintMapping = new ConstraintMapping();
+        constraintMapping.setConstraint(constraint);
+        constraintMapping.setPathSpec("/*");
+
+        ConstraintSecurityHandler csh = new ConstraintSecurityHandler();
+        csh.setAuthenticator(new BasicAuthenticator());
+        csh.setRealmName("test-realm");
+        csh.addConstraintMapping(constraintMapping);
+        csh.setLoginService(l);
+
+        this.securityHandler = Optional.of(csh);
+
+        return this;
+    }
+
+    public HttpService start() throws Exception {
         try {
-            if(httpsEnabled){
+            if (httpsEnabled) {
                 //by default the server is configured with a http connector, this needs to be removed since we are going
                 //to provide https
-                for(Connector c: server.getConnectors()) {
+                for (Connector c: server.getConnectors()) {
                     server.removeConnector(c);
                 }
     
@@ -84,6 +127,10 @@ public class HttpService {
             context.setContextPath("/");
             context.setParentLoaderPriority(true);
 
+            if (securityHandler.isPresent()) {
+                context.setSecurityHandler(securityHandler.get());
+            }
+
             server.setHandler(context);
             server.start();
     
@@ -97,6 +144,8 @@ public class HttpService {
                 throw e;
             }
         }
+
+        return this;
     }
     
     public void shutdown() throws Exception {
@@ -139,4 +188,5 @@ public class HttpService {
             }
         });
     }
+
 }
