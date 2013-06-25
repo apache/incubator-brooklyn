@@ -10,8 +10,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
+import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestUtils;
 
 import com.google.common.collect.ImmutableList;
 
@@ -34,8 +34,8 @@ public class TomcatServerEc2LiveTest extends AbstractEc2LiveTest {
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(url, 200);
         HttpTestUtils.assertContentContainsText(url, "Hello");
         
-        TestUtils.executeUntilSucceeds(new Runnable() {
-            public void run() {
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
                 assertNotNull(server.getAttribute(TomcatServer.REQUEST_COUNT));
                 assertNotNull(server.getAttribute(TomcatServer.ERROR_COUNT));
                 assertNotNull(server.getAttribute(TomcatServer.TOTAL_PROCESSING_TIME));
