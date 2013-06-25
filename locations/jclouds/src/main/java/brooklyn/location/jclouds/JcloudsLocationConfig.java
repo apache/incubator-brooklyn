@@ -53,6 +53,11 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +
             "if 'false', won't check; if 'true' uses default duration; otherwise accepts a time string e.g. '5m' (the default) or a number of milliseconds", "5m");
     
+    // note causing problems on centos due to use of `sudo -n`; but required for default RHEL VM
+    public static final ConfigKey<Boolean> OPEN_IPTABLES = ConfigKeys.newBooleanConfigKey("openIptables", 
+            "Whether to open the INBOUND_PORTS via iptables rules; " +
+            "if true then ssh in to run iptables commands, as part of machine provisioning", false);
+    
     public static final ConfigKey<Integer> MIN_RAM = new BasicConfigKey<Integer>(Integer.class, "minRam", 
             "Minimum amount of RAM (in MB), for use in selecting the machine/hardware profile", null);
     public static final ConfigKey<Integer> MIN_CORES = new BasicConfigKey<Integer>(Integer.class, "minCores", 

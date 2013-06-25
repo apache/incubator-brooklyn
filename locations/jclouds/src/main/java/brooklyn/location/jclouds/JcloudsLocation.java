@@ -352,8 +352,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     sshLocByHostname.execCommands("using urandom instead of random", 
                         Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
                 
-                mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
-                        (Iterable<Integer>) setup.get(INBOUND_PORTS));
+                if (setup.get(OPEN_IPTABLES)) {
+                    mapSecurityGroupRuleToIpTables(computeService, node, initialCredentials, "eth0", 
+                            (Iterable<Integer>) setup.get(INBOUND_PORTS));
+                }
+                
             } else {
                 // Otherwise would break CloudStack, where port-forwarding means that jclouds opinion 
                 // of using port 22 is wrong.
