@@ -1,6 +1,7 @@
 package brooklyn.entity.webapp.jboss;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
@@ -64,4 +65,15 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
 
     BasicAttributeSensor<Integer> MANAGEMENT_STATUS =
             new BasicAttributeSensor<Integer>(Integer.class, "webapp.jboss.managementStatus", "HTTP response code for the management server");
+
+    @SetFromFlag("managementUser")
+    ConfigKey<String> MANAGEMENT_USER = new BasicConfigKey<String>(String.class,
+            "webapp.jboss.managementUser",
+            "A user to be placed in the management realm. Brooklyn will use this user to poll sensors",
+            "brooklyn");
+
+    @SetFromFlag("managementPassword")
+    ConfigKey<String> MANAGEMENT_PASSWORD =
+            new BasicConfigKey<String>(String.class, "webapp.jboss.managementPassword", "Password for MANAGEMENT_USER.");
+
 }
