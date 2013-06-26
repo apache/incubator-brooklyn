@@ -6,6 +6,7 @@ import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 
 public class RabbitQueue extends RabbitDestination implements Queue {
 
@@ -35,17 +36,17 @@ public class RabbitQueue extends RabbitDestination implements Queue {
                 .poll(new SshPollConfig<Integer>(QUEUE_DEPTH_BYTES)
                         .env(shellEnvironment)
                         .command(cmd)
+                        .onFailure(Functions.constant(-1))
                         .onSuccess(new Function<SshPollValue, Integer>() {
                                 @Override public Integer apply(SshPollValue input) {
-                                    if (input.getExitStatus() != 0) return -1;
                                     return 0; // TODO parse out queue depth from output
                                 }}))
                 .poll(new SshPollConfig<Integer>(QUEUE_DEPTH_MESSAGES)
                         .env(shellEnvironment)
                         .command(cmd)
+                        .onFailure(Functions.constant(-1))
                         .onSuccess(new Function<SshPollValue, Integer>() {
                                 @Override public Integer apply(SshPollValue input) {
-                                    if (input.getExitStatus() != 0) return -1;
                                     return 0; // TODO parse out queue depth from output
                                 }}))
                 .build();
