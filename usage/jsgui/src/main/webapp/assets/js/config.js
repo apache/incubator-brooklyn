@@ -2,7 +2,6 @@
  * set the require.js configuration for your application
  */
 require.config({
-
     /* Libraries */
     baseUrl:"assets/js",
     paths:{
@@ -32,6 +31,9 @@ require.config({
         "backbone":{
             deps:[ "underscore", "jquery" ],
             exports:"Backbone"
+        },
+        "jquery-datatables": {
+            deps: [ "jquery" ]
         },
         "datatables-extensions":{
             deps:[ "jquery", "jquery-datatables" ]

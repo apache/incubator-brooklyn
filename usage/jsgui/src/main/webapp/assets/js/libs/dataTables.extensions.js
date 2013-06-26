@@ -3,6 +3,10 @@
  *
  * http://www.datatables.net/plug-ins/api#fnStandingRedraw
  */
+define([
+    "jquery", "jquery-datatables"
+], function($, dataTables) {
+
 $.fn.dataTableExt.oApi.fnStandingRedraw = function(oSettings) {
     if (oSettings.oFeatures.bServerSide === false) {
         var before = oSettings._iDisplayStart;
@@ -24,3 +28,5 @@ jQuery.fn.dataTableExt.oApi.fnProcessingIndicator = function ( oSettings, onoff 
     }
     this.oApi._fnProcessingDisplay( oSettings, onoff );
 };
+
+});

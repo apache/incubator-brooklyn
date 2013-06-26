@@ -32,6 +32,9 @@
             deps:[ "underscore", "jquery" ],
             exports:"Backbone"
         },
+        "jquery-datatables": {
+            deps: [ "jquery" ]
+        },
         "datatables-extensions":{
             deps:[ "jquery", "jquery-datatables" ]
         }
