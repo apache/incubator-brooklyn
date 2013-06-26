@@ -47,6 +47,16 @@ public class ScheduledTask extends BasicTask {
     public ScheduledTask(Callable<Task<?>> taskFactory) {
         this(MutableMap.of(), taskFactory);
     }
+
+    public ScheduledTask(final Task<?> task){
+        this(new Callable<Task<?>>(){
+            @Override
+            public Task<?> call() throws Exception {
+                return task;
+            }
+        });
+    }
+
 	public ScheduledTask(Map flags, Callable<Task<?>> taskFactory) {
 		super(flags);
 		this.taskFactory = taskFactory;
