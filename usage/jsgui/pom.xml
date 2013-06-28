@@ -19,6 +19,20 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
+    <properties>
+        <maven-replacer-plugin.version>1.5.2</maven-replacer-plugin.version>
+        <nodejs-maven-plugin.version>1.0.3</nodejs-maven-plugin.version>
+        <jasmine-maven-plugin.version>1.2.0.0</jasmine-maven-plugin.version>
+        <requirejs-maven-plugin.version>2.0.0</requirejs-maven-plugin.version>
+
+        <!-- The maven-war-plugin 2.1+ and the replacer plugin don't work well together. -->
+        <maven-war-plugin.version>2.0.2</maven-war-plugin.version>
+
+        <project.build.webapp>
+            ${project.build.directory}/${project.build.finalName}
+        </project.build.webapp>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -94,7 +108,7 @@
             <plugin>
                 <groupId>com.github.searls</groupId>
                 <artifactId>jasmine-maven-plugin</artifactId>
-                <version>1.2.0.0</version>
+                <version>${jasmine-maven-plugin.version}</version>
                 <!-- avoid double phase executions https://github.com/searls/jasmine-maven-plugin/pull/54 -->
                 <extensions>true</extensions>
                 <executions>
@@ -127,45 +141,105 @@
                     </customRunnerConfiguration>
                 </configuration>
             </plugin>
-
-
-            <plugin>
-                <groupId>com.github.skwakman.nodejs-maven-plugin</groupId>
-                <artifactId>nodejs-maven-plugin</artifactId>
-                <version>1.0.3</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>extract</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <!-- target directory for node binaries -->
-                    <targetDirectory>${basedir}/target/nodejs/</targetDirectory>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.github.mcheely</groupId>
-                <artifactId>requirejs-maven-plugin</artifactId>
-                <version>2.0.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>optimize</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <nodeExecutable>${basedir}/target/nodejs/node</nodeExecutable>
-                    <configFile>${basedir}/src/main/webapp/assets/js/build.js</configFile>
-                    <optimizerFile>${basedir}/src/main/webapp/assets/js/libs/r.js</optimizerFile>
-                    <!-- Skips require.js optimization if true -->
-                    <skip>false</skip>
-                </configuration>
-            </plugin>
         </plugins>
-
     </build>
+
+    <profiles>
+        <profile>
+            <id>Optimise resources</id>
+            <activation>
+                <property>
+                    <name>!skipOptimization</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Installs node.js in target/. Means we get the benefits of node's speed
+                         (compared to Rhino) without having to install it manually. -->
+                    <plugin>
+                        <groupId>com.github.skwakman.nodejs-maven-plugin</groupId>
+                        <artifactId>nodejs-maven-plugin</artifactId>
+                        <version>${nodejs-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>extract</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <!-- target directory for node binaries -->
+                            <targetDirectory>${project.basedir}/target/nodejs/</targetDirectory>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Runs the require.js optimiser with node to produce a single artifact. -->
+                    <plugin>
+                        <groupId>com.github.mcheely</groupId>
+                        <artifactId>requirejs-maven-plugin</artifactId>
+                        <version>${requirejs-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>Optimise javascript</id>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <configFile>${project.basedir}/src/main/resources/optimise-javascript.build.js</configFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <nodeExecutable>${project.basedir}/target/nodejs/node</nodeExecutable>
+                            <optimizerFile>${project.basedir}/src/main/resources/r.js</optimizerFile>
+                            <!-- Replaces Maven tokens in the build file with their values -->
+                            <filterConfig>true</filterConfig>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Including the exploded goal means sources are in place ready for the replacer plugin. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>${maven-war-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-war</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>exploded</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>com.google.code.maven-replacer-plugin</groupId>
+                        <artifactId>replacer</artifactId>
+                        <version>${maven-replacer-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>Use optimised resources in index.html</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>replace</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <file>${project.build.webapp}/index.html</file>
+                            <replacements>
+                                <replacement>
+                                    <token>assets/js/config.js</token>
+                                    <value>assets/js/gui.min.js</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
 

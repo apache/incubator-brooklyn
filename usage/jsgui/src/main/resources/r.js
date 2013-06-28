@@ -25187,8 +25187,8 @@ define('build', function (require) {
  */
 
 /*
- * Create a build.js file that has the build options you want and pass that
- * build file to this file to do the build. See example.build.js for more information.
+ * Create a optimise-javascript.build.js file that has the build options you want and pass that
+ * build file to this file to do the build. See example.optimise-javascript.build.js for more information.
  */
 
 /*jslint strict: false, nomen: false */
