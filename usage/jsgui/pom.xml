@@ -127,7 +127,36 @@
                     </customRunnerConfiguration>
                 </configuration>
             </plugin>
-        </plugins>
-    </build>
 
+
+            <plugin>
+                <groupId>com.github.mcheely</groupId>
+                <artifactId>requirejs-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>optimize</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- optional path to a nodejs executable -->
+                    <nodeExecutable>/usr/local/bin/node</nodeExecutable>
+                    <configFile>${basedir}/src/main/webapp/assets/js/build.js</configFile>
+                    <optimizerFile>${basedir}/src/main/webapp/assets/js/libs/r.js</optimizerFile>
+                    <!--
+                    Whether or not to process configFile with maven filters.
+                    If you use this option, some options in your configFile
+                    must resolve to absolute paths (see below)
+                    -->
+                    <!-- <filterConfig>true</filterConfig> -->
+                    <!-- Skip requirejs optimization if true -->
+                    <!-- <skip>false</skip> -->
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
 </project>
+
