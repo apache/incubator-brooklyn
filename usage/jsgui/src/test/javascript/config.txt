@@ -35,4 +35,6 @@
         "datatables-extensions":{
             deps:[ "jquery", "jquery-datatables" ]
         }
-    }
+    },
+    // Seconds require will wait before timing out. Defaults to seven seconds.
+    waitSeconds: 300
