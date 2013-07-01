@@ -155,7 +155,7 @@ define([
             var cid = $(evt.currentTarget).attr("id");
             this._modal = new PolicyConfigInvokeView({
                 el:"#policy-config-modal",
-                model:this._config.getByCid(cid),
+                model:this._config.get(cid),
                 policy:this.model
             });
             this._modal.render().$el.modal('show');
