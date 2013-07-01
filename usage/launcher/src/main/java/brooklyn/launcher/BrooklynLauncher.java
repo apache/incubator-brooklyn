@@ -317,6 +317,8 @@ public class BrooklynLauncher {
                 webServer.putAttributes(brooklynProperties);
                 if (installSecurityFilter) {
                     webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
+                } else {
+                    LOG.info("Starting brooklyn web-console on port {} without security", port);
                 }
                 
                 for (Map.Entry<String, String> webapp : webApps.entrySet())
