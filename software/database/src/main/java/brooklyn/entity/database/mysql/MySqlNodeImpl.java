@@ -66,11 +66,9 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                     .machine((SshMachineLocation)machine)
                     .poll(new SshPollConfig<Boolean>(SERVICE_UP)
                             .command(cmd)
-                            .onSuccess(new Function<SshPollValue, Boolean>() {
-                                public Boolean apply(SshPollValue input) {
-                                    return (input.getExitStatus() == 0);
-                                }})
-                            .onError(Functions.constant(false)))
+                            .onSuccess(Functions.constant(true))
+                            .onFailure(Functions.constant(false))
+                            .onException(Functions.constant(false)))
                     .build();
         } else {
             LOG.warn("Location(s) %s not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
