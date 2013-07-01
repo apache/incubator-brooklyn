@@ -45,6 +45,9 @@ Key things to note if you're new to Maven:
   
   ``examples/simple-web-cluster% mvnf ../../{software/webapp,usage/all}`` 
 
+* The **developers catalog** ([developers-catalog.xml](developers-catalog.xml)) uses artifacts from your local `~/.m2/repository/...` (after building from source). This avoids unnecessary web requests to Maven Central or Sonatype, and will allow you to work off-line.
+  
+  ``wget {{site.url}}/dev/build/developers-catalog.xml > ~/.brooklyn/catalog.xml`` 
 
 ## Appendix: Sample Output
 
