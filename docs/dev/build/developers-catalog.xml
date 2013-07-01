@@ -1,0 +1,87 @@
+<catalog>
+    <name>Brooklyn Developers Catalog</name>
+
+	<template type="io.cloudsoft.cloudera.SampleClouderaManagedCluster" name="Cloudera CDH4">
+		<description>Launches Cloudera Distribution for Hadoop Manager with a Cloudera Manager and an initial cluster of 4 CDH nodes
+		(resizable) and default services including HDFS, MapReduce, and HBase</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/cloudera-icon.jpeg</iconUrl>
+	</template>
+	
+	<template type="io.cloudsoft.mapr.MyM3App" name="M3 Cluster">
+		<description>Map Reduce using MapR</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/mapr-icon.png</iconUrl>
+	</template>
+	
+	<template type="brooklyn.example.cloudfoundry.MovableCloudFoundryClusterExample" name="Stackato Movable CloudFoundry Cluster Example">
+		<description>Brooklyn Stackato</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/stackato-icon.jpeg</iconUrl>
+	</template>
+	
+	<template type="brooklyn.example.cloudfoundry.MovableElasticWebAppCluster" name="Stackato Movable Elastic Web Cluster">
+		<description>Brooklyn Stackato</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/stackato-icon.jpeg</iconUrl>
+	</template>
+	
+	<template type="io.cloudsoft.socialapps.drupal.examples.BasicDrupalApp" name="Basic Drupal App">
+		<description>Brooklyn Social Apps - Basic. (Requires Debian)</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/drupal-icon.png</iconUrl>
+	</template>
+	
+	<template type="io.cloudsoft.socialapps.drupal.examples.ClusteredDrupalApp" name="Clustered Drupal App">
+		<description>Brooklyn Social Apps - Cluster. (Requires Debian)</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/drupal-text-icon.png</iconUrl>
+	</template> 
+    
+    <template type="brooklyn.extras.cloudfoundry.CloudFoundryJavaClusterExample" name="Cloud Foundry Web App">
+		<description>Deploys a web application to a Cloud Foundry target</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/cloud-foundry-logo-icon.png</iconUrl>
+	</template>
+	
+	<template type="brooklyn.extras.openshift.OpenshiftExpressJavaClusterOnlyExample" name="OpenShift Web App">
+		<description>Deploys a web application to an OpenShift target</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/openshift_logo-icon.png</iconUrl>
+	</template>
+	
+	<template type="brooklyn.demo.SimpleRedisCluster" name="Redis Cluster">
+		<description>Launches a Redis cluster</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/redis-sq-icon.png</iconUrl>
+	</template>
+    <template type="brooklyn.demo.SimpleCassandraCluster" name="Cassandra Cluster">
+		<description>Launches a Cassandra cluster</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/cassandra-sq-icon.jpg</iconUrl>
+	</template>
+	<template type="brooklyn.demo.SimpleCouchDBCluster" name="CouchDB Cluster">
+		<description>Launches a CouchDB cluster</description>
+		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/couchdb-logo-icon.png</iconUrl>
+	</template>
+
+    <template type="brooklyn.demo.GlobalWebFabricExample" name="Demo 2: GeoDNS Web Fabric DB">
+      <description>Deploys a demonstration web application to JBoss clusters around the world</description>
+      <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/JBoss_by_Red_Hat-icon.png</iconUrl>
+    </template>
+
+    <template type="brooklyn.demo.WebClusterDatabaseExample" name="Demo 1: Web Cluster with DB">
+      <description>Deploys a demonstration web application to a managed JBoss cluster with elasticity, persisting to a MySQL</description>
+      <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/JBoss_by_Red_Hat-icon.png</iconUrl>
+    </template>
+    
+    
+    <classpath> 
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.6.0-SNAPSHOT/brooklyn-example-simple-web-cluster-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->   
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.6.0-SNAPSHOT/brooklyn-example-global-web-fabric-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->        
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.6.0-SNAPSHOT/brooklyn-example-global-web-fabric-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-hadoop-webapp/0.6.0-SNAPSHOT/brooklyn-example-hello-world-hadoop-webapp-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-portable-cloudfoundry/0.6.0-SNAPSHOT/brooklyn-example-portable-cloudfoundry-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.6.0-SNAPSHOT/brooklyn-example-simple-web-cluster-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hadoop-and-whirr/0.6.0-SNAPSHOT/brooklyn-example-hadoop-and-whirr-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-SNAPSHOT/brooklyn-example-hello-world-sql-webapp-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-messaging-pubsub/0.6.0-SNAPSHOT/brooklyn-example-simple-messaging-pubsub-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-examples-parent/0.6.0-SNAPSHOT/brooklyn-examples-parent-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-hadoop-jar/0.6.0-SNAPSHOT/brooklyn-example-hello-world-hadoop-jar-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-webapp/0.6.0-SNAPSHOT/brooklyn-example-hello-world-webapp-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-nosql-cluster/0.6.0-SNAPSHOT/brooklyn-example-simple-nosql-cluster-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-examples-webapps-parent/0.6.0-SNAPSHOT/brooklyn-examples-webapps-parent-0.6.0-SNAPSHOT.jar</entry> <!--  BROOKLYN_VERSION  -->
+    </classpath>
+
+
+</catalog>
