@@ -64,6 +64,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                 .entity(this)
                 .period(200)
                 .baseUri(managementUri)
+                .credentials(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                 .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
                         .onSuccess(HttpValueFunctions.responseCode()))
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
