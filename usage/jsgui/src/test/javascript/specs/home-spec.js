@@ -11,13 +11,6 @@ define([
     "underscore", "jquery", "model/application", "model/location", "view/home"
 ], function (_, $, Application, Location, HomeView) {
 
-    Backbone.View.prototype.callPeriodically = function (uid, callback, interval) {
-        if (!this._periodicFunctions) {
-            this._periodicFunctions = []
-        }
-        this._periodicFunctions.push(setInterval(callback, interval))
-    }
-
     describe('view/home-spec', function () {
 
         describe('view/home HomePageView', function () {

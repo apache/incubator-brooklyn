@@ -1,6 +1,6 @@
 define([
-    "router"
-], function (Router) {
+    "brooklyn", "router"
+], function (Brooklyn, Router) {
 
     var View = Backbone.View.extend({
         render:function () {
@@ -39,4 +39,36 @@ define([
             expect(view.close).toHaveBeenCalled()
         })
     })
+
+    describe("Periodic functions", function() {
+        var CallbackView = View.extend({
+            initialize: function() {
+                this.counter = 0;
+                this.callPeriodically("test-callback", function() {
+                        this.counter += 1;
+                    }, 100)
+            }
+        });
+
+        // Expects callback to have been called at least once
+        it("should have 'this' set to the owning view", function() {
+            Brooklyn.refresh = true;
+            var view = new CallbackView();
+            waits(500);
+            runs(function() {
+                expect(view.counter).toBeGreaterThan(0);
+            });
+        });
+
+        it("should not be run if Brooklyn.refresh is false", function() {
+            Brooklyn.refresh = false;
+            var view = new CallbackView();
+            waits(500);
+            runs(function() {
+                expect(view.counter).toEqual(0);
+                Brooklyn.refresh = true;
+            });
+        });
+    });
+
 })

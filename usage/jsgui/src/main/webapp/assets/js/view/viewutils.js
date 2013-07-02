@@ -1,6 +1,6 @@
 define([
-        "underscore", "jquery", "backbone"
-], function (_, $, Backbone) {
+        "underscore", "jquery"
+], function (_, $) {
 
     var ViewUtils = {
         myDataTable:function($table, extra) {

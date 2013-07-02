@@ -20,8 +20,12 @@ define([
         this.remove()
         this.unbind()
     }
-    
-    // registers a callback (cf setInterval) but it cleanly gets unregistered when view closes
+
+    /**
+     * Registers a callback (cf setInterval) that is unregistered cleanly when the view
+     * closes. The callback is run in the context of the owning view, so callbacks can
+     * refer to 'this' safely.
+     */
     Backbone.View.prototype.callPeriodically = function (uid, callback, interval) {
         if (!this._periodicFunctions) {
             this._periodicFunctions = {}
@@ -32,9 +36,11 @@ define([
         // Wrap callback in function that checks whether updates are enabled
         var periodic = function() {
             if (Brooklyn.refresh) {
-                callback();
+                callback.apply(this);
             }
         };
+        // Bind this to the view
+        periodic = _.bind(periodic, this);
         this._periodicFunctions[uid] = setInterval(periodic, interval)
     }
 
