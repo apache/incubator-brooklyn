@@ -3,9 +3,6 @@ package brooklyn.cli;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -14,7 +11,6 @@ import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.iq80.cli.Cli;
 import org.iq80.cli.Cli.CliBuilder;
 import org.iq80.cli.Command;
@@ -173,6 +169,10 @@ public class Main {
                 description = "Whether to start the web console")
         public boolean noConsole = false;
 
+        @Option(name = { "--noConsoleSecurity" },
+                description = "Whether to start the web console with no security (i.e. no authentication required)")
+        public boolean noConsoleSecurity = false;
+
         @Option(name = { "-ns", "--noShutdownOnExit" },
                 description = "Whether to stop the application when the JVM exits")
         public boolean noShutdownOnExit = false;
@@ -230,6 +230,7 @@ public class Main {
             BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                     .webconsolePort(port)
                     .webconsole(!noConsole)
+                    .installSecurityFilter(!noConsoleSecurity)
                     .shutdownOnExit(!noShutdownOnExit)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
             
@@ -370,6 +371,7 @@ public class Main {
                     .add("location", locations)
                     .add("port", port)
                     .add("noConsole", noConsole)
+                    .add("noConsoleSecurity", noConsoleSecurity)
                     .add("noShutdownOnExit", noShutdownOnExit)
                     .add("stopOnKeyPress", stopOnKeyPress);
         }

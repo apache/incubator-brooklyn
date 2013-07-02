@@ -4,6 +4,7 @@ import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.base.Throwables.getCausalChain;
 import static com.google.common.collect.Iterables.find;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
@@ -162,9 +164,15 @@ public class HttpTestUtils {
          });
     }
 
-    public static void assertHttpStatusCodeEquals(String url, int expectedCode) {
+    public static void assertHttpStatusCodeEquals(String url, int... expectedCode) {
         try {
-            assertEquals(getHttpStatusCode(url), expectedCode, "url="+url);
+            List<Integer> acceptableCodes = Lists.newArrayList();
+            for (int code : expectedCode) {
+                acceptableCodes.add((Integer)code);
+            }
+            int actualCode = getHttpStatusCode(url);
+            assertTrue(acceptableCodes.contains(actualCode), "code="+expectedCode+"; url="+url);
+            
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted for "+url+" (in assertion that result code is "+expectedCode+")", e);
@@ -211,6 +219,14 @@ public class HttpTestUtils {
         assertContentEventuallyContainsText(Collections.emptyMap(), url, phrase, additionalPhrases);
     }
 
+    public static String getContent(String url) {
+        try {
+            return DefaultGroovyMethods.getText(new URL(url).openStream());
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+    }
+    
     /** @deprecated since 0.4.0 use assertContentEventuallyContainsText */
     // it's not necessarily http (and http is implied by the class name anyway)
     // more importantly, we want to use new routines above which don't wrap execute-until-succeeds twice!

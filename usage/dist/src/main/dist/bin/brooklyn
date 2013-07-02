@@ -7,6 +7,8 @@
 
 #set -x # debug
 
+ROOT=$(cd $(dirname $0)/.. && pwd -P)
+
 # discover BROOKLYN_HOME if not set, by attempting to resolve absolute path of this command (brooklyn)
 if [ -z "$BROOKLYN_HOME" ] ; then
     BROOKLYN_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
@@ -29,4 +31,7 @@ fi
 JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
 # start Brooklyn
-exec java ${JAVA_OPTS} -cp "${INITIAL_CLASSPATH}" brooklyn.cli.Main "$@"
+exec java ${JAVA_OPTS} -cp "${INITIAL_CLASSPATH}" brooklyn.cli.Main "$@" &
+echo $! > $ROOT/pid_java
+fg
+

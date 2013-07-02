@@ -3,8 +3,10 @@ package brooklyn.event.feed.http;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -17,6 +19,19 @@ public class JsonFunctions {
         return new Function<String, JsonElement>() {
             @Override public JsonElement apply(String input) {
                 return new JsonParser().parse(input);
+            }
+        };
+    }
+
+    public static <T> Function<JsonElement, List<T>> forEach(final Function<JsonElement, T> func) {
+        return new Function<JsonElement, List<T>>() {
+            @Override public List<T> apply(JsonElement input) {
+                JsonArray array = (JsonArray) input;
+                List<T> result = Lists.newArrayList();
+                for (int i = 0; i < array.size(); i++) {
+                    result.add(func.apply(array.get(i)));
+                }
+                return result;
             }
         };
     }
