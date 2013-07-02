@@ -1,0 +1,13 @@
+[#ftl]
+[#noparse]$TTL[/#noparse] 86400
+@   IN  SOA     ns1.brooklyn.local. root.brooklyn.local. (
+        2011071001  ;Serial
+        3600        ;Refresh
+        1800        ;Retry
+        604800      ;Expire
+        86400       ;Minimum TTL
+)
+@   IN  NS      ns1.brooklyn.local.
+@   IN  NS      ns2.brooklyn.local.
+ns1     IN  A    ${driver.address}
+ns2     IN  A    ${driver.address}

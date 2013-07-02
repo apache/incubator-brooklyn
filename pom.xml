@@ -608,6 +608,7 @@
                 <module>utils/jmx/jmxmp-ssl-agent</module>
                 <module>utils/jmx/jmxrmi-agent</module>
                 <module>software/base</module>
+                <module>software/network</module>
                 <module>software/osgi</module>
                 <module>software/webapp</module>
                 <module>software/messaging</module>
