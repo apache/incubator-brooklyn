@@ -5,6 +5,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
@@ -16,6 +17,9 @@ import brooklyn.util.flags.SetFromFlag;
 public interface AbstractGeoDnsService extends Entity {
     @SetFromFlag("pollPeriod")
     public static final ConfigKey<Long> POLL_PERIOD = new BasicConfigKey<Long>(Long.class, "geodns.pollperiod", "Poll period (in milliseconds) for refreshing target hosts", 5000L);
+    public static final ConfigKey<Boolean> INCLUDE_HOMELESS_ENTITIES = ConfigKeys.newBooleanConfigKey("geodns.includeHomeless", "Whether to include entities whose geo-coordinates cannot be inferred", false);
+    public static final ConfigKey<Boolean> USE_HOSTNAMES = ConfigKeys.newBooleanConfigKey("geodns.useHostnames", "Whether to use the hostname for the returned value, for routing (rather than IP address)", true);
+    
     public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
     public static final AttributeSensor<Boolean> SERVICE_UP = Startable.SERVICE_UP;
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;

@@ -32,6 +32,10 @@ public class HostGeoInfo implements Serializable {
     public final double latitude;
     public final double longitude;
 
+    public static HostGeoInfo create(String address, String displayName, double latitude, double longitude) {
+        return new HostGeoInfo(address, displayName, latitude, longitude);
+    }
+    
     public static HostGeoInfo fromIpAddress(InetAddress address) {
         try {
             HostGeoLookup lookup = findHostGeoLookupImpl();

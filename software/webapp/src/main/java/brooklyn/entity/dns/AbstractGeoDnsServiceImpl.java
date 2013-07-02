@@ -28,7 +28,6 @@ import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
@@ -172,7 +171,9 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         try {
             HostGeoInfo oldGeo = targetHosts.get(e);
             String hostname = inferHostname(e);
+            String ip = inferIp(e);
             HostGeoInfo geoH = (hostname == null) ? null : HostGeoInfo.fromIpAddress(InetAddress.getByName(hostname));
+            HostGeoInfo geoE = HostGeoInfo.fromEntity(e);
 
             if (hostname == null) {
                 if (entitiesWithoutGeoInfo.add(e)) {
@@ -182,10 +183,22 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             }
             
             if (geoH == null) {
-                if (entitiesWithoutGeoInfo.add(e)) {
-                    log.warn("GeoDns ignoring {} (no geography info available for {})", e, hostname);
+                if (getConfig(INCLUDE_HOMELESS_ENTITIES)) {
+                    if (entitiesWithoutGeoInfo.add(e)) {
+                        log.info("GeoDns including {}, even though no geography info available for {})", e, hostname);
+                    }
+                    geoH = (geoE != null) ? geoE : HostGeoInfo.create(hostname, "unknownLocation("+hostname+")", 0, 0);
+                } else {
+                    if (entitiesWithoutGeoInfo.add(e)) {
+                        log.warn("GeoDns ignoring {} (no geography info available for {})", e, hostname);
+                    }
+                    return false;
                 }
-                return false;
+            }
+            
+            // Switch to IP address if that's what we're configured to use, and it's available
+            if (!getConfig(USE_HOSTNAMES) && ip != null) {
+                geoH = HostGeoInfo.create(ip, geoH.displayName, geoH.latitude, geoH.longitude);
             }
             
             // If we already knew about it, and it hasn't changed, then nothing to do
@@ -194,7 +207,6 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             }
             
             // Check if location has lat/lon explicitly set; use geo-dns but warn if dramatically different
-            HostGeoInfo geoE = HostGeoInfo.fromEntity(e);
             if (geoE != null) {
                 if ((Math.abs(geoH.latitude-geoE.latitude)>3) ||
                         (Math.abs(geoH.longitude-geoE.longitude)>3) ) {
@@ -260,5 +272,9 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             }
         }
         return hostname;
+    }
+    
+    protected String inferIp(Entity entity) {
+        return entity.getAttribute(Attributes.ADDRESS);
     }
 }
