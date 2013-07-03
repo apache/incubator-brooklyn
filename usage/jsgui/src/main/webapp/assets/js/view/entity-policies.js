@@ -134,7 +134,14 @@ define([
                     that.currentStateUrl = that._policies.get(that.activePolicy).getLinkByName("config") + "/current-state";
                     $("#policy-config").show(100);
                     $table.show(100);
-                    ViewUtils.myDataTable($table);
+                    ViewUtils.myDataTable($table, {
+                        "bAutoWidth": false,
+                        "aoColumns" : [
+                            { sWidth: '220px' },
+                            { sWidth: '240px' },
+                            { sWidth: '25px' }
+                        ]
+                    });
                     $table.dataTable().fnAdjustColumnSizing();
                 }
             }
