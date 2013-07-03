@@ -162,11 +162,13 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
         // Restart BIND
         machine.execCommands("configuring BIND", ImmutableList.of(CommonCommands.sudo("service bind restart")));
+        LOG.info("updated named configuration and zone file for '{}' on {}", getDomainName(), this);
     }
 
     public void configure(SshMachineLocation machine) {
         String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate("classpath://brooklyn/entity/network/bind/resolv.conf");
         machine.copyTo(new ByteArrayInputStream(contents.getBytes()), "/tmp/resolv.conf");
         machine.execScript("update resolver config", ImmutableList.of(CommonCommands.sudo("cp /tmp/resolv.conf /etc/resolv.conf")));
+        LOG.info("configured resolver on {}", machine);
     }
 }
