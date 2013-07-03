@@ -82,6 +82,7 @@ define([
         },
 
         rowClick:function(evt) {
+            evt.stopPropagation();
             var row = $(evt.currentTarget).closest("tr"),
                 id = row.attr("id"),
                 policy = this._policies.get(id);
@@ -156,6 +157,7 @@ define([
         },
 
         showPolicyConfigModal:function (evt) {
+            evt.stopPropagation();
             // get the model that we need to show, create its view and show it
             var cid = $(evt.currentTarget).attr("id");
             this._modal = new PolicyConfigInvokeView({
@@ -170,6 +172,7 @@ define([
         callStop:function(event) { this.doPost(event, "stop"); },
         callDestroy:function(event) { this.doPost(event, "destroy"); },
         doPost:function(event, linkname) {
+            event.stopPropagation();
             var that = this,
                 url = $(event.currentTarget).attr("link");
             $.ajax({
