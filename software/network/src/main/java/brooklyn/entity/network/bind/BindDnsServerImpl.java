@@ -5,12 +5,12 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
@@ -38,7 +38,9 @@ import com.google.common.collect.Multimap;
 public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsServer {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BindDnsServerImpl.class);
+    protected static final String RESOURCES_CLASSPATH = "classpath://brooklyn/entity/network/bind/";
 
+    private AtomicLong serial = new AtomicLong(System.currentTimeMillis());
     private Object[] mutex = new Object[0];
     private DynamicGroup entities;
     private AbstractMembershipTrackingPolicy policy;
@@ -60,6 +62,10 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
     public String getDomainName() {
         return getConfig(DOMAIN_NAME);
+    }
+
+    public long getSerial() {
+        return serial.incrementAndGet();
     }
 
     @Override
@@ -93,7 +99,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     }
 
     @Override
-    public void onManagementStarted() {
+    protected void preStart() {
         Map<?, ?> flags = MutableMap.builder()
                 .put("name", "Address tracker")
                 .put("sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR)))
@@ -155,20 +161,21 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         SshMachineLocation machine = (SshMachineLocation) location.get();
         String[] templateList = new String[] { "domain.zone", "named.conf" };
         for (String fileName : templateList) {
-            String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate("classpath://brooklyn/entity/network/bind/" + fileName);
+            String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate(RESOURCES_CLASSPATH + fileName);
             machine.copyTo(new ByteArrayInputStream(contents.getBytes()), "/tmp/" + fileName);
-            machine.execScript("update bind config", ImmutableList.of(CommonCommands.sudo("cp /tmp/" + fileName + " /var/named/" + fileName)));
         }
+        machine.execScript("update bind config", ImmutableList.of(
+                CommonCommands.sudo("mv /tmp/named.conf /etc/named.conf"),
+                CommonCommands.sudo("mv /tmp/domain.zone /var/named/domain.zone"),
+                CommonCommands.sudo("service bind restart")));
 
-        // Restart BIND
-        machine.execCommands("configuring BIND", ImmutableList.of(CommonCommands.sudo("service bind restart")));
         LOG.info("updated named configuration and zone file for '{}' on {}", getDomainName(), this);
     }
 
     public void configure(SshMachineLocation machine) {
-        String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate("classpath://brooklyn/entity/network/bind/resolv.conf");
+        String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate(RESOURCES_CLASSPATH + "resolv.conf");
         machine.copyTo(new ByteArrayInputStream(contents.getBytes()), "/tmp/resolv.conf");
-        machine.execScript("update resolver config", ImmutableList.of(CommonCommands.sudo("cp /tmp/resolv.conf /etc/resolv.conf")));
+        machine.execScript("update resolver config", ImmutableList.of(CommonCommands.sudo("mv /tmp/resolv.conf /etc/resolv.conf")));
         LOG.info("configured resolver on {}", machine);
     }
 }

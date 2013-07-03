@@ -47,9 +47,8 @@ public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver impleme
         // XXX do we need to grab another public IP somewhere???
         newScript(CUSTOMIZING)
                 .body.append(
-                        CommonCommands.sudo("iptables -A INPUT -p udp -m state --state NEW --dport " + dnsPort + " -j ACCEPT"),
-                        CommonCommands.sudo("iptables -A INPUT -p tcp -m state --state NEW --dport " + dnsPort + " -j ACCEPT"),
-                        CommonCommands.sudo("service iptables restart")
+                        CommonCommands.sudo("iptables -I INPUT 1 -p udp -m state --state NEW --dport " + dnsPort + " -j ACCEPT"),
+                        CommonCommands.sudo("iptables -I INPUT 1 -p tcp -m state --state NEW --dport " + dnsPort + " -j ACCEPT")
                 ).execute();
     }
 

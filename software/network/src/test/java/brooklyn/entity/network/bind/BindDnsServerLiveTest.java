@@ -1,6 +1,7 @@
 package brooklyn.entity.network.bind;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,9 @@ public class BindDnsServerLiveTest {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void shutdown() {
+    public void shutdown() throws Exception {
         Entities.destroyAll(app);
+        // Thread.sleep(TimeUnit.MINUTES.toMillis(30));
     }
 
     @DataProvider(name = "virtualMachineData")
