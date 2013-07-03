@@ -1,6 +1,5 @@
 package brooklyn.entity.network.bind;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +33,7 @@ public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver impleme
     public void install() {
         List<String> commands = ImmutableList.of(CommonCommands.installPackage(MutableMap.of("yum", "bind"), "bind"));
 
-        newScript(MutableMap.of("allocatePTY", "true"), INSTALLING)
+        newScript(INSTALLING)
                 .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
@@ -42,34 +41,34 @@ public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public void customize() {
-        Map<String, Object> ports = new HashMap<String, Object>();
-        ports.put("dnsPort", entity.getAttribute(BindDnsServer.DNS_PORT));
+        Integer dnsPort = getEntity().getDnsPort();
+        Map<String, Object> ports = MutableMap.<String, Object>of("dnsPort", dnsPort);
         NetworkUtils.checkPortsValid(ports);
         // XXX do we need to grab another public IP somewhere???
-        newScript(MutableMap.of("allocatePTY", "true"), CUSTOMIZING)
+        newScript(CUSTOMIZING)
                 .body.append(
-                        CommonCommands.sudo("iptables -A INPUT -p udp -m state --state NEW --dport 53 -j ACCEPT"),
-                        CommonCommands.sudo("iptables -A INPUT -p tcp -m state --state NEW --dport 53 -j ACCEPT"),
+                        CommonCommands.sudo("iptables -A INPUT -p udp -m state --state NEW --dport " + dnsPort + " -j ACCEPT"),
+                        CommonCommands.sudo("iptables -A INPUT -p tcp -m state --state NEW --dport " + dnsPort + " -j ACCEPT"),
                         CommonCommands.sudo("service iptables restart")
-                    ).execute();
+                ).execute();
     }
 
     @Override
     public void launch() {
-        newScript(MutableMap.of("allocatePTY", "true", "usePidFile", "false"), LAUNCHING).
+        newScript(MutableMap.of("usePidFile", false), LAUNCHING).
         body.append(CommonCommands.sudo("service named start")).execute();
     }
 
     @Override
     public boolean isRunning() {
-        return newScript(MutableMap.of("allocatePTY", "true", "usePidFile", "false"), CHECK_RUNNING).
-                    body.append(CommonCommands.sudo("service named status")).execute() == 0;
+        return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
+                    .body.append(CommonCommands.sudo("service named status")).execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(MutableMap.of("allocatePTY", "true", "usePidFile", "false"), STOPPING).
-        body.append(CommonCommands.sudo("service named stop")).execute();
+        newScript(MutableMap.of("usePidFile", false), STOPPING)
+                .body.append(CommonCommands.sudo("service named stop")).execute();
     }
 
 }

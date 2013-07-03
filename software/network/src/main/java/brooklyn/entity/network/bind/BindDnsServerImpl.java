@@ -50,6 +50,10 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         return getConfig(MANAGEMENT_CIDR);
     }
 
+    public Integer getDnsPort() {
+        return getAttribute(DNS_PORT);
+    }
+
     public void init() {
         entities = addChild(EntitySpecs.spec(DynamicGroup.class)
                 .configure("entityFilter", getConfig(ENTITY_FILTER)));
@@ -83,7 +87,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     public void onManagementStarted() {
         Map<?, ?> flags = MutableMap.builder()
                 .put("name", "Address tracker")
-                .put("sensorsToTrack", ImmutableSet.of(Attributes.ADDRESS))
+                .put("sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR)))
                 .build();
         policy = new AbstractMembershipTrackingPolicy(flags) {
             @Override
@@ -104,7 +108,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     public void added(Entity member) {
         synchronized (mutex) {
             Optional<Location> location = Iterables.tryFind(member.getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-            if (location.isPresent() && Strings.isNonBlank(member.getAttribute(Attributes.ADDRESS))) {
+            if (location.isPresent() && Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) {
                 SshMachineLocation machine = (SshMachineLocation) location.get();
                 if (!entityLocations.containsKey(machine)) {
                     entityLocations.put(machine, member);
@@ -126,11 +130,12 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
     public void update(SshMachineLocation machine) {
         synchronized (mutex) {
-            String[] templateList = new String[] { "fwd.brooklyn.local", "rev.brooklyn.local", "named.conf" };
+            String[] templateList = new String[] { "fwd.brooklyn.local", /* "rev.brooklyn.local", */ "named.conf" };
             // Parse and copy templates
             for (String fileName : templateList) {
                 String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate("classpath://brooklyn/entity/network/bind/" + fileName);
-                machine.copyTo(new ByteArrayInputStream(contents.getBytes()), "/var/named/" + fileName);
+                machine.copyTo(new ByteArrayInputStream(contents.getBytes()), "/tmp/" + fileName);
+                machine.execScript("update bind config", ImmutableList.of(CommonCommands.sudo("cp /tmp/" + fileName + " /var/named/" + fileName)));
             }
 
             // Restart BIND
