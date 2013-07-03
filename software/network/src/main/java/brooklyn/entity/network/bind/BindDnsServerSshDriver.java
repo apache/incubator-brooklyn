@@ -1,15 +1,13 @@
 package brooklyn.entity.network.bind;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.CommonCommands;
 
 import com.google.common.collect.ImmutableList;
@@ -32,25 +30,11 @@ public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver impleme
         return "/var/named/data/named.run";
     }
 
-    protected String getExpandedInstallDir() {
-        if (expandedInstallDir == null) throw new IllegalStateException("expandedInstallDir is null; most likely install was not called");
-        return expandedInstallDir;
-    }
-
     @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
-        List<String> urls = resolver.getTargets();
-        String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir()+"/"+resolver.getUnpackedDirectoryName(String.format("apache-karaf-%s", getVersion()));
+        List<String> commands = ImmutableList.of(CommonCommands.installPackage(MutableMap.of("yum", "bind"), "bind"));
 
-        List<String> commands = ImmutableList.<String>builder()
-                .addAll(CommonCommands.downloadUrlAs(urls, saveAs))
-                .add(CommonCommands.INSTALL_TAR)
-                .add("tar xzfv " + saveAs)
-                .build();
-
-        newScript(INSTALLING)
+        newScript(MutableMap.of("allocatePTY", "true"), INSTALLING)
                 .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
@@ -59,33 +43,33 @@ public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public void customize() {
         Map<String, Object> ports = new HashMap<String, Object>();
-        ports.put("dnsPort", 53);
-
+        ports.put("dnsPort", entity.getAttribute(BindDnsServer.DNS_PORT));
         NetworkUtils.checkPortsValid(ports);
-        newScript(CUSTOMIZING).
-                body.append(String.format("cd %s", getRunDir())).execute();
+        // XXX do we need to grab another public IP somewhere???
+        newScript(MutableMap.of("allocatePTY", "true"), CUSTOMIZING)
+                .body.append(
+                        CommonCommands.sudo("iptables -A INPUT -p udp -m state --state NEW --dport 53 -j ACCEPT"),
+                        CommonCommands.sudo("iptables -A INPUT -p tcp -m state --state NEW --dport 53 -j ACCEPT"),
+                        CommonCommands.sudo("service iptables restart")
+                    ).execute();
     }
 
     @Override
     public void launch() {
-        Map<String, Object> flags = new HashMap<String, Object>();
-        flags.put("usePidFile", true);
-
-        newScript(flags, LAUNCHING).
-                body.append("").execute();
+        newScript(MutableMap.of("allocatePTY", "true", "usePidFile", "false"), LAUNCHING).
+        body.append(CommonCommands.sudo("service named start")).execute();
     }
 
     @Override
     public boolean isRunning() {
-        return newScript(CHECK_RUNNING).
-                    body.append("").execute() == 0;
+        return newScript(MutableMap.of("allocatePTY", "true", "usePidFile", "false"), CHECK_RUNNING).
+                    body.append(CommonCommands.sudo("service named status")).execute() == 0;
     }
 
     @Override
     public void stop() {
-        newScript(STOPPING).
-                body.append("")
-        ).execute();
+        newScript(MutableMap.of("allocatePTY", "true", "usePidFile", "false"), STOPPING).
+        body.append(CommonCommands.sudo("service named stop")).execute();
     }
 
 }

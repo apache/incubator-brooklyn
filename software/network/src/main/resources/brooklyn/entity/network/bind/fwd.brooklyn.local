@@ -11,3 +11,6 @@
 @   IN  NS      ns2.brooklyn.local.
 ns1     IN  A    ${driver.address}
 ns2     IN  A    ${driver.address}
+[#list entity.entityLocations as location]
+${location.name} IN A ${location.address.hostAddress}
+[/#list]
