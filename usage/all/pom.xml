@@ -60,6 +60,11 @@
             <artifactId>brooklyn-software-nosql</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-network</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.brooklyn</groupId>
