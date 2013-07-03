@@ -43,7 +43,7 @@ public class BindDnsServerLiveTest {
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {
         return new Object[][] { // ImageId, Provider, Region
-            new Object[] { "ami-029f9476", "aws-ec2", "eu-west-1" }, // XXX using imageId instead...
+            new Object[] { "ami-029f9476", "aws-ec2", "eu-west-1" },
         };
     }
 
@@ -58,6 +58,7 @@ public class BindDnsServerLiveTest {
         dns.start(ImmutableList.of(testLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.SERVICE_UP, true);
+        Entities.dumpInfo(app);
     }
 
 }

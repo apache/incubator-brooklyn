@@ -54,6 +54,11 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         return getAttribute(DNS_PORT);
     }
 
+    public String getDomainName() {
+        return getConfig(DOMAIN_NAME);
+    }
+
+    @Override
     public void init() {
         entities = addChild(EntitySpecs.spec(DynamicGroup.class)
                 .configure("entityFilter", getConfig(ENTITY_FILTER)));
@@ -65,7 +70,9 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     }
 
     public List<Location> getEntityLocations() {
-        return ImmutableList.copyOf(entityLocations.keySet());
+        synchronized (mutex) {
+            return ImmutableList.copyOf(entityLocations.keySet());
+        }
     }
 
     @Override
@@ -108,12 +115,14 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     public void added(Entity member) {
         synchronized (mutex) {
             Optional<Location> location = Iterables.tryFind(member.getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-            if (location.isPresent() && Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) {
+            String hostname = member.getAttribute(getConfig(HOSTNAME_SENSOR));
+            if (location.isPresent() && Strings.isNonBlank(hostname)) {
                 SshMachineLocation machine = (SshMachineLocation) location.get();
                 if (!entityLocations.containsKey(machine)) {
                     entityLocations.put(machine, member);
                     update(machine);
                 }
+                LOG.info("{} added at location {} with name {}", new Object[] { member, machine, hostname });
             } else {
                 LOG.warn("added({}) called but entity not ready", member);
             }
@@ -130,8 +139,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
     public void update(SshMachineLocation machine) {
         synchronized (mutex) {
-            String[] templateList = new String[] { "fwd.brooklyn.local", /* "rev.brooklyn.local", */ "named.conf" };
-            // Parse and copy templates
+            String[] templateList = new String[] { "domain.zone", "named.conf" };
             for (String fileName : templateList) {
                 String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate("classpath://brooklyn/entity/network/bind/" + fileName);
                 machine.copyTo(new ByteArrayInputStream(contents.getBytes()), "/tmp/" + fileName);

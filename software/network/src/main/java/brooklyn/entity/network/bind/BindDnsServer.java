@@ -27,6 +27,9 @@ public interface BindDnsServer extends SoftwareProcess {
     ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = new BasicConfigKey(Predicate.class,
             "bind.entity.filter", "Filter for entities which will have locations added to DNS", Predicates.instanceOf(SoftwareProcess.class));
 
+    @SetFromFlag("domainName")
+    ConfigKey<String> DOMAIN_NAME = new BasicConfigKey<String>(String.class, "bind.domain.name", "The DNS domain name to serve", "brooklyn.local");
+
     @SetFromFlag("subnet")
     ConfigKey<String> MANAGEMENT_CIDR = new BasicConfigKey<String>(String.class, "bind.access.cidr", "Subnet CIDR allowed to access DNS", "0.0.0.0/0");
     // TODO should default be a /0 or use brooklyn management CIDR?
