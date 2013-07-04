@@ -167,7 +167,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         machine.execScript("update bind config", ImmutableList.of(
                 CommonCommands.sudo("mv /tmp/named.conf /etc/named.conf"),
                 CommonCommands.sudo("mv /tmp/domain.zone /var/named/domain.zone"),
-                CommonCommands.sudo("service bind restart")));
+                CommonCommands.sudo("service named restart")));
 
         LOG.info("updated named configuration and zone file for '{}' on {}", getDomainName(), this);
     }
