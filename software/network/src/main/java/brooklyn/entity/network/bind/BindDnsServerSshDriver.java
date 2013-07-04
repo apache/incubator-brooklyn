@@ -31,7 +31,10 @@ public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public void install() {
-        List<String> commands = ImmutableList.of(CommonCommands.installPackage(MutableMap.of("yum", "bind"), "bind"));
+        List<String> commands = ImmutableList.<String>builder()
+                .add(CommonCommands.installPackage(MutableMap.of("yum", "bind"), "bind"))
+                .add("which setenforce && " + CommonCommands.sudo("setenforce 0"))
+                .build();
 
         newScript(INSTALLING)
                 .failOnNonZeroResultCode()
