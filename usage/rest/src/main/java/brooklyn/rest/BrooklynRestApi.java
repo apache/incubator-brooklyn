@@ -20,6 +20,7 @@ import brooklyn.rest.resources.PolicyResource;
 import brooklyn.rest.resources.ScriptResource;
 import brooklyn.rest.resources.SensorResource;
 import brooklyn.rest.resources.VersionResource;
+import brooklyn.rest.util.DefaultExceptionMapper;
 
 import com.google.common.collect.Iterables;
 
@@ -51,6 +52,7 @@ public class BrooklynRestApi {
 
     public static Iterable<Object> getMiscResources() {
         List<Object> resources = new ArrayList<Object>();
+        resources.add(new DefaultExceptionMapper());
         resources.add(new JacksonJsonProvider());
         return resources;
     }

@@ -13,6 +13,7 @@ import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.resources.AbstractBrooklynRestResource;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
+import brooklyn.rest.util.DefaultExceptionMapper;
 import brooklyn.rest.util.NullHttpServletRequestProvider;
 import brooklyn.rest.util.NullServletConfigProvider;
 
@@ -48,7 +49,6 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
         // doesn't inject ServletConfig and it all blows up
         addProvider(NullServletConfigProvider.class);
         addProvider(NullHttpServletRequestProvider.class);
-        
       super.addResource(resource);
       if (resource instanceof AbstractBrooklynRestResource) {
           ((AbstractBrooklynRestResource)resource).injectManagementContext(getManagementContext());
@@ -56,6 +56,7 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
     }
     
     protected void addResources() {
+        addProvider(DefaultExceptionMapper.class);
         for (Object r: BrooklynRestApi.getBrooklynRestResources())
             addResource(r);
     }

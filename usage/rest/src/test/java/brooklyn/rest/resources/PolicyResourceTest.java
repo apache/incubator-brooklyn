@@ -75,7 +75,9 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
             configNames.add(conf.getName());
         }
         
-        assertEquals(configNames, ImmutableSet.of(RestMockSimplePolicy.SAMPLE_CONFIG.getName()));
+        assertEquals(configNames, ImmutableSet.of(
+                RestMockSimplePolicy.SAMPLE_CONFIG.getName(),
+                RestMockSimplePolicy.INTEGER_CONFIG.getName()));
     }
 
     @Test
