@@ -38,6 +38,11 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
     }
 
     @Override
+    protected void setUpResources() throws Exception {
+        addResources();
+    }
+
+    @Override
     protected final void addResource(Object resource) {
         // seems we have to provide our own injector because the jersey test framework 
         // doesn't inject ServletConfig and it all blows up

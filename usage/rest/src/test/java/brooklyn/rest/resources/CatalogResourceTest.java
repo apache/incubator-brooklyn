@@ -27,11 +27,6 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogResourceTest.class);
     
-  @Override
-  protected void setUpResources() throws Exception {
-    addResource(new CatalogResource());
-  }
-
   @Test
   public void testRegisterCustomEntity() {
     String groovyScript = "package brooklyn.rest.entities.custom\n" +

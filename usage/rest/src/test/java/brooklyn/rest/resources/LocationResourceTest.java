@@ -33,11 +33,6 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
     private static final Logger log = LoggerFactory.getLogger(LocationResourceTest.class);
     private URI addedLocationUri;
     
-  @Override
-  protected void setUpResources() throws Exception {
-    addResources();
-  }
-
   @Test
   public void testAddNewLocation() {
     Map<String, String> expectedConfig = ImmutableMap.of(
