@@ -12,6 +12,11 @@
 		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/mapr-icon.png</iconUrl>
 	</template>
 	
+	<template type="brooklyn.demo.SimpleMongoDBReplicaSet" name="Simple MongoDB replica set">
+        <description>Launches a MongoDB replica set</description>
+        <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/mongo-db-icon.jpeg</iconUrl>
+    </template>
+    
 	<template type="brooklyn.example.cloudfoundry.MovableCloudFoundryClusterExample" name="Stackato Movable CloudFoundry Cluster Example">
 		<description>Brooklyn Stackato</description>
 		<iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/stackato-icon.jpeg</iconUrl>
