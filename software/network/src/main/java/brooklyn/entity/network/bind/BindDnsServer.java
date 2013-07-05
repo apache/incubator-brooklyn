@@ -40,19 +40,50 @@ public interface BindDnsServer extends SoftwareProcess {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("filter")
     ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = new BasicConfigKey(Predicate.class,
-            "bind.entity.filter", "Filter for entities which will have locations added to DNS", Predicates.instanceOf(SoftwareProcess.class));
+            "bind.entity.filter", "Filter for entities which will use the BIND DNS service for name resolution",
+            Predicates.instanceOf(SoftwareProcess.class));
 
     @SetFromFlag("domainName")
-    ConfigKey<String> DOMAIN_NAME = new BasicConfigKey<String>(String.class, "bind.domain.name", "The DNS domain name to serve", "brooklyn.local");
+    ConfigKey<String> DOMAIN_NAME = new BasicConfigKey<String>(String.class,
+            "bind.domain.name", "The DNS domain name to serve", "brooklyn.local");
 
     @SetFromFlag("subnet")
-    ConfigKey<String> MANAGEMENT_CIDR = new BasicConfigKey<String>(String.class, "bind.access.cidr", "Subnet CIDR allowed to access DNS", "0.0.0.0/0");
-    // TODO should default be a /0 or use brooklyn management CIDR?
+    ConfigKey<String> MANAGEMENT_CIDR = new BasicConfigKey<String>(String.class,
+            "bind.access.cidr", "Subnet CIDR allowed to access DNS", "0.0.0.0/0");
+            // TODO should default be a /0 or use brooklyn management CIDR?
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("hostnameSensor")
-    ConfigKey<AttributeSensor<String>> HOSTNAME_SENSOR = new BasicConfigKey(AttributeSensor.class, "bind.sensor.hostname", "Sensor on managed entities that reports the hostname", Attributes.HOSTNAME);
+    ConfigKey<AttributeSensor<String>> HOSTNAME_SENSOR = new BasicConfigKey(AttributeSensor.class,
+            "bind.sensor.hostname", "Sensor on managed entities that reports the hostname", Attributes.HOSTNAME);
 
-    PortAttributeSensorAndConfigKey DNS_PORT = new PortAttributeSensorAndConfigKey("bind.port", "BIND DNS port for TCP and UDP", PortRanges.fromString("53"));
+    PortAttributeSensorAndConfigKey DNS_PORT =
+            new PortAttributeSensorAndConfigKey("bind.port", "BIND DNS port for TCP and UDP", PortRanges.fromString("53"));
+
+    @SetFromFlag("zoneFileTemplate")
+    ConfigKey<String> DOMAIN_ZONE_FILE_TEMPLATE = new BasicConfigKey<String>(String.class,
+            "bind.template.domain-zone", "The BIND domain zone file to serve (as FreeMarker template)",
+            "classpath://brooklyn/entity/network/bind/domain.zone");
+
+    @SetFromFlag("namedConfTemplate")
+    ConfigKey<String> NAMED_CONF_TEMPLATE = new BasicConfigKey<String>(String.class,
+            "bind.template.named-conf", "The BIND named configuration file (as FreeMarker template)",
+            "classpath://brooklyn/entity/network/bind/named.conf");
+
+    /* Configuration applicable to clients of the BIND DNS service. */
+
+    @SetFromFlag("replaceResolvConf")
+    ConfigKey<Boolean> REPLACE_RESOLV_CONF = new BasicConfigKey<Boolean>(Boolean.class,
+            "bind.resolv-conf.replce", "Set to replace resolv.conf with the template (default is to use eth0 script)", Boolean.FALSE);
+
+    @SetFromFlag("interfaceConfigTemplate")
+    ConfigKey<String> INTERFACE_CONFIG_TEMPLATE = new BasicConfigKey<String>(String.class,
+            "bind.template.interface-cfg", "The network interface configuration file for clients (as FreeMarker template)",
+            "classpath://brooklyn/entity/network/bind/ifcfg");
+
+    @SetFromFlag("interfaceConfigTemplate")
+    ConfigKey<String> RESOLV_CONF_TEMPLATE = new BasicConfigKey<String>(String.class,
+            "bind.template.resolv-conf", "The resolver configuration file for clients (as FreeMarker template)",
+            "classpath://brooklyn/entity/network/bind/resolv.conf");
 
 }

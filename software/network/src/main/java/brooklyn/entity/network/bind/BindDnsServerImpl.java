@@ -174,23 +174,35 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     public void update() {
         Optional<Location> location = Iterables.tryFind(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
         SshMachineLocation machine = (SshMachineLocation) location.get();
-        String[] templateList = new String[] { "domain.zone", "named.conf" };
-        for (String fileName : templateList) {
-            String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate(RESOURCES_CLASSPATH + fileName);
-            machine.copyTo(new ByteArrayInputStream(contents.getBytes()), "/tmp/" + fileName);
-        }
-        machine.execScript("update bind config", ImmutableList.of(
-                CommonCommands.sudo("mv /tmp/named.conf /etc/named.conf"),
-                CommonCommands.sudo("mv /tmp/domain.zone /var/named/domain.zone"),
-                CommonCommands.sudo("service named restart")));
-
+        copyTemplate(getConfig(NAMED_CONF_TEMPLATE), "/etc/named.conf", machine);
+        copyTemplate(getConfig(DOMAIN_ZONE_FILE_TEMPLATE), "/var/named/domain.zone", machine);
+        machine.execScript("restart bind", ImmutableList.of(CommonCommands.sudo("service named restart")));
         LOG.info("updated named configuration and zone file for '{}' on {}", getDomainName(), this);
     }
 
     public void configure(SshMachineLocation machine) {
-        String contents = ((BindDnsServerSshDriver) getDriver()).processTemplate(RESOURCES_CLASSPATH + "resolv.conf");
-        machine.copyTo(new ByteArrayInputStream(contents.getBytes()), "/tmp/resolv.conf");
-        machine.execScript("update resolver config", ImmutableList.of(CommonCommands.sudo("mv /tmp/resolv.conf /etc/resolv.conf")));
+        if (getConfig(REPLACE_RESOLV_CONF)) {
+            copyTemplate(getConfig(RESOLV_CONF_TEMPLATE), "/etc/resolv.conf", machine);
+        } else {
+            appendTemplate(getConfig(INTERFACE_CONFIG_TEMPLATE), "/etc/sysconfig/network-scripts/ifcfg-eth0", machine);
+            machine.execScript("reload network", ImmutableList.of(CommonCommands.sudo("service network reload")));
+        }
         LOG.info("configured resolver on {}", machine);
+    }
+
+    public void copyTemplate(String template, String destination, SshMachineLocation machine) {
+        String content = ((BindDnsServerSshDriver) getDriver()).processTemplate(template);
+        String temp = "/tmp/template-" + Strings.makeRandomId(6);
+        machine.copyTo(new ByteArrayInputStream(content.getBytes()), temp);
+        machine.execScript("copying file", ImmutableList.of(CommonCommands.sudo(String.format("mv %s %s", temp, destination))));
+    }
+
+    public void appendTemplate(String template, String destination, SshMachineLocation machine) {
+        String content = ((BindDnsServerSshDriver) getDriver()).processTemplate(template);
+        String temp = "/tmp/template-" + Strings.makeRandomId(6);
+        machine.copyTo(new ByteArrayInputStream(content.getBytes()), temp);
+        machine.execScript("updating file", ImmutableList.of(
+                CommonCommands.sudo(String.format("tee -a %s < %s", destination, temp)),
+                String.format("rm -f %s", temp)));
     }
 }

@@ -23,6 +23,10 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.IptablesCommands;
+import brooklyn.util.ssh.IptablesCommands.Chain;
+import brooklyn.util.ssh.IptablesCommands.Policy;
+import brooklyn.util.ssh.IptablesCommands.Protocol;
 
 import com.google.common.collect.ImmutableList;
 
@@ -62,11 +66,13 @@ public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver impleme
         Integer dnsPort = getEntity().getDnsPort();
         Map<String, Object> ports = MutableMap.<String, Object>of("dnsPort", dnsPort);
         NetworkUtils.checkPortsValid(ports);
-        // XXX do we need to grab another public IP somewhere???
         newScript(CUSTOMIZING)
                 .body.append(
-                        CommonCommands.sudo("iptables -I INPUT 1 -p udp -m state --state NEW --dport " + dnsPort + " -j ACCEPT"),
-                        CommonCommands.sudo("iptables -I INPUT 1 -p tcp -m state --state NEW --dport " + dnsPort + " -j ACCEPT")
+                        // TODO determine name of ethernet interface if not eth0?
+                        IptablesCommands.insertIptablesRule(Chain.INPUT, "eth0", Protocol.UDP, dnsPort, Policy.ACCEPT),
+                        IptablesCommands.insertIptablesRule(Chain.INPUT, "eth0", Protocol.TCP, dnsPort, Policy.ACCEPT),
+                        CommonCommands.sudo("service iptables save"),
+                        CommonCommands.sudo("service iptables restart")
                 ).execute();
     }
 
