@@ -7,13 +7,6 @@ define([
         return "fixtures/sensor-current-state.json"
     }
 
-    Backbone.View.prototype.callPeriodically = function (uid, callback, interval) {
-        if (!this._periodicFunctions) {
-            this._periodicFunctions = []
-        }
-        this._periodicFunctions.push(setInterval(callback, interval))
-    }
-
     // FIXME test complains about 'url' needing to be set
     // but i can't figure out where 'url' is missing
     // (may get sorted out if state is stored centrally)

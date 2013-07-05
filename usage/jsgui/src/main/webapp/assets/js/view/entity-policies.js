@@ -34,6 +34,7 @@ define([
             }, 3000);
             that.refresh();
         },
+
         refresh:function() {
             var that = this;
             that.render();
@@ -41,6 +42,7 @@ define([
                 that.render();
             }});
         },
+
         render:function () {
             var that = this,
                 $tbody = this.$('#policies-table tbody').empty();
@@ -70,13 +72,17 @@ define([
             }
             return that;
         },
+
         toggleFilterEmpty:function() {
             ViewUtils.toggleFilterEmpty($('#policy-config-table'), 2);
         },
+
         refreshPolicyConfigNow:function () {
             this.refreshPolicyConfig(this);  
         },
+
         rowClick:function(evt) {
+            evt.stopPropagation();
             var row = $(evt.currentTarget).closest("tr"),
                 id = row.attr("id"),
                 policy = this._policies.get(id);
@@ -99,6 +105,7 @@ define([
                 }});
             }
         },
+
         showPolicyConfig:function (activePolicyId) {
             var that = this;
             if (activePolicyId != null && that.activePolicy != activePolicyId) {
@@ -127,15 +134,20 @@ define([
                     that.currentStateUrl = that._policies.get(that.activePolicy).getLinkByName("config") + "/current-state";
                     $("#policy-config").show(100);
                     $table.show(100);
-                    ViewUtils.myDataTable($table);
+                    ViewUtils.myDataTable($table, {
+                        "bAutoWidth": false,
+                        "aoColumns" : [
+                            { sWidth: '220px' },
+                            { sWidth: '240px' },
+                            { sWidth: '25px' }
+                        ]
+                    });
                     $table.dataTable().fnAdjustColumnSizing();
                 }
             }
             that.refreshPolicyConfig(that);
-            that.callPeriodically("entity-policy-config", function() {
-                that.refreshPolicyConfig(that);
-            }, 3000);
         },
+
         refreshPolicyConfig:function (that) {
             var $table = that.$('#policy-config-table').dataTable(),
                 $rows = that.$("tr.policy-config-row");
@@ -150,20 +162,24 @@ define([
             });
             $table.dataTable().fnStandingRedraw();
         },
+
         showPolicyConfigModal:function (evt) {
+            evt.stopPropagation();
             // get the model that we need to show, create its view and show it
             var cid = $(evt.currentTarget).attr("id");
             this._modal = new PolicyConfigInvokeView({
                 el:"#policy-config-modal",
-                model:this._config.getByCid(cid),
+                model:this._config.get(cid),
                 policy:this.model
             });
             this._modal.render().$el.modal('show');
         },
+
         callStart:function(event) { this.doPost(event, "start"); },
         callStop:function(event) { this.doPost(event, "stop"); },
         callDestroy:function(event) { this.doPost(event, "destroy"); },
         doPost:function(event, linkname) {
+            event.stopPropagation();
             var that = this,
                 url = $(event.currentTarget).attr("link");
             $.ajax({
@@ -174,6 +190,8 @@ define([
                 }
             });
         }
+
     });
+
     return EntityPoliciesView;
 });

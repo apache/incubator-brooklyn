@@ -302,7 +302,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @SetFromFlag("maxReachedNotificationDelay")
     public static final ConfigKey<Long> MAX_REACHED_NOTIFICATION_DELAY = BasicConfigKey.builder(Long.class)
             .name("autoscaler.maxReachedNotificationDelay")
-            .description("Time (milliseconds) that the we consistently wanted to go above the maxPoolSize for, after which the maxSizeReachedSensor (if any) will be emitted")
+            .description("Time (milliseconds) that we consistently wanted to go above the maxPoolSize for, after which the maxSizeReachedSensor (if any) will be emitted")
             .defaultValue(0l)
             .build();
     

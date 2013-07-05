@@ -1,6 +1,6 @@
 define([
-        "underscore", "jquery", "backbone"
-], function (_, $, Backbone) {
+        "underscore", "jquery"
+], function (_, $) {
 
     var ViewUtils = {
         myDataTable:function($table, extra) {
@@ -30,11 +30,8 @@ define([
                                     '</select> / page )'
                 }
             };
-            for (var prop in extra) {
-                settings[prop] = extra[prop];
-            }
-            var result = $table.dataTable(settings);
-            return result;
+            _.extend(settings, extra);
+            return $table.dataTable(settings);
         },
         myDataTableToolbarAddHtml: function($table,html) {
             $('.brook-db-bot-toolbar', $table.parent().parent()).append(html)

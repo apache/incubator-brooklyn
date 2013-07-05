@@ -68,7 +68,7 @@ define([
         },
         deleteApplication:function (event) {
             // call Backbone destroy() which does HTTP DELETE on the model
-            this.collection.getByCid(event.currentTarget['id']).destroy({wait:true})
+            this.collection.get(event.currentTarget['id']).destroy({wait:true})
         }
         
     })

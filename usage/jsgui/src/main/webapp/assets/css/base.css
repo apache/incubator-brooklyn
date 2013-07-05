@@ -1038,3 +1038,16 @@ input[type="file"] {
     width: 300px;
 }
 
+#policy-config-table {
+    table-layout: fixed;
+}
+
+#policy-config-table td.policy-config-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#policy-config-table td.policy-config-value {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}

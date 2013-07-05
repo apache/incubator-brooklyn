@@ -2,15 +2,18 @@
  * Render a policy configuration key as a modal for reconfiguring.
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils", "text!tpl/apps/policy-config-modal.html", "bootstrap"
+    "underscore", "jquery", "backbone", "brooklyn-utils",
+    "text!tpl/apps/policy-config-modal.html",
+    "bootstrap"
 ], function (_, $, Backbone, Util, PolicyConfigModalHtml) {
 
     var PolicyConfigInvokeView = Backbone.View.extend({
-        template:_.template(PolicyConfigModalHtml),
+        template: _.template(PolicyConfigModalHtml),
         events:{
             "click .save-policy-config":"savePolicyConfig",
             "shown":"unfade"
         },
+
         render:function () {
             var that = this,
                 configUrl = that.model.getLinkByName("self");
@@ -26,9 +29,11 @@ define([
             that.model = this.model;
             return that;
         },
+
         unfade:function() {
             this.$el.fadeTo(500,1);
         },
+
         savePolicyConfig:function () {
             var that = this,
                 url = that.model.getLinkByName("self") + "/set",
