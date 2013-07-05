@@ -10,6 +10,8 @@ import javax.ws.rs.ext.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
+
 import brooklyn.rest.domain.ApiError;
 
 @Provider
@@ -40,9 +42,11 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
         }
 
         LOG.info("No exception mapping for " + exception.getClass() + ", responding 500", exception);
+        String message = Optional.fromNullable(exception.getMessage())
+                .or("Internal error. Check server logs for details.");
         return Response.status(Status.INTERNAL_SERVER_ERROR)
                 .type(MediaType.APPLICATION_JSON)
-                .entity(new ApiError(exception.getMessage()))
+                .entity(new ApiError(message))
                 .build();
     }
 
