@@ -1,6 +1,7 @@
 package brooklyn.entity.trait;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +12,11 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.CompoundRuntimeException;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class StartableMethods {
 
@@ -55,5 +58,24 @@ public class StartableMethods {
     
     private static Iterable<Entity> filterStartableManagedEntities(Iterable<Entity> contenders) {
         return Iterables.filter(contenders, Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.managed()));
+    }
+
+    public static void stopSequentially(Iterable<? extends Startable> entities) {
+        List<Exception> exceptions = Lists.newArrayList();
+        List<Startable> failedEntities = Lists.newArrayList();
+        
+        for (Startable entity : entities) {
+            try {
+                entity.stop();
+            } catch (Exception e) {
+                log.warn("Error stopping "+entity+"; continuing with shutdown", e);
+                exceptions.add(e);
+                failedEntities.add(entity);
+            }
+        }
+        
+        if (exceptions.size() > 0) {
+            throw new CompoundRuntimeException("Error stopping "+(failedEntities.size() > 1 ? "entities" : "entity")+": "+failedEntities, exceptions);
+        }
     }
 }

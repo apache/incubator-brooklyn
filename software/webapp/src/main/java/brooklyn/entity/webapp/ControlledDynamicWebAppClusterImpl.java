@@ -18,6 +18,7 @@ import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.trait.StartableMethods;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
@@ -136,17 +137,20 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         
         connectSensors();
     }
-    
+
+    @Override
     public void stop() {
-        if (this.equals(getController().getParent())) {
-            getController().stop();
-        }
-        getCluster().stop();
+        List<Startable> tostop = Lists.newArrayList();
+        if (this.equals(getController().getParent())) tostop.add(getController());
+        tostop.add(getCluster());
+        
+        StartableMethods.stopSequentially(tostop);
 
         clearLocations();
         setAttribute(SERVICE_UP, false);
     }
 
+    @Override
     public void restart() {
         // TODO prod the entities themselves to restart, instead?
         Collection<Location> locations = Lists.newArrayList(getLocations());
