@@ -32,6 +32,8 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
+import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
@@ -586,18 +588,13 @@ public class Entities {
      * Registers the given location (and all its children) with the management context. 
      * @throws IllegalStateException if the parent location is not already managed
      * 
-     * @return True if the location is now managed; false if it was already managed
+     * @since 0.6.0 (added only for backwards compatibility, where locations are being created directly).
+     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead.
      */
-    public static boolean manage(Location loc, ManagementContext managementContext) {
-        Location parent = loc.getParentLocation();
-        if (parent != null && !managementContext.getLocationManager().isManaged(parent)) {
-            throw new IllegalStateException("Can't manage "+loc+" because its parent is not yet managed ("+parent+")");
-        }
-        if (managementContext.getLocationManager().isManaged(loc)) {
-            return false;
-        } else {
+    public static void manage(Location loc, ManagementContext managementContext) {
+        if (!managementContext.getLocationManager().isManaged(loc)) {
+            log.warn("Deprecated use of unmanaged location; will be managed automatically now but not supported in future versions", new Exception("for stacktrace"));
             managementContext.getLocationManager().manage(loc);
-            return true;
         }
     }
 }

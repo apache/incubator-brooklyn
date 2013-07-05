@@ -70,8 +70,8 @@ public class LocalLocationManager implements LocationManager {
     }
     
     @Override
-    public boolean isManaged(Location e) {
-        return (isRunning() && getLocation(e.getId()) != null);
+    public boolean isManaged(Location loc) {
+        return (isRunning() && getLocation(loc.getId()) != null);
     }
     
     synchronized boolean isPreRegistered(Location loc) {
@@ -91,11 +91,13 @@ public class LocalLocationManager implements LocationManager {
     @Override
     public void manage(Location e) {
         if (isManaged(e)) {
-//            if (log.isDebugEnabled()) {
-                log.warn(""+this+" redundant call to start management of location (and descendants of) "+e+"; skipping", 
-                    new Exception("source of duplicate management of "+e));
-//            }
+            // TODO put log.warn back in if/when manage(Location) becomes private; or could even have assert.
+            // Can be stricter about contract.
             return;
+        }
+        Location parent = e.getParent();
+        if (parent != null && !managementContext.getLocationManager().isManaged(parent)) {
+            throw new IllegalStateException("Can't manage "+e+" because its parent is not yet managed ("+parent+")");
         }
         
         recursively(e, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
@@ -160,8 +162,8 @@ public class LocalLocationManager implements LocationManager {
     }
 
     /**
-     * Should ensure that the entity is no longer managed anywhere, remove from all lists.
-     * Returns true if the entity has been removed from management; if it was not previously managed (anything else throws exception) 
+     * Should ensure that the location is no longer managed anywhere, remove from all lists.
+     * Returns true if the location has been removed from management; if it was not previously managed (anything else throws exception) 
      */
     private synchronized boolean unmanageNonRecursive(AbstractLocation loc) {
         loc.setParentLocation(null);
@@ -172,7 +174,7 @@ public class LocalLocationManager implements LocationManager {
             return false;
         } else if (!old.equals(loc)) {
             // shouldn't happen...
-            log.error("{} call to stop management of location {} removed different entity {}", new Object[] { this, loc, old });
+            log.error("{} call to stop management of location {} removed different location {}", new Object[] { this, loc, old });
             return true;
         } else {
             if (log.isDebugEnabled()) log.debug("{} stopped management of location {}", this, loc);
@@ -182,12 +184,12 @@ public class LocalLocationManager implements LocationManager {
 
     private boolean shouldSkipUnmanagement(Location loc) {
         if (loc==null) {
-            log.warn(""+this+" call to unmanage null entity; skipping",  
+            log.warn(""+this+" call to unmanage null location; skipping",  
                 new IllegalStateException("source of null unmanagement call to "+this));
             return true;
         }
         if (!isManaged(loc)) {
-            log.warn("{} call to stop management of unknown entity (already unmanaged?) {}; skipping, and all descendants", this, loc);
+            log.warn("{} call to stop management of unknown location (already unmanaged?) {}; skipping, and all descendants", this, loc);
             return true;
         }
         return false;

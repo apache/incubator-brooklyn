@@ -45,6 +45,9 @@ public interface LocationManager {
      * depending on the implementation of the management context,
      * this might push it out to one or more remote management nodes.
      * Manage a location.
+     * 
+     * @since 0.6.0 (added only for backwards compatibility, where locations are being created directly).
+     * @deprecated in 0.6.0; use {@link #createLocation(LocationSpec)} instead.
      */
     void manage(Location e);
     

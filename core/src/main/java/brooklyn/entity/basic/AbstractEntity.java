@@ -654,6 +654,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         if (getManagementSupport().isDeployed()) {
             for (Location newLocation : newLocations) {
                 // Location is now reachable, so manage it
+                // TODO will not be required in future releases when creating locations always goes through LocationManager.createLocation(LocationSpec).
                 Entities.manage(newLocation, getManagementContext());
             }
         }
