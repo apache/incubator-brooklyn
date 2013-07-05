@@ -16,7 +16,6 @@
 package brooklyn.entity.network.bind;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,6 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 
