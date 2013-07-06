@@ -30,7 +30,15 @@ public class RestMockSimplePolicy extends AbstractPolicy {
             .defaultValue("DEFAULT_VALUE")
             .reconfigurable(true)
             .build();
-    
+
+    @SetFromFlag
+    public static final ConfigKey<Integer> INTEGER_CONFIG = BasicConfigKey.builder(Integer.class)
+            .name("brooklyn.rest.mock.sample.integer")
+            .description("Mock integer config")
+            .defaultValue(1)
+            .reconfigurable(true)
+            .build();
+
     @Override
     protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
         // no-op

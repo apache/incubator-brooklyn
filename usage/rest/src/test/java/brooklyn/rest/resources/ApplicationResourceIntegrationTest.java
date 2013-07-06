@@ -40,11 +40,6 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
       locations(ImmutableSet.of("localhost")).
       build();
 
-  @Override
-  protected void setUpResources() throws Exception {
-      addResources();
-  }
-
   @AfterClass(alwaysRun=true)
   @Override
   public void tearDown() throws Exception {

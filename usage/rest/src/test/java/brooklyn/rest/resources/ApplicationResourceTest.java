@@ -59,11 +59,6 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
           locations(ImmutableSet.of("localhost")).
           build();
 
-  @Override
-  protected void setUpResources() throws Exception {
-      addResources();
-  }
-
   @AfterClass
   @Override
   public void tearDown() throws Exception {

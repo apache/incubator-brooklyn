@@ -103,7 +103,7 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource {
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
-@POST
+  @POST
   @Path("/{config}/set")
   @ApiOperation(value = "Sets the given config on this policy")
   @ApiErrors(value = {

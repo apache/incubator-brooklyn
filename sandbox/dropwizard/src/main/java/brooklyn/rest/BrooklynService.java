@@ -22,6 +22,7 @@ import brooklyn.rest.commands.locations.AddLocationCommand;
 import brooklyn.rest.commands.locations.ListLocationsCommand;
 import brooklyn.rest.health.GeneralHealthCheck;
 import brooklyn.rest.resources.AbstractBrooklynRestResource;
+import brooklyn.rest.util.DefaultExceptionMapper;
 import brooklyn.rest.views.SwaggerUiResource;
 import brooklyn.rest.views.WebClientResource;
 
@@ -95,6 +96,8 @@ public class BrooklynService extends Service<BrooklynConfiguration> {
       environment.addFilter(new BasicAuthFilter<User>(authenticator, configuration.getAuthBasicRealm()), "/*");
       environment.addProvider(new BasicAuthProvider<User>(authenticator, configuration.getAuthBasicRealm()));
     }
+
+    environment.addProvider(new DefaultExceptionMapper());
 
     initialized.countDown();
   }

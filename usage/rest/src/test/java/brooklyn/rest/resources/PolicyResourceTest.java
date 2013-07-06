@@ -40,11 +40,6 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
 
     private String policyId;
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-
     @BeforeClass(alwaysRun = true)
     @Override
     public void setUp() throws Exception {
@@ -80,7 +75,9 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
             configNames.add(conf.getName());
         }
         
-        assertEquals(configNames, ImmutableSet.of(RestMockSimplePolicy.SAMPLE_CONFIG.getName()));
+        assertEquals(configNames, ImmutableSet.of(
+                RestMockSimplePolicy.SAMPLE_CONFIG.getName(),
+                RestMockSimplePolicy.INTEGER_CONFIG.getName()));
     }
 
     @Test
