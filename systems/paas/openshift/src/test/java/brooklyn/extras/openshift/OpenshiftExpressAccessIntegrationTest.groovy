@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
 
 import brooklyn.extras.openshift.OpenshiftExpressAccess.Cartridge
-import brooklyn.extras.openshift.OpenshiftExpressAccess.OpenshiftExpressApplicationAccess
 
 class OpenshiftExpressAccessIntegrationTest {
 
