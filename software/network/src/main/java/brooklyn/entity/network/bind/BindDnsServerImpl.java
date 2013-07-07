@@ -94,6 +94,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         return BindDnsServerDriver.class;
     }
 
+    @Override
     public Map<String, String> getAddressMappings() {
         return addressMappings;
     }

@@ -15,9 +15,12 @@
  */
 package brooklyn.entity.network.bind;
 
+import java.util.Map;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -86,4 +89,6 @@ public interface BindDnsServer extends SoftwareProcess {
             "bind.template.resolv-conf", "The resolver configuration file for clients (as FreeMarker template)",
             "classpath://brooklyn/entity/network/bind/resolv.conf");
 
+    @Effector(description="Gets the Hostname->IP mappings stored in this DNS server's conf file")
+    public Map<String,String> getAddressMappings();
 }
