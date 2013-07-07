@@ -124,13 +124,20 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
             @Override
             protected void onEntityChange(Entity member) { added(member); }
             @Override
-            protected void onEntityAdded(Entity member) { } // Ignore
+            protected void onEntityAdded(Entity member) {
+                if (!Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) added(member); // Ignore, unless attrib already set
+            }
             @Override
             protected void onEntityRemoved(Entity member) { removed(member); }
         };
 
         addPolicy(policy);
         policy.setGroup(entities);
+
+        // For any entities that have already come up
+        for (Entity member : entities.getMembers()) {
+            if (!Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) added(member);
+        }
     }
 
     @Override
