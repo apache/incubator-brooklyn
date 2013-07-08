@@ -32,8 +32,6 @@ import com.google.common.collect.ImmutableList;
 
 public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver implements BindDnsServerDriver {
 
-    protected String expandedInstallDir;
-
     public BindDnsServerSshDriver(BindDnsServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -41,11 +39,6 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
     @Override
     public BindDnsServerImpl getEntity() {
         return (BindDnsServerImpl) super.getEntity();
-    }
-
-    // TODO Only in JavaSoftwareProcessSshDriver - should it be moved up?
-    protected String getLogFileLocation() {
-        return "/var/named/data/named.run";
     }
 
     @Override

@@ -58,16 +58,18 @@ public class BindDnsServerLiveTest {
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {
         return new Object[][] { // ImageId, Provider, Region
-            new Object[] { "ami-029f9476", "aws-ec2", "eu-west-1" },
+            new Object[] { "", "named:cloudera" },
+            new Object[] { "eu-west-1/ami-029f9476", "aws-ec2:eu-west-1" },
         };
     }
 
     @Test(groups = "Live", dataProvider = "virtualMachineData")
-    protected void testOperatingSystemProvider(String imageId, String provider, String region) throws Exception {
-        LOG.info("Testing BIND on {}:{} using {}", new Object[] { provider, region, imageId });
+    protected void testOperatingSystemProvider(String imageId, String provider) throws Exception {
+        LOG.info("Testing BIND on {} using {}", provider, imageId);
 
-        Map<String, String> properties = MutableMap.of("image-id", region + "/" + imageId, "user", "ec2-user");
-        testLocation = app.getManagementContext().getLocationRegistry().resolve(provider + ":" + region, properties);
+        Map<String, String> properties = MutableMap.of("image-id", imageId);
+        if (provider.contains("ec2")) properties.put("user", "ec2-user");
+        testLocation = app.getManagementContext().getLocationRegistry().resolve(provider, properties);
 
         BindDnsServer dns = app.createAndManageChild(EntitySpecs.spec(BindDnsServer.class));
         dns.start(ImmutableList.of(testLocation));
