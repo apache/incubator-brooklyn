@@ -36,13 +36,13 @@
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-rest</artifactId>
+            <artifactId>brooklyn-rest-server</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-rest</artifactId>
+            <artifactId>brooklyn-rest-server</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
@@ -89,12 +89,7 @@
                 <directory>${project.basedir}/src/test/resources/fixtures</directory>
                 <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
             </resource>
-            <resource>
-		<!-- TODO read from artifact -->
-                <directory>${project.basedir}/../rest/src/test/resources/fixtures</directory>
-                <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
-            </resource>
-        </resources>
+        </resources>        
         <plugins>
             <!-- run js tests with: $ mvn clean process-resources jasmine:test -->
             <!--
@@ -140,6 +135,32 @@
                         ${project.basedir}/src/test/javascript/config.txt
                     </customRunnerConfiguration>
                 </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <id>prep-server</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>brooklyn-rest-api</artifactId>
+                                    <classifier>tests</classifier>
+                                    <version>${brooklyn.version}</version>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/jasmine</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                            <includes>fixtures/*</includes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
