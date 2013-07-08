@@ -1,0 +1,82 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+    <display-name>Brooklyn REST API v1</display-name>
+
+    <filter>
+        <filter-name>Brooklyn Properties Authentication Filter</filter-name>
+        <filter-class>brooklyn.rest.security.BrooklynPropertiesSecurityFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn Properties Authentication Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
+<!-- Brooklyn REST is usu run as a filter so static content can be placed in a webapp
+     to which this is added; to run as a servlet directly, replace the filter tags 
+     below (after the comment) with the servlet tags (commented out immediately below),
+     (and do the same for the matching tags at the bottom)
+    <servlet>
+        <servlet-name>Brooklyn REST API v1 Servlet</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+ -->
+    <filter>
+        <filter-name>Brooklyn REST API v1 Filter</filter-name>
+        <filter-class>com.sun.jersey.spi.container.servlet.ServletContainer</filter-class>
+
+        <!-- load our REST API jersey resources explicitly 
+            (the package scanner will only pick up classes with @Path annotations - doesn't look at implemented interfaces) 
+        -->
+        <init-param>
+            <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
+            <param-value>com.sun.jersey.api.core.ClassNamesResourceConfig</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.classnames</param-name>
+            <param-value>
+                brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
+                org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+                brooklyn.rest.resources.ActivityResource;
+                brooklyn.rest.resources.ApidocResource;
+                brooklyn.rest.resources.ApplicationResource;
+                brooklyn.rest.resources.CatalogResource;
+                brooklyn.rest.resources.EffectorResource;
+                brooklyn.rest.resources.EntityConfigResource;
+                brooklyn.rest.resources.EntityResource;
+                brooklyn.rest.resources.LocationResource;
+                brooklyn.rest.resources.PolicyConfigResource;
+                brooklyn.rest.resources.PolicyResource;
+                brooklyn.rest.resources.ScriptResource;
+                brooklyn.rest.resources.SensorResource;
+                brooklyn.rest.resources.VersionResource;
+            </param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        
+        <!-- no need for WADL. of course you can turn it back on it you want. --> 
+        <init-param>
+            <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn REST API v1 Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+<!-- Brooklyn REST as a filter above; replace above 5 lines with those commented out below,
+     to run it as a servlet (see note above) 
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Brooklyn REST API v1 Servlet</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+-->
+</web-app>
