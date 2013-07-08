@@ -41,6 +41,7 @@ define([
         
         refreshApplications:function () {
             this.collection.fetch()
+            this.treeView.render()
             return false
         },
         show: function(entityId) {
