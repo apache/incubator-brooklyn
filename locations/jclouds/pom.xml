@@ -40,6 +40,11 @@
             <groupId>org.jclouds</groupId>
             <artifactId>jclouds-allcompute</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jclouds.labs</groupId>
+            <artifactId>abiquo</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
 
         <!-- test dependencies -->
         <dependency>

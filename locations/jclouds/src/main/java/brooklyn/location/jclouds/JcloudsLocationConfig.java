@@ -108,6 +108,10 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     public static final ConfigKey<File> LOCAL_TEMP_DIR = SshTool.PROP_LOCAL_TEMP_DIR;
 
+    // default is just shy of common 64-char boundary (could perhaps increase slightly...)
+    public static final ConfigKey<Integer> VM_NAME_MAX_LENGTH = ConfigKeys.newIntegerConfigKey(
+            "vmNameMaxLength", "Maximum length of VM name", 61);
+
     // TODO
     
 //  "noDefaultSshKeys" - hints that local ssh keys should not be read as defaults

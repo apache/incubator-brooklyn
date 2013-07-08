@@ -26,6 +26,7 @@ import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
@@ -608,6 +609,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         for (Image img: imgs) {
                             LOG.info(" Image: "+img);
                         }
+                        
+                        Set<? extends Hardware> profiles = computeServiceLessRestrictive.listHardwareProfiles();
+                        LOG.info(""+profiles.size()+" available profiles at "+this);
+                        for (Hardware profile: profiles) {
+                            LOG.info(" Profile: "+profile);
+                        }
+
                     }
                 }
             } catch (Exception e2) {
