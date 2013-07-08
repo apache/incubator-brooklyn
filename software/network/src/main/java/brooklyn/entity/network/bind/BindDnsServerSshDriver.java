@@ -18,7 +18,7 @@ package brooklyn.entity.network.bind;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
@@ -30,7 +30,7 @@ import brooklyn.util.ssh.IptablesCommands.Protocol;
 
 import com.google.common.collect.ImmutableList;
 
-public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver implements BindDnsServerDriver {
+public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver implements BindDnsServerDriver {
 
     protected String expandedInstallDir;
 
@@ -43,7 +43,7 @@ public class BindDnsServerSshDriver extends JavaSoftwareProcessSshDriver impleme
         return (BindDnsServerImpl) super.getEntity();
     }
 
-    @Override
+    // TODO Only in JavaSoftwareProcessSshDriver - should it be moved up?
     protected String getLogFileLocation() {
         return "/var/named/data/named.run";
     }

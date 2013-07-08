@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -18,7 +19,11 @@ import com.google.common.base.Functions;
 public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNode {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynNodeImpl.class);
-    
+
+    static {
+        RendererHints.register(WEB_CONSOLE_URI, new RendererHints.NamedActionWithUrl("Open"));
+    }
+
     private HttpFeed httpFeed;
     
     public BrooklynNodeImpl() {
@@ -62,11 +67,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         String host = getAttribute(HOSTNAME);
         URI webConsoleUri;
         if (isHttpProtocolEnabled("http")) {
-            int port = getAttribute(HTTP_PORT);
+            int port = getConfig(PORT_MAPPER).apply(getAttribute(HTTP_PORT));
             webConsoleUri = URI.create(String.format("http://%s:%s", host, port));
             setAttribute(WEB_CONSOLE_URI, webConsoleUri);
         } else if (isHttpProtocolEnabled("https")) {
-            int port = getAttribute(HTTPS_PORT);
+            int port = getConfig(PORT_MAPPER).apply(getAttribute(HTTPS_PORT));
             webConsoleUri = URI.create(String.format("https://%s:%s", host, port));
             setAttribute(WEB_CONSOLE_URI, webConsoleUri);
         } else {

@@ -18,6 +18,8 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -107,6 +109,10 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("classpath")
     public static final BasicAttributeSensorAndConfigKey<List<String>> CLASSPATH = new BasicAttributeSensorAndConfigKey(
             List.class, "brooklynnode.classpath", "classpath to use, as list of URL entries", Lists.newArrayList());
+
+    @SetFromFlag("portMapper")
+    public static final ConfigKey<Function<? super Integer, ? extends Integer>> PORT_MAPPER = (ConfigKey) ConfigKeys.newConfigKey(Function.class,
+            "brooklynnode.webconsole.portMapper", "Function for mapping private to public ports, for use in inferring the brooklyn URI", Functions.<Integer>identity());
 
     public static final AttributeSensor<URI> WEB_CONSOLE_URI = new BasicAttributeSensor<URI>(
             URI.class, "brooklynnode.webconsole.url", "URL of the brooklyn web-console");

@@ -132,7 +132,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
         Integer initialSize = getConfig(INITIAL_SIZE);
         resize(initialSize);
-        if (getCurrentSize() != initialSize) {
+        if (getCurrentSize().intValue() != initialSize.intValue()) {
             throw new IllegalStateException("On start of cluster "+this+", failed to get to initial size of "+initialSize+"; size is "+getCurrentSize());
         }
         for (Policy it : getPolicies()) { it.resume(); }

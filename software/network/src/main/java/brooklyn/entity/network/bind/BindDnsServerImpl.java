@@ -32,6 +32,7 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.CommonCommands;
@@ -94,6 +95,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         return BindDnsServerDriver.class;
     }
 
+    @Override
     public Map<String, String> getAddressMappings() {
         return addressMappings;
     }
@@ -123,13 +125,20 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
             @Override
             protected void onEntityChange(Entity member) { added(member); }
             @Override
-            protected void onEntityAdded(Entity member) { } // Ignore
+            protected void onEntityAdded(Entity member) {
+                if (!Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) added(member); // Ignore, unless attrib already set
+            }
             @Override
             protected void onEntityRemoved(Entity member) { removed(member); }
         };
 
         addPolicy(policy);
         policy.setGroup(entities);
+
+        // For any entities that have already come up
+        for (Entity member : entities.getMembers()) {
+            if (!Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) added(member);
+        }
     }
 
     @Override
@@ -161,16 +170,31 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
     public void removed(Entity member) {
         synchronized (mutex) {
-            Optional<Location> location = Iterables.tryFind(member.getLocations(), Predicates.instanceOf(SshMachineLocation.class));
-            SshMachineLocation machine = (SshMachineLocation) location.get();
-            entityLocations.remove(machine, member);
-            if (!entityLocations.containsKey(machine)) {
-                addressMappings.remove(machine.getAddress().getHostAddress());
+            Location location = reverseLookupLocation(member);
+            if (location != null) {
+                entityLocations.remove(location, member);
+                if (!entityLocations.containsKey(location)) {
+                    addressMappings.remove(((MachineLocation)location).getAddress().getHostAddress());
+                }
             }
             update();
         }
     }
 
+    private Location reverseLookupLocation(Entity member) {
+        // don't use member.getLocations(), because when being stopped the location might not be set
+        if (entityLocations.containsValue(member)) {
+            for (Map.Entry<Location, Entity> entry : entityLocations.entries()) {
+                if (member.equals(entry.getValue())) {
+                    return entry.getKey();
+                }
+            }
+            return null;
+        } else {
+            return null;
+        }
+    }
+    
     public void update() {
         Optional<Location> location = Iterables.tryFind(getLocations(), Predicates.instanceOf(SshMachineLocation.class));
         SshMachineLocation machine = (SshMachineLocation) location.get();
