@@ -35,11 +35,14 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Cidr;
 import brooklyn.util.ssh.CommonCommands;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -50,11 +53,12 @@ import com.google.common.collect.Multimap;
 
 /**
  * This sets up a BIND DNS server.
+ * <p>
+ * <b>NOTE</b> This entity has only been certified on <i>CentOS</i> and <i>RHEL</i> operating systems.
  */
 public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsServer {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BindDnsServerImpl.class);
-    protected static final String RESOURCES_CLASSPATH = "classpath://brooklyn/entity/network/bind/";
 
     private AtomicLong serial = new AtomicLong(System.currentTimeMillis());
     private Object[] mutex = new Object[0];
@@ -62,7 +66,8 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     private AbstractMembershipTrackingPolicy policy;
     private Multimap<Location, Entity> entityLocations = HashMultimap.create();
     private ConcurrentMap<String, String> addressMappings = Maps.newConcurrentMap();
-    protected List<InetAddress> addresses = Lists.newArrayList();
+    private ConcurrentMap<String, String> reverseMappings = Maps.newConcurrentMap();
+    private Cidr reverseNetwork;
 
     public BindDnsServerImpl() {
         super();
@@ -84,6 +89,13 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         return serial.incrementAndGet();
     }
 
+    public String getReverseLookupDomain() {
+        String reverse = getConfig(REVERSE_LOOKUP_NETWORK);
+        if (Strings.isBlank(reverse)) reverse = getAttribute(ADDRESS);
+        reverseNetwork = new Cidr(reverse + "/24");
+        return Joiner.on('.').join(Iterables.skip(Lists.reverse(Lists.newArrayList(Splitter.on('.').split(reverse))), 1)) + " .in-addr.arpa";
+    }
+
     @Override
     public void init() {
         entities = addChild(EntitySpecs.spec(DynamicGroup.class)
@@ -98,6 +110,11 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     @Override
     public Map<String, String> getAddressMappings() {
         return addressMappings;
+    }
+
+    @Override
+    public Map<String, String> getReverseMappings() {
+        return reverseMappings;
     }
 
     @Override
@@ -125,20 +142,18 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
             @Override
             protected void onEntityChange(Entity member) { added(member); }
             @Override
-            protected void onEntityAdded(Entity member) {
-                if (Strings.isEmpty(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) added(member); // Ignore, unless attrib already set
-            }
+            protected void onEntityAdded(Entity member) { added(member); }
             @Override
             protected void onEntityRemoved(Entity member) { removed(member); }
         };
 
-        addPolicy(policy);
-        policy.setGroup(entities);
-
         // For any entities that have already come up
         for (Entity member : entities.getMembers()) {
-            if (Strings.isEmpty(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) added(member);
+            added(member);
         }
+
+        addPolicy(policy);
+        policy.setGroup(entities);
     }
 
     @Override
@@ -156,6 +171,10 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
                 if (!entityLocations.containsKey(machine)) {
                     entityLocations.put(machine, member);
                     addressMappings.putIfAbsent(address, hostname);
+                    if (reverseNetwork.contains(new Cidr(address + "/32"))) {
+                        String octet = Iterables.get(Splitter.on('.').split(address), 3);
+                        reverseMappings.putIfAbsent(hostname, octet);
+                    }
                     if (getAttribute(Startable.SERVICE_UP)) {
                         update();
                     }
@@ -170,7 +189,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
     public void removed(Entity member) {
         synchronized (mutex) {
-            Location location = reverseLookupLocation(member);
+            Location location = findLocation(member);
             if (location != null) {
                 entityLocations.remove(location, member);
                 if (!entityLocations.containsKey(location)) {
@@ -181,7 +200,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         }
     }
 
-    private Location reverseLookupLocation(Entity member) {
+    private Location findLocation(Entity member) {
         // don't use member.getLocations(), because when being stopped the location might not be set
         if (entityLocations.containsValue(member)) {
             for (Map.Entry<Location, Entity> entry : entityLocations.entries()) {
@@ -200,6 +219,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         SshMachineLocation machine = (SshMachineLocation) location.get();
         copyTemplate(getConfig(NAMED_CONF_TEMPLATE), "/etc/named.conf", machine);
         copyTemplate(getConfig(DOMAIN_ZONE_FILE_TEMPLATE), "/var/named/domain.zone", machine);
+        copyTemplate(getConfig(REVERSE_ZONE_FILE_TEMPLATE), "/var/named/reverse.zone", machine);
         machine.execScript("restart bind", ImmutableList.of(CommonCommands.sudo("service named restart")));
         LOG.info("updated named configuration and zone file for '{}' on {}", getDomainName(), this);
     }

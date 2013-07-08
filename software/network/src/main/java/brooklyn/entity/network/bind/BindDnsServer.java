@@ -50,10 +50,14 @@ public interface BindDnsServer extends SoftwareProcess {
     ConfigKey<String> DOMAIN_NAME = new BasicConfigKey<String>(String.class,
             "bind.domain.name", "The DNS domain name to serve", "brooklyn.local");
 
+    @SetFromFlag("reverseLookupNetwork")
+    ConfigKey<String> REVERSE_LOOKUP_NETWORK = new BasicConfigKey<String>(String.class,
+            "bind.reverse-lookup.address", "Network address for reverse lookup zone (defaults to server address /24)");
+
     @SetFromFlag("subnet")
     ConfigKey<String> MANAGEMENT_CIDR = new BasicConfigKey<String>(String.class,
             "bind.access.cidr", "Subnet CIDR allowed to access DNS", "0.0.0.0/0");
-            // TODO should default be a /0 or use brooklyn management CIDR?
+            // TODO should default be a /0, or 'any', or use brooklyn management CIDR?
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("hostnameSensor")
@@ -67,6 +71,11 @@ public interface BindDnsServer extends SoftwareProcess {
     ConfigKey<String> DOMAIN_ZONE_FILE_TEMPLATE = new BasicConfigKey<String>(String.class,
             "bind.template.domain-zone", "The BIND domain zone file to serve (as FreeMarker template)",
             "classpath://brooklyn/entity/network/bind/domain.zone");
+
+    @SetFromFlag("reverseZoneFileTemplate")
+    ConfigKey<String> REVERSE_ZONE_FILE_TEMPLATE = new BasicConfigKey<String>(String.class,
+            "bind.template.reverse-zone", "The BIND reverse lookup zone file to serve (as FreeMarker template)",
+            "classpath://brooklyn/entity/network/bind/reverse.zone");
 
     @SetFromFlag("namedConfTemplate")
     ConfigKey<String> NAMED_CONF_TEMPLATE = new BasicConfigKey<String>(String.class,
@@ -91,4 +100,7 @@ public interface BindDnsServer extends SoftwareProcess {
 
     @Effector(description="Gets the Hostname->IP mappings stored in this DNS server's conf file")
     public Map<String,String> getAddressMappings();
+
+    public Map<String,String> getReverseMappings();
+
 }

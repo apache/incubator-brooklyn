@@ -13,10 +13,10 @@
     604800 ; expire
     86400 ; ttl
 )
-@ IN NS ns1.${entity.domainName}.
-@ IN NS ns2.${entity.domainName}.
+${entity.reverseLookupDomain}. IN NS ns1.${entity.domainName}.
+${entity.reverseLookupDomain}. IN NS ns2.${entity.domainName}.
 ns1 IN A ${driver.address}
 ns2 IN A ${driver.address}
-[#list entity.addressMappings?keys as address]
-${entity.addressMappings[address]} IN A ${address}
+[#list entity.reverseMappings?keys as hostname]
+${entity.reverseMappings[hostname]} IN PTR ${hostname}.${entity.domainName}.
 [/#list]
