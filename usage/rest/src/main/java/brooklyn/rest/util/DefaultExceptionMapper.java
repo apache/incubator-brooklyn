@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 
 import brooklyn.rest.domain.ApiError;
+import brooklyn.util.flags.ClassCoercionException;
 
 @Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
@@ -33,8 +34,8 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
             return wae.getResponse();
         }
 
-        // Assume ClassCastExceptions are caused by TypeCoercions from input paramters gone wrong.
-        if (exception instanceof ClassCastException) {
+        // Assume ClassCoercionExceptions are caused by TypeCoercions from input paramters gone wrong.
+        if (exception instanceof ClassCoercionException) {
             return Response.status(Status.BAD_REQUEST)
                 .type(MediaType.APPLICATION_JSON)
                 .entity(new ApiError(exception.getMessage()))

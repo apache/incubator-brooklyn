@@ -99,7 +99,7 @@ public class TypeCoercions {
                         try {
                             return (T) m.invoke(value);
                         } catch (Exception e) {
-                            throw new ClassCastException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): "+m.getName()+" adapting failed, "+e);
+                            throw new ClassCoercionException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): "+m.getName()+" adapting failed, "+e);
                         }
                     }
                 }
@@ -115,7 +115,7 @@ public class TypeCoercions {
                     try {
                         return (T) m.invoke(null, value);
                     } catch (Exception e) {
-                        throw new ClassCastException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): "+m.getName()+" adapting failed, "+e);
+                        throw new ClassCoercionException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): "+m.getName()+" adapting failed, "+e);
                     }
                 }
             }
@@ -134,7 +134,7 @@ public class TypeCoercions {
                 else { boxedV = boxedVT.getConstructor(value.getClass()).newInstance(value); }
                 return (T) coerce(boxedV, boxedT);
             } catch (Exception e) {
-                throw new ClassCastException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): unboxing failed, "+e);
+                throw new ClassCoercionException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): unboxing failed, "+e);
             }
         }
 
@@ -158,7 +158,7 @@ public class TypeCoercions {
         }
                 
         //not found
-        throw new ClassCastException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): no adapter known");
+        throw new ClassCoercionException("Cannot coerce type "+value.getClass()+" to "+targetType.getCanonicalName()+" ("+value+"): no adapter known");
     }
 
     /**
@@ -251,7 +251,7 @@ public class TypeCoercions {
             if (value.length() == 1) {
                 return (T) (Character) value.charAt(0);
             } else if (value.length() != 1) {
-                throw new ClassCastException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
+                throw new ClassCoercionException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
             }
         }
         
@@ -266,7 +266,7 @@ public class TypeCoercions {
         try {
             return (T) wrappedType.getMethod("valueOf", String.class).invoke(null, value);
         } catch (Exception e) {
-            ClassCastException tothrow = new ClassCastException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
+            ClassCoercionException tothrow = new ClassCoercionException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
             tothrow.initCause(e);
             throw tothrow;
         }
