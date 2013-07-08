@@ -45,6 +45,17 @@
             <artifactId>abiquo</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+        <!-- these two seem needed here to prevent Eclipse IDE from getting wrong version of logback-core -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
 
         <!-- test dependencies -->
         <dependency>
