@@ -1,6 +1,7 @@
 package brooklyn.rest.resources;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
@@ -13,6 +14,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.client.ClientResponse;
 
+import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
@@ -61,6 +63,9 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
 
         assertEquals(response.getStatus(), Status.BAD_REQUEST.getStatusCode());
         assertEquals(response.getHeaders().getFirst("Content-Type"), MediaType.APPLICATION_JSON);
+
+        ApiError error = response.getEntity(ApiError.class);
+        assertTrue(error.getMessage().toLowerCase().contains("cannot coerce"));
     }
 
     @Test
