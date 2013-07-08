@@ -1,7 +1,5 @@
 package brooklyn.cli.commands;
 
-import brooklyn.rest.domain.ApiError;
-
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.iq80.cli.Arguments;
