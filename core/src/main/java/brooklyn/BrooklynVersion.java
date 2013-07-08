@@ -16,7 +16,8 @@ public class BrooklynVersion {
   private static final BrooklynVersion INSTANCE = new BrooklynVersion();
 
   private final String versionFromClasspath;
-  private final String versionFromStatic = "0.5.0_SNAPSHOT"; // BROOKLYN_VERSION
+  // static useful when running from the IDE
+  private final String versionFromStatic = "0.6.0-SNAPSHOT"; // BROOKLYN_VERSION
   private final String version;
 
   public BrooklynVersion() {
