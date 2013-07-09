@@ -1,7 +1,5 @@
 package brooklyn.rest.domain;
 
-import brooklyn.rest.domain.EntitySummary;
-
 import com.google.common.collect.Maps;
 import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
 import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;

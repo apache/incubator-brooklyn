@@ -18,7 +18,7 @@ public class WebResourceUtils {
         if (log.isDebugEnabled()) log.debug("returning 404 notFound("+msg+") - may be a stale browser session");
         throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .entity(new ApiError(msg)).build());
+                .entity(ApiError.builder().message(msg).build()).build());
     }
 
     public static WebApplicationException preconditionFailed(String format, Object... args) {
@@ -26,7 +26,7 @@ public class WebResourceUtils {
         if (log.isDebugEnabled()) log.debug("returning 412 preconditionFailed("+msg+")");
         throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .entity(new ApiError(msg)).build());
+                .entity(ApiError.builder().message(msg).build()).build());
     }
 
 }

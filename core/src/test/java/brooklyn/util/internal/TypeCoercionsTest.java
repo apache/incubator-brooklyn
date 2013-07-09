@@ -9,10 +9,12 @@ import org.codehaus.groovy.runtime.GStringImpl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.util.flags.ClassCoercionException;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 
 public class TypeCoercionsTest {
 
@@ -108,6 +110,11 @@ public class TypeCoercionsTest {
     public void testCoerceStringToNumber() {
         assertEquals(TypeCoercions.coerce("1", Number.class), (Number) Double.valueOf(1));
         assertEquals(TypeCoercions.coerce("1.0", Number.class), (Number) Double.valueOf(1.0));
+    }
+
+    @Test(expectedExceptions = ClassCoercionException.class)
+    public void testInvalidCoercionThrowsClassCoercionException() {
+        TypeCoercions.coerce(new Object(), TypeToken.of(Integer.class));
     }
 
     public static class WithAs {

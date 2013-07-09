@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 
 import brooklyn.rest.domain.ApiError;
+import brooklyn.util.flags.ClassCoercionException;
 
 @Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
@@ -27,26 +28,36 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
      * mapping is found a {@link Status#INTERNAL_SERVER_ERROR} is assumed.
      */
     @Override
-    public Response toResponse(Throwable exception) {
-        if (exception instanceof WebApplicationException) {
-            WebApplicationException wae = (WebApplicationException) exception;
+    public Response toResponse(Throwable throwable) {
+
+        if (LOG.isTraceEnabled()) {
+            String message = Optional.fromNullable(throwable.getMessage()).or(throwable.getClass().getName());
+            LOG.trace("Request threw: " + message);
+        }
+
+        if (throwable instanceof WebApplicationException) {
+            WebApplicationException wae = (WebApplicationException) throwable;
             return wae.getResponse();
         }
 
-        // Assume ClassCastExceptions are caused by TypeCoercions from input paramters gone wrong.
-        if (exception instanceof ClassCastException) {
+        // Assume ClassCoercionExceptions are caused by TypeCoercions from input paramters gone wrong.
+        if (throwable instanceof ClassCoercionException) {
             return Response.status(Status.BAD_REQUEST)
                 .type(MediaType.APPLICATION_JSON)
-                .entity(new ApiError(exception.getMessage()))
+                .entity(ApiError.builder()
+                        .message(throwable.getMessage())
+                        .build())
                 .build();
         }
 
-        LOG.info("No exception mapping for " + exception.getClass() + ", responding 500", exception);
-        String message = Optional.fromNullable(exception.getMessage())
+        LOG.info("No exception mapping for " + throwable.getClass() + ", responding 500", throwable);
+        String message = Optional.fromNullable(throwable.getMessage())
                 .or("Internal error. Check server logs for details.");
         return Response.status(Status.INTERNAL_SERVER_ERROR)
                 .type(MediaType.APPLICATION_JSON)
-                .entity(new ApiError(message))
+                .entity(ApiError.fromThrowable(throwable)
+                        .message(message)
+                        .build())
                 .build();
     }
 
