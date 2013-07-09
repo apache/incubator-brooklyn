@@ -1051,3 +1051,7 @@ input[type="file"] {
     overflow-wrap: break-word;
     word-wrap: break-word;
 }
+
+.padded-div {
+    padding: 0.5em 1.2em;
+}

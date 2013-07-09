@@ -19,6 +19,9 @@ define([
             defer = _.defer;
             _.defer = EntitySummary.Model.prototype.fetch = Application.Model.prototype.fetch = function() {};
 
+            // Append a #details div for not found test
+            $("body").append('<div id="details"></div>');
+
             view = new ApplicationTreeView({
                 collection:apps
             }).render()
@@ -29,6 +32,7 @@ define([
             EntitySummary.Model.prototype.fetch = entityFetch;
             Application.Model.prototype.fetch = applicationFetch;
             _.defer = defer;
+            $("#details").remove();
         });
 
         it("builds the entity tree for each application", function () {
@@ -40,5 +44,10 @@ define([
             
             expect(view.$("#child-nonesuch").length).toBe(0)
         })
+
+        it("shows a 'not found' error for unknown entities", function() {
+            view.displayEntityId("nonexistant");
+            expect($("#details").text().toLowerCase()).toContain("failed to load entity nonexistant");
+        });
     })
 })

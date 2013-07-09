@@ -5,12 +5,13 @@
 define([
     "underscore", "jquery", "backbone",
     "model/app-tree", "./entity-details", "model/entity-summary", "model/application",
-    "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html"
+    "text!tpl/apps/tree-item.html", "text!tpl/apps/details.html", "text!tpl/apps/entity-not-found.html"
 ], function (_, $, Backbone,
              AppTree, EntityDetailsView, EntitySummary, Application,
-             TreeItemHtml, EntityDetailsEmptyHtml) {
+             TreeItemHtml, EntityDetailsEmptyHtml, EntityNotFoundHtml) {
 
-    var treeViewTemplate = _.template(TreeItemHtml);
+    var treeViewTemplate = _.template(TreeItemHtml),
+        notFoundTemplate = _.template(EntityNotFoundHtml);
 
     var ApplicationTreeView = Backbone.View.extend({
         tagName: "ol",
@@ -37,7 +38,7 @@ define([
 
             // Display tree and highlight the selected entity.
             if (this.collection.isEmpty()) {
-                that.$el.append("<li><i>No applications</i></li>")
+                this.$el.append("<li><i>No applications</i></li>")
             } else {
                 this.collection.each(function (app) {
                     that.$el.append(that.buildTree(app))
@@ -73,7 +74,7 @@ define([
                     type:"application",
                     parentApp:application.get("id"),
                     displayName:application.get("name")
-                })), $tree,
+                })),
                 treeFromEntity = function (entity) {
                     var $entityTpl
 
@@ -100,7 +101,7 @@ define([
                 }
 
             // start rendering from initial children of the application
-            $tree = $template.find("ol.tree")
+            var $tree = $template.find("ol.tree")
             _.each(application.get("children"), function (entity) {
                 $tree.append(treeFromEntity(new AppTree.Model(entity)))
             })
@@ -136,7 +137,7 @@ define([
             }
             if (appName === undefined) {
                 // no such app
-                return
+                return this.displayEntityNotFound(id);
             }
 
             var app = new Application.Model()
@@ -148,6 +149,10 @@ define([
                 success: function() {
                     that.showDetails(app, entitySummary);
                 }});
+        },
+
+        displayEntityNotFound: function(id) {
+            $("div#details").html(notFoundTemplate({"id": id}));
         },
 
         /**
