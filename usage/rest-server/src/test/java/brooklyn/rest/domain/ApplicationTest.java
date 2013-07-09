@@ -55,12 +55,11 @@ public class ApplicationTest {
         ApplicationSummary.class), application);
   }
 
-// TODO
-//  @Test
-//  public void testTransitionToRunning() {
-//    ApplicationSummary running = application.transitionTo(ApplicationSummary.Status.RUNNING);
-//    assertEquals(running.getStatus(), ApplicationSummary.Status.RUNNING);
-//  }
+  @Test
+  public void testTransitionToRunning() {
+        ApplicationSummary running = application.transitionTo(Status.RUNNING);
+        assertEquals(running.getStatus(), Status.RUNNING);
+  }
 
   @Test
   public void testAppInAppTest() throws IOException {

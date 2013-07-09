@@ -14,7 +14,7 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
     
-<!-- Brooklyn REST is usu run as a filter so static content can be placed in a webapp
+<!-- Brooklyn REST is usually run as a filter so static content can be placed in a webapp
      to which this is added; to run as a servlet directly, replace the filter tags 
      below (after the comment) with the servlet tags (commented out immediately below),
      (and do the same for the matching tags at the bottom)

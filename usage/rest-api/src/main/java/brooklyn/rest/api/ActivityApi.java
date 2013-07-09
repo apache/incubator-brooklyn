@@ -1,5 +1,6 @@
 package brooklyn.rest.api;
 
+import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.TaskSummary;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
@@ -10,6 +11,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 @Path("/v1/applications/{application}/entities/{entity}/activities")
+@Apidoc("Activities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface ActivityApi {

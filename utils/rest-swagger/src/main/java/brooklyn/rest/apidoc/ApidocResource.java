@@ -1,5 +1,6 @@
 package brooklyn.rest.apidoc;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.collect.ImmutableList;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.wordnik.swagger.core.Api;
 import com.wordnik.swagger.core.ApiOperation;
@@ -53,14 +55,27 @@ abstract public class ApidocResource {
     
     protected boolean isIncludedForDocumentation(Class<?> resource) {
         // TODO currently only support @Produces, not Contenty-type header, or Accept header (which original ApiListing does support)
-        Produces produces = resource.getAnnotation(Produces.class);
-        if (produces==null) return false;
+        Produces produces = getAnnotation(resource, Produces.class);
+        if (produces == null) return false;
         for (String type: produces.value()) 
             if (isSupportedMediaType(type))
                 return true;
         return false;
     }
 
+    protected <A extends Annotation> A getAnnotation(Class<?> r, Class<A> annotationClass) {
+        A result = r.getAnnotation(annotationClass);
+        if (result == null) {
+            result = r.getSuperclass().getAnnotation(annotationClass);
+        }
+        if (result == null) {
+            for(Class<?> parentInterface :  r.getInterfaces()) {
+                result = parentInterface.getAnnotation(annotationClass);
+                if (result != null) break;
+            }
+        }
+        return result;
+    }
     
     protected String getLinkFor(String path, Class<?> resource) {
         return getClass().getAnnotation(Path.class).value()+"/"+getLinkWordFor(resource);
@@ -102,9 +117,9 @@ abstract public class ApidocResource {
             if (!isIncludedForDocumentation(resource))
                 continue;
             
-            Apidoc apidoc = resource.getAnnotation(Apidoc.class);
-            Api apidocX = resource.getAnnotation(Api.class);
-            Path rsPath = resource.getAnnotation(Path.class);
+            Apidoc apidoc = getAnnotation(resource, Apidoc.class);
+            Api apidocX = getAnnotation(resource, Api.class);
+            Path rsPath = getAnnotation(resource, Path.class);
 
             if (apidoc==null && apidocX == null) continue;
             String path = rsPath.value();
@@ -144,9 +159,11 @@ abstract public class ApidocResource {
         // @Path should always be set, right? unless something is oddd
         for (Class<?> r: resourceClasses)
             if (r.getAnnotation(Path.class)!=null) resources.add(r);
-        for (Object r: resourceObjects) 
-            if (r.getClass().getAnnotation(Path.class)!=null) resources.add(r.getClass());
-        
+        for (Object r: resourceObjects) {
+            if (getAnnotation(r.getClass(), Path.class)!=null) {
+                resources.add(r.getClass());
+            }            
+        }
         return resources;
     }
 
@@ -177,9 +194,9 @@ abstract public class ApidocResource {
 
         String apiFilterClassName = getConfigReader().getApiFilterClassName();
 
-        Apidoc apidoc = target.getAnnotation(Apidoc.class);
-        Api apidocX = target.getAnnotation(Api.class);
-        Path rsPath = target.getAnnotation(Path.class);
+        Apidoc apidoc = getAnnotation(target, Apidoc.class);
+        Api apidocX = getAnnotation(target, Api.class);
+        Path rsPath = getAnnotation(target, Path.class);
 
         if ((apidoc==null && apidocX==null) || rsPath==null)
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -223,6 +240,18 @@ abstract public class ApidocResource {
             // return an ignored item; all clients do is check it isn't null
             return ApidocJaxrsSpecParser.class.getAnnotation(Api.class);
         }
+        @Override
+        public Class<?> hostClass() {
+            // Overriding to make sure we have a look at the interfaces (Jersey jaxrs implementation doesn't bother)
+            // Note this means we require the @Path class annotation on the same class as all the method annotations
+            for (Class<?> tryMe : ImmutableList.<Class<?>>builder().add(super.hostClass()).add(super.hostClass().getInterfaces()).build()) {
+                if (tryMe.getAnnotation(Path.class) != null) {
+                    return tryMe;                
+                }
+            }
+            return super.hostClass();
+        }
+        
         public String getPath(Method method) {
             Path cwsPath = hostClass().getAnnotation(Path.class);
             Path mwsPath = method.getAnnotation(Path.class);

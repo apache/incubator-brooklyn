@@ -24,7 +24,6 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
     return EntityTransformer.entitySummary(brooklyn().getEntity(application, entity));
   }
 
-  // TODO rename as "/children" ?
   @Override
   public Iterable<EntitySummary> getChildren( final String application, final String entity) {
     return summaryForChildrenEntities(brooklyn().getEntity(application, entity));

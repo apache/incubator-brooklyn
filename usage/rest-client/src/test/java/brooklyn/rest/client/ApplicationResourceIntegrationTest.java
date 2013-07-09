@@ -13,6 +13,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.jboss.resteasy.client.ClientResponseFailure;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class ApplicationResourceIntegrationTest {
         return manager;
     }
 
-    BrooklynApi api = new BrooklynApi("http://localhost:8081/");
+    BrooklynApi api;
 
     @BeforeClass(groups = "Integration")
     public void setUp() throws Exception {
@@ -62,7 +63,9 @@ public class ApplicationResourceIntegrationTest {
         context.setExtraClasspath("./target/test-rest-server/");
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, getManagementContext());
 
-        startServer(context, "from WAR at " + context.getWar());
+        Server server = startServer(context, "from WAR at " + context.getWar());
+
+        api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/");
     }
 
     @AfterClass(alwaysRun = true)
@@ -71,7 +74,7 @@ public class ApplicationResourceIntegrationTest {
             try {
                 ((AbstractApplication) app).stop();
             } catch (Exception e) {
-                log.debug("Error stopping app " + app + " during test teardown: " + e);
+                log.warn("Error stopping app " + app + " during test teardown: " + e);
             }
         }
     }
@@ -83,8 +86,6 @@ public class ApplicationResourceIntegrationTest {
 
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
-//        assertTrue(response.getLocation().getPath().startsWith("/v1/applications/"), "path=" + response.getLocation().getPath()); // path uses id, rather than app name
-
 
         while (!api.getSensorApi().get("redis-app", "redis-ent", "service.state").equals(Lifecycle.RUNNING.toString())) {
             Thread.sleep(100);

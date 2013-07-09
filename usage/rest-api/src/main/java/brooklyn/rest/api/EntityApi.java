@@ -44,6 +44,8 @@ public interface EntityApi {
 
   // TODO rename as "/children" ?
   @GET
+  @ApiOperation(value = "Fetch details about a specific application entity's children",
+          responseClass = "brooklyn.rest.domain.EntitySummary")
   @Path("/{entity}/entities")
   public Iterable<EntitySummary> getChildren(
       @PathParam("application") final String application,

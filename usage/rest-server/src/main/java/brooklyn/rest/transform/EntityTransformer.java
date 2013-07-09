@@ -14,11 +14,7 @@ import java.net.URI;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: aplowe
- * Date: 05/07/2013
- * Time: 17:02
- * To change this template use File | Settings | File Templates.
+ * @author Adam Lowe
  */
 public class EntityTransformer {
 
