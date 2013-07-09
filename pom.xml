@@ -482,8 +482,34 @@
                                         <ignore />
                                     </action>
                                 </pluginExecution>
-                            </pluginExecutions>
-                        </lifecycleMappingMetadata>
+                                <pluginExecution>
+                                  <pluginExecutionFilter>
+                                    <groupId>com.github.skwakman.nodejs-maven-plugin</groupId>
+                                    <artifactId>nodejs-maven-plugin</artifactId>
+                                    <versionRange>[1.0.3,)</versionRange>
+                                    <goals>
+                                      <goal>extract</goal>
+                                    </goals>
+                                  </pluginExecutionFilter>
+                                  <action>
+                                    <ignore></ignore>
+                                  </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                  <pluginExecutionFilter>
+                                    <groupId>com.github.mcheely</groupId>
+                                    <artifactId>requirejs-maven-plugin</artifactId>
+                                    <versionRange>[2.0.0,)</versionRange>
+                                    <goals>
+                                      <goal>optimize</goal>
+                                    </goals>
+                                  </pluginExecutionFilter>
+                                  <action>
+                                    <ignore></ignore>
+                                  </action>
+                                </pluginExecution>
+                             </pluginExecutions>
+                         </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
             </plugins>
