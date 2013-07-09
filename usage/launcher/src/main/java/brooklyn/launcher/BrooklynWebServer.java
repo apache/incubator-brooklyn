@@ -22,8 +22,10 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.launcher.config.CustomResourceLocator;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
@@ -53,7 +55,13 @@ public class BrooklynWebServer {
     private static final Logger log = LoggerFactory.getLogger(BrooklynWebServer.class);
 
     public static final String BROOKLYN_WAR_URL = "classpath://brooklyn.war";
-
+    static {
+        // support loading the WAR in dev mode from an alternate location 
+        CustomResourceLocator.registerAlternateLocator(new CustomResourceLocator.SearchingClassPathInDevMode(
+                BROOKLYN_WAR_URL, "/usage/launcher/target", 
+                "/usage/jsgui/target/brooklyn-jsgui-"+BrooklynVersion.get()+".war"));
+    }
+    
     protected Server server;
 
     private WebAppContext rootContext;
@@ -318,16 +326,22 @@ public class BrooklynWebServer {
             cleanPathSpec = cleanPathSpec.substring(1);
         boolean isRoot = cleanPathSpec.isEmpty();
 
-        File tmpWarFile = ResourceUtils.writeToTempFile(new ResourceUtils(this).getResourceFromUrl(warUrl), 
-                isRoot ? "ROOT" : ("embedded-" + cleanPathSpec), ".war");
-
         WebAppContext context = new WebAppContext();
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
         for (Map.Entry<String, Object> attributeEntry : attributes.entrySet()) {
             context.setAttribute(attributeEntry.getKey(), attributeEntry.getValue());
         }
 
-        context.setWar(tmpWarFile.getAbsolutePath());
+        try {
+            File tmpWarFile = ResourceUtils.writeToTempFile(new CustomResourceLocator(managementContext.getConfig(), new ResourceUtils(this)).getResourceFromUrl(warUrl), 
+                    isRoot ? "ROOT" : ("embedded-" + cleanPathSpec), ".war");
+            context.setWar(tmpWarFile.getAbsolutePath());
+        } catch (Exception e) {
+            log.error("Unabled to load WAR file from "+warUrl+"; launching run without WAR: "+e);
+            log.debug("Detail on why running without WAR file: "+e, e);
+            context.setWar("/dev/null");
+        }
+
         context.setContextPath("/" + cleanPathSpec);
         context.setParentLoaderPriority(true);
 

@@ -71,12 +71,31 @@ public class CloudMachineNamer {
             canTruncate("appId", 2).
             canRemove("appId");
         
-        int len = 52;  // allows for 9 chars (dash plus 8 for hex id) added by jclouds, without hitting common 64 boundary
-        if ("vcloud".equals( setup.peek(JcloudsLocationConfig.CLOUD_PROVIDER) )) len = 15;
-        // TODO other cloud max length rules
-        
+        int len = getMaxNameLength();
+        // decrement by 9 chars because jclouds adds that (dash plus 8 for hex id)
+        len -= 9;
+        if (len<=0) return "";
         String s = shortener.getStringOfMaxLength(len);
         return sanitize(s).toLowerCase();
+    }
+
+    /** returns the max length of a VM name for the cloud specified in setup;
+     * this value is typically decremented by 9 to make room for jclouds labels */
+    public int getMaxNameLength() {
+        if (setup.containsKey(JcloudsLocationConfig.VM_NAME_MAX_LENGTH)) {
+            // if a length is set, use that
+            return setup.get(JcloudsLocationConfig.VM_NAME_MAX_LENGTH);
+        }
+        
+        // otherwise, for some known clouds which only allow a short name, use that length
+        if ("vcloud".equals( setup.peek(JcloudsLocationConfig.CLOUD_PROVIDER) )) 
+            return 24;
+        if ("abiquo".equals( setup.peek(JcloudsLocationConfig.CLOUD_PROVIDER) )) 
+            return 39;
+        // TODO other cloud max length rules
+        
+        // return the default
+        return setup.get(JcloudsLocationConfig.VM_NAME_MAX_LENGTH);  
     }
 
     private String shortName(Object x) {
