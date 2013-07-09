@@ -130,6 +130,7 @@ define([
         displayEntityId:function (id, appName) {
             var entitySummary = new EntitySummary.Model,
                 that = this;
+            console.debug("Displaying entity: " + id);
             this.highlightEntity(id)
 
             if (appName === undefined) {
@@ -137,6 +138,7 @@ define([
             }
             if (appName === undefined) {
                 // no such app
+                console.error("Couldn't find a parent application for entity: " + id);
                 return this.displayEntityNotFound(id);
             }
 

@@ -1,5 +1,5 @@
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils",
+    "underscore", "jquery", "backbone",
     "text!tpl/script/swagger.html",
     
     "jquery-slideto",
@@ -7,7 +7,7 @@ define([
     "jquery-ba-bbq",
     "handlebars",
     "bootstrap"
-], function (_, $, Backbone, Util, SwaggerHtml) {
+], function (_, $, Backbone, SwaggerHtml) {
 
     var ApidocView = Backbone.View.extend({
         tagName:"div",
@@ -35,13 +35,13 @@ define([
                     supportHeaderParams: false,
                     supportedSubmitMethods: ['get', 'post', 'put'],
                     onComplete: function(swaggerApi, swaggerUi){
-                        Util.log("Loaded SwaggerUI");
-                        Util.log(swaggerApi);
-                        Util.log(swaggerUi);
+                        console.info("Loaded SwaggerUI");
+                        console.debug(swaggerApi);
+                        console.debug(swaggerUi);
                     },
                     onFailure: function(data) {
-                        Util.log("Unable to Load SwaggerUI");
-                        Util.log(data);
+                        console.error("Unable to Load SwaggerUI");
+                        console.debug(data);
                     },
                     docExpansion: "none"
                 });

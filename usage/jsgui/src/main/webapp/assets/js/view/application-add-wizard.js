@@ -3,7 +3,7 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils", "formatJson",
+    "underscore", "jquery", "backbone", "formatJson",
     "model/entity", "model/application", "model/location",
     "text!tpl/app-add-wizard/modal-wizard.html",
     "text!tpl/app-add-wizard/create.html",
@@ -16,7 +16,7 @@ define([
     "text!tpl/app-add-wizard/preview.html",
     "bootstrap"
     
-], function (_, $, Backbone, Util, FormatJSON, Entity, Application, Location,
+], function (_, $, Backbone, FormatJSON, Entity, Application, Location,
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
              DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
@@ -346,7 +346,7 @@ define([
                     return true
                 }
             } else {
-                Util.log("NOT IMPLEMENTED YET")
+                console.info("NOT IMPLEMENTED YET")
                 // TODO - other tabs not implemented yet 
                 // do nothing, show error return false below
             }
