@@ -650,7 +650,9 @@
             <modules>
                 <module>usage/logback-xml</module>
                 <module>utils/rest-swagger</module>
-                <module>usage/rest</module>
+                <module>usage/rest-api</module>
+                <module>usage/rest-server</module>
+                <module>usage/rest-client</module>
                 <module>usage/jsgui</module>
                 <module>usage/launcher</module>
                 <module>usage/cli</module>
