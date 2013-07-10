@@ -128,10 +128,13 @@ define([
         },
 
         displayEntityId:function (id, appName) {
-            var entitySummary = new EntitySummary.Model,
-                that = this;
+            var that = this;
             console.debug("Displaying entity: " + id);
             this.highlightEntity(id)
+
+            var entityLoadFailed = function() {
+                return that.displayEntityNotFound(id);
+            };
 
             if (appName === undefined) {
                 appName = $("span.entity_tree_node#"+id).data("parent-app")
@@ -139,18 +142,20 @@ define([
             if (appName === undefined) {
                 // no such app
                 console.error("Couldn't find a parent application for entity: " + id);
-                return this.displayEntityNotFound(id);
+                return entityLoadFailed();
             }
 
-            var app = new Application.Model()
-            app.url = "/v1/applications/" + appName
-            app.fetch({async:false})
+            var app = new Application.Model(),
+                entitySummary = new EntitySummary.Model;
 
-            entitySummary.url = "/v1/applications/" + appName + "/entities/" + id
-            entitySummary.fetch({
-                success: function() {
+            app.url = "/v1/applications/" + appName
+            entitySummary.url = "/v1/applications/" + appName + "/entities/" + id;
+
+            $.when(app.fetch(), entitySummary.fetch())
+                .done(function() {
                     that.showDetails(app, entitySummary);
-                }});
+                })
+                .fail(entityLoadFailed);
         },
 
         displayEntityNotFound: function(id) {
