@@ -856,11 +856,6 @@ tr.app-add-wizard-config-entry {
 	margin-bottom: 0px;
 }
 
-#application-explorer div#summary {
-    padding-right: 16px;
-    padding-left: 24px;
-    margin-left: -16px;
-}
 #application-explorer div#summary textarea {
 	width: 100%;
 	cursor: auto;
