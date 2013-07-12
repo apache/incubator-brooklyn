@@ -52,7 +52,7 @@ public class ByonLocationResolver implements LocationResolver {
 
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("hosts", "name", "user");
 
-    private ManagementContext managementContext;
+    private volatile ManagementContext managementContext;
 
     @Override
     public void init(ManagementContext managementContext) {

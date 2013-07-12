@@ -22,7 +22,7 @@ public class DefinedLocationByIdResolver implements LocationResolver {
 
     public static final String ID = "id";
     
-    private ManagementContext managementContext;
+    private volatile ManagementContext managementContext;
 
     @Override
     public void init(ManagementContext managementContext) {
