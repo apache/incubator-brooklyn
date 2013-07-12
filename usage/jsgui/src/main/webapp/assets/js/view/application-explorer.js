@@ -40,8 +40,7 @@ define([
         },
         
         refreshApplications:function () {
-            this.collection.fetch()
-            this.treeView.render()
+            this.collection.fetch({reset: true})
             return false
         },
         show: function(entityId) {

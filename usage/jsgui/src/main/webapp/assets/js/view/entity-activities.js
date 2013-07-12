@@ -57,12 +57,12 @@ define([
             that.collection.on("reset", that.render, that);
             that.callPeriodically("entity-activities", function () {
                 if (that.refreshActive)
-                    that.collection.fetch();
+                    that.collection.fetch({reset: true});
             }, 3000);
-            that.collection.fetch();
+            that.collection.fetch({reset: true});
         },
         refreshNow: function() {
-            this.collection.fetch();
+            this.collection.fetch({reset: true});
         },
         beforeClose:function () {
             this.collection.off("reset", this.render);

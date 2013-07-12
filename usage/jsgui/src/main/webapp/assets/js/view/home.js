@@ -69,8 +69,8 @@ define([
         },
         
         refresh:function (that) {
-        	that.collection.fetch()
-        	that.options.locations.fetch()     	
+        	that.collection.fetch({reset: true})
+        	that.options.locations.fetch({reset: true})
         },
         updateCircles: function(that, locatedLocations, GoogleMaps, map) {
             locatedLocations.fetch({success:function() {
