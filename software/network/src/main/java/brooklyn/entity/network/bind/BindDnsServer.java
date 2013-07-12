@@ -25,10 +25,12 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.net.Cidr;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -52,12 +54,11 @@ public interface BindDnsServer extends SoftwareProcess {
 
     @SetFromFlag("reverseLookupNetwork")
     ConfigKey<String> REVERSE_LOOKUP_NETWORK = new BasicConfigKey<String>(String.class,
-            "bind.reverse-lookup.address", "Network address for reverse lookup zone (defaults to server address /24)");
+            "bind.reverse-lookup.address", "Network address for reverse lookup zone");
 
     @SetFromFlag("subnet")
     ConfigKey<String> MANAGEMENT_CIDR = new BasicConfigKey<String>(String.class,
-            "bind.access.cidr", "Subnet CIDR allowed to access DNS", "0.0.0.0/0");
-            // TODO should default be a /0, or 'any', or use brooklyn management CIDR?
+            "bind.access.cidr", "Subnet CIDR or ACL allowed to access DNS", "0.0.0.0/0");
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("hostnameSensor")
@@ -81,6 +82,14 @@ public interface BindDnsServer extends SoftwareProcess {
     ConfigKey<String> NAMED_CONF_TEMPLATE = new BasicConfigKey<String>(String.class,
             "bind.template.named-conf", "The BIND named configuration file (as FreeMarker template)",
             "classpath://brooklyn/entity/network/bind/named.conf");
+
+    /* Reverse lookup attributes. */
+
+    AttributeSensor<Cidr> REVERSE_LOOKUP_CIDR = new BasicAttributeSensor<Cidr>(Cidr.class,
+            "bind.reverse-lookup.cidr", "The network CIDR that hosts must have for reverse lookup entriers to be added (default uses server address /24)");
+
+    AttributeSensor<String> REVERSE_LOOKUP_DOMAIN = new BasicAttributeSensor<String>(String.class,
+            "bind.reverse-lookup.domain", "The in-addr.arpa reverse lookup domain name");
 
     /* Configuration applicable to clients of the BIND DNS service. */
 
