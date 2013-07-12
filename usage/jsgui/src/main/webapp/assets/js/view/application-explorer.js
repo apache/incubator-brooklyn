@@ -15,7 +15,7 @@ define([
         id:'application-explorer',
         template:_.template(PageHtml),
         events:{
-            'click .refresh':'refreshApplications',
+            'click .application-tree-refresh': 'refreshApplications',
             'click #add-new-application':'createApplication',
             'click .delete':'deleteApplication'
         },
