@@ -1,5 +1,7 @@
 package brooklyn.location.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
@@ -11,6 +13,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.KeyValueParser;
 
@@ -36,6 +39,13 @@ public class LocalhostResolver implements LocationResolver {
 
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("name");
 
+    private ManagementContext managementContext;
+
+    @Override
+    public void init(ManagementContext managementContext) {
+        this.managementContext = checkNotNull(managementContext, "managementContext");
+    }
+    
     @Override
     public String getPrefix() {
         return LOCALHOST;

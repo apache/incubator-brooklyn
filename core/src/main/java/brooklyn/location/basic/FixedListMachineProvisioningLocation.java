@@ -59,16 +59,24 @@ implements MachineProvisioningLocation<T>, Closeable {
     public FixedListMachineProvisioningLocation(Map properties) {
         super(properties);
 
+        if (isLegacyConstruction()) {
+            init();
+        }
+    }
+
+    @Override
+    public void init() {
+        super.init();
         for (MachineLocation location: machines) {
             // FIXME Bad casting
             Location machine = (Location) location;
             Location parent = machine.getParent();
             if (parent != null && !parent.equals(this))
                 throw new IllegalStateException("Machines must not have a parent location, but machine '"+machine.getDisplayName()+"' has its parent location set");
-	        addChildLocation(machine);
+            addChildLocation(machine);
         }
     }
-
+    
     @Override
     public String toVerboseString() {
         return Objects.toStringHelper(this).omitNullValues()
@@ -77,7 +85,8 @@ implements MachineProvisioningLocation<T>, Closeable {
                 .toString();
     }
 
-    protected void configure(Map properties) {
+    @Override
+    public void configure(Map properties) {
         if (lock == null) {
             lock = new Object();
             machines = Sets.newLinkedHashSet();
@@ -310,4 +319,4 @@ implements MachineProvisioningLocation<T>, Closeable {
                     .build());
         }        
     }
-} 
+}

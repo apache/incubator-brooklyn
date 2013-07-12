@@ -123,10 +123,12 @@ public class LocalEntityManager implements EntityManager {
     // concurrently then the managed'ness could be set after our check but before we do 
     // onManagementStarting etc. However, we can't just synchronize because we're calling alien code 
     // (the user might override entity.onManagementStarting etc).
-    //
+    // 
     // TODO We need to do some check about isPreManaged - i.e. is there another thread (or is this a
     // re-entrant call) where the entity is not yet full managed (i.e. isManaged==false) but we're in
     // the middle of managing it.
+    // 
+    // TODO Also see LocalLocationManager.manage(Entity), if fixing things here
     @Override
     public void manage(Entity e) {
         if (isManaged(e)) {

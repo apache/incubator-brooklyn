@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -651,6 +650,14 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
                 locations.set(ImmutableList.<Location>builder().addAll(oldLocations).addAll(truelyNewLocations).build());
             }
         }
+        
+        if (getManagementSupport().isDeployed()) {
+            for (Location newLocation : newLocations) {
+                // Location is now reachable, so manage it
+                // TODO will not be required in future releases when creating locations always goes through LocationManager.createLocation(LocationSpec).
+                Entities.manage(newLocation, getManagementContext());
+            }
+        }
         getManagementSupport().getEntityChangeListener().onLocationsChanged();
     }
 
@@ -660,6 +667,12 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
             List<Location> oldLocations = locations.get();
             locations.set(MutableList.<Location>builder().addAll(oldLocations).removeAll(removedLocations).buildImmutable());
         }
+        
+        // TODO Not calling `Entities.unmanage(removedLocation)` because this location might be shared with other entities.
+        // Relying on abstractLocation.removeChildLocation unmanaging it, but not ideal as top-level locations will stick
+        // around forever, even if not referenced.
+        // Same goes for AbstractEntity#clearLocations().
+        
         getManagementSupport().getEntityChangeListener().onLocationsChanged();
     }
     

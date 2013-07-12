@@ -1,5 +1,7 @@
 package brooklyn.location.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -10,6 +12,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.management.ManagementContext;
 
 /**
  * Allows you to say, in your brooklyn.properties:
@@ -32,6 +35,13 @@ public class NamedLocationResolver implements LocationResolver {
     public static final Logger log = LoggerFactory.getLogger(NamedLocationResolver.class);
 
     public static final String NAMED = "named";
+    
+    private ManagementContext managementContext;
+
+    @Override
+    public void init(ManagementContext managementContext) {
+        this.managementContext = checkNotNull(managementContext, "managementContext");
+    }
     
     @SuppressWarnings("rawtypes")
     @Override

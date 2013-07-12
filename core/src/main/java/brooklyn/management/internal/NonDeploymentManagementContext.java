@@ -27,6 +27,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
+import brooklyn.management.LocationManager;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
@@ -56,6 +57,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     private final BasicSubscriptionContext subscriptionContext;
     private final NonDeploymentExecutionContext executionContext;
     private NonDeploymentEntityManager entityManager;
+    private NonDeploymentLocationManager locationManager;
 
     public NonDeploymentManagementContext(AbstractEntity entity, NonDeploymentManagementContextMode mode) {
         this.entity = checkNotNull(entity, "entity");
@@ -64,11 +66,13 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         subscriptionContext = new BasicSubscriptionContext(qsm, entity);
         executionContext = new NonDeploymentExecutionContext();
         entityManager = new NonDeploymentEntityManager(null);
+        locationManager = new NonDeploymentLocationManager(null);
     }
     
     public void setManagementContext(ManagementContextInternal val) {
         this.initialManagementContext = checkNotNull(val, "initialManagementContext");
         this.entityManager = new NonDeploymentEntityManager(val);
+        this.locationManager = new NonDeploymentLocationManager(val);
     }
 
     @Override
@@ -99,6 +103,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         return entityManager;
     }
     
+    @Override
+    public LocationManager getLocationManager() {
+        return locationManager;
+    }
+
     @Override
     public ExecutionManager getExecutionManager() {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: executions cannot be performed prior to management");

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.location.AddressableLocation;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.geo.HostGeoInfo;
@@ -72,7 +73,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         this(MutableMap.of("name", name, "count", count));
     }
     
-    protected void configure(Map flags) {
+    public void configure(Map flags) {
         super.configure(flags);
         
         if (!truth(name)) { name = "localhost"; }
@@ -99,9 +100,15 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
                 NetworkUtils.getLocalHost()), InetAddress.class);
     }
 
-    public InetAddress getAddress() { return address; }
+    @Override
+    public InetAddress getAddress() {
+        return address;
+    }
     
-    public boolean canProvisionMore() { return canProvisionMore; }
+    @Override
+    public boolean canProvisionMore() {
+        return canProvisionMore;
+    }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void provisionMore(int size) {
@@ -113,8 +120,12 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
                 Object v = findLocationProperty(k);
                 if (v!=null) flags.put(k, v);
             }
-            SshMachineLocation child = new LocalhostMachine(flags);
-            addChildLocation(child);
+            
+            if (isManaged()) {
+                addChild(LocationSpec.spec(LocalhostMachine.class).configure(flags));
+            } else {
+                addChild(new LocalhostMachine(flags)); // TODO legacy way
+            }
        }
     }
 

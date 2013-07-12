@@ -20,22 +20,41 @@ import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails;
 import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
-    final JcloudsLocation parent;
-    final NodeMetadata node;
-    private final RunScriptOnNode.Factory runScriptFactory;
     
-    public JcloudsSshMachineLocation(Map flags, JcloudsLocation parent, NodeMetadata node) {
+    @SetFromFlag
+    JcloudsLocation jcloudsParent;
+    
+    @SetFromFlag
+    NodeMetadata node;
+    
+    private RunScriptOnNode.Factory runScriptFactory;
+    
+    public JcloudsSshMachineLocation() {
+    }
+    
+    /**
+     * @deprecated since 0.6; use LocationSpec (which calls no-arg constructor)
+     */
+    @Deprecated
+    public JcloudsSshMachineLocation(Map flags, JcloudsLocation jcloudsParent, NodeMetadata node) {
         super(flags);
-        this.parent = parent;
+        this.jcloudsParent = jcloudsParent;
         this.node = node;
         
-        ComputeServiceContext context = parent.getComputeService().getContext();
+        init();
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        ComputeServiceContext context = jcloudsParent.getComputeService().getContext();
         runScriptFactory = context.utils().injector().getInstance(RunScriptOnNode.Factory.class);
     }
     
@@ -58,7 +77,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     }
     
     public JcloudsLocation getParent() {
-        return parent;
+        return jcloudsParent;
     }
     
     /** returns the hostname for use by peers in the same subnet,
@@ -70,7 +89,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     public String getSubnetHostname() {
         if (truth(node.getPrivateAddresses()))
             return node.getPrivateAddresses().iterator().next();
-        return parent.getPublicHostname(node, null);
+        return jcloudsParent.getPublicHostname(node, null);
     }
     
     public String getJcloudsId() {
@@ -113,9 +132,9 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
      */
     public String waitForPassword() {
         // TODO Hacky; don't want aws specific stuff here but what to do?!
-        if (parent.getProvider().equals("aws-ec2")) {
+        if (jcloudsParent.getProvider().equals("aws-ec2")) {
             try {
-                return JcloudsUtil.waitForPasswordOnAws(parent.getComputeService(), node, 15, TimeUnit.MINUTES);
+                return JcloudsUtil.waitForPasswordOnAws(jcloudsParent.getComputeService(), node, 15, TimeUnit.MINUTES);
             } catch (TimeoutException e) {
                 throw Throwables.propagate(e);
             }

@@ -3,7 +3,14 @@ package brooklyn.entity.basic;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,6 +32,8 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
+import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
@@ -40,7 +49,6 @@ import brooklyn.util.task.ParallelTask;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -576,4 +584,17 @@ public class Entities {
         };
     }
 
+    /**
+     * Registers the given location (and all its children) with the management context. 
+     * @throws IllegalStateException if the parent location is not already managed
+     * 
+     * @since 0.6.0 (added only for backwards compatibility, where locations are being created directly).
+     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead.
+     */
+    public static void manage(Location loc, ManagementContext managementContext) {
+        if (!managementContext.getLocationManager().isManaged(loc)) {
+            log.warn("Deprecated use of unmanaged location; will be managed automatically now but not supported in future versions", new Exception("for stacktrace"));
+            managementContext.getLocationManager().manage(loc);
+        }
+    }
 }

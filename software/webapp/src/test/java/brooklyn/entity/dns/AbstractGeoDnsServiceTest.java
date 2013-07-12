@@ -22,12 +22,14 @@ import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.Repeater;
 
 import com.google.common.base.Predicates;
@@ -42,26 +44,14 @@ public class AbstractGeoDnsServiceTest {
     private static final double WEST_LATITUDE = 37.43472, WEST_LONGITUDE = -121.89500;
     private static final double EAST_LATITUDE = 41.10361, EAST_LONGITUDE = -73.79583;
     
-    private static SimulatedLocation newSimulatedLocation(String name, double lat, double lon) {
-        return new SimulatedLocation(MutableMap.of("name", name, "latitude", lat, "longitude", lon));
-    }
+    private ManagementContext managementContext;
     
-    private static Location newSshMachineLocation(String name, String address, Location parent) {
-        return new SshMachineLocation(MutableMap.of("name", name, "address", address, "parentLocation", parent)); 
-    }
-    
-    private static Location newSshMachineLocation(String name, String address, Location parent, double lat, double lon) {
-        return new SshMachineLocation(MutableMap.of("name", name, "address", address, "parentLocation", parent, "latitude", lat, "longitude", lon)); 
-    }
-    
-    private static final Location WEST_PARENT = newSimulatedLocation("West parent", WEST_LATITUDE, WEST_LONGITUDE);
-    
-    private static final Location WEST_CHILD = newSshMachineLocation("West child", WEST_IP, WEST_PARENT);
-    private static final Location WEST_CHILD_WITH_LOCATION = newSshMachineLocation("West child with location", WEST_IP, WEST_PARENT, WEST_LATITUDE, WEST_LONGITUDE); 
-    
-    private static final Location EAST_PARENT = newSimulatedLocation("East parent", EAST_LATITUDE, EAST_LONGITUDE);
-    private static final Location EAST_CHILD = newSshMachineLocation("East child", EAST_IP, EAST_PARENT); 
-    private static final Location EAST_CHILD_WITH_LOCATION = newSshMachineLocation("East child with location", EAST_IP, EAST_PARENT, EAST_LATITUDE, EAST_LONGITUDE); 
+    private Location westParent;
+    private Location westChild;
+    private Location westChildWithLocation; 
+    private Location eastParent;
+    private Location eastChild; 
+    private Location eastChildWithLocation; 
     
     private TestApplication app;
     private DynamicFabric fabric;
@@ -71,7 +61,21 @@ public class AbstractGeoDnsServiceTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        managementContext = new LocalManagementContext();
+        
+        westParent = newSimulatedLocation("West parent", WEST_LATITUDE, WEST_LONGITUDE);
+        
+        westChild = newSshMachineLocation("West child", WEST_IP, westParent);
+        westChildWithLocation = newSshMachineLocation("West child with location", WEST_IP, westParent, WEST_LATITUDE, WEST_LONGITUDE); 
+        
+        eastParent = newSimulatedLocation("East parent", EAST_LATITUDE, EAST_LONGITUDE);
+        eastChild = newSshMachineLocation("East child", EAST_IP, eastParent); 
+        eastChildWithLocation = newSshMachineLocation("East child with location", EAST_IP, eastParent, EAST_LATITUDE, EAST_LONGITUDE); 
+
+        Entities.manage(westParent, managementContext);
+        Entities.manage(eastParent, managementContext);
+        
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         fabric = app.createAndManageChild(EntitySpecs.spec(DynamicFabric.class)
             .configure(DynamicFabric.MEMBER_SPEC, EntitySpecs.spec(TestEntity.class)));
         
@@ -87,10 +91,32 @@ public class AbstractGeoDnsServiceTest {
         if (app != null) Entities.destroy(app);
     }
 
+    private SimulatedLocation newSimulatedLocation(String name, double lat, double lon) {
+        return managementContext.getLocationManager().createLocation(LocationSpec.spec(SimulatedLocation.class)
+                .displayName(name)
+                .configure("latitude", lat)
+                .configure("longitude", lon));
+    }
+    
+    private Location newSshMachineLocation(String name, String address, Location parent) {
+        return managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .parent(parent)
+                .displayName(name)
+                .configure("address", address));
+    }
+    
+    private Location newSshMachineLocation(String name, String address, Location parent, double lat, double lon) {
+        return managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .parent(parent)
+                .displayName(name)
+                .configure("address", address)
+                .configure("latitude", lat)
+                .configure("longitude", lon));
+    }
     
     @Test
     public void testGeoInfoOnLocation() {
-        app.start( ImmutableList.of(WEST_CHILD_WITH_LOCATION, EAST_CHILD_WITH_LOCATION) );
+        app.start( ImmutableList.of(westChildWithLocation, eastChildWithLocation) );
         
         waitForTargetHosts(geoDns);
         assertTrue(geoDns.getTargetHostsByName().containsKey("West child with location"), "targets="+geoDns.getTargetHostsByName());
@@ -99,7 +125,7 @@ public class AbstractGeoDnsServiceTest {
     
     @Test
     public void testGeoInfoOnParentLocation() {
-        app.start( ImmutableList.of(WEST_CHILD, EAST_CHILD) );
+        app.start( ImmutableList.of(westChild, eastChild) );
         
         waitForTargetHosts(geoDns);
         assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());

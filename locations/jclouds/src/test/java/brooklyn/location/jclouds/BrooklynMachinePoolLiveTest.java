@@ -43,9 +43,10 @@ public class BrooklynMachinePoolLiveTest {
         
         { registerTemplates(USUAL_VM, ANYONE_NOT_TINY_VM, VM_LARGE1, VM_SMALL1); }
     }
-    
-    private LocalManagementContext managementContext;
 
+
+    private LocalManagementContext managementContext;
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         managementContext = new LocalManagementContext();
@@ -55,7 +56,7 @@ public class BrooklynMachinePoolLiveTest {
     public void tearDown() throws Exception {
         if (managementContext != null) managementContext.terminate();
     }
-   
+    
     @Test(groups="Live")
     public void buildClaimAndDestroy() {
         SamplePool p = new SamplePool(resolve("aws-ec2:us-west-1"));

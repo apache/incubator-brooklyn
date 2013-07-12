@@ -60,8 +60,10 @@ public class BasicLocationRegistry implements LocationRegistry {
 
     protected void findServices() {
         ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class);
-        for (LocationResolver r: loader)
+        for (LocationResolver r: loader) {
+            r.init(mgmt);
             resolvers.put(r.getPrefix(), r);
+        }
         if (log.isDebugEnabled()) log.debug("Location resolvers are: "+resolvers);
         if (resolvers.isEmpty()) log.warn("No location resolvers detected: is src/main/resources correclty included?");
     }
@@ -217,7 +219,7 @@ public class BasicLocationRegistry implements LocationRegistry {
         return false;
     }
 
-    /** @deprecated use resolve */
+    /** @deprecated since 0.5; use resolve */
     public List<Location> getLocationsById(Iterable<?> specs) {
         return resolve(specs);
     }

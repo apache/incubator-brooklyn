@@ -1,5 +1,7 @@
 package brooklyn.location.jclouds;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,6 +22,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.basic.BasicLocationRegistry;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
 
@@ -73,6 +76,13 @@ public class JcloudsResolver implements LocationResolver {
         return (JcloudsLocation) new JcloudsResolver().newLocationFromString(properties, spec);
     }
 
+    private ManagementContext managementContext;
+
+    @Override
+    public void init(ManagementContext managementContext) {
+        this.managementContext = checkNotNull(managementContext, "managementContext");
+    }
+    
     /** @deprecated since 0.6; use {@link #newLocationFromString(String, LocationRegistry, Map, Map)} */
     public JcloudsLocation newLocationFromString(String spec) {
         return newLocationFromString(new LinkedHashMap(), spec);

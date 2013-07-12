@@ -3,11 +3,15 @@ package brooklyn.location;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import brooklyn.management.ManagementContext;
+
 /**
  * Provides a way of creating location instances of a particular type.
  */
 public interface LocationResolver {
 
+    void init(ManagementContext managementContext);
+    
     /** the prefix that this resolver will attend to */
     String getPrefix();
     
