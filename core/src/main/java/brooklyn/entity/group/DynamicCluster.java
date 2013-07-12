@@ -13,6 +13,7 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
@@ -45,6 +46,12 @@ public interface DynamicCluster extends AbstractGroup, Cluster {
 
     public static final AttributeSensor<Group> QUARANTINE_GROUP = new BasicAttributeSensor<Group>(Group.class, "dynamiccluster.quarantineGroup", "Group of quarantined entities that failed to start");
     
+    @SetFromFlag("initialQuorumSize")
+    ConfigKey<Integer> INITIAL_QUORUM_SIZE = ConfigKeys.newIntegerConfigKey(
+            "cluster.initial.quorumSize",
+            "Initial cluster quorum size - number of initial nodes that must have been successfully started to report success (if < 0, then use value of INITIAL_SIZE)", 
+            -1);
+
     @SetFromFlag("memberSpec")
     public static final ConfigKey<EntitySpec<?>> MEMBER_SPEC = new BasicConfigKey(
             EntitySpec.class, "dynamiccluster.memberspec", "entity spec for creating new cluster members", null);

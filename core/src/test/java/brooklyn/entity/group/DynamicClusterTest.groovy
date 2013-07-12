@@ -310,6 +310,54 @@ class DynamicClusterTest {
     }
     
     @Test
+    public void testInitialQuorumSizeSufficientForStartup() {
+        final int failNum = 1;
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+                .configure("initialSize", 2)
+                .configure(DynamicCluster.INITIAL_QUORUM_SIZE, 1)
+                .configure("factory", { properties ->
+                    int num = counter.incrementAndGet();
+                    return new FailingEntity(properties, (num==failNum))
+                }));
+        
+        cluster.start([loc])
+        assertEquals(cluster.getCurrentSize(), 1)
+        assertEquals(cluster.getChildren().size(), 1)
+        for (Entity child : cluster.getChildren()) {
+            assertFalse(((FailingEntity)child).failOnStart)
+        }
+    }
+    
+    @Test
+    public void testInitialQuorumSizeDeafultsToInitialSize() throws Exception {
+        final int failNum = 1;
+        final AtomicInteger counter = new AtomicInteger(0)
+        DynamicCluster cluster = app.createAndManageChild(EntitySpecs.spec(DynamicCluster.class)
+                .configure("initialSize", 2)
+                .configure("factory", { properties ->
+                    int num = counter.incrementAndGet();
+                    return new FailingEntity(properties, (num==failNum))
+                }));
+        
+        try {
+            cluster.start([loc])
+        } catch (Exception e) {
+            IllegalStateException unwrapped = Exceptions.getFirstThrowableOfType(e, IllegalStateException.class);
+            if (unwrapped != null && unwrapped.getMessage().contains("failed to get to initial size")) {
+                // success
+            } else {
+                throw e; // fail
+            }
+        }
+        assertEquals(cluster.getCurrentSize(), 1)
+        assertEquals(cluster.getChildren().size(), 1)
+        for (Entity child : cluster.getChildren()) {
+            assertFalse(((FailingEntity)child).failOnStart)
+        }
+    }
+    
+    @Test
     public void testCanQuarantineFailedEntities() {
         final int failNum = 2
         final AtomicInteger counter = new AtomicInteger(0)
