@@ -132,7 +132,6 @@ define([
             $(".nav1_script_groovy").addClass("active")
         },
         helpPage:function () {
-            var that = this
             $("#application-content").html(_.template(HelpHtml, {}))
             $(".nav1").removeClass("active")
             $(".nav1_help").addClass("active")

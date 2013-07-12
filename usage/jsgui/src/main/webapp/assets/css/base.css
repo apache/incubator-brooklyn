@@ -856,11 +856,6 @@ tr.app-add-wizard-config-entry {
 	margin-bottom: 0px;
 }
 
-#application-explorer div#summary {
-    padding-right: 16px;
-    padding-left: 24px;
-    margin-left: -16px;
-}
 #application-explorer div#summary textarea {
 	width: 100%;
 	cursor: auto;
@@ -1050,4 +1045,8 @@ input[type="file"] {
 #policy-config-table td.policy-config-value {
     overflow-wrap: break-word;
     word-wrap: break-word;
+}
+
+.padded-div {
+    padding: 0.5em 1.2em;
 }

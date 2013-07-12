@@ -4,17 +4,6 @@ define([
 
     var Util = {};
 
-    Util.log = function (args) {
-        if (!_.isUndefined(window.console)) {
-            console.log(args);
-            if (arguments.length > 1) {
-                for (var i=1; i < arguments.length; i++) {
-                    console.log(arguments[i]);
-                }
-            }
-        }
-    };
-
     // TODO: Also rename
     /** preps data for output */
     Util.prep = function (s) {

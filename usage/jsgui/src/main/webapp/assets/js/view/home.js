@@ -3,12 +3,12 @@
  */
 
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils", "./application-add-wizard", "model/location",
+    "underscore", "jquery", "backbone", "./application-add-wizard", "model/location",
     "text!tpl/home/applications.html",
     "text!tpl/home/summaries.html",
     "text!tpl/home/app-entry.html",
     "bootstrap"
-], function (_, $, Backbone, Util, AppAddWizard, Location, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
+], function (_, $, Backbone, AppAddWizard, Location, ApplicationsHtml, HomeSummariesHtml, AppEntryHtml) {
 
     var HomeView = Backbone.View.extend({
         tagName:"div",
@@ -42,7 +42,7 @@ define([
             } else {
             	requirejs(["googlemaps"], function (GoogleMaps) {
             	    _.defer( function() {
-            	        Util.log("loading google maps")
+            	        console.debug("loading google maps")
             			var map = GoogleMaps.addMapToCanvas(id[0],
             			        // brooklyn bridge
 //            			        40.7063, -73.9971, 14
@@ -69,8 +69,8 @@ define([
         },
         
         refresh:function (that) {
-        	that.collection.fetch()
-        	that.options.locations.fetch()     	
+        	that.collection.fetch({reset: true})
+        	that.options.locations.fetch({reset: true})
         },
         updateCircles: function(that, locatedLocations, GoogleMaps, map) {
             locatedLocations.fetch({success:function() {

@@ -50,10 +50,10 @@ public interface MongoDBServer extends SoftwareProcess {
     ConfigKey<Boolean> ENABLE_REST_INTERFACE = new BasicConfigKey<Boolean>(Boolean.class,
             "mongodb.config.enable_rest", "Adds --rest to server startup flags when true", Boolean.FALSE);
 
-    // BasicBSONObject are Maps
     AttributeSensor<String> HTTP_INTERFACE_URL = new BasicAttributeSensor<String>(String.class,
             "mongodb.server.http_interface", "URL of the server's HTTP console");
 
+    // BasicBSONObjects are Maps
     AttributeSensor<BasicBSONObject> STATUS = new BasicAttributeSensor<BasicBSONObject>(BasicBSONObject.class,
             "mongodb.server.status", "Server status");
 

@@ -15,7 +15,7 @@ define([
         id:'application-explorer',
         template:_.template(PageHtml),
         events:{
-            'click .refresh':'refreshApplications',
+            'click .application-tree-refresh': 'refreshApplications',
             'click #add-new-application':'createApplication',
             'click .delete':'deleteApplication'
         },
@@ -40,8 +40,7 @@ define([
         },
         
         refreshApplications:function () {
-            this.collection.fetch()
-            this.treeView.render()
+            this.collection.fetch({reset: true})
             return false
         },
         show: function(entityId) {

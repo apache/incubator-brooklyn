@@ -43,10 +43,12 @@ require.config({
 
 /*
  * Main application entry point.
+ *
+ * Inclusion of brooklyn module sets up logging.
  */
 require([
-    "backbone", "router"
-], function (Backbone, Router) {
+    "backbone", "router", "brooklyn"
+], function (Backbone, Router, Brooklyn) {
     var router = new Router();
     Backbone.history.start();
 });

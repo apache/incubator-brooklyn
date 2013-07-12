@@ -1,5 +1,5 @@
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils",
+    "underscore", "jquery", "backbone",
     "view/viewutils",
     "text!tpl/script/groovy.html", 
     
@@ -8,7 +8,7 @@ define([
     "jquery-ba-bbq",
     "handlebars",
     "bootstrap"
-], function (_, $, Backbone, Util, ViewUtils, GroovyHtml) {
+], function (_, $, Backbone, ViewUtils, GroovyHtml) {
 
     var ScriptGroovyView = Backbone.View.extend({
         tagName:"div",
@@ -71,8 +71,8 @@ define([
                     $("#groovy-ui-container div.error").val("ERROR: "+data)
                     $(".output .error").show()
                     
-                    Util.log("ERROR submitting groovy script")
-                    Util.log(data)
+                    console.error("ERROR submitting groovy script")
+                    console.debug(data)
                 }})
         }
         
