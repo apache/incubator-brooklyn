@@ -72,7 +72,6 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
 
     @Override
     public void launch() {
-        List<String> commands = new LinkedList<String>();
         Integer port = entity.getAttribute(MongoDBServer.PORT);
 
         ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
@@ -92,11 +91,10 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
 
         String args = Joiner.on(" ").join(argsBuilder.build());
         String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
-        commands.add(command);
         log.info(command);
         newScript(LAUNCHING)
                 .updateTaskAndFailOnNonZeroResultCode()
-                .body.append(commands).execute();
+                .body.append(command).execute();
 
     }
 
