@@ -42,7 +42,7 @@ define([
 
             it("must have a i.refresh element inside #tree header", function () {
                 expect(view.$("#tree h3").length).toBe(1)
-                expect(view.$("#tree i.refresh").length).toBe(1)
+                expect(view.$("#tree i.application-tree-refresh").length).toBe(1)
             })
 
             it("must have div#tree-list for rendering the applications", function () {
@@ -51,7 +51,7 @@ define([
 
             it("triggers collection fetch on application refresh", function () {
                 spyOn(apps, "fetch").andCallThrough()
-                view.$(".refresh").trigger("click")
+                view.$(".application-tree-refresh").trigger("click")
                 waits(100)
                 runs(function () {
                     expect(view.collection.fetch).toHaveBeenCalled()
