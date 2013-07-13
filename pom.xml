@@ -437,6 +437,7 @@
                                         <goals>
                                             <goal>copy</goal>
                                             <goal>copy-dependencies</goal>
+                                            <goal>unpack</goal>
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
