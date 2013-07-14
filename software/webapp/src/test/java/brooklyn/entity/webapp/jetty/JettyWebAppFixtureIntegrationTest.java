@@ -15,8 +15,8 @@ public class JettyWebAppFixtureIntegrationTest extends AbstractWebAppFixtureInte
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
         TestApplication jettyApp = newTestApplication();
-        JettyServer jetty = jettyApp.createAndManageChild(EntitySpecs.spec(JettyServer.class)
-                .configure(JettyServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
+        Jetty6Server jetty = jettyApp.createAndManageChild(EntitySpecs.spec(Jetty6Server.class)
+                .configure(Jetty6Server.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
         
         return new JavaWebAppSoftwareProcess[][] {
                 new JavaWebAppSoftwareProcess[] {jetty}

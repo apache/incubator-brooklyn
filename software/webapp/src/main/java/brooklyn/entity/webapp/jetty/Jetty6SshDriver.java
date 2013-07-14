@@ -59,8 +59,6 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
     public void customize() {
         newScript(CUSTOMIZING).
                 body.append(
-                format("mkdir -p %s",getRunDir()),
-                format("cd %s",getRunDir()),
                 // create app-specific dirs
                 "mkdir logs contexts webapps",
                 // link to the binary directories; silly that we have to do this but jetty has only one notion of "jetty.home" 
@@ -69,7 +67,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
                 // copy config
                 format("for x in etc resources; do cp -r %s/$x $x ; done", getExpandedInstallDir()),
                 
-                // no modify the config file
+                // now modify the config file
                 format("sed -i.bk s/8080/%s/g etc/jetty.xml",getHttpPort()),
                 format("sed -i.bk s/8443/%s/g etc/jetty.xml",getHttpsPort())
         ).execute();
@@ -112,7 +110,8 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
             body.append("./bin/jetty.sh stop"
         ).execute();
     }
-    
+
+    // not used, but an alternative to stop which might be useful
     public void kill1() {
         Map flags = MutableMap.of("usePidFile","jetty.pid");
         newScript(flags, STOPPING).execute();
@@ -120,7 +119,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
     public void kill9() {
         Map flags = MutableMap.of("usePidFile","jetty.pid");
-        newScript(flags, STOPPING).execute();
+        newScript(flags, KILLING).execute();
     }
 
     @Override
@@ -128,13 +127,6 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
         kill9();
     }
 
-//    @Override
-//    protected Map getCustomJavaSystemProperties() {
-//        return MutableMap.copyOf(super.getCustomJavaSystemProperties()).
-//            add("jetty.run", getRunDir()).
-//            add("jetty.logs", getRunDir()+"/logs");
-//    }
-    
     @Override
     protected List<String> getCustomJavaConfigOptions() {
         List<String> options = new LinkedList<String>();

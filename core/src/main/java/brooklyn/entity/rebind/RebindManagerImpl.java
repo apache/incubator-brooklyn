@@ -182,7 +182,7 @@ public class RebindManagerImpl implements RebindManager {
         for (Location location: locations.values()) {
             if (location.getParent()==null) {
                 // manage all root locations
-                // LocationManager.manage perhaps should not be abstract to support this?
+                // LocationManager.manage perhaps should not be deprecated, as we need to do this I think?
                 managementContext.getLocationManager().manage(location);
             }
         }

@@ -1,7 +1,9 @@
 package brooklyn.entity.webapp.tomcat;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.BasicEntitySpec;
@@ -14,6 +16,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
@@ -22,6 +25,8 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(TomcatServerImpl.class)
 public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasShortName {
 
+    /** @deprecated since v0.6.0 as does nothing beyond BasicEntitySpec */
+    @Deprecated
     class Spec<T extends TomcatServer, S extends Spec<T,S>> extends BasicEntitySpec<T,S> {
 
         private static class ConcreteSpec extends Spec<TomcatServer, ConcreteSpec> {
@@ -55,6 +60,8 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
     PortAttributeSensorAndConfigKey SHUTDOWN_PORT =
             new PortAttributeSensorAndConfigKey("tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+"));
 
+    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, (int)Duration.FIVE_MINUTES.toSeconds());
+    
     BasicAttributeSensor<String> CONNECTOR_STATUS =
             new BasicAttributeSensor<String>(String.class, "webapp.tomcat.connectorStatus", "Catalina connector state name");
 

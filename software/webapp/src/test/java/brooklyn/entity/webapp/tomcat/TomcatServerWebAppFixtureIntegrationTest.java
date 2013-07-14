@@ -40,7 +40,7 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
         };
     }
 
-//    // to be able to test on this class in Eclipse IDE
+//    // uncomment to be able to test on this class from GUI in Eclipse IDE
 //    @Test(groups = "Integration", dataProvider = "basicEntities")
 //    public void canStartAndStop(final SoftwareProcess entity) {
 //        super.canStartAndStop(entity);

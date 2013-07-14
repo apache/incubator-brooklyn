@@ -68,6 +68,10 @@ public class Duration implements Comparable<Duration> {
         return nanos;
     }    
     
+    public long toSeconds() {
+        return toUnit(TimeUnit.SECONDS);
+    }
+    
     /** number of nanoseconds of this duration */
     public long nanos() {
         return nanos;

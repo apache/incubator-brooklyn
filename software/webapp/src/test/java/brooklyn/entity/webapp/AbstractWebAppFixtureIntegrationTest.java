@@ -124,7 +124,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
     @AfterClass
     public synchronized void shutdownMgmt() {
         if (mgmt != null) {
-            Entities.destroy(mgmt);
+            Entities.destroyAll(mgmt);
             mgmt = null;
         }
     }

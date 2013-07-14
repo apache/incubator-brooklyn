@@ -61,8 +61,6 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
     public void customize() {
         newScript(CUSTOMIZING).
                 body.append(
-                format("mkdir -p %s",getRunDir()),
-                format("cd %s",getRunDir()),
                 "mkdir conf logs webapps temp",
                 format("cp %s/conf/{server,web}.xml conf/",getExpandedInstallDir()),
                 format("sed -i.bk s/8080/%s/g conf/server.xml",getHttpPort()),

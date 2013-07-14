@@ -1,21 +1,18 @@
 package brooklyn.entity.webapp.jetty;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.basic.AddingEnricher;
-import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
+import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.Sensor;
-import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.util.time.Duration;
@@ -26,38 +23,15 @@ import com.google.common.base.Predicates;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Jetty instance.
  */
-public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements JettyServer {
+public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements Jetty6Server {
 
     private static final Logger log = LoggerFactory.getLogger(Jetty6ServerImpl.class);
 
-    public Jetty6ServerImpl() {
-        super();
-    }
-
-    public Jetty6ServerImpl(Map flags) {
-        this(flags,null);
-    }
-
-    public Jetty6ServerImpl(Entity parent) {
-        this(new LinkedHashMap(),parent);
-    }
-
-    public Jetty6ServerImpl(Map flags, Entity parent) {
-        super(flags, parent);
-    }
-    
     private volatile JmxFeed jmxFeed;
 
     @Override
     public void connectSensors() {
         super.connectSensors();
-
-        ConfigToAttributes.apply(this);
-
-        Map<String, Object> flags = new LinkedHashMap<String, Object>();
-        // might be high, and should be configurable, but not changing it here
-        Duration period = Duration.millis(500);
-        flags.put("period", period);
         
         if (getDriver().isJmxEnabled()) {
             String serverMbeanName = "org.mortbay.jetty:type=server,id=0";
@@ -105,7 +79,7 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     public void waitForServiceUp() {
         // Increases wait-time by overriding this
         LOG.info("Waiting for {} up, via {}", this, jmxFeed == null ? "" : jmxFeed.getJmxUri());
-        waitForServiceUp(Duration.FIVE_MINUTES);
+        waitForServiceUp(Duration.of(getConfig(TomcatServer.START_TIMEOUT), TimeUnit.SECONDS));
     }
 
     @Override
