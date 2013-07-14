@@ -270,7 +270,7 @@ public class Entities {
     public static void dumpInfo(Location loc, Writer out, String currentIndentation, String tab) throws IOException {
         out.append(currentIndentation+loc.toString()+"\n");
 
-        for (Object entryO : loc.getAllConfig().entrySet()) {
+        for (Object entryO : loc.getAllConfig(true).entrySet()) {
             Map.Entry entry = (Map.Entry)entryO;
             Object keyO = entry.getKey();
             String key =
@@ -440,7 +440,7 @@ public class Entities {
 
     /** convenience for starting an entity, esp a new Startable instance which has been created dynamically
      * (after the application is started) */
-    public static void start(Entity e, Collection<Location> locations) {
+    public static void start(Entity e, Collection<? extends Location> locations) {
         if (!isManaged(e) && !manage(e)) {
             log.warn("Using discouraged mechanism to start management -- Entities.start(Application, Locations) -- caller should create and use the preferred management context");
             startManagement(e);
@@ -458,10 +458,23 @@ public class Entities {
         }
     }
 
+    /** stops, destroys, and unmanages all apps in the given context,
+     * and then terminates the management context */
+    public static void destroy(ManagementContext mgmt) {
+        for (Application app: mgmt.getApplications()) {
+            destroy(app);
+        }
+        if (mgmt instanceof ManagementContextInternal) 
+            ((ManagementContextInternal)mgmt).terminate();
+    }
+        
     /**
      * stops, destroys, and unmanages the given application -- and terminates the mangaement context;
      * does as many as are valid given the type and state
+     * @deprecated since 0.6.0 use destroy(Application) if you DONT want to destroy the mgmt context,
+     * or destroy(app.getManagementContext()) if you want to destory everything in the app's mgmt context
      */
+    @Deprecated
     public static void destroyAll(Application app) {
         if (isManaged(app)) {
             ManagementContext managementContext = app.getManagementContext();

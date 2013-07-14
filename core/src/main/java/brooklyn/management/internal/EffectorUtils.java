@@ -256,8 +256,8 @@ public class EffectorUtils {
         String id = entity.getId();
         String name = eff.getName();
         
-        if (log.isDebugEnabled()) log.debug("Invoking effector {} on {}", new Object[] {name, entity});
-        if (log.isTraceEnabled()) log.trace("Invoking effector {} on {} with args {}", new Object[] {name, entity, parameters});
+        if (log.isDebugEnabled()) log.debug("Invoking-async effector {} on {}", new Object[] {name, entity});
+        if (log.isTraceEnabled()) log.trace("Invoking-async effector {} on {} with args {}", new Object[] {name, entity, parameters});
         EntityManagementSupport mgmtSupport = ((EntityInternal)entity).getManagementSupport();
         if (!mgmtSupport.isDeployed()) {
             mgmtSupport.attemptLegacyAutodeployment(name);

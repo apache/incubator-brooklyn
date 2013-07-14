@@ -26,9 +26,9 @@ import com.google.common.collect.ImmutableList;
  * 
  * FIXME this test is largely superseded by WebApp*IntegrationTest which tests inter alia Tomcat
  */
-public class TomcatServerIntegrationTest {
+public class TomcatServerSimpleIntegrationTest {
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(TomcatServerIntegrationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TomcatServerSimpleIntegrationTest.class);
     
     /** don't use 8080 since that is commonly used by testing software */
     static int DEFAULT_HTTP_PORT = 7880;

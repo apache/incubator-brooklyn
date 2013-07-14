@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.junit.AfterClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -35,8 +36,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.jboss.JBoss6Server;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -45,6 +44,7 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.Asserts;
@@ -60,14 +60,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 /**
- * Tests that implementations of JavaWebApp can start up and shutdown, 
+ * Test fixture for implementations of JavaWebApp, checking start up and shutdown, 
  * post request and error count metrics and deploy wars, etc.
- * 
- * Currently tests {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server}.
  */
-public class WebAppIntegrationTest {
+public abstract class AbstractWebAppFixtureIntegrationTest {
     
-    private static final Logger log = LoggerFactory.getLogger(WebAppIntegrationTest.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractWebAppFixtureIntegrationTest.class);
     
     // Don't use 8080 since that is commonly used by testing software
     public static final String DEFAULT_HTTP_PORT = "7880+";
@@ -76,13 +74,21 @@ public class WebAppIntegrationTest {
     public static final int PORT_INCREMENT = 400;
 
     // The parent application entity for these tests
-    private List<TestApplication> applications = Lists.newArrayList();
-    private SoftwareProcess entity;
-    private LocalhostMachineProvisioningLocation loc;
+    protected ManagementContext mgmt;
+    protected List<TestApplication> applications = Lists.newArrayList();
+    protected SoftwareProcess entity;
+    protected LocalhostMachineProvisioningLocation loc;
 
+    protected synchronized ManagementContext getMgmt() {
+        if (mgmt==null)
+            mgmt = new LocalManagementContext();
+        return mgmt;
+    }
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         loc = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "london"));
+        getMgmt().getLocationManager().manage(loc);
     }
     
     /*
@@ -111,49 +117,15 @@ public class WebAppIntegrationTest {
     public void shutdownApp() {
         if (entity != null) {
             Application app = entity.getApplication();
-            if (app != null) Entities.destroyAll(app);
+            if (app != null) Entities.destroy(app);
         }
     }
 
-    @AfterMethod(alwaysRun=true, dependsOnMethods="shutdownApp")
-    public void ensureTomcatIsShutDown() throws Exception {
-        final AtomicReference<Socket> shutdownSocket = new AtomicReference<Socket>();
-        final AtomicReference<SocketException> gotException = new AtomicReference<SocketException>();
-        final Integer shutdownPort = (entity != null) ? entity.getAttribute(TomcatServer.SHUTDOWN_PORT) : null;
-        
-        if (shutdownPort != null) {
-            boolean socketClosed = Repeater.create("Checking Tomcat has shut down")
-                    .repeat(new Callable<Void>() {
-                            public Void call() throws Exception {
-                                if (shutdownSocket.get() != null) shutdownSocket.get().close();
-                                try {
-                                    shutdownSocket.set(new Socket(InetAddress.getLocalHost(), shutdownPort));
-                                    gotException.set(null);
-                                } catch (SocketException e) {
-                                    gotException.set(e);
-                                }
-                                return null;
-                            }})
-                    .every(100, TimeUnit.MILLISECONDS)
-                    .until(new Callable<Boolean>() {
-                            public Boolean call() {
-                                return (gotException.get() != null);
-                            }})
-                    .limitIterationsTo(25)
-                    .run();
-            
-            if (socketClosed == false) {
-//                log.error("Tomcat did not shut down - this is a failure of the last test run");
-//                log.warn("I'm sending a message to the Tomcat shutdown port {}", shutdownPort);
-//                OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
-//                writer.write("SHUTDOWN\r\n");
-//                writer.flush();
-//                writer.close();
-//                shutdownSocket.close();
-                throw new Exception("Last test run did not shut down Tomcat entity "+entity+" (port "+shutdownPort+")");
-            }
-        } else {
-            log.info("Cannot shutdown, because shutdown-port not set for {}", entity);
+    @AfterClass
+    public synchronized void shutdownMgmt() {
+        if (mgmt != null) {
+            Entities.destroy(mgmt);
+            mgmt = null;
         }
     }
 
@@ -162,39 +134,23 @@ public class WebAppIntegrationTest {
      * so it can be terminated suitable after each test has run.
      * @return
      */
-    private TestApplication newTestApplication() {
-        TestApplication ta = ApplicationBuilder.newManagedApp(TestApplication.class);
+    protected TestApplication newTestApplication() {
+        TestApplication ta = ApplicationBuilder.newManagedApp(TestApplication.class, getMgmt());
         applications.add(ta);
         return ta;
     }
 
     /**
-     * Provides instances of {@link TomcatServer}, {@link JBoss6Server} and {@link JBoss7Server} to the tests below.
+     * Provides instances of the WebAppServer to test
+     * (arrays of 1-element array arguments to some of the other methods) 
      *
+     * NB annotation must be placed on concrete impl method
+     * 
      * TODO combine the data provider here with live integration test
-     *
      * @see WebAppLiveIntegrationTest#basicEntities()
      */
     @DataProvider(name = "basicEntities")
-    public JavaWebAppSoftwareProcess[][] basicEntities() {
-		//FIXME we should start the application, not the entity
-        TestApplication tomcatApp = newTestApplication();
-        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpecs.spec(TomcatServer.class)
-                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
-        
-        TestApplication jboss6App = newTestApplication();
-        JBoss6Server jboss6 = jboss6App.createAndManageChild(EntitySpecs.spec(JBoss6Server.class)
-                .configure(JBoss6Server.PORT_INCREMENT, PORT_INCREMENT));
-        
-        TestApplication jboss7App = newTestApplication();
-        JBoss7Server jboss7 = jboss7App.createAndManageChild(EntitySpecs.spec(JBoss7Server.class)
-                .configure(JBoss7Server.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
-        
-        return new JavaWebAppSoftwareProcess[][] {
-                new JavaWebAppSoftwareProcess[] {tomcat}, 
-                new JavaWebAppSoftwareProcess[] {jboss6}, 
-                new JavaWebAppSoftwareProcess[] {jboss7}};
-    }
+    public abstract Object[][] basicEntities();
 
     /**
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
@@ -204,7 +160,7 @@ public class WebAppIntegrationTest {
         this.entity = entity;
         log.info("test=canStartAndStop; entity="+entity+"; app="+entity.getApplication());
         
-        entity.start(ImmutableList.of(loc));
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
         Asserts.succeedsEventually(MutableMap.of("timeout", 120*1000), new Runnable() {
             public void run() {
                 assertTrue(entity.getAttribute(Startable.SERVICE_UP));
@@ -222,7 +178,7 @@ public class WebAppIntegrationTest {
         this.entity = entity;
         log.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication());
         
-        entity.start(ImmutableList.of(loc));
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
         Asserts.succeedsEventually(MutableMap.of("timeout", 120*1000), new Runnable() {
             public void run() {
                 assertTrue(entity.getAttribute(Startable.SERVICE_UP));
@@ -236,17 +192,20 @@ public class WebAppIntegrationTest {
             BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
             
             newManagementContext = Entities.newManagementContext();
-            newManagementContext.getRebindManager().rebind(brooklynMemento, WebAppIntegrationTest.class.getClassLoader());
+            newManagementContext.getRebindManager().rebind(brooklynMemento, getClass().getClassLoader());
             SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(entity.getId());
             entity2.stop();
         } finally {
             if (newManagementContext != null) ((ManagementContextInternal)newManagementContext).terminate();
         }
-
+        log.info("called to stop tomcat in parallel mgmt universe, waiting for service up false in primary mgmt universe");
+        
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 assertFalse(entity.getAttribute(Startable.SERVICE_UP));
             }});
+        
+        log.info("success getting service up false in primary mgmt universe");
     }
     
     /**
@@ -258,7 +217,7 @@ public class WebAppIntegrationTest {
         this.entity = entity;
         log.info("test=publishesRequestAndErrorCountMetrics; entity="+entity+"; app="+entity.getApplication());
         
-        entity.start(ImmutableList.of(loc));
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         Asserts.succeedsEventually(MutableMap.of("timeout", 10*1000), new Runnable() {
             public void run() {
@@ -298,7 +257,8 @@ public class WebAppIntegrationTest {
         this.entity = entity;
         log.info("test=publishesRequestsPerSecondMetric; entity="+entity+"; app="+entity.getApplication());
         
-        entity.start(ImmutableList.of(loc));
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
+
         log.info("Entity "+entity+" started");
         
         try {
@@ -306,7 +266,7 @@ public class WebAppIntegrationTest {
             log.info("Waiting for initial avg-requests to be zero...");
             Asserts.succeedsEventually(MutableMap.of("timeout", 20*1000), new Runnable() {
                 public void run() {
-                    Double activityValue = entity.getAttribute(WebAppService.AVG_REQUESTS_PER_SECOND);
+                    Double activityValue = entity.getAttribute(WebAppService.REQUESTS_PER_SECOND_IN_WINDOW);
                     assertNotNull(activityValue, "activity not set yet "+activityValue+")");
                     assertEquals(activityValue.doubleValue(), 0.0d, 0.000001d);
                 }});
@@ -322,8 +282,8 @@ public class WebAppIntegrationTest {
                     final Integer preRequestCount = entity.getAttribute(WebAppService.REQUEST_COUNT);
                     
                     // need to maintain n requests per second for the duration of the window size
-                    log.info("Applying load for "+WebAppService.REQUESTS_PER_SECOND_WINDOW_PERIOD+"ms");
-                    while (stopwatch.elapsed(TimeUnit.MILLISECONDS) < WebAppService.REQUESTS_PER_SECOND_WINDOW_PERIOD) {
+                    log.info("Applying load for "+WebAppServiceMethods.DEFAULT_WINDOW_DURATION);
+                    while (stopwatch.elapsed(TimeUnit.MILLISECONDS) < WebAppServiceMethods.DEFAULT_WINDOW_DURATION.toMilliseconds()) {
                         long preReqsTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
                         for (int i = 0; i < desiredMsgsPerSec; i++) { connectToUrl(url); }
                         sleep(1000 - (stopwatch.elapsed(TimeUnit.MILLISECONDS)-preReqsTime));
@@ -344,8 +304,8 @@ public class WebAppIntegrationTest {
                 }});
             
             // After suitable delay, expect to again get zero msgs/sec
-            log.info("Waiting for avg-requests to drop to zero, for "+WebAppService.REQUESTS_PER_SECOND_WINDOW_PERIOD+"ms");
-            Thread.sleep(WebAppService.REQUESTS_PER_SECOND_WINDOW_PERIOD);
+            log.info("Waiting for avg-requests to drop to zero, for "+WebAppServiceMethods.DEFAULT_WINDOW_DURATION);
+            Thread.sleep(WebAppServiceMethods.DEFAULT_WINDOW_DURATION.toMilliseconds());
             
             Asserts.succeedsEventually(MutableMap.of("timeout", 10*1000), new Runnable() {
                 public void run() {
@@ -362,6 +322,7 @@ public class WebAppIntegrationTest {
      * Tests that we get consecutive events with zero workrate, and with suitably small timestamps between them.
      */
     @Test(groups = "Integration", dataProvider = "basicEntities")
+    @SuppressWarnings("rawtypes")
     public void publishesZeroRequestsPerSecondMetricRepeatedly(final SoftwareProcess entity) {
         this.entity = entity;
         log.info("test=publishesZeroRequestsPerSecondMetricRepeatedly; entity="+entity+"; app="+entity.getApplication());
@@ -369,7 +330,7 @@ public class WebAppIntegrationTest {
         final int MAX_INTERVAL_BETWEEN_EVENTS = 1000; // events should publish every 500ms so this should be enough overhead
         final int NUM_CONSECUTIVE_EVENTS = 3;
 
-        entity.start(ImmutableList.of(loc));
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         SubscriptionHandle subscriptionHandle = null;
         SubscriptionContext subContext = ((EntityInternal)entity).getSubscriptionContext();
@@ -390,7 +351,7 @@ public class WebAppIntegrationTest {
                     
                     for (SensorEvent event : events.subList(events.size()-NUM_CONSECUTIVE_EVENTS, events.size())) {
                         assertEquals(event.getSource(), entity);
-                        assertEquals(event.getSensor(), WebAppService.AVG_REQUESTS_PER_SECOND);
+                        assertEquals(event.getSensor(), WebAppService.REQUESTS_PER_SECOND_IN_WINDOW);
                         assertEquals(event.getValue(), 0.0d);
                         if (eventTime > 0) assertTrue(event.getTimestamp()-eventTime < MAX_INTERVAL_BETWEEN_EVENTS,
     						"events at "+eventTime+" and "+event.getTimestamp()+" exceeded maximum allowable interval "+MAX_INTERVAL_BETWEEN_EVENTS);
@@ -418,7 +379,7 @@ public class WebAppIntegrationTest {
     public Object[][] entitiesWithWar() {
         List<Object[]> result = Lists.newArrayList();
         
-        for (JavaWebAppSoftwareProcess[] entity : basicEntities()) {
+        for (Object[] entity : basicEntities()) {
             result.add(new Object[] {
                     entity[0],
                     "hello-world.war",
@@ -462,7 +423,7 @@ public class WebAppIntegrationTest {
         assertNotNull(resource);
         
         ((EntityLocal)entity).setConfig(JavaWebAppService.ROOT_WAR, resource.getPath());
-        entity.start(ImmutableList.of(loc));
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
 		//tomcat may need a while to unpack everything
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
@@ -484,7 +445,8 @@ public class WebAppIntegrationTest {
         assertNotNull(resource);
         
         ((EntityLocal)entity).setConfig(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.getPath()));
-        entity.start(ImmutableList.of(loc));
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
+
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
@@ -501,7 +463,7 @@ public class WebAppIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war);;
         assertNotNull(resource);
         
-        entity.start(ImmutableList.of(loc));
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         // Test deploying
         entity.deploy(resource.getPath(), "myartifactname.war");
@@ -521,12 +483,7 @@ public class WebAppIntegrationTest {
                 assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of());
             }});
     }
-    
-	public static void main(String ...args) {
-		WebAppIntegrationTest t = new WebAppIntegrationTest();
-		t.canStartAndStop(null);
-	}
-	
+    	
     private void sleep(long millis) {
         if (millis > 0) Time.sleep(millis);
     }    
