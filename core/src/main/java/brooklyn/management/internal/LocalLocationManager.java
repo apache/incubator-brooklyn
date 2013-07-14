@@ -89,11 +89,11 @@ public class LocalLocationManager implements LocationManager {
     
     // TODO synchronization issues here: see comment in LocalEntityManager.manage(Entity)
     @Override
-    public void manage(Location e) {
+    public Location manage(Location e) {
         if (isManaged(e)) {
             // TODO put log.warn back in if/when manage(Location) becomes private; or could even have assert.
             // Can be stricter about contract.
-            return;
+            return e;
         }
         Location parent = e.getParent();
         if (parent != null && !managementContext.getLocationManager().isManaged(parent)) {
@@ -113,6 +113,7 @@ public class LocalLocationManager implements LocationManager {
                 return result;
             }
         } });
+        return e;
     }
     
     @Override

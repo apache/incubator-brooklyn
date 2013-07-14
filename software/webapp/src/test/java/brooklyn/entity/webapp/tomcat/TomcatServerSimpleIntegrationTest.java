@@ -26,9 +26,9 @@ import com.google.common.collect.ImmutableList;
  * 
  * FIXME this test is largely superseded by WebApp*IntegrationTest which tests inter alia Tomcat
  */
-public class TomcatServerIntegrationTest {
+public class TomcatServerSimpleIntegrationTest {
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(TomcatServerIntegrationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TomcatServerSimpleIntegrationTest.class);
     
     /** don't use 8080 since that is commonly used by testing software */
     static int DEFAULT_HTTP_PORT = 7880;
@@ -59,7 +59,7 @@ public class TomcatServerIntegrationTest {
             tc = app.createAndManageChild(EntitySpecs.spec(TomcatServer.class).configure("httpPort",DEFAULT_HTTP_PORT));
             
             try {
-                tc.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
+                tc.start(ImmutableList.of(app.getManagementContext().getLocationManager().manage(new LocalhostMachineProvisioningLocation())));
                 fail("Should have thrown start-exception");
             } catch (Exception e) {
                 // LocalhostMachineProvisioningLocation does NetworkUtils.isPortAvailable, so get -1
