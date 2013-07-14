@@ -178,6 +178,15 @@ public class RebindManagerImpl implements RebindManager {
             entity.getRebindSupport().reconstruct(rebindContext, entityMemento);
         }
         
+        LOG.info("RebindManager managing locations");
+        for (Location location: locations.values()) {
+            if (location.getParent()==null) {
+                // manage all root locations
+                // LocationManager.manage perhaps should not be abstract to support this?
+                managementContext.getLocationManager().manage(location);
+            }
+        }
+        
         // Manage the top-level apps (causing everything under them to become managed)
         LOG.info("RebindManager managing entities");
         for (String appId : memento.getApplicationIds()) {

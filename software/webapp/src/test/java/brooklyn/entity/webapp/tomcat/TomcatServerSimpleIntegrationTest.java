@@ -59,7 +59,7 @@ public class TomcatServerSimpleIntegrationTest {
             tc = app.createAndManageChild(EntitySpecs.spec(TomcatServer.class).configure("httpPort",DEFAULT_HTTP_PORT));
             
             try {
-                tc.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
+                tc.start(ImmutableList.of(app.getManagementContext().getLocationManager().manage(new LocalhostMachineProvisioningLocation())));
                 fail("Should have thrown start-exception");
             } catch (Exception e) {
                 // LocalhostMachineProvisioningLocation does NetworkUtils.isPortAvailable, so get -1

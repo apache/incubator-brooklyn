@@ -59,9 +59,9 @@ public class NonDeploymentLocationManager implements LocationManager {
     }
 
     @Override
-    public void manage(Location loc) {
+    public Location manage(Location loc) {
         if (isInitialManagementContextReal()) {
-            initialManagementContext.getLocationManager().manage(loc);
+            return initialManagementContext.getLocationManager().manage(loc);
         } else {
             throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot manage "+loc);
         }
