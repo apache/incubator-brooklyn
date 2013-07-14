@@ -3,6 +3,7 @@ package brooklyn.entity.webapp.tomcat;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -12,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
+
+import com.google.common.collect.Lists;
 
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpecs;
@@ -42,7 +45,35 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
 //    public void canStartAndStop(final SoftwareProcess entity) {
 //        super.canStartAndStop(entity);
 //    }
-    
+
+    @Override
+    // as parent, but with spring travel
+    @DataProvider(name = "entitiesWithWarAndURL")
+    public Object[][] entitiesWithWar() {
+        List<Object[]> result = Lists.newArrayList();
+        
+        for (Object[] entity : basicEntities()) {
+            result.add(new Object[] {
+                    entity[0],
+                    "hello-world.war",
+                    "hello-world/",
+                    "" // no sub-page path
+                    });
+        }
+        
+        TestApplication tomcatApp = newTestApplication();
+        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpecs.spec(TomcatServer.class)
+                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
+        result.add(new Object[] {
+                tomcat,
+                "swf-booking-mvc.war",
+                "swf-booking-mvc/",
+                "spring/intro",
+               });
+        
+        return result.toArray(new Object[][] {});
+    }
+
     @AfterMethod(alwaysRun=true, dependsOnMethods="shutdownApp")
     public void ensureIsShutDown() throws Exception {
         final AtomicReference<Socket> shutdownSocket = new AtomicReference<Socket>();

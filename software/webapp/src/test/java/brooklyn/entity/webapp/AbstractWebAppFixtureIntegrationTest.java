@@ -369,11 +369,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      * they should be able to deploy.  Correct deployment can be checked by
      * pinging the given URL.
      *
-     * <ul>
-     * <li>Everything can deploy hello world
-     * <li>Tomcat can deploy Spring travel
-     * <li>JBoss can deploy Seam travel
-     * </ul>
+     * Everything can deploy hello world. Some subclasses deploy add'l apps.
      */
     @DataProvider(name = "entitiesWithWarAndURL")
     public Object[][] entitiesWithWar() {
@@ -387,25 +383,6 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                     "" // no sub-page path
                     });
         }
-        
-        TestApplication tomcatApp = newTestApplication();
-        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpecs.spec(TomcatServer.class)
-                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
-        result.add(new Object[] {
-                tomcat,
-                "swf-booking-mvc.war",
-                "swf-booking-mvc/",
-				"spring/intro",
-               });
-            // FIXME seam-booking does not work
-//            [   new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT),
-//				"seam-booking-as6.war",
-//                "seam-booking-as6/",
-//            ],
-//            [   new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT),
-//                "seam-booking-as7.war",
-//                "seam-booking-as7/",
-//            ],
         
         return result.toArray(new Object[][] {});
     }

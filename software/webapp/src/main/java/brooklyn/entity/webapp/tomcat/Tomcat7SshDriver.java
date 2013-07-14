@@ -7,12 +7,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.ssh.CommonCommands;
 
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
@@ -49,7 +49,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(CommonCommands.downloadUrlAs(urls, saveAs));
-        commands.add(CommonCommands.installExecutable("tar"));
+        commands.add(CommonCommands.INSTALL_TAR);
         commands.add(format("tar xvzf %s",saveAs));
 
         newScript(INSTALLING).
@@ -89,7 +89,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
                 format("%s/bin/startup.sh >>$RUN/console 2>&1 </dev/null",getExpandedInstallDir()),
                 "for i in {1..10}\n" +
                 "do\n" +
-                "    if [ -s "+getRunDir()+"/logs/catalina.out ]; then exit; fi\n" +
+                "    if [ -s "+getLogFileLocation()+" ]; then exit; fi\n" +
                 "    sleep 1\n" +
                 "done\n" +
             "echo \"Couldn't determine if tomcat-server is running (logs/catalina.out is still empty); continuing but may subsequently fail\""
