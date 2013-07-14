@@ -34,7 +34,44 @@ public class JbossServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtu
     public void canStartAndStop(final SoftwareProcess entity) {
         super.canStartAndStop(entity);
     }
-    
+
+//    @Override
+//    // TODO override parent and add seam-booking-as{6,7}
+//    @DataProvider(name = "entitiesWithWarAndURL")
+//    public Object[][] entitiesWithWar() {
+//        List<Object[]> result = Lists.newArrayList();
+//        
+//        for (Object[] entity : basicEntities()) {
+//            result.add(new Object[] {
+//                    entity[0],
+//                    "hello-world.war",
+//                    "hello-world/",
+//                    "" // no sub-page path
+//                    });
+//        }
+//        
+//        TestApplication tomcatApp = newTestApplication();
+//        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpecs.spec(TomcatServer.class)
+//                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
+//        result.add(new Object[] {
+//                tomcat,
+//                "swf-booking-mvc.war",
+//                "swf-booking-mvc/",
+//                "spring/intro",
+//               });
+//            // FIXME seam-booking does not work
+////            [   new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT),
+////              "seam-booking-as6.war",
+////                "seam-booking-as6/",
+////            ],
+////            [   new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT),
+////                "seam-booking-as7.war",
+////                "seam-booking-as7/",
+////            ],
+//        
+//        return result.toArray(new Object[][] {});
+//    }
+
     public static void main(String ...args) throws Exception {
         JbossServerWebAppFixtureIntegrationTest t = new JbossServerWebAppFixtureIntegrationTest();
         t.setUp();

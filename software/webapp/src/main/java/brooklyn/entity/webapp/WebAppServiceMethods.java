@@ -10,7 +10,7 @@ import brooklyn.util.time.Duration;
 
 public class WebAppServiceMethods implements WebAppServiceConstants {
     
-    public static Duration DEFAULT_WINDOW_DURATION = Duration.TEN_SECONDS;
+    public static final Duration DEFAULT_WINDOW_DURATION = Duration.TEN_SECONDS;
     
     public static void connectWebAppServerPolicies(EntityLocal entity) {
         connectWebAppServerPolicies(entity, DEFAULT_WINDOW_DURATION);

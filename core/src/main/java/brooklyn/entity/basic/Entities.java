@@ -460,7 +460,7 @@ public class Entities {
 
     /** stops, destroys, and unmanages all apps in the given context,
      * and then terminates the management context */
-    public static void destroy(ManagementContext mgmt) {
+    public static void destroyAll(ManagementContext mgmt) {
         for (Application app: mgmt.getApplications()) {
             destroy(app);
         }

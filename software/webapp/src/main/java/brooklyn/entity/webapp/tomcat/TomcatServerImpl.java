@@ -48,13 +48,6 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     @Override
     public void connectSensors() {
         super.connectSensors();
-
-        ConfigToAttributes.apply(this);
-
-        Map<String, Object> flags = new LinkedHashMap<String, Object>();
-        // might be high, and should be configurable, but not changing it here
-        Duration period = Duration.millis(500);
-        flags.put("period", period);
         
         if (getDriver().isJmxEnabled()) {
             String requestProcessorMbeanName = "Catalina:type=GlobalRequestProcessor,name=\"http-*\"";
@@ -79,7 +72,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
                             .objectName(connectorMbeanName)
                             .attributeName("stateName")
                             .onSuccess(Functions.forPredicate(Predicates.<Object>equalTo("STARTED")))
-                            .onError(Functions.constant(false)))
+                            .onException(Functions.constant(false)))
                     .build();
             
             JavaAppUtils.connectMXBeanSensors(this);
@@ -95,7 +88,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     public void waitForServiceUp() {
         // Increases wait-time by overriding this
         LOG.info("Waiting for {} up, via {}", this, jmxFeed == null ? "" : jmxFeed.getJmxUri());
-        waitForServiceUp(Duration.FIVE_MINUTES);
+        waitForServiceUp(Duration.of(getConfig(TomcatServer.START_TIMEOUT), TimeUnit.SECONDS));
     }
 
     @Override
