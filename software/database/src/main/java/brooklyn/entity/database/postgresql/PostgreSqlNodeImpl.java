@@ -37,9 +37,8 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
                     .machine((SshMachineLocation)machine)
                     .poll(new SshPollConfig<Boolean>(SERVICE_UP)
                             .command(cmd)
-                            .onSuccess(Functions.constant(true))
-                            .onFailure(Functions.constant(false))
-                            .onException(Functions.constant(false)))
+                            .setOnSuccess(true)
+                            .setOnFailureOrException(false))
                     .build();
         } else {
             LOG.warn("Location(s) %s not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());

@@ -45,5 +45,8 @@ public interface DynamicWebAppCluster extends DynamicCluster, WebAppService {
             Integer.class, "webapp.reqs.processingTime.perNode", "Total processing time per node");
     /** @deprecated since 0.5.0, use TOTAL_PROCESSING_TIME_PER_NODE */
     public static final AttributeSensor<Integer> AVERAGE_PROCESSING_TIME = TOTAL_PROCESSING_TIME_PER_NODE;
-    
+
+    public static final AttributeSensor<Double> PROCESSING_TIME_FRACTION_IN_WINDOW_PER_NODE = new BasicAttributeSensor<Double>(
+            Double.class, "webapp.reqs.processingTime.fraction.windowed.perNode", "Fraction of time spent processing reported by webserver (percentage, over time window) averaged over all nodes");
+
 }

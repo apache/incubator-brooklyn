@@ -5,10 +5,12 @@ import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import static brooklyn.event.basic.DependentConfiguration.formatString;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
@@ -60,7 +62,12 @@ public class WebClusterDatabaseExample extends AbstractApplication {
                         formatString("jdbc:%s%s?user=%s\\&password=%s", 
                                 attributeWhenReady(mysql, MySqlNode.DB_URL), 
                                 DB_TABLE, DB_USERNAME, DB_PASSWORD)) );
-        
+
+        web.addEnricher(HttpLatencyDetector.builder().
+                url(ControlledDynamicWebAppCluster.ROOT_URL).
+                rollup(10, TimeUnit.SECONDS).
+                build());
+
         // simple scaling policy
         web.getCluster().addPolicy(AutoScalerPolicy.builder().
                 metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE).
@@ -71,9 +78,10 @@ public class WebClusterDatabaseExample extends AbstractApplication {
         // expose some KPI's
         addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(web,  
                 WebAppServiceConstants.ROOT_URL,
-                DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW));
-        addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
-                DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT, Functions.<Integer>identity()));
+                DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
+                HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW));
+        addEnricher(SensorTransformingEnricher.newInstanceTransforming(web, 
+                DynamicWebAppCluster.GROUP_SIZE, Functions.<Integer>identity(), APPSERVERS_COUNT));
     }
 
     public static void main(String[] argv) {

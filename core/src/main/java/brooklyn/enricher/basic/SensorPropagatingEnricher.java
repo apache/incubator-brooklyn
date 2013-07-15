@@ -31,7 +31,7 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
     private final Set<Sensor<?>> sensors;
 
     /** the sensors to listen to */
-    private final Map<Sensor<?>, Sensor<?>> sensorAlternatives;
+    private final Map<Sensor<?>, Sensor<?>> sensorMappings;
 
     public static SensorPropagatingEnricher newInstanceListeningToAllSensors(Entity source) {
         return newInstanceListeningToAllSensorsBut(source);
@@ -50,7 +50,12 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         return new SensorPropagatingEnricher(source, includes);
     }
 
+    /** @deprecated since 0.6.0 use {@link #newInstanceRenaming(Entity, Map)} which does the same thing */
     public static SensorPropagatingEnricher newInstanceListeningTo(Entity source, Map<? extends Sensor<?>, ? extends Sensor<?>> sensors) {
+        return new SensorPropagatingEnricher(source, sensors);
+    }
+    /** listens to sensors from source, propagates them here renamed according to the map */
+    public static SensorPropagatingEnricher newInstanceRenaming(Entity source, Map<? extends Sensor<?>, ? extends Sensor<?>> sensors) {
         return new SensorPropagatingEnricher(source, sensors);
     }
 
@@ -61,13 +66,13 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
     public SensorPropagatingEnricher(Entity source, Collection<Sensor<?>> sensors) {
         this.source = source;
         this.sensors = ImmutableSet.copyOf(sensors);
-        this.sensorAlternatives = ImmutableMap.of();
+        this.sensorMappings = ImmutableMap.of();
     }
     
     public SensorPropagatingEnricher(Entity source, Map<? extends Sensor<?>, ? extends Sensor<?>> sensors) {
         this.source = source;
         this.sensors = ImmutableSet.copyOf(sensors.keySet());
-        this.sensorAlternatives = ImmutableMap.copyOf(sensors);
+        this.sensorMappings = ImmutableMap.copyOf(sensors);
     }
     
     public void setEntity(EntityLocal entity) {
@@ -117,6 +122,6 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
     }
     
     private Sensor<?> getDestinationSensor(Sensor<?> sourceSensor) {
-        return sensorAlternatives.containsKey(sourceSensor) ? sensorAlternatives.get(sourceSensor): sourceSensor;
+        return sensorMappings.containsKey(sourceSensor) ? sensorMappings.get(sourceSensor): sourceSensor;
     }
 }

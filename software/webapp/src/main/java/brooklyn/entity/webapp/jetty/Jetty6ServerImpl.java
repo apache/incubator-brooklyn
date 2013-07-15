@@ -44,7 +44,7 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                             .objectName(serverMbeanName)
                             .attributeName("running")
                             .onSuccess(Functions.forPredicate(Predicates.<Object>equalTo(true)))
-                            .onException(Functions.constant(false)))
+                            .setOnFailureOrException(false))
                     .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
                             .objectName(statsMbeanName)
                             .attributeName("requests"))

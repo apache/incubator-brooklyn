@@ -46,13 +46,13 @@ public class DynamicWebAppFabricImpl extends DynamicFabricImpl implements Dynami
             AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
             
-            SensorTransformingEnricher<Number, Double> enricher = new SensorTransformingEnricher<Number,Double>(this, t, average, 
+            SensorTransformingEnricher<Number, Double> enricher = SensorTransformingEnricher.newInstanceTransforming(this, t,  
                     new Function<Number, Double>() {
                         @Override public Double apply(@Nullable Number input) {
                             Integer size = getAttribute(DynamicWebAppFabric.FABRIC_SIZE);
                             return (size != null && input != null) ? (input.doubleValue() / size) : null;
                         }
-                    });
+                    }, average);
             addEnricher(enricher);
         }
     }

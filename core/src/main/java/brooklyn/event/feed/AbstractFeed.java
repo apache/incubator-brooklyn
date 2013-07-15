@@ -26,6 +26,7 @@ public abstract class AbstractFeed {
     
     protected final EntityLocal entity;
     protected final Poller<?> poller;
+    private volatile Long lastConnectionTime;
     private volatile boolean activated, suspended;
     private final Object pollerStateMutex = new Object(); 
 
@@ -54,6 +55,7 @@ public abstract class AbstractFeed {
         // (e.g. if ssh gets NoRouteToHostException, then every AttributePollHandler for that
         // feed will log.warn - so if polling for 10 sensors/attributes will get 10 log messages).
         // Would be nice if reduced this logging duplication.
+        // (You can reduce it by providing a better 'isConnected' implementation of course.)
         return isActivated();
     }
 

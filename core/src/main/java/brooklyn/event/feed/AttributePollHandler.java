@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 
