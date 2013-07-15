@@ -53,7 +53,7 @@
     
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-rest</artifactId>
+            <artifactId>brooklyn-rest-server</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

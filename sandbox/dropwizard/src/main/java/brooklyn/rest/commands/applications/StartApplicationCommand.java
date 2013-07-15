@@ -4,6 +4,7 @@ import brooklyn.rest.commands.BrooklynCommand;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.Status;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -17,7 +18,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.net.URI;
 
-import static brooklyn.rest.domain.ApplicationSummary.Status;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class StartApplicationCommand extends BrooklynCommand {
