@@ -122,7 +122,7 @@ public class EntityPollingTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         if (jmxService != null) jmxService.shutdown();
     }
 

@@ -55,7 +55,7 @@ public class VanillaJavaAppRebindTest {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
     

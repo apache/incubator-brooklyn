@@ -49,7 +49,7 @@ public class HttpFeedIntegrationTest {
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
         if (httpService != null) httpService.shutdown();
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test(groups = {"Integration"})

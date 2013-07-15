@@ -117,7 +117,7 @@ public class JmxFeedTest {
         if (feed != null) feed.stop();
         if (jmxHelper != null) jmxHelper.disconnect();
         if (jmxService != null) jmxService.shutdown();
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         feed = null;
     }
 

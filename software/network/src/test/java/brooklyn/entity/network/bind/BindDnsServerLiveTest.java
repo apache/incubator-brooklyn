@@ -51,7 +51,7 @@ public class BindDnsServerLiveTest {
 
     @AfterMethod(alwaysRun = true)
     public void shutdown() throws Exception {
-        Entities.destroyAll(app);
+        Entities.destroyAll(app.getManagementContext());
         // Thread.sleep(TimeUnit.MINUTES.toMillis(30));
     }
 

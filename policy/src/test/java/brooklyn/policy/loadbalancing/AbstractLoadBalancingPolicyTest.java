@@ -86,7 +86,7 @@ public class AbstractLoadBalancingPolicyTest {
     @AfterMethod(alwaysRun=true)
     public void after() {
         if (policy != null) policy.destroy();
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     // Using this utility, as it gives more info about the workrates of all containers rather than just the one that differs    

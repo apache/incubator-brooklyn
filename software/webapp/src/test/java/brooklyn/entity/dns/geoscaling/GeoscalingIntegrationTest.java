@@ -87,7 +87,7 @@ public class GeoscalingIntegrationTest {
         } else {
             System.clearProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName());
         }
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test(groups={"Integration"})

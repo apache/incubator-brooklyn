@@ -60,7 +60,7 @@ public class RabbitIntegrationTest {
 
     @AfterMethod(alwaysRun = true)
     public void shutdown() {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     /**

@@ -62,7 +62,7 @@ public class AutoScalerPolicyTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (policy != null) policy.destroy();
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         cluster = null;
         resizable = null;
         policy = null;
