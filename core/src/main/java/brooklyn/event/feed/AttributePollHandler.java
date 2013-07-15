@@ -10,8 +10,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Function;
-
 /**
  * Handler for when polling an entity's attribute. On each poll result the entity's attribute is set.
  * 
@@ -29,7 +27,18 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     private final EntityLocal entity;
     private final AttributeSensor sensor;
     private final AbstractFeed feed;
-    private volatile boolean lastWasFailure = false;
+    
+    // allow 30 seconds before logging at WARN, if there has been no success yet;
+    // after success WARN immediately
+    // TODO these should both be configurable
+    private Duration logWarningGraceTimeOnStartup = Duration.THIRTY_SECONDS;
+    private Duration logWarningGraceTime = Duration.millis(0);
+    
+    // internal state to look after whether to log warnings
+    private volatile Long lastSuccessTime = null;
+    private volatile Long currentProblemStartTime = null;
+    private volatile boolean currentProblemLoggedAsWarning = false;
+    private volatile boolean lastWasProblem = false;
     
     public AttributePollHandler(FeedConfig config, EntityLocal entity, AbstractFeed feed) {
         this.config = checkNotNull(config, "config");
@@ -46,11 +55,17 @@ public class AttributePollHandler<V> implements PollHandler<V> {
 
     @Override
     public void onSuccess(V val) {
-        if (lastWasFailure) {
-            lastWasFailure = false;
-            log.info("Success (following previous failure) reading "+entity+"->"+sensor);
+        if (lastWasProblem) {
+            if (currentProblemLoggedAsWarning) { 
+                log.info("Success (following previous problem) reading "+entity+"->"+sensor);
+            } else {
+                log.debug("Success (following previous problem) reading "+entity+"->"+sensor);
+            }
+            lastWasProblem = false;
+            currentProblemStartTime = null;
+            currentProblemLoggedAsWarning = false;
         }
-        
+        lastSuccessTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) log.trace("poll for {}->{} got: {}", new Object[] {entity, sensor, val});
         
         try {
@@ -72,13 +87,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         if (!config.hasFailureHandler()) {
             onException(new Exception("checkSuccess of "+this+" from "+entity+" was false but poller has no failure handler"));
         } else {
-            if (lastWasFailure) {
-                if (log.isDebugEnabled())
-                    log.debug("Recurring failure reading " + this + " from " + entity + ". Got: " + val);
-            } else {
-                log.warn("Read of " + entity + "->" + sensor + " failed. Got: " + val);
-                lastWasFailure = true;
-            }
+            logProblem("failure", val);
 
             try {
                 Object v = coerce(config.getOnFailure().apply(val));
@@ -87,10 +96,10 @@ public class AttributePollHandler<V> implements PollHandler<V> {
                 }
             } catch (Exception e) {
                 if (feed.isConnected()) {
-                    log.warn("unable to compute " + entity + "->" + sensor + "; on val=" + val, e);
+                    log.warn("Error computing " + entity + "->" + sensor + "; val=" + val+": "+ e, e);
                 } else {
                     if (log.isDebugEnabled())
-                        log.debug("unable to compute " + entity + " ->" + sensor + "; val=" + val + " (when inactive)", e);
+                        log.debug("Error computing " + entity + " ->" + sensor + "; val=" + val + " (when inactive)", e);
                 }
             }
         }
@@ -107,16 +116,10 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     @Override
     public void onException(Exception exception) {
         if (!feed.isConnected()) {
-            if (log.isDebugEnabled()) log.debug("exception reading {} from {} (while not connected or not yet connected): {}", new Object[] {this, entity, exception});
-        } else if (lastWasFailure) {
-            if (log.isDebugEnabled()) log.debug("recurring exception reading "+this+" from "+entity, exception);
+            if (log.isDebugEnabled()) log.debug("Read of {} from {} gave exception (while not connected or not yet connected): {}", new Object[] {this, entity, exception});
         } else {
-            // if we see an error once it is up, log it as a warning the first time until it corrects itself
-            log.warn("Exception reading "+entity+"->"+sensor+": "+exception);
-            if (log.isDebugEnabled())
-                log.debug("details for exception reading "+entity+"->"+sensor+": "+exception, exception);
+            logProblem("failure", exception);
         }
-        lastWasFailure = true;
 
         if (config.hasExceptionHandler()) {
             try {
@@ -134,6 +137,49 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         }
     }
 
+    protected void logProblem(String type, Object val) {
+        if (lastWasProblem && currentProblemLoggedAsWarning) {
+            if (log.isDebugEnabled())
+                log.debug("Recurring "+type+" reading " + this + " from " + entity + ": " + val);
+        } else {
+            long nowTime = System.currentTimeMillis();
+            // get a non-volatile value
+            Long currentProblemStartTimeCache = currentProblemStartTime;
+            long expiryTime = 
+                    lastSuccessTime!=null ? lastSuccessTime+logWarningGraceTime.toMilliseconds() :
+                    currentProblemStartTimeCache!=null ? currentProblemStartTimeCache+logWarningGraceTimeOnStartup.toMilliseconds() :
+                    nowTime+logWarningGraceTimeOnStartup.toMilliseconds();
+            if (!lastWasProblem) {
+                if (expiryTime <= nowTime) {
+                    currentProblemLoggedAsWarning = true;
+                    log.warn("Read of " + entity + "->" + sensor + " gave " + type + ": " + val);
+                    if (log.isDebugEnabled() && val instanceof Throwable)
+                        log.debug("Trace for "+type+" reading "+entity+"->"+sensor+": "+val, (Throwable)val);
+                } else {
+                    if (log.isDebugEnabled())
+                        log.debug("Read of " + entity + "->" + sensor + " gave " + type + 
+                                " (in grace period)" +
+                                ": " + val);
+                }
+                lastWasProblem = true;
+                currentProblemStartTime = nowTime;
+            } else {
+                if (expiryTime <= nowTime) {
+                    currentProblemLoggedAsWarning = true;
+                    log.warn("Read of " + entity + "->" + sensor + " gave " + type + 
+                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+")"+
+                            ": " + val);
+                    if (log.isDebugEnabled() && val instanceof Throwable)
+                        log.debug("Trace for "+type+" reading "+entity+"->"+sensor+": "+val, (Throwable)val);
+                } else {
+                    log.debug("Recurring "+type+" reading " + this + " from " + entity + 
+                            " (still in grace period)" +
+                            ": " + val);
+                }
+            }
+        }
+    }
+    
     /**
      * Does post-processing on the result of the actual poll, to convert it to the attribute's new value.
      * Or returns PollConfig.UNSET if the post-processing indicates that the attribute should not be changed.
