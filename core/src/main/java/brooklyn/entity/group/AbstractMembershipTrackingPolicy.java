@@ -1,6 +1,7 @@
 package brooklyn.entity.group;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -72,6 +73,10 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
             subscribeToGroup();
         }
     }
+
+    // TODO having "subscribe to changes only" semantics as part of subscription would be much cleaner
+    // than this lightweight map
+    Map<String,Boolean> lastKnownServiceUpCache = new LinkedHashMap<String, Boolean>();
     
     protected void subscribeToGroup() {
         Preconditions.checkNotNull(group, "The group cannot be null");
@@ -85,12 +90,15 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         });
         subscribe(group, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
+                lastKnownServiceUpCache.remove(event.getSource());
                 onEntityRemoved(event.getValue());
             }
         });
-        // TODO having last value would be handy in the event publication (or suppressing if no change)
         subscribeToMembers(group, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
+                if (event.getValue() == lastKnownServiceUpCache.put(event.getSource().getId(), event.getValue()))
+                    // ignore if value has not changed
+                    return;
                 onEntityChange(event.getSource());
             }
         });

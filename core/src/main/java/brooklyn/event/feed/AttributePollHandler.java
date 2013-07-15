@@ -162,4 +162,9 @@ public class AttributePollHandler<V> implements PollHandler<V> {
             return v;
         }
     }
+    
+    @Override
+    public String toString() {
+        return super.toString()+"["+sensor+" @ "+entity+" <- "+feed+"]";
+    }
 }
