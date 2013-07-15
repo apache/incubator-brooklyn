@@ -13,6 +13,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.KeyValueParser;
@@ -99,7 +100,8 @@ public class LocalhostResolver implements LocationResolver {
             }
         }
         
-        return new LocalhostMachineProvisioningLocation(flags);
+        return managementContext.getLocationManager().createLocation(LocationSpec.spec(LocalhostMachineProvisioningLocation.class)
+                .configure(flags));
     }
 
     @Override
