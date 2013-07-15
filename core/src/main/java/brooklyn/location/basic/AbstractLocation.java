@@ -100,7 +100,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     }
     
     public AbstractLocation(Map properties) {
-        
+        inConstruction = true;
         _legacyConstruction = !InternalLocationFactory.FactoryConstructionTracker.isConstructing();
         
         if (_legacyConstruction) {
