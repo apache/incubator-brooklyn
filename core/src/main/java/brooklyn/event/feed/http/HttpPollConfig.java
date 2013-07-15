@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.Map;
 
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.URLParamEncoder;
@@ -113,4 +114,5 @@ public class HttpPollConfig<T> extends PollConfig<HttpPollValue, T, HttpPollConf
         // TODO Not using Immutable builder, because that fails if duplicates in map1 and map2
         return MutableMap.<K,V>builder().putAll(map1).putAll(map2).build();
     }
+
 }

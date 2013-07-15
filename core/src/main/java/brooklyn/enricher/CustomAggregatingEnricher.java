@@ -159,7 +159,8 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         return newSummingEnricher(Collections.<String,Object>emptyMap(), source, target);
     }
 
-    /** creates an enricher which averages over all sensors, 
+    // TODO semantics of ZERO default seem very odd for an average (okay for summing)
+    /** creates an enricher which averages over all children/members, 
      * counting ZERO for sensors which have not yet published anything;
      * to have those sensors excluded, pass null as an additional argument (defaultValue)
      */
@@ -182,6 +183,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
         };
         return new CustomAggregatingEnricher<N,Double>(flags, source, target, aggregator, defaultValue);
     }
+    /** averages the given source sensor over all children/members, storing in target */
     public static <N extends Number> CustomAggregatingEnricher<Number,Double> newAveragingEnricher(
             AttributeSensor<N> source, AttributeSensor<Double> target) {
         return newAveragingEnricher(Collections.<String,Object>emptyMap(), source, target);

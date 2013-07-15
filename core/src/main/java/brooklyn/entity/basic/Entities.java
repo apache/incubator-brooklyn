@@ -606,7 +606,11 @@ public class Entities {
      */
     public static void manage(Location loc, ManagementContext managementContext) {
         if (!managementContext.getLocationManager().isManaged(loc)) {
-            log.warn("Deprecated use of unmanaged location; will be managed automatically now but not supported in future versions", new Exception("for stacktrace"));
+            log.warn("Deprecated use of unmanaged location ("+loc+"); will be managed automatically now but not supported in future versions");
+            // FIXME this occurs MOST OF THE TIME e.g. including BrooklynLauncher.location(locationString)
+            // not sure what is the recommend way to convert from locationString to locationSpec, or the API we want to expose;
+            // deprecating some of the LocationRegistry methods seems sensible?
+            log.debug("Stack trace for location of: Deprecated use of unmanaged location; will be managed automatically now but not supported in future versions", new Exception("TRACE for: Deprecated use of unmanaged location"));
             managementContext.getLocationManager().manage(loc);
         }
     }

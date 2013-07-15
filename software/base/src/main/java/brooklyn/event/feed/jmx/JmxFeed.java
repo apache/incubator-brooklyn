@@ -173,6 +173,10 @@ public class JmxFeed extends AbstractFeed {
         return (Poller<Object>) poller;
     }
     
+    protected boolean isConnected() {
+        return super.isConnected() && helper.isConnected();
+    }
+    
     @Override
     protected void preStart() {
         /*

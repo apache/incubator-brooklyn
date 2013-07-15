@@ -40,7 +40,8 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
                 ImmutableList.of(ERROR_COUNT, ERROR_COUNT),
                 ImmutableList.of(REQUESTS_PER_SECOND_LAST, REQUESTS_PER_SECOND_LAST),
                 ImmutableList.of(REQUESTS_PER_SECOND_IN_WINDOW, REQUESTS_PER_SECOND_IN_WINDOW),
-                ImmutableList.of(TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME)
+                ImmutableList.of(TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME),
+                ImmutableList.of(PROCESSING_TIME_FRACTION_IN_WINDOW, PROCESSING_TIME_FRACTION_IN_WINDOW)
         );
         
         List<? extends List<? extends AttributeSensor<? extends Number>>> averagingEnricherSetup = ImmutableList.of(
@@ -48,7 +49,8 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
                 ImmutableList.of(ERROR_COUNT, ERROR_COUNT_PER_NODE),
                 ImmutableList.of(REQUESTS_PER_SECOND_LAST, REQUESTS_PER_SECOND_LAST_PER_NODE),
                 ImmutableList.of(REQUESTS_PER_SECOND_IN_WINDOW, REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE),
-                ImmutableList.of(TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME_PER_NODE)
+                ImmutableList.of(TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME_PER_NODE),
+                ImmutableList.of(PROCESSING_TIME_FRACTION_IN_WINDOW, PROCESSING_TIME_FRACTION_IN_WINDOW_PER_NODE)
         );
         
         for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {

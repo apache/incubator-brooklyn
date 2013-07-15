@@ -111,7 +111,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                         // Any response from Nginx is good.
                         .checkSuccess(Predicates.alwaysTrue())
-                        .onSuccess(new Function<HttpPollValue, Boolean>() {
+                        .onResult(new Function<HttpPollValue, Boolean>() {
                                 @Override
                                 public Boolean apply(HttpPollValue input) {
                                     // Accept any nginx response (don't assert specific version), so that sub-classing
@@ -119,7 +119,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                                     List<String> actual = input.getHeaderLists().get("Server");
                                     return actual != null && actual.size() == 1 && actual.get(0).startsWith("nginx");
                                 }})
-                        .onException(Functions.constant(false)))
+                        .setOnException(false))
                 .build();
 
         // Can guarantee that parent/managementContext has been set

@@ -18,7 +18,6 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.util.internal.TimeExtras;
 import brooklyn.util.javalang.AtomicReferences;
 import brooklyn.util.javalang.Boxing;
 import brooklyn.util.math.MathFunctions;
@@ -51,7 +50,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
             "web.request.latency.windowed", "Request latency over time window, in seconds");
 
     HttpFeed httpFeed = null;
-    final long periodMillis;
+    final Duration period;
     
     final boolean requireServiceUp; 
     final AtomicBoolean serviceUp = new AtomicBoolean(false);
@@ -62,7 +61,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
     final Duration rollupWindowSize;
     
     protected HttpLatencyDetector(Builder builder) {
-        this.periodMillis = builder.periodMillis;
+        this.period = builder.period;
         this.requireServiceUp = builder.requireServiceUp;
         
         if (builder.urlSensor != null) {
@@ -96,11 +95,11 @@ public class HttpLatencyDetector extends AbstractEnricher {
     protected void initialize() {
         httpFeed = HttpFeed.builder()
                 .entity(entity)
-                .period(periodMillis)
+                .period(period)
                 .baseUri(Suppliers.compose(Urls.stringToUriFunction(), AtomicReferences.supplier(url)))
                 .poll(new HttpPollConfig<Double>(REQUEST_LATENCY_IN_SECONDS_MOST_RECENT)
-                        .onSuccess(MathFunctions.divide(HttpValueFunctions.latency(), 1000.0d))
-                        .onError(Functions.constant((Double)null)))
+                        .onResult(MathFunctions.divide(HttpValueFunctions.latency(), 1000.0d))
+                        .setOnException(null))
                 .suspended()
                 .build();
     }
@@ -165,7 +164,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
     
     public static class Builder {
         boolean requireServiceUp = true;
-        long periodMillis = 1000;
+        Duration period = Duration.ONE_SECOND;
         String url;
         AttributeSensor<String> urlSensor;
         Function<String, String> urlPostProcessing = Functions.identity();
@@ -178,10 +177,14 @@ public class HttpLatencyDetector extends AbstractEnricher {
             requireServiceUp = false;
             return this;
         }
-        
-        public Builder period(int amount, TimeUnit unit) {
-            periodMillis = TimeExtras.duration(amount, unit).toMilliseconds();
+
+        /** sets how often to test for latency */
+        public Builder period(Duration period) {
+            this.period = period;
             return this;
+        }
+        public Builder period(int amount, TimeUnit unit) {
+            return period(Duration.of(amount, unit));
         }
         
         /** supplies a constant URL which should be polled for latency,
@@ -206,10 +209,16 @@ public class HttpLatencyDetector extends AbstractEnricher {
 
         /** specifies a size of the time window which should be used to give a rolled-up average;
          * defaults to {@link HttpLatencyDetector#LATENCY_WINDOW_DEFAULT_PERIOD} */ 
-        public Builder rollup(int windowSize, TimeUnit unit) {
-            this.rollupWindowSize = Duration.of(windowSize, unit);
+        public Builder rollup(Duration windowSize) {
+            this.rollupWindowSize = windowSize;
             return this;
         }
+        
+        /** see {@link #rollup(Duration)} */
+        public Builder rollup(int windowSize, TimeUnit unit) {
+            return rollup(Duration.of(windowSize, unit));
+        }
+        
         /** specifies that a rolled-up average should _not_ be calculated and emitted 
          * (defaults to true) */
         public Builder rollupOff() {

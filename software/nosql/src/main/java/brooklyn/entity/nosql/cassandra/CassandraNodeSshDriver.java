@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
@@ -23,6 +22,7 @@ import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
+import brooklyn.util.ssh.CommonCommands;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

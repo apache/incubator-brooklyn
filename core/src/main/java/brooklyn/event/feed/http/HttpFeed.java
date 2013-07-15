@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Optional;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -27,7 +26,6 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -40,8 +38,10 @@ import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.HashMultimap;
@@ -106,8 +106,7 @@ public class HttpFeed extends AbstractFeed {
     public static class Builder {
         private EntityLocal entity;
         private Supplier<URI> baseUriProvider;
-        private long period = 500;
-        private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
+        private Duration period = Duration.millis(500);
         private List<HttpPollConfig<?>> polls = Lists.newArrayList();
         private URI baseUri;
         private Map<String, String> baseUriVars = Maps.newLinkedHashMap();
@@ -154,13 +153,15 @@ public class HttpFeed extends AbstractFeed {
             headers.put(key, val);
             return this;
         }
+        public Builder period(Duration duration) {
+            this.period = duration;
+            return this;
+        }
         public Builder period(long millis) {
             return period(millis, TimeUnit.MILLISECONDS);
         }
         public Builder period(long val, TimeUnit units) {
-            this.period = val;
-            this.periodUnits = units;
-            return this;
+            return period(Duration.of(val, units));
         }
         public Builder poll(HttpPollConfig<?> config) {
             polls.add(config);
@@ -248,7 +249,7 @@ public class HttpFeed extends AbstractFeed {
         for (HttpPollConfig<?> config : builder.polls) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             HttpPollConfig<?> configCopy = new HttpPollConfig(config);
-            if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
+            if (configCopy.getPeriod() < 0) configCopy.period(builder.period);
             String method = config.getMethod();
             Map<String,String> headers = config.buildHeaders(baseHeaders);
             byte[] body = config.getBody();

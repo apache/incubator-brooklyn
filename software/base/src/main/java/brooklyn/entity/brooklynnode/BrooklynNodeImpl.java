@@ -88,7 +88,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                     .credentialsIfNotNull(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                     .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                             .onSuccess(HttpValueFunctions.responseCodeEquals(200))
-                            .onException(Functions.constant(false)))
+                            .setOnFailureOrException(false))
                     .build();
 
         } else {

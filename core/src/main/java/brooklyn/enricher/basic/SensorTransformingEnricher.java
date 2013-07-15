@@ -5,6 +5,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.policy.Enricher;
 import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Function;
@@ -49,6 +50,13 @@ public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnr
 
     protected U compute(T value) {
         return transformation.apply(value);
+    }
+
+    /** creates an enricher which listens to a source (from the producer), 
+     * transforms it and publishes it under the target */
+    public static <U,V> SensorTransformingEnricher<U,V> newInstanceTransforming(Entity producer, AttributeSensor<U> source,
+            Function<U,V> transformation, AttributeSensor<V> target) {
+        return new SensorTransformingEnricher<U,V>(producer, source, target, transformation);
     }
 
 }

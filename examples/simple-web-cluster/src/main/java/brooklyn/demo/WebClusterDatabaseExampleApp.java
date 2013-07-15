@@ -29,7 +29,6 @@ import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
@@ -119,8 +118,8 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
                 WebAppServiceConstants.ROOT_URL,
                 DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
                 HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW));
-        addEnricher(new SensorTransformingEnricher<Integer,Integer>(web, 
-                DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT, Functions.<Integer>identity()));
+        addEnricher(SensorTransformingEnricher.newInstanceTransforming(web, 
+                DynamicWebAppCluster.GROUP_SIZE, Functions.<Integer>identity(), APPSERVERS_COUNT));
     }
     
     public static void main(String[] argv) {

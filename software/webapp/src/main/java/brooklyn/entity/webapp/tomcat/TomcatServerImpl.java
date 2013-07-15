@@ -72,7 +72,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
                             .objectName(connectorMbeanName)
                             .attributeName("stateName")
                             .onSuccess(Functions.forPredicate(Predicates.<Object>equalTo("STARTED")))
-                            .onException(Functions.constant(false)))
+                            .setOnFailureOrException(false))
                     .build();
             
             JavaAppUtils.connectMXBeanSensors(this);
