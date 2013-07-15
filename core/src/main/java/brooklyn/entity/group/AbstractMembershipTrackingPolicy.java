@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +77,7 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
 
     // TODO having "subscribe to changes only" semantics as part of subscription would be much cleaner
     // than this lightweight map
-    Map<String,Boolean> lastKnownServiceUpCache = new LinkedHashMap<String, Boolean>();
+    Map<String,Boolean> lastKnownServiceUpCache = new ConcurrentHashMap<String, Boolean>();
     
     protected void subscribeToGroup() {
         Preconditions.checkNotNull(group, "The group cannot be null");
