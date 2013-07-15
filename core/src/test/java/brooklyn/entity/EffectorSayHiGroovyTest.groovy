@@ -42,7 +42,7 @@ public class EffectorSayHiGroovyTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

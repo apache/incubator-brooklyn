@@ -52,7 +52,7 @@ class CassandraClusterLiveTest {
 
     @AfterMethod(alwaysRun = true)
     public void shutdown() {
-        Entities.destroyAll(app);
+        Entities.destroyAll(app.getManagementContext());
     }
 
     /**

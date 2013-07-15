@@ -34,7 +34,7 @@ public class KarafContainerTest {
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     // FIXME Test failing in jenkins; not sure why. The karaf log shows the mbeans never being

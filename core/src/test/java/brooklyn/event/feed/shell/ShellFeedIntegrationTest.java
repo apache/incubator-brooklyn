@@ -51,7 +51,7 @@ public class ShellFeedIntegrationTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         if (loc != null) Closeables.closeQuietly(loc);
     }
     

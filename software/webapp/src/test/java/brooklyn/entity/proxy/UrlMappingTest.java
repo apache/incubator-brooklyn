@@ -79,7 +79,7 @@ public class UrlMappingTest {
 
     @AfterMethod(alwaysRun=true)
     public void shutdown() {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
 

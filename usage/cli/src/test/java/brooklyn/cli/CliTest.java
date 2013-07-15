@@ -121,7 +121,7 @@ public class CliTest {
             String typeName = app.getEntityType().getName();
             assertEquals(typeName, expectedAppTypeName, "app="+app+"; typeName="+typeName);
         } finally {
-            Entities.destroyAll(app);
+            Entities.destroyAll(app.getManagementContext());
         }
     }
     

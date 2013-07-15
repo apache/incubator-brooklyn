@@ -58,7 +58,7 @@ public class AbstractPerformanceTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     protected void measureAndAssert(String prefix, int numIterations, double minRatePerSec, Runnable r) {

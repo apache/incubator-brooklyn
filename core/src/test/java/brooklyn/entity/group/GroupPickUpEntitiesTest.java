@@ -40,7 +40,7 @@ public class GroupPickUpEntitiesTest {
 
     @AfterTest(alwaysRun=true)
     public void teardown() {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test

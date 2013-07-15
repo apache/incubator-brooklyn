@@ -72,7 +72,7 @@ public class NginxClusterIntegrationTest {
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
     public void shutdown() {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test(groups = "Integration")

@@ -46,7 +46,7 @@ public class BindDnsServerTest {
 
     @AfterMethod(alwaysRun = true)
     public void shutdown() {
-        Entities.destroyAll(app);
+        Entities.destroyAll(app.getManagementContext());
     }
 
     @Test(groups = { "Integration" })

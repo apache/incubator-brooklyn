@@ -90,7 +90,7 @@ public class AbstractFollowTheSunPolicyTest {
     @AfterMethod(alwaysRun=true)
     public void after() {
         if (pool != null && policy != null) pool.removePolicy(policy);
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         MockItemEntityImpl.totalMoveCount.set(0);
     }
     
