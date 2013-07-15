@@ -614,6 +614,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info(" Profile: "+profile);
                         }
 
+                        Set<? extends org.jclouds.domain.Location> assignableLocations = computeServiceLessRestrictive.listAssignableLocations();
+                        LOG.info(""+assignableLocations.size()+" available locations at "+this);
+                        for (org.jclouds.domain.Location assignableLocation: assignableLocations) {
+                            LOG.info(" Location: "+assignableLocation);
+                        }
                     }
                 }
             } catch (Exception e2) {
