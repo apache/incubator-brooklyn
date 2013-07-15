@@ -130,11 +130,26 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (locs.size()!=1) throw new IllegalStateException("Wrong number of locations supplied to start "+this+": "+locs);
         addLocations(locs);
         setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-        Integer initialSize = getConfig(INITIAL_SIZE);
-        resize(initialSize);
-        if (getCurrentSize().intValue() != initialSize.intValue()) {
-            throw new IllegalStateException("On start of cluster "+this+", failed to get to initial size of "+initialSize+"; size is "+getCurrentSize());
+        
+        int initialSize = getConfig(INITIAL_SIZE).intValue();
+        int initialQuorumSize = getConfig(INITIAL_QUORUM_SIZE).intValue();
+        if (initialQuorumSize < 0) initialQuorumSize = initialSize;
+        if (initialQuorumSize > initialSize) {
+            LOG.warn("On start of cluster {}, misconfigured initial quorum size {} greater than initial size{}; using {}", new Object[] {initialQuorumSize, initialSize, initialSize});
+            initialQuorumSize = initialSize;
         }
+        
+        resize(initialSize);
+        
+        int currentSize = getCurrentSize().intValue();
+        if (currentSize < initialQuorumSize) {
+            throw new IllegalStateException("On start of cluster "+this+", failed to get to initial size of "+initialSize+"; size is "+getCurrentSize()+
+                    (initialQuorumSize != initialSize ? " (initial quorum size is "+initialQuorumSize+")" : ""));
+        } else if (currentSize < initialSize) {
+            LOG.warn("On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing", 
+                    new Object[] {this, currentSize, initialQuorumSize, initialSize});
+        }
+        
         for (Policy it : getPolicies()) { it.resume(); }
         setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         setAttribute(SERVICE_UP, calculateServiceUp());
