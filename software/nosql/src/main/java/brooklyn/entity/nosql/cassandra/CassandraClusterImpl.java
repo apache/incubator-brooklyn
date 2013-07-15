@@ -96,17 +96,17 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
         policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Cluster Tracker")) {
             @Override
             protected void onEntityChange(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Node {} updated in Cluster {}", member, getClusterName());
+                if (log.isDebugEnabled()) log.debug("Node {} updated in Cluster {}", member, this);
                 update();
             }
             @Override
             protected void onEntityAdded(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Node {} added to Cluster {}", member, getClusterName());
+                if (log.isDebugEnabled()) log.debug("Node {} added to Cluster {}", member, this);
                 update();
             }
             @Override
             protected void onEntityRemoved(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Node {} removed from Cluster {}", member, getClusterName());
+                if (log.isDebugEnabled()) log.debug("Node {} removed from Cluster {}", member, this);
                 update();
             }
         };
@@ -118,11 +118,11 @@ public class CassandraClusterImpl extends DynamicClusterImpl implements Cassandr
 
     @Override
     protected boolean calculateServiceUp() {
-        boolean up = false;
+        // TODO would be useful to have "n-up" semantics (policy?) available for groups ?
         for (Entity member : getMembers()) {
-            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) up = true;
+            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) return true;
         }
-        return up;
+        return false;
     }
 
     @Override
