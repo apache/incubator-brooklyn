@@ -14,6 +14,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -41,7 +42,7 @@ public class EntityTypeTest {
     private AbstractEntity entity;
     private EntitySubscriptionTest.RecordingSensorEventListener listener;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUpTestEntity() throws Exception{
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = new AbstractEntity(app) {};
@@ -52,6 +53,11 @@ public class EntityTypeTest {
         app.getSubscriptionContext().subscribe(entity, SENSOR_REMOVED, listener);
     }
 
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        if (app != null) Entities.destroyAll(app.getManagementContext());
+    }
+    
     @Test
     public void testGetName() throws Exception {
         TestEntity entity2 = app.createAndManageChild(EntitySpecs.spec(TestEntity.class));
