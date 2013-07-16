@@ -116,9 +116,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
 
+    public JcloudsLocation() {
+       super();
+    }
+    
     /** typically wants at least ACCESS_IDENTITY and ACCESS_CREDENTIAL */
     public JcloudsLocation(Map<?,?> conf) {
-        super(conf);
+       super(conf);
     }
 
     @Override
@@ -803,7 +807,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             .configure(sshConfig)
                             // FIXME remove "config" -- inserted directly, above
                             .configure("config", sshConfig)
-                            .configure("jcloudsLocation", this)
+                            .configure("jcloudsParent", this)
                             .configure("node", node));
         } else {
             return new JcloudsSshMachineLocation(MutableMap.builder()

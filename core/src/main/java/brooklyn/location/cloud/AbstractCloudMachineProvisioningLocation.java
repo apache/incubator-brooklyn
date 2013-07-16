@@ -15,6 +15,9 @@ import brooklyn.util.internal.ssh.SshTool;
 public abstract class AbstractCloudMachineProvisioningLocation extends AbstractLocation 
 implements MachineProvisioningLocation<SshMachineLocation>, CloudLocationConfig 
 {
+   public AbstractCloudMachineProvisioningLocation() {
+      super();
+   }
 
     /** typically wants at least ACCESS_IDENTITY and ACCESS_CREDENTIAL */
     public AbstractCloudMachineProvisioningLocation(Map<?,?> conf) {
