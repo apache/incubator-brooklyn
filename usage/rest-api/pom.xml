@@ -15,16 +15,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <jersey.version>1.12</jersey.version>
-        <jackson.version>1.9.9</jackson.version>
-        <reflections.version>0.9.5</reflections.version>
-        <swagger.version>1.0.1</swagger.version>
-        <dropwizard.version>0.4.4</dropwizard.version>
-    </properties>
-
     <dependencies>       
-
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
