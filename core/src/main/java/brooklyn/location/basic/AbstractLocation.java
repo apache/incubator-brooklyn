@@ -119,7 +119,7 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     }
 
     protected void assertNotYetManaged() {
-        if (!inConstruction && (managementContext == null || !managementContext.getLocationManager().isManaged(this))) {
+        if (!inConstruction && (managementContext != null && managementContext.getLocationManager().isManaged(this))) {
             LOG.warn("configuration being made to {} after deployment; may not be supported in future versions", this);
         }
         //throw new IllegalStateException("Cannot set configuration "+key+" on active location "+this)
