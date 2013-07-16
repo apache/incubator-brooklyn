@@ -480,8 +480,8 @@ public class Entities {
             ManagementContext managementContext = app.getManagementContext();
             if (app instanceof Startable) Entities.invokeEffector((EntityLocal)app, app, Startable.STOP).getUnchecked();
             if (app instanceof AbstractEntity) ((AbstractEntity)app).destroy();
-            if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
             unmanage(app);
+            if (managementContext instanceof ManagementContextInternal) ((ManagementContextInternal)managementContext).terminate();
         }
     }
 
