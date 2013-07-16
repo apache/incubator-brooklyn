@@ -26,7 +26,7 @@
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-test-support</artifactId>
             <version>${brooklyn.version}</version>
-            <scope>tests</scope>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
