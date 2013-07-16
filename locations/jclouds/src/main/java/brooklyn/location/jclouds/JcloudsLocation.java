@@ -99,8 +99,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // TODO test (and fix) ability to set config keys from flags
 
-    // TODO retire CredentialsFromEnv
-    // TODO check how/if fields used in JCloudsLocationFactory
     // TODO need a way to define imageId (and others?) with a specific location
 
     // TODO we say config is inherited, but it isn't the case for many "deep" / jclouds properties
@@ -523,6 +521,22 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("ignoring keyPair({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
                     }})
+             .put(AUTO_GENERATE_KEYPAIRS, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        if (t instanceof NovaTemplateOptions) {
+                            ((NovaTemplateOptions)t).generateKeyPair((Boolean)v);
+                        } else {
+                            LOG.info("ignoring auto_generate_keypair({}) in VM creation because not supported for cloud/type ({})", v, t);
+                        }
+                    }})
+             .put(AUTO_CREATE_FLOATING_IPS, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        if (t instanceof NovaTemplateOptions) {
+                            ((NovaTemplateOptions)t).autoAssignFloatingIp((Boolean)v);
+                        } else {
+                            LOG.info("ignoring auto_generate_floating_ips({}) in VM creation because not supported for cloud/type ({})", v, t);
+                        }
+                    }})                    
             .build();
 
     private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;
@@ -628,7 +642,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             throw new IllegalStateException("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+". See list of images in log.", e);
         }
         TemplateOptions options = template.getOptions();
-        
+               
         for (Map.Entry<ConfigKey<?>, CustomizeTemplateOptions> entry : SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.entrySet()) {
             ConfigKey<?> key = entry.getKey();
             CustomizeTemplateOptions code = entry.getValue();

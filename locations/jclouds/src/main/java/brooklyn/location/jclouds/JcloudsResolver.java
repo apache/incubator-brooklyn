@@ -2,14 +2,12 @@ package brooklyn.location.jclouds;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.jclouds.Constants;
 import org.jclouds.apis.ApiMetadata;
 import org.jclouds.apis.Apis;
 import org.jclouds.providers.ProviderMetadata;
@@ -18,9 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
@@ -164,46 +162,44 @@ public class JcloudsResolver implements LocationResolver {
     @SuppressWarnings("unchecked")
     protected JcloudsLocation newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
         JcloudsSpecParser details = JcloudsSpecParser.parse(spec, false);
-        
+        String locationName = (String) locationFlags.get("name");
+
         boolean isProvider = details.isProvider();
-        if (Strings.isEmpty(details.providerOrApi)) {
+        String providerOrApi = details.providerOrApi;
+        String regionName = details.parameter;
+        
+        if (Strings.isEmpty(providerOrApi)) {
             throw new IllegalArgumentException("Cloud provider/API type not specified in spec \""+spec+"\"");
         }
         if (!isProvider && !details.isApi()) {
-            throw new NoSuchElementException("Cloud provider/API type "+details.providerOrApi+" is not supported by jclouds");
+            throw new NoSuchElementException("Cloud provider/API type "+providerOrApi+" is not supported by jclouds");
         }
         
-        Map tmpProperties = new LinkedHashMap();
-        if (registry!=null) tmpProperties.putAll(registry.getProperties());
-        tmpProperties.putAll(properties);
-        tmpProperties.putAll(locationFlags);
-
-        Map jcloudsProperties = new LinkedHashMap();
-        if (registry != null) {
-            String brooklynDataDir = (String) registry.getProperties().get(ConfigKeys.BROOKLYN_DATA_DIR.getName());
-            if (brooklynDataDir != null && brooklynDataDir.length() > 0) {
-                jcloudsProperties.put("localTempDir", new File(brooklynDataDir));
-            }
-        }
-        jcloudsProperties.putAll(new CredentialsFromEnv(tmpProperties, details.providerOrApi).asMap());
-        // adding properties here so that user can programmatically pass things through to JcloudsLocation for provisioning;
-        // above will filter by location, below may in constructor but should also accept unqualified properties
-        // (e.g. just "identity", if set e.g. in a namedLocation)
-        jcloudsProperties.putAll(properties);
+        // For everything in brooklyn.properties, only use things with correct prefix (and remove that prefix).
+        // But for everything passed in via locationFlags, pass those as-is.
+        // TODO Should revisit the locationFlags: where are these actually used? Reason accepting properties without
+        //      full prefix is that the map's context is explicitly this location, rather than being generic properties.
+        Map allProperties = getAllProperties(registry, properties, locationFlags);
+        Map jcloudsProperties = JcloudsPropertiesFromBrooklynProperties.getJcloudsProperties(providerOrApi, regionName, locationName, allProperties);
+        jcloudsProperties.putAll(locationFlags);
         
-        JcloudsLocation l;
         if (isProvider) {
             // providers from ServiceLoader take a location (endpoint already configured)
-            l = new JcloudsLocationFactory(jcloudsProperties).newLocation(details.parameter);
+            jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionName);
         } else {
             // other "providers" are APIs so take an _endpoint_ (but not a location)
-            jcloudsProperties.put(Constants.PROPERTY_ENDPOINT, details.parameter);
-            jcloudsProperties.put(JcloudsLocation.CLOUD_ENDPOINT, details.parameter);
-            l = new JcloudsLocationFactory(jcloudsProperties).newLocation(null);          
         }
-        // location flags trump other properties
-        l.getConfigBag().putAll(locationFlags);
-        return l;
+        
+        return managementContext.getLocationManager().createLocation(LocationSpec.spec(JcloudsLocation.class)
+                .configure(jcloudsProperties));
+    }
+
+    private Map getAllProperties(brooklyn.location.LocationRegistry registry, Map<?,?> properties, Map<?,?> locationFlags) {
+        Map<Object,Object> allProperties = Maps.newHashMap();
+        if (registry!=null) allProperties.putAll(registry.getProperties());
+        allProperties.putAll(properties);
+        allProperties.putAll(locationFlags);
+        return allProperties;
     }
     
     @Override

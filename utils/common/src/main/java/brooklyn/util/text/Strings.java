@@ -29,6 +29,8 @@ public class Strings {
      * @see #isNonBlank(CharSequence)
      */
     public static boolean isEmpty(CharSequence s) {
+        // Note guava has com.google.common.base.Strings.isNullOrEmpty(String),
+        // but that is just for String rather than CharSequence
         return s == null || s.length()==0;
     }
 
