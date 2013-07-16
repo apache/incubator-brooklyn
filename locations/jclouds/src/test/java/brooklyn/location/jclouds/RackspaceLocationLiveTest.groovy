@@ -7,8 +7,8 @@ import org.testng.annotations.Test
 
 public class RackspaceLocationLiveTest extends AbstractJcloudsLocationTest {
     
-    private static final String PROVIDER = "cloudservers"
-    private static final String REGION_NAME = "cloudservers"
+    private static final String PROVIDER = "rackspace-cloudservers-uk"
+    private static final String REGION_NAME = null;
     private static final String IMAGE_ID = "115"
     private static final String IMAGE_NAME_PATTERN = "Ubuntu 11.04"
     private static final String IMAGE_OWNER = null

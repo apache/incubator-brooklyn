@@ -5,6 +5,7 @@ import java.util.Map;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.testng.collections.Maps;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
@@ -101,11 +102,8 @@ public abstract class AbstractEc2LiveTest {
         runTest(ImmutableMap.of("imageId", "us-east-1/ami-d258fbbb", "hardwareId", SMALL_HARDWARE_ID));
     }
     
-    protected void runTest(Map<?,?> flags) throws Exception {
-        Map<?,?> jcloudsFlags = MutableMap.builder()
-                .putAll(flags)
-                .build();
-        jcloudsLocation = ctx.getLocationRegistry().resolve(LOCATION_SPEC, jcloudsFlags);
+    protected void runTest(Map<String,?> flags) throws Exception {
+        jcloudsLocation = ctx.getLocationRegistry().resolve(LOCATION_SPEC, flags);
 
         doTest(jcloudsLocation);
     }

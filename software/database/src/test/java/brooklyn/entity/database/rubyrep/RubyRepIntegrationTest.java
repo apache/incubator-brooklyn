@@ -36,7 +36,7 @@ public class RubyRepIntegrationTest {
     
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        brooklynProperties = BrooklynProperties.Factory.newDefault();
         managementContext = new LocalManagementContext(brooklynProperties);
         tapp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }

@@ -17,7 +17,7 @@ import com.google.common.collect.ImmutableMap
  *  (you must create the image manually first) */
 public class RackspaceUkLocationWithImageNameLiveTest {
     
-    private static final String PROVIDER = "cloudservers-uk"
+    private static final String PROVIDER = "rackspace-cloudservers-uk"
 
     private ManagementContext managementContext;
     JcloudsLocation loc
@@ -28,8 +28,8 @@ public class RackspaceUkLocationWithImageNameLiveTest {
         managementContext = Entities.newManagementContext(
             ImmutableMap.builder()
             .put("provider", PROVIDER)
-            .put("brooklyn.jclouds.cloudservers-uk.image-name-regex", ".*Ubuntu 11.10.*")
-            .put("brooklyn.jclouds.cloudservers-uk.hardware-id", "1")  //gives the 80gb disk needed
+            .put("brooklyn.jclouds.rackspace-cloudservers-uk.imageNameRegex", ".*Ubuntu 11.10.*")
+            .put("brooklyn.jclouds.rackspace-cloudservers-uk.hardwareId", "1")  //gives the 80gb disk needed
             .build());
     }
 
@@ -50,8 +50,8 @@ public class RackspaceUkLocationWithImageNameLiveTest {
      * <p>
      * Notes:
      * <ul>
-     *   <li>This requires a dependency on the mvn org.jclouds.provider:cloudservers-uk module, which is not there by default.
-     *       This needs to be added to the core/pom.xml to make this test work!
+     *   <li>This requires a dependency on the mvn org.jclouds.provider:rackspace-cloudservers-uk module.
+     *       This is included by default from the org.jclouds:jclouds-allcompute dependency.
      *   <li>The image-name-regex was chosen to work with particular account credentials.
      *       Should the "linux-no-firewall" work with all?
      * </ul>

@@ -58,7 +58,7 @@
         <!-- we need this dependency since we are going to deploy mysql in various rackspace machines (Debian, Ubuntu etc) -->
         <dependency>
             <groupId>org.jclouds.provider</groupId>
-            <artifactId>cloudservers-uk</artifactId>
+            <artifactId>rackspace-cloudservers-uk</artifactId>
             <version>${jclouds.version}</version>
             <scope>test</scope>
         </dependency>
