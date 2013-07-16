@@ -64,9 +64,10 @@ public class PostgreSqlRackspaceLiveTest extends PostgreSqlIntegrationTest {
         PostgreSqlNode psql = tapp.createAndManageChild(EntitySpecs.spec(PostgreSqlNode.class)
                 .configure("creationScriptContents", CREATION_SCRIPT));
 
-        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", osRegex);
+        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.imageNameRegex", osRegex);
         brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
-        brooklynProperties.put("inboundPorts", [22, 5432]);
+        brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.imageId");
+        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.inboundPorts", [22, 5432]);
         JcloudsLocation jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve("jclouds:cloudservers-uk");
 
         tapp.start(asList(jcloudsLocation));
