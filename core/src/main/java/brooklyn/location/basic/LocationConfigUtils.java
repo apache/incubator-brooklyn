@@ -36,10 +36,10 @@ public class LocationConfigUtils {
                     config.get(dataKey);
                 }
             } catch (IOException e) {
-                log.warn("Invalid file for "+fileKey+"; may fail provisioning "+config.getDescription());
+                log.warn("Invalid file for "+fileKey+" (value "+file+"); may fail provisioning "+config.getDescription());
             }
         }
-        return data;        
+        return data;
     }
     
     public static String getPrivateKeyData(ConfigBag config) {
