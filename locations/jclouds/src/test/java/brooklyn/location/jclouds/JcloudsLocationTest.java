@@ -28,11 +28,16 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             new RuntimeException("early termination for test");
     
     public static class BailOutJcloudsLocation extends JcloudsLocation {
-        public BailOutJcloudsLocation(Map<?, ?> conf) {
+       ConfigBag lastConfigBag;
+
+       public BailOutJcloudsLocation() {
+          super();
+       }
+       
+       public BailOutJcloudsLocation(Map<?, ?> conf) {
             super(conf);
         }
         
-        ConfigBag lastConfigBag;
         
         @Override
         protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
