@@ -61,7 +61,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         private static void addDefaultProperties(BrooklynProperties p) {
             // TODO Could also read from http://brooklyn.io, for up-to-date values?
             // But might that make unit tests run very badly when developer is offline?
-            String classpath = "classpath://location-metadata.properties";
+            String classpath = "classpath://brooklyn/location-metadata.properties";
             
             try {
                 p.addFrom(new ResourceUtils(BrooklynProperties.class).getResourceFromUrl(classpath));

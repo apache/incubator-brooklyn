@@ -1,11 +1,7 @@
 package brooklyn.location.jclouds;
 
-<<<<<<< HEAD
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.File;
-=======
->>>>>>> added JCloudsPropertiesFromEnv + Test; updated the properties management for jclouds location
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -22,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
@@ -189,12 +186,12 @@ public class JcloudsResolver implements LocationResolver {
         if (isProvider) {
             // providers from ServiceLoader take a location (endpoint already configured)
             jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionName);
-            return new JcloudsLocation(jcloudsProperties);
-
         } else {
             // other "providers" are APIs so take an _endpoint_ (but not a location)
-            return new JcloudsLocation(jcloudsProperties);
         }
+        
+        return managementContext.getLocationManager().createLocation(LocationSpec.spec(JcloudsLocation.class)
+                .configure(jcloudsProperties));
     }
 
     private Map getAllProperties(brooklyn.location.LocationRegistry registry, Map<?,?> properties, Map<?,?> locationFlags) {
