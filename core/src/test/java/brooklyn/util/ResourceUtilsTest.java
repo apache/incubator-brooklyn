@@ -147,4 +147,10 @@ public class ResourceUtilsTest {
         assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
     }
 
+    @Test
+    public void testTidyFilePath() throws Exception {
+        String userhome = System.getProperty("user.home");
+        assertEquals(ResourceUtils.tidyFilePath("/a/b"), "/a/b");
+        assertEquals(ResourceUtils.tidyFilePath("~/a/b"), userhome+"/a/b");
+    }
 }

@@ -1,6 +1,6 @@
 package brooklyn.location.basic;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Charsets;
@@ -21,13 +22,14 @@ public class LocationConfigUtils {
     public static String getKeyData(ConfigBag config, ConfigKey<String> dataKey, ConfigKey<String> fileKey) {
         boolean unused = config.isUnused(dataKey);
         String data = config.get(dataKey);
-        if (truth(data) && !unused) return data;
+        if (groovyTruth(data) && !unused) return data;
 
         String file = config.get(fileKey);
-        if (truth(file)) {
+        if (groovyTruth(file)) {
+            String fileTidied = ResourceUtils.tidyFilePath(file);
             try {
-                String fileData = Files.toString(new File(file), Charsets.UTF_8);
-                if (truth(data)) {
+                String fileData = Files.toString(new File(fileTidied), Charsets.UTF_8);
+                if (groovyTruth(data)) {
                     if (!fileData.trim().equals(data.trim()))
                         log.warn(dataKey.getName()+" and "+fileKey.getName()+" both specified; preferring the former");
                 } else {
@@ -36,7 +38,9 @@ public class LocationConfigUtils {
                     config.get(dataKey);
                 }
             } catch (IOException e) {
-                log.warn("Invalid file for "+fileKey+" (value "+file+"); may fail provisioning "+config.getDescription());
+                log.warn("Invalid file for "+fileKey+" (value "+file+
+                        (fileTidied.equals(file) ? "" : "; converted to "+fileTidied)+
+                        "); may fail provisioning "+config.getDescription());
             }
         }
         return data;
@@ -51,10 +55,10 @@ public class LocationConfigUtils {
     
     public static String getPublicKeyData(ConfigBag config) {
         String data = getKeyData(config, LocationConfigKeys.PUBLIC_KEY_DATA, LocationConfigKeys.PUBLIC_KEY_FILE);
-        if (truth(data)) return data;
+        if (groovyTruth(data)) return data;
         
         String privateKeyFile = config.get(LocationConfigKeys.PRIVATE_KEY_FILE);
-        if (truth(privateKeyFile)) {
+        if (groovyTruth(privateKeyFile)) {
             File f = new File(privateKeyFile+".pub");
             if (f.exists()) {
                 log.debug("Trying to load "+LocationConfigKeys.PUBLIC_KEY_DATA.getName()+" from "+LocationConfigKeys.PRIVATE_KEY_FILE.getName() + " " + f.getAbsolutePath()+" for "+config.getDescription());

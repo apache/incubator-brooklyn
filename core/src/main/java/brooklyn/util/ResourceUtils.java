@@ -184,6 +184,17 @@ public class ResourceUtils {
         return url;
     }
     
+    public static String tidyFilePath(String path) {
+        String pathRelativeToHome = Strings.removeFromStart(path, "~/");
+        if (path.equals(pathRelativeToHome)) {
+            return path;
+        }
+        // allow ~ syntax for home dir
+        String result = System.getProperty("user.home")+"/"+pathRelativeToHome;
+        if (log.isDebugEnabled()) log.debug("quietly changing to "+path+" to "+result);
+        return result;
+    }
+    
     /** returns the protocol (e.g. http) if one appears to be specified, or else null;
      * 'protocol' here should consist of 2 or more _letters_ only followed by a colon
      * (2 required to prevent  c``:\xxx being treated as a url)
