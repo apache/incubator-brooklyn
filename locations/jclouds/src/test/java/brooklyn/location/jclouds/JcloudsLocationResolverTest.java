@@ -29,8 +29,8 @@ public class JcloudsLocationResolverTest {
         
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.identity", "aws-ec2-id");
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.credential", "aws-ec2-cred");
-        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.identity", "cloudservers-uk-id");
-        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.credential", "cloudservers-uk-cred");
+        brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.identity", "cloudservers-uk-id");
+        brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.credential", "cloudservers-uk-cred");
         
         managementContext = new LocalManagementContext(brooklynProperties);
     }
@@ -81,8 +81,7 @@ public class JcloudsLocationResolverTest {
         assertJcloudsEquals(resolve("jclouds:aws-ec2:us-east-1"), "aws-ec2", "us-east-1");
         
         // test with provider that has no region
-        // TODO This is being renamed to "rackspace-cloudservers-uk", so will break in a future version of jclouds!
-        assertJcloudsEquals(resolve("jclouds:cloudservers-uk"), "cloudservers-uk", null);
+        assertJcloudsEquals(resolve("jclouds:rackspace-cloudservers-uk"), "rackspace-cloudservers-uk", null);
     }
 
     // TODO Visual inspection test that it logs warnings

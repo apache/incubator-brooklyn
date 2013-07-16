@@ -67,11 +67,11 @@ public class RubyRepRackspaceLiveTest extends RubyRepIntegrationTest {
                 .configure("creationScriptContents", PostgreSqlIntegrationTest.CREATION_SCRIPT)
                 .configure("port", 9111));
 
-        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.imageNameRegex", osRegex);
-        brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
-        brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.imageId");
-        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.inboundPorts", new int[] {22, 9111});
-        Location loc = managementContext.getLocationRegistry().resolve("jclouds:cloudservers-uk");
+        brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.imageNameRegex", osRegex);
+        brooklynProperties.remove("brooklyn.jclouds.rackspace-cloudservers-uk.image-id");
+        brooklynProperties.remove("brooklyn.jclouds.rackspace-cloudservers-uk.imageId");
+        brooklynProperties.put("brooklyn.jclouds.rackspace-cloudservers-uk.inboundPorts", new int[] {22, 9111});
+        Location loc = managementContext.getLocationRegistry().resolve("jclouds:rackspace-cloudservers-uk");
         
         startInLocation(tapp, db1, db2, loc);
 
