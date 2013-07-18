@@ -249,7 +249,13 @@ public class Main {
 
             
             // Launch server
-            launcher.start();
+            try {
+                launcher.start();
+            } catch (Exception e) {
+                // Don't terminate the VM; leave it as-is until someone explicitly stops it
+                log.error("Error starting brooklyn app(s)", e);
+            }
+            
             BrooklynServerDetails server = launcher.getServerDetails();
             ManagementContext ctx = server.getManagementContext();
             
