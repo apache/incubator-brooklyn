@@ -13,17 +13,19 @@ define([
         template:_.template(SensorsHtml),
         sensorMetadata:{},
         refreshActive:true,
+
         events:{
-            'click .refresh':'refreshSensors',
+            'click .refresh': 'updateSensorsNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh'
         },
+
         initialize:function () {
-            this.$el.html(this.template({ }));
-            $.ajaxSetup({ async:false });
-            var that = this,
-                $table = this.$('#sensors-table');
-            that.table = ViewUtils.myDataTable($table, {
+            this.$el.html(this.template());
+            _.bindAll(this);
+
+            var $table = this.$('#sensors-table');
+            this.table = ViewUtils.myDataTable($table, {
                 "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
                     $(nRow).attr('id', aData[0])
                     $('td',nRow).each(function(i,v){
@@ -79,38 +81,41 @@ define([
                                  { "bVisible": false,  "aTargets": [ 0 ] }
                              ]            
             });
-            ViewUtils.addFilterEmptyButton(that.table);
-            ViewUtils.addAutoRefreshButton(that.table);
-            ViewUtils.addRefreshButton(that.table);
-            that.loadSensorMetadata(that);
-            that.updateSensorsPeriodically(that);
-            that.toggleFilterEmpty();
+            ViewUtils.addFilterEmptyButton(this.table);
+            ViewUtils.addAutoRefreshButton(this.table);
+            ViewUtils.addRefreshButton(this.table);
+            this.loadSensorMetadata();
+            this.updateSensorsPeriodically();
+            this.toggleFilterEmpty();
         },
-        render:function () {
-            this.updateSensorsNow(this);
+
+        render: function() {
+            this.updateSensorsNow();
             return this;
         },
-        toggleFilterEmpty:function () {
+
+        toggleFilterEmpty: function() {
             ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 3);
         },
-        toggleAutoRefresh:function () {
+
+        toggleAutoRefresh: function() {
             ViewUtils.toggleAutoRefresh(this);
         },
+
         enableAutoRefresh: function(isEnabled) {
             this.refreshActive = isEnabled
         },
-        refreshSensors:function () {
-            this.updateSensorsNow(this);  
-        },
-        updateSensorsPeriodically:function (that) {
-            var self = this;
-            that.callPeriodically("entity-sensors", function() {
-                if (self.refreshActive)
-                    self.updateSensorsNow(that);
+
+        updateSensorsPeriodically: function() {
+            this.callPeriodically("entity-sensors", function() {
+                if (this.refreshActive)
+                    this.updateSensorsNow();
             }, 3000);
         },
-        loadSensorMetadata: function(that) {
-            var url =  that.model.getLinkByName('sensors');
+
+        loadSensorMetadata: function() {
+            var url = this.model.getLinkByName('sensors'),
+                that = this;
             $.get(url, function (data) {
                 for (d in data) {
                     var sensor = data[d];
@@ -127,13 +132,15 @@ define([
                           type:sensor["type"]
                     }
                 }
-                that.updateSensorsNow(that);
+                that.updateSensorsNow();
                 that.table.find('*[rel="tooltip"]').tooltip();
             });
         },
-        updateSensorsNow:function (that) {
-            var url = that.model.getSensorUpdateUrl(),
-                $table = that.$('#sensors-table');
+
+        updateSensorsNow: function() {
+            var url = this.model.getSensorUpdateUrl(),
+                $table = this.$('#sensors-table'),
+                that = this;
             $.get(url, function (data) {
                 ViewUtils.updateMyDataTable($table, data, function(value, name) {
                     var metadata = that.sensorMetadata[name]
@@ -143,7 +150,7 @@ define([
                         // until the page is refreshed; don't think that's a bit problem -- mainly tooltips
                         // for now, we just return the partial value
                         return [name, {'name':name}, {}, value]
-                    } 
+                    }
                     return [name, metadata,
                         metadata["actions"],
                         value
