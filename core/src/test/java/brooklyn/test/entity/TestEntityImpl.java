@@ -132,7 +132,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     @Override
     public String toString() {
         String id = getId();
-        return "Entity["+id.substring(Math.max(0, id.length()-8))+"]";
+        return getEntityType().getSimpleName()+"["+id.substring(Math.max(0, id.length()-8))+"]";
     }
     
     // TODO add more mock methods
