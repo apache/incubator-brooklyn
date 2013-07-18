@@ -90,7 +90,6 @@ define([
         },
 
         render: function() {
-            this.updateSensorsNow();
             return this;
         },
 
