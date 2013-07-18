@@ -1105,6 +1105,10 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         storage.remove(id+"-children");
         storage.remove(id+"-locations");
         storage.remove(id+"-creationTime");
+        storage.remove(id+"-displayName");
+        storage.remove(id+"-config");
+        storage.remove(id+"-attributes");
+
     }
     
     /** For use by management plane, to invalidate all fields (e.g. when an entity is changing to being proxied) */
