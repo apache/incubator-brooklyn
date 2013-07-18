@@ -179,10 +179,10 @@ public class SshCliTool extends SshAbstractTool implements SshTool {
         // use "-f" because some systems have "rm" aliased to "rm -i"; use "< /dev/null" to guarantee doesn't hang
         String cmd = 
                 (runAsRoot ? CommonCommands.sudo(scriptPath) : scriptPath) + " < /dev/null"+separator+
-                "RESULT=$?"+separator+
-                (noExtraOutput==null || !noExtraOutput ? "echo Executed "+scriptPath+", result $RESULT"+separator : "")+ 
+                "RESULT=\\$?"+separator+
+                (noExtraOutput==null || !noExtraOutput ? "echo Executed "+scriptPath+", result \\$RESULT"+separator : "")+
                 "rm -f "+scriptPath+" < /dev/null"+separator+
-                "exit $RESULT";
+                "exit \\$RESULT";
         Integer result = sshExec(props, cmd);
         return result != null ? result : -1;
     }
