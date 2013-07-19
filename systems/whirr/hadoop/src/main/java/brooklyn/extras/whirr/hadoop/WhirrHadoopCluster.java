@@ -39,7 +39,7 @@ public interface WhirrHadoopCluster extends WhirrCluster {
 
     public void generateWhirrClusterRecipe();
     
-    public List getUserRecipeLines();
+    public List<String> getUserRecipeLines();
     
     public void addRecipeLine(String line);
 }

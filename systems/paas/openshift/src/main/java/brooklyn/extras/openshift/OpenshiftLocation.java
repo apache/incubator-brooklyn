@@ -1,23 +1,34 @@
-package brooklyn.extras.openshift
+package brooklyn.extras.openshift;
 
+import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
-import brooklyn.entity.basic.ConfigurableEntityFactory
-import brooklyn.entity.webapp.ElasticJavaWebAppService
-import brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation
-import brooklyn.location.AddressableLocation
-import brooklyn.location.Location
-import brooklyn.location.LocationRegistry
-import brooklyn.location.LocationResolver
-import brooklyn.location.basic.AbstractLocation
-import brooklyn.management.ManagementContext;
-import brooklyn.util.collections.MutableMap
 
-import com.google.common.base.Objects
-import com.google.common.base.Preconditions
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Map;
+
+import brooklyn.entity.basic.ConfigurableEntityFactory;
+import brooklyn.entity.webapp.ElasticJavaWebAppService;
+import brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation;
+import brooklyn.location.AddressableLocation;
+import brooklyn.location.Location;
+import brooklyn.location.LocationRegistry;
+import brooklyn.location.LocationResolver;
+import brooklyn.location.basic.AbstractLocation;
+import brooklyn.management.ManagementContext;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 class OpenshiftLocation extends AbstractLocation implements AddressableLocation, ElasticJavaWebAppServiceAwareLocation {
 
-    public OpenshiftLocation(Map properties = [:]) {
+    public OpenshiftLocation() {
+        super(MutableMap.of());
+    }
+    
+    public OpenshiftLocation(Map properties) {
         super(properties);
     }
 
@@ -31,16 +42,16 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
 
 
     public String getHostname() {
-        return getConfigBag().getStringKey("hostname") ?: "openshift.redhat.com";
+        return (String) elvis(getConfigBag().getStringKey("hostname"), "openshift.redhat.com");
     }
     
     public String getUrl() {
-        return getConfigBag().getStringKey("url") ?: "https://${hostname}/broker";
+        return (String) elvis(getConfigBag().getStringKey("url"), "https://"+getHostname()+"/broker");
     }
     
     public String getUser() {
-        return Preconditions.checkNotNull(
-            getConfigBag().getStringKey("user") ?: getConfigBag().getStringKey("username") ?: null);
+        String result = elvis(getConfigBag().getStringKey("user"), getConfigBag().getStringKey("username"), null);
+        return Preconditions.checkNotNull(result);
     }
 
     public String getUsername() {
@@ -48,8 +59,8 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
     }
         
     public String getPassword() {
-        return Preconditions.checkNotNull(
-            getConfigBag().getStringKey("password") ?: null);
+        String result = (String) elvis(getConfigBag().getStringKey("password"), null);
+        return Preconditions.checkNotNull(result);
     }
     
     public static class Resolver implements LocationResolver {
@@ -77,7 +88,7 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
         }
 
         protected Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
-            assert spec.equals(getPrefix()) : "location '"+getPrefix()+"' is not currently parametrisable (invalid '"+spec+"')"
+            assert spec.equals(getPrefix()) : "location '"+getPrefix()+"' is not currently parametrisable (invalid '"+spec+"')";
             //TODO could support multiple URL/endpoints?
             return new OpenshiftLocation(properties);
         }
@@ -98,7 +109,11 @@ class OpenshiftLocation extends AbstractLocation implements AddressableLocation,
 
     @Override
     public InetAddress getAddress() {
-        return InetAddress.getByName(hostname);
+        try {
+            return InetAddress.getByName(getHostname());
+        } catch (UnknownHostException e) {
+            throw Exceptions.propagate(e);
+        }
     }
 
 }

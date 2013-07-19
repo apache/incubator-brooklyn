@@ -2,8 +2,7 @@ package brooklyn.cli.commands;
 
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.EntitySpec;
-import brooklyn.rest.domain.ApplicationSummary.Status;
+import brooklyn.rest.domain.Status;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -131,7 +130,7 @@ public class DeployCommand extends BrooklynCommand {
         getOut().println("Waiting for application to start ("+appUri+")...");
         Status status = getApplicationStatus(appUri);
         Status previousStatus = null;
-        while (status != ApplicationSummary.Status.RUNNING && status != ApplicationSummary.Status.ERROR) {
+        while (status != Status.RUNNING && status != Status.ERROR) {
             if (status != previousStatus) {
                 getOut().println("Application status: "+status);
                 previousStatus = status;
@@ -141,7 +140,7 @@ public class DeployCommand extends BrooklynCommand {
             Thread.sleep(1000);
             status = getApplicationStatus(appUri);
         }
-        if (status == ApplicationSummary.Status.RUNNING) {
+        if (status == Status.RUNNING) {
             String path = appUri.getPath();
             getOut().println("The application has been deployed: "+path.substring(path.lastIndexOf("/")+1));
         } else {
@@ -176,7 +175,7 @@ public class DeployCommand extends BrooklynCommand {
         return catalogEntityName;
     }
 
-    private ApplicationSummary.Status getApplicationStatus(URI uri) throws IOException, InterruptedException, CommandExecutionException {
+    private Status getApplicationStatus(URI uri) throws IOException, InterruptedException, CommandExecutionException {
         WebResource webResource = getClient().resource(uri.toString());
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 
