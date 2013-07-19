@@ -19,6 +19,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.zookeeper.Zookeeper;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -34,6 +35,8 @@ public interface KafkaZookeeper extends Zookeeper, Kafka {
     /** The Kafka version, not the Zookeeper version. */
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = Kafka.SUGGESTED_VERSION;
+
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = Kafka.DOWNLOAD_URL;
 
     /** Location of the kafka configuration file template to be copied to the server. */
     @SetFromFlag("kafkaZookeeperConfig")

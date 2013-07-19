@@ -22,6 +22,7 @@ import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
@@ -63,7 +64,7 @@ public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Ka
 
     AttributeSensor<Long> BYTES_RECEIVED = Sensors.newLongSensor("kafka.broker.bytes.received", "Total bytes received");
     AttributeSensor<Long> BYTES_SENT = Sensors.newLongSensor("kafka.broker.bytes.sent", "Total bytes sent");
-
+    
     Integer getKafkaPort();
 
     Integer getBrokerId();

@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.zookeeper.AbstractZookeeperImpl;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.
@@ -26,6 +27,8 @@ import brooklyn.entity.zookeeper.AbstractZookeeperImpl;
 public class KafkaZookeeperImpl extends AbstractZookeeperImpl implements KafkaZookeeper {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaZookeeperImpl.class);
+
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = Kafka.DOWNLOAD_URL;
 
     public KafkaZookeeperImpl() {
     }

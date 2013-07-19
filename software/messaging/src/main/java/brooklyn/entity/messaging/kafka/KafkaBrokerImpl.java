@@ -28,6 +28,7 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.zookeeper.Zookeeper;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
@@ -42,6 +43,8 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
 
     private static final Logger log = LoggerFactory.getLogger(KafkaBrokerImpl.class);
     private static final ObjectName SOCKET_SERVER_STATS_MBEAN = JmxHelper.createObjectName("kafka:type=kafka.SocketServerStats");
+
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = Kafka.DOWNLOAD_URL;
 
     private volatile JmxFeed jmxFeed;
 
