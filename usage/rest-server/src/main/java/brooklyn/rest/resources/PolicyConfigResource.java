@@ -1,20 +1,22 @@
 package brooklyn.rest.resources;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.core.Response;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.policy.Policy;
 import brooklyn.rest.api.PolicyConfigApi;
 import brooklyn.rest.domain.PolicyConfigSummary;
 import brooklyn.rest.transform.PolicyTransformer;
+import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.flags.TypeCoercions;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Future;
 
 public class PolicyConfigResource extends AbstractBrooklynRestResource implements PolicyConfigApi {
 
@@ -27,7 +29,7 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource implement
 
     List<PolicyConfigSummary> result = Lists.newArrayList();
     for (ConfigKey<?> key : policy.getPolicyType().getConfigKeys()) {
-        result.add(PolicyTransformer.policyConfigSummary(entity, policy, key));
+        result.add(PolicyTransformer.policyConfigSummary(brooklyn(), entity, policy, key));
     }
     return result;
   }
@@ -41,7 +43,7 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource implement
     Map<ConfigKey<?>, Object> source = policy.getAllConfig();
     Map<String, Object> result = Maps.newLinkedHashMap();
     for (Map.Entry<ConfigKey<?>, Object> ek: source.entrySet()) {
-        result.put(ek.getKey().getName(), getValueForDisplay(policy, ek.getValue()));
+        result.put(ek.getKey().getName(), getStringValueForDisplay(brooklyn(), policy, ek.getValue()));
     }
     return result;
   }
@@ -52,9 +54,10 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource implement
     ConfigKey<?> ck = policy.getPolicyType().getConfigKey(configKeyName);
     if (ck == null) throw WebResourceUtils.notFound("Cannot find config key '%s' in policy '%s' of entity '%s'", configKeyName, policy, entityToken);
 
-    return getValueForDisplay(policy, policy.getConfig(ck));
+    return getStringValueForDisplay(brooklyn(), policy, policy.getConfig(ck));
   }
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public Response set(
            String application, String entityToken, String policyToken, String configKeyName, String value
@@ -68,18 +71,7 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource implement
       return Response.status(Response.Status.OK).build();
   }
 
-  // TODO Remove duplication from ConfigResource
-  private String getValueForDisplay(Policy policy, Object value) {
-    // currently everything converted to string, expanded if it is a "done" future
-    if (value instanceof Future) {
-        if (((Future<?>)value).isDone()) {
-            try {
-                value = ((Future<?>)value).get();
-            } catch (Exception e) {
-                value = ""+value+" (error evaluating: "+e+")";
-            }
-        }
-    }
-    return (value != null) ? value.toString() : null;
+  public static String getStringValueForDisplay(BrooklynRestResourceUtils utils, Policy policy, Object value) {
+    return utils.getStringValueForDisplay(value);
   }
 }

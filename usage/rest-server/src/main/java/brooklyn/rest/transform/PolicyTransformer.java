@@ -1,5 +1,8 @@
 package brooklyn.rest.transform;
 
+import java.net.URI;
+import java.util.Map;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
@@ -8,17 +11,16 @@ import brooklyn.policy.basic.Policies;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.PolicyConfigSummary;
 import brooklyn.rest.domain.PolicySummary;
-import com.google.common.collect.ImmutableMap;
-import org.slf4j.LoggerFactory;
+import brooklyn.rest.resources.PolicyConfigResource;
+import brooklyn.rest.util.BrooklynRestResourceUtils;
 
-import java.net.URI;
-import java.util.Map;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Converts from Brooklyn entities to restful API summary objects
  */
 public class PolicyTransformer {
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(PolicyTransformer.class);
+//    private static final org.slf4j.Logger log = LoggerFactory.getLogger(PolicyTransformer.class);
 
     public static PolicySummary policySummary(Entity entity, Policy policy) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();
@@ -37,15 +39,15 @@ public class PolicyTransformer {
         return new PolicySummary(policy.getId(), policy.getName(), ApplicationTransformer.statusFromLifecycle(Policies.getPolicyStatus(policy)), links);
     }
 
-    public PolicyConfigSummary policyConfigSummary(ApplicationSummary application, EntityLocal entity, Policy policy, ConfigKey<?> config) {
-        PolicyConfigSummary summary = policyConfigSummary(entity, policy, config);
+    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, ApplicationSummary application, EntityLocal entity, Policy policy, ConfigKey<?> config) {
+        PolicyConfigSummary summary = policyConfigSummary(utils, entity, policy, config);
 //        TODO
 //        if (!entity.getApplicationId().equals(application.getInstance().getId()))
 //            throw new IllegalStateException("Application "+application+" does not match app "+entity.getApplication()+" of "+entity);
         return summary;
     }
 
-    public static PolicyConfigSummary policyConfigSummary(EntityLocal entity, Policy policy, ConfigKey<?> config) {
+    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, EntityLocal entity, Policy policy, ConfigKey<?> config) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();
         String entityUri = applicationUri + "/entities/" + entity.getId();
         String policyUri = entityUri + "/policies/" + policy.getId();
@@ -57,7 +59,10 @@ public class PolicyTransformer {
                 .put("policy", URI.create(policyUri))
                 .build();
 
-        return new PolicyConfigSummary(config.getName(), config.getTypeName(), config.getDescription(), config.getDefaultValue(), false /* TODO boolean? */, links);
+        return new PolicyConfigSummary(config.getName(), config.getTypeName(), config.getDescription(), 
+                PolicyConfigResource.getStringValueForDisplay(utils, policy, config.getDefaultValue()), 
+                config.isReconfigurable(), 
+                links);
     }
 
 }

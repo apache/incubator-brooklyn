@@ -57,17 +57,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
   }
 
   private String getValueForDisplay(EntityLocal entity, Object value) {
-    // currently everything converted to string, expanded if it is a "done" future
-    if (value instanceof Future) {
-        if (((Future)value).isDone()) {
-            try {
-                value = ((Future)value).get();
-            } catch (Exception e) {
-                value = ""+value+" (error evaluating: "+e+")";
-            }
-        }
-    }
-    return (value != null) ? value.toString() : null;
+    return brooklyn().getStringValueForDisplay(value);
   }
 
 }

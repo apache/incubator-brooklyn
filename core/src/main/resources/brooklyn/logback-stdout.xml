@@ -2,7 +2,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d %-5level %msg%n</pattern>
+      <pattern>%d %-5level %msg%n%xEx{0}</pattern>
     </encoder>
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
         <level>INFO</level>

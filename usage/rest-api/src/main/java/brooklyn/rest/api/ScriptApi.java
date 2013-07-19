@@ -25,6 +25,7 @@ public interface ScriptApi {
     @SuppressWarnings("rawtypes")
     @POST
     @Path("/groovy")
+    @Consumes("application/text")
     @ApiOperation(value = "Execute a groovy script",
         responseClass = "brooklyn.rest.domain.SensorSummary")
     public ScriptExecutionSummary groovy(
