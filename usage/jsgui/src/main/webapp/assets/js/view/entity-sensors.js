@@ -77,7 +77,13 @@ define([
                                  },
                                  { // value
                                      "mRender": function ( data, type, row ) {
-                                         return Util.prep(Util.roundIfNumberToNumDecimalPlaces(data, 4))
+                                         var escaped = Util.escape(Util.roundIfNumberToNumDecimalPlaces(data, 4)),
+                                             sensorName = row[0],
+                                             openHint = that.getSensorActions(sensorName).open;
+                                         if (openHint) {
+                                             escaped = "<a href='"+openHint+"'>" + escaped + "</a>";
+                                         }
+                                         return escaped;
                                      },
                                      "aTargets": [ 3 ]
                                  },
