@@ -1,5 +1,6 @@
 package brooklyn.entity.nosql.mongodb;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -19,6 +20,10 @@ import java.util.concurrent.TimeUnit;
 public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBServerImpl.class);
+
+    static {
+        RendererHints.register(HTTP_INTERFACE_URL, new RendererHints.NamedActionWithUrl("Open"));
+    }
 
     private FunctionFeed serviceStats;
     private FunctionFeed replicaSetStats;
