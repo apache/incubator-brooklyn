@@ -5,12 +5,16 @@
  */
 define([
     "underscore", "jquery", "backbone", "brooklyn-utils",
-    "view/viewutils", "model/sensor-summary", "text!tpl/apps/sensors.html", 
+    "view/viewutils", "model/sensor-summary",
+    "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-name.html",
     "jquery-datatables", "datatables-extensions"
-], function (_, $, Backbone, Util, ViewUtils, SensorSummary, SensorsHtml) {
+], function (_, $, Backbone, Util, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
+
+    var sensorHtml = _.template(SensorsHtml),
+        sensorNameHtml = _.template(SensorNameHtml);
 
     var EntitySensorsView = Backbone.View.extend({
-        template:_.template(SensorsHtml),
+        template: sensorHtml,
         sensorMetadata:{},
         refreshActive:true,
 
@@ -24,7 +28,8 @@ define([
             this.$el.html(this.template());
             _.bindAll(this);
 
-            var $table = this.$('#sensors-table');
+            var $table = this.$('#sensors-table'),
+                that = this;
             this.table = ViewUtils.myDataTable($table, {
                 "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
                     $(nRow).attr('id', aData[0])
@@ -38,10 +43,9 @@ define([
                                  { // name (with tooltip)
                                      "mRender": function ( data, type, row ) {
                                          // name (column 1) should have tooltip title
-                                         return '<span class="sensor-name" rel="tooltip" title="<b>'+
-                                             Util.prep(data['description'])+'</b><br/>('+
-                                             Util.prep(data['type'])+')" data-placement="left">'+
-                                             Util.prep(data['name'])+'</span>';
+                                         var actions = that.getSensorActions(data.name);
+                                         var context = _.extend(data, {href: actions.json});
+                                         return sensorNameHtml(context);
                                      },
                                      "aTargets": [ 1 ]
                                  },
@@ -84,25 +88,39 @@ define([
             ViewUtils.addFilterEmptyButton(this.table);
             ViewUtils.addAutoRefreshButton(this.table);
             ViewUtils.addRefreshButton(this.table);
-            this.loadSensorMetadata();
-            this.updateSensorsPeriodically();
-            this.toggleFilterEmpty();
+            this.loadSensorMetadata()
+                .updateSensorsPeriodically()
+                .toggleFilterEmpty();
+            return this;
         },
 
         render: function() {
             return this;
         },
 
+        /**
+         * Returns the actions loaded to view.sensorMetadata[name].actions
+         * for the given name, or an empty object.
+         */
+        getSensorActions: function(sensorName) {
+            var allMetadata = this.sensorMetadata || {};
+            var metadata = allMetadata[sensorName] || {};
+            return metadata.actions || {}
+        },
+
         toggleFilterEmpty: function() {
             ViewUtils.toggleFilterEmpty(this.$('#sensors-table'), 3);
+            return this;
         },
 
         toggleAutoRefresh: function() {
             ViewUtils.toggleAutoRefresh(this);
+            return this;
         },
 
         enableAutoRefresh: function(isEnabled) {
             this.refreshActive = isEnabled
+            return this;
         },
 
         updateSensorsPeriodically: function() {
@@ -110,32 +128,40 @@ define([
                 if (this.refreshActive)
                     this.updateSensorsNow();
             }, 3000);
+            return this;
         },
 
+        /**
+         * Loads all information about an entity's sensors. Populates view.sensorMetadata object
+         * with a map of sensor names to description, actions and type (e.g. java.lang.Long).
+         */
         loadSensorMetadata: function() {
             var url = this.model.getLinkByName('sensors'),
                 that = this;
             $.get(url, function (data) {
-                for (d in data) {
-                    var sensor = data[d];
+                _.each(data, function(sensor) {
                     var actions = {};
-                    _.each(sensor["links"], function(v,k) {
+                    _.each(sensor.links, function(v, k) {
                         if (k.slice(0, 7) == "action:") {
                             actions[k.slice(7)] = v;
                         }
                     });
-                    that.sensorMetadata[sensor["name"]] = {
-                          name:sensor["name"],
-                          description:sensor["description"],
-                          actions:actions,
-                          type:sensor["type"]
+                    that.sensorMetadata[sensor.name] = {
+                        name: sensor.name,
+                        description: sensor.description,
+                        actions: actions,
+                        type: sensor.type
                     }
-                }
+                });
                 that.updateSensorsNow();
                 that.table.find('*[rel="tooltip"]').tooltip();
             });
+            return this;
         },
 
+        /**
+         * Loads current values for all sensors on an entity and updates sensors table.
+         */
         updateSensorsNow: function() {
             var url = this.model.getSensorUpdateUrl(),
                 $table = this.$('#sensors-table'),
@@ -156,6 +182,7 @@ define([
                     ];
                 });
             });
+            return this;
         }
     });
     return EntitySensorsView;
