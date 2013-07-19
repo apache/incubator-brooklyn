@@ -34,8 +34,7 @@ define([
                 "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
                     $(nRow).attr('id', aData[0])
                     $('td',nRow).each(function(i,v){
-                        if (i==1) $(v).attr('class','sensor-actions');
-                        if (i==2) $(v).attr('class','sensor-value');
+                        if (i==1) $(v).attr('class','sensor-value');
                     })
                     return nRow;
                 },
@@ -49,32 +48,6 @@ define([
                                      },
                                      "aTargets": [ 1 ]
                                  },
-                                 { // actions
-                                     "mRender": function ( actions, type, row ) {
-                                         var actionsText = ""
-                                         _.each(actions, function(v,k) {
-                                             var text=k
-                                             var icon=""
-                                             var title=""
-                                             if (k=="json") {
-                                                 icon="icon-file"
-                                                 title="JSON direct link"
-                                             }
-                                             if (k=="open") {
-                                                 icon="icon-home"
-                                                 title="Open URL"
-                                             }
-                                             if (icon!="") text=""
-                                             actionsText = actionsText +
-                                                "<a href='"+Util.prep(v)+"'"+
-                                                " class='"+Util.prep(icon)+"'"+
-                                             	" title='"+Util.prep(title)+"'>"+
-                                                 Util.prep(text)+"</a>\n";
-                                         })
-                                         return actionsText;
-                                     },
-                                     "aTargets": [ 2 ]
-                                 },
                                  { // value
                                      "mRender": function ( data, type, row ) {
                                          var escaped = Util.escape(Util.roundIfNumberToNumDecimalPlaces(data, 4)),
@@ -85,7 +58,7 @@ define([
                                          }
                                          return escaped;
                                      },
-                                     "aTargets": [ 3 ]
+                                     "aTargets": [ 2 ]
                                  },
                                  // ID in column 0 is standard (assumed in ViewUtils)
                                  { "bVisible": false,  "aTargets": [ 0 ] }
@@ -180,16 +153,14 @@ define([
                         // (currently if we have dynamic sensors, their metadata won't appear
                         // until the page is refreshed; don't think that's a bit problem -- mainly tooltips
                         // for now, we just return the partial value
-                        return [name, {'name':name}, {}, value]
+                        return [name, {'name':name}, value]
                     }
-                    return [name, metadata,
-                        metadata["actions"],
-                        value
-                    ];
+                    return [name, metadata, value];
                 });
             });
             return this;
         }
     });
+
     return EntitySensorsView;
 });
