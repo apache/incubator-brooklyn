@@ -51,10 +51,14 @@ public class DownloadSubstituters {
      * override the default substitutions listed above.
      */
     public static String substitute(DownloadRequirement req, String basevalue) {
-        return substitute(basevalue, getBasicSubscriptions(req));
+        return substitute(basevalue, getBasicSubstitutions(req));
     }
 
+    /** @deprecated use getBasicSubstitutions (method was misnamed) */
     public static Map<String,Object> getBasicSubscriptions(DownloadRequirement req) {
+        return getBasicSubstitutions(req);
+    }
+    public static Map<String,Object> getBasicSubstitutions(DownloadRequirement req) {
         EntityDriver driver = req.getEntityDriver();
         String addon = req.getAddonName();
         Map<String, ?> props = req.getProperties();
