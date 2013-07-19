@@ -21,6 +21,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpecs;
@@ -49,9 +51,12 @@ public class BindDnsServerTest {
         Entities.destroyAll(app.getManagementContext());
     }
 
-    @Test(groups = { "Integration" })
+    // TODO this needs to be run on a slave VM where we can edit the resolver configuration
+    @Test(groups = { "WIP", "Integration" })
     protected void testDnsEntity() throws Exception {
         BindDnsServer dns = app.createAndManageChild(EntitySpecs.spec(BindDnsServer.class));
+
+        app.start(ImmutableList.<Location>of(testLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.SERVICE_UP, true);
     }
