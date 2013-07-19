@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.core.Response;
 
@@ -42,6 +43,7 @@ import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
@@ -252,6 +254,7 @@ public class BrooklynRestResourceUtils {
                 MutableMap.of("locations", locations));
     }
 
+    @SuppressWarnings("unchecked")
     private brooklyn.entity.proxying.EntitySpec<? extends Entity> toCoreEntitySpec(brooklyn.rest.domain.EntitySpec spec) {
         String type = spec.getType();
         String name = spec.getName();
@@ -356,6 +359,29 @@ public class BrooklynRestResourceUtils {
             locationId = Strings.removeFromStart(locationId, "/v1/locations/");
         }
         return locationId;
+    }
+
+    public Object getObjectValueForDisplay(Object value) {
+        if (value==null) return null;
+        // currently everything converted to string, expanded if it is a "done" future
+        if (value instanceof Future) {
+            if (((Future<?>)value).isDone()) {
+                try {
+                    value = ((Future<?>)value).get();
+                } catch (Exception e) {
+                    value = ""+value+" (error evaluating: "+e+")";
+                }
+            }
+        }
+        
+        if (TypeCoercions.isPrimitiveOrBoxer(value.getClass())) return value;
+        return value.toString();
+    }
+
+    // currently everything converted to string, expanded if it is a "done" future
+    public String getStringValueForDisplay(Object value) {
+        if (value==null) return null;
+        return ""+getObjectValueForDisplay(value);
     }
 
 }
