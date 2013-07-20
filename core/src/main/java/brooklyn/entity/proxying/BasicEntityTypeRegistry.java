@@ -51,11 +51,12 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
             }
             result = getFromAnnotation(type);
             if (result == null) {
-                //might be nice to do intelligent detection here (but now we do it earlier in the process)
-//                if (!type.isInterface() && ((type.getModifiers() & Modifier.ABSTRACT)==0))
-//                    result = type;
-//                else
-                throw new IllegalArgumentException("Interface "+type+" is not annotated with @"+ImplementedBy.class.getSimpleName()+", and no implementation is registered");
+                if (!type.isInterface() && ((type.getModifiers() & Modifier.ABSTRACT)==0)) {
+                    // warning delivered later, in InternalEntityFactory
+                    result = type;
+                } else {
+                    throw new IllegalArgumentException("Interface "+type+" is not annotated with @"+ImplementedBy.class.getSimpleName()+", and no implementation is registered");
+                }
             }
             cache.put(type, result);
             return (Class<? extends T>) result;
