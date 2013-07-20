@@ -20,6 +20,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 
 public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements KafkaBrokerDriver {
 
@@ -55,6 +56,17 @@ public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements Kaf
     @Override
     public Integer getKafkaPort() {
         return getEntity().getAttribute(KafkaBroker.KAFKA_PORT);
+    }
+
+    @Override
+    public Map<String, String> getShellEnvironment() {
+        // kafka script sets JMX_PORT if it isn't set
+        return MutableMap.<String, String> builder()
+                .putAll(super.getShellEnvironment())
+                // seems odd to pass RMI port here, as it gets assigned to com.sun.mgmt.jmx.port in kafka-run-class.sh
+                // but RMI server port works, whereas JMX port does not
+                .put("JMX_PORT", String.valueOf(getRmiServerPort()))
+                .build();
     }
 
 }
