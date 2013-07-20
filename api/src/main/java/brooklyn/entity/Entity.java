@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
@@ -145,10 +146,16 @@ public interface Entity extends Serializable, Rebindable {
     <T> T getAttribute(AttributeSensor<T> sensor);
 
     /**
-     * Gets the given configuration value for this entity, which may be inherited from
-     * its parent.
+     * Gets the given configuration value for this entity, in the following order of preference:
+     * <li> value (including null) explicitly set on the entity
+     * <li> value (including null) explicitly set on an ancestor (inherited)
+     * <li> a default value (including null) on the best equivalent static key of the same name declared on the entity
+     *      (where best equivalence is defined as preferring a config key which extends another, via ConfigKe
+     * <li> a default value (including null) on the key itself
+     * <li> null
      */
     <T> T getConfig(ConfigKey<T> key);
+    <T> T getConfig(HasConfigKey<T> key);
     
     /**
      * Invokes the given effector, with the given parameters to that effector.
