@@ -16,13 +16,13 @@
 package brooklyn.entity.messaging.kafka;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.zookeeper.Zookeeper;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
@@ -35,7 +35,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Kafka {
 
     @SetFromFlag("startTimeout")
-    public static final ConfigKey<Integer> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
+    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, 300);
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = Kafka.SUGGESTED_VERSION;
