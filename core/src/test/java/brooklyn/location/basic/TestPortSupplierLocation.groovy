@@ -7,6 +7,7 @@ import org.testng.annotations.Test
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.proxying.EntitySpecs
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
@@ -29,7 +30,7 @@ public class TestPortSupplierLocation {
     
     @Test
     public void testObtainsPort() {
-        e.setAttribute(ps);
+        ConfigToAttributes.apply(e, ps);
         
         int p = e.getAttribute(ps);
         Assert.assertEquals(p, 1234);
@@ -61,7 +62,7 @@ public class TestPortSupplierLocation {
     public void testSimulatedRestrictedPermitted() {
         l.setPermittedPorts(PortRanges.fromString("1240+"));
         
-        e.setAttribute(ps);
+        ConfigToAttributes.apply(e, ps);
         int p = e.getAttribute(ps);
         Assert.assertEquals((int)p, 1240);
     }

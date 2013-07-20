@@ -9,9 +9,11 @@ import brooklyn.util.flags.TypeCoercions;
 
 /**
 * A {@link Sensor} describing an attribute that can be configured with inputs that are used to derive the final value.
-*
+* <p>
 * The {@link ConfigKey} will have the same name and description as the sensor but not necessarily the same type.
 * Conversion to set the sensor value from the config key must be supplied in a subclass.
+* <p>
+* {@link ConfigToAttributes#apply(EntityLocal, AttributeSensorAndConfigKey)} is useful to set the attribute from the sensor.
 */
 public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends BasicAttributeSensor<SensorType> 
         implements ConfigKey.HasConfigKey<ConfigType> {
@@ -57,7 +59,6 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
         if (sensorValue!=null) return sensorValue;
         
         ConfigType v = ((EntityLocal)e).getConfig(this);
-        if (v==null) v = configKey.getDefaultValue();
         try {
             return convertConfigToSensor(v, e);
         } catch (Throwable t) {
