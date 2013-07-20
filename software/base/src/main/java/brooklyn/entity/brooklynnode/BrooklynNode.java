@@ -31,7 +31,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             Map.class, "brooklynnode.copytorundir", "URLs of resources to be copied across to the server, giving the path they are to be copied to", MutableMap.of());
     
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(ConfigKeys.SUGGESTED_VERSION, "0.6.0-SNAPSHOT"); // BROOKLYN_VERSION
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(ConfigKeys.SUGGESTED_VERSION, "0.6.0-SNAPSHOT"); // BROOKLYN_VERSION
 
     // Takes presidence over downloadUrl, if non-null
     @SetFromFlag("distroUploadUrl")

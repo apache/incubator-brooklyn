@@ -3,7 +3,9 @@ package brooklyn.entity.messaging.qpid;
 import java.util.Map;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
@@ -29,7 +31,7 @@ public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, Amq
     public static final String PASSWD = "etc/passwd";
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "0.20");
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "0.20");
     
     @SetFromFlag("downloadUrl")
     public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(

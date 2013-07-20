@@ -4,6 +4,7 @@ import org.bson.BasicBSONObject;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
@@ -23,7 +24,7 @@ public interface MongoDBServer extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.2.4");
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.2.4");
 
     // e.g. http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.2.tgz,
     // http://fastdl.mongodb.org/osx/mongodb-osx-x86_64-2.2.2.tgz

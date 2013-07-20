@@ -3,6 +3,7 @@ package brooklyn.entity.basic.lifecycle;
 import java.util.List;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessDriver;
 import brooklyn.entity.basic.SoftwareProcessImpl;
@@ -38,7 +39,7 @@ public class MyEntityImpl extends SoftwareProcessImpl implements MyEntity {
     public static class MyEntitySshDriver extends JavaSoftwareProcessSshDriver implements MyEntityDriver {
 
         @SetFromFlag("version")
-        public static final ConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "0.1");
+        public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "0.1");
 
         public MyEntitySshDriver(MyEntityImpl entity, SshMachineLocation machine) {
             super(entity, machine);

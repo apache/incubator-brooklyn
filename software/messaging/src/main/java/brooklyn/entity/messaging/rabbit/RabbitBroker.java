@@ -3,6 +3,8 @@ package brooklyn.entity.messaging.rabbit;
 import java.util.Map;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpServer;
@@ -22,7 +24,7 @@ import com.google.common.annotations.Beta;
 public interface RabbitBroker extends SoftwareProcess, MessageBroker, AmqpServer {
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.8.7");
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.8.7");
 
     @SetFromFlag("downloadUrl")
     public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(

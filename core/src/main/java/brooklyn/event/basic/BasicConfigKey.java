@@ -110,7 +110,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
 
     /** @deprecated since 0.6.0; use {@link ConfigKeys#newConfigKeyWithDefault(ConfigKey, Object)} */
     public BasicConfigKey(ConfigKey<T> key, T defaultValue) {
-        log.warn("deprecated use of BasicConfigKey(exendedKey) constructor");
+        log.warn("deprecated use of BasicConfigKey(exendedKey) constructor, for "+key+" ("+defaultValue+")");
         this.description = key.getDescription();
         this.name = checkNotNull(key.getName(), "name");
         this.typeToken = checkNotNull(key.getTypeToken(), "type");

@@ -3,6 +3,7 @@ package brooklyn.entity.webapp;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
@@ -74,7 +75,7 @@ public interface ControlledDynamicWebAppCluster extends Entity, Startable, Resiz
     }
     
     @SetFromFlag("initialSize")
-    public static ConfigKey<Integer> INITIAL_SIZE = new BasicConfigKey<Integer>(Cluster.INITIAL_SIZE, 1);
+    public static ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 1);
 
     @SetFromFlag("controller")
     public static BasicAttributeSensorAndConfigKey<AbstractController> CONTROLLER = new BasicAttributeSensorAndConfigKey<AbstractController>(

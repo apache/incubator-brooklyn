@@ -4,9 +4,11 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJava;
@@ -14,7 +16,6 @@ import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
@@ -40,7 +41,7 @@ public interface KarafContainer extends SoftwareProcess, UsesJava, UsesJmx {
     public static final MethodEffector<Void> UPDATE_SERVICE_PROPERTIES = new MethodEffector<Void>(KarafContainer.class, "updateServiceProperties");
 
     @SetFromFlag("version")
-    public static final BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(
             SoftwareProcess.SUGGESTED_VERSION, "2.3.0");
 
     @SetFromFlag("downloadUrl")

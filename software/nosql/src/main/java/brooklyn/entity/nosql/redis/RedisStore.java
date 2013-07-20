@@ -24,7 +24,7 @@ public interface RedisStore extends SoftwareProcess, DataStore {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "2.6.7");
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.6.7");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(

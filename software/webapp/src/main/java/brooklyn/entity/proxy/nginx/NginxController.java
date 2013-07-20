@@ -5,6 +5,7 @@ import java.util.Map;
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.AbstractController;
@@ -43,8 +44,8 @@ public interface NginxController extends AbstractController, HasShortName {
             new MethodEffector<Void>(NginxController.class, "getCurrentConfiguration");
     
     @SetFromFlag("version")
-    BasicConfigKey<String> SUGGESTED_VERSION =
-        new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "1.3.7");
+    ConfigKey<String> SUGGESTED_VERSION =
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.3.7");
 
     @SetFromFlag("stickyVersion")
     ConfigKey<String> STICKY_VERSION =

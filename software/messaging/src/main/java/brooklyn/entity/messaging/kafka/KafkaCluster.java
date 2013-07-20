@@ -59,7 +59,7 @@ public interface KafkaCluster extends Entity, Startable, Resizable, Group  {
     ConfigKey<Integer> START_TIMEOUT = ConfigKeys.START_TIMEOUT;
 
     @SetFromFlag("initialSize")
-    ConfigKey<Integer> INITIAL_SIZE = new BasicConfigKey<Integer>(Cluster.INITIAL_SIZE, 1);
+    ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 1);
 
     /** Zookeeper for the cluster. If null a default be will created. */
     @SetFromFlag("zookeeper")
