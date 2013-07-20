@@ -2,6 +2,7 @@ package brooklyn.event.basic;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -36,8 +37,8 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
 
     public AttributeSensorAndConfigKey(AttributeSensorAndConfigKey<ConfigType,SensorType> orig, ConfigType defaultValue) {
         super(orig.getTypeToken(), orig.getName(), orig.getDescription());
-        configKey = new BasicConfigKey<ConfigType>(orig.configKey.getTypeToken(), orig.getName(), orig.getDescription(), 
-            TypeCoercions.coerce(defaultValue, orig.configKey.getTypeToken()));
+        configKey = ConfigKeys.newConfigKeyWithDefault(orig.configKey, 
+                TypeCoercions.coerce(defaultValue, orig.configKey.getTypeToken()));
     }
 
     public ConfigKey<ConfigType> getConfigKey() { return configKey; }

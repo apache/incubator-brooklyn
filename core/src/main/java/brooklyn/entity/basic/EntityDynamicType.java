@@ -3,7 +3,12 @@ package brooklyn.entity.basic;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -18,12 +23,17 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.event.Sensor;
+import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /** This is the actual type of an entity instance at runtime,
@@ -41,21 +51,20 @@ public class EntityDynamicType {
     private volatile String simpleName;
     
     /** 
-     * Effectors on this entity.
-     * TODO support overloading; requires not using a map keyed off method name.
+     * Effectors on this entity, by name.
      */
-    private final ConcurrentMap<String, Effector<?>> effectors = new ConcurrentHashMap<String, Effector<?>>();
+    // TODO support overloading; requires not using a map keyed off method name.
+    private final Map<String, Effector<?>> effectors = new ConcurrentHashMap<String, Effector<?>>();
 
     /** 
-     * Map of sensors on this entity by name.
+     * Map of sensors on this entity, by name.
      */
     private final ConcurrentMap<String,Sensor<?>> sensors = new ConcurrentHashMap<String, Sensor<?>>();
 
     /** 
-     * Map of config keys on this entity by name.
+     * Map of config keys (and their fields) on this entity, by name.
      */
-    private final ConcurrentMap<String,ConfigKey<?>> configKeys = new ConcurrentHashMap<String, ConfigKey<?>>();
-    private final ConcurrentMap<String,Field> configKeyFields = new ConcurrentHashMap<String, Field>();
+    private final Map<String,FieldAndValue<ConfigKey<?>>> configKeys = new ConcurrentHashMap<String, FieldAndValue<ConfigKey<?>>>();
 
     private volatile EntityTypeSnapshot snapshot;
     private final AtomicBoolean snapshotValid = new AtomicBoolean(false);
@@ -80,7 +89,7 @@ public class EntityDynamicType {
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} sensors: {}", id, Joiner.on(", ").join(sensors.keySet()));
         
-        buildConfigKeys(clazz, entity, configKeys, configKeyFields);
+        buildConfigKeys(clazz, entity, configKeys);
         if (LOG.isTraceEnabled())
             LOG.trace("Entity {} config keys: {}", id, Joiner.on(", ").join(configKeys.keySet()));
 
@@ -141,7 +150,7 @@ public class EntityDynamicType {
      * ConfigKeys available on this entity.
      */
     public Map<String,ConfigKey<?>> getConfigKeys() {
-        return Collections.unmodifiableMap(configKeys);
+        return Collections.unmodifiableMap(value(configKeys));
     }
 
     /**
@@ -197,17 +206,17 @@ public class EntityDynamicType {
      * ConfigKeys available on this entity.
      */
     public ConfigKey<?> getConfigKey(String keyName) { 
-        return configKeys.get(keyName); 
+        return value(configKeys.get(keyName)); 
     }
 
     /** field where a config key is defined, for use getting annotations. note annotations are not inherited. */
     public Field getConfigKeyField(String keyName) { 
-        return configKeyFields.get(keyName); 
+        return field(configKeys.get(keyName)); 
     }
 
     private EntityTypeSnapshot refreshSnapshot() {
         if (snapshotValid.compareAndSet(false, true)) {
-            snapshot = new EntityTypeSnapshot(name, simpleName, configKeys, sensors, effectors.values());
+            snapshot = new EntityTypeSnapshot(name, simpleName, value(configKeys), sensors, effectors.values());
         }
         return snapshot;
     }
@@ -304,11 +313,15 @@ public class EntityDynamicType {
     
     /**
      * Finds the config keys defined on the entity's class, statics and optionally any non-static (discouraged).
+     * Prefers keys which overwrite other keys, and prefers keys which are lower in the hierarchy;
+     * logs warnings if there are two conflicting keys which don't have an overwriting relationship.
      */
     protected static void buildConfigKeys(Class<? extends Entity> clazz, AbstractEntity optionalEntity, 
-            Map<String, ConfigKey<?>> configKeys, Map<String, Field> configKeyFields) {
+            Map<String, FieldAndValue<ConfigKey<?>>> configKeys) {
+        ListMultimap<String,FieldAndValue<ConfigKey<?>>> configKeysAll = 
+                ArrayListMultimap.<String, FieldAndValue<ConfigKey<?>>>create();
         try {
-            for (Field f : clazz.getFields()) {
+            for (Field f : FlagUtils.getAllFields(clazz)) {
                 boolean isConfigKey = ConfigKey.class.isAssignableFrom(f.getType());
                 if (!isConfigKey) {
                     if (!HasConfigKey.class.isAssignableFrom(f.getType())) {
@@ -326,30 +339,111 @@ public class EntityDynamicType {
                 if (k==null) {
                     LOG.warn("no value defined for config key field (skipping): "+f);
                 } else {
-                    Field alternativeField = configKeyFields.get(k.getName());
-                    // Allow overriding config keys (e.g. to set default values) when there is an assignable-from relationship between classes
-                    Field definitiveField = alternativeField != null ? Reflections.inferSubbestField(alternativeField, f) : f;
-                    boolean skip = false;
-                    if (definitiveField != f) {
-                        // If they refer to the _same_ instance, just keep the one we already have
-                        if (alternativeField.get(optionalEntity) == f.get(optionalEntity)) skip = true;
+                    configKeysAll.put(k.getName(), new FieldAndValue<ConfigKey<?>>(f, k));
+                }
+            }
+            LinkedHashSet<String> keys = new LinkedHashSet<String>(configKeysAll.keys());
+            for (String kn: keys) {
+                List<FieldAndValue<ConfigKey<?>>> kk = Lists.newArrayList(configKeysAll.get(kn));
+                if (kk.size()>1) {
+                    // remove anything which extends another value in the list
+                    for (FieldAndValue<ConfigKey<?>> k: kk) {
+                        ConfigKey<?> key = value(k);
+                        if (key instanceof BasicConfigKeyOverwriting) {                            
+                            ConfigKey<?> parent = ((BasicConfigKeyOverwriting<?>)key).getParentKey();
+                            // find and remove the parent from consideration
+                            for (FieldAndValue<ConfigKey<?>> k2: kk) {
+                                if (value(k2) == parent)
+                                    configKeysAll.remove(kn, k2);
+                            }
+                        }
                     }
-                    if (skip) {
-                        //nothing
-                    } else if (definitiveField == f) {
-                        configKeys.put(k.getName(), k);
-                        configKeyFields.put(k.getName(), f);
-                    } else if (definitiveField != null) {
-                        if (LOG.isDebugEnabled()) LOG.debug("multiple definitions for config key {} on {}; preferring that in sub-class: {} to {}", new Object[] {
-                                k.getName(), optionalEntity!=null ? optionalEntity : clazz, alternativeField, f});
-                    } else if (definitiveField == null) {
-                        LOG.warn("multiple definitions for config key {} on {}; preferring {} to {}", new Object[] {
-                                k.getName(), optionalEntity!=null ? optionalEntity : clazz, alternativeField, f});
+                    kk = Lists.newArrayList(configKeysAll.get(kn));
+                }
+                // multiple keys, not overwriting; if their values are the same then we don't mind
+                FieldAndValue<ConfigKey<?>> best = null;
+                for (FieldAndValue<ConfigKey<?>> k: kk) {
+                    if (best==null) {
+                        best=k;
+                    } else {
+                        Field lower = Reflections.inferSubbestField(k.field, best.field);
+                        ConfigKey<? extends Object> lowerV = lower==null ? null : lower.equals(k.field) ? k.value : best.value;
+                        if (best.value == k.value) {
+                            // same value doesn't matter which we take (but take lower if there is one)
+                            if (LOG.isDebugEnabled()) 
+                                LOG.debug("multiple definitions for config key {} <String><String><String>on {}; same value {}; " +
+                                        "from {} and {}, preferring {}", 
+                                        new Object[] {
+                                        best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
+                                        best.value.getDefaultValue(),
+                                        k.field, best.field, lower});
+                            best = new FieldAndValue<ConfigKey<?>>(lower!=null ? lower : best.field, best.value);
+                        } else if (lower!=null) {
+                            // different value, but one clearly lower (in type hierarchy)
+                            if (LOG.isDebugEnabled()) 
+                                LOG.debug("multiple definitions for config key {} on {}; " +
+                                        "from {} and {}, preferring lower {}, value {}", 
+                                        new Object[] {
+                                        best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
+                                        k.field, best.field, lower,
+                                        lowerV.getDefaultValue() });
+                            best = new FieldAndValue<ConfigKey<?>>(lower, lowerV);
+                        } else {
+                            // different value, neither one lower than another in hierarchy
+                            LOG.warn("multiple ambiguous definitions for config key {} on {}; " +
+                                    "from {} and {}, values {} and {}; " +
+                                    "keeping latter (arbitrarily)", 
+                                    new Object[] {
+                                    best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
+                                    k.field, best.field, 
+                                    k.value.getDefaultValue(), best.value.getDefaultValue() });
+                            // (no change)
+                        }
                     }
+                }
+                if (best==null) {
+                    // shouldn't happen
+                    LOG.error("Error - no matching config key from "+kk+" even though had config key name "+kn);
+                    continue;
+                } else {
+                    configKeys.put(best.value.getName(), best);
                 }
             }
         } catch (IllegalAccessException e) {
             throw Exceptions.propagate(e);
         }
     }
+    
+    private static class FieldAndValue<V> {
+        public final Field field;
+        public final V value;
+        public FieldAndValue(Field field, V value) {
+            this.field = field;
+            this.value = value;
+        }
+    }
+    
+    private static <V> V value(FieldAndValue<V> fv) {
+        if (fv==null) return null;
+        return fv.value;
+    }
+    
+    private static Field field(FieldAndValue<?> fv) {
+        if (fv==null) return null;
+        return fv.field;
+    }
+
+    private static <V> Collection<V> value(Collection<FieldAndValue<V>> fvs) {
+        List<V> result = new ArrayList<V>();
+        for (FieldAndValue<V> fv: fvs) result.add(value(fv));
+        return result;
+    }
+
+    private static <K,V> Map<K,V> value(Map<K,FieldAndValue<V>> fvs) {
+        Map<K,V> result = new LinkedHashMap<K,V>();
+        for (K key: fvs.keySet())
+            result.put(key, value(fvs.get(key)));
+        return result;
+    }
+
 }

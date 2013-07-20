@@ -7,7 +7,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.Tasks;
@@ -20,6 +24,8 @@ import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializable {
+    
+    private static final Logger log = LoggerFactory.getLogger(BasicConfigKey.class);
     private static final long serialVersionUID = -1762014059150215376L;
     
     private static final Splitter dots = Splitter.on('.');
@@ -102,7 +108,9 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.reconfigurable = false;
     }
 
+    /** @deprecated since 0.6.0; use {@link ConfigKeys#newConfigKeyWithDefault(ConfigKey, Object)} */
     public BasicConfigKey(ConfigKey<T> key, T defaultValue) {
+        log.warn("deprecated use of BasicConfigKey(exendedKey) constructor");
         this.description = key.getDescription();
         this.name = checkNotNull(key.getName(), "name");
         this.typeToken = checkNotNull(key.getTypeToken(), "type");
@@ -199,4 +207,23 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         return Tasks.resolveValue(v, type, exec, "config "+name);
     }
 
+    /** used to record a key which overwrites another; only needed at disambiguation time 
+     * if a class declares a key and an equivalent one (often inherited) which overwrites it;
+     * see {@link brooklyn.entity.basic.ConfigEntityInheritanceTest}, and uses of this class, for more explanation.
+     */
+    public static class BasicConfigKeyOverwriting<T> extends BasicConfigKey<T> {
+        private static final long serialVersionUID = -3458116971918128018L;
+
+        private final ConfigKey<T> parentKey;
+        
+        public BasicConfigKeyOverwriting(ConfigKey<T> key, T defaultValue) {
+            super(checkNotNull(key.getTypeToken(), "type"), checkNotNull(key.getName(), "name"), 
+                    key.getDescription(), defaultValue);
+            parentKey = key;
+        }
+        
+        public ConfigKey<T> getParentKey() {
+            return parentKey;
+        }
+    }
 }
