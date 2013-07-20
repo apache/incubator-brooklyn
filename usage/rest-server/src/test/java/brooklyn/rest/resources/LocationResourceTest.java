@@ -11,16 +11,16 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
 
-import brooklyn.test.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
-import brooklyn.test.TestUtils;
+import brooklyn.test.Asserts;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -57,6 +57,9 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
     assertThat(location.getConfig().get("identity"), is("bob"));
     assertFalse(location.getConfig().containsKey("CR3dential"));
     Assert.assertTrue(addedLocationUri.toString().startsWith("/v1/locations/"));
+    
+    JcloudsLocation l = (JcloudsLocation) getManagementContext().getLocationRegistry().resolve(location.getId());
+    Assert.assertEquals(l.getProvider(), "aws-ec2");
   }
 
   @Test(dependsOnMethods={"testAddNewLocation"})

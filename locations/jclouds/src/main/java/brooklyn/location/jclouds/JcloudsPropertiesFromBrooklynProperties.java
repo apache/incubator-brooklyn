@@ -80,7 +80,9 @@ public class JcloudsPropertiesFromBrooklynProperties {
     private static String getProviderName(String providerOrApi, String locationName, Map<String, Object> properties) {
         String provider = providerOrApi;
         if(!Strings.isNullOrEmpty(locationName)) {
-            provider = getProviderFromNamedProperty(locationName, properties);
+            String providerDefinition = (String) properties.get(String.format("brooklyn.location.named.%s", locationName));
+            if (providerDefinition!=null)
+                provider = getProviderFromDefinition(providerDefinition);
         }
         return provider;
     }
@@ -105,8 +107,8 @@ public class JcloudsPropertiesFromBrooklynProperties {
         return ConfigUtils.filterForPrefixAndStrip(properties, prefix).asMapWithStringKeys();
     }
 
-    private static String getProviderFromNamedProperty(String locationName, Map<String, Object> properties) {
-        return Iterables.get(Splitter.on(":").split((String) properties.get(String.format("brooklyn.location.named.%s", locationName))), 1);
+    private static String getProviderFromDefinition(String definition) {
+        return Iterables.get(Splitter.on(":").split(definition), 1);
     }
 
     private static void warnOfDeprecated(Map<String, Object> properties) {
