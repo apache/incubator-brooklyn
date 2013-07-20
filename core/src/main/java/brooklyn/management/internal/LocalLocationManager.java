@@ -97,7 +97,9 @@ public class LocalLocationManager implements LocationManager {
         }
         Location parent = e.getParent();
         if (parent != null && !managementContext.getLocationManager().isManaged(parent)) {
-            throw new IllegalStateException("Can't manage "+e+" because its parent is not yet managed ("+parent+")");
+//            throw new IllegalStateException("Can't manage "+e+" because its parent is not yet managed ("+parent+")");
+            log.warn("Parent location "+parent+" of "+e+" is not managed; attempting to manage it (in future this may be disallowed)");
+            manage(parent);
         }
         
         recursively(e, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
