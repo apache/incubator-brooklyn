@@ -18,6 +18,8 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Predicate;
+
 @SuppressWarnings({"unchecked"})
 public class ConfigUtils {
 
@@ -53,6 +55,16 @@ public class ConfigUtils {
     public static BrooklynProperties loadFromFile(String file) {
         BrooklynProperties result = BrooklynProperties.Factory.newEmpty();
         if (file!=null) result.addFrom(new File(file));
+        return result;
+    }
+    
+    public static BrooklynProperties filterFor(BrooklynProperties properties, Predicate<? super String> filter) {
+        BrooklynProperties result = BrooklynProperties.Factory.newEmpty();
+        for (String k: (Collection<String>)properties.keySet()) {
+            if (filter.apply(k)) {
+                result.put(k, properties.get(k));
+            }
+        }
         return result;
     }
     

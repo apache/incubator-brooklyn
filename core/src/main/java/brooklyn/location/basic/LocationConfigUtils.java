@@ -4,16 +4,15 @@ import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.config.ConfigBag;
 
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.io.Files;
@@ -23,10 +22,6 @@ public class LocationConfigUtils {
     private static final Logger log = LoggerFactory.getLogger(LocationConfigUtils.class);
     
     public static String getKeyData(ConfigBag config, ConfigKey<String> dataKey, ConfigKey<String> fileKey) {
-        return getKeyData(config, dataKey, fileKey, true);
-    }
-    
-    public static String getKeyData(ConfigBag config, ConfigKey<String> dataKey, ConfigKey<String> fileKey, boolean alsoCheckHyphen) {
         boolean unused = config.isUnused(dataKey);
         String data = config.get(dataKey);
         if (groovyTruth(data) && !unused) 
@@ -50,22 +45,9 @@ public class LocationConfigUtils {
                         (fileTidied.equals(file) ? "" : "; converted to "+fileTidied)+
                         "); may fail provisioning "+config.getDescription());
             }
-            return data;
         }
         
-        if (alsoCheckHyphen) {
-            // since 0.6.0 -- we warn on checking legacy lower-case values
-            data = getKeyData(config, 
-                    ConfigKeys.convert(dataKey, CaseFormat.LOWER_CAMEL, CaseFormat.LOWER_HYPHEN),
-                    ConfigKeys.convert(fileKey, CaseFormat.LOWER_CAMEL, CaseFormat.LOWER_HYPHEN),
-                    false);
-            if (data!=null) {
-                log.warn("Deprecated use of hyphenated key settings ("+dataKey+" / "+fileKey+")");
-                return data;
-            }
-        }
-        
-        return null;
+        return data;
     }
     
     public static String getPrivateKeyData(ConfigBag config) {
@@ -108,8 +90,8 @@ public class LocationConfigUtils {
         T value2 = getConfigCheckingDeprecatedAlternativesInternal(configBag, preferredKey, deprecatedKeys);
         if (!Objects.equal(value1, value2)) {
             // points to a bug in one of the get-with-deprecation methods
-            log.warn("Deprecated getConfig with deprecated keys "+deprecatedKeys+" gets different value with " +
-            		"new strategy ("+value1+") and old ("+value2+"); preferring old value for now, but this behaviour will change");
+            log.warn("Deprecated getConfig with deprecated keys "+Arrays.toString(deprecatedKeys)+" gets different value with " +
+            		"new strategy "+preferredKey+" ("+value1+") and old ("+value2+"); preferring old value for now, but this behaviour will change");
             return value2;
         }
         return value1;
@@ -117,34 +99,48 @@ public class LocationConfigUtils {
     
     private static <T> T getConfigCheckingDeprecatedAlternativesInternal(ConfigBag configBag, ConfigKey<T> preferredKey,
             ConfigKey<?> ...deprecatedKeys) {
+        ConfigKey<?> keyProvidingValue = null;
         T value = null;
-        if (configBag.containsKey(preferredKey))
+        boolean found = false;
+        if (configBag.containsKey(preferredKey)) {
             value = configBag.get(preferredKey);
+            found = true;
+            keyProvidingValue = preferredKey;
+        }
+        
         for (ConfigKey<?> deprecatedKey: deprecatedKeys) {
             T altValue = null;
-            if (configBag.containsKey(deprecatedKey))
+            boolean altFound = false;
+            if (configBag.containsKey(deprecatedKey)) {
                 altValue = (T) configBag.get(deprecatedKey);
-            if (altValue!=null) {
-                if (value!=null) {
-                    if (value.equals(altValue)) {
-                        // fine -- nothing
+                altFound = true;
+                
+                if (altFound) {
+                    if (found) {
+                        if (Objects.equal(value, altValue)) {
+                            // fine -- nothing
+                        } else {
+                            log.warn("Detected deprecated key "+deprecatedKey+" with value "+altValue+" used in addition to "+keyProvidingValue+" " +
+                            		"with value "+value+" for "+configBag.getDescription()+"; ignoring");
+                            configBag.remove(deprecatedKey);
+                        }
                     } else {
-                        log.warn("Detected deprecated key "+deprecatedKey+" with value "+altValue+" used in addition to "+preferredKey+" " +
-                        		"with value "+value+" for "+configBag.getDescription()+"; ignoring");
+                        log.warn("Detected deprecated key "+deprecatedKey+" with value "+altValue+" used instead of recommended "+preferredKey+"; " +
+                                "promoting to preferred key status; will not be supported in future versions");
+                        configBag.put(preferredKey, altValue);
                         configBag.remove(deprecatedKey);
+                        value = altValue;
+                        found = true;
+                        keyProvidingValue = deprecatedKey;
                     }
-                } else {
-                    log.warn("Detected deprecated key "+deprecatedKey+" with value "+altValue+" used instead of recommended "+preferredKey+"; " +
-                            "promoting to preferred key status");
-                    configBag.put(preferredKey, altValue);
-                    configBag.remove(deprecatedKey);
-                    value = altValue;
                 }
             }
         }
-        if (value==null)
-            value = configBag.get(preferredKey);
-        return value;
+        
+        if (found) {
+            return value;
+        } else {
+            return configBag.get(preferredKey); // get the default
+        }
     }
-
 }

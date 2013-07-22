@@ -11,6 +11,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 
 /**
@@ -200,50 +201,63 @@ public class ConfigBag {
     /** returns the value for the first key in the list for which a value is set,
      * warning if any of the deprecated keys have a value which is different to that set on the first set current key
      * (including warning if a deprecated key has a value but no current key does) */
-    public Object getWithDeprecation(ConfigKey<?> currentKeysInOrderOfPreference[], ConfigKey<?> ...deprecatedKeys) {
-        ConfigKey<?> deprecatedKeyProvidingValue = null;
-        Object result = null;
-        for (ConfigKey<?> deprecatedKey: deprecatedKeys) {
-            Object x = get(deprecatedKey);
-            if (x!=null) {
-                if (result!=null) {
-                    if (!result.equals(x)) {
-                        log.warn("Conflicting values in deprecated keys, ignoring "+deprecatedKey+" value "+x+
-                                " conflicting with "+deprecatedKeyProvidingValue+" value "+result);
-                    } // if value the same, just ignore
-                } else {
-                    // new value, from deprecated key
-                    result = x;
-                    deprecatedKeyProvidingValue = deprecatedKey;
-                }
-            }
-        }
+    public Object getWithDeprecation(ConfigKey<?>[] currentKeysInOrderOfPreference, ConfigKey<?> ...deprecatedKeys) {
+        // Get preferred key (or null)
         ConfigKey<?> preferredKeyProvidingValue = null;
-        Object x = null;
+        Object result = null;
+        boolean found = false;
         for (ConfigKey<?> key: currentKeysInOrderOfPreference) {
             if (containsKey(key)) {
                 preferredKeyProvidingValue = key;
-                x = get(preferredKeyProvidingValue);
+                result = get(preferredKeyProvidingValue);
+                found = true;
                 break;
             }
         }
-        if (x!=null) {
-            if (result!=null) {
-                if (!result.equals(x)) {
-                    log.warn("Conflicting value from deprecated key " +deprecatedKeyProvidingValue+" value "+result+
-                            ", using preferred key "+preferredKeyProvidingValue+" value "+x);
-                } else {
-                    // preferred and deprecated keys give the same value, no need to log
-                }
-            } else {
-                // new value from preferred key (no deprecated keys used), no need to log
+        
+        // Check if any deprecated keys are set
+        ConfigKey<?> deprecatedKeyProvidingValue = null;
+        Object deprecatedResult = null;
+        boolean foundDeprecated = false;
+        for (ConfigKey<?> deprecatedKey: deprecatedKeys) {
+            Object x = null;
+            boolean foundX = false;
+            if (containsKey(deprecatedKey)) {
+                x = get(deprecatedKey);
+                foundX = true;
             }
-            return x;
-        } else {
-            // deprecated key only
-            log.warn("Deprecated key " +deprecatedKeyProvidingValue+" detected (supplying value "+result+"), "+
-                    ", use preferred key '"+preferredKeyProvidingValue+"' instead");
+            if (foundX) {
+                if (found) {
+                    if (!Objects.equal(result, x)) {
+                        log.warn("Conflicting value from deprecated key " +deprecatedKey+", value "+x+
+                                "; using preferred key "+preferredKeyProvidingValue+" value "+result);
+                    } else {
+                        log.info("Deprecated key " +deprecatedKey+" ignored; has same value as preferred key "+preferredKeyProvidingValue+" ("+result+")");
+                    }
+                } else if (foundDeprecated) {
+                    if (!Objects.equal(result, x)) {
+                        log.warn("Conflicting values from deprecated keys: using " +deprecatedKeyProvidingValue+" instead of "+deprecatedKey+
+                                " (value "+deprecatedResult+" instead of "+x+")");
+                    } else {
+                        log.info("Deprecated key " +deprecatedKey+" ignored; has same value as other deprecated key "+preferredKeyProvidingValue+" ("+deprecatedResult+")");
+                    }
+                } else {
+                    // new value, from deprecated key
+                    log.warn("Deprecated key " +deprecatedKey+" detected (supplying value "+x+"), "+
+                            "; recommend changing to preferred key '"+currentKeysInOrderOfPreference[0]+"'; this will not be supported in future versions");
+                    deprecatedResult = x;
+                    deprecatedKeyProvidingValue = deprecatedKey;
+                    foundDeprecated = true;
+                }
+            }
+        }
+        
+        if (found) {
             return result;
+        } else if (foundDeprecated) {
+            return deprecatedResult;
+        } else {
+            return currentKeysInOrderOfPreference[0].getDefaultValue();
         }
     }
 
