@@ -9,6 +9,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
@@ -16,8 +20,10 @@ import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.KeyValueParser;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -33,12 +39,17 @@ import com.google.common.collect.Sets;
  * @author alex, aled
  */
 public class LocalhostResolver implements LocationResolver {
+
+    private static final Logger log = LoggerFactory.getLogger(LocalhostResolver.class);
     
     public static final String LOCALHOST = "localhost";
     
     private static final Pattern PATTERN = Pattern.compile("("+LOCALHOST+"|"+LOCALHOST.toUpperCase()+")" + "(:\\((.*)\\))?$");
-
     private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("name");
+    
+    private static final ConfigKey<?>[] KEYS = new ConfigKey[] {
+        LocationConfigKeys.PRIVATE_KEY_FILE, LocationConfigKeys.PUBLIC_KEY_FILE, 
+        LocationConfigKeys.PRIVATE_KEY_DATA, LocationConfigKeys.PRIVATE_KEY_PASSPHRASE };
 
     private ManagementContext managementContext;
 
@@ -81,14 +92,15 @@ public class LocalhostResolver implements LocationResolver {
         }
 
         MutableMap<String,Object> flags = new MutableMap<String,Object>();
-        // legacy syntax
-        flags.addIfNotNull("privateKeyFile", properties.get("brooklyn.localhost.private-key-file"));
-        flags.addIfNotNull("privateKeyPassphrase", properties.get("brooklyn.localhost.private-key-passphrase"));
-        flags.addIfNotNull("publicKeyFile", properties.get("brooklyn.localhost.public-key-file"));
-        // now prefer these names, for consistency (and sanity)
-        flags.addIfNotNull("privateKeyFile", properties.get("brooklyn.localhost.privateKeyFile"));
-        flags.addIfNotNull("privateKeyPassphrase", properties.get("brooklyn.localhost.privateKeyPassphrase"));
-        flags.addIfNotNull("publicKeyFile", properties.get("brooklyn.localhost.publicKeyFile"));
+        
+        ConfigBag bag = ConfigBag.newInstance().putAll(properties);
+        // preferred keys and deprecated keys
+        for (ConfigKey<?> key: KEYS) {
+            flags.addIfNotNull(key.getName(), bag.getWithDeprecation(
+                ConfigKeys.newConfigKeyWithPrefix("brooklyn.localhost", key),
+                ConfigKeys.newConfigKeyWithPrefix("brooklyn.localhost", ConfigKeys.convert(key, CaseFormat.LOWER_CAMEL, CaseFormat.LOWER_HYPHEN)) ));
+        }
+        
         flags.add(locationFlags);
         if (namePart != null) {
             flags.put("name", namePart);

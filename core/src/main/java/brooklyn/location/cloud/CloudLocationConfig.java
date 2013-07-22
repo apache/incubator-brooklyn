@@ -1,7 +1,6 @@
 package brooklyn.location.cloud;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -23,6 +22,17 @@ public interface CloudLocationConfig {
     public static final ConfigKey<String> PRIVATE_KEY_FILE = LocationConfigKeys.PRIVATE_KEY_FILE;
     public static final ConfigKey<String> PRIVATE_KEY_DATA = LocationConfigKeys.PRIVATE_KEY_DATA;
     public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = LocationConfigKeys.PRIVATE_KEY_PASSPHRASE;
+
+    /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated
+    public static final ConfigKey<String> LEGACY_PUBLIC_KEY_FILE = LocationConfigKeys.LEGACY_PUBLIC_KEY_FILE;
+    /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated
+    public static final ConfigKey<String> LEGACY_PUBLIC_KEY_DATA = LocationConfigKeys.LEGACY_PUBLIC_KEY_DATA;
+    /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated
+    public static final ConfigKey<String> LEGACY_PRIVATE_KEY_FILE = LocationConfigKeys.LEGACY_PRIVATE_KEY_FILE;
+    /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated
+    public static final ConfigKey<String> LEGACY_PRIVATE_KEY_DATA = LocationConfigKeys.LEGACY_PRIVATE_KEY_DATA;
+    /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated
+    public static final ConfigKey<String> LEGACY_PRIVATE_KEY_PASSPHRASE = LocationConfigKeys.LEGACY_PRIVATE_KEY_PASSPHRASE;
 
     public static final ConfigKey<Object> CALLER_CONTEXT = LocationConfigKeys.CALLER_CONTEXT;
 

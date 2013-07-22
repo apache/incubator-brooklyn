@@ -7,6 +7,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.util.internal.ssh.SshTool;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 
@@ -57,11 +58,20 @@ public class ConfigKeys {
     public static <T> ConfigKey<T> newConfigKeyWithDefault(ConfigKey<T> parent, T defaultValue) {
         return new BasicConfigKeyOverwriting<T>(parent, defaultValue);
     }
-    
-    public static <T> ConfigKey<T> newConfigKeyWithPrefix(String prefix, ConfigKey<T> key) {
-        return new BasicConfigKey<T>(key.getTypeToken(), prefix+key.getName(), key.getDescription(), key.getDefaultValue());
+
+    public static <T> ConfigKey<T> newConfigKeyRenamed(String newName, ConfigKey<T> key) {
+        return new BasicConfigKey<T>(key.getTypeToken(), newName, key.getDescription(), key.getDefaultValue());
     }
-    
+
+    public static <T> ConfigKey<T> newConfigKeyWithPrefix(String prefix, ConfigKey<T> key) {
+        return newConfigKeyRenamed(prefix+key.getName(), key);
+    }
+
+    /** converts the name of the key from one case-strategy (e.g. lowerCamel) to andother (e.g. lower-hyphen) */
+    public static <T> ConfigKey<T> convert(ConfigKey<T> key, CaseFormat inputCaseStrategy, CaseFormat outputCaseStrategy) {
+        return newConfigKeyRenamed(inputCaseStrategy.to(outputCaseStrategy, key.getName()), key);
+    }
+
     // ---- typed keys
 
     public static ConfigKey<String> newStringConfigKey(String name) {
