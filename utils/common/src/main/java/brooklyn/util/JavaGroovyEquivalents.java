@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -105,6 +106,14 @@ public class JavaGroovyEquivalents {
             @Override public boolean apply(T val) {
                 return groovyTruth(val);
             }
+        };
+    }
+    
+    public static Function<Object,Boolean> groovyTruthFunction() {
+        return new Function<Object, Boolean>() {
+           @Override public Boolean apply(Object input) {
+               return groovyTruth(input);
+           }
         };
     }
 
