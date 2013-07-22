@@ -115,6 +115,10 @@ public class EntityDynamicType {
         return refreshSnapshot();
     }
     
+    public Class<? extends Entity> getEntityClass() {
+        return entityClass;
+    }
+    
     /**
      * @return the effector with the given name, or null if not found
      */
@@ -403,7 +407,7 @@ public class EntityDynamicType {
                 }
                 if (best==null) {
                     // shouldn't happen
-                    LOG.error("Error - no matching config key from "+kk+" even though had config key name "+kn);
+                    LOG.error("Error - no matching config key from "+kk+" in class "+clazz+", even though had config key name "+kn);
                     continue;
                 } else {
                     configKeys.put(best.value.getName(), best);
@@ -433,6 +437,7 @@ public class EntityDynamicType {
         return fv.field;
     }
 
+    @SuppressWarnings("unused")
     private static <V> Collection<V> value(Collection<FieldAndValue<V>> fvs) {
         List<V> result = new ArrayList<V>();
         for (FieldAndValue<V> fv: fvs) result.add(value(fv));

@@ -150,7 +150,8 @@ public interface Entity extends Serializable, Rebindable {
      * <li> value (including null) explicitly set on the entity
      * <li> value (including null) explicitly set on an ancestor (inherited)
      * <li> a default value (including null) on the best equivalent static key of the same name declared on the entity
-     *      (where best equivalence is defined as preferring a config key which extends another, via ConfigKe
+     *      (where best equivalence is defined as preferring a config key which extends another, 
+     *      as computed in EntityDynamicType.getConfigKeys)
      * <li> a default value (including null) on the key itself
      * <li> null
      */

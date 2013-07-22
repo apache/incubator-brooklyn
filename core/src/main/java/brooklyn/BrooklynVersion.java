@@ -7,10 +7,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BrooklynVersion {
 
+  private static final Logger log = LoggerFactory.getLogger(BrooklynVersion.class);
+  
   private static final String VERSION_RESOURCE_FILE = "META-INF/maven/io.brooklyn/brooklyn-core/pom.properties";
-
   private static final String VERSION_PROPERTY_NAME = "version";
 
   private static final BrooklynVersion INSTANCE = new BrooklynVersion();
@@ -23,7 +27,15 @@ public class BrooklynVersion {
 
   public BrooklynVersion() {
     this.versionFromClasspath = readVersionPropertyFromClasspath(BrooklynVersion.class.getClassLoader());
-    this.version = !isValid(versionFromClasspath) ? versionFromStatic : versionFromClasspath;
+    if (isValid(versionFromClasspath)) {
+        this.version = versionFromClasspath;
+        if (!this.version.equals(versionFromStatic)) {
+            // should always be the same, and we can drop classpath detection ...
+            log.warn("Version detected from classpath as "+versionFromClasspath+" (preferring that), but in code it is recorded as "+versionFromStatic);
+        }
+    } else {
+        this.version = versionFromStatic;
+    }
   }
 
   private static boolean isValid(String v) {
@@ -31,9 +43,9 @@ public class BrooklynVersion {
     if (v.equals("0.0.0") || v.equals("0.0")) return false;
     if (v.startsWith("0.0.0-") || v.startsWith("0.0-")) return false;
     return true;
-}
+  }
 
-private String readVersionPropertyFromClasspath(ClassLoader resourceLoader) {
+  private String readVersionPropertyFromClasspath(ClassLoader resourceLoader) {
     Properties versionProperties = new Properties();
     try {
       InputStream versionStream = resourceLoader.getResourceAsStream(VERSION_RESOURCE_FILE);

@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Map;
 
+import org.eclipse.jetty.util.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,6 @@ import freemarker.template.TemplateException;
 
 public class DownloadSubstituters {
 
-    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(DownloadSubstituters.class);
 
     private DownloadSubstituters() {}
@@ -54,7 +54,8 @@ public class DownloadSubstituters {
         return substitute(basevalue, getBasicSubstitutions(req));
     }
 
-    /** @deprecated use getBasicSubstitutions (method was misnamed) */
+    /** @deprecated since 0.6.0 use getBasicSubstitutions (method was misnamed) */
+    @Deprecated
     public static Map<String,Object> getBasicSubscriptions(DownloadRequirement req) {
         return getBasicSubstitutions(req);
     }
@@ -80,8 +81,16 @@ public class DownloadSubstituters {
         Entity entity = driver.getEntity();
         String type = entity.getEntityType().getName();
         String simpleType = type.substring(type.lastIndexOf(".")+1);
-        String version = entity.getAttribute(Attributes.VERSION);
-        if (version == null) version = entity.getConfig(ConfigKeys.SUGGESTED_VERSION);
+        String version = entity.getConfig(ConfigKeys.SUGGESTED_VERSION);
+        
+        String v2 = entity.getAttribute(Attributes.VERSION);
+        if (v2!=null && !v2.equals(version)) {
+            // Attributes.VERSION was deprecated in 0.5.0 but was preferred here without warning in 0.6.0
+            // now warn on use of deprecated key when it is different
+            LOG.warn("Using deprecated key "+Attributes.VERSION+", value "+v2+", which differs from the " +
+            		"preferred key "+ConfigKeys.SUGGESTED_VERSION+", value "+version+"; old key will be retired shortly!");
+            version = v2;
+        }
         
         return MutableMap.<String,Object>builder()
                 .put("entity", entity)

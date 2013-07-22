@@ -8,7 +8,6 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigMapTest.MyOtherEntity;
-import brooklyn.entity.basic.ConfigMapTest.MySubEntity;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
@@ -22,16 +21,15 @@ import brooklyn.test.entity.TestApplicationImpl;
  *    interface X extends Y
  *    config C is declared on S and overwritten at Y
  */
+@SuppressWarnings("serial")
 public class ConfigEntityInheritanceTest {
 
     private TestApplication app;
-    private Entity entity;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = new TestApplicationImpl();
         Entities.startManagement(app);
-        entity = app.addChild(EntitySpecs.spec(MySubEntity.class));
     }
 
     @AfterMethod(alwaysRun=true)
@@ -40,12 +38,7 @@ public class ConfigEntityInheritanceTest {
     }
 
     protected void checkKeys(Entity entity2, Integer value) {
-//        assertNotNull(entity2.getEntityType().getConfigKeys().find( { it.getName() == MyOtherEntity.INT_KEY.getName() } ),
-//            "missing int key in "+entity2.getEntityType().getConfigKeys());
         Assert.assertEquals(entity2.getConfig(MyOtherEntity.INT_KEY), value);
-        
-//        assertNotNull(entity2.getEntityType().getConfigKeys().find( { it.getName() == MyOtherEntity.SENSOR_AND_CONFIG_KEY.getName() } ),
-//            "missing sensor key in "+entity2.getEntityType().getConfigKeys());
         Assert.assertEquals(entity2.getConfig(MyOtherEntity.SENSOR_AND_CONFIG_KEY), value);
     }
 
@@ -84,6 +77,10 @@ public class ConfigEntityInheritanceTest {
     @Test
     public void testConfigKeysSubExtended() throws Exception {
         checkKeys(app.addChild(EntitySpecs.spec(MySubEntityHere.class)), 4);
+    }
+    @Test
+    public void testConfigKeysSubInheriting() throws Exception {
+        checkKeys(app.addChild(EntitySpecs.spec(MySubEntityHereInheriting.class)), 4);
     }
     @Test
     public void testConfigKeysHereSubRight() throws Exception {
@@ -133,6 +130,9 @@ public class ConfigEntityInheritanceTest {
     }
     
     public static class MySubEntityHere extends MyEntityHere implements MyInterfaceRedeclaring {
+    }
+
+    public static class MySubEntityHereInheriting extends MyEntityHere implements MyInterfaceRedeclaringAndInheriting {
     }
 
     public static class MySubEntityHereExtended extends MyEntityHere implements MyInterfaceRedeclaringThenExtending {
