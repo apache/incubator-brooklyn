@@ -49,7 +49,7 @@ public class ConfigBag {
     }
     
     /** creates a new ConfigBag instance which includes all of the supplied ConfigBag's values,
-     * plus an additional set of <ConfigKey,Object> or <String,Object> pairs
+     * plus an additional set of &lt;ConfigKey,Object&gt; or &lt;String,Object&gt; pairs
      * <p>
      * values from the original set which are used here will be marked as used in the original set
      * (note: this applies even for values which are overridden and the overridden value is used);
@@ -179,6 +179,72 @@ public class ConfigBag {
     /** like get, but without marking it as used */
     public <T> T peek(ConfigKey<T> key) {
         return get(key, false);
+    }
+
+    /** returns the first key in the list for which a value is explicitly set, then defaulting to defaulting value of preferred key */
+    public <T> T getFirst(ConfigKey<T> preferredKey, ConfigKey<T> ...otherCurrentKeysInOrderOfPreference) {
+        if (containsKey(preferredKey)) 
+            return get(preferredKey);
+        for (ConfigKey<T> key: otherCurrentKeysInOrderOfPreference) {
+            if (containsKey(key)) 
+                return get(key);
+        }
+        return get(preferredKey);
+    }
+
+    /** convenience for @see #getWithDeprecation(ConfigKey[], ConfigKey...) */
+    public Object getWithDeprecation(ConfigKey<?> key, ConfigKey<?> ...deprecatedKeys) {
+        return getWithDeprecation(new ConfigKey[] { key }, deprecatedKeys);
+    }
+
+    /** returns the value for the first key in the list for which a value is set,
+     * warning if any of the deprecated keys have a value which is different to that set on the first set current key
+     * (including warning if a deprecated key has a value but no current key does) */
+    public Object getWithDeprecation(ConfigKey<?> currentKeysInOrderOfPreference[], ConfigKey<?> ...deprecatedKeys) {
+        ConfigKey<?> deprecatedKeyProvidingValue = null;
+        Object result = null;
+        for (ConfigKey<?> deprecatedKey: deprecatedKeys) {
+            Object x = get(deprecatedKey);
+            if (x!=null) {
+                if (result!=null) {
+                    if (!result.equals(x)) {
+                        log.warn("Conflicting values in deprecated keys, ignoring "+deprecatedKey+" value "+x+
+                                " conflicting with "+deprecatedKeyProvidingValue+" value "+result);
+                    } // if value the same, just ignore
+                } else {
+                    // new value, from deprecated key
+                    result = x;
+                    deprecatedKeyProvidingValue = deprecatedKey;
+                }
+            }
+        }
+        ConfigKey<?> preferredKeyProvidingValue = null;
+        Object x = null;
+        for (ConfigKey<?> key: currentKeysInOrderOfPreference) {
+            if (containsKey(key)) {
+                preferredKeyProvidingValue = key;
+                x = get(preferredKeyProvidingValue);
+                break;
+            }
+        }
+        if (x!=null) {
+            if (result!=null) {
+                if (!result.equals(x)) {
+                    log.warn("Conflicting value from deprecated key " +deprecatedKeyProvidingValue+" value "+result+
+                            ", using preferred key "+preferredKeyProvidingValue+" value "+x);
+                } else {
+                    // preferred and deprecated keys give the same value, no need to log
+                }
+            } else {
+                // new value from preferred key (no deprecated keys used), no need to log
+            }
+            return x;
+        } else {
+            // deprecated key only
+            log.warn("Deprecated key " +deprecatedKeyProvidingValue+" detected (supplying value "+result+"), "+
+                    ", use preferred key '"+preferredKeyProvidingValue+"' instead");
+            return result;
+        }
     }
 
     protected <T> T get(ConfigKey<T> key, boolean remove) {
