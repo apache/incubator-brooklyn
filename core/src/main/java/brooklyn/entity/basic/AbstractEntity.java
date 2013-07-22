@@ -31,6 +31,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
 import brooklyn.internal.storage.impl.BasicReference;
@@ -735,11 +736,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         entityType.removeSensor(attribute);
     }
 
-    /** sets the value of the given attribute sensor from the config key value herein,
-     * if the config key resolves to a non-null value as a sensor
+    /** sets the value of the given attribute sensor from the config key value herein
+     * if the attribtue sensor is not-set or null
      * <p>
-     * returns old value */
-    @Override
+     * returns old value 
+     * @deprecated on interface since 0.5.0; use {@link ConfigToAttributes#apply(EntityLocal, AttributeSensorAndConfigKey)} */
     public <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor) {
         T v = getAttribute(configuredSensor);
         if (v!=null) return v;

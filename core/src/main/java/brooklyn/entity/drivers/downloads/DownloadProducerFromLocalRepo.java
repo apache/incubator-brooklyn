@@ -55,7 +55,7 @@ public class DownloadProducerFromLocalRepo implements Function<DownloadRequireme
         String url = String.format(LOCAL_REPO_URL_PATTERN, path);
         
         if (enabled) {
-            Map<String, ?> subs = DownloadSubstituters.getBasicSubscriptions(req);
+            Map<String, ?> subs = DownloadSubstituters.getBasicSubstitutions(req);
             String result = DownloadSubstituters.substitute(url, subs);
             return BasicDownloadTargets.builder().addPrimary(result).build();
             

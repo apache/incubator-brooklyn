@@ -1,16 +1,14 @@
 package brooklyn.entity.webapp.jboss;
 
-import java.util.Map;
-
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.MapConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="JBoss Application Server 6", description="AS6: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.png")
@@ -18,8 +16,8 @@ import brooklyn.util.flags.SetFromFlag;
 public interface JBoss6Server extends JavaWebAppSoftwareProcess, JavaWebAppService, UsesJmx {
 
     @SetFromFlag("version")
-    BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "6.0.0.Final");
+    ConfigKey<String> SUGGESTED_VERSION =
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "6.0.0.Final");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(

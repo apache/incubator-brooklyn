@@ -6,7 +6,6 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
@@ -55,21 +54,6 @@ public interface EntityInternal extends Entity {
      */
     @Beta // for internal use only
     EntityInternal configure(Map flags);
-
-    /** sets the value of the given attribute sensor from the config key value herein,
-     * if the config key resolves to a non-null value as a sensor
-     * 
-     * @deprecated since 0.5; use {@link #setAttribute(AttributeSensor, Object)}, such as 
-     * <pre>
-     * T val = getConfig(KEY.getConfigKey());
-     * if (val != null) {
-     *     setAttribute(KEY, val)
-     * }
-     * </pre>
-     * 
-     * @return old value
-     */
-    <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor);
 
     /** 
      * @return Routings for accessing and inspecting the management context of the entity

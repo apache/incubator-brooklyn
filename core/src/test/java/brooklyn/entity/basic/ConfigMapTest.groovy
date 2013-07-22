@@ -1,7 +1,5 @@
 package brooklyn.entity.basic
 
-import brooklyn.entity.Entity
-
 import static org.testng.Assert.*
 
 import java.util.concurrent.Callable
@@ -19,7 +17,9 @@ import org.testng.annotations.Test
 
 import brooklyn.config.ConfigMap
 import brooklyn.config.ConfigPredicates
+import brooklyn.entity.Entity
 import brooklyn.event.basic.BasicConfigKey
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey
 import brooklyn.management.ExecutionManager
 import brooklyn.management.Task
 import brooklyn.test.entity.TestApplication
@@ -51,6 +51,7 @@ public class ConfigMapTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
+        Entities.destroyAll(app.getManagementContext());
         if (executor != null) executor.shutdownNow();
     }
 
@@ -244,15 +245,16 @@ public class ConfigMapTest {
         MyOtherEntity(Entity parent) {
             super(parent)
         }
-        public static final BasicConfigKey<Integer> INT_KEY = [ Integer, "intKey", "int key", null]
+        public static final BasicConfigKey<Integer> INT_KEY = [ Integer, "intKey", "int key", 1]
         public static final BasicConfigKey<String> STRING_KEY = [ String, "stringKey", "string key", null]
         public static final BasicConfigKey<Object> OBJECT_KEY = [ Object, "objectKey", "object key", null]
         public static final BasicConfigKey<Closure> CLOSURE_KEY = [ Closure, "closureKey", "closure key", null]
         public static final BasicConfigKey<Future> FUTURE_KEY = [ Future, "futureKey", "future key", null]
         public static final BasicConfigKey<Task> TASK_KEY = [ Task, "taskKey", "task key", null]
         public static final BasicConfigKey<Predicate> PREDICATE_KEY = [ Predicate, "predicateKey", "predicate key", null]
+        public static final IntegerAttributeSensorAndConfigKey SENSOR_AND_CONFIG_KEY = [ "sensorConfigKey", "sensor+config key", 1]
     }
-    
+
     static class LatchingCallable<T> implements Callable<T> {
         final CountDownLatch latchCalled = new CountDownLatch(1);
         final CountDownLatch latchContinued = new CountDownLatch(1);

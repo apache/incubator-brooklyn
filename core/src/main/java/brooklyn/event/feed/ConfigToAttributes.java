@@ -19,9 +19,11 @@ public class ConfigToAttributes {
     }
 
     //for selectively applying once (e.g. sub-classes of DynamicWebAppCluster that don't want to set HTTP_PORT etc!)
-    public static void apply(EntityLocal entity, AttributeSensorAndConfigKey<?,?> key) {
-        if (entity.getAttribute(key)==null) {
-            ((EntityInternal)entity).setAttribute((AttributeSensorAndConfigKey<?,?>)key);
-        }
+    public static <T> T apply(EntityLocal entity, AttributeSensorAndConfigKey<?,T> key) {
+        T v = entity.getAttribute(key);
+        if (v!=null) return v;
+        v = key.getAsSensorValue(entity);
+        if (v!=null) entity.setAttribute(key, v);
+        return v;
     }
 }

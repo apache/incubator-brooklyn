@@ -21,7 +21,7 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
         super(type, type, name, description, defaultValue);
     }
 
-    public BasicAttributeSensorAndConfigKey(BasicAttributeSensorAndConfigKey<T> orig, T defaultValue) {
+    public BasicAttributeSensorAndConfigKey(AttributeSensorAndConfigKey<T,T> orig, T defaultValue) {
         super(orig, defaultValue);
     }
     
@@ -29,7 +29,7 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
     
     public static class StringAttributeSensorAndConfigKey extends BasicAttributeSensorAndConfigKey<String> {
 
-        public StringAttributeSensorAndConfigKey(BasicAttributeSensorAndConfigKey<String> orig, String defaultValue) {
+        public StringAttributeSensorAndConfigKey(AttributeSensorAndConfigKey<String,String> orig, String defaultValue) {
             super(orig, defaultValue);
         }
 
@@ -49,7 +49,7 @@ public class BasicAttributeSensorAndConfigKey<T> extends AttributeSensorAndConfi
     
     public static class IntegerAttributeSensorAndConfigKey extends BasicAttributeSensorAndConfigKey<Integer> {
 
-        public IntegerAttributeSensorAndConfigKey(BasicAttributeSensorAndConfigKey<Integer> orig, Integer defaultValue) {
+        public IntegerAttributeSensorAndConfigKey(AttributeSensorAndConfigKey<Integer,Integer> orig, Integer defaultValue) {
             super(orig, defaultValue);
         }
 

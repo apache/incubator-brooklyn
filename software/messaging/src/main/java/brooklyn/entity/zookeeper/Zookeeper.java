@@ -16,6 +16,7 @@
 package brooklyn.entity.zookeeper;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -34,7 +35,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface Zookeeper extends SoftwareProcess, UsesJmx {
 
     @SetFromFlag("version")
-    ConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "3.3.3");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "3.3.3");
 
     @SetFromFlag("zookeeperPort")
     PortAttributeSensorAndConfigKey ZOOKEEPER_PORT = new PortAttributeSensorAndConfigKey("zookeeper.port", "Zookeeper port", "2181+");

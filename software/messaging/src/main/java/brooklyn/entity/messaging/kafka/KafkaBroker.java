@@ -16,6 +16,7 @@
 package brooklyn.entity.messaging.kafka;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
@@ -34,7 +35,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Kafka {
 
     @SetFromFlag("startTimeout")
-    public static final ConfigKey<Integer> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
+    ConfigKey<Integer> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, 300);
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = Kafka.SUGGESTED_VERSION;
@@ -63,7 +64,7 @@ public interface KafkaBroker extends SoftwareProcess, MessageBroker, UsesJmx, Ka
 
     AttributeSensor<Long> BYTES_RECEIVED = Sensors.newLongSensor("kafka.broker.bytes.received", "Total bytes received");
     AttributeSensor<Long> BYTES_SENT = Sensors.newLongSensor("kafka.broker.bytes.sent", "Total bytes sent");
-
+    
     Integer getKafkaPort();
 
     Integer getBrokerId();

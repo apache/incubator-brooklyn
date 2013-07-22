@@ -35,6 +35,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 
@@ -52,6 +53,7 @@ public class KafkaIntegrationTest {
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         testLocation = new LocalhostMachineProvisioningLocation();
+//        app.getManagementContext().getLocationManager().manage(testLocation);
     }
 
     @AfterMethod(alwaysRun = true)
@@ -118,16 +120,17 @@ public class KafkaIntegrationTest {
      * Connects to the zookeeper controller and tests sending and receiving messages on a topic.
      */
     @Test(groups = "Integration")
-    public void testSingleBrokerCluster() {
-        final KafkaCluster cluster = app.createAndManageChild(EntitySpecs.spec(KafkaCluster.class));
+    public void testTwoBrokerCluster() {
+        final KafkaCluster cluster = app.createAndManageChild(EntitySpecs.spec(KafkaCluster.class)
+                .configure(KafkaCluster.INITIAL_SIZE, 2));
 
         cluster.start(ImmutableList.of(testLocation));
-        Asserts.succeedsEventually(MutableMap.of("timeout", 60000l), new Callable<Void>() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.FIVE_MINUTES), new Callable<Void>() {
             @Override
             public Void call() {
                 assertTrue(cluster.getAttribute(Startable.SERVICE_UP));
                 assertTrue(cluster.getZookeeper().getAttribute(Startable.SERVICE_UP));
-                assertEquals(cluster.getCurrentSize().intValue(), 1);
+                assertEquals(cluster.getCurrentSize().intValue(), 2);
                 return null;
             }
         });

@@ -16,7 +16,8 @@ public interface ConfigMap {
     public <T> T getConfig(HasConfigKey<T> key, T defaultValue);
     /** returns value stored against the given key,
      * resolved (if it is a Task, possibly blocking), and coerced to the appropriate type, 
-     * or given default value if not set */ 
+     * or given default value if not set, 
+     * unless the default value is null in which case it returns the default*/ 
     public <T> T getConfig(ConfigKey<T> key, T defaultValue);
 
     /** returns the value stored against the given key, 

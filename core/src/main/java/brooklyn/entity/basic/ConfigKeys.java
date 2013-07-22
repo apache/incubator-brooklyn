@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.util.internal.ssh.SshTool;
 
 import com.google.common.base.Preconditions;
@@ -54,7 +55,7 @@ public class ConfigKeys {
     // ---- extensions to keys
     
     public static <T> ConfigKey<T> newConfigKeyWithDefault(ConfigKey<T> parent, T defaultValue) {
-        return new BasicConfigKey<T>(parent, defaultValue);
+        return new BasicConfigKeyOverwriting<T>(parent, defaultValue);
     }
     
     public static <T> ConfigKey<T> newConfigKeyWithPrefix(String prefix, ConfigKey<T> key) {

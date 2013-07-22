@@ -7,6 +7,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
@@ -33,6 +36,8 @@ import com.google.common.collect.Maps;
  */
 public class InternalEntityFactory {
 
+    private static final Logger log = LoggerFactory.getLogger(InternalEntityFactory.class);
+    
     private final ManagementContextInternal managementContext;
     private final EntityTypeRegistry entityTypeRegistry;
 
@@ -67,6 +72,7 @@ public class InternalEntityFactory {
      * @param clazz
      * @return
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static boolean isNewStyleEntity(ManagementContext managementContext, Class<?> clazz) {
         try {
             return isNewStyleEntity(clazz) && managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)clazz) != null;
@@ -98,11 +104,15 @@ public class InternalEntityFactory {
         // TODO Don't want the proxy to have to implement EntityLocal, but required by how 
         // AbstractEntity.parent is used (e.g. parent.getAllConfig)
         ClassLoader classloader = (spec.getImplementation() != null ? spec.getImplementation() : spec.getType()).getClassLoader();
-        Set<Class<?>> interfaces = MutableSet.<Class<?>>builder()
-                .addAll(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class)
-                .add(spec.getType())
-                .addAll(spec.getAdditionalInterfaces())
-                .build();
+        MutableSet.Builder<Class<?>> builder = MutableSet.<Class<?>>builder()
+                .addAll(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class);
+        if (spec.getType().isInterface()) {
+            builder.add(spec.getType());
+        } else {
+            log.warn("EntitySpec declared in terms of concrete type "+spec.getType()+"; should be supplied in terms of interface");
+        }
+        builder.addAll(spec.getAdditionalInterfaces());
+        Set<Class<?>> interfaces = builder.build();
         
         return (T) java.lang.reflect.Proxy.newProxyInstance(
                 classloader,

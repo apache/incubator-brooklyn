@@ -55,7 +55,7 @@ public class DownloadProducerFromCloudsoftRepo implements Function<DownloadRequi
         String url = String.format(CLOUDSOFT_REPO_URL_PATTERN, baseUrl);
         
         if (enabled) {
-            Map<String, ?> subs = DownloadSubstituters.getBasicSubscriptions(req);
+            Map<String, ?> subs = DownloadSubstituters.getBasicSubstitutions(req);
             String result = DownloadSubstituters.substitute(url, subs);
             return BasicDownloadTargets.builder().addPrimary(result).build();
             

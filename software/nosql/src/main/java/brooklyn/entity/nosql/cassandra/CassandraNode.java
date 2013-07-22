@@ -4,6 +4,7 @@
 package brooklyn.entity.nosql.cassandra;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -22,7 +23,7 @@ import brooklyn.util.flags.SetFromFlag;
 public interface CassandraNode extends SoftwareProcess, UsesJmx {
 
     @SetFromFlag("version")
-    BasicConfigKey<String> SUGGESTED_VERSION = new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "1.2.2");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.2");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
