@@ -113,7 +113,10 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 machine.copyTo(propertiesStream, brooklynPropertiesTempRemotePath);
             }
             newScript(CUSTOMIZING)
-                    .body.append(format("cp -p %s %s", brooklynPropertiesTempRemotePath, brooklynPropertiesRemotePath))
+                    .failOnNonZeroResultCode()
+                    .body.append(
+                            format("mkdir -p %s", brooklynPropertiesRemotePath.subSequence(0, brooklynPropertiesRemotePath.lastIndexOf("/"))),
+                            format("cp -p %s %s", brooklynPropertiesTempRemotePath, brooklynPropertiesRemotePath))
                     .execute();
         }
 
