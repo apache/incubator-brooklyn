@@ -17,7 +17,7 @@ public class BrooklynVersion {
   private static final String VERSION_RESOURCE_FILE = "META-INF/maven/io.brooklyn/brooklyn-core/pom.properties";
   private static final String VERSION_PROPERTY_NAME = "version";
 
-  private static final BrooklynVersion INSTANCE = new BrooklynVersion();
+  public static final BrooklynVersion INSTANCE = new BrooklynVersion();
 
   private final String versionFromClasspath;
   // static useful when running from the IDE
@@ -36,6 +36,18 @@ public class BrooklynVersion {
     } else {
         this.version = versionFromStatic;
     }
+  }
+  
+  public String getVersionFromClasspath() {
+    return versionFromClasspath;
+  }
+  
+  public String getVersion() {
+    return version;
+  }
+  
+  public String getVersionFromStatic() {
+    return versionFromStatic;
   }
 
   private static boolean isValid(String v) {
