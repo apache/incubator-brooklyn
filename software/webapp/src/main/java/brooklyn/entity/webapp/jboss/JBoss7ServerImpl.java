@@ -91,7 +91,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                         .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class)))
                 .build();
         
-                connectServiceUp();
+        connectServiceUp();
     }
     
     protected void connectServiceUp() {
