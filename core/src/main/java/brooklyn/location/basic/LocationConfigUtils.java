@@ -60,7 +60,7 @@ public class LocationConfigUtils {
         
         String privateKeyFile = config.get(LocationConfigKeys.PRIVATE_KEY_FILE);
         if (groovyTruth(privateKeyFile)) {
-            File f = new File(privateKeyFile+".pub");
+            File f = new File(ResourceUtils.tidyFilePath(privateKeyFile+".pub"));
             if (f.exists()) {
                 log.debug("Trying to load "+LocationConfigKeys.PUBLIC_KEY_DATA.getName()+" from "+LocationConfigKeys.PRIVATE_KEY_FILE.getName() + " " + f.getAbsolutePath()+" for "+config.getDescription());
                 try {
