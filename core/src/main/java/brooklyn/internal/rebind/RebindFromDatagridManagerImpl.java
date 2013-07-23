@@ -22,6 +22,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindContextImpl;
 import brooklyn.internal.storage.BrooklynStorage;
@@ -35,6 +36,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -58,8 +60,6 @@ public class RebindFromDatagridManagerImpl {
     private final Set<String> applicationIds;
     private final Map<String,String> locationTypes;
     private final Map<String,String> policyTypes;
-    private final InternalEntityFactory entityFactory;
-
     
     public RebindFromDatagridManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
@@ -68,7 +68,6 @@ public class RebindFromDatagridManagerImpl {
         locationTypes = storage.getMap("locations");
         applicationIds = SetFromLiveMap.create(storage.<String,Boolean>getMap("applications"));
         policyTypes = storage.getMap("policies");
-        entityFactory = ((ManagementContextInternal)managementContext).getEntityFactory();
     }
 
     //@Override
@@ -145,10 +144,7 @@ public class RebindFromDatagridManagerImpl {
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", id);
 
             ((AbstractLocation)location).setManagementContext(managementContext);
-
-            // FIXME
-            //((AbstractLocation)location).rebind();
-            //location.getRebindSupport().reconstruct(rebindContext, locMemento);
+            ((AbstractLocation)location).reconstruct();
         }
 
         // Reconstruct policies
@@ -157,9 +153,7 @@ public class RebindFromDatagridManagerImpl {
             Policy policy = rebindContext.getPolicy(id);
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", id);
 
-            // FIXME
-            //((AbstractPolicy)policy).rebind();
-            //policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
+            ((AbstractPolicy)policy).reconstruct();
         }
 
         // Reconstruct entities
@@ -168,10 +162,8 @@ public class RebindFromDatagridManagerImpl {
             Entity entity = rebindContext.getEntity(id);
             if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", id);
 
-            // FIXME
             ((AbstractEntity)entity).setManagementContext(managementContext);
-            //((AbstractEntity)entity).rebind();
-            //entity.getRebindSupport().reconstruct(rebindContext, entityMemento);
+            ((AbstractEntity)entity).reconstruct();
         }
         
         // Manage the top-level locations (causing everything under them to become managed)
@@ -209,6 +201,7 @@ public class RebindFromDatagridManagerImpl {
         Class<?>[] additionalInterfaces = entityClazz.getInterfaces();
         
         try {
+            InternalEntityFactory entityFactory = ((ManagementContextInternal)managementContext).getEntityFactory();
             Entity entity = entityFactory.constructEntity(entityClazz);
             
             FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
@@ -227,7 +220,7 @@ public class RebindFromDatagridManagerImpl {
      * Constructs a new location, passing to its constructor the location id and all of memento.getFlags().
      */
     private Location newLocation(String locationId, String locationType, Reflections reflections) {
-        Class<?> locationClazz = reflections.loadClass(locationType);
+        Class<? extends Location> locationClazz = (Class<? extends Location>) reflections.loadClass(locationType);
 
         // TODO Move this code inside location?
         // FIXME What about config that refers to other location objects? Those won't have been instantiated yet.
@@ -235,14 +228,12 @@ public class RebindFromDatagridManagerImpl {
         Reference<String> locationDisplayName = storage.getReference("location-"+locationId+"-displayName");
         Map<String,?> locationConfig = storage.getMap("location-"+locationId+"-config");
 
-        Map<String, Object> flags = MutableMap.<String, Object>builder()
-        		.put("id", locationId)
-                .putIfNotNull("displayName", locationDisplayName.get())
-        		.putAll(locationConfig)
-        		.build();
+        InternalLocationFactory locationFactory = ((ManagementContextInternal)managementContext).getLocationFactory();
+        Location location = locationFactory.constructLocation(locationClazz);
+        
+        FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", locationId), location);
 
-        return (Location) invokeConstructor(reflections, locationClazz, new Object[] {flags});
-        // 'used' config keys get marked in BasicLocationRebindSupport
+        return location;
     }
 
     /**

@@ -146,4 +146,24 @@ public class InternalLocationFactory {
             throw new IllegalStateException("No valid constructor defined for "+clazz+" (expected no-arg or single java.util.Map argument)");
         }
     }
+
+    /**
+     * Constructs a new-style location (fails if no no-arg constructor).
+     */
+    public <T extends Location> T constructLocation(Class<T> clazz) {
+        try {
+            FactoryConstructionTracker.setConstructing();
+            try {
+                if (isNewStyleLocation(clazz)) {
+                    return clazz.newInstance();
+                } else {
+                    throw new IllegalStateException("Location class "+clazz+" must have a no-arg constructor");
+                }
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
 }

@@ -469,6 +469,19 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
     
     /**
+     * Called by framework (in new-style entities) when recreating an entity, on restart.
+     * Called after {@link #setManagementContext(ManagementContextInternal)} but before
+     * {@link #onManagementStarting()}.
+     * 
+     * To preserve backwards compatibility, the {@linke #getRebindSupport()}'s 
+     * {@link BasicEntityRebindSupport#reconstruct(brooklyn.entity.rebind.RebindContext, EntityMemento)}
+     * will call this method.
+     */
+    public void reconstruct() {
+        // no-op
+    }
+    
+    /**
      * Adds this as a child of the given entity; registers with application if necessary.
      */
     @Override

@@ -168,7 +168,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     private BasicPool<SshTool> buildVanillaPool() {
         return BasicPool.<SshTool>builder()
-                .name(name+"@"+address+
+                .name(getDisplayName()+"@"+address+
                         (hasConfig(SSH_HOST) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
                         ":"+
                         System.identityHashCode(this))
@@ -209,8 +209,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 	            user = ""+properties.get("username");
 	        }
 	        
-	        if (name == null) {
-	        	name = (truth(user) ? user+"@" : "") + address.getHostName();
+	        if (getDisplayName() == null) {
+	        	setDisplayName((truth(user) ? user+"@" : "") + address.getHostName());
 	        }
         
 	        if (getHostGeoInfo() == null) {
@@ -637,7 +637,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @Override
     public String toString() {
-        return "SshMachineLocation["+name+":"+address+"]";
+        return "SshMachineLocation["+getDisplayName()+":"+address+"]";
     }
 
     @Override

@@ -9,6 +9,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
@@ -44,6 +45,8 @@ public interface ManagementContextInternal extends ManagementContext {
 
     InternalEntityFactory getEntityFactory();
 
+    InternalLocationFactory getLocationFactory();
+    
     /**
      * TODO Will be deleted shortly; placeholder while implementing remoting. When running with
      * a distributed brooklyn, this method is meaningless as the real entity instance may not

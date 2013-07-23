@@ -21,6 +21,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.internal.storage.BrooklynStorage;
@@ -272,6 +273,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     
     @Override
     public InternalEntityFactory getEntityFactory() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InternalLocationFactory getLocationFactory() {
         throw new UnsupportedOperationException();
     }
 

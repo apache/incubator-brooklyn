@@ -1,5 +1,7 @@
 package brooklyn.util.config;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,8 +35,8 @@ public class ConfigBag {
     
     protected String description;
     
-    private Map<String,Object> config = new LinkedHashMap<String,Object>();
-    private Map<String,Object> unusedConfig = new LinkedHashMap<String,Object>();
+    private final Map<String,Object> config;
+    private final Map<String,Object> unusedConfig;
     private boolean sealed = false;
 
     /** creates a new ConfigBag instance, empty and ready for population */
@@ -66,6 +68,15 @@ public class ConfigBag {
         }.copy(configBag).putAll(flags);
     }
 
+    public ConfigBag() {
+        this(new LinkedHashMap<String,Object>());
+    }
+    
+    public ConfigBag(Map<String,Object> storage) {
+        this.config = checkNotNull(storage, "storage map must be specified");
+        this.unusedConfig = new LinkedHashMap<String,Object>();
+
+    }
     public ConfigBag setDescription(String description) {
         if (sealed) 
             throw new IllegalStateException("Cannot set description to '"+description+"': this config bag has been sealed and is now immutable.");
@@ -87,7 +98,11 @@ public class ConfigBag {
     /** internal map containing the current values for all entries;
      * for use where the caller wants to modify this directly and knows it is safe to do so */ 
     public Map<String,Object> getAllConfigRaw() {
-        return config;
+        // TODO sealed no longer works as before, because `config` is the backing storage map.
+        // Therefore returning it is dangerous! Even if we were to replace our field with an immutable copy,
+        // the underlying datagrid's map would still be modifiable. We need a way to switch the returned
+        // value's behaviour to sealable (i.e. wrapping the returned map).
+        return (sealed) ? Collections.unmodifiableMap(config) : config;
     }
 
     /** current values for all entries which have not yet been used 
@@ -333,7 +348,7 @@ public class ConfigBag {
      * returns this for convenience (fluent usage) */
     public ConfigBag seal() {
         sealed = true;
-        config = getAllConfig();
+        //TODO config.seal();
         return this;
     }
 }

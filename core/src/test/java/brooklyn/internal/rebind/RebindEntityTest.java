@@ -42,6 +42,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.internal.storage.impl.InmemoryDatagrid;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.TestUtils;
@@ -213,8 +214,7 @@ public class RebindEntityTest {
     
     @Test
     public void testHandlesReferencingOtherLocations() throws Exception {
-        MyLocation origLoc = new MyLocation();
-        Entities.manage(origLoc, origManagementContext);
+        MyLocation origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.spec(MyLocation.class));
         MyEntityReffingOthers origE = origApp.createAndManageChild(EntitySpecs.spec(MyEntityReffingOthers.class)
                     .configure("locationRef", origLoc));
         origE.setAttribute(MyEntityReffingOthers.LOCATION_REF_SENSOR, origLoc);
@@ -242,7 +242,7 @@ public class RebindEntityTest {
         final LocalManagementContext newManagementContext = new LocalManagementContext(newDatagrid);
         
         Thread thread = new Thread() {
-            public void run() {
+            @Override public void run() {
                 try {
                     RebindTestUtils.rebind(newManagementContext, getClass().getClassLoader());
                 } catch (Exception e) {
@@ -312,7 +312,7 @@ public class RebindEntityTest {
                     events.add(event.getValue());
                 }});
 
-            // In entity's reconstruct, publishes events are queued, and subscriptions don't yet take effect
+            // In entity's reconstruct, publish-events are queued, and subscriptions don't yet take effect
             assertTrue(MyLatchingEntityImpl.reconstructStartedLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
             newManagementContext.getSubscriptionManager().publish(new BasicSensorEvent<String>(TestApplication.MY_ATTRIBUTE, null, "myvaltooearly"));
             
@@ -595,7 +595,8 @@ public class RebindEntityTest {
             super();
         }
 
-        private void onReconstruct() {
+        @Override
+        public void reconstruct() {
             if (getConfig(SUBSCRIBE) != null) {
                 getManagementSupport().getSubscriptionContext().subscribe(null, getConfig(SUBSCRIBE), new SensorEventListener<Object>() {
                         @Override public void onEvent(SensorEvent<Object> event) {
@@ -645,7 +646,7 @@ public class RebindEntityTest {
         public RebindSupport<EntityMemento> getRebindSupport() {
             return new BasicEntityRebindSupport(this) {
                 @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
-                    MyLatchingEntityImpl.this.onReconstruct();
+                    MyLatchingEntityImpl.this.reconstruct();
                 }
             };
         }

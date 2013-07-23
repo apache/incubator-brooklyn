@@ -11,10 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.BasicPolicyRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.management.ExecutionContext;
+import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicyType;
@@ -105,10 +107,23 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         }
     }
     
+    /**
+     * Called by framework (in new-style entities) when recreating a policy, on restart.
+     * 
+     * To preserve backwards compatibility, the {@linke #getRebindSupport()}'s 
+     * {@link BasicPolicyRebindSupport#reconstruct(brooklyn.entity.rebind.RebindContext, PolicyMemento)}
+     * will call this method.
+     */
+    public void reconstruct() {
+        // no-op
+    }
+    
+    @Override
     public <T> T getConfig(ConfigKey<T> key) {
         return configsInternal.getConfig(key);
     }
     
+    @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         if (entity != null && isRunning()) {
             doReconfigureConfig(key, val);
@@ -116,6 +131,7 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         return (T) configsInternal.setConfig(key, val);
     }
     
+    @Override
     public Map<ConfigKey<?>, Object> getAllConfig() {
         return configsInternal.getAllConfig();
     }
@@ -136,14 +152,17 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         return policyType;
     }
 
+    @Override
     public void suspend() {
         suspended.set(true);
     }
 
+    @Override
     public void resume() {
         suspended.set(false);
     }
 
+    @Override
     public boolean isSuspended() {
         return suspended.get();
     }

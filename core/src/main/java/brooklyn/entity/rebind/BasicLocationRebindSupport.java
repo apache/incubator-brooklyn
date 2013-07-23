@@ -9,13 +9,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
-
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.flags.FlagUtils;
+
+import com.google.common.collect.Sets;
 
 public class BasicLocationRebindSupport implements RebindSupport<LocationMemento> {
 
@@ -71,6 +71,12 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         addChildren(rebindContext, memento);
         
         doReconsruct(rebindContext, memento);
+        
+        if (location instanceof AbstractLocation) {
+            ((AbstractLocation)location).reconstruct();
+        } else {
+            LOG.info("rebind() not being called, because location is not of type AbstractLocation: type={}; location={}", location.getClass(), location);
+        }
     }
 
     protected void addChildren(RebindContext rebindContext, LocationMemento memento) {
