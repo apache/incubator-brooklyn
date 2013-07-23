@@ -26,6 +26,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 	public static final Logger log = LoggerFactory.getLogger(JBoss7ServerImpl.class);
 
     private volatile HttpFeed httpFeed;
+    private SensorTransformingEnricher<Boolean, Boolean> serviceUpEnricher;
     
     public JBoss7ServerImpl(){
         super();
@@ -95,8 +96,13 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     protected void connectServiceUp() {
-        addEnricher(SensorTransformingEnricher.newInstanceTransforming(this,
-            MANAGEMENT_URL_UP, Functions.<Boolean>identity(), SERVICE_UP));
+        serviceUpEnricher = SensorTransformingEnricher.newInstanceTransforming(this,
+            MANAGEMENT_URL_UP, Functions.<Boolean>identity(), SERVICE_UP);
+        addEnricher(serviceUpEnricher);
+    }
+    
+    protected void disconnectServiceUp() {
+        removeEnricher(serviceUpEnricher);
     }
     
     @Override
@@ -104,6 +110,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         super.disconnectSensors();
         
         if (httpFeed != null) httpFeed.stop();
+        disconnectServiceUp();
     }
     
     public int getManagementHttpsPort() {
