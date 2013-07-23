@@ -31,10 +31,10 @@ public class LocationConfigKeys {
             "user account for normal access to the remote machine, defaulting to local user", System.getProperty("user.name"));
     
     public static final ConfigKey<String> PASSWORD = ConfigKeys.newStringConfigKey("password");
-    public static final ConfigKey<String> PUBLIC_KEY_FILE = ConfigKeys.newStringConfigKey("publicKeyFile");
-    public static final ConfigKey<String> PUBLIC_KEY_DATA = ConfigKeys.newStringConfigKey("publicKeyData");
-    public static final ConfigKey<String> PRIVATE_KEY_FILE = ConfigKeys.newStringConfigKey("privateKeyFile");
-    public static final ConfigKey<String> PRIVATE_KEY_DATA = ConfigKeys.newStringConfigKey("privateKeyData");
+    public static final ConfigKey<String> PUBLIC_KEY_FILE = ConfigKeys.newStringConfigKey("publicKeyFile", "colon-separated list of ssh public key file(s) to use; if blank will infer from privateKeyFile by appending \".pub\"");
+    public static final ConfigKey<String> PUBLIC_KEY_DATA = ConfigKeys.newStringConfigKey("publicKeyData", "ssh public key string to use (takes precedence over publicKeyFile)");
+    public static final ConfigKey<String> PRIVATE_KEY_FILE = ConfigKeys.newStringConfigKey("privateKeyFile", "colon-separated list of ssh private key files; uses first in list that can be read", "~/.ssh/id_rsa:~/.ssh/id_dsa");
+    public static final ConfigKey<String> PRIVATE_KEY_DATA = ConfigKeys.newStringConfigKey("privateKeyData", "ssh private key string to use (takes precedence over privateKeyFile)");
     public static final ConfigKey<String> PRIVATE_KEY_PASSPHRASE = ConfigKeys.newStringConfigKey("privateKeyPassphrase");
 
     /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated

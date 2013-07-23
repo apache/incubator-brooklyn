@@ -5,6 +5,7 @@ import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,43 +13,18 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public class LocationConfigUtils {
 
     private static final Logger log = LoggerFactory.getLogger(LocationConfigUtils.class);
-    
-    public static String getKeyData(ConfigBag config, ConfigKey<String> dataKey, ConfigKey<String> fileKey) {
-        boolean unused = config.isUnused(dataKey);
-        String data = config.get(dataKey);
-        if (groovyTruth(data) && !unused) 
-            return data;
-
-        String file = config.get(fileKey);
-        if (groovyTruth(file)) {
-            String fileTidied = ResourceUtils.tidyFilePath(file);
-            try {
-                String fileData = Files.toString(new File(fileTidied), Charsets.UTF_8);
-                if (groovyTruth(data)) {
-                    if (!fileData.trim().equals(data.trim()))
-                        log.warn(dataKey.getName()+" and "+fileKey.getName()+" both specified; preferring the former");
-                } else {
-                    data = fileData;
-                    config.put(dataKey, data);
-                    config.get(dataKey);
-                }
-            } catch (IOException e) {
-                log.warn("Invalid file for "+fileKey+" (value "+file+
-                        (fileTidied.equals(file) ? "" : "; converted to "+fileTidied)+
-                        "); may fail provisioning "+config.getDescription());
-            }
-        }
-        
-        return data;
-    }
     
     public static String getPrivateKeyData(ConfigBag config) {
         return getKeyData(config, LocationConfigKeys.PRIVATE_KEY_DATA, LocationConfigKeys.PRIVATE_KEY_FILE);
@@ -60,25 +36,84 @@ public class LocationConfigUtils {
         
         String privateKeyFile = config.get(LocationConfigKeys.PRIVATE_KEY_FILE);
         if (groovyTruth(privateKeyFile)) {
-            File f = new File(ResourceUtils.tidyFilePath(privateKeyFile+".pub"));
-            if (f.exists()) {
-                log.debug("Trying to load "+LocationConfigKeys.PUBLIC_KEY_DATA.getName()+" from "+LocationConfigKeys.PRIVATE_KEY_FILE.getName() + " " + f.getAbsolutePath()+" for "+config.getDescription());
-                try {
-                    data = Files.toString(f, Charsets.UTF_8);
-                    config.put(LocationConfigKeys.PUBLIC_KEY_DATA, data);
-                    if (log.isDebugEnabled())
-                        log.debug("Loaded public key "+LocationConfigKeys.PUBLIC_KEY_DATA.getName()+" from "+LocationConfigKeys.PRIVATE_KEY_FILE.getName() + " " + f.getAbsolutePath()+" for "+config.getDescription()+": "+data);
-                    return data;
-                } catch (IOException e) {
-                    log.debug("Not able to load "+f.getAbsolutePath()+" for "+config.getDescription());
-                }
+            List<String> privateKeyFiles = Arrays.asList(privateKeyFile.split(":"));
+            List<String> publicKeyFiles = ImmutableList.copyOf(Iterables.transform(privateKeyFiles, StringFunctions.append(".pub")));
+            List<String> publicKeyFilesTidied = tidyFilePaths(publicKeyFiles);
+            
+            String fileData = getFileContents(publicKeyFilesTidied);
+            if (groovyTruth(fileData)) {
+                if (log.isDebugEnabled()) log.debug("Loaded "+LocationConfigKeys.PUBLIC_KEY_DATA.getName()+" from inferred files, based on "+LocationConfigKeys.PRIVATE_KEY_FILE.getName() + ": used " + publicKeyFilesTidied + " for "+config.getDescription());
+                config.put(LocationConfigKeys.PUBLIC_KEY_DATA, fileData);
+                return fileData;
+            } else {
+                log.info("Not able to load "+LocationConfigKeys.PUBLIC_KEY_DATA.getName()+" from inferred files, based on "+LocationConfigKeys.PRIVATE_KEY_FILE.getName() + ": tried " + publicKeyFilesTidied + " for "+config.getDescription());
             }
         }
         
-        // used to also check:
-        // "sshPublicKey"
-
         return null;
+    }
+
+    public static String getKeyData(ConfigBag config, ConfigKey<String> dataKey, ConfigKey<String> fileKey) {
+        boolean unused = config.isUnused(dataKey);
+        String data = config.get(dataKey);
+        if (groovyTruth(data) && !unused) {
+            return data;
+        }
+        
+        String file = config.get(fileKey);
+        if (groovyTruth(file)) {
+            List<String> files = Arrays.asList(file.split(":"));
+            List<String> filesTidied = tidyFilePaths(files);
+            String fileData = getFileContents(filesTidied);
+            if (fileData == null) {
+                log.warn("Invalid file" + (files.size() > 1 ? "s" : "") + " for " + fileKey + " (given " + files + 
+                        (files.equals(filesTidied) ? "" : "; converted to " + filesTidied) + ") " +
+                        "may fail provisioning " + config.getDescription());
+            } else if (groovyTruth(data)) {
+                if (!fileData.trim().equals(data.trim()))
+                    log.warn(dataKey.getName()+" and "+fileKey.getName()+" both specified; preferring the former");
+            } else {
+                data = fileData;
+                config.put(dataKey, data);
+                config.get(dataKey);
+            }
+        }
+        
+        return data;
+    }
+    
+    /**
+     * Reads the given file(s) in-order, returning the contents of the first file that can be read.
+     * Returns the file contents, or null if none of the files can be read.
+     *  
+     * @param files             list of file paths
+     * @param fileContext       what this file refers to (e.g. privateKeyFile)
+     * @param configDescription what this file is being read for 
+     */
+    private static String getFileContents(Iterable<String> files) {
+        int size = Iterables.size(files);
+        int i = 0;
+        
+        for (String file : files) {
+            if (groovyTruth(file)) {
+                try {
+                    File f = new File(file);
+                    return Files.toString(f, Charsets.UTF_8);
+                } catch (IOException e) {
+                    log.debug("Invalid file "+file+" ; " + (i >= (size-1) ? "no more files to try" : "trying next file"), e);
+                }
+            }
+            i++;
+        }
+        return null;
+    }
+
+    private static List<String> tidyFilePaths(Iterable<String> files) {
+        List<String> result = Lists.newArrayList();
+        for (String file : files) {
+            result.add(ResourceUtils.tidyFilePath(file));
+        }
+        return result;
     }
 
     /** @deprecated since 0.6.0 use configBag.getWithDeprecation */

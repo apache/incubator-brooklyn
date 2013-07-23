@@ -42,6 +42,24 @@ public class LocationConfigUtilsTest {
     }
     
     @Test(groups="Integration")
+    public void testReadsPrivateKeyFileWithMultipleColonSeparatedFilesWithGoodLast() throws Exception {
+        ConfigBag config = ConfigBag.newInstance();
+        config.put(LocationConfigKeys.PRIVATE_KEY_FILE, "/path/does/not/exist:"+SSH_PRIVATE_KEY_FILE);
+        
+        String data = LocationConfigUtils.getPrivateKeyData(config);
+        assertTrue(data != null && data.length() > 0);
+    }
+    
+    @Test(groups="Integration")
+    public void testReadsPrivateKeyFileWithMultipleColonSeparatedFilesWithGoodFirst() throws Exception {
+        ConfigBag config = ConfigBag.newInstance();
+        config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE+":/path/does/not/exist");
+        
+        String data = LocationConfigUtils.getPrivateKeyData(config);
+        assertTrue(data != null && data.length() > 0);
+    }
+    
+    @Test(groups="Integration")
     public void testReadsPublicKeyFileWithTildaPath() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PUBLIC_KEY_FILE, SSH_PUBLIC_KEY_FILE);
