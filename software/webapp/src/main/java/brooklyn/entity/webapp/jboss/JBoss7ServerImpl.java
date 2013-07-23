@@ -102,7 +102,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     protected void disconnectServiceUp() {
-        removeEnricher(serviceUpEnricher);
+        if (serviceUpEnricher != null) removeEnricher(serviceUpEnricher);
     }
     
     @Override
