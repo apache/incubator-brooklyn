@@ -10,8 +10,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
+import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestUtils;
 
 import com.google.common.collect.ImmutableList;
 
@@ -34,8 +34,8 @@ public class Jboss7ServerEc2LiveTest extends AbstractEc2LiveTest {
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(url, 200);
         HttpTestUtils.assertContentContainsText(url, "Hello");
         
-        TestUtils.executeUntilSucceeds(new Runnable() {
-            public void run() {
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
                 assertNotNull(server.getAttribute(JBoss7Server.REQUEST_COUNT));
                 assertNotNull(server.getAttribute(JBoss7Server.ERROR_COUNT));
                 assertNotNull(server.getAttribute(JBoss7Server.TOTAL_PROCESSING_TIME));
@@ -45,6 +45,12 @@ public class Jboss7ServerEc2LiveTest extends AbstractEc2LiveTest {
             }});
     }
     
+    @Test(groups = {"Live", "Live-sanity"})
+    @Override
+    public void test_CentOS_6_3() throws Exception {
+        super.test_CentOS_6_3();
+    }
+
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
 }

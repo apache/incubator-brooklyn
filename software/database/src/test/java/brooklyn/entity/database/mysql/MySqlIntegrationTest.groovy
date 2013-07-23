@@ -34,7 +34,7 @@ public class MySqlIntegrationTest {
     
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        brooklynProperties = BrooklynProperties.Factory.newDefault();
         managementContext = new LocalManagementContext(brooklynProperties);
         tapp = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
@@ -42,9 +42,9 @@ public class MySqlIntegrationTest {
     @AfterMethod(alwaysRun=true)
     public void ensureShutDown() {
         if (tapp != null) {
-            Entities.destroyAll(tapp)
+            Entities.destroyAll(tapp.getManagementContext());
             tapp = null;
-        };
+        }
     }
 
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines
