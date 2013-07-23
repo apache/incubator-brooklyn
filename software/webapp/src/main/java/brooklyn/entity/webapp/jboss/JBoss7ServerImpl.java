@@ -6,10 +6,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.basic.SensorTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
@@ -66,7 +68,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                 .credentials(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                 .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
                         .onSuccess(HttpValueFunctions.responseCode()))
-                .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
+                .poll(new HttpPollConfig<Boolean>(MANAGEMENT_URL_UP)
                         .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                         .onError(Functions.constant(false)))
                 .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
@@ -88,6 +90,13 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                         .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class)))
                 .build();
+        
+                connectServiceUp();
+    }
+    
+    protected void connectServiceUp() {
+        addEnricher(SensorTransformingEnricher.newInstanceTransforming(this,
+            MANAGEMENT_URL_UP, Functions.<Boolean>identity(), SERVICE_UP));
     }
     
     @Override

@@ -79,4 +79,7 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppServi
 
     AttributeSensor<Integer> MANAGEMENT_STATUS =
             Sensors.newIntegerSensor("webapp.jboss.managementStatus", "HTTP response code for the management server");
+    
+    AttributeSensor<Boolean> MANAGEMENT_URL_UP = 
+            Sensors.newBooleanSensor("webapp.jboss.managementUp", "Management server is responding with OK");
 }
