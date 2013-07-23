@@ -102,31 +102,18 @@ public class InternalEntityFactory {
     }
 
     public <T extends Entity> T createEntityProxy(EntitySpec<T> spec, T entity) {
-        Set<Class<?>> interfaces = MutableSet.<Class<?>>builder()
-                .add(spec.getType())
-                .addAll(spec.getAdditionalInterfaces())
-                .build();
-        return createEntityProxy(entity, interfaces);
-    }
-
-    public <T extends Entity> T createEntityProxy(T entity, Class<?>... entityInterfaces) {
-        return createEntityProxy(entity, Arrays.asList(entityInterfaces));
-    }
-    
-    @SuppressWarnings("unchecked")
-    public <T extends Entity> T createEntityProxy(T entity, Iterable<Class<?>> entityInterfaces) {
         // TODO Don't want the proxy to have to implement EntityLocal, but required by how 
         // AbstractEntity.parent is used (e.g. parent.getAllConfig)
         ClassLoader classloader = (spec.getImplementation() != null ? spec.getImplementation() : spec.getType()).getClassLoader();
         MutableSet.Builder<Class<?>> builder = MutableSet.<Class<?>>builder()
                 .addAll(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class)
-                .addAll(entityInterfaces);
+                .addAll(spec.getAdditionalInterfaces());
+        
         if (spec.getType().isInterface()) {
             builder.add(spec.getType());
         } else {
-            log.warn("EntitySpec declared in terms of concrete type "+spec.getType()+"; should be supplied in terms of interface");
+            log.warn("Deprecated use of EntitySpec declared in terms of concrete type "+spec.getType()+"; should be supplied in terms of interface");
         }
-        builder.addAll(spec.getAdditionalInterfaces());
         Set<Class<?>> interfaces = builder.build();
         
         return (T) java.lang.reflect.Proxy.newProxyInstance(
@@ -181,7 +168,8 @@ public class InternalEntityFactory {
         Class<?>[] additionalInterfaces = entity.getClass().getInterfaces();
         
         try {
-            ((AbstractEntity)entity).setProxy(createEntityProxy(entity, additionalInterfaces));
+            EntitySpec<Entity> entitySpec = EntitySpecs.spec(Entity.class).additionalInterfaces(additionalInterfaces);
+            ((AbstractEntity)entity).setProxy(createEntityProxy(entitySpec, entity));
             ((AbstractEntity)entity).setManagementContext(managementContext);
             
         } catch (Exception e) {

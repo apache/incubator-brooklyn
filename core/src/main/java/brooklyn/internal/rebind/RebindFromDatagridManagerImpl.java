@@ -19,6 +19,8 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindContextImpl;
@@ -210,7 +212,9 @@ public class RebindFromDatagridManagerImpl {
             Entity entity = entityFactory.constructEntity(entityClazz);
             
             FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
-            ((AbstractEntity)entity).setProxy(entityFactory.createEntityProxy(entity, additionalInterfaces));
+            
+            EntitySpec<Entity> entitySpec = EntitySpecs.spec(Entity.class).additionalInterfaces(additionalInterfaces);
+            ((AbstractEntity)entity).setProxy(entityFactory.createEntityProxy(entitySpec, entity));
             
             return entity;
             
