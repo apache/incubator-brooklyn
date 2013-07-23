@@ -29,7 +29,7 @@ public class CloudMachineNamerTest {
         // br-user-myco-1234
         Assert.assertTrue(result.length() <= 15);
         
-        String user = Strings.maxlen(System.getProperty("user.name"), 2);
+        String user = Strings.maxlen(System.getProperty("user.name"), 2).toLowerCase();
         // (length 2 will happen if user is brooklyn)
         Assert.assertTrue(result.indexOf(user) >= 0);
         Assert.assertTrue(result.indexOf("-myc") >= 0);
@@ -50,7 +50,7 @@ public class CloudMachineNamerTest {
             // e.g. brooklyn-alex-tistapp-uube-testent-xisg-rwad
             Assert.assertTrue(result.length() <= 60);
 
-            String user = Strings.maxlen(System.getProperty("user.name"), 4);
+            String user = Strings.maxlen(System.getProperty("user.name"), 4).toLowerCase();
             Assert.assertTrue(result.indexOf(user) >= 0);
             Assert.assertTrue(result.indexOf("-tistapp-") >= 0);
             Assert.assertTrue(result.indexOf("-testent-") >= 0);
