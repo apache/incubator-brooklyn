@@ -29,10 +29,18 @@ public class SingleMachineLocationResolverTest {
         assertThrowsNoSuchElement("wrongprefix:(hosts=\"1.1.1.1\")");
         assertThrowsIllegalArgument("single");
     }
+    
+    @Test
+    public void testThrowsOnInvalidTarget() throws Exception {
+        assertThrowsIllegalArgument("single:()");
+        assertThrowsIllegalArgument("single:(wrongprefix:(hosts=\"1.1.1.1\"))");
+        assertThrowsIllegalArgument("single:(foo:bar)");
+    }
 
     @Test
     public void resolveHosts() {
         resolve("single:(localhost)");
+        resolve("single:(named:foo)");
         resolve("single:(byon:(hosts=\"1.1.1.1\"))");
     }
     

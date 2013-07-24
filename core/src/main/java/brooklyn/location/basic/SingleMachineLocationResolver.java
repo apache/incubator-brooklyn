@@ -1,12 +1,10 @@
 package brooklyn.location.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
@@ -15,8 +13,6 @@ import brooklyn.location.MachineLocation;
 import brooklyn.management.ManagementContext;
 
 public class SingleMachineLocationResolver implements LocationResolver {
-    
-    private static final Logger LOG = LoggerFactory.getLogger(SingleMachineLocationResolver.class);
     
     private static final String SINGLE = "single";
     
@@ -30,18 +26,22 @@ public class SingleMachineLocationResolver implements LocationResolver {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public Location newLocationFromString(Map properties, String spec) {
         return newLocationFromString(properties, spec, null);
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like single(named:foo)");
         }
         String args = matcher.group(2);
-        // TODO: Check that args can be resolved to a location
+        if (!managementContext.getLocationRegistry().canResolve(args)) {
+            throw new IllegalArgumentException("Invalid target location '" + args + "'; must be resolvable location");
+        }
         return new SingleMachineProvisioningLocation<MachineLocation>(args);
     }
 
