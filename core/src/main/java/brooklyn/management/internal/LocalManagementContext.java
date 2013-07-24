@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
@@ -30,6 +32,8 @@ import brooklyn.util.text.Identifiers;
  * A local implementation of the {@link ManagementContext} API.
  */
 public class LocalManagementContext extends AbstractManagementContext {
+    public static final AtomicInteger instanceCount = new AtomicInteger();
+
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
@@ -66,6 +70,15 @@ public class LocalManagementContext extends AbstractManagementContext {
         super(brooklynProperties,storageFactory);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
         this.locationManager = new LocalLocationManager(this);
+
+        final int instanceCount = LocalManagementContext.instanceCount.incrementAndGet();
+        if(instanceCount >1){
+            try{
+            throw new RuntimeException();
+            }catch(RuntimeException e){
+                log.warn(format("%s LocalManagementContext instances detected, please terminate old instances before starting new ones.",instanceCount), e);
+            }
+        }
     }
     
     public void prePreManage(Entity entity) {
@@ -138,6 +151,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         super.terminate();
         if (execution != null) execution.shutdownNow();
         if (gc != null) gc.shutdownNow();
+        instanceCount.decrementAndGet();
     }
     
     @Override
