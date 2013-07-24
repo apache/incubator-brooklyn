@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.java.JavaSoftwareProcessDriver;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
@@ -53,12 +54,14 @@ public abstract class AbstractZookeeperImpl extends SoftwareProcessImpl implemen
     public void waitForServiceUp(long duration, TimeUnit units) {
         super.waitForServiceUp(duration, units);
 
-        // Wait for the MBean to exist
-        JmxHelper helper = new JmxHelper(this);
-        try {
-            helper.assertMBeanExistsEventually(ZOOKEEPER_MBEAN, units.toMillis(duration));
-        } finally {
-            helper.disconnect();
+        if (((JavaSoftwareProcessDriver)getDriver()).isJmxEnabled()) {
+            // Wait for the MBean to exist
+            JmxHelper helper = new JmxHelper(this);
+            try {
+                helper.assertMBeanExistsEventually(ZOOKEEPER_MBEAN, units.toMillis(duration));
+            } finally {
+                helper.disconnect();
+            }
         }
     }
 
@@ -66,7 +69,8 @@ public abstract class AbstractZookeeperImpl extends SoftwareProcessImpl implemen
     protected void connectSensors() {
         connectServiceUpIsRunning();
 
-        jmxFeed = JmxFeed.builder()
+        if (((JavaSoftwareProcessDriver)getDriver()).isJmxEnabled()) {
+            jmxFeed = JmxFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)
                 .pollAttribute(new JmxAttributePollConfig<Long>(OUTSTANDING_REQUESTS)
@@ -82,6 +86,7 @@ public abstract class AbstractZookeeperImpl extends SoftwareProcessImpl implemen
                         .attributeName("PacketsSent")
                         .onError(Functions.constant(-1l)))
                 .build();
+        }
     }
 
     @Override
