@@ -88,8 +88,8 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
     @Override
     public V put(K key, V value) {
-        if (!(key instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
-        if (!(value instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
+        if (!(key == null || key instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
+        if (!(value == null || value instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
         return (V) fromNonNullValue(delegate.put(key, (V) toNonNullValue(value)));
     }
 
@@ -112,8 +112,8 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
     @Override
     public V putIfAbsent(K key, V value) {
-        if (!(key instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
-        if (!(value instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
+        if (!(key == null || key instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
+        if (!(value == null || value instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
         return (V) fromNonNullValue(delegate.putIfAbsent(key, (V) toNonNullValue(value)));
     }
 
