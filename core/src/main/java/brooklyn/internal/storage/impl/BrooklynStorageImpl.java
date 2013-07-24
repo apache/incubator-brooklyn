@@ -81,4 +81,9 @@ public class BrooklynStorageImpl implements BrooklynStorage {
         refsCache.remove(id);
         listRefsCache.remove(id);
     }
+
+    @Override
+    public void terminate() {
+        datagrid.terminate();
+    }
 }

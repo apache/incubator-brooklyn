@@ -14,4 +14,10 @@ public interface DataGrid {
      * Deletes the map for this id, if it exists; otherwise a no-op.
      */
     void remove(String id);
+
+    /**
+     * Terminates the DataGrid. If there is a real datagrid with multiple machines running, it doesn't mean that the
+     * datagrid is going to be terminated; it only means that all local resources of the datagrid are released.
+     */
+    void terminate();
 }

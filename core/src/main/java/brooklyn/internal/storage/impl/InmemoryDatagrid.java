@@ -46,4 +46,11 @@ public class InmemoryDatagrid implements DataGrid {
             maps.remove(id);
         }
     }
+
+    @Override
+    public void terminate() {
+        synchronized (maps) {
+            maps.clear();
+        }
+    }
 }

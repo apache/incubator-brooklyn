@@ -101,7 +101,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public void terminate() {
         running = false;
         rebindManager.stop();
-        
+        storage.terminate();
         // Don't unmanage everything; different entities get given their events at different times 
         // so can cause problems (e.g. a group finds out that a member is unmanaged, before the
         // group itself has been told that it is unmanaged).
