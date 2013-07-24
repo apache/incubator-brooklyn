@@ -21,14 +21,23 @@ import com.google.common.collect.Iterables;
 public class CatalogScanTest {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogScanTest.class);
-    private BrooklynCatalog defaultCatalog, annotsCatalog;
+    private BrooklynCatalog defaultCatalog, annotsCatalog, fullCatalog;
     
-    private synchronized void loadDefaultCatalog() {
+    private synchronized void loadFullCatalog() {
+        if (fullCatalog!=null) return;
+        BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
+        props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), 
+                "data:,"+URLEncoder.encode("<catalog><classpath scan=\"types\"/></catalog>"));
+        fullCatalog = new LocalManagementContext(props).getCatalog();        
+        log.info("ENTITIES loaded for FULL: "+fullCatalog.getCatalogItems(Predicates.alwaysTrue()));
+    }
+    
+    private synchronized void loadTheDefaultCatalog() {
         if (defaultCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), "");
         defaultCatalog = new LocalManagementContext(props).getCatalog();        
-        log.info("ENTITIES loaded: "+defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
+        log.info("ENTITIES loaded for DEFAULT: "+defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
     @SuppressWarnings("deprecation")
@@ -42,28 +51,29 @@ public class CatalogScanTest {
     }
     
     @Test
-    public void testDefaultScansAll() {
-        loadDefaultCatalog();
+    public void testLoadAnnotations() {
+        loadAnnotationsOnlyCatalog();
+        BrooklynCatalog c = annotsCatalog;
         
-        Iterable<CatalogItem<Object>> bases = defaultCatalog.getCatalogItems(CatalogPredicates.name(Predicates.containsPattern("MyBaseEntity")));
-        Assert.assertNotEquals(Iterables.size(bases), 0);
+        Iterable<CatalogItem<Object>> bases = c.getCatalogItems(CatalogPredicates.name(Predicates.containsPattern("MyBaseEntity")));
+        Assert.assertEquals(Iterables.size(bases), 0, "should have been empty: "+bases);
         
-        Iterable<CatalogItem<Object>> asdfjkls = defaultCatalog.getCatalogItems(CatalogPredicates.name(Predicates.containsPattern("__asdfjkls__shouldnotbefound")));
+        Iterable<CatalogItem<Object>> asdfjkls = c.getCatalogItems(CatalogPredicates.name(Predicates.containsPattern("__asdfjkls__shouldnotbefound")));
         Assert.assertEquals(Iterables.size(asdfjkls), 0);
         
-        Iterable<CatalogItem<Object>> silly1 = defaultCatalog.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
-        Iterable<CatalogItem<Object>> silly2 = defaultCatalog.getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(MySillyAppTemplate.class.getName())));
+        Iterable<CatalogItem<Object>> silly1 = c.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
+        Iterable<CatalogItem<Object>> silly2 = c.getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(MySillyAppTemplate.class.getName())));
         Assert.assertEquals(Iterables.getOnlyElement(silly1), Iterables.getOnlyElement(silly2));
         
-        CatalogItem<Application> s1 = defaultCatalog.getCatalogItem(Application.class, silly1.iterator().next().getId());
+        CatalogItem<Application> s1 = c.getCatalogItem(Application.class, silly1.iterator().next().getId());
         Assert.assertEquals(s1, Iterables.getOnlyElement(silly1));
         
         Assert.assertEquals(s1.getDescription(), "Some silly app test");
         
-        Class<? extends Application> app = defaultCatalog.loadClass(s1);
+        Class<? extends Application> app = c.loadClass(s1);
         Assert.assertEquals(MySillyAppTemplate.class, app);
         
-        String xml = ((BasicBrooklynCatalog)defaultCatalog).toXmlString();
+        String xml = ((BasicBrooklynCatalog)c).toXmlString();
         log.info("Catalog is:\n"+xml);
         Assert.assertTrue(xml.indexOf("Some silly app test") >= 0);
     }
@@ -85,12 +95,23 @@ public class CatalogScanTest {
     @Test
     public void testAnnotationFindsFewer() {
         loadAnnotationsOnlyCatalog();
-        loadDefaultCatalog();
+        loadFullCatalog();
         
         int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
-        int numFromTypes = Iterables.size(defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
+        int numFromTypes = Iterables.size(fullCatalog.getCatalogItems(Predicates.alwaysTrue()));
         
-        Assert.assertTrue(numFromAnnots < numFromTypes);
+        Assert.assertTrue(numFromAnnots < numFromTypes, "full="+numFromTypes+" annots="+numFromAnnots);
+    }
+    
+    @Test
+    public void testAnnotationIsDefault() {
+        loadAnnotationsOnlyCatalog();
+        loadTheDefaultCatalog();
+        
+        int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
+        int numInDefault = Iterables.size(defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
+        
+        Assert.assertEquals(numFromAnnots, numInDefault);
     }
     
 }

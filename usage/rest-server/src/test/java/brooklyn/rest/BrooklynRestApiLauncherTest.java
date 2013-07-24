@@ -12,7 +12,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
-import brooklyn.rest.testing.mocks.RestMockApp;
+import brooklyn.rest.util.BrooklynRestResourceUtilsTest.SampleNoOpApplication;
 import brooklyn.test.HttpTestUtils;
 
 public class BrooklynRestApiLauncherTest {
@@ -46,7 +46,7 @@ public class BrooklynRestApiLauncherTest {
         enableAnyoneLogin(server);
         forceUseOfDefaultCatalogWithJavaClassPath(server);
         String rootUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort();
-        HttpTestUtils.assertContentContainsText(rootUrl+"/v1/catalog/applications", RestMockApp.class.getCanonicalName());
+        HttpTestUtils.assertContentContainsText(rootUrl+"/v1/catalog/applications", SampleNoOpApplication.class.getSimpleName());
     }
 
     public static void forceUseOfDefaultCatalogWithJavaClassPath(Server server) {

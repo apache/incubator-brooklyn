@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ import brooklyn.rest.domain.EntitySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
@@ -51,6 +53,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 
 public class BrooklynRestResourceUtils {
 
@@ -382,6 +385,21 @@ public class BrooklynRestResourceUtils {
     public String getStringValueForDisplay(Object value) {
         if (value==null) return null;
         return ""+getObjectValueForDisplay(value);
+    }
+
+    /** true if the URL points to content which must be resolved on the server-side (i.e. classpath)
+     *  and which is safe to do so (currently just images, though in future perhaps also javascript and html plugins)
+     *  <p>
+     *  note we do not let caller access classpath through this mechanism, 
+     *  just those which are supplied by the platform administrator e.g. as an icon url */
+    public boolean isUrlServerSideAndSafe(String url) {
+        if (Strings.isEmpty(url)) return false;
+        String ext = Files.getFileExtension(url);
+        if (Strings.isEmpty(ext)) return false;
+        MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(ext);
+        if (mime==null) return false;
+        
+        return !Urls.isUrlWithProtocol(url) || url.startsWith("classpath:");
     }
 
 }

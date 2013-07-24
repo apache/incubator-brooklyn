@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
@@ -46,6 +47,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * by another policy that is attached to it; see, for example, {@link LoadBalancingPolicy}.)
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
+@Catalog
 public class AutoScalerPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(AutoScalerPolicy.class);

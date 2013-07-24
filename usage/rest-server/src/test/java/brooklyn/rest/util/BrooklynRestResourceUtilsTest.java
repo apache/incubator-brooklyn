@@ -51,7 +51,7 @@ public class BrooklynRestResourceUtilsTest {
     public void testCreateAppFromImplClass() {
         ApplicationSpec spec = ApplicationSpec.builder()
                 .name("myname")
-                .type(MyApplicationImpl.class.getName())
+                .type(SampleNoOpApplication.class.getName())
                 .locations(ImmutableSet.of("localhost"))
                 .build();
         Application app = util.create(spec);
@@ -60,17 +60,17 @@ public class BrooklynRestResourceUtilsTest {
         assertEquals(app.getDisplayName(), "myname");
         assertTrue(app instanceof EntityProxy);
         assertTrue(app instanceof MyInterface);
-        assertFalse(app instanceof MyApplicationImpl);
+        assertFalse(app instanceof SampleNoOpApplication);
     }
 
     @Test
     public void testNestedApplications() {
         // hierarchy is: app -> subapp -> subentity (where subentity has a policy)
         
-        MyApplicationImpl app = new MyApplicationImpl();
+        SampleNoOpApplication app = new SampleNoOpApplication();
         app.setDisplayName("app");
         
-        MyApplicationImpl subapp = new MyApplicationImpl();
+        SampleNoOpApplication subapp = new SampleNoOpApplication();
         subapp.setDisplayName("subapp");
         
         TestEntityImpl subentity = new TestEntityImpl(MutableMap.of("displayName", "subentity"), subapp);
@@ -93,8 +93,10 @@ public class BrooklynRestResourceUtilsTest {
     public interface MyInterface {
     }
 
-    @Catalog
-    public static class MyApplicationImpl extends AbstractApplication implements MyInterface {
+    @Catalog(name="Sample No-Op Application",
+            description="Application which does nothing, included only as part of the test cases.",
+            iconUrl="")
+    public static class SampleNoOpApplication extends AbstractApplication implements MyInterface {
         @Override
         public void init() {
             // no-op

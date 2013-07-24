@@ -1,11 +1,15 @@
 package brooklyn.rest.util;
 
+import java.util.Map;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableMap;
 
 import brooklyn.rest.domain.ApiError;
 
@@ -29,4 +33,18 @@ public class WebResourceUtils {
                 .entity(ApiError.builder().message(msg).build()).build());
     }
 
+    public final static Map<String,com.google.common.net.MediaType> IMAGE_FORMAT_MIME_TYPES = ImmutableMap.<String, com.google.common.net.MediaType>builder()
+            .put("jpg", com.google.common.net.MediaType.JPEG)
+            .put("jpeg", com.google.common.net.MediaType.JPEG)
+            .put("png", com.google.common.net.MediaType.PNG)
+            .put("gif", com.google.common.net.MediaType.GIF)
+            .put("svg", com.google.common.net.MediaType.SVG_UTF_8)
+            .build();
+    
+    public static MediaType getImageMediaTypeFromExtension(String extension) {
+        com.google.common.net.MediaType mime = IMAGE_FORMAT_MIME_TYPES.get(extension.toLowerCase());
+        if (mime==null) return null;
+        return MediaType.valueOf(mime.toString());
+    }
+    
 }
