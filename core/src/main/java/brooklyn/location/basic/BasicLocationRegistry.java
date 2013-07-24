@@ -65,7 +65,7 @@ public class BasicLocationRegistry implements LocationRegistry {
             resolvers.put(r.getPrefix(), r);
         }
         if (log.isDebugEnabled()) log.debug("Location resolvers are: "+resolvers);
-        if (resolvers.isEmpty()) log.warn("No location resolvers detected: is src/main/resources correclty included?");
+        if (resolvers.isEmpty()) log.warn("No location resolvers detected: is src/main/resources correctly included?");
     }
 
     @Override
