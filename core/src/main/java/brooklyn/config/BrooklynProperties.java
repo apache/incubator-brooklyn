@@ -1,5 +1,7 @@
 package brooklyn.config;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import groovy.lang.Closure;
 
 import java.io.File;
@@ -45,42 +47,82 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         }
 
         public static BrooklynProperties newDefault() {
-            BrooklynProperties properties = new BrooklynProperties();
-
-            addDefaultProperties(properties);
-
-            addGlobalProperties(properties);
-
-            properties.addEnvironmentVars();
-
-            properties.addSystemProperties();
-
-            return properties;
+            return new Builder().build();
         }
 
-        private static void addDefaultProperties(BrooklynProperties p) {
-            // TODO Could also read from http://brooklyn.io, for up-to-date values?
-            // But might that make unit tests run very badly when developer is offline?
-            String classpath = "classpath://brooklyn/location-metadata.properties";
+        public static class Builder {
+            private String defaultLocationMetadataUrl = "classpath://brooklyn/location-metadata.properties";
+            private String globalLocationMetadataFile = "~"+File.separatorChar+".brooklyn"+File.separatorChar+"location-metadata.properties";
+            private String globalPropertiesFile = "~"+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties";
+            private String localPropertiesFile = null;
             
-            try {
-                p.addFrom(new ResourceUtils(BrooklynProperties.class).getResourceFromUrl(classpath));
-            } catch (Exception e) {
-                LOG.info("Could not load {}; continuing", classpath);
-                if (LOG.isTraceEnabled()) LOG.trace("Could not load "+classpath+"; continuing", e);
+            /**
+             * The URL of a default location-metadata.properties (for meta-data about different locations, such as iso3166 and global lat/lon). 
+             * Defaults to classpath://brooklyn/location-metadata.properties
+             */
+            public Builder defaultLocationMetadataUrl(String val) {
+                defaultLocationMetadataUrl = checkNotNull(val, "file");
+                return this;
+            }
+            
+            /**
+             * The URL of a location-metadata.properties file that appends to and overwrites values in the locationMetadataUrl. 
+             * Defaults to ~/.brooklyn/location-metadata.properties
+             */
+            public Builder globalLocationMetadataFile(String val) {
+                globalLocationMetadataFile = checkNotNull(val, "file");
+                return this;
+            }
+            
+            /**
+             * The URL of a shared brooklyn.properties file. Defaults to ~/.brooklyn/brooklyn.properties
+             */
+            public Builder globalPropertiesFile(String val) {
+                globalPropertiesFile = checkNotNull(val, "file");
+                return this;
+            }
+            
+            /**
+             * The URL of a brooklyn.properties file specific to this launch. Appends to and overwrites values in globalPropertiesFile.
+             */
+            public Builder localPropertiesFile(String val) {
+                localPropertiesFile = val;
+                return this;
+            }
+            
+            public BrooklynProperties build() {
+                BrooklynProperties properties = new BrooklynProperties();
+
+                // TODO Could also read from http://brooklyn.io, for up-to-date values?
+                // But might that make unit tests run very badly when developer is offline?
+                addPropertiesFromUrl(properties, defaultLocationMetadataUrl);
+                
+                addPropertiesFromFile(properties, globalLocationMetadataFile);
+                addPropertiesFromFile(properties, globalPropertiesFile);
+                if (localPropertiesFile != null) addPropertiesFromFile(properties, localPropertiesFile);
+                
+                properties.addEnvironmentVars();
+                properties.addSystemProperties();
+
+                return properties;
             }
         }
         
-        private static void addGlobalProperties(BrooklynProperties p) {
-            String userHome = System.getProperty("user.home");
-            File globalLocationMetadataFile = new File(userHome+File.separatorChar+".brooklyn"+File.separatorChar+"location-metadata.properties");
-            File globalPropertiesFile = new File(userHome+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties");
-
-            if (globalLocationMetadataFile.exists()) {
-                p.addFrom(globalLocationMetadataFile);
+        private static void addPropertiesFromUrl(BrooklynProperties p, String url) {
+            try {
+                p.addFrom(new ResourceUtils(BrooklynProperties.class).getResourceFromUrl(url));
+            } catch (Exception e) {
+                LOG.info("Could not load {}; continuing", url);
+                if (LOG.isTraceEnabled()) LOG.trace("Could not load "+url+"; continuing", e);
             }
-            if (globalPropertiesFile.exists()) {
-                p.addFrom(globalPropertiesFile);
+        }
+        
+        private static void addPropertiesFromFile(BrooklynProperties p, String file) {
+            String fileTidied = ResourceUtils.tidyFilePath(file);
+            File f = new File(fileTidied);
+
+            if (f.exists()) {
+                p.addFrom(f);
             }
         }
     }

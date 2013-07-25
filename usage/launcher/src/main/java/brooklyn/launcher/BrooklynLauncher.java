@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynProperties.Factory.Builder;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
@@ -76,6 +77,8 @@ public class BrooklynLauncher {
     private volatile BrooklynWebServer webServer;
 
     private boolean started;
+    private String globalBrooklynPropertiesFile;
+    private String localBrooklynPropertiesFile;
 
     public List<Application> getApplications() {
         if (!started) throw new IllegalStateException("Cannot retrieve application until started");
@@ -158,6 +161,16 @@ public class BrooklynLauncher {
         return this;
     }
 
+    public BrooklynLauncher globalBrooklynPropertiesFile(String file) {
+        globalBrooklynPropertiesFile = file;
+        return this;
+    }
+    
+    public BrooklynLauncher localBrooklynPropertiesFile(String file) {
+        localBrooklynPropertiesFile = file;
+        return this;
+    }
+    
     /** 
      * Specifies the management context this launcher should use. 
      * If not specified a new one is created automatically.
@@ -298,7 +311,10 @@ public class BrooklynLauncher {
         // Create the management context
         if (managementContext == null) {
             if (brooklynProperties == null) {
-                brooklynProperties = BrooklynProperties.Factory.newDefault();
+                Builder builder = new BrooklynProperties.Factory.Builder();
+                if (globalBrooklynPropertiesFile != null) builder.globalPropertiesFile(globalBrooklynPropertiesFile);
+                if (localBrooklynPropertiesFile != null) builder.localPropertiesFile(localBrooklynPropertiesFile);
+                brooklynProperties = builder.build();
             }
             managementContext = new LocalManagementContext(brooklynProperties);
         }

@@ -145,6 +145,10 @@ public class Main {
             "to point to the user application classpath.")
     public static class LaunchCommand extends BrooklynCommand {
 
+        @Option(name = { "--localBrooklynProperties" }, title = "local brooklyn.properties file",
+                description = "local brooklyn.properties file, specific to this launch (appending to and overriding global properties)")
+        public String localBrooklynProperties;
+
         @Option(name = { "-a", "--app" }, title = "application class or file",
                 description = "The Application to start. " +
                         "For example my.AppName or file://my/AppName.groovy or classpath://my/AppName.groovy")
@@ -228,6 +232,7 @@ public class Main {
             }
 
             BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+                    .localBrooklynPropertiesFile(localBrooklynProperties)
                     .webconsolePort(port)
                     .webconsole(!noConsole)
                     .installSecurityFilter(!noConsoleSecurity)
@@ -379,7 +384,8 @@ public class Main {
                     .add("noConsole", noConsole)
                     .add("noConsoleSecurity", noConsoleSecurity)
                     .add("noShutdownOnExit", noShutdownOnExit)
-                    .add("stopOnKeyPress", stopOnKeyPress);
+                    .add("stopOnKeyPress", stopOnKeyPress)
+                    .add("localBrooklynProperties", localBrooklynProperties);
         }
     }
 

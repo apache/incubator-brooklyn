@@ -13,11 +13,11 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -64,19 +64,53 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public static final BasicAttributeSensorAndConfigKey<String> LOCATIONS = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "brooklynnode.locations", "Locations to use when launching the app", null);
     
-    // For use in testing primarily
-    @SetFromFlag("brooklynPropertiesRemotePath")
-    public static final ConfigKey<String> BROOKLYN_PROPERTIES_REMOTE_PATH = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.remotepath", "Remote path for the brooklyn.properties file to be uploaded", "${HOME}/.brooklyn/brooklyn.properties");
+    /**
+     * Exposed just for testing; remote path is not passed into the launched brooklyn so this won't be used!
+     * This will likely change in a future version.
+     */
+    @VisibleForTesting
+    @SetFromFlag("brooklynGlobalPropertiesRemotePath")
+    public static final ConfigKey<String> BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH = ConfigKeys.newStringConfigKey(
+            "brooklynnode.brooklynproperties.global.remotepath", "Remote path for the global brooklyn.properties file to be uploaded", "${HOME}/.brooklyn/brooklyn.properties");
     
+    @SetFromFlag("brooklynGlobalPropertiesUri")
+    public static final ConfigKey<String> BROOKLYN_GLOBAL_PROPERTIES_URI = ConfigKeys.newStringConfigKey(
+            "brooklynnode.brooklynproperties.global.uri", "URI for the global brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+
+    @SetFromFlag("brooklynGlobalPropertiesContents")
+    public static final ConfigKey<String> BROOKLYN_GLOBAL_PROPERTIES_CONTENTS = ConfigKeys.newStringConfigKey(
+            "brooklynnode.brooklynproperties.global.contents", "Contents for the global brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+
+    /**
+     * @deprecated since 0.6.0; use BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH
+     */
+    @SetFromFlag("brooklynPropertiesRemotePath")
+    public static final ConfigKey<String> BROOKLYN_PROPERTIES_REMOTE_PATH = BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH;
+    
+    /**
+     * @deprecated since 0.6.0; use BROOKLYN_GLOBAL_PROPERTIES_URI
+     */
     @SetFromFlag("brooklynPropertiesUri")
-    public static final ConfigKey<String> BROOKLYN_PROPERTIES_URI = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.uri", "URI for the brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+    public static final ConfigKey<String> BROOKLYN_PROPERTIES_URI = BROOKLYN_GLOBAL_PROPERTIES_URI;
 
+    /**
+     * @deprecated since 0.6.0; use BROOKLYN_GLOBAL_PROPERTIES_CONTENTS
+     */
     @SetFromFlag("brooklynPropertiesContents")
-    public static final ConfigKey<String> BROOKLYN_PROPERTIES_CONTENTS = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.contents", "Contents for the brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+    public static final ConfigKey<String> BROOKLYN_PROPERTIES_CONTENTS = BROOKLYN_GLOBAL_PROPERTIES_CONTENTS;
 
+    @SetFromFlag("brooklynLocalPropertiesRemotePath")
+    public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH = ConfigKeys.newStringConfigKey(
+            "brooklynnode.brooklynproperties.local.remotepath", "Remote path for the launch-specific brooklyn.properties file to be uploaded", "${driver.runDir}/brooklyn-local.properties");
+    
+    @SetFromFlag("brooklynLocalPropertiesUri")
+    public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_URI = ConfigKeys.newStringConfigKey(
+            "brooklynnode.brooklynproperties.local.uri", "URI for the launch-specific brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+
+    @SetFromFlag("brooklynLocalPropertiesContents")
+    public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_CONTENTS = ConfigKeys.newStringConfigKey(
+            "brooklynnode.brooklynproperties.local.contents", "Contents for the launch-specific brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+    
     // For use in testing primarily
     @SetFromFlag("brooklynCatalogRemotePath")
     public static final ConfigKey<String> BROOKLYN_CATALOG_REMOTE_PATH = ConfigKeys.newStringConfigKey(

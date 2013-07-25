@@ -190,7 +190,7 @@ public class ResourceUtils {
             return path;
         }
         // allow ~ syntax for home dir
-        String result = System.getProperty("user.home")+"/"+pathRelativeToHome;
+        String result = System.getProperty("user.home")+File.separatorChar+pathRelativeToHome;
         if (log.isDebugEnabled()) log.debug("quietly changing to "+path+" to "+result);
         return result;
     }

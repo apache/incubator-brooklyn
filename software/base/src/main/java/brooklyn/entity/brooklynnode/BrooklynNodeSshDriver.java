@@ -1,6 +1,7 @@
 package brooklyn.entity.brooklynnode;
 
 import static java.lang.String.format;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -99,43 +100,31 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         SshMachineLocation machine = getMachine();
         BrooklynNode entity = getEntity();
         
-        String brooklynPropertiesTempRemotePath = String.format("%s/brooklyn.properties", getRunDir());
-        String brooklynPropertiesRemotePath = entity.getConfig(BrooklynNode.BROOKLYN_PROPERTIES_REMOTE_PATH);
-        String brooklynPropertiesContents = entity.getConfig(BrooklynNode.BROOKLYN_PROPERTIES_CONTENTS);
-        String brooklynPropertiesUri = entity.getConfig(BrooklynNode.BROOKLYN_PROPERTIES_URI);
+        String brooklynGlobalPropertiesRemotePath = entity.getConfig(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH);
+        String brooklynGlobalPropertiesContents = entity.getConfig(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS);
+        String brooklynGlobalPropertiesUri = entity.getConfig(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_URI);
 
-        // Override the ~/.brooklyn/brooklyn.properties if required
-        if (brooklynPropertiesContents != null || brooklynPropertiesUri != null) {
-            if (brooklynPropertiesContents != null) {
-                machine.copyTo(new ByteArrayInputStream(brooklynPropertiesContents.getBytes()), brooklynPropertiesTempRemotePath);
-            } else if (brooklynPropertiesUri != null) {
-                InputStream propertiesStream = new ResourceUtils(entity).getResourceFromUrl(brooklynPropertiesUri);
-                machine.copyTo(propertiesStream, brooklynPropertiesTempRemotePath);
-            }
-            newScript(CUSTOMIZING)
-                    .failOnNonZeroResultCode()
-                    .body.append(
-                            format("mkdir -p %s", brooklynPropertiesRemotePath.subSequence(0, brooklynPropertiesRemotePath.lastIndexOf("/"))),
-                            format("cp -p %s %s", brooklynPropertiesTempRemotePath, brooklynPropertiesRemotePath))
-                    .execute();
-        }
+        String brooklynLocalPropertiesRemotePath = processTemplateContents(entity.getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
+        String brooklynLocalPropertiesContents = entity.getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS);
+        String brooklynLocalPropertiesUri = entity.getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_URI);
 
-        String brooklynCatalogTempRemotePath = String.format("%s/catalog.xml", getRunDir());
         String brooklynCatalogRemotePath = entity.getConfig(BrooklynNode.BROOKLYN_CATALOG_REMOTE_PATH);
         String brooklynCatalogContents = entity.getConfig(BrooklynNode.BROOKLYN_CATALOG_CONTENTS);
         String brooklynCatalogUri = entity.getConfig(BrooklynNode.BROOKLYN_CATALOG_URI);
 
+        // Override the ~/.brooklyn/brooklyn.properties if required
+        if (brooklynGlobalPropertiesContents != null || brooklynGlobalPropertiesUri != null) {
+            uploadFileContents(brooklynGlobalPropertiesContents, brooklynGlobalPropertiesUri, brooklynGlobalPropertiesRemotePath);
+        }
+        
+        // Upload a local-brooklyn.properties if required
+        if (brooklynLocalPropertiesContents != null || brooklynLocalPropertiesUri != null) {
+            uploadFileContents(brooklynLocalPropertiesContents, brooklynLocalPropertiesUri, brooklynLocalPropertiesRemotePath);
+        }
+
         // Override the ~/.brooklyn/catalog.xml if required
         if (brooklynCatalogContents != null || brooklynCatalogUri != null) {
-            if (brooklynCatalogContents != null) {
-                machine.copyTo(new ByteArrayInputStream(brooklynCatalogContents.getBytes()), brooklynCatalogTempRemotePath);
-            } else if (brooklynCatalogUri != null) {
-                InputStream catalogStream = new ResourceUtils(entity).getResourceFromUrl(brooklynCatalogUri);
-                machine.copyTo(catalogStream, brooklynCatalogTempRemotePath);
-            }
-            newScript(CUSTOMIZING)
-                    .body.append(format("cp -p %s %s", brooklynCatalogTempRemotePath, brooklynCatalogRemotePath))
-                    .execute();
+            uploadFileContents(brooklynCatalogContents, brooklynCatalogUri, brooklynCatalogRemotePath);
         }
 
         // Copy additional resources to the server
@@ -196,13 +185,18 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         String app = getEntity().getAttribute(BrooklynNode.APP);
         String locations = getEntity().getAttribute(BrooklynNode.LOCATIONS);
         Integer httpPort = getEntity().getAttribute(BrooklynNode.HTTP_PORT);
-        
+        boolean hasLocalBrooklynProperties = entity.getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS) != null || entity.getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_URI) != null;
+        String localBrooklynPropertiesPath = processTemplateContents(getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
+
         String cmd = "./bin/brooklyn launch";
         if (app != null) {
             cmd += " --app "+app;
         }
         if (locations != null) {
             cmd += " --locations "+locations;
+        }
+        if (hasLocalBrooklynProperties) {
+            cmd += " --localBrooklynProperties "+localBrooklynPropertiesPath;
         }
         if (getEntity().isHttpProtocolEnabled("http")) {
             NetworkUtils.checkPortsValid(ImmutableMap.of("httpPort", httpPort));
@@ -260,5 +254,27 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         results.put("BROOKLYN_HOME", getBrooklynHome());
         results.put("RUN", getRunDir());
         return results;
+    }
+    
+    private void uploadFileContents(String contents, String alternativeUri, String remotePath) {
+        checkNotNull(remotePath, "remotePath");
+        SshMachineLocation machine = getMachine();
+        String tempRemotePath = String.format("%s/upload.tmp", getRunDir());
+
+        if (contents != null) {
+            machine.copyTo(new ByteArrayInputStream(contents.getBytes()), tempRemotePath);
+        } else if (alternativeUri != null) {
+            InputStream propertiesStream = new ResourceUtils(entity).getResourceFromUrl(alternativeUri);
+            machine.copyTo(propertiesStream, tempRemotePath);
+        } else {
+            throw new IllegalStateException("No contents supplied for file "+remotePath);
+        }
+        newScript(CUSTOMIZING)
+                .failOnNonZeroResultCode()
+                .body.append(
+                        format("mkdir -p %s", remotePath.subSequence(0, remotePath.lastIndexOf("/"))),
+                        format("cp -p %s %s", tempRemotePath, remotePath),
+                        format("rm -f %s", tempRemotePath))
+                .execute();
     }
 }
