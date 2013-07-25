@@ -79,4 +79,9 @@ public interface BrooklynStorage {
      * Removes the data stored against this id, whether it is a map, ref or whatever.
      */
     void remove(String id);
+
+    /**
+     * Terminates the BrooklynStorage.
+     */
+    void terminate();
 }
