@@ -16,7 +16,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
@@ -163,7 +162,7 @@ public class ByonLocationResolverTest {
         Assert.assertNull(l.getAllConfig(false).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
         Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
         
-        Assert.assertNull(l.getRawLocalConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
+        Assert.assertEquals(l.getRawLocalConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE), LocationConfigKeys.PRIVATE_KEY_FILE.getDefaultValue());
     }
 
     private void assertByonClusterEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<String> expectedHosts, String expectedName) {

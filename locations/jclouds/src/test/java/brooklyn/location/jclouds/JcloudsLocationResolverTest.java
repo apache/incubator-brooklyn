@@ -3,6 +3,7 @@ package brooklyn.location.jclouds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
@@ -39,7 +40,92 @@ public class JcloudsLocationResolverTest {
     public void tearDown() throws Exception {
         if (managementContext != null) managementContext.terminate();
     }
-    
+
+    @Test
+    public void testJcloudsTakesProviderScopedProperties() {
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.privateKeyFile", "myprivatekeyfile");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.publicKeyFile", "mypublickeyfile");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.privateKeyData", "myprivateKeyData");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.publicKeyData", "myPublicKeyData");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.privateKeyPassphrase", "myprivateKeyPassphrase");
+        Map<String, Object> conf = resolve("jclouds:aws-ec2").getAllConfig(true);
+        
+        assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
+        assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
+        assertEquals(conf.get("privateKeyData"), "myprivateKeyData");
+        assertEquals(conf.get("publicKeyData"), "myPublicKeyData");
+        assertEquals(conf.get("privateKeyPassphrase"), "myprivateKeyPassphrase");
+    }
+
+    @Test
+    public void testJcloudsTakesGenericScopedProperties() {
+        brooklynProperties.put("brooklyn.jclouds.privateKeyFile", "myprivatekeyfile");
+        brooklynProperties.put("brooklyn.jclouds.publicKeyFile", "mypublickeyfile");
+        brooklynProperties.put("brooklyn.jclouds.privateKeyData", "myprivateKeyData");
+        brooklynProperties.put("brooklyn.jclouds.publicKeyData", "myPublicKeyData");
+        brooklynProperties.put("brooklyn.jclouds.privateKeyPassphrase", "myprivateKeyPassphrase");
+        Map<String, Object> conf = resolve("jclouds:aws-ec2").getAllConfig(true);
+        
+        assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
+        assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
+        assertEquals(conf.get("privateKeyData"), "myprivateKeyData");
+        assertEquals(conf.get("publicKeyData"), "myPublicKeyData");
+        assertEquals(conf.get("privateKeyPassphrase"), "myprivateKeyPassphrase");
+    }
+
+    @Test
+    public void testJcloudsTakesDeprecatedProperties() {
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.private-key-file", "myprivatekeyfile");
+        brooklynProperties.put("brooklyn.jclouds.public-key-file", "mypublickeyfile");
+        brooklynProperties.put("brooklyn.jclouds.private-key-data", "myprivateKeyData");
+        brooklynProperties.put("brooklyn.jclouds.public-key-data", "myPublicKeyData");
+        brooklynProperties.put("brooklyn.jclouds.private-key-passphrase", "myprivateKeyPassphrase");
+        brooklynProperties.put("brooklyn.jclouds.image-id", "myimageid");
+        Map<String, Object> conf = resolve("jclouds:aws-ec2").getAllConfig(true);
+        
+        assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
+        assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
+        assertEquals(conf.get("privateKeyData"), "myprivateKeyData");
+        assertEquals(conf.get("publicKeyData"), "myPublicKeyData");
+        assertEquals(conf.get("privateKeyPassphrase"), "myprivateKeyPassphrase");
+        assertEquals(conf.get("imageId"), "myimageid");
+    }
+
+    @Test
+    public void testJcloudsPropertiesPrecedence() {
+        brooklynProperties.put("brooklyn.location.named.myaws-ec2", "jclouds:aws-ec2");
+        
+        // prefer those in "named" over everything else
+        brooklynProperties.put("brooklyn.location.named.myaws-ec2.privateKeyFile", "privateKeyFile-inNamed");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.privateKeyFile", "privateKeyFile-inProviderSpecific");
+        brooklynProperties.put("brooklyn.jclouds.privateKeyFile", "privateKeyFile-inJcloudsGeneric");
+
+        // prefer those in provider-specific over generic
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.publicKeyFile", "publicKeyFile-inProviderSpecific");
+        brooklynProperties.put("brooklyn.jclouds.publicKeyFile", "publicKeyFile-inJcloudsGeneric");
+
+        // prefer deprecated properties in "named" over those less specific
+        brooklynProperties.put("brooklyn.location.named.myaws-ec2.private-key-data", "privateKeyData-inNamed");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.privateKeyData", "privateKeyData-inProviderSpecific");
+        brooklynProperties.put("brooklyn.jclouds.privateKeyData", "privateKeyData-inJcloudsGeneric");
+
+        // prefer generic if nothing else
+        brooklynProperties.put("brooklyn.jclouds.publicKeyData", "publicKeyData-inJcloudsGeneric");
+
+        // prefer "named" over everything else: confirm deprecated don't get transformed to overwrite it accidentally
+        brooklynProperties.put("brooklyn.location.named.myaws-ec2.privateKeyPassphrase", "privateKeyPassphrase-inNamed");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.private-key-passphrase", "privateKeyPassphrase-inProviderSpecific");
+        brooklynProperties.put("brooklyn.jclouds.private-key-passphrase", "privateKeyPassphrase-inJcloudsGeneric");
+
+        Map<String, Object> conf = resolve("named:myaws-ec2").getAllConfig(true);
+        
+        assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
+        assertEquals(conf.get("publicKeyFile"), "publicKeyFile-inProviderSpecific");
+        assertEquals(conf.get("privateKeyData"), "privateKeyData-inNamed");
+        assertEquals(conf.get("publicKeyData"), "publicKeyData-inJcloudsGeneric");
+        assertEquals(conf.get("privateKeyPassphrase"), "privateKeyPassphrase-inNamed");
+    }
+
     @Test
     public void testJcloudsLoads() {
         Assert.assertTrue(resolve("jclouds:aws-ec2") instanceof JcloudsLocation);
