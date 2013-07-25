@@ -20,7 +20,7 @@ public class SingleMachineProvisioningLocation<T extends MachineLocation> extend
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public T obtain(Map flags) throws NoMachinesAvailableException {
+    public synchronized T obtain(Map flags) throws NoMachinesAvailableException {
         if (singleLocation == null) {
             if (provisioningLocation == null)
                 provisioningLocation = (MachineProvisioningLocation) getManagementContext().getLocationRegistry().resolve(
@@ -33,14 +33,15 @@ public class SingleMachineProvisioningLocation<T extends MachineLocation> extend
     }
 
     @Override
-    public T obtain() throws NoMachinesAvailableException {
+    public synchronized T obtain() throws NoMachinesAvailableException {
         // TODO: Is getAllConfig correct?
         return obtain(getAllConfig(true));
     }
 
-    public void release(T machine) {
+    public synchronized void release(T machine) {
         if (--referenceCount == 0) {
             provisioningLocation.release(machine);
+            singleLocation = null;
         }
     };
 

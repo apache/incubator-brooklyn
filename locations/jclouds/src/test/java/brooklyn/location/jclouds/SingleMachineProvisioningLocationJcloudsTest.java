@@ -5,7 +5,9 @@ import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,9 @@ public class SingleMachineProvisioningLocationJcloudsTest {
 private static final Logger log = LoggerFactory.getLogger(SingleMachineProvisioningLocation.class);
     
     private LocalManagementContext managementContext;
+    private Set<MachineLocation> machinesToTearDown;
+    @SuppressWarnings("rawtypes")
+    private SingleMachineProvisioningLocation location;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -34,41 +39,52 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
         BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
         properties.put(nameKey, "jclouds:aws-ec2:us-east-1");
         managementContext = new LocalManagementContext(properties);
+        machinesToTearDown = new HashSet<MachineLocation>();
     }
     
+    @SuppressWarnings("unchecked")
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
+        for (MachineLocation machineLocation: machinesToTearDown) {
+            try {
+                location.release(machineLocation);
+            } catch (Exception e) {
+
+            }
+        }
         if (managementContext != null) managementContext.terminate();
     }
     
     @SuppressWarnings("unchecked")
     @Test(groups="Live")
     public void testJcloudsSingle() throws Exception {
-        SingleMachineProvisioningLocation<MachineLocation> l = (SingleMachineProvisioningLocation<MachineLocation>) 
+        location = (SingleMachineProvisioningLocation<MachineLocation>) 
             managementContext.getLocationRegistry().resolve("single:(jclouds:aws-ec2:us-east-1)");
-        l.setManagementContext(managementContext);
+        location.setManagementContext(managementContext);
         
-        MachineLocation m1 = l.obtain();
+        MachineLocation m1 = location.obtain();
 
         log.info("GOT "+m1);
         
-        l.release(m1);
+        location.release(m1);
     }
     
     @SuppressWarnings("unchecked")
     @Test(groups="Live")
     public void testJcloudsSingleRelease() throws Exception {
-        SingleMachineProvisioningLocation<SshMachineLocation> l = (SingleMachineProvisioningLocation<SshMachineLocation>) 
+        location = (SingleMachineProvisioningLocation<SshMachineLocation>) 
             managementContext.getLocationRegistry().resolve("single:(jclouds:aws-ec2:us-east-1)");
-        l.setManagementContext(managementContext);
+        location.setManagementContext(managementContext);
         
-        SshMachineLocation m1 = l.obtain();
+        SshMachineLocation m1 = (SshMachineLocation) location.obtain();
+        machinesToTearDown.add(m1);
         log.info("GOT " + m1);
-        SshMachineLocation m2 = l.obtain();
+        SshMachineLocation m2 = (SshMachineLocation) location.obtain();
         log.info("GOT " + m2);
+        machinesToTearDown.add(m2);
         assertSame(m1, m2);
         
-        l.release(m1);
+        location.release(m1);
 
         assertTrue(m2.isSshable());
         
@@ -80,7 +96,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
 
         assertTrue(outString.contains(expectedName), outString);
         
-        l.release(m2);
+        location.release(m2);
         
         assertFalse(m2.isSshable());
     }
@@ -88,15 +104,17 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     @SuppressWarnings("unchecked")
     @Test(groups="Live")
     public void testJcloudsSingleObtainReleaseObtain() throws Exception {
-        SingleMachineProvisioningLocation<SshMachineLocation> l = (SingleMachineProvisioningLocation<SshMachineLocation>) 
+        location = (SingleMachineProvisioningLocation<SshMachineLocation>) 
             managementContext.getLocationRegistry().resolve("single:(jclouds:aws-ec2:us-east-1)");
-        l.setManagementContext(managementContext);
-        SshMachineLocation m1 = l.obtain();
+        location.setManagementContext(managementContext);
+        SshMachineLocation m1 = (SshMachineLocation) location.obtain();
         log.info("GOT " + m1);
+        machinesToTearDown.add(m1);
         
-        l.release(m1);
+        location.release(m1);
         
-        SshMachineLocation m2 = l.obtain();
+        SshMachineLocation m2 = (SshMachineLocation) location.obtain();
+        machinesToTearDown.add(m2);
         
         assertTrue(m2.isSshable());
         
@@ -108,17 +126,18 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
 
         assertTrue(outString.contains(expectedName), outString);
         
-        l.release(m2);
+        location.release(m2);
     }
     
     @SuppressWarnings("unchecked")
     @Test(groups="Live")
     public void testJCloudsNamedSingle() throws Exception {
-        SingleMachineProvisioningLocation<SshMachineLocation> l = (SingleMachineProvisioningLocation<SshMachineLocation>) 
+        location = (SingleMachineProvisioningLocation<SshMachineLocation>) 
             managementContext.getLocationRegistry().resolve("single:(named:FooServers)");
-        l.setManagementContext(managementContext);
+        location.setManagementContext(managementContext);
         
-        SshMachineLocation m1 = l.obtain();
-        l.release(m1);
+        SshMachineLocation m1 = (SshMachineLocation) location.obtain();
+        machinesToTearDown.add(m1);
+        location.release(m1);
     }
 }
