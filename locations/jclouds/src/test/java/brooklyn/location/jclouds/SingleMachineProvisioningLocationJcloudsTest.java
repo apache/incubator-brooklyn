@@ -87,6 +87,32 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     
     @SuppressWarnings("unchecked")
     @Test(groups="Live")
+    public void testJcloudsSingleObtainReleaseObtain() throws Exception {
+        SingleMachineProvisioningLocation<SshMachineLocation> l = (SingleMachineProvisioningLocation<SshMachineLocation>) 
+            managementContext.getLocationRegistry().resolve("single:(jclouds:aws-ec2:us-east-1)");
+        l.setManagementContext(managementContext);
+        SshMachineLocation m1 = l.obtain();
+        log.info("GOT " + m1);
+        
+        l.release(m1);
+        
+        SshMachineLocation m2 = l.obtain();
+        
+        assertTrue(m2.isSshable());
+        
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        String expectedName = System.getProperty("user.name");
+        Map<?, ?> flags = ImmutableMap.of("out", outStream);
+        m2.run(flags, "whoami; exit");
+        String outString = new String(outStream.toByteArray());
+
+        assertTrue(outString.contains(expectedName), outString);
+        
+        l.release(m2);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test(groups="Live")
     public void testJCloudsNamedSingle() throws Exception {
         SingleMachineProvisioningLocation<SshMachineLocation> l = (SingleMachineProvisioningLocation<SshMachineLocation>) 
             managementContext.getLocationRegistry().resolve("single:(named:FooServers)");
