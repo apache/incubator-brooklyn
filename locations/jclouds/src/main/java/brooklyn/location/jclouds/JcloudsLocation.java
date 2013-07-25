@@ -58,6 +58,7 @@ import brooklyn.location.basic.LocationCreationUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.TypeCoercions;
@@ -504,7 +505,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         String privateKeyFileName = ((CharSequence)v).toString();
                         String privateKey;
                         try {
-                            privateKey = Files.toString(new File(privateKeyFileName), Charsets.UTF_8);
+                            privateKey = Files.toString(new File(ResourceUtils.tidyFilePath(privateKeyFileName)), Charsets.UTF_8);
                         } catch (IOException e) {
                             LOG.error(privateKeyFileName + "not found", e);
                             throw Throwables.propagate(e);
