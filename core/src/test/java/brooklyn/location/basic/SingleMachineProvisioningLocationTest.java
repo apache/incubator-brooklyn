@@ -24,9 +24,9 @@ public class SingleMachineProvisioningLocationTest {
         if (managementContext != null) managementContext.terminate();
     }
     
-    @SuppressWarnings("unchecked")  
-    @Test(groups="Live")
-    public void testJcloudsSingle() throws Exception {
+    @SuppressWarnings("unchecked") 
+    @Test
+    public void testLocalhostSingle() throws Exception {
         SingleMachineProvisioningLocation<SshMachineLocation> l = (SingleMachineProvisioningLocation<SshMachineLocation>) 
             managementContext.getLocationRegistry().resolve("single:(localhost)");
         l.setManagementContext(managementContext);
@@ -37,4 +37,5 @@ public class SingleMachineProvisioningLocationTest {
         
         l.release(m1);
     }
+    
 }
