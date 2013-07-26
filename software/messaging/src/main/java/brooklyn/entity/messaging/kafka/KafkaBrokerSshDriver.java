@@ -20,7 +20,6 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 
 public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements KafkaBrokerDriver {
 

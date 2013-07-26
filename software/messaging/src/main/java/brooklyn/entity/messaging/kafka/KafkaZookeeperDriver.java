@@ -15,9 +15,9 @@
  */
 package brooklyn.entity.messaging.kafka;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import brooklyn.entity.java.JavaSoftwareProcessDriver;
 
-public interface KafkaZookeeperDriver extends SoftwareProcessDriver {
+public interface KafkaZookeeperDriver extends JavaSoftwareProcessDriver {
 
     Integer getZookeeperPort();
 

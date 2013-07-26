@@ -80,12 +80,14 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     public void waitForServiceUp(long duration, TimeUnit units) {
         super.waitForServiceUp(duration, units);
 
-        // Wait for the MBean to exist
-        JmxHelper helper = new JmxHelper(this);
-        try {
-            helper.assertMBeanExistsEventually(SOCKET_SERVER_STATS_MBEAN, units.toMillis(duration));
-        } finally {
-            helper.disconnect();
+        if (((KafkaBrokerDriver)getDriver()).isJmxEnabled()) {
+            // Wait for the MBean to exist
+            JmxHelper helper = new JmxHelper(this);
+            try {
+                helper.assertMBeanExistsEventually(SOCKET_SERVER_STATS_MBEAN, units.toMillis(duration));
+            } finally {
+                helper.disconnect();
+            }
         }
     }
 
@@ -93,7 +95,8 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     protected void connectSensors() {
         connectServiceUpIsRunning();
 
-        jmxFeed = JmxFeed.builder()
+        if (((KafkaBrokerDriver)getDriver()).isJmxEnabled()) {
+            jmxFeed = JmxFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)
                 .pollAttribute(new JmxAttributePollConfig<Long>(FETCH_REQUEST_COUNT)
@@ -129,6 +132,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
                         .attributeName("TotalBytesWritten")
                         .onError(Functions.constant(-1l)))
                 .build();
+        }
 
         setBrokerUrl();
     }
