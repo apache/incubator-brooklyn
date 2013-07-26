@@ -324,97 +324,100 @@ public class EntityDynamicType {
             Map<String, FieldAndValue<ConfigKey<?>>> configKeys) {
         ListMultimap<String,FieldAndValue<ConfigKey<?>>> configKeysAll = 
                 ArrayListMultimap.<String, FieldAndValue<ConfigKey<?>>>create();
-        try {
-            for (Field f : FlagUtils.getAllFields(clazz)) {
-                boolean isConfigKey = ConfigKey.class.isAssignableFrom(f.getType());
-                if (!isConfigKey) {
-                    if (!HasConfigKey.class.isAssignableFrom(f.getType())) {
-                        // neither ConfigKey nor HasConfigKey
-                        continue;
-                    }
+        
+        for (Field f : FlagUtils.getAllFields(clazz)) {
+            boolean isConfigKey = ConfigKey.class.isAssignableFrom(f.getType());
+            if (!isConfigKey) {
+                if (!HasConfigKey.class.isAssignableFrom(f.getType())) {
+                    // neither ConfigKey nor HasConfigKey
+                    continue;
                 }
-                if (!Modifier.isStatic(f.getModifiers())) {
-                    // require it to be static or we have an instance
-                    LOG.warn("Discouraged use of non-static config key "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
-                    if (optionalEntity==null) continue;
-                }
+            }
+            if (!Modifier.isStatic(f.getModifiers())) {
+                // require it to be static or we have an instance
+                LOG.warn("Discouraged use of non-static config key "+f+" defined in " + (optionalEntity!=null ? optionalEntity : clazz));
+                if (optionalEntity==null) continue;
+            }
+            try {
                 ConfigKey<?> k = isConfigKey ? (ConfigKey<?>) f.get(optionalEntity) : 
                     ((HasConfigKey<?>)f.get(optionalEntity)).getConfigKey();
+                
                 if (k==null) {
                     LOG.warn("no value defined for config key field (skipping): "+f);
                 } else {
                     configKeysAll.put(k.getName(), new FieldAndValue<ConfigKey<?>>(f, k));
                 }
+                
+            } catch (IllegalAccessException e) {
+                LOG.warn("cannot access config key (skipping): "+f);
             }
-            LinkedHashSet<String> keys = new LinkedHashSet<String>(configKeysAll.keys());
-            for (String kn: keys) {
-                List<FieldAndValue<ConfigKey<?>>> kk = Lists.newArrayList(configKeysAll.get(kn));
-                if (kk.size()>1) {
-                    // remove anything which extends another value in the list
-                    for (FieldAndValue<ConfigKey<?>> k: kk) {
-                        ConfigKey<?> key = value(k);
-                        if (key instanceof BasicConfigKeyOverwriting) {                            
-                            ConfigKey<?> parent = ((BasicConfigKeyOverwriting<?>)key).getParentKey();
-                            // find and remove the parent from consideration
-                            for (FieldAndValue<ConfigKey<?>> k2: kk) {
-                                if (value(k2) == parent)
-                                    configKeysAll.remove(kn, k2);
-                            }
+        }
+        LinkedHashSet<String> keys = new LinkedHashSet<String>(configKeysAll.keys());
+        for (String kn: keys) {
+            List<FieldAndValue<ConfigKey<?>>> kk = Lists.newArrayList(configKeysAll.get(kn));
+            if (kk.size()>1) {
+                // remove anything which extends another value in the list
+                for (FieldAndValue<ConfigKey<?>> k: kk) {
+                    ConfigKey<?> key = value(k);
+                    if (key instanceof BasicConfigKeyOverwriting) {                            
+                        ConfigKey<?> parent = ((BasicConfigKeyOverwriting<?>)key).getParentKey();
+                        // find and remove the parent from consideration
+                        for (FieldAndValue<ConfigKey<?>> k2: kk) {
+                            if (value(k2) == parent)
+                                configKeysAll.remove(kn, k2);
                         }
                     }
-                    kk = Lists.newArrayList(configKeysAll.get(kn));
                 }
-                // multiple keys, not overwriting; if their values are the same then we don't mind
-                FieldAndValue<ConfigKey<?>> best = null;
-                for (FieldAndValue<ConfigKey<?>> k: kk) {
-                    if (best==null) {
-                        best=k;
-                    } else {
-                        Field lower = Reflections.inferSubbestField(k.field, best.field);
-                        ConfigKey<? extends Object> lowerV = lower==null ? null : lower.equals(k.field) ? k.value : best.value;
-                        if (best.value == k.value) {
-                            // same value doesn't matter which we take (but take lower if there is one)
-                            if (LOG.isDebugEnabled()) 
-                                LOG.debug("multiple definitions for config key {} <String><String><String>on {}; same value {}; " +
-                                        "from {} and {}, preferring {}", 
-                                        new Object[] {
-                                        best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
-                                        best.value.getDefaultValue(),
-                                        k.field, best.field, lower});
-                            best = new FieldAndValue<ConfigKey<?>>(lower!=null ? lower : best.field, best.value);
-                        } else if (lower!=null) {
-                            // different value, but one clearly lower (in type hierarchy)
-                            if (LOG.isDebugEnabled()) 
-                                LOG.debug("multiple definitions for config key {} on {}; " +
-                                        "from {} and {}, preferring lower {}, value {}", 
-                                        new Object[] {
-                                        best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
-                                        k.field, best.field, lower,
-                                        lowerV.getDefaultValue() });
-                            best = new FieldAndValue<ConfigKey<?>>(lower, lowerV);
-                        } else {
-                            // different value, neither one lower than another in hierarchy
-                            LOG.warn("multiple ambiguous definitions for config key {} on {}; " +
-                                    "from {} and {}, values {} and {}; " +
-                                    "keeping latter (arbitrarily)", 
+                kk = Lists.newArrayList(configKeysAll.get(kn));
+            }
+            // multiple keys, not overwriting; if their values are the same then we don't mind
+            FieldAndValue<ConfigKey<?>> best = null;
+            for (FieldAndValue<ConfigKey<?>> k: kk) {
+                if (best==null) {
+                    best=k;
+                } else {
+                    Field lower = Reflections.inferSubbestField(k.field, best.field);
+                    ConfigKey<? extends Object> lowerV = lower==null ? null : lower.equals(k.field) ? k.value : best.value;
+                    if (best.value == k.value) {
+                        // same value doesn't matter which we take (but take lower if there is one)
+                        if (LOG.isDebugEnabled()) 
+                            LOG.debug("multiple definitions for config key {} <String><String><String>on {}; same value {}; " +
+                                    "from {} and {}, preferring {}", 
                                     new Object[] {
                                     best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
-                                    k.field, best.field, 
-                                    k.value.getDefaultValue(), best.value.getDefaultValue() });
-                            // (no change)
-                        }
+                                    best.value.getDefaultValue(),
+                                    k.field, best.field, lower});
+                        best = new FieldAndValue<ConfigKey<?>>(lower!=null ? lower : best.field, best.value);
+                    } else if (lower!=null) {
+                        // different value, but one clearly lower (in type hierarchy)
+                        if (LOG.isDebugEnabled()) 
+                            LOG.debug("multiple definitions for config key {} on {}; " +
+                                    "from {} and {}, preferring lower {}, value {}", 
+                                    new Object[] {
+                                    best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
+                                    k.field, best.field, lower,
+                                    lowerV.getDefaultValue() });
+                        best = new FieldAndValue<ConfigKey<?>>(lower, lowerV);
+                    } else {
+                        // different value, neither one lower than another in hierarchy
+                        LOG.warn("multiple ambiguous definitions for config key {} on {}; " +
+                                "from {} and {}, values {} and {}; " +
+                                "keeping latter (arbitrarily)", 
+                                new Object[] {
+                                best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
+                                k.field, best.field, 
+                                k.value.getDefaultValue(), best.value.getDefaultValue() });
+                        // (no change)
                     }
                 }
-                if (best==null) {
-                    // shouldn't happen
-                    LOG.error("Error - no matching config key from "+kk+" in class "+clazz+", even though had config key name "+kn);
-                    continue;
-                } else {
-                    configKeys.put(best.value.getName(), best);
-                }
             }
-        } catch (IllegalAccessException e) {
-            throw Exceptions.propagate(e);
+            if (best==null) {
+                // shouldn't happen
+                LOG.error("Error - no matching config key from "+kk+" in class "+clazz+", even though had config key name "+kn);
+                continue;
+            } else {
+                configKeys.put(best.value.getName(), best);
+            }
         }
     }
     
