@@ -184,13 +184,24 @@ public class ResourceUtils {
         return url;
     }
     
+    public static String mergeFilePaths(String... items) {
+        char separatorChar = File.separatorChar;
+        StringBuilder result = new StringBuilder();
+        for (String item: items) {
+            if (item.isEmpty()) continue;
+            if (result.length() > 0 && result.charAt(result.length()-1) != separatorChar) result.append(separatorChar);
+            result.append(item);
+        }
+        return result.toString();
+    }
+    
     public static String tidyFilePath(String path) {
         String pathRelativeToHome = Strings.removeFromStart(path, "~/");
         if (path.equals(pathRelativeToHome)) {
             return path;
         }
         // allow ~ syntax for home dir
-        String result = System.getProperty("user.home")+File.separatorChar+pathRelativeToHome;
+        String result = mergeFilePaths(System.getProperty("user.home"), pathRelativeToHome);
         if (log.isDebugEnabled()) log.debug("quietly changing to "+path+" to "+result);
         return result;
     }

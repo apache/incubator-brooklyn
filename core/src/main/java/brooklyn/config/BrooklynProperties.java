@@ -52,8 +52,8 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
 
         public static class Builder {
             private String defaultLocationMetadataUrl = "classpath://brooklyn/location-metadata.properties";
-            private String globalLocationMetadataFile = "~"+File.separatorChar+".brooklyn"+File.separatorChar+"location-metadata.properties";
-            private String globalPropertiesFile = "~"+File.separatorChar+".brooklyn"+File.separatorChar+"brooklyn.properties";
+            private String globalLocationMetadataFile = ResourceUtils.mergeFilePaths("~", ".brooklyn", "location-metadata.properties");
+            private String globalPropertiesFile = ResourceUtils.mergeFilePaths("~", ".brooklyn", "brooklyn.properties");
             private String localPropertiesFile = null;
             
             /**
