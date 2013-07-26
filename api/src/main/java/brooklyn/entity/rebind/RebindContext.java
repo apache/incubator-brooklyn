@@ -1,5 +1,7 @@
 package brooklyn.entity.rebind;
 
+import java.util.Set;
+
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.policy.Policy;
@@ -20,6 +22,8 @@ public interface RebindContext {
     public Location getLocation(String id);
 
     public Policy getPolicy(String id);
+
+    Set<Entity> getEntities();
 
     public Class<?> loadClass(String typeName) throws ClassNotFoundException;
 }

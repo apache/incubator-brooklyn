@@ -76,7 +76,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     public void configure(Map flags) {
         super.configure(flags);
         
-        if (!truth(name)) { name = "localhost"; }
+        if (!truth(getDisplayName())) { setName("localhost"); }
         if (!truth(address)) address = getLocalhostInetAddress();
         // TODO should try to confirm this machine is accessible on the given address ... but there's no 
         // immediate convenience in java so early-trapping of that particular error is deferred

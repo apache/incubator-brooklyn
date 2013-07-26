@@ -37,13 +37,13 @@ public class LocalhostResolverTest {
     
     @Test
     public void testResolvesName() throws Exception {
-        Location location = resolve("localhost");
-        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
-        assertEquals(location.getDisplayName(), "localhost");
-
-        Location location2 = resolve("localhost:()");
-        assertTrue(location2 instanceof LocalhostMachineProvisioningLocation);
-        assertEquals(location2.getDisplayName(), "localhost");
+//        Location location = resolve("localhost");
+//        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
+//        assertEquals(location.getDisplayName(), "localhost");
+//
+//        Location location2 = resolve("localhost:()");
+//        assertTrue(location2 instanceof LocalhostMachineProvisioningLocation);
+//        assertEquals(location2.getDisplayName(), "localhost");
 
         Location location3 = resolve("localhost:(name=myname)");
         assertTrue(location3 instanceof LocalhostMachineProvisioningLocation);

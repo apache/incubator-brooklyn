@@ -1,9 +1,11 @@
 package brooklyn.entity.proxying;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -99,19 +101,19 @@ public class InternalEntityFactory {
         this.entityTypeRegistry = checkNotNull(entityTypeRegistry, "entityTypeRegistry");
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends Entity> T createEntityProxy(EntitySpec<T> spec, T entity) {
         // TODO Don't want the proxy to have to implement EntityLocal, but required by how 
         // AbstractEntity.parent is used (e.g. parent.getAllConfig)
         ClassLoader classloader = (spec.getImplementation() != null ? spec.getImplementation() : spec.getType()).getClassLoader();
         MutableSet.Builder<Class<?>> builder = MutableSet.<Class<?>>builder()
-                .addAll(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class);
+                .addAll(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class)
+                .addAll(spec.getAdditionalInterfaces());
+        
         if (spec.getType().isInterface()) {
             builder.add(spec.getType());
         } else {
-            log.warn("EntitySpec declared in terms of concrete type "+spec.getType()+"; should be supplied in terms of interface");
+            log.warn("Deprecated use of EntitySpec declared in terms of concrete type "+spec.getType()+"; should be supplied in terms of interface");
         }
-        builder.addAll(spec.getAdditionalInterfaces());
         Set<Class<?>> interfaces = builder.build();
         
         return (T) java.lang.reflect.Proxy.newProxyInstance(
@@ -129,20 +131,14 @@ public class InternalEntityFactory {
         try {
             Class<? extends T> clazz = getImplementedBy(spec);
             
-            FactoryConstructionTracker.setConstructing();
-            T entity;
-            try {
-                entity = construct(clazz, spec);
-            } finally {
-                FactoryConstructionTracker.reset();
-            }
+            T entity = constructEntity(clazz, spec);
             
             if (spec.getDisplayName()!=null)
                 ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
             
             if (isNewStyleEntity(clazz)) {
-                ((AbstractEntity)entity).setManagementContext(managementContext);
                 ((AbstractEntity)entity).setProxy(createEntityProxy(spec, entity));
+                ((AbstractEntity)entity).setManagementContext(managementContext);
                 ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
             }
             
@@ -167,22 +163,60 @@ public class InternalEntityFactory {
         }
     }
     
-    private <T extends Entity> Class<? extends T> getImplementedBy(EntitySpec<T> spec) {
-        if (spec.getImplementation() != null) {
-            return spec.getImplementation();
-        } else {
-            return entityTypeRegistry.getImplementedBy(spec.getType());
+    public void reconstituteEntity(Entity entity) {
+        checkArgument(!(entity instanceof EntityProxy), "entity %s must not be entity proxy", entity);
+        Class<?>[] additionalInterfaces = entity.getClass().getInterfaces();
+        
+        try {
+            EntitySpec<Entity> entitySpec = EntitySpecs.spec(Entity.class).additionalInterfaces(additionalInterfaces);
+            ((AbstractEntity)entity).setProxy(createEntityProxy(entitySpec, entity));
+            ((AbstractEntity)entity).setManagementContext(managementContext);
+            
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
     
-    private <T extends Entity> T construct(Class<? extends T> clazz, EntitySpec<T> spec) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        if (isNewStyleEntity(clazz)) {
-            return clazz.newInstance();
-        } else {
-            return constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
+    /**
+     * Constructs an entity (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
+     */
+    public <T extends Entity> T constructEntity(Class<? extends T> clazz, EntitySpec<T> spec) {
+        try {
+            FactoryConstructionTracker.setConstructing();
+            try {
+                if (isNewStyleEntity(clazz)) {
+                    return clazz.newInstance();
+                } else {
+                    return constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
+                }
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
-    
+
+    /**
+     * Constructs a new-style entity (fails if no no-arg constructor).
+     */
+    public <T extends Entity> T constructEntity(Class<T> clazz) {
+        try {
+            FactoryConstructionTracker.setConstructing();
+            try {
+                if (isNewStyleEntity(clazz)) {
+                    return clazz.newInstance();
+                } else {
+                    throw new IllegalStateException("Entity class "+clazz+" must have a no-arg constructor");
+                }
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+        
     private <T extends Entity> T constructOldStyle(Class<? extends T> clazz, Map<String,?> flags) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         if (flags.containsKey("parent") || flags.containsKey("owner")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+clazz);
@@ -192,6 +226,14 @@ public class InternalEntityFactory {
             return c2.newInstance(Maps.newLinkedHashMap(flags));
         } else {
             throw new IllegalStateException("No valid constructor defined for "+clazz+" (expected no-arg or single java.util.Map argument)");
+        }
+    }
+    
+    private <T extends Entity> Class<? extends T> getImplementedBy(EntitySpec<T> spec) {
+        if (spec.getImplementation() != null) {
+            return spec.getImplementation();
+        } else {
+            return entityTypeRegistry.getImplementedBy(spec.getType());
         }
     }
 }

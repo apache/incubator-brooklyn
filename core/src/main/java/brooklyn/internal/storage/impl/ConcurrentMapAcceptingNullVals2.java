@@ -2,8 +2,8 @@ package brooklyn.internal.storage.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.Serializable;
 import java.util.AbstractMap;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,24 +16,31 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
+import brooklyn.internal.storage.Serializer;
+
 /**
- * A decorator for a ConcurrentMap that allows null values to be used.
+ * A decorator for a ConcurrentMap that allows null keys and values to be used.
+ * 
+ * It also accepts a serializer that transforms the underlying keys/values stored 
+ * in the backing map.
  * 
  * However, {@link #values()} and {@link #entrySet()} return immutable snapshots
  * of the map's contents. This may be revisited in a future version.
  * 
  * @author aled
  */
-public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>, Serializable {
+public class ConcurrentMapAcceptingNullVals2<K, V> implements ConcurrentMap<K, V> {
 
     private static enum Marker {
         NULL;
     }
     
     private final ConcurrentMap<K, V> delegate;
+    private final Serializer<Object,Object> serializer;
 
-    public ConcurrentMapAcceptingNullVals(ConcurrentMap<K,V> delegate) {
+    public ConcurrentMapAcceptingNullVals2(ConcurrentMap<K,V> delegate, Serializer<Object,Object> serializer) {
         this.delegate = checkNotNull(delegate, "delegate");
+        this.serializer = checkNotNull(serializer, "serializer");
     }
     
     @Override
@@ -43,20 +50,20 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
     @Override
     public boolean containsKey(Object key) {
-        return delegate.containsKey(key);
+        return delegate.containsKey(toKey(key));
     }
 
     @Override
     public boolean containsValue(Object value) {
-        return delegate.containsValue(toNonNullValue(value));
+        return delegate.containsValue(toValue(value));
     }
-
+    
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
         // Note that returns an immutable snapshot
         Set<Map.Entry<K, V>> result = new LinkedHashSet<Map.Entry<K, V>>(delegate.size());
         for (Map.Entry<K, V> entry : delegate.entrySet()) {
-            result.add(new AbstractMap.SimpleEntry<K,V>(entry.getKey(), (V)fromNonNullValue(entry.getValue())));
+            result.add(new AbstractMap.SimpleEntry<K,V>((K)fromKey(entry.getKey()), (V)fromValue(entry.getValue())));
         }
         return Collections.unmodifiableSet(result);
     }
@@ -66,19 +73,19 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
         // Note that returns an immutable snapshot
         List<V> result = new ArrayList<V>(delegate.size());
         for (V v : delegate.values()) {
-            result.add((V)fromNonNullValue(v));
+            result.add((V)fromValue(v));
         }
         return Collections.unmodifiableCollection(result);
     }
 
     @Override
     public Set<K> keySet() {
-        return delegate.keySet();
+        return new KeySet<K>(delegate.keySet());
     }
 
     @Override
     public V get(Object key) {
-        return (V) fromNonNullValue(delegate.get(key));
+        return (V) fromValue(delegate.get(key));
     }
 
     @Override
@@ -88,9 +95,7 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
     @Override
     public V put(K key, V value) {
-        if (!(key == null || key instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
-        if (!(value == null || value instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
-        return (V) fromNonNullValue(delegate.put(key, (V) toNonNullValue(value)));
+        return (V) fromValue(delegate.put((K)toKey(key), (V) toValue(value)));
     }
 
     @Override
@@ -102,7 +107,7 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
     @Override
     public V remove(Object key) {
-        return (V) fromNonNullValue(delegate.remove(key));
+        return (V) fromValue(delegate.remove(toKey(key)));
     }
 
     @Override
@@ -112,44 +117,32 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
     @Override
     public V putIfAbsent(K key, V value) {
-        if (!(key == null || key instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
-        if (!(value == null || value instanceof Serializable)) throw new RuntimeException("NotSerializableException: key="+key+"; value="+value); // FIXME; remove fail-fast
-        return (V) fromNonNullValue(delegate.putIfAbsent(key, (V) toNonNullValue(value)));
+        return (V) fromValue(delegate.putIfAbsent((K)toKey(key), (V) toValue(value)));
     }
 
     @Override
     public boolean remove(Object key, Object value) {
-        return delegate.remove(key, (V) toNonNullValue(value));
+        return delegate.remove((K) toKey(key), (V) toValue(value));
     }
 
     @Override
     public V replace(K key, V value) {
-        return (V) fromNonNullValue(delegate.replace(key, (V) toNonNullValue(value)));
+        return (V) fromValue(delegate.replace((K) toKey(key), (V) toValue(value)));
     }
 
     @Override
     public boolean replace(K key, V oldValue, V newValue) {
-        return delegate.replace(key, (V) toNonNullValue(oldValue), (V) toNonNullValue(newValue));
+        return delegate.replace((K) toKey(key), (V) toValue(oldValue), (V) toValue(newValue));
     }
     
-    private static class SetWithNullVals<T> implements Set<T> {
+    private class KeySet<T> extends AbstractSet<T> {
 
         private final Set<T> delegate;
         
-        public SetWithNullVals(Set<T> delegate) {
+        KeySet(Set<T> delegate) {
             this.delegate = delegate;
         }
         
-        @Override
-        public boolean add(T e) {
-            return delegate.add(e); // unsupported; let delegate give exception
-        }
-
-        @Override
-        public boolean addAll(Collection<? extends T> c) {
-            return delegate.addAll(c); // unsupported; let delegate give exception
-        }
-
         @Override
         public void clear() {
             delegate.clear();
@@ -157,13 +150,13 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
         @Override
         public boolean contains(Object o) {
-            return delegate.contains(toNonNullValue(o));
+            return delegate.contains(toKey(o));
         }
 
         @Override
         public boolean containsAll(Collection<?> c) {
             for (Object e : c) {
-                if (!delegate.contains(toNonNullValue(e))) return false;
+                if (!delegate.contains(toKey(e))) return false;
             }
             return true;
         }
@@ -175,20 +168,24 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
         @Override
         public Iterator<T> iterator() {
-            // TODO Auto-generated method stub
-            return null;
+            // Note that returns an immutable snapshot
+            List<T> result = new ArrayList<T>(delegate.size());
+            for (T k : delegate) {
+                result.add((T)fromKey(k));
+            }
+            return Collections.unmodifiableList(result).iterator();
         }
 
         @Override
         public boolean remove(Object o) {
-            return delegate.remove(toNonNullValue(o));
+            return delegate.remove(toKey(o));
         }
 
         @Override
         public boolean removeAll(Collection<?> c) {
             boolean result = false;
             for (Object e : c) {
-                result = result & delegate.remove(toNonNullValue(e));
+                result = result & delegate.remove(toKey(e));
             }
             return result;
         }
@@ -198,7 +195,7 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
             boolean result = false;
             for (Iterator<T> iter = delegate.iterator(); iter.hasNext();) {
                 T e = iter.next();
-                if (!c.contains(fromNonNullValue(e))) {
+                if (!c.contains(fromKey(e))) {
                     iter.remove();
                     result = true;
                 }
@@ -213,24 +210,23 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
 
         @Override
         public Object[] toArray() {
-            // TODO Auto-generated method stub
-            return null;
+            Object[] result = delegate.toArray();
+            for (int i = 0; i < result.length; i++) {
+                result[i] = fromKey(result[i]);
+            }
+            return result;
         }
 
         @Override
         public <T> T[] toArray(T[] a) {
-            // TODO Auto-generated method stub
-            return null;
+            // TODO Not type-safe if serializer is making changes
+            T[] result = delegate.toArray(a);
+            for (int i = 0; i < result.length; i++) {
+                result[i] = (T) fromKey(result[i]);
+            }
+            return result;
         }
 
-    }
-    
-    private static Object toNonNullValue(Object value) {
-        return (value != null) ? value : Marker.NULL;
-    }
-
-    private static Object fromNonNullValue(Object value) {
-        return (value == Marker.NULL) ? null : value; 
     }
     
     @Override
@@ -255,5 +251,25 @@ public class ConcurrentMapAcceptingNullVals<K, V> implements ConcurrentMap<K, V>
     @Override
     public String toString() {
         return delegate.toString();
+    }
+    
+    private Object toValue(Object value) {
+        Object v2 = serializer.serialize(value);
+        return ((v2 != null) ? v2 : Marker.NULL);
+    }
+
+    private Object fromValue(Object value) {
+        Object v2 = (value == Marker.NULL) ? null : value; 
+        return serializer.deserialize(v2);
+    }
+    
+    private Object toKey(Object value) {
+        Object v2 = serializer.serialize(value);
+        return ((v2 != null) ? v2 : Marker.NULL);
+    }
+
+    private Object fromKey(Object value) {
+        Object v2 = (value == Marker.NULL) ? null : value; 
+        return serializer.deserialize(v2);
     }
 }

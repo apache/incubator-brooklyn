@@ -45,7 +45,7 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
     @Override
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec) {
         if (!getManagementSupport().isDeployed()) throw new IllegalStateException("Entity "+this+" not managed");
-        T child = createChild(spec);
+        T child = addChild(spec);
         getEntityManager().manage(child);
         return child;
     }

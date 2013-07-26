@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.dto.MementosGenerators;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.basic.AbstractPolicy;
 
@@ -47,6 +48,12 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
         policy.setName(memento.getDisplayName());
         
         doReconsruct(rebindContext, memento);
+        
+        if (policy instanceof AbstractPolicy) {
+            ((AbstractPolicy)policy).reconstruct();
+        } else {
+            LOG.info("rebind() not being called, because policy is not of type AbstractPolicy: type={}; policy={}", policy.getClass(), policy);
+        }
     }
 
     /**

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
@@ -101,6 +102,12 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         addLocations(rebindContext, memento);
 
         doReconstruct(rebindContext, memento);
+        
+        if (entity instanceof AbstractEntity) {
+            ((AbstractEntity)entity).reconstruct();
+        } else {
+            LOG.info("rebind() not being called, because entity is not of type AbstractEntity: type={}; entity={}", entity.getClass(), entity);
+        }
     }
     
     /**

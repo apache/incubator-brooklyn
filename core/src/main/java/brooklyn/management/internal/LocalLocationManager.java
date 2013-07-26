@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.proxying.InternalLocationFactory;
+import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
@@ -28,10 +29,16 @@ public class LocalLocationManager implements LocationManager {
     
     protected final Map<String,Location> locationsById = Maps.newLinkedHashMap();
     private final Map<String, Location> preRegisteredLocationsById = Maps.newLinkedHashMap();
+
+    private final BrooklynStorage storage;
+    private Map<String, String> locationTypes;
     
     public LocalLocationManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
         this.locationFactory = new InternalLocationFactory(managementContext);
+        
+        this.storage = managementContext.getStorage();
+        locationTypes = storage.getMap("locations");
     }
 
     @Override
@@ -152,6 +159,8 @@ public class LocalLocationManager implements LocationManager {
         Object old = locationsById.put(loc.getId(), loc);
         preRegisteredLocationsById.remove(loc.getId());
         
+        locationTypes.put(loc.getId(), loc.getClass().getName());
+
         if (old!=null) {
             if (old.equals(loc)) {
                 log.warn("{} redundant call to start management of location {}", this, loc);
@@ -171,6 +180,7 @@ public class LocalLocationManager implements LocationManager {
     private synchronized boolean unmanageNonRecursive(AbstractLocation loc) {
         loc.setParentLocation(null);
         Object old = locationsById.remove(loc.getId());
+        locationTypes.remove(loc.getId());
 
         if (old==null) {
             log.warn("{} call to stop management of unknown location (already unmanaged?) {}", this, loc);
@@ -185,6 +195,10 @@ public class LocalLocationManager implements LocationManager {
         }
     }
 
+    public InternalLocationFactory getLocationFactory() {
+        return locationFactory;
+    }
+    
     private boolean shouldSkipUnmanagement(Location loc) {
         if (loc==null) {
             log.warn(""+this+" call to unmanage null location; skipping",  
