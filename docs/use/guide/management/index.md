@@ -169,7 +169,7 @@ This configuration could look like:
 
 {% highlight properties %}
 brooklyn.webconsole.security.explicit.users=admin
-brooklyn.webconsole.security.explicit.user.admin=password
+brooklyn.webconsole.security.explicit.user.admin.password=password
 {% endhighlight %}
 
 The `users` line should contain a comma-separated list. The special value `*` is accepted to permit all users.

@@ -68,6 +68,7 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
         }
     }
     
+    @SuppressWarnings("deprecation")
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
         if (allowAnyUser) return true;
@@ -88,7 +89,14 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
         }
 
         BrooklynProperties properties = (BrooklynProperties) mgmt.getConfig();
-        String actualP = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user));
+        String actualP = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD_FOR_USER(user));
+        if (actualP==null) {
+            actualP = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user));
+            if (actualP!=null) {
+                LOG.warn("Web console user password set using legacy property "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD_FOR_USER(user).getName()+"; " +
+            		"configure using "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getName()+" instead");
+            }
+        }
         if (actualP==null) {
             LOG.info("Web console rejecting passwordless user "+user);
             return false;

@@ -16,8 +16,8 @@ public class BrooklynWebConfig {
     
     /** explicitly set the users/passwords, e.g. in brooklyn.properties:
      * brooklyn.webconsole.security.explicit.users=admin,bob
-     * brooklyn.webconsole.security.explicit.user.admin=password
-     * brooklyn.webconsole.security.explicit.user.bob=bobspass
+     * brooklyn.webconsole.security.explicit.user.admin.password=password
+     * brooklyn.webconsole.security.explicit.user.bob.password=bobspass
      */
     public final static ConfigKey<String> SECURITY_PROVIDER_EXPLICIT__USERS = new BasicConfigKey<String>(String.class,
             BASE_NAME+".security.explicit.users");
@@ -28,8 +28,13 @@ public class BrooklynWebConfig {
     public final static ConfigKey<String> LDAP_REALM = new BasicConfigKey<String>(String.class,
             BASE_NAME+".security.ldap.realm");
 
+    /** @deprecated since 0.6.0; use #SECURITY_PROVIDER_EXPLICIT__PASSWORD_FOR_USER */
     public final static ConfigKey<String> SECURITY_PROVIDER_EXPLICIT__PASSWORD(String user) {
         return new BasicConfigKey<String>(String.class, BASE_NAME+".security.explicit.user."+user);
+    }
+
+    public final static ConfigKey<String> SECURITY_PROVIDER_EXPLICIT__PASSWORD_FOR_USER(String user) {
+        return new BasicConfigKey<String>(String.class, BASE_NAME+".security.explicit.user."+user+".password");
     }
 
 }
