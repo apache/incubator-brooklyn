@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
+import brooklyn.internal.storage.BrooklynStorageFactory;
+import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +34,7 @@ import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.impl.BrooklynStorageImpl;
-import brooklyn.internal.storage.impl.InmemoryDatagrid;
+import brooklyn.internal.storage.impl.inmemory.InmemoryDatagrid;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
@@ -69,14 +71,17 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     private final DownloadResolverManager downloadsManager;
 
-    private final DataGrid datagrid = new InmemoryDatagrid();
+    private final BrooklynStorage storage;
 
-    private final BrooklynStorage storage = new BrooklynStorageImpl(datagrid);
+    public   AbstractManagementContext(BrooklynProperties brooklynProperties){
+        this(brooklynProperties, new InMemoryBrooklynStorageFactory());
+    }
 
-    public AbstractManagementContext(BrooklynProperties brooklynProperties){
+    public AbstractManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory){
        this.configMap = brooklynProperties;
        this.entityDriverManager = new BasicEntityDriverManager();
        this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
+       this.storage = storageFactory.newStorage(this);
     }
     
     static {
