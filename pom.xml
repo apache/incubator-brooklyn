@@ -65,6 +65,12 @@
             <releases> <enabled>false</enabled> </releases>
             <snapshots> <enabled>true</enabled> </snapshots>
         </repository>
+        <!-- Hazelcast snapshot repo, can be removed as soon as Hazelcast 3 is released-->
+        <repository>
+            <id>snapshot-repository</id>
+            <name>Maven2 Snapshot Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
     </repositories>
 
     <properties>
@@ -105,6 +111,7 @@
         <freemarker.version>2.3.19</freemarker.version>
         <osgi-core.version>4.3.0</osgi-core.version>
         <commons-io.version>2.4</commons-io.version>
+        <hazelcast.version>3.0-SNAPSHOT</hazelcast.version>
      
         <includedTestGroups />
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
