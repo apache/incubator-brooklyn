@@ -1,5 +1,6 @@
 package brooklyn.entity.proxying;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +23,9 @@ import brooklyn.policy.Policy;
  * 
  * @author aled
  */
-public interface EntitySpec<T extends Entity> {
+public interface EntitySpec<T extends Entity> extends Serializable {
+
+    long serialVersionUID = 1L;
 
     /**
      * @return The type of the entity
