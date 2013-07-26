@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Collections;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -130,10 +129,18 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     }
 
     public String processTemplate(String templateConfigUrl) {
-        return processTemplate(templateConfigUrl, Collections.EMPTY_MAP);
+        return processTemplate(templateConfigUrl, ImmutableMap.<String,String>of());
     }
 
     public String processTemplate(String templateConfigUrl, Map<String,? extends Object> extraSubstitutions) {
+        return processTemplateContents(getResourceAsString(templateConfigUrl), extraSubstitutions);
+    }
+
+    public String processTemplateContents(String templateContents) {
+        return processTemplateContents(templateContents, ImmutableMap.<String,String>of());
+    }
+    
+    public String processTemplateContents(String templateContents, Map<String,? extends Object> extraSubstitutions) {
         Map<String, Object> config = getEntity().getApplication().getManagementContext().getConfig().asMapWithStringKeys();
         Map<String, Object> substitutions = ImmutableMap.<String, Object>builder()
                 .putAll(config)
@@ -144,11 +151,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 .build();
 
         try {
-            String templateConfigFile = getResourceAsString(templateConfigUrl);
-
             Configuration cfg = new Configuration();
             StringTemplateLoader templateLoader = new StringTemplateLoader();
-            templateLoader.putTemplate("config", templateConfigFile);
+            templateLoader.putTemplate("config", templateContents);
             cfg.setTemplateLoader(templateLoader);
             Template template = cfg.getTemplate("config");
 

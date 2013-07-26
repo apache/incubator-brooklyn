@@ -58,8 +58,8 @@ public class BrooklynNodeIntegrationTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        pseudoBrooklynPropertiesFile.delete();
-        pseudoBrooklynCatalogFile.delete();
+        if (pseudoBrooklynPropertiesFile != null) pseudoBrooklynPropertiesFile.delete();
+        if (pseudoBrooklynCatalogFile != null) pseudoBrooklynCatalogFile.delete();
     }
     
     @Test(groups="Integration")
@@ -88,10 +88,20 @@ public class BrooklynNodeIntegrationTest {
     
 
     @Test(groups="Integration")
-    public void testSetsBrooklynPropertiesFromContents() throws Exception {
+    public void testSetsGlobalBrooklynPropertiesFromContents() throws Exception {
         BrooklynNode brooklynNode = app.createAndManageChild(BasicEntitySpec.newInstance(BrooklynNode.class)
-                .configure(BrooklynNode.BROOKLYN_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
-                .configure(BrooklynNode.BROOKLYN_PROPERTIES_CONTENTS, "abc=def"));
+                .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
+                .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS, "abc=def"));
+        app.start(locs);
+        
+        assertEquals(Files.readLines(pseudoBrooklynPropertiesFile, Charsets.UTF_8), ImmutableList.of("abc=def"));
+    }
+    
+    @Test(groups="Integration")
+    public void testSetsLocalBrooklynPropertiesFromContents() throws Exception {
+        BrooklynNode brooklynNode = app.createAndManageChild(BasicEntitySpec.newInstance(BrooklynNode.class)
+                .configure(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
+                .configure(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS, "abc=def"));
         app.start(locs);
         
         assertEquals(Files.readLines(pseudoBrooklynPropertiesFile, Charsets.UTF_8), ImmutableList.of("abc=def"));
@@ -103,8 +113,8 @@ public class BrooklynNodeIntegrationTest {
         Files.write("abc=def", brooklynPropertiesSourceFile, Charsets.UTF_8);
         
         BrooklynNode brooklynNode = app.createAndManageChild(BasicEntitySpec.newInstance(BrooklynNode.class)
-                .configure(BrooklynNode.BROOKLYN_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
-                .configure(BrooklynNode.BROOKLYN_PROPERTIES_URI, brooklynPropertiesSourceFile.toURI().toString()));
+                .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
+                .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_URI, brooklynPropertiesSourceFile.toURI().toString()));
         app.start(locs);
         
         assertEquals(Files.readLines(pseudoBrooklynPropertiesFile, Charsets.UTF_8), ImmutableList.of("abc=def"));
@@ -188,7 +198,7 @@ public class BrooklynNodeIntegrationTest {
         try {
             BrooklynNode brooklynNode = app.createAndManageChild(BasicEntitySpec.newInstance(BrooklynNode.class)
                     .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true)
-                    .configure(BrooklynNode.BROOKLYN_PROPERTIES_CONTENTS, brooklynPropertiesContents)
+                    .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS, brooklynPropertiesContents)
                     .configure(BrooklynNode.APP, BasicApplicationImpl.class.getName())
                     .configure(BrooklynNode.LOCATIONS, "named:mynamedloc"));
             app.start(locs);

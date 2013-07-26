@@ -153,4 +153,13 @@ public class ResourceUtilsTest {
         assertEquals(ResourceUtils.tidyFilePath("/a/b"), "/a/b");
         assertEquals(ResourceUtils.tidyFilePath("~/a/b"), userhome+"/a/b");
     }
+    
+    @Test
+    public void testMergeFilePaths() throws Exception {
+        assertEquals(ResourceUtils.mergeFilePaths("a"), "a"); 
+        assertEquals(ResourceUtils.mergeFilePaths("a", "b"), "a/b"); 
+        assertEquals(ResourceUtils.mergeFilePaths("a/", "b"), "a/b");
+        assertEquals(ResourceUtils.mergeFilePaths("a", "b/"), "a/b/");
+        assertEquals(ResourceUtils.mergeFilePaths("/a", "b"), "/a/b");
+    }
 }

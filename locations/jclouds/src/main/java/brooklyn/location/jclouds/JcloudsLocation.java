@@ -480,6 +480,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports {} for {}", Arrays.toString(inboundPorts), t);
                         t.inboundPorts(inboundPorts);
                     }})
+            .put(TAGS, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        List<String> tags = toListOfStrings(v);
+                        if (LOG.isDebugEnabled()) LOG.debug("setting VM tags {} for {}", tags, t);
+                        t.tags(tags);
+                    }})
             .put(USER_METADATA, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         t.userMetadata(toMapStringString(v));
@@ -1121,7 +1127,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     protected static String[] toStringArray(Object v) {
-        Collection<String> result = Lists.newArrayList();
+        return toListOfStrings(v).toArray(new String[0]);
+    }
+    
+    protected static List<String> toListOfStrings(Object v) {
+        List<String> result = Lists.newArrayList();
         if (v instanceof Iterable) {
             for (Object o : (Iterable<?>)v) {
                 result.add(o.toString());
@@ -1133,9 +1143,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         } else if (v instanceof String) {
             result.add((String) v);
         } else {
-            throw new IllegalArgumentException("Invalid type for String[]: "+v+" of type "+v.getClass());
+            throw new IllegalArgumentException("Invalid type for List<String>: "+v+" of type "+v.getClass());
         }
-        return result.toArray(new String[0]);
+        return result;
     }
     
     protected static byte[] toByteArray(Object v) {

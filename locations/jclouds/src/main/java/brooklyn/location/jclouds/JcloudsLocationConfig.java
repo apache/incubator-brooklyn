@@ -99,6 +99,10 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Inbound ports to be applied when creating a VM, on supported clouds " +
             "(either a single port as a String, or an Iterable<Integer> or Integer[])", null);
 
+    public static final ConfigKey<Object> TAGS = new BasicConfigKey<Object>(Object.class, "tags", 
+            "Tags to be applied when creating a VM, on supported clouds " +
+            "(either a single tag as a String, or an Iterable<String> or String[])", null);
+
     public static final ConfigKey<Object> USER_METADATA = new BasicConfigKey<Object>(Object.class, "userMetadata", 
             "Arbitrary user metadata, as a map (or String of comma-separated key=value pairs), on supported clouds", null);
 
