@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
 
 import brooklyn.rest.domain.ApiError;
+import brooklyn.util.exceptions.Exceptions;
 
 public class WebResourceUtils {
 
@@ -44,7 +45,13 @@ public class WebResourceUtils {
     public static MediaType getImageMediaTypeFromExtension(String extension) {
         com.google.common.net.MediaType mime = IMAGE_FORMAT_MIME_TYPES.get(extension.toLowerCase());
         if (mime==null) return null;
-        return MediaType.valueOf(mime.toString());
+        try {
+            return MediaType.valueOf(mime.toString());
+        } catch (Exception e) {
+            log.warn("Unparseable MIME type "+mime+"; ignoring ("+e+")");
+            Exceptions.propagateIfFatal(e);
+            return null;
+        }
     }
     
 }
