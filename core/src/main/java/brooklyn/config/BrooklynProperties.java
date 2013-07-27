@@ -95,7 +95,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
 
                 // TODO Could also read from http://brooklyn.io, for up-to-date values?
                 // But might that make unit tests run very badly when developer is offline?
-                addPropertiesFromUrl(properties, defaultLocationMetadataUrl);
+                addPropertiesFromUrl(properties, defaultLocationMetadataUrl, false);
                 
                 addPropertiesFromFile(properties, globalLocationMetadataFile);
                 addPropertiesFromFile(properties, globalPropertiesFile);
@@ -108,11 +108,12 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
             }
         }
         
-        private static void addPropertiesFromUrl(BrooklynProperties p, String url) {
+        private static void addPropertiesFromUrl(BrooklynProperties p, String url, boolean warnIfNotFound) {
             try {
                 p.addFrom(new ResourceUtils(BrooklynProperties.class).getResourceFromUrl(url));
             } catch (Exception e) {
-                LOG.info("Could not load {}; continuing", url);
+                if (warnIfNotFound)
+                    LOG.warn("Could not load {}; continuing", url);
                 if (LOG.isTraceEnabled()) LOG.trace("Could not load "+url+"; continuing", e);
             }
         }

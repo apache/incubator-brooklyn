@@ -22,9 +22,11 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.ReflectionScanner;
 import brooklyn.util.javalang.UrlClassLoader;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 
 public class CatalogClasspathDo {
@@ -42,7 +44,8 @@ public class CatalogClasspathDo {
         ANNOTATIONS,
         
         /** all types are included, even if not annotated for inclusion in the catalog; useful for quick hacking,
-         * or a classpath (and possibly in future a regex, if added) which is known to have only good things in it */
+         * or a classpath (and possibly in future a regex, if added) which is known to have only good things in it
+         * (limited to interfaces for entities and applications) */
         TYPES
     }
     
@@ -91,6 +94,7 @@ public class CatalogClasspathDo {
         if (scanMode==null || scanMode==CatalogScanningModes.NONE)
             return;
         
+        Stopwatch timer = new Stopwatch().start();
         ReflectionScanner scanner = null;
         if (!catalog.isLocal()) {
             log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);
@@ -110,7 +114,7 @@ public class CatalogClasspathDo {
                 if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
                     try {
                         ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
-                        log.info("Catalog scan of default classloader returned nothing; reverting to java.class.path");
+                        log.debug("Catalog scan of default classloader returned nothing; reverting to java.class.path");
                         baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
                         scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
                     } catch (Exception e) {
@@ -125,24 +129,29 @@ public class CatalogClasspathDo {
         }
         
         if (scanner!=null) {
-            int count = 0;
+            int count = 0, countApps = 0;
             if (scanMode==CatalogScanningModes.ANNOTATIONS) {
                 Set<Class<?>> catalogClasses = scanner.getTypesAnnotatedWith(Catalog.class);
                 for (Class<?> c: catalogClasses) {
                     try {
-                        addCatalogEntry(c);
+                        CatalogItem<?> item = addCatalogEntry(c);
+                        count++;
+                        if (CatalogTemplateItemDto.class.isInstance(item)) countApps++;
                     } catch (Exception e) {
                         log.warn("Failed to add catalog entry for "+c+"; continuing scan...", e);
                     }
-                    count++;
                 }
             } else if (scanMode==CatalogScanningModes.TYPES) {
                 Iterable<Class<? extends Entity>> entities = this.excludeInvalidClasses(scanner.getSubTypesOf(Entity.class));
-                for (Class<?> c: entities) { 
-                    if (Application.class.isAssignableFrom(c))
+                for (Class<?> c: entities) {
+                    if (!c.isInterface())
+                        continue;
+                    if (Application.class.isAssignableFrom(c)) {
                         addCatalogEntry(new CatalogTemplateItemDto(), c);
-                    else
+                        countApps++;
+                    } else {
                         addCatalogEntry(new CatalogEntityItemDto(), c);
+                    }
                     count++;
                 }
                 Iterable<Class<? extends Policy>> policies = this.excludeInvalidClasses(scanner.getSubTypesOf(Policy.class));
@@ -153,7 +162,7 @@ public class CatalogClasspathDo {
             } else {
                 throw new IllegalStateException("Unsupported catalog scan mode "+scanMode+" for "+this);
             }
-            log.info("Classpath scan for catalog "+catalog+" complete; "+count+" entities detected (by "+scanMode+")");
+            log.info("Catalog '"+catalog.dto.name+"' classpath scan completed: loaded "+count+" items ("+countApps+" apps) in "+Time.makeTimeStringRounded(timer));
         }
         
         isLoaded = true;

@@ -8,7 +8,13 @@
     <!-- quite noisy at INFO, and uninteresting -->
     <logger name="org.eclipse.jetty" level="WARN"/>
     
-    <!-- quite noisy at INFO, but poss interesting; put to file only -->
+    <!-- a bit noisy at INFO, but still, poss interesting; put to file only -->
+    <logger name="org.reflections.Reflections" additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="com.sun.jersey.server.impl.application" additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
     <logger name="org.apache.whirr.service.ComputeCache" additivity="false">
         <appender-ref ref="FILE" />
     </logger>

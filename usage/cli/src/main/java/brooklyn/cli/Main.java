@@ -3,6 +3,7 @@ package brooklyn.cli;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -37,6 +38,9 @@ import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.Strings;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.util.StatusPrinter;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -337,6 +341,7 @@ public class Main {
                 Constructor<?> constructor = clazz.getConstructor();
                 return (ApplicationBuilder) constructor.newInstance();
             } else if (StartableApplication.class.isAssignableFrom(clazz)) {
+                @SuppressWarnings("unchecked")
                 EntitySpec<StartableApplication> appSpec = EntitySpecs.appSpec((Class<? extends StartableApplication>)clazz);
                 return new ApplicationBuilder(appSpec) {
                     @Override protected void doBuild() {
@@ -350,11 +355,13 @@ public class Main {
             } else if (AbstractEntity.class.isAssignableFrom(clazz)) {
                 // TODO Should we really accept any entity type, and just wrap it in an app? That's not documented!
                 return new ApplicationBuilder() {
+                    @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
                         addChild(EntitySpecs.spec(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
                     }};
             } else if (Entity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
+                    @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
                         addChild(EntitySpecs.spec((Class<? extends Entity>)clazz));
                     }};

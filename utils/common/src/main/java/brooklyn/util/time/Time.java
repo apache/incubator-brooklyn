@@ -12,6 +12,8 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Stopwatch;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
@@ -49,6 +51,9 @@ public class Time {
     public static String makeTimeStringRounded(long t, TimeUnit unit) {
         long nanos = unit.toNanos(t);
         return makeTimeStringNanoRounded(nanos);
+    }
+    public static String makeTimeStringRounded(Stopwatch timer) {
+        return makeTimeStringRounded(timer.elapsed(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
     }
     /** @deprecated since 0.6.0 use {@link #makeTimeStringRounded(long)} */
     @Deprecated
