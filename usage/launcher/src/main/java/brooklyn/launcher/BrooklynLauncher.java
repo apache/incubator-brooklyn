@@ -3,6 +3,7 @@ package brooklyn.launcher;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Closeable;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,8 +28,10 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.exceptions.CompoundRuntimeException;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -69,9 +72,10 @@ public class BrooklynLauncher {
     
     private boolean startWebApps = true;
     private PortRange port = PortRanges.fromString("8081+");
+    private InetAddress bindAddress = null;
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
     private Map<String, ?> webconsoleFlags = Maps.newLinkedHashMap();
-    private boolean installSecurityFilter = true;
+    private Boolean skipSecurityFilter = null;
     private boolean shutdownOnExit = true;
     
     private volatile BrooklynWebServer webServer;
@@ -219,13 +223,13 @@ public class BrooklynLauncher {
         return this;
     }
 
-    public BrooklynLauncher installSecurityFilter(boolean val) {
-        this.installSecurityFilter = val;
+    public BrooklynLauncher installSecurityFilter(Boolean val) {
+        this.skipSecurityFilter = val == null ? null : !val;
         return this;
     }
 
     /** 
-     * Specifies the port where the web console (and any additional webapps specified) will be listed; 
+     * Specifies the port where the web console (and any additional webapps specified) will listen; 
      * default "8081+" being the first available >= 8081.
      */ 
     public BrooklynLauncher webconsolePort(int port) {
@@ -233,7 +237,7 @@ public class BrooklynLauncher {
     }
 
     /**
-     * Specifies the port where the web console (and any additional webapps specified) will be listed;
+     * Specifies the port where the web console (and any additional webapps specified) will listen;
      * default "8081+" being the first available >= 8081.
      */
     public BrooklynLauncher webconsolePort(String port) {
@@ -241,7 +245,7 @@ public class BrooklynLauncher {
     }
 
     /**
-     * Specifies the port where the web console (and any additional webapps specified) will be listed;
+     * Specifies the port where the web console (and any additional webapps specified) will listen;
      * default "8081+" being the first available >= 8081.
      */ 
     public BrooklynLauncher webconsolePort(PortRange port) {
@@ -249,6 +253,15 @@ public class BrooklynLauncher {
         return this;
     }
 
+    /**
+     * Specifies the NIC where the web console (and any additional webapps specified) will be bound;
+     * default 0.0.0.0, unless no security is specified (e.g. users) in which case it is localhost.
+     */ 
+    public BrooklynLauncher bindAddress(InetAddress bindAddress) {
+        this.bindAddress = bindAddress;
+        return this;
+    }
+    
     /**
      * Specifies additional flags to be passed to {@link BrooklynWebServer}.
      */ 
@@ -327,14 +340,23 @@ public class BrooklynLauncher {
         
         // Start the web-console
         if (startWebApps) {
+            if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties)) {
+                if (bindAddress==null) {
+                    LOG.info("Starting brooklyn web-console on loopback interface because no security config is set");
+                    bindAddress = Networking.LOOPBACK;
+                }
+                if (skipSecurityFilter==null) {
+                    LOG.debug("Starting brooklyn web-console without security because we are loopback and no security is set");
+                    skipSecurityFilter = true;
+                }
+            }
             try {
                 webServer = new BrooklynWebServer(webconsoleFlags, managementContext);
+                webServer.setBindAddress(bindAddress);
                 webServer.setPort(port);
                 webServer.putAttributes(brooklynProperties);
-                if (installSecurityFilter) {
+                if (skipSecurityFilter != Boolean.TRUE) {
                     webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
-                } else {
-                    LOG.info("Starting brooklyn web-console on port {} without security", port);
                 }
                 
                 for (Map.Entry<String, String> webapp : webApps.entrySet())

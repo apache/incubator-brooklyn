@@ -27,8 +27,8 @@ import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -96,7 +96,7 @@ public class CouchDBNodeSshDriver extends JavaSoftwareProcessSshDriver implement
     @Override
     public void customize() {
         log.info("Customizing {} (Cluster {})", entity, getClusterName());
-        NetworkUtils.checkPortsValid(getPortMap());
+        Networking.checkPortsValid(getPortMap());
 
         newScript(CUSTOMIZING).execute();
 

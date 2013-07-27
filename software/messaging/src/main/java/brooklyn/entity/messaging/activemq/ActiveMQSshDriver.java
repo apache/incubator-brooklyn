@@ -11,8 +11,8 @@ import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -66,7 +66,7 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
 
     @Override
     public void customize() {
-        NetworkUtils.checkPortsValid(ImmutableMap.of("jmxPort", getJmxPort(), "openWirePort", getOpenWirePort()));
+        Networking.checkPortsValid(ImmutableMap.of("jmxPort", getJmxPort(), "openWirePort", getOpenWirePort()));
         newScript(CUSTOMIZING).
                 body.append(
                 String.format("cp -R %s/{bin,conf,data,lib,webapps} .", getExpandedInstallDir()),

@@ -4,9 +4,9 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.CommonCommands;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -161,7 +161,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         if (isProtocolEnabled("HTTPS")) {
             ports.put("httpsPort", getHttpsPort());
         }
-        NetworkUtils.checkPortsValid(ports);
+        Networking.checkPortsValid(ports);
 
         // Check hostname is defined
         String hostname = entity.getAttribute(SoftwareProcess.HOSTNAME);

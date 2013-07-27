@@ -20,8 +20,8 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
 
 import com.google.common.base.Charsets;
@@ -134,7 +134,7 @@ public class BrooklynRestApiLauncher {
     }
     
     public static Server startServer(ContextHandler context, String summary) {
-        Server server = new Server(NetworkUtils.nextAvailablePort(FAVOURITE_PORT));
+        Server server = new Server(Networking.nextAvailablePort(FAVOURITE_PORT));
         server.setHandler(context);
         try {
             server.start();

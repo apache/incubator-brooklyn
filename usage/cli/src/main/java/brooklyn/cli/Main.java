@@ -174,8 +174,8 @@ public class Main {
         public boolean noConsole = false;
 
         @Option(name = { "--noConsoleSecurity" },
-                description = "Whether to start the web console with no security (i.e. no authentication required)")
-        public boolean noConsoleSecurity = false;
+                description = "Whether to disable security for the web console with no security (i.e. no authentication required)")
+        public Boolean noConsoleSecurity = false;
 
         @Option(name = { "-ns", "--noShutdownOnExit" },
                 description = "Whether to stop the application when the JVM exits")
@@ -231,13 +231,15 @@ public class Main {
                 execGroovyScript(utils, loader, script);
             }
 
-            BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+            BrooklynLauncher launcher = BrooklynLauncher.newInstance();
+            launcher
                     .localBrooklynPropertiesFile(localBrooklynProperties)
                     .webconsolePort(port)
                     .webconsole(!noConsole)
-                    .installSecurityFilter(!noConsoleSecurity)
                     .shutdownOnExit(!noShutdownOnExit)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
+            if (noConsoleSecurity) 
+                launcher.installSecurityFilter(false);
             
             if (app != null) {
                 // Create the instance of the brooklyn app

@@ -148,4 +148,14 @@ public class PolicyConfigMap implements brooklyn.config.ConfigMap {
     public Map<String,Object> asMapWithStringKeys() {
         return mapViewWithStringKeys;
     }
+
+    @Override
+    public int size() {
+        return ownConfig.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return ownConfig.isEmpty();
+    }
 }

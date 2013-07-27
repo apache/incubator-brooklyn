@@ -5,6 +5,8 @@ package brooklyn.util.internal;
  */
 public class BrooklynSystemProperties {
 
+    // TODO should these become ConfigKeys ?
+    
     public static BooleanSystemProperty DEBUG = new BooleanSystemProperty("brooklyn.debug");
     public static BooleanSystemProperty EXPERIMENTAL = new BooleanSystemProperty("brooklyn.experimental");
     

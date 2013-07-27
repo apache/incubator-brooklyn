@@ -14,8 +14,8 @@ import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -76,7 +76,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
 
     @Override
     public void customize() {
-        NetworkUtils.checkPortsValid(MutableMap.of("amqpPort", getAmqpPort()));
+        Networking.checkPortsValid(MutableMap.of("amqpPort", getAmqpPort()));
         newScript(CUSTOMIZING)
                 .body.append(
                     format("cp -R %s/* .", getExpandedInstallDir())

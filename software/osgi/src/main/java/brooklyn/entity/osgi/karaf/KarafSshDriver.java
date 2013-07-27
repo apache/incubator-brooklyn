@@ -11,7 +11,7 @@ import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 
@@ -67,7 +67,7 @@ public class KarafSshDriver extends JavaSoftwareProcessSshDriver implements Kara
         ports.put("jmxPort", getJmxPort());
         ports.put("rmiServerPort", getRmiServerPort());
 
-        NetworkUtils.checkPortsValid(ports);
+        Networking.checkPortsValid(ports);
         newScript(CUSTOMIZING).
                 body.append(
                 format("cd %s", getRunDir()),

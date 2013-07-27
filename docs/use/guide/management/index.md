@@ -120,8 +120,7 @@ public static void main(String[] argv) {
 {% endhighlight %}
 
 This will start an embedded brooklyn management node, including the web console.
-The URL for the web console defaults to http://localhost:8081,
-with credentials admin/password.
+The URL for the web console defaults to http://127.0.0.1:8081, .
 
 The mechanism for launching brooklyn management will change in a future release. For this release, the brooklyn management node is embedded.
 
@@ -168,14 +167,13 @@ which should be specified as configuration parameters e.g. in `brooklyn.properti
 This configuration could look like:
 
 {% highlight properties %}
-brooklyn.webconsole.security.explicit.users=admin
-brooklyn.webconsole.security.explicit.user.admin.password=password
+brooklyn.webconsole.security.users=admin
+brooklyn.webconsole.security.user.admin.password=password
 {% endhighlight %}
 
 The `users` line should contain a comma-separated list. The special value `*` is accepted to permit all users.
-If no values are specified at all the above setting (`admin`/`password`) is used by default.
 
-If not using the web console, you should specify
+If not using the web console, you can specify
 `brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.BlackholeSecurityProvider` to prevent inadvertant logins.
 During dev/test you can specify `brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.AnyoneSecurityProvider`
 to allow logins with no credentials. 

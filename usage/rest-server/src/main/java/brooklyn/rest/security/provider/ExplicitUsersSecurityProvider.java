@@ -10,11 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.StringConfigMap;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynWebConfig;
 
+/** security provider which validates users against passwords according to property keys,
+ * as set in {@link BrooklynWebConfig#USERS} and {@link BrooklynWebConfig#PASSWORD_FOR_USER(String)}*/
 public class ExplicitUsersSecurityProvider implements SecurityProvider {
 
     public static final Logger LOG = LoggerFactory.getLogger(ExplicitUsersSecurityProvider.class);
@@ -30,58 +31,50 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
     @Override
     public boolean isAuthenticated(HttpSession session) {
         if (session==null) return false;
-        if (allowAnyUser) return true;
         Object value = session.getAttribute(AUTHENTICATION_KEY);
         return (value!=null);
     }
 
     private boolean allowAnyUserWithValidPass = false;
-    private boolean allowDefaultUsers = false;
-    private boolean allowAnyUser = false;
     
     private Set<String> allowedUsers = null;
     
+    @SuppressWarnings("deprecation")
     private synchronized void initialize() {
         if (allowedUsers!=null) return;
 
         StringConfigMap properties = mgmt.getConfig();
 
         allowedUsers = new LinkedHashSet<String>();
-        String users = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__USERS);
+        String users = properties.getConfig(BrooklynWebConfig.USERS);
         if (users==null) {
-            LOG.info("Web console allowing default user (admin)");
-            allowDefaultUsers = true;
+            users = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__USERS);
+            if (users!=null) 
+                LOG.warn("Using deprecated config key "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__USERS.getName()+"; " +
+            		"use "+BrooklynWebConfig.USERS.getName()+" instead");
+        }
+        if (users==null) {
+            LOG.warn("Web console has no users configured; no one will be able to log in!");
         } else if ("*".equals(users)) {
-            LOG.info("Web console allowing any users");
+            LOG.info("Web console allowing any user (so long as valid password is set)");
             allowAnyUserWithValidPass = true;
         } else {
-            LOG.info("Web console allowing users "+users);
             StringTokenizer t = new StringTokenizer(users, ",");
             while (t.hasMoreElements()) {
                 allowedUsers.add((""+t.nextElement()).trim());
             }
+            LOG.info("Web console allowing users: "+allowedUsers);
         }       
-
-        if (properties.getFirst(BrooklynServiceAttributes.BROOKLYN_AUTOLOGIN_USERNAME)!=null) {
-            LOG.warn("Use of legacy AUTOLOGIN; replace with setting BrooklynSystemProperties.SECURITY_PROVIDER to "+AnyoneSecurityProvider.class.getCanonicalName());
-            allowAnyUser = true;
-        }
     }
     
     @SuppressWarnings("deprecation")
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
-        if (allowAnyUser) return true;
         if (session==null || user==null) return false;
         
         initialize();
         
         if (!allowAnyUserWithValidPass) {
-            if (allowDefaultUsers) {
-                if (user.equals("admin") && password.equals("password")) {
-                    return allow(session, user);
-                }
-            } 
             if (!allowedUsers.contains(user)) {
                 LOG.info("Web console rejecting unknown user "+user);
                 return false;                
@@ -89,16 +82,16 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
         }
 
         BrooklynProperties properties = (BrooklynProperties) mgmt.getConfig();
-        String actualP = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD_FOR_USER(user));
+        String actualP = properties.getConfig(BrooklynWebConfig.PASSWORD_FOR_USER(user));
         if (actualP==null) {
             actualP = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user));
             if (actualP!=null) {
-                LOG.warn("Web console user password set using legacy property "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD_FOR_USER(user).getName()+"; " +
-            		"configure using "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getName()+" instead");
+                LOG.warn("Web console user password set using decprecated property "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getName()+"; " +
+            		"configure using "+BrooklynWebConfig.PASSWORD_FOR_USER(user).getName()+" instead");
             }
         }
         if (actualP==null) {
-            LOG.info("Web console rejecting passwordless user "+user);
+            LOG.warn("Web console rejecting passwordless user "+user);
             return false;
         } else if (!actualP.equals(password)){
             LOG.info("Web console rejecting bad password for user "+user);

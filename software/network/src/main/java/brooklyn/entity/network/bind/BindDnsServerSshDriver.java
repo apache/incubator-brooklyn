@@ -20,8 +20,8 @@ import java.util.Map;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.CommonCommands;
 import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
@@ -58,7 +58,7 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
     public void customize() {
         Integer dnsPort = getEntity().getDnsPort();
         Map<String, Object> ports = MutableMap.<String, Object>of("dnsPort", dnsPort);
-        NetworkUtils.checkPortsValid(ports);
+        Networking.checkPortsValid(ports);
         newScript(CUSTOMIZING)
                 .body.append(
                         // TODO determine name of ethernet interface if not eth0?

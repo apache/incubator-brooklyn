@@ -4,6 +4,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumSet;
@@ -24,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.launcher.config.CustomResourceLocator;
 import brooklyn.location.PortRange;
@@ -31,10 +37,14 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApi;
+import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.BrooklynLanguageExtensions;
+import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.crypto.FluentKeySigner;
+import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
@@ -70,11 +80,16 @@ public class BrooklynWebServer {
     protected PortRange port = PortRanges.fromString("8081+");
     @SetFromFlag
     protected PortRange httpsPort = PortRanges.fromString("8443+");
+    
     protected volatile int actualPort = -1;
+    protected InetAddress actualAddress = null; 
 
     @SetFromFlag
     protected String war = BROOKLYN_WAR_URL;
 
+    @SetFromFlag
+    protected InetAddress bindAddress = null;
+    
     /**
      * map of context-prefix to file
      */
@@ -86,8 +101,8 @@ public class BrooklynWebServer {
 
     private ManagementContext managementContext;
 
-    @SetFromFlag(defaultVal = "false")
-    private boolean httpsEnabled;
+    @SetFromFlag
+    private Boolean httpsEnabled;
 
     @SetFromFlag
     private String keystorePath;
@@ -144,6 +159,12 @@ public class BrooklynWebServer {
         return this;
     }
 
+    public boolean getHttpsEnabled() {
+        if (httpsEnabled!=null) return httpsEnabled;
+        httpsEnabled = managementContext.getConfig().getConfig(BrooklynWebConfig.HTTPS_REQUIRED);
+        return httpsEnabled;
+    }
+    
     public PortRange getRequestedPort() {
         return port;
     }
@@ -153,15 +174,15 @@ public class BrooklynWebServer {
         return actualPort;
     }
 
-    /** interface/address where this server binds */
+    /** interface/address where this server is bound */
     public InetAddress getAddress() {
-        return LocalhostMachineProvisioningLocation.getLocalhostInetAddress();
+        return actualAddress;
     }
     
     /** URL for accessing this web server (root context) */
     public String getRootUrl() {
         if (getActualPort()>0){
-            String protocol = httpsEnabled?"https":"http";
+            String protocol = getHttpsEnabled()?"https":"http";
             return protocol+"://"+getAddress().getHostName()+":"+getActualPort()+"/";
         }else{
             return null;
@@ -182,6 +203,13 @@ public class BrooklynWebServer {
         return this;
     }
 
+    /** InetAddress to which server should bind; 
+     * defaults to 0.0.0.0 (although common call path is to set to 127.0.0.1 when security is not set) */
+    public BrooklynWebServer setBindAddress(InetAddress address) {
+        bindAddress = address;
+        return this;
+    }
+    
     /** @deprecated use setAttribute */
     public BrooklynWebServer addAttribute(String field, Object value) {
         return setAttribute(field, value);
@@ -192,6 +220,11 @@ public class BrooklynWebServer {
         attributes.put(field, value);
         return this;
     }
+    
+    public <T> BrooklynWebServer configure(ConfigKey<T> key, T value) {
+        return setAttribute(key.getName(), value);
+    }
+
     /** Specifies attributes passed to deployed webapps 
      * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT} */
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -226,17 +259,23 @@ public class BrooklynWebServer {
         if (server!=null) throw new IllegalStateException(""+this+" already running");
 
         if (actualPort==-1){
-            actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), httpsEnabled?httpsPort:port);
+            actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), getHttpsEnabled()?httpsPort:port);
             if (actualPort == -1) 
-                throw new IllegalStateException("Unable to provision port for web console (wanted "+(httpsEnabled?httpsPort:port)+")");
+                throw new IllegalStateException("Unable to provision port for web console (wanted "+(getHttpsEnabled()?httpsPort:port)+")");
+        }
+
+        if (bindAddress!=null) {
+            actualAddress = bindAddress;
+            server = new Server(new InetSocketAddress(bindAddress, actualPort));
+        } else {
+            actualAddress = BrooklynNetworkUtils.getLocalhostInetAddress();
+            server = new Server(actualPort);
         }
 
         if (log.isDebugEnabled())
             log.debug("Starting Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
-
-        server = new Server(actualPort);
-
-        if(httpsEnabled){
+        
+        if(getHttpsEnabled()){
             //by default the server is configured with a http connector, this needs to be removed since we are going
             //to provide https
             for(Connector c: server.getConnectors()){
@@ -244,8 +283,24 @@ public class BrooklynWebServer {
             }
 
             SslContextFactory sslContextFactory = new SslContextFactory();
-            sslContextFactory.setKeyStorePath(checkFileExists(keystorePath, "keystore"));
-            sslContextFactory.setKeyStorePassword(keystorePassword);
+            if (keystorePath!=null) {
+                sslContextFactory.setKeyStorePath(checkFileExists(keystorePath, "keystore"));
+                sslContextFactory.setKeyStorePassword(keystorePassword);
+            } else {
+                // TODO allow webconsole keystore & related properties to be set in brooklyn.properties 
+                log.info("No keystore specified but https enabled; creating a default keystore");
+                // if password is blank the process will block and read from stdin !
+                if (Strings.isEmpty(keystorePassword))
+                    keystorePassword = "password";
+                
+                KeyStore ks = SecureKeys.newKeyStore();
+                KeyPair key = SecureKeys.newKeyPair();
+                X509Certificate cert = new FluentKeySigner("brooklyn").newCertificateFor("web-console", key);
+                ks.setKeyEntry("web-console", key.getPrivate(), keystorePassword.toCharArray(),
+                        new Certificate[] { cert });                
+                sslContextFactory.setKeyStore(ks);
+                sslContextFactory.setKeyStorePassword(keystorePassword);
+            }
             if (!Strings.isEmpty(truststorePath)) {
                 sslContextFactory.setTrustStore(checkFileExists(truststorePath, "truststore"));
                 sslContextFactory.setTrustStorePassword(trustStorePassword);
@@ -382,4 +437,5 @@ public class BrooklynWebServer {
     public WebAppContext getRootContext() {
         return rootContext;
     }
+
 }

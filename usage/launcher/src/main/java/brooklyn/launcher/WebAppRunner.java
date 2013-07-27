@@ -4,7 +4,7 @@ import java.util.Map;
 
 import brooklyn.management.ManagementContext;
 
-/** @deprecated use BrooklynWebServer */
+/** @deprecated since 0.6.0 use BrooklynWebServer */
 public class WebAppRunner extends BrooklynWebServer {
 
     public WebAppRunner(ManagementContext managementContext, int port, String warUrl) {

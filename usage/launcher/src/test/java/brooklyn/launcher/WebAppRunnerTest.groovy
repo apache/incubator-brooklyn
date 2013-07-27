@@ -10,8 +10,8 @@ import org.testng.annotations.Test
 import brooklyn.config.BrooklynProperties
 import brooklyn.management.internal.LocalManagementContext
 import brooklyn.test.HttpTestUtils
-import brooklyn.util.NetworkUtils
 import brooklyn.util.internal.TimeExtras
+import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration
 
 
@@ -48,7 +48,7 @@ public class WebAppRunnerTest {
     
     @Test
     public void testStartWar1() {
-        if (!NetworkUtils.isPortAvailable(8090))
+        if (!Networking.isPortAvailable(8090))
             fail("Another process is using port 8090 which is required for this test.");
         BrooklynWebServer server = createWebServer(port:8090);
         assertNotNull(server);
@@ -67,7 +67,7 @@ public class WebAppRunnerTest {
     
     @Test
     public void testStartSecondaryWar() {
-        if (!NetworkUtils.isPortAvailable(8090))
+        if (!Networking.isPortAvailable(8090))
             fail("Another process is using port 8090 which is required for this test.");
         BrooklynWebServer server = createWebServer(port:8090, war:"brooklyn.war", wars:["hello":"hello-world.war"]);
         assertNotNull(server);
@@ -86,7 +86,7 @@ public class WebAppRunnerTest {
 
     @Test
     public void testStartSecondaryWarAfter() {
-        if (!NetworkUtils.isPortAvailable(8090))
+        if (!Networking.isPortAvailable(8090))
             fail("Another process is using port 8090 which is required for this test.");
         BrooklynWebServer server = createWebServer(port:8090, war:"brooklyn.war");
         assertNotNull(server);
