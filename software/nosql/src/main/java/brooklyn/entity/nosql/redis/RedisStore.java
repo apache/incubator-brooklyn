@@ -8,7 +8,6 @@ import brooklyn.entity.nosql.DataStore;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
@@ -18,7 +17,7 @@ import brooklyn.util.flags.SetFromFlag;
  *
  * TODO add sensors with Redis statistics using INFO command
  */
-@Catalog(name="Redis Server", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.jpeg")
+@Catalog(name="Redis Server", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.png")
 @ImplementedBy(RedisStoreImpl.class)
 public interface RedisStore extends SoftwareProcess, DataStore {
 

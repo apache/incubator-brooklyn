@@ -30,16 +30,19 @@ import com.google.common.collect.Iterables;
 public class CatalogClasspathDo {
 
     public static enum CatalogScanningModes {
-        /** the classpath is not scanned; the default, and recommended for any catalog which is presented over the internet
+        /** the classpath is not scanned; 
+         * for any catalog which is presented over the internet this is recommended (to prevent loading) and is the default; 
          * (you should explicitly list the items to include; it may be useful to autogenerate it by using a local catalog
          * scanning with ANNOTATIONS, viwing that by running mgmt.getCatalog().toXmlString(),
          * then editting the resulting XML (e.g. setting the classpath and removing the scan attribute) */
         NONE, 
         
-        /** types in the classpath are scanned for annotations indicating inclusion in the catalog ({@link Catalog}) */
+        /** types in the classpath are scanned for annotations indicating inclusion in the catalog ({@link Catalog});
+         * this is the default if no catalog is supplied, scanning the local classpath */
         ANNOTATIONS,
         
-        /** all types are included, even if not annotated for inclusion in the catalog; useful for quick hacking */
+        /** all types are included, even if not annotated for inclusion in the catalog; useful for quick hacking,
+         * or a classpath (and possibly in future a regex, if added) which is known to have only good things in it */
         TYPES
     }
     

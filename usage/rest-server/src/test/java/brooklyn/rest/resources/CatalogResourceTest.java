@@ -3,16 +3,22 @@ package brooklyn.rest.resources;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.jclouds.compute.domain.ImageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.testng.reporters.Files;
 
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.rest.domain.CatalogEntitySummary;
@@ -21,6 +27,7 @@ import brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
 
 public class CatalogResourceTest extends BrooklynRestResourceTest {
 
@@ -92,13 +99,25 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     assertEquals(entities4.size(), 0);
   }
 
+  private static final String REDIS_STORE_ICON_URL = "/v1/catalog/icon/brooklyn.entity.nosql.redis.RedisStore";
+  
   @Test
   public void testGetCatalogEntityDetails() {
       CatalogEntitySummary details = client().resource(
-              // FIXME entity ids should use interface class not imp[lementation
-              URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStoreImpl"))
+              URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore"))
               .get(CatalogEntitySummary.class);
-      assertTrue(details.toString().contains("redis.port"));
+      assertTrue(details.toString().contains("redis.port"), "expected more config, only got: "+details);
+      assertTrue(details.getIconUrl().contains(REDIS_STORE_ICON_URL), "expected brooklyn URL for icon image, but got: "+details.getIconUrl());
+  }
+
+  @Test
+  public void testGetCatalogEntityIconDetails() throws IOException {
+      ClientResponse response = client().resource(
+              URI.create(REDIS_STORE_ICON_URL)).get(ClientResponse.class);
+      response.bufferEntity();
+      Assert.assertEquals(response.getType(), MediaType.valueOf("image/png"));
+      Image image = Toolkit.getDefaultToolkit().createImage(Files.readFile(response.getEntityInputStream()));
+      Assert.assertNotNull(image);
   }
 
   @Test

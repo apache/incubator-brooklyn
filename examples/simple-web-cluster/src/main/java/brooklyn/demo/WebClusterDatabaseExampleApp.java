@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.HttpLatencyDetector;
@@ -48,6 +49,12 @@ import com.google.common.collect.Lists;
  * Note the policy min size must have the same value,
  * otherwise it fights with cluster set up trying to reduce the cluster size!
  **/
+@Catalog(name="Elastic Java Web + DB",
+    description="Deploys a WAR to a load-balanced elastic Java AppServer cluster, " +
+    		"with an auto-scaling policy, " +
+    		"wired to a database initialized with the provided SQL; " +
+    		"defaults to a 'Hello World' chatroom app.",
+    iconUrl="classpath://brooklyn/demo/glossy-3d-blue-web-icon.png")
 public class WebClusterDatabaseExampleApp extends AbstractApplication implements StartableApplication {
     
     public static final Logger LOG = LoggerFactory.getLogger(WebClusterDatabaseExampleApp.class);

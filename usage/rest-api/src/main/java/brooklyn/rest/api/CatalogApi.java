@@ -60,7 +60,6 @@ public interface CatalogApi {
             final @QueryParam("fragment") @DefaultValue("") String fragment
     ) ;
 
-    @SuppressWarnings("unchecked")
     @GET
     @Path("/entities/{entityId}")
     @ApiOperation(value = "Fetch an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
@@ -90,5 +89,18 @@ public interface CatalogApi {
     public CatalogItemSummary getPolicy(
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
         @PathParam("policyId") String policyId) throws Exception ;
+    
+    @GET
+    @Path("/icon/{itemId}")
+    @ApiOperation(value = "Return the icon for a given catalog entry (application/image or HTTP redirect)")
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Item not found")
+        })
+    @Produces("application/image")
+    public Response getIcon(
+        @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy)")
+        final @PathParam("itemId") @DefaultValue("") String itemId
+    ) ;
+
 }
 

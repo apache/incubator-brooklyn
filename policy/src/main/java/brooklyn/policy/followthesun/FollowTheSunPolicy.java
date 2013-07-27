@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityLocal;
@@ -34,6 +35,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+@Catalog
 public class FollowTheSunPolicy extends AbstractPolicy {
 
     private static final Logger LOG = LoggerFactory.getLogger(FollowTheSunPolicy.class);

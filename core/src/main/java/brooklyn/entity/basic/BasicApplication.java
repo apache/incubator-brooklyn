@@ -1,8 +1,6 @@
 package brooklyn.entity.basic;
 
-import brooklyn.entity.Application;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.trait.Startable;
 
 /**
  * The most basic implementation of an application possible.

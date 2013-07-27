@@ -14,10 +14,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -48,6 +49,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * of container resource in the pool respectively. These events may be consumed by a separate policy that is capable
  * of resizing the container pool.
  */
+@Catalog
 public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movable> extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class);

@@ -51,7 +51,7 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testCatalogDetails() throws Exception {
         Documentation response = client().resource("/v1/apidoc/brooklyn.rest.resources.CatalogResource").get(Documentation.class);
-        assertEquals(countOperations(response), 7);
+        assertEquals(countOperations(response), 8);
     }
 
     /* Note in some cases we might have more than one Resource method per 'endpoint'
