@@ -614,4 +614,12 @@ public class Entities {
             managementContext.getLocationManager().manage(loc);
         }
     }
+    
+    /** fails-fast if value of the given key is null or unresolveable */
+    public static String getRequiredUrlConfig(Entity entity, ConfigKey<String> urlKey) {
+        String url = entity.getConfig(urlKey);
+        if (url==null)
+            throw new NullPointerException("Key "+urlKey+" on "+entity+" should not be null");
+        return new ResourceUtils(entity).checkUrlExists(url);
+    }
 }
