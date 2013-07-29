@@ -25,8 +25,6 @@ import brooklyn.policy.Policy;
  */
 public interface EntitySpec<T extends Entity> extends Serializable {
 
-    long serialVersionUID = 1L;
-
     /**
      * @return The type of the entity
      */

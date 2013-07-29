@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import brooklyn.internal.storage.BrooklynStorageFactory;
+import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,11 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
-        super(brooklynProperties);
+        this(brooklynProperties, new InMemoryBrooklynStorageFactory());
+    }
+
+    public LocalManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory) {
+        super(brooklynProperties,storageFactory);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
         this.locationManager = new LocalLocationManager(this);
     }
