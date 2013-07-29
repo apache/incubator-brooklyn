@@ -51,7 +51,7 @@ import brooklyn.util.flags.SetFromFlag;
  * {@link Resizable#resize(Integer) resize} will change the number of brokers.
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
-@Catalog(name="Kafka", description="Apache Kafka is a distributed publish-subscribe messaging system")
+@Catalog(name="Kafka", description="Apache Kafka is a distributed publish-subscribe messaging system", iconUrl="classpath://brooklyn/entity/messaging/kafka/kafka-google-doorway.jpg")
 @ImplementedBy(KafkaClusterImpl.class)
 public interface KafkaCluster extends Entity, Startable, Resizable, Group  {
 

@@ -795,8 +795,12 @@ table.config-table {
 	margin-left: 2px;
 }
 .app-add-wizard-config-entry input {
-    margin-bottom: 0px;	
-    min-height: 11px;
+    margin: 3px 0 2px 0;	
+    height: 12px;
+    vertical-align: middle;
+}
+.app-add-wizard-config-entry input {
+    height: 14px;
 }
 tr.app-add-wizard-config-entry:nth-child(odd) {
 	background-color: #f8f8f8;

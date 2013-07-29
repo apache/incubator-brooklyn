@@ -16,12 +16,13 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -96,8 +97,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     }
     
     public static InetAddress getLocalhostInetAddress() {
-        return TypeCoercions.coerce(elvis(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue(), 
-                NetworkUtils.getLocalHost()), InetAddress.class);
+        return BrooklynNetworkUtils.getLocalhostInetAddress();
     }
 
     @Override
@@ -113,7 +113,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void provisionMore(int size) {
         for (int i=0; i<size; i++) {
-            Map flags = MutableMap.of("address", elvis(address, NetworkUtils.getLocalHost()));
+            Map flags = MutableMap.of("address", elvis(address, Networking.getLocalHost()));
             // TODO is this necessary? since they are inherited anyway? 
             // (probably, since inheritance is only respected for a small subset) 
             for (String k: SshMachineLocation.ALL_SSH_CONFIG_KEY_NAMES) {
@@ -141,13 +141,13 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             return true;
         }
     }
-    /** checks the actual availability of the port on localhost, ie by binding to it; cf {@link NetworkUtils#isPortAvailable(int)} */
+    /** checks the actual availability of the port on localhost, ie by binding to it; cf {@link Networking#isPortAvailable(int)} */
     public static boolean checkPortAvailable(InetAddress localAddress, int portNumber) {
         if (portNumber<1024) {
             if (LOG.isDebugEnabled()) LOG.debug("Skipping system availability check for privileged localhost port "+portNumber);
             return true;
         }
-        return NetworkUtils.isPortAvailable(portNumber);
+        return Networking.isPortAvailable(portNumber);
     }
     public static int obtainPort(PortRange range) {
         return obtainPort(getLocalhostInetAddress(), range);

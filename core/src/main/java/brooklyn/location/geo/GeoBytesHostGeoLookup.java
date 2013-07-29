@@ -9,7 +9,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.net.Networking;
 
 public class GeoBytesHostGeoLookup implements HostGeoLookup {
 
@@ -53,7 +53,7 @@ public class GeoBytesHostGeoLookup implements HostGeoLookup {
 
     /** returns URL to get properties for the given address (assuming localhost if address is on a subnet) */
     public String getPropertiesLookupUrlFor(InetAddress address) {
-        if (NetworkUtils.isPrivateSubnet(address)) return getPropertiesLookupUrlForLocalhost();
+        if (Networking.isPrivateSubnet(address)) return getPropertiesLookupUrlForLocalhost();
         return getPropertiesLookupUrlForPublicIp(address.getHostAddress());
     }
     

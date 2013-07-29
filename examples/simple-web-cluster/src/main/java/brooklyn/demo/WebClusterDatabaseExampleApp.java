@@ -96,14 +96,14 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     public void init() {
         MySqlNode mysql = addChild(
                 EntitySpecs.spec(MySqlNode.class)
-                        .configure(MySqlNode.CREATION_SCRIPT_URL, getConfig(DB_SETUP_SQL_URL)));
+                        .configure(MySqlNode.CREATION_SCRIPT_URL, Entities.getRequiredUrlConfig(this, DB_SETUP_SQL_URL)));
 
         ControlledDynamicWebAppCluster web = addChild(
                 EntitySpecs.spec(ControlledDynamicWebAppCluster.class)
                         .configure(WebAppService.HTTP_PORT, PortRanges.fromString("8080+"))
                         // to specify a diferrent appserver:
 //                        .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpecs.spec(TomcatServer.class))
-                        .configure(JavaWebAppService.ROOT_WAR, getConfig(WAR_PATH))
+                        .configure(JavaWebAppService.ROOT_WAR, Entities.getRequiredUrlConfig(this, WAR_PATH))
                         .configure(JavaEntityMethods.javaSysProp("brooklyn.example.db.url"), 
                                 formatString("jdbc:%s%s?user=%s\\&password=%s", 
                                         attributeWhenReady(mysql, MySqlNode.MYSQL_URL), DB_TABLE, DB_USERNAME, DB_PASSWORD))

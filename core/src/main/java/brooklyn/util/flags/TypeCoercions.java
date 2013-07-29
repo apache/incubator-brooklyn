@@ -27,8 +27,8 @@ import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.net.Cidr;
+import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
@@ -351,7 +351,7 @@ public class TypeCoercions {
         registerAdapter(String.class, InetAddress.class, new Function<String,InetAddress>() {
             @Override
             public InetAddress apply(String input) {
-                return NetworkUtils.getInetAddressWithFixedName(input);
+                return Networking.getInetAddressWithFixedName(input);
             }
         });
         registerAdapter(String.class, Cidr.class, new Function<String,Cidr>() {

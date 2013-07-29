@@ -14,7 +14,7 @@ import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.net.Networking;
 
 public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver {
 
@@ -110,7 +110,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         ports.put("httpPort",getHttpPort());
         ports.put("jmxPort",getJmxPort());
 
-        NetworkUtils.checkPortsValid(ports);
+        Networking.checkPortsValid(ports);
 
         String clusterArg = isEmpty(getClusterName()) ? "":"-g "+getClusterName();
         // run.sh must be backgrounded otherwise the script will never return.

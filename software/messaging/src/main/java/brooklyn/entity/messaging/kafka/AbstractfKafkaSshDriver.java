@@ -33,11 +33,11 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableMap.Builder;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,7 +104,7 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
     
     @Override
     public void customize() {
-        NetworkUtils.checkPortsValid(getPortMap());
+        Networking.checkPortsValid(getPortMap());
         newScript(CUSTOMIZING)
                 .failOnNonZeroResultCode()
                 .body.append(format("cp -R %s/* %s", getExpandedInstallDir(), getRunDir()))

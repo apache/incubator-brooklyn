@@ -1,9 +1,20 @@
 <configuration>
 
-  <include resource="brooklyn/logback-stdout.xml"/>
-  <include resource="brooklyn/logback-file.xml"/>
-
-  <include resource="brooklyn/logback-excludes.xml"/>
-  <include resource="brooklyn/logback-debug.xml"/>
+  <!-- the only point of this file (and this project) is to supply a logback.xml suitable for extension.
+       you'll note below it simply points to a logback-default.xml (from brooklyn-core) with common includes.
+       
+       the main advantage of this is that a developer can supply their own logback-default.xml
+       earlier on the classpath which will safely trump the default, allowing preferred includes/settings
+       (i.e. without the tons of logback WARNs you get if you supply two logback.xml files)
+       
+       it is recommended that this project is included carefully via maven so that the above scheme is only
+       applied in IDE's and for projects which don't build assemblies (and don't want a per-project logback.xml);
+       when an assembly is built, this project should be excluded and the "logback-default" scheme bypassed.
+       
+       to do this, your pom dependency on this project should:
+       * "optional" so it is not passed down to dependent projects; and
+       * "compile" only so it runs in the IDE (experimental)
+  -->
+  <include resource="brooklyn/logback-default.xml"/>
 
 </configuration>

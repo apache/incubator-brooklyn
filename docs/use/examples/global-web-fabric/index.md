@@ -280,7 +280,7 @@ ${BROOKLYN_HOME}/bin/brooklyn launch --app brooklyn.demo.GlobalWebFabricExample 
 The management web console will start,
 followed by the web-app services in the locations specified
 creating the VM's as needed.
-Let's look at the management web console, on port 8081 (default credentials are admin/password):
+Let's look at the management web console, on port 8081:
 
 [![Web Console Map](console-map-w700.png "Web Console Map")](console-map.png) 
 

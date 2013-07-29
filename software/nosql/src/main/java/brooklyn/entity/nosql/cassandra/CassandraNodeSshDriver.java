@@ -18,10 +18,10 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.CommonCommands;
 
 import com.google.common.collect.ImmutableList;
@@ -107,7 +107,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public void customize() {
         log.info("Customizing {} (Cluster {})", entity, getClusterName());
-        NetworkUtils.checkPortsValid(getPortMap());
+        Networking.checkPortsValid(getPortMap());
 
         String logFileEscaped = getLogFileLocation().replace("/", "\\/"); // escape slashes
 

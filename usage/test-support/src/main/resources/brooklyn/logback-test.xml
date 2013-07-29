@@ -1,10 +1,12 @@
 <included>
 
-    <include resource="brooklyn/logback-stdout.xml"/>
-    <include resource="brooklyn/logback-test-file.xml"/>
-    
-    <include resource="brooklyn/logback-excludes.xml"/>
-    
+    <!-- include debug (unless overridden below) -->
     <include resource="brooklyn/logback-debug.xml"/>
+    
+    <!-- include all the default appenders and categories (allowing this to be overridden) -->
+    <include resource="brooklyn/logback-default.xml"/>
+    
+    <!-- specify that the FILE should say brooklyn-tests.xml -->
+    <include resource="brooklyn/logback-test-file.xml"/>
 
 </included>

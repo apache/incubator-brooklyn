@@ -15,9 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
+import brooklyn.util.net.Networking;
 
 import com.google.common.base.Throwables;
 
@@ -102,7 +102,7 @@ Beyond this you get blacklisted and requests may time out, or return none.
 
     /** returns URL to get properties for the given address (assuming localhost if address is on a subnet) */
     public String getLookupUrlFor(InetAddress address) {
-        if (NetworkUtils.isPrivateSubnet(address)) return getLookupUrlForLocalhost();
+        if (Networking.isPrivateSubnet(address)) return getLookupUrlForLocalhost();
         return getLookupUrlForPublicIp(address.getHostAddress());
     }
     

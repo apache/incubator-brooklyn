@@ -39,4 +39,8 @@ public interface ConfigMap {
      * but in some compatibility areas having a Properties-like view is useful */
     public Map<String,Object> asMapWithStringKeys();
     
+    public int size();
+    
+    public boolean isEmpty();
+    
 }

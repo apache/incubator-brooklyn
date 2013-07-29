@@ -283,6 +283,20 @@ public class ResourceUtils {
         }
     }
 
+    /** allows failing-fast if URL cannot be read */
+    public String checkUrlExists(String url) {
+        if (url==null) throw new NullPointerException("URL must not be null");
+        InputStream s;
+        try {
+            s = getResourceFromUrl(url);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            throw new IllegalArgumentException("Unable to access URL "+url, e);
+        }
+        Closeables.closeQuietly(s); 
+        return url;
+    }
+
     /** returns the base directory or JAR from which the context is class-loaded, if possible;
      * throws exception if not found */
     public String getClassLoaderDir() {

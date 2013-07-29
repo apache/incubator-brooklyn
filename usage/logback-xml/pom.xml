@@ -8,9 +8,11 @@
     <description>
         This project contains a logback.xml which sets up logging for brooklyn. 
         One recommended way to configure logging on a project is to add this as an 
-        *optional* dependency in a project's pom.xml file, so that logback.xml
-        is on the classpath when that project is run, but it is *not* exported
-        to dependendent projects thus allowing them to supply their own logging.
+        *optional* *runtime* dependency in a project's pom.xml file, so that logback.xml
+        is on the classpath when that project is run, but it is *not* exported to 
+        dependendent projects thus allowing them to supply their own logging.
+        -
+        See logback.xml for more information.
     </description>
 
     <parent>

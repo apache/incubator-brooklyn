@@ -2,7 +2,6 @@ package brooklyn.util.net;
 
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -11,7 +10,6 @@ import brooklyn.util.math.BitList;
 import brooklyn.util.math.BitUtils;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /** represents a CIDR (classless inter-domain routing) token, i.e. 10.0.0.0/8 or 192.168.4.0/24 */
@@ -172,7 +170,7 @@ public class Cidr {
             lengthLeft -= 8;
             i++;
         }
-        return getInetAddressWithFixedName(netmaskBytes);
+        return Networking.getInetAddressWithFixedName(netmaskBytes);
     }
 
     /** taking the addresses in the CIDR in order, returns the one in the offset^th position 
@@ -191,7 +189,7 @@ public class Cidr {
         byte[] bytes = new byte[] { 0, 0, 0, 0 };
         for (int i=0; i<4; i++)
             bytes[i] = (byte) ints[i];
-        return getInetAddressWithFixedName(bytes);
+        return Networking.getInetAddressWithFixedName(bytes);
     }
 
     /** returns length of the prefix in common between the two cidrs */
@@ -213,17 +211,10 @@ public class Cidr {
     }
 
     // FIXME remove from here, promote NetworkUtils
+    /** @deprecated use {@link Networking#getInetAddressWithFixedName(byte[])} */
+    @Deprecated
     public static InetAddress getInetAddressWithFixedName(byte[] ip) {
-        try {
-            StringBuilder name = new StringBuilder();
-            for (byte part : ip) {
-                if (name.length() > 0) name.append(".");
-                name.append(part);
-            }
-            return InetAddress.getByAddress(name.toString(), ip);
-        } catch (UnknownHostException e) {
-            throw Throwables.propagate(e);
-        }
+        return Networking.getInetAddressWithFixedName(ip);
     }
 
 }

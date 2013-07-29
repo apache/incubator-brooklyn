@@ -1,6 +1,6 @@
 package brooklyn.util.internal.ssh;
 
-import static brooklyn.util.NetworkUtils.checkPortValid;
+import static brooklyn.util.net.Networking.checkPortValid;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.CommonCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -60,7 +60,7 @@ public class MongoDBSshDriver extends AbstractSoftwareProcessSshDriver implement
     @Override
     public void customize() {
         Map ports = ImmutableMap.of("port", getServerPort());
-        NetworkUtils.checkPortsValid(ports);
+        Networking.checkPortsValid(ports);
         String command = String.format("mkdir -p %s", getDataDirectory());
         newScript(CUSTOMIZING)
                 .updateTaskAndFailOnNonZeroResultCode()

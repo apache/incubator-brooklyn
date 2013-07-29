@@ -3,6 +3,7 @@ package brooklyn.cli;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -37,6 +38,9 @@ import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.Strings;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.util.StatusPrinter;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -174,8 +178,8 @@ public class Main {
         public boolean noConsole = false;
 
         @Option(name = { "--noConsoleSecurity" },
-                description = "Whether to start the web console with no security (i.e. no authentication required)")
-        public boolean noConsoleSecurity = false;
+                description = "Whether to disable security for the web console with no security (i.e. no authentication required)")
+        public Boolean noConsoleSecurity = false;
 
         @Option(name = { "-ns", "--noShutdownOnExit" },
                 description = "Whether to stop the application when the JVM exits")
@@ -231,13 +235,15 @@ public class Main {
                 execGroovyScript(utils, loader, script);
             }
 
-            BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+            BrooklynLauncher launcher = BrooklynLauncher.newInstance();
+            launcher
                     .localBrooklynPropertiesFile(localBrooklynProperties)
                     .webconsolePort(port)
                     .webconsole(!noConsole)
-                    .installSecurityFilter(!noConsoleSecurity)
                     .shutdownOnExit(!noShutdownOnExit)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : ImmutableList.of(locations));
+            if (noConsoleSecurity) 
+                launcher.installSecurityFilter(false);
             
             if (app != null) {
                 // Create the instance of the brooklyn app
@@ -335,6 +341,7 @@ public class Main {
                 Constructor<?> constructor = clazz.getConstructor();
                 return (ApplicationBuilder) constructor.newInstance();
             } else if (StartableApplication.class.isAssignableFrom(clazz)) {
+                @SuppressWarnings("unchecked")
                 EntitySpec<StartableApplication> appSpec = EntitySpecs.appSpec((Class<? extends StartableApplication>)clazz);
                 return new ApplicationBuilder(appSpec) {
                     @Override protected void doBuild() {
@@ -348,11 +355,13 @@ public class Main {
             } else if (AbstractEntity.class.isAssignableFrom(clazz)) {
                 // TODO Should we really accept any entity type, and just wrap it in an app? That's not documented!
                 return new ApplicationBuilder() {
+                    @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
                         addChild(EntitySpecs.spec(Entity.class).impl((Class<? extends AbstractEntity>)clazz));
                     }};
             } else if (Entity.class.isAssignableFrom(clazz)) {
                 return new ApplicationBuilder() {
+                    @SuppressWarnings("unchecked")
                     @Override protected void doBuild() {
                         addChild(EntitySpecs.spec((Class<? extends Entity>)clazz));
                     }};

@@ -7,8 +7,8 @@ import java.net.MalformedURLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.internal.BrooklynSystemProperties;
+import brooklyn.util.net.Networking;
 
 import com.google.common.base.Throwables;
 import com.maxmind.geoip.LookupService;
@@ -42,7 +42,7 @@ public class MaxMindHostGeoLookup implements HostGeoLookup {
         if (ll==null) return null;
         
         InetAddress extAddress = address;
-        if (NetworkUtils.isPrivateSubnet(extAddress)) extAddress = InetAddress.getByName(UtraceHostGeoLookup.getLocalhostExternalIp());
+        if (Networking.isPrivateSubnet(extAddress)) extAddress = InetAddress.getByName(UtraceHostGeoLookup.getLocalhostExternalIp());
         
         com.maxmind.geoip.Location l = ll.getLocation(extAddress);
         if (l==null) {

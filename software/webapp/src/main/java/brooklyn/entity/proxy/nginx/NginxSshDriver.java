@@ -17,8 +17,8 @@ import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
@@ -229,7 +229,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     @Override
     public void launch() {
         // By default, nginx writes the pid of the master process to "logs/nginx.pid"
-        NetworkUtils.checkPortsValid(MutableMap.of("httpPort", getHttpPort()));
+        Networking.checkPortsValid(MutableMap.of("httpPort", getHttpPort()));
         Map flags = MutableMap.of("usePidFile", false);
 
         // We wait for evidence of running because, using 

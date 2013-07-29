@@ -15,9 +15,9 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JarBuilder;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.CommonCommands;
 
 import com.google.common.collect.ImmutableMap;
@@ -199,7 +199,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
             cmd += " --localBrooklynProperties "+localBrooklynPropertiesPath;
         }
         if (getEntity().isHttpProtocolEnabled("http")) {
-            NetworkUtils.checkPortsValid(ImmutableMap.of("httpPort", httpPort));
+            Networking.checkPortsValid(ImmutableMap.of("httpPort", httpPort));
             cmd += " --port "+httpPort;
         } else if (getEntity().getEnabledHttpProtocols().isEmpty()) {
             cmd += " --noConsole";

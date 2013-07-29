@@ -23,9 +23,9 @@ import brooklyn.location.geo.MaxMindHostGeoLookup;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.BrooklynSystemProperties;
+import brooklyn.util.net.Networking;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -39,8 +39,8 @@ public class GeoscalingIntegrationTest {
 
     private final String primaryDomain = "geopaas.org";//"domain"+((int)(Math.random()*10000))+".test.org";
     private final String subDomain = "subdomain"+((int)(Math.random()*10000));
-    private final InetAddress addrWithGeo = NetworkUtils.getLocalHost();
-    private final InetAddress addrWithoutGeo = NetworkUtils.getInetAddressWithFixedName(StubHostGeoLookup.HOMELESS_IP);
+    private final InetAddress addrWithGeo = Networking.getLocalHost();
+    private final InetAddress addrWithoutGeo = Networking.getInetAddressWithFixedName(StubHostGeoLookup.HOMELESS_IP);
     
     private final SshMachineLocation locWithGeo = new SshMachineLocation(MutableMap.builder()
             .put("address", addrWithGeo)

@@ -63,7 +63,7 @@ public class ApplicationResourceIntegrationTest {
         context.setExtraClasspath("./target/test-rest-server/");
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, getManagementContext());
 
-        Server server = startServer(context, "from WAR at " + context.getWar());
+        Server server = startServer(manager, context, "from WAR at " + context.getWar());
 
         api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/");
     }

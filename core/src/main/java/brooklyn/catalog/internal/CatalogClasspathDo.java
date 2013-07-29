@@ -16,15 +16,19 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.ReflectionScanner;
 import brooklyn.util.javalang.UrlClassLoader;
+import brooklyn.util.time.Time;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 
 public class CatalogClasspathDo {
@@ -41,8 +45,22 @@ public class CatalogClasspathDo {
          * this is the default if no catalog is supplied, scanning the local classpath */
         ANNOTATIONS,
         
-        /** all types are included, even if not annotated for inclusion in the catalog; useful for quick hacking,
-         * or a classpath (and possibly in future a regex, if added) which is known to have only good things in it */
+        @Beta
+        /** all catalog-friendly types are included, 
+         * even if not annotated for inclusion in the catalog; useful for quick hacking,
+         * or a classpath (and possibly in future a regex, if added) which is known to have only good things in it;
+         * however the precise semantics of what is included is subject to change,
+         * and it is strongly recommended to use the {@link Catalog} annotation and scan for annotations 
+         * <p>
+         * a catalog-friendly type is currently defined as:
+         * any concrete non-anonymous (and not a non-static inner) class implementing Entity or Policy;
+         * and additionally for entities and applications, an interface with the {@link ImplementedBy} annotation;
+         * note that this means classes done "properly" with both an interface and an implementation
+         * will be included twice, once as interface and once as implementation;
+         * this guarantees inclusion of anything previously included (implementations; 
+         * and this will be removed from catalog in future likely),
+         * plus things now done properly (which will become the only way in the future)
+         **/
         TYPES
     }
     
@@ -91,6 +109,7 @@ public class CatalogClasspathDo {
         if (scanMode==null || scanMode==CatalogScanningModes.NONE)
             return;
         
+        Stopwatch timer = new Stopwatch().start();
         ReflectionScanner scanner = null;
         if (!catalog.isLocal()) {
             log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);
@@ -110,7 +129,7 @@ public class CatalogClasspathDo {
                 if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
                     try {
                         ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
-                        log.info("Catalog scan of default classloader returned nothing; reverting to java.class.path");
+                        log.debug("Catalog scan of default classloader returned nothing; reverting to java.class.path");
                         baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
                         scanner = new ReflectionScanner(baseCL, catalog.getRootClassLoader(), baseCP, prefix);
                     } catch (Exception e) {
@@ -125,24 +144,27 @@ public class CatalogClasspathDo {
         }
         
         if (scanner!=null) {
-            int count = 0;
+            int count = 0, countApps = 0;
             if (scanMode==CatalogScanningModes.ANNOTATIONS) {
                 Set<Class<?>> catalogClasses = scanner.getTypesAnnotatedWith(Catalog.class);
                 for (Class<?> c: catalogClasses) {
                     try {
-                        addCatalogEntry(c);
+                        CatalogItem<?> item = addCatalogEntry(c);
+                        count++;
+                        if (CatalogTemplateItemDto.class.isInstance(item)) countApps++;
                     } catch (Exception e) {
                         log.warn("Failed to add catalog entry for "+c+"; continuing scan...", e);
                     }
-                    count++;
                 }
             } else if (scanMode==CatalogScanningModes.TYPES) {
                 Iterable<Class<? extends Entity>> entities = this.excludeInvalidClasses(scanner.getSubTypesOf(Entity.class));
-                for (Class<?> c: entities) { 
-                    if (Application.class.isAssignableFrom(c))
+                for (Class<?> c: entities) {
+                    if (Application.class.isAssignableFrom(c)) {
                         addCatalogEntry(new CatalogTemplateItemDto(), c);
-                    else
+                        countApps++;
+                    } else {
                         addCatalogEntry(new CatalogEntityItemDto(), c);
+                    }
                     count++;
                 }
                 Iterable<Class<? extends Policy>> policies = this.excludeInvalidClasses(scanner.getSubTypesOf(Policy.class));
@@ -153,7 +175,7 @@ public class CatalogClasspathDo {
             } else {
                 throw new IllegalStateException("Unsupported catalog scan mode "+scanMode+" for "+this);
             }
-            log.info("Classpath scan for catalog "+catalog+" complete; "+count+" entities detected (by "+scanMode+")");
+            log.info("Catalog '"+catalog.dto.name+"' classpath scan completed: loaded "+count+" items ("+countApps+" apps) in "+Time.makeTimeStringRounded(timer));
         }
         
         isLoaded = true;
@@ -166,8 +188,11 @@ public class CatalogClasspathDo {
             @Override
             public boolean apply(@Nullable Class<? extends T> input) {
                 if (input==null) return false;
-                if (Modifier.isAbstract(input.getModifiers())) return false;
                 if (input.isLocalClass() || input.isAnonymousClass()) return false;
+                if (Modifier.isAbstract(input.getModifiers())) {
+                    if (input.getAnnotation(ImplementedBy.class)==null)
+                        return false;
+                }
                 // non-abstract top-level classes are okay
                 if (!input.isMemberClass()) return true;
                 if (!Modifier.isStatic(input.getModifiers())) return false;

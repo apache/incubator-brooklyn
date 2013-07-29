@@ -23,7 +23,6 @@ import brooklyn.util.task.DeferredSupplier;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 
-@SuppressWarnings("deprecation")
 public class EntityConfigMap implements ConfigMap {
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityConfigMap.class);
@@ -167,4 +166,15 @@ public class EntityConfigMap implements ConfigMap {
     public Map<String,Object> asMapWithStringKeys() {
         return mapViewWithStringKeys;
     }
+
+    @Override
+    public int size() {
+        return ownConfig.size() + inheritedConfig.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return ownConfig.isEmpty() && inheritedConfig.isEmpty();
+    }
+    
 }

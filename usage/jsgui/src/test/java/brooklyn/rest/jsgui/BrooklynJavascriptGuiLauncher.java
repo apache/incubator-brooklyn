@@ -1,12 +1,14 @@
 package brooklyn.rest.jsgui;
 
+import java.net.InetSocketAddress;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.rest.BrooklynRestApiLauncher;
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.net.Networking;
 
 /** launches Javascript GUI programmatically. and used for tests.
  * see {@link BrooklynRestApiLauncher} for more information. */
@@ -31,7 +33,7 @@ public class BrooklynJavascriptGuiLauncher {
     public static Server startJavascriptWithoutRest() throws Exception {
         WebAppContext context = new WebAppContext("./src/main/webapp", "/");
         
-        Server server = new Server(NetworkUtils.nextAvailablePort(FAVOURITE_PORT));
+        Server server = new Server(new InetSocketAddress(Networking.LOOPBACK, Networking.nextAvailablePort(FAVOURITE_PORT)));
         server.setHandler(context);
         server.start();
         log.info("JS GUI server started (no REST) at  http://localhost:"+server.getConnectors()[0].getLocalPort()+"/");

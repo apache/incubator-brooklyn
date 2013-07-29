@@ -10,8 +10,8 @@ import java.util.Map;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.NetworkUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.CommonCommands;
 
 
@@ -78,7 +78,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
     @Override
     public void launch() {
         Map ports = MutableMap.of("httpPort",getHttpPort(), "jmxPort",getJmxPort());
-        NetworkUtils.checkPortsValid(ports);
+        Networking.checkPortsValid(ports);
         
         Map flags = MutableMap.of("usePidFile",false);
 
