@@ -4,12 +4,16 @@ define([
 
     var Util = {};
 
-    // TODO: Also rename
-    /** preps data for output */
-    Util.prep = function (s) {
-        if (s==null) return "";
+    /**
+     * @return {string} empty string if s is null or undefined, otherwise result of _.escape(s)
+     */
+    Util.escape = function (s) {
+        if (s == undefined || s == null) return "";
         return _.escape(s);
     };
+
+    /** @deprecated Since 0.6. Use Util.escape */
+    Util.prep = Util.escape;
 
     function isWholeNumber(v) {
         return (Math.abs(Math.round(v) - v) < 0.000000000001);
