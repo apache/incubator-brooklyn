@@ -6,6 +6,12 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
+
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
@@ -17,6 +23,11 @@ public class SingleMachineLocationResolver implements LocationResolver {
     private static final String SINGLE = "single";
     
     private static final Pattern PATTERN = Pattern.compile("(" + SINGLE + "|" + SINGLE.toUpperCase() + ")" + ":" + "\\((.*)\\)$");
+    
+    public static final Logger log = LoggerFactory.getLogger(SingleMachineLocationResolver.class);
+    
+    @SuppressWarnings("rawtypes")
+    private ImmutableMap locationFlags;
     
     private volatile ManagementContext managementContext;
 
@@ -32,8 +43,16 @@ public class SingleMachineLocationResolver implements LocationResolver {
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
+        if (locationFlags != null && this.locationFlags == null) {
+            this.locationFlags = ImmutableMap.builder().putAll(locationFlags).build();
+        }
+        
+        if (!Objects.equal(locationFlags, this.locationFlags)) {
+            log.warn("Flags {} passed to subsequent call to newLocationFromString will be ignored, using {}", locationFlags, this.locationFlags);
+        }
+            
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like single(named:foo)");
