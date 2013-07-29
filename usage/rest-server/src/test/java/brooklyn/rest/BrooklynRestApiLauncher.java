@@ -3,6 +3,7 @@ package brooklyn.rest;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.EnumSet;
 
 import javax.servlet.DispatcherType;
@@ -16,10 +17,12 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
@@ -70,7 +73,7 @@ public class BrooklynRestApiLauncher {
         
         installAsServletFilter(context);
         
-        return startServer(context, "programmatic Jersey ServletContainer filter on webapp at "+context.getWar());
+        return startServer(managementContext, context, "programmatic Jersey ServletContainer filter on webapp at "+context.getWar());
     }
 
     public static Server startRestResourcesViaServlet() throws Exception {
@@ -88,7 +91,7 @@ public class BrooklynRestApiLauncher {
         
         installBrooklynPropertiesSecurityFilter(context);
         
-        return startServer(context, "programmatic Jersey ServletContainer servlet");
+        return startServer(managementContext, context, "programmatic Jersey ServletContainer servlet");
     }
     
     public static void installBrooklynPropertiesSecurityFilter(ServletContextHandler context) {
@@ -105,7 +108,7 @@ public class BrooklynRestApiLauncher {
             config.getSingletons().add(r);
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
-        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/asserts/[^?]+\\.[A-Za-z0-9_]+)");
+        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
         // and anything which is not matched as a servlet also falls through (but more expensive than a regex check?)
         config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
         // finally create this as a _filter_ which falls through to a web app or something (optionally)
@@ -133,8 +136,35 @@ public class BrooklynRestApiLauncher {
         return startServer(context, "from WAR at "+context.getWar());
     }
     
+    /** starts server on all nics (even if security not enabled).
+     * @deprecated since 0.6.0; use {@link #startServer(ManagementContext, ContextHandler, String)} or
+     * {@link #startServer(ContextHandler, String, InetSocketAddress)} */
+    @Deprecated
     public static Server startServer(ContextHandler context, String summary) {
-        Server server = new Server(Networking.nextAvailablePort(FAVOURITE_PORT));
+        return startServer(context, summary, 
+                new InetSocketAddress(Networking.ANY_NIC, Networking.nextAvailablePort(FAVOURITE_PORT)));
+    }
+    /** starts a server, on all NICs if security is configured,
+     * otherwise (no security) only on loopback interface */
+    public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
+        // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
+        boolean secure = mgmt!=null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig()) ? true : false;
+        if (secure) {
+            log.debug("Detected security configured, launching server on all network interfaces");
+        } else {
+            log.debug("Detected no security configured, launching server on loopback (localhost) network interface only");
+            if (mgmt!=null) {
+                log.debug("Detected no security configured, running on loopback; disabling authentication");
+                ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, AnyoneSecurityProvider.class.getName());
+            }
+        }
+        InetSocketAddress bindLocation = new InetSocketAddress(
+                secure ? Networking.ANY_NIC : Networking.LOOPBACK, 
+                        Networking.nextAvailablePort(FAVOURITE_PORT));
+        return startServer(context, summary, bindLocation);
+    }
+    public static Server startServer(ContextHandler context, String summary, InetSocketAddress bindLocation) {
+        Server server = new Server(bindLocation);
         server.setHandler(context);
         try {
             server.start();
