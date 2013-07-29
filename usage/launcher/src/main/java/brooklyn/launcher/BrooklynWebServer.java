@@ -88,12 +88,18 @@ public class BrooklynWebServer {
     @SetFromFlag
     protected PortRange httpsPort = PortRanges.fromString("8443+");
     
+    /** actual port where this gets bound; will be consistent with the "port" passed in
+     * but that might be a range and here it is a single port, or -1 if not yet set */
     protected volatile int actualPort = -1;
+    /** actual NIC where this is listening; in the case of 0.0.0.0 being passed in as bindAddress,
+     * this will revert to one address (such as localhost) */
     protected InetAddress actualAddress = null; 
 
     @SetFromFlag
     protected String war = BROOKLYN_WAR_URL;
 
+    /** IP of NIC where this server should bind, or null to autodetect 
+     * (e.g. 0.0.0.0 if security is configured, or loopback if no security) */
     @SetFromFlag
     protected InetAddress bindAddress = null;
     
@@ -181,7 +187,8 @@ public class BrooklynWebServer {
         return actualPort;
     }
 
-    /** interface/address where this server is bound */
+    /** interface/address where this server is listening;
+     * if bound to 0.0.0.0 (all NICs, e.g. because security is set) this will return one NIC where this is bound */
     public InetAddress getAddress() {
         return actualAddress;
     }

@@ -1,7 +1,5 @@
 package brooklyn.util;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
-
 import java.net.InetAddress;
 
 import brooklyn.config.BrooklynServiceAttributes;
@@ -18,7 +16,7 @@ public class BrooklynNetworkUtils {
 
     /** returns a IP address for localhost paying attention to a system property to prevent lookup in some cases */ 
     public static InetAddress getLocalhostInetAddress() {
-        return TypeCoercions.coerce(elvis(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue(), 
+        return TypeCoercions.coerce(JavaGroovyEquivalents.elvis(BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS.getValue(), 
                 Networking.getLocalHost()), InetAddress.class);
     }
 
