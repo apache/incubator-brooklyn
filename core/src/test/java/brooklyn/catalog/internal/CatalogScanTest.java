@@ -93,12 +93,23 @@ public class CatalogScanTest {
     }
     
     @Test
-    public void testAnnotationFindsFewer() {
+    public void testMoreTypesThanAnnotations() {
         loadAnnotationsOnlyCatalog();
         loadFullCatalog();
         
         int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
         int numFromTypes = Iterables.size(fullCatalog.getCatalogItems(Predicates.alwaysTrue()));
+        
+        Assert.assertTrue(numFromAnnots < numFromTypes, "full="+numFromTypes+" annots="+numFromAnnots);
+    }
+    
+    @Test
+    public void testMoreTypesThanAnnotationsForApps() {
+        loadAnnotationsOnlyCatalog();
+        loadFullCatalog();
+        
+        int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(CatalogPredicates.IS_TEMPLATE));
+        int numFromTypes = Iterables.size(fullCatalog.getCatalogItems(CatalogPredicates.IS_TEMPLATE));
         
         Assert.assertTrue(numFromAnnots < numFromTypes, "full="+numFromTypes+" annots="+numFromAnnots);
     }
