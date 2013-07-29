@@ -150,4 +150,8 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
     public static final AttributeSensor<URI> WEB_CONSOLE_URI = new BasicAttributeSensor<URI>(
             URI.class, "brooklynnode.webconsole.url", "URL of the brooklyn web-console");
+    
+    @SetFromFlag("noShutdownOnExit")
+    public static final ConfigKey<Boolean> NO_SHUTDOWN_ON_EXIT = ConfigKeys.newBooleanConfigKey("brooklynnode.noshutdownonexit", 
+        "Whether to shutdown entities on exit", false);
 }

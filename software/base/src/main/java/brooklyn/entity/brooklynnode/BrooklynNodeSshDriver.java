@@ -209,6 +209,9 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         if (getEntity().getAttribute(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION)) {
             cmd += " --noConsoleSecurity ";
         }
+        if (getEntity().getConfig(BrooklynNode.NO_SHUTDOWN_ON_EXIT)) {
+            cmd += " --noShutdownOnExit ";
+        }
         cmd += format(" >> %s/console 2>&1 </dev/null &", getRunDir());
         
         log.info("Starting brooklyn on {} using command {}", getMachine(), cmd);
