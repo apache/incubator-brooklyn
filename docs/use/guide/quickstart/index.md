@@ -44,8 +44,6 @@ Brooklyn will output the address of the management interface:
 
 `... Started Brooklyn console at http://127.0.0.1:8081/` ([link](http://127.0.0.1:8081/))
 
-Login with default credentials: `admin:password`
-
 Stop Brooklyn with ctrl-c.
 
 ### Setting up Locations and Applications
