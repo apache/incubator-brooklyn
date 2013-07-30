@@ -1,10 +1,11 @@
-package brooklyn.internal.storage.impl;
+package brooklyn.internal.storage.impl.inmemory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import brooklyn.internal.storage.DataGrid;
 
+import brooklyn.internal.storage.impl.ConcurrentMapAcceptingNullVals;
 import com.google.common.collect.Maps;
 
 /**

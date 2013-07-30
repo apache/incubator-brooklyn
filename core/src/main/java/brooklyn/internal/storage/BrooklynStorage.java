@@ -2,6 +2,7 @@ package brooklyn.internal.storage;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.annotations.Beta;
 
@@ -73,7 +74,7 @@ public interface BrooklynStorage {
      * @param id
      * @return
      */
-    <K,V> Map<K,V> getMap(String id);
+    <K,V> ConcurrentMap<K,V> getMap(String id);
 
     /**
      * Removes the data stored against this id, whether it is a map, ref or whatever.

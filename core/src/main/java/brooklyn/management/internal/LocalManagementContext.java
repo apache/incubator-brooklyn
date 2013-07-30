@@ -2,12 +2,16 @@ package brooklyn.management.internal;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import brooklyn.internal.storage.BrooklynStorageFactory;
+import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +33,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
+
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
     private LocalEntityManager entityManager;
@@ -45,7 +50,20 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
-        super(brooklynProperties);
+        this(brooklynProperties, null);
+    }
+
+    /**
+     * Creates a new LocalManagementContext.
+     *
+     * @param brooklynProperties the BrooklynProperties.
+     * @param storageFactory the  BrooklynStorageFactory to use. If this instance is null, it means that the system
+     *                       is going to use BrooklynProperties to figure out which instance to load or otherwise
+     *                       use a default instance.
+     */
+    @VisibleForTesting
+    public LocalManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory) {
+        super(brooklynProperties,storageFactory);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
         this.locationManager = new LocalLocationManager(this);
     }

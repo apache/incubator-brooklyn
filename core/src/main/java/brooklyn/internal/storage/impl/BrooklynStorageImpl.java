@@ -10,6 +10,7 @@ import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.Reference;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
@@ -28,7 +29,17 @@ public class BrooklynStorageImpl implements BrooklynStorage {
         this.refsCache = Maps.newConcurrentMap();
         this.listRefsCache = Maps.newConcurrentMap();
     }
-    
+
+    /**
+     * Returns the DataGrid used by this  BrooklynStorageImpl
+     *
+     * @return the DataGrid.
+     */
+    @VisibleForTesting
+    public DataGrid getDataGrid(){
+        return datagrid;
+    }
+
     @Override
     public <T> Reference<T> getReference(final String id) {
         // Can use different ref instances; no need to always return same one. Caching is an
@@ -69,7 +80,7 @@ public class BrooklynStorageImpl implements BrooklynStorage {
     }
 
     @Override
-    public <K, V> Map<K, V> getMap(final String id) {
+    public <K, V> ConcurrentMap<K, V> getMap(final String id) {
         return datagrid.<K,V>getMap(id);
     }
     

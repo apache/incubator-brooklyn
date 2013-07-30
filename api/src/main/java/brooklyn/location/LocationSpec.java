@@ -2,6 +2,7 @@ package brooklyn.location;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
@@ -27,10 +28,13 @@ import com.google.common.collect.Maps;
  * 
  * @author aled
  */
-public class LocationSpec<T extends Location> {
+public class LocationSpec<T extends Location> implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(LocationSpec.class);
-    
+
+    private final static long serialVersionUID = 1L;
+
+
     /**
      * Creates a new {@link LocationSpec} instance for a location of the given type. The returned 
      * {@link LocationSpec} can then be customized.
