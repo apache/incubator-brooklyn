@@ -52,6 +52,16 @@ public class LocalManagementContext extends AbstractManagementContext {
         this(brooklynProperties, null);
     }
 
+    /**
+     * Creates a new LocalManagementContext.
+     *
+     * This call is exposed to the outside world for testing purposes.
+     *
+     * @param brooklynProperties the BrooklynProperties.
+     * @param storageFactory the  BrooklynStorageFactory to use. If this instance is null, it means that the system
+     *                       is going to use BrooklynProperties to figure out which instance to load or otherwise
+     *                       use a default instance.
+     */
     public LocalManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory) {
         super(brooklynProperties,storageFactory);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
