@@ -51,9 +51,58 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 
+import static java.lang.String.format;
+
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
-    
+
+    private static BrooklynStorageFactory loadBrooklynStorageFactory(BrooklynProperties properties){
+        String clazzName = properties.getFirst(BrooklynStorageFactory.class.getName());
+        if(clazzName == null){
+            clazzName = InMemoryBrooklynStorageFactory.class.getName();
+        }
+
+        Class clazz;
+        try{
+            //todo: which classloader should we use?
+            clazz = LocalManagementContext.class.getClassLoader().loadClass(clazzName);
+        }catch(ClassNotFoundException e){
+            throw new IllegalStateException(format("Could not load class [%s]",clazzName),e);
+        }
+
+        Object instance;
+        try {
+            instance = clazz.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalStateException(format("Could not instantiate class [%s]",clazzName),e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(format("Could not instantiate class [%s]",clazzName),e);
+        }
+
+        if(!(instance instanceof BrooklynStorageFactory)){
+            throw new IllegalStateException(format("Class [%s] not an instantiate of class [%s]",clazzName, BrooklynStorageFactory .class.getName()));
+        }
+
+        return (BrooklynStorageFactory)instance;
+    }
+
+    static {
+        // ensure that if ResourceUtils is given an entity as context,
+        // we use the catalog class loader (e.g. to resolve classpath URLs)
+        ResourceUtils.addClassLoaderProvider(new Function<Object, ClassLoader>() {
+            @Override
+            public ClassLoader apply(@Nullable Object input) {
+                if (input instanceof EntityInternal)
+                    return apply(((EntityInternal)input).getManagementSupport());
+                if (input instanceof EntityManagementSupport)
+                    return apply(((EntityManagementSupport)input).getManagementContext());
+                if (input instanceof AbstractManagementContext)
+                    return ((AbstractManagementContext)input).getCatalog().getRootClassLoader();
+                return null;
+            }
+        });
+    }
+
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
     protected BrooklynProperties configMap;
@@ -73,36 +122,22 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     private final BrooklynStorage storage;
 
+    private volatile boolean running = true;
+
     public   AbstractManagementContext(BrooklynProperties brooklynProperties){
-        this(brooklynProperties, new InMemoryBrooklynStorageFactory());
+        this(brooklynProperties, null);
     }
 
-    public AbstractManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory){
-       this.configMap = brooklynProperties;
-       this.entityDriverManager = new BasicEntityDriverManager();
-       this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
-       this.storage = storageFactory.newStorage(this);
+    public AbstractManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory) {
+        this.configMap = brooklynProperties;
+        this.entityDriverManager = new BasicEntityDriverManager();
+        this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
+        if (storageFactory == null) {
+            storageFactory = loadBrooklynStorageFactory(brooklynProperties);
+        }
+        this.storage = storageFactory.newStorage(this);
     }
-    
-    static {
-        // ensure that if ResourceUtils is given an entity as context,
-        // we use the catalog class loader (e.g. to resolve classpath URLs)
-        ResourceUtils.addClassLoaderProvider(new Function<Object, ClassLoader>() {
-            @Override 
-            public ClassLoader apply(@Nullable Object input) {
-                if (input instanceof EntityInternal) 
-                    return apply(((EntityInternal)input).getManagementSupport());
-                if (input instanceof EntityManagementSupport) 
-                    return apply(((EntityManagementSupport)input).getManagementContext());
-                if (input instanceof AbstractManagementContext) 
-                    return ((AbstractManagementContext)input).getCatalog().getRootClassLoader();
-                return null;
-            }
-        });
-    }
-    
-    private volatile boolean running = true;
-    
+
     public void terminate() {
         running = false;
         rebindManager.stop();

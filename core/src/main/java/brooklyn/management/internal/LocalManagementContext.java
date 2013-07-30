@@ -2,6 +2,7 @@ package brooklyn.management.internal;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +32,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(LocalManagementContext.class);
 
+
     private BasicExecutionManager execution;
     private SubscriptionManager subscriptions;
     private LocalEntityManager entityManager;
@@ -47,7 +49,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
-        this(brooklynProperties, new InMemoryBrooklynStorageFactory());
+        this(brooklynProperties, null);
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory) {

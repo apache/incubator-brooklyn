@@ -28,7 +28,16 @@ public class BrooklynStorageImpl implements BrooklynStorage {
         this.refsCache = Maps.newConcurrentMap();
         this.listRefsCache = Maps.newConcurrentMap();
     }
-    
+
+    /**
+     * Returns the DataGrid used by this  BrooklynStorageImpl
+     *
+     * @return the DataGrid.
+     */
+    public DataGrid getDataGrid(){
+        return datagrid;
+    }
+
     @Override
     public <T> Reference<T> getReference(final String id) {
         // Can use different ref instances; no need to always return same one. Caching is an

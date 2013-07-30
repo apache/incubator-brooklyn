@@ -2,8 +2,11 @@ package brooklyn.storage.impl.hazelcast;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.internal.storage.Reference;
+import brooklyn.internal.storage.impl.BrooklynStorageImpl;
 import brooklyn.internal.storage.impl.hazelcast.HazelcastBrooklynStorageFactory;
+import brooklyn.internal.storage.impl.hazelcast.HazelcastDataGrid;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableList;
 import com.hazelcast.core.Hazelcast;
@@ -11,11 +14,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class HazelcastStorageTest {
 
@@ -24,8 +27,9 @@ public class HazelcastStorageTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newDefault(),
-                new HazelcastBrooklynStorageFactory());
+        BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
+        properties.put(BrooklynStorageFactory.class.getName(), HazelcastBrooklynStorageFactory .class.getName());
+        managementContext = new LocalManagementContext(properties);
         storage = managementContext.getStorage();
     }
 
@@ -33,6 +37,14 @@ public class HazelcastStorageTest {
     public void tearDown() {
         if (managementContext != null) managementContext.terminate();
         Hazelcast.shutdownAll();
+    }
+
+    //test to verify that our HazelcastDatagrid really is being picked up.
+    @Test
+    public void testPickUp(){
+       assertTrue(storage instanceof BrooklynStorageImpl,"storage should be instance of BrooklynStorageImpl");
+       BrooklynStorageImpl brooklynStorageImpl = (BrooklynStorageImpl)storage;
+       assertTrue(brooklynStorageImpl.getDataGrid() instanceof HazelcastDataGrid,"storage should be instanceof HazelcastDataGrid");
     }
 
     @Test
@@ -58,16 +70,15 @@ public class HazelcastStorageTest {
     }
 
     @Test
-    public void removeReference(){
+    public void testRemoveReference(){
         Reference<String> ref = storage.getReference("someReference");
         ref.set("bar");
         storage.remove("someReference");
         assertEquals(ref.get(), null);
     }
 
-
     @Test
-    public void removeMap(){
+    public void testRemoveMap(){
         Map<String,String> map = storage.getMap("somemap");
         map.put("foo", "bar");
         storage.remove("somemap");
