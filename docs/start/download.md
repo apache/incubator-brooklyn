@@ -77,11 +77,18 @@ Release notes can be found [here]({{ site.url }}/start/release-notes.html).
 <a name="examples"></a>
 ## Examples
 
+{% if SNAPSHOT %}
+As this is a snapshot version of Brooklyn, please find the examples in the main Brooklyn codebase (in the `/examples` directory).
+
+When this version is released, the [brooklyn-examples git repository](http://github.com/brooklyncentral/brooklyn-examples) will be updated and instructions for use will be included here. 
+
+{% else %}
+
 You can checkout the examples from the [brooklyn-examples git repository](http://github.com/brooklyncentral/brooklyn-examples).
+
 Maven (v3) is required to build them, as described [here]({{ site.url }}/dev/build/).
 The examples for this version ({{ site.brooklyn-version }}) are in the branch 
-`{% if SNAPSHOT %}{{ site.brooklyn-snapshot-git-branch }}{% else %}{{ site.brooklyn-version }}{% endif %}`,
-so if you have `git` and `mvn` already, you can simply:
+`{% if SNAPSHOT %}{{ site.brooklyn-snapshot-git-branch }}{% else %}{{ site.brooklyn-version }}{% endif %}`, so if you have `git` and `mvn` already, you can simply:
 
 {% highlight bash %}
 % git clone https://github.com/brooklyncentral/brooklyn-examples.git
@@ -89,13 +96,7 @@ so if you have `git` and `mvn` already, you can simply:
 {% if brooklyn_examples_branch == 'master' %}{% else %}% git checkout {{ brooklyn_examples_branch }}
 {% endif %}% mvn clean install
 {% endhighlight %}
-
-{% if SNAPSHOT %}
-**Please note**: for snapshot versions of Brooklyn, 
-the examples in this repository may not be automatically synched.
-It is recommended that you use the code for the examples included
-in the main Brooklyn codebase, or use a released version.
-{% endif %}  
+ 
 
 If you don't use `git`, you can download the projects as a tarball instead
 from [this link](https://github.com/brooklyncentral/brooklyn-examples/tarball/{{ brooklyn_examples_branch }}). 
@@ -110,8 +111,10 @@ These commands should do the trick:
 % mvn clean install
 {% endhighlight %}
 
+
 A good example to start with is the [Elastic Web Cluster]({{site.url}}/use/examples/webcluster.html).
 
+{% endif %} 
 
 
 <a name="maven"></a>
