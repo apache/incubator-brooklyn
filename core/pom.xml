@@ -107,12 +107,6 @@
             <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.version}</version>
-        </dependency>
     </dependencies>
 
   <!-- add maxmind geo-ip library; exact copy of source included as required by LGPL2 -->

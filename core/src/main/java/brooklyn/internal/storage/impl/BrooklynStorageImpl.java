@@ -78,7 +78,7 @@ public class BrooklynStorageImpl implements BrooklynStorage {
     }
 
     @Override
-    public <K, V> Map<K, V> getMap(final String id) {
+    public <K, V> ConcurrentMap<K, V> getMap(final String id) {
         return datagrid.<K,V>getMap(id);
     }
     
