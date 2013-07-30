@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
 
 import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
+import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,13 +56,12 @@ public class LocalManagementContext extends AbstractManagementContext {
     /**
      * Creates a new LocalManagementContext.
      *
-     * This call is exposed to the outside world for testing purposes.
-     *
      * @param brooklynProperties the BrooklynProperties.
      * @param storageFactory the  BrooklynStorageFactory to use. If this instance is null, it means that the system
      *                       is going to use BrooklynProperties to figure out which instance to load or otherwise
      *                       use a default instance.
      */
+    @VisibleForTesting
     public LocalManagementContext(BrooklynProperties brooklynProperties, BrooklynStorageFactory storageFactory) {
         super(brooklynProperties,storageFactory);
         configMap.putAll(checkNotNull(brooklynProperties, "brooklynProperties"));
