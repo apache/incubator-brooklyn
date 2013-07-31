@@ -1,19 +1,26 @@
 package brooklyn.rest.transform;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+
+import javax.annotation.Nullable;
+
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.rest.domain.TaskSummary;
+
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 public class TaskTransformer {
 
@@ -45,9 +52,16 @@ public class TaskTransformer {
         String startTimeUtc = (task.getStartTimeUtc() == -1) ? "" : formatter.get().format(new Date(task.getStartTimeUtc()));
         String endTimeUtc = (task.getEndTimeUtc() == -1) ? "" : formatter.get().format(new Date(task.getEndTimeUtc()));
 
-        return new TaskSummary(entityId, entityDisplayName, task.getDisplayName(), task.getDescription(),
-                task.getId(), task.getTags(), task.getSubmitTimeUtc(), submitTimeUtc, startTimeUtc, endTimeUtc,
-                task.getStatusSummary(), task.getStatusDetail(true));
+        List<String> children = Collections.emptyList();
+        if (task instanceof HasTaskChildren) {
+            children = new ArrayList<String>();
+            for (Object t: ((HasTaskChildren)task).getChildrenTasks()) {
+                children.add(((Task)t).getId());
+            }
+        }
+        return new TaskSummary(task.getId(), entityId, entityDisplayName, task.getDisplayName(), task.getDescription(),
+                task.getTags(), task.getSubmitTimeUtc(), submitTimeUtc, startTimeUtc, endTimeUtc,
+                task.getStatusSummary(), task.getStatusDetail(true), children);
     }
 
     // formatter is not thread-safe; use thread-local storage

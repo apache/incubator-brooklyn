@@ -1,9 +1,9 @@
 package brooklyn.rest.domain;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -14,39 +14,41 @@ import com.google.common.collect.ImmutableList;
 
 public class TaskSummary {
 
+  private final String id;
   private final String entityId;
   private final String entityDisplayName;
   
   private final String displayName;
   private final String description;
-  private final String id;
   private final Collection<Object> tags;
   private final long rawSubmitTimeUtc;
   private final String submitTimeUtc;
   private final String startTimeUtc;
   private final String endTimeUtc;
+  private final List<String> children;
   private final String currentStatus;
   private final String detailedStatus;
 
   
   public TaskSummary(
+          @JsonProperty("id") String id, 
           @JsonProperty("entityId") String entityId, 
           @JsonProperty("entityDisplayName") String entityDisplayName, 
           @JsonProperty("displayName") String displayName, 
           @JsonProperty("description") String description, 
-          @JsonProperty("id") String id, 
           @JsonProperty("tags") Set<Object> tags,
           @JsonProperty("rawSubmitTimeUtc") long rawSubmitTimeUtc, 
           @JsonProperty("submitTimeUtc") String submitTimeUtc, 
           @JsonProperty("startTimeUtc") String startTimeUtc, 
           @JsonProperty("endTimeUtc") String endTimeUtc, 
           @JsonProperty("currentStatus") String currentStatus, 
-          @JsonProperty("detailedStatus") String detailedStatus) {
+          @JsonProperty("detailedStatus") String detailedStatus,
+          @JsonProperty("children") List<String> children) {
+    this.id = id;
     this.entityId = entityId;
     this.entityDisplayName = entityDisplayName;
     this.displayName = displayName;
     this.description = description;
-    this.id = id;
     this.tags = ImmutableList.<Object>copyOf(tags);
     this.rawSubmitTimeUtc = rawSubmitTimeUtc;
     this.submitTimeUtc = submitTimeUtc;
@@ -54,18 +56,13 @@ public class TaskSummary {
     this.endTimeUtc = endTimeUtc;
     this.currentStatus = currentStatus;
     this.detailedStatus = detailedStatus;
+    this.children = children;
 }
 
 
-  // formatter is not thread-safe; use thread-local storage
-  private static final ThreadLocal<DateFormat> formatter = new ThreadLocal<DateFormat>() {
-    @Override
-    protected DateFormat initialValue() {
-      SimpleDateFormat result = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-      result.setTimeZone(TimeZone.getTimeZone("GMT"));
-      return result;
-    }
-  };
+  public String getId() {
+      return id;
+  }
 
   public String getEntityId() {
     return entityId;
@@ -81,10 +78,6 @@ public class TaskSummary {
 
   public String getDescription() {
     return description;
-  }
-
-  public String getId() {
-    return id;
   }
 
   public Collection<Object> getTags() {
@@ -114,6 +107,10 @@ public class TaskSummary {
   public String getEndTimeUtc() {
     return endTimeUtc;
   }
+
+  public List<String> getChildren() {
+      return children;
+    }
 
   public String getCurrentStatus() {
     return currentStatus;

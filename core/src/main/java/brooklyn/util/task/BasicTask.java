@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ExecutionManager;
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
@@ -434,11 +435,11 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		        rv += "Submitted by "+submittedByTask+"\n";
 		    }
 
-		    if (this instanceof CompoundTask) {
+		    if (this instanceof HasTaskChildren) {
 		        // list children tasks for compound tasks
 		        try {
-		            List<Task> childrenTasks = ((CompoundTask)this).getChildrenTasks();
-		            if (!childrenTasks.isEmpty()) {
+		            Iterable<Task> childrenTasks = ((HasTaskChildren)this).getChildrenTasks();
+		            if (childrenTasks.iterator().hasNext()) {
 		                rv += "Children:\n";
 		                for (Task child: childrenTasks) {
 		                    rv += "  "+child+": "+child.getStatusDetail(false)+"\n";

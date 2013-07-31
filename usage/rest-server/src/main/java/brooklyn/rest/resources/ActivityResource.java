@@ -8,6 +8,7 @@ import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.util.WebResourceUtils;
 import com.google.common.collect.Collections2;
 
+import java.util.Collection;
 import java.util.Set;
 
 public class ActivityResource extends AbstractBrooklynRestResource implements ActivityApi {

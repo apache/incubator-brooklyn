@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 
@@ -24,7 +25,7 @@ import brooklyn.util.collections.MutableMap;
  * This class holds the collection of child tasks, but subclasses have the responsibility of executing them in a
  * sensible manner by implementing the abstract {@link #runJobs} method.
  */
-public abstract class CompoundTask<T> extends BasicTask<List<T>> {
+public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasTaskChildren<T> {
 
     private static final Logger log = LoggerFactory.getLogger(CompoundTask.class);
                 
@@ -93,7 +94,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> {
         }
     }
     
-    protected List<Task<? extends T>> getChildrenTasks() {
+    public List<Task<? extends T>> getChildrenTasks() {
         return children;
     }
     
