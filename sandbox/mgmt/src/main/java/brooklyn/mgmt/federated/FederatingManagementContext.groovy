@@ -15,6 +15,7 @@ import brooklyn.entity.Application
 import brooklyn.entity.Entity
 import brooklyn.management.EntityManager
 import brooklyn.management.ExecutionManager
+import brooklyn.management.LocationManager;
 import brooklyn.management.SubscriptionManager
 import brooklyn.management.Task
 import brooklyn.management.internal.AbstractManagementContext
@@ -84,6 +85,7 @@ public class FederatingManagementContext extends AbstractManagementContext {
     public SubscriptionManager getSubscriptionManager() { return rem.getContext().getSubscriptionManager(); }
     public ExecutionManager getExecutionManager() { return rem.getContext().getExecutionManager(); }
     public EntityManager getEntityManager() { return rem.getContext().getEntityManager(); }
+    public LocationManager getLocationManager() { return rem.getContext().getLocationManager(); }
     
     public void onApplicationStart(Application app) {
         String remoteNodeUid = Identifiers.makeRandomId(8);
