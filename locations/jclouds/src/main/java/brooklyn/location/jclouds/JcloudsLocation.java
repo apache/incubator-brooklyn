@@ -61,6 +61,7 @@ import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.SshTool;
@@ -316,6 +317,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
         String groupId = elvis(setup.get(GROUP_ID), new CloudMachineNamer(setup).generateNewGroupId());
         NodeMetadata node = null;
+        JcloudsSshMachineLocation machineResult = null;
+        
         try {
             LOG.info("Creating VM in "+setup.getDescription()+" for "+this);
 
@@ -332,23 +335,23 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in " + setup.getDescription());
 
             LoginCredentials initialCredentials = extractVmCredentials(setup, node);
-            if (initialCredentials != null)
+            if (initialCredentials != null) {
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(initialCredentials).build();
-            else
+            } else {
                 // only happens if something broke above...
                 initialCredentials = LoginCredentials.fromCredentials(node.getCredentials());
-            
+            }
             // Wait for the VM to be reachable over SSH
             waitForReachable(computeService, node, initialCredentials, setup);
             
             String vmHostname = getPublicHostname(node, setup);
-            JcloudsSshMachineLocation sshLocByHostname = registerJcloudsSshMachineLocation(node, vmHostname, setup);
+            machineResult = registerJcloudsSshMachineLocation(node, vmHostname, setup);
             
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
             if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
                 if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
-                    sshLocByHostname.execCommands("using urandom instead of random", 
+                    machineResult.execCommands("using urandom instead of random", 
                         Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
                 
                 if (setup.get(OPEN_IPTABLES)) {
@@ -363,20 +366,46 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
-                customizer.customize(computeService, sshLocByHostname);
+                customizer.customize(computeService, machineResult);
             }
             
-            return sshLocByHostname;
+            return machineResult;
         } catch (RunNodesException e) {
             if (e.getNodeErrors().size() > 0) {
                 node = Iterables.get(e.getNodeErrors().keySet(), 0);
             }
-            LOG.error("Failed to start VM for {}: {}", setup.getDescription(), e.getMessage());
-            throw Throwables.propagate(e);
+            boolean destroyNode = (node != null) && Boolean.TRUE.equals(setup.get(DESTROY_ON_FAILURE));
+            
+            LOG.error("Failed to start VM for {}{}: {}", 
+                    new Object[] {setup.getDescription(), (destroyNode ? " (destroying "+node+")" : ""), e.getMessage()});
+            
+            if (destroyNode) {
+                if (machineResult != null) {
+                    releaseSafely(machineResult);
+                } else {
+                    releaseNodeSafely(node);
+                }
+            }
+            
+            throw Exceptions.propagate(e);
+            
         } catch (Exception e) {
-            LOG.error("Failed to start VM for {}: {}", setup.getDescription(), e.getMessage());
+            boolean destroyNode = (node != null) && Boolean.TRUE.equals(setup.get(DESTROY_ON_FAILURE));
+            
+            LOG.error("Failed to start VM for {}{}: {}", 
+                    new Object[] {setup.getDescription(), (destroyNode ? " (destroying "+node+")" : ""), e.getMessage()});
             LOG.debug(Throwables.getStackTraceAsString(e));
-            throw Throwables.propagate(e);
+            
+            if (destroyNode) {
+                if (machineResult != null) {
+                    releaseSafely(machineResult);
+                } else {
+                    releaseNodeSafely(node);
+                }
+            }
+
+            throw Exceptions.propagate(e);
+            
         } finally {
             //leave it open for reuse
 //            computeService.getContext().close();
@@ -514,7 +543,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             privateKey = Files.toString(new File(ResourceUtils.tidyFilePath(privateKeyFileName)), Charsets.UTF_8);
                         } catch (IOException e) {
                             LOG.error(privateKeyFileName + "not found", e);
-                            throw Throwables.propagate(e);
+                            throw Exceptions.propagate(e);
                         }
                         t.overrideLoginPrivateKey(privateKey);
                     }})
@@ -778,7 +807,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             return registerJcloudsSshMachineLocation(node, hostname, setup);
             
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
     public JcloudsSshMachineLocation rebindMachine(Map flags) throws NoMachinesAvailableException {
@@ -842,6 +871,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return extractSshConfig(setup, nodeConfig).getAllConfigRaw();
     }
 
+    @Override
     public void release(SshMachineLocation machine) {
         String instanceId = vmInstanceIds.remove(machine);
         if (!truth(instanceId)) {
@@ -850,18 +880,45 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         
         LOG.info("Releasing machine {} in {}, instance id {}", new Object[] {machine, this, instanceId});
         
-        removeChildLocation(machine);
+        removeChild(machine);
+        try {
+            releaseNode(instanceId);
+        } catch (Exception e) {
+            LOG.error("Problem releasing machine "+machine+" in "+this+", instance id "+instanceId+
+                    "; discarding instance and continuing...", e);
+            Exceptions.propagate(e);
+        }
+    }
+
+    protected void releaseSafely(SshMachineLocation machine) {
+        try {
+            release(machine);
+        } catch (Exception e) {
+            // rely on exception having been logged by #release(SshMachineLocation), so no-op
+        }
+    }
+
+    protected void releaseNodeSafely(NodeMetadata node) {
+        String instanceId = node.getId();
+        LOG.info("Releasing node {} in {}, instance id {}", new Object[] {node, this, instanceId});
+        
+        ComputeService computeService = null;
+        try {
+            releaseNode(instanceId);
+        } catch (Exception e) {
+            LOG.warn("Problem releasing node "+node+" in "+this+", instance id "+instanceId+
+                    "; discarding instance and continuing...", e);
+        }
+    }
+
+    protected void releaseNode(String instanceId) {
         ComputeService computeService = null;
         try {
             computeService = JcloudsUtil.findComputeService(getConfigBag());
             computeService.destroyNode(instanceId);
-        } catch (Exception e) {
-            LOG.error("Problem releasing machine "+machine+" in "+this+", instance id "+instanceId+
-                    "; discarding instance and continuing...", e);
-            Throwables.propagate(e);
         } finally {
         /*
-         //don't close
+         //don't close, so can re-use...
             if (computeService != null) {
                 try {
                     computeService.getContext().close();
@@ -1009,7 +1066,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         } catch (Exception e) {
             if (rethrow) {
                 LOG.warn("couldn't connect to "+metadata+" when trying to discover hostname (rethrowing): "+e);
-                throw Throwables.propagate(e);                
+                throw Exceptions.propagate(e);                
             }
             return false;
         }
@@ -1021,13 +1078,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             try {
                 vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
             } catch (Exception e) {
-                LOG.warn("Error reaching aws-ec2 instance on port 22; falling back to jclouds metadata for address", e);
+                LOG.warn("Error reaching aws-ec2 instance "+node.getId()+"@"+node.getLocation()+" on port "+node.getLoginPort()+"; falling back to jclouds metadata for address", e);
             }
             if (vmIp != null) {
                 try {
                     return getPublicHostnameAws(vmIp, setup);
                 } catch (Exception e) {
-                    LOG.warn("Error querying aws-ec2 instance over ssh for its hostname; falling back to first reachable IP", e);
+                    LOG.warn("Error querying aws-ec2 instance instance "+node.getId()+"@"+node.getLocation()+" over ssh for its hostname; falling back to first reachable IP", e);
                     return vmIp;
                 }
             }
