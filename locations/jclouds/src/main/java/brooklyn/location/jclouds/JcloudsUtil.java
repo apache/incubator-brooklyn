@@ -15,11 +15,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
@@ -51,7 +49,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.internal.Repeater;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
@@ -286,42 +283,25 @@ public class JcloudsUtil implements JcloudsLocationConfig {
          return newStatementList(
                  appendFile("/root/.ssh/authorized_keys", Splitter.on('\n').split(publicKey)),
                  interpret("chmod 600 /root/.ssh/authorized_keys"));
-     }
+    }
 
     public static String getFirstReachableAddress(ComputeServiceContext context, NodeMetadata node) {
-        // FIXME calling client.connect() will retry by default 7 times, but each of those attempts can
-        // be fast if just getting an IOException. We want to wait for some non-hard-coded period of time 
-        // (e.g. 2 minutes?) for us to connect.
-        // Should we be using `TemplateOptions.blockOnPort(22, 120)`? Also see:
-        //   [12/02/2013 12:21:55] Andrea Turli: https://github.com/jclouds/jclouds/pull/895
-        //   [12/02/2013 12:22:25] Andrea Turli: and here https://issues.apache.org/jira/browse/WHIRR-420
-        //   jclouds.ssh.max-retries
-        //   jclouds.ssh.retry-auth
-        // ^^^ that looks fixed now. BUT do we need this method (as when we call it, we connect just afterwards)
-        // and TODO this method doesn't do what the name suggests; there is no iterating through addresses to see what is reachable
+        // To pick the address, it relies on jclouds `sshForNode().apply(Node)` to check all IPs of node (private+public), 
+        // to find one that is reachable. It does `openSocketFinder.findOpenSocketOnNode(node, node.getLoginPort(), ...)`.
+        // This keeps trying for time org.jclouds.compute.reference.ComputeServiceConstants.Timeouts.portOpen.
+        // TODO Want to configure this timeout here.
+        //
+        // TODO We could perhaps instead just set `templateOptions.blockOnPort(loginPort, 120)`, but need
+        // to be careful to only set that if config WAIT_FOR_SSHABLE is true. For some advanced networking examples
+        // (e.g. using DNAT on CloudStack), the brooklyn machine won't be able to reach the VM until some additional
+        // setup steps have been done. See links from Andrea:
+        //     https://github.com/jclouds/jclouds/pull/895
+        //     https://issues.apache.org/jira/browse/WHIRR-420
+        //     jclouds.ssh.max-retries
+        //     jclouds.ssh.retry-auth
+
         final SshClient client = context.utils().sshForNode().apply(node);
-        final AtomicReference<String> result = new AtomicReference<String>();
-        new Repeater()
-                .every(1000, TimeUnit.MILLISECONDS)
-                .limitTimeTo(120*1000, TimeUnit.MILLISECONDS)
-                .rethrowException()
-                .repeat(new Callable<Void>() {
-                        public Void call() {
-                            try {
-                                client.connect();
-                                result.set(client.getHostAddress());
-                                return null;
-                            } finally {
-                                client.disconnect();
-                            }
-                        }})
-                .until(new Callable<Boolean>() {
-                        public Boolean call() {
-                            return result.get() != null;
-                        }})
-                .run();
-        
-        return result.get();
+        return client.getHostAddress();
     }
     
     // Suggest at least 15 minutes for timeout
