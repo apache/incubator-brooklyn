@@ -63,7 +63,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.jclouds.provider</groupId>
+            <groupId>org.apache.jclouds.provider</groupId>
             <artifactId>rackspace-cloudservers-uk</artifactId>
             <version>${jclouds.version}</version>
             <scope>test</scope>
@@ -92,7 +92,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jclouds.provider</groupId>
+            <groupId>org.apache.jclouds.provider</groupId>
             <artifactId>aws-ec2</artifactId>
             <version>${jclouds.version}</version>
             <scope>test</scope>
