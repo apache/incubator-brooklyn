@@ -13,6 +13,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.ResourceUtils;
@@ -59,8 +61,14 @@ public class JcloudsLoginLiveTest {
     private File privateDsaFile = new File(ResourceUtils.tidyFilePath("~/.ssh/id_dsa"));
     private File privateRsaFileTmp = new File(privateRsaFile.getAbsoluteFile()+".tmp");
     private File privateDsaFileTmp = new File(privateDsaFile.getAbsoluteFile()+".tmp");
+    private File publicRsaFile = new File(ResourceUtils.tidyFilePath("~/.ssh/id_rsa.pub"));
+    private File publicDsaFile = new File(ResourceUtils.tidyFilePath("~/.ssh/id_dsa.pub"));
+    private File publicRsaFileTmp = new File(publicRsaFile.getAbsoluteFile()+".tmp");
+    private File publicDsaFileTmp = new File(publicDsaFile.getAbsoluteFile()+".tmp");
     private boolean privateRsaFileMoved;
     private boolean privateDsaFileMoved;
+    private boolean publicRsaFileMoved;
+    private boolean publicDsaFileMoved;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -117,45 +125,10 @@ public class JcloudsLoginLiveTest {
         assertSshable(machine);
     }
     
-//    // Uses ubuntu, because default centos /etc/ssh/sshd_config has "PasswordAuthentication no"
-//    @Test(groups = {"Live"})
-//    protected void testSpecifyingPasswordAndNoDefaultKeyFilesExist() throws Exception {
-//        testSpecifyingPasswordAndNoDefaultKeyFilesExist(AWS_EC2_UBUNTU_IMAGE_ID);
-//    }
-
-    // Uses ubuntu, because default centos /etc/ssh/sshd_config has "PasswordAuthentication no"
     @Test(groups = {"Live"})
-    public void test_Debian_6() throws Exception {
-        // release codename "squeeze"
-        // Image: {id=us-east-1/ami-7ce17315, providerId=ami-7ce17315, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=debian, arch=paravirtual, version=6.0, description=Debian 6.0.7 (Squeeze),  is64Bit=true}, description=Debian 6.0.7 (Squeeze), version=20091011, status=AVAILABLE[available], loginUser=ubuntu, userMetadata={owner=379101102735, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        testSpecifyingPasswordAndNoDefaultKeyFilesExist("us-east-1/ami-7ce17315");
-    }
-
-    @Test(groups = {"Live"})
-    public void test_Ubuntu_10_0() throws Exception {
-        // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        testSpecifyingPasswordAndNoDefaultKeyFilesExist("us-east-1/ami-5e008437");
-    }
-
-    protected void testSpecifyingPasswordAndNoDefaultKeyFilesExist(String imageId) throws Exception {
-        try {
-            movePrivateSshKeyFiles();
-            
-            brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
-            jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
-            
-            machine = createEc2Machine(ImmutableMap.of("imageId", imageId));
-            assertSshable(machine);
-        } finally {
-            restorePrivateSshKeyFiles();
-        }
-    }
-
-    // FIXME Fails because JcloudsLocation.createTemplate sets admin.lockSsh(true), so password-login is disabled
-    @Test(enabled = false, groups = {"Live"})
     public void testSpecifyingPasswordAndNoDefaultKeyFilesExist() throws Exception {
         try {
-            movePrivateSshKeyFiles();
+            moveSshKeyFiles();
             
             brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
             jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
@@ -163,28 +136,85 @@ public class JcloudsLoginLiveTest {
             machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
             assertSshable(machine);
         } finally {
-            restorePrivateSshKeyFiles();
+            restoreSshKeyFiles();
         }
     }
 
-    // FIXME It makes up a password and passes that to jclouds, but it doesn't pass that password to the
-    // SshMachineLocation, for use in the SshjTool!
-    // A little bit fiddly: only want to supply password if not using sshKey as SshjTool will prefer the
-    // password over other mechanisms, if that is supplied. Perhaps we should change that...
-    @Test(enabled = false, groups = {"Live"})
+    @Test(groups = {"Live"})
     protected void testSpecifyingNothingAndNoDefaultKeyFilesExist() throws Exception {
         try {
-            movePrivateSshKeyFiles();
+            moveSshKeyFiles();
             
             jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
             
             machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
             assertSshable(machine);
         } finally {
-            restorePrivateSshKeyFiles();
+            restoreSshKeyFiles();
         }
     }
 
+    @Test(groups = {"Live"})
+    protected void testSpecifyingPasswordAndSshKeysPrefersKeys() throws Exception {
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
+        
+        machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
+        assertSshable(machine);
+        
+        SshMachineLocation machineUsingKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .configure("address", machine.getAddress())
+                .configure("user", machine.getUser())
+                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
+        
+        assertSshable(machineUsingKey);
+        
+        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .configure("address", machine.getAddress())
+                .configure("user", machine.getUser())
+                .configure(SshMachineLocation.PASSWORD, "mypassword"));
+        assertSshable(machineUsingPassword);
+    }
+
+    @Test(groups = {"Live"})
+    protected void testSpecifyingPasswordWhenDefaultSshKeysExistPrefersKeys() throws Exception {
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
+        
+        machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
+        assertSshable(machine);
+        
+        SshMachineLocation machineUsingKey = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .configure("address", machine.getAddress())
+                .configure("user", machine.getUser())
+                .configure(SshMachineLocation.PRIVATE_KEY_FILE, ResourceUtils.tidyFilePath("~/.ssh/id_rsa")));
+        
+        assertSshable(machineUsingKey);
+        
+        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.spec(SshMachineLocation.class)
+                .configure("address", machine.getAddress())
+                .configure("user", machine.getUser())
+                .configure(SshMachineLocation.PASSWORD, "mypassword"));
+        assertSshable(machineUsingPassword);
+    }
+
+    @Test(groups = {"Live"})
+    protected void testAwsEc2SpecifyingRootUser() throws Exception {
+        // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        // Uses "root" as loginUser
+        String imageId = "us-east-1/ami-5e008437";
+        
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "root");
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
+        
+        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
+        assertSshable(machine);
+    }
+    
     private JcloudsSshMachineLocation createEc2Machine(Map<String,? extends Object> conf) throws Exception {
         return createMachine(MutableMap.<String,Object>builder()
                 .putAll(conf)
@@ -205,14 +235,16 @@ public class JcloudsLoginLiveTest {
         return jcloudsLocation.obtain(conf);
     }
     
-    private void assertSshable(JcloudsSshMachineLocation machine) {
+    private void assertSshable(SshMachineLocation machine) {
         int result = machine.execScript("simplecommand", ImmutableList.of("true"));
         assertEquals(result, 0);
     }
     
-    private void movePrivateSshKeyFiles() throws Exception {
+    private void moveSshKeyFiles() throws Exception {
         privateRsaFileMoved = false;
         privateDsaFileMoved = false;
+        publicRsaFileMoved = false;
+        publicDsaFileMoved = false;
 
         if (privateRsaFile.exists()) {
             LOG.info("Moving {} to {}", privateRsaFile, privateRsaFileTmp);
@@ -224,9 +256,19 @@ public class JcloudsLoginLiveTest {
             Runtime.getRuntime().exec("mv "+privateDsaFile.getAbsolutePath()+" "+privateDsaFileTmp.getAbsolutePath());
             privateDsaFileMoved = true;
         }
+        if (publicRsaFile.exists()) {
+            LOG.info("Moving {} to {}", publicRsaFile, publicRsaFileTmp);
+            Runtime.getRuntime().exec("mv "+publicRsaFile.getAbsolutePath()+" "+publicRsaFileTmp.getAbsolutePath());
+            publicRsaFileMoved = true;
+        }
+        if (publicDsaFile.exists()) {
+            LOG.info("Moving {} to {}", publicDsaFile, publicDsaFileTmp);
+            Runtime.getRuntime().exec("mv "+publicDsaFile.getAbsolutePath()+" "+publicDsaFileTmp.getAbsolutePath());
+            publicDsaFileMoved = true;
+        }
     }
     
-    private void restorePrivateSshKeyFiles() throws Exception {
+    private void restoreSshKeyFiles() throws Exception {
         if (privateRsaFileMoved) {
             LOG.info("Restoring {} form {}", privateRsaFile, privateRsaFileTmp);
             Runtime.getRuntime().exec("mv "+privateRsaFileTmp.getAbsolutePath()+" "+privateRsaFile.getAbsolutePath());
@@ -236,6 +278,16 @@ public class JcloudsLoginLiveTest {
             LOG.info("Restoring {} form {}", privateDsaFile, privateDsaFileTmp);
             Runtime.getRuntime().exec("mv "+privateDsaFileTmp.getAbsolutePath()+" "+privateDsaFile.getAbsolutePath());
             privateDsaFileMoved = false;
+        }
+        if (publicRsaFileMoved) {
+            LOG.info("Restoring {} form {}", publicRsaFile, publicRsaFileTmp);
+            Runtime.getRuntime().exec("mv "+publicRsaFileTmp.getAbsolutePath()+" "+publicRsaFile.getAbsolutePath());
+            publicRsaFileMoved = false;
+        }
+        if (publicDsaFileMoved) {
+            LOG.info("Restoring {} form {}", publicDsaFile, publicDsaFileTmp);
+            Runtime.getRuntime().exec("mv "+publicDsaFileTmp.getAbsolutePath()+" "+publicDsaFile.getAbsolutePath());
+            publicDsaFileMoved = false;
         }
     }
 }

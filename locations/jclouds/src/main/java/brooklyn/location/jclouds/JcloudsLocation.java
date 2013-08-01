@@ -334,7 +334,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (node == null)
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in " + setup.getDescription());
 
-            LoginCredentials initialCredentials = extractVmCredentials(setup, node);
+            LoginCredentials initialCredentials = extractVmCredentials(setup, node, template);
             if (initialCredentials != null) {
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(initialCredentials).build();
             } else {
@@ -694,11 +694,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
         //also, it may not be valid for first login (it is created before login e.g. on amazon, so valid there;
-        //but not elsewhere, e.g. on rackspace)
+        //but not elsewhere, e.g. on rackspace).
         String user = getUser(config);
         String loginUser = config.get(LOGIN_USER);
         Boolean dontCreateUser = config.get(DONT_CREATE_USER);
         String publicKeyData = LocationConfigUtils.getPublicKeyData(config);
+        String explicitPassword = config.get(PASSWORD);
+        String password = truth(explicitPassword) ? explicitPassword : Identifiers.makeRandomId(12);
+        
         if (truth(user) && !NON_ADDABLE_USERS.contains(user) && 
                 !user.equals(loginUser) && !truth(dontCreateUser)) {
             // create the user, if it's not the login user and not a known root-level user
@@ -707,18 +710,35 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // e.g. using jclouds UserAdd.Builder, with RunScriptOnNode, or template.options.runScript(xxx)
             // (if that is a common use case, we could expose a property here)
             // note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
-            AdminAccess.Builder adminBuilder = AdminAccess.builder().
-                    adminUsername(user).
-                    grantSudoToAdminUser(true);
-            adminBuilder.adminPassword(truth(config.get(PASSWORD)) ? config.get(PASSWORD) : Identifiers.makeRandomId(12));
-            if (publicKeyData!=null)
+            AdminAccess.Builder adminBuilder = AdminAccess.builder()
+                    .adminUsername(user)
+                    .adminPassword(password)
+                    .grantSudoToAdminUser(true)
+                    .resetLoginPassword(true)
+                    .loginPassword(password);
+            
+            if (publicKeyData!=null) {
                 adminBuilder.authorizeAdminPublicKey(true).adminPublicKey(publicKeyData);
-            else
-                adminBuilder.authorizeAdminPublicKey(false).adminPublicKey("ignored").lockSsh(true);
-            adminBuilder.installAdminPrivateKey(false).adminPrivateKey("ignored");
-            adminBuilder.resetLoginPassword(true).loginPassword(Identifiers.makeRandomId(12));
-            adminBuilder.lockSsh(true);
+            } else {
+                adminBuilder.authorizeAdminPublicKey(false).adminPublicKey("ignored");
+            }
+            
+            // TODO Brittle code! This only works with adminPrivateKey set to non-null; 
+            // otherwise, in AdminAccess.build, if adminUsername != null && adminPassword != null 
+            // then authorizeAdminPublicKey is reset to null!
+            adminBuilder.installAdminPrivateKey(false).adminPrivateKey("ignore");
+            
+            if (truth(explicitPassword)) {
+                adminBuilder.lockSsh(false);
+            } else if (publicKeyData != null) {
+                adminBuilder.lockSsh(true);
+            } else {
+                // no keys or passwords supplied; using only defaults!
+                adminBuilder.lockSsh(false);
+            }
+            
             options.runScript(adminBuilder.build());
+            
         } else if (truth(publicKeyData)) {
             // don't create the user, but authorize the public key for the default user
             options.authorizePublicKey(publicKeyData);
@@ -932,45 +952,84 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // ------------ support methods --------------------
 
-    protected LoginCredentials extractVmCredentials(ConfigBag setup, NodeMetadata node) {
-        LoginCredentials expectedCredentials = setup.get(CUSTOM_CREDENTIALS);
-        if (expectedCredentials!=null) {
+    /**
+     * In order of preference:
+     * <ol>
+     *   <li>Explicit LoginCredentials supplied in configuration
+     *   <li>AdminAccess set up through jclouds (see {@link #buildTemplate(ComputeService, ConfigBag)})
+     *   <li>Credentials obtained directly from the jclouds node
+     * </ol>
+     */
+    protected LoginCredentials extractVmCredentials(ConfigBag setup, NodeMetadata node, Template template) {
+        LoginCredentials customCredentials = setup.get(CUSTOM_CREDENTIALS);
+        
+        if (customCredentials!=null) {
             //set userName and other data, from these credentials
-            Object oldUsername = setup.put(USER, expectedCredentials.getUser());
-            LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, expectedCredentials.getUser(), oldUsername });
-            if (truth(expectedCredentials.getPassword())) setup.put(PASSWORD, expectedCredentials.getPassword());
-            if (truth(expectedCredentials.getPrivateKey())) setup.put(PRIVATE_KEY_DATA, expectedCredentials.getPrivateKey());
+            Object oldUsername = setup.put(USER, customCredentials.getUser());
+            LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, customCredentials.getUser(), oldUsername });
+            if (truth(customCredentials.getPassword())) setup.put(PASSWORD, customCredentials.getPassword());
+            if (truth(customCredentials.getPrivateKey())) setup.put(PRIVATE_KEY_DATA, customCredentials.getPrivateKey());
+            return customCredentials;
         }
-        if (expectedCredentials==null) {
-            expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
-            String user = getUser(setup);
-            LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, user, expectedCredentials.getUser() });
-            if (truth(expectedCredentials.getUser())) {
-                if (user==null) {
-                    setup.put(USER, user = expectedCredentials.getUser());
-                } else if ("root".equals(user) && ROOT_ALIASES.contains(expectedCredentials.getUser())) {
-                    // deprecated, we used to default username to 'root'; now we leave null, then use autodetected credentials if no user specified
-                    // 
-                    LOG.warn("overriding username 'root' in favour of '"+expectedCredentials.getUser()+"' at {}; this behaviour may be removed in future", node);
-                    setup.put(USER, user = expectedCredentials.getUser());
-                }
+
+        AdminAccess adminAccess = (template.getOptions().getRunScript() instanceof AdminAccess) ? (AdminAccess)template.getOptions().getRunScript() : null;
+        String user = getUser(setup);
+        String localPrivateKeyData = LocationConfigUtils.getPrivateKeyData(setup);
+        String localPassword = setup.get(PASSWORD);
+        LoginCredentials nodeCredentials = LoginCredentials.fromCredentials(node.getCredentials());
+
+        LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, user, nodeCredentials.getUser() });
+        
+        if (adminAccess != null) {
+            Credentials adminCredentials = adminAccess.getAdminCredentials();
+            if (user == null || !user.equals(adminCredentials.identity)) {
+                LOG.warn("User mismatch in admin-access for node {}, config {}; admin {}; using user from configuration; may fail subsequently", 
+                        new Object[] {node, user, adminCredentials.identity});
             }
-            //override credentials
-            String pkd = elvis(LocationConfigUtils.getPrivateKeyData(setup), expectedCredentials.getPrivateKey());
-            String pwd = elvis(setup.get(PASSWORD), expectedCredentials.getPassword());
+            
+            if (localPrivateKeyData != null) {
+                // will rely on that; should have uploaded corresponding .pub file
+                return LoginCredentials.builder().user(user).privateKey(localPrivateKeyData).build();
+            } else {
+                String password = localPassword;
+                if (truth(localPassword) && !localPassword.equals(adminAccess.getAdminPassword())) {
+                    LOG.warn("Password mismatch in configuration and admin-access for node {}, user {}; using password from configuration; may fail subsequently", node, user);
+                } else if (!truth(password)) {
+                    password = adminAccess.getAdminPassword();
+                    setup.put(PASSWORD, password);
+                }
+                
+                return LoginCredentials.builder().user(user).password(password).build();
+            }
+        }
+
+        if (truth(nodeCredentials.getUser())) {
+            if (user==null) {
+                setup.put(USER, user = nodeCredentials.getUser());
+            } else if ("root".equals(user) && ROOT_ALIASES.contains(nodeCredentials.getUser())) {
+                // deprecated, we used to default username to 'root'; now we leave null, then use autodetected credentials if no user specified
+                // 
+                LOG.warn("overriding username 'root' in favour of '"+nodeCredentials.getUser()+"' at {}; this behaviour may be removed in future", node);
+                setup.put(USER, user = nodeCredentials.getUser());
+            }
+            
+            String pkd = elvis(localPrivateKeyData, nodeCredentials.getPrivateKey());
+            String pwd = elvis(localPassword, nodeCredentials.getPassword());
             if (user==null || (pkd==null && pwd==null)) {
                 String missing = (user==null ? "user" : "credential");
                 LOG.warn("Not able to determine "+missing+" for "+this+" at "+node+"; will likely fail subsequently");
-                expectedCredentials = null;
+                return null;
             } else {
-                LoginCredentials.Builder expectedCredentialsBuilder = LoginCredentials.builder().
-                        user(user);
-                if (pkd!=null) expectedCredentialsBuilder.privateKey(pkd);
-                if (pwd!=null && pkd==null) expectedCredentialsBuilder.password(pwd);
-                expectedCredentials = expectedCredentialsBuilder.build();        
+                LoginCredentials.Builder resultBuilder = LoginCredentials.builder()
+                        .user(user);
+                if (pkd!=null) resultBuilder.privateKey(pkd);
+                if (pwd!=null && pkd==null) resultBuilder.password(pwd);
+                return resultBuilder.build();        
             }
         }
-        return expectedCredentials;
+        
+        LOG.warn("No node-credentials or admin-access available for node "+node+" in "+this+"; will likely fail subsequently");
+        return null;
     }
 
     protected void waitForReachable(final ComputeService computeService, NodeMetadata node, LoginCredentials expectedCredentials, ConfigBag setup) {
