@@ -932,6 +932,29 @@
         </profile>
 
         <profile>
+            <id>Live-sanity</id>
+            <properties>
+                <includedTestGroups>Live-sanity</includedTestGroups>
+                <excludedTestGroups>Acceptance,WIP</excludedTestGroups>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>test-jar-creation</id>
+                                <configuration>
+                                    <skip>true</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
             <id>CI</id>
             <build>
                 <plugins>
