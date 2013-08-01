@@ -157,7 +157,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
           throw new IllegalArgumentException("don't know how to handle" + os.toString());
     }
 
-    static Map<Properties,ComputeService> cachedComputeServices = new ConcurrentHashMap<Properties,ComputeService> ();
+    static Map<Map<?,?>,ComputeService> cachedComputeServices = new ConcurrentHashMap<Map<?,?>,ComputeService> ();
     
     /** @deprecated since 0.5.0 pass ConfigBag instead */
     public static ComputeService buildOrFindComputeService(Map<String,? extends Object> conf) {
@@ -225,8 +225,16 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         if (!truth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
         if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
+        Map<?,?> cacheKey = MutableMap.builder()
+                .putAll(properties)
+                .put("provider", provider)
+                .put("identify", identity)
+                .put("credential", credential)
+                .build()
+                .toImmutable();
+        
         if (allowReuse) {
-            ComputeService result = cachedComputeServices.get(properties);
+            ComputeService result = cachedComputeServices.get(cacheKey);
             if (result!=null) {
                 LOG.debug("jclouds ComputeService cache hit for compute service, for "+Entities.sanitize(properties));
                 return result;
@@ -248,15 +256,15 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 
         if (allowReuse) {
             synchronized (cachedComputeServices) {
-                ComputeService result = cachedComputeServices.get(properties);
+                ComputeService result = cachedComputeServices.get(cacheKey);
                 if (result != null) {
-                    LOG.debug("jclouds ComputeService cache recovery for compute service, for "+Entities.sanitize(properties));
+                    LOG.debug("jclouds ComputeService cache recovery for compute service, for "+Entities.sanitize(cacheKey));
                     //keep the old one, discard the new one
                     computeService.getContext().close();
                     return result;
                 }
                 LOG.debug("jclouds ComputeService created "+computeService+", adding to cache, for "+Entities.sanitize(properties));
-                cachedComputeServices.put(properties, computeService);
+                cachedComputeServices.put(cacheKey, computeService);
             }
         }
         
