@@ -47,12 +47,13 @@ public class HostGeoLookupIntegrationTest {
         log.info("maxmind.com at "+geo);
         
         // used to be Washington; now Dalas - in case this is temporary failover will accept either!
+        // Also saw variation in lat/lon reported, so happy to within one degree now.
 //      Assert.assertEquals(geo.displayName, "Washington, DC (US)");
 //      Assert.assertEquals(geo.latitude, 38.90, 0.1);
 //      Assert.assertEquals(geo.longitude, -77.02, 0.1);
         
         Assert.assertTrue(Objects.equal(geo.displayName, "Washington, DC (US)") || Objects.equal(geo.displayName, "Dallas, TX (US)"), "name="+geo.displayName);
-        Assert.assertTrue(Math.abs(geo.latitude - 38.90) <= 0.1 || Math.abs(geo.latitude - 32.78) <= 0.1, "lat="+geo.latitude);
-        Assert.assertTrue(Math.abs(geo.longitude - -77.02) <= 0.1 || Math.abs(geo.longitude - -96.82) <= 0.1, "lon="+geo.longitude);
+        Assert.assertTrue(Math.abs(geo.latitude - 38.90) <= 1 || Math.abs(geo.latitude - 32.78) <= 1, "lat="+geo.latitude);
+        Assert.assertTrue(Math.abs(geo.longitude - -77.02) <= 1 || Math.abs(geo.longitude - -96.82) <= 1, "lon="+geo.longitude);
     }
 }
