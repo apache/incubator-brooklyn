@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Objects;
+
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 
@@ -43,9 +45,14 @@ public class HostGeoLookupIntegrationTest {
     public void testMaxmindLookup() throws Exception {
         HostGeoInfo geo = new MaxMindHostGeoLookup().getHostGeoInfo(InetAddress.getByName("maxmind.com"));
         log.info("maxmind.com at "+geo);
-        Assert.assertEquals(geo.displayName, "Washington, DC (US)");
-        Assert.assertEquals(geo.latitude, 38.90, 0.1);
-        Assert.assertEquals(geo.longitude, -77.02, 0.1);
+        
+        // used to be Washington; now Dalas - in case this is temporary failover will accept either!
+//      Assert.assertEquals(geo.displayName, "Washington, DC (US)");
+//      Assert.assertEquals(geo.latitude, 38.90, 0.1);
+//      Assert.assertEquals(geo.longitude, -77.02, 0.1);
+        
+        Assert.assertTrue(Objects.equal(geo.displayName, "Washington, DC (US)") || Objects.equal(geo.displayName, "Dallas, TX (US)"), "name="+geo.displayName);
+        Assert.assertTrue(Math.abs(geo.latitude - 38.90) <= 0.1 || Math.abs(geo.latitude - 32.78) <= 0.1, "lat="+geo.latitude);
+        Assert.assertTrue(Math.abs(geo.longitude - -77.02) <= 0.1 || Math.abs(geo.longitude - -96.82) <= 0.1, "lon="+geo.longitude);
     }
-
 }
