@@ -116,7 +116,6 @@ public class EntityPollingTest {
          */
         entity = app.createAndManageChild(EntitySpecs.spec(SoftwareProcess.class).impl(SubVanillaJavaApp.class)
                 .configure("jmxPort", 40123)
-                .configure("jmxContext", null)
                 .configure("mxbeanStatsEnabled", false));
     }
 

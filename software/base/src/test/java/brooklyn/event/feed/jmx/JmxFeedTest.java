@@ -43,6 +43,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
+import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
@@ -94,7 +95,7 @@ public class JmxFeedTest {
             setAttribute(Attributes.HOSTNAME, "localhost");
             setAttribute(Attributes.JMX_PORT, 40123);
             setAttribute(Attributes.RMI_SERVER_PORT, 40124);
-            setAttribute(Attributes.JMX_CONTEXT);
+            ConfigToAttributes.apply(this, Attributes.JMX_CONTEXT);
         }
     }
     
