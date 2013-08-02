@@ -31,7 +31,5 @@ fi
 JAVA_OPTS="-Dbrooklyn.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
 # start Brooklyn
-exec java ${JAVA_OPTS} -cp "${INITIAL_CLASSPATH}" brooklyn.cli.Main "$@" &
-echo $! > $ROOT/pid_java
-fg
-
+echo $$ > $ROOT/pid_java
+exec java ${JAVA_OPTS} -cp "${INITIAL_CLASSPATH}" brooklyn.cli.Main "$@"
