@@ -61,6 +61,7 @@ import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.internal.Repeater;
 import brooklyn.util.internal.ssh.SshTool;
@@ -316,6 +317,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         final ComputeService computeService = JcloudsUtil.findComputeService(setup);
         String groupId = elvis(setup.get(GROUP_ID), new CloudMachineNamer(setup).generateNewGroupId());
         NodeMetadata node = null;
+        JcloudsSshMachineLocation machineResult = null;
+        
         try {
             LOG.info("Creating VM in "+setup.getDescription()+" for "+this);
 
@@ -331,24 +334,24 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (node == null)
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in " + setup.getDescription());
 
-            LoginCredentials initialCredentials = extractVmCredentials(setup, node);
-            if (initialCredentials != null)
+            LoginCredentials initialCredentials = extractVmCredentials(setup, node, template);
+            if (initialCredentials != null) {
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(initialCredentials).build();
-            else
+            } else {
                 // only happens if something broke above...
                 initialCredentials = LoginCredentials.fromCredentials(node.getCredentials());
-            
+            }
             // Wait for the VM to be reachable over SSH
             waitForReachable(computeService, node, initialCredentials, setup);
             
             String vmHostname = getPublicHostname(node, setup);
-            JcloudsSshMachineLocation sshLocByHostname = registerJcloudsSshMachineLocation(node, vmHostname, setup);
+            machineResult = registerJcloudsSshMachineLocation(node, vmHostname, setup);
             
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
             if (!(waitForSshable!=null && "false".equalsIgnoreCase(waitForSshable))) {
                 if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM))
-                    sshLocByHostname.execCommands("using urandom instead of random", 
+                    machineResult.execCommands("using urandom instead of random", 
                         Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
                 
                 if (setup.get(OPEN_IPTABLES)) {
@@ -363,20 +366,30 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
-                customizer.customize(computeService, sshLocByHostname);
+                customizer.customize(computeService, machineResult);
             }
             
-            return sshLocByHostname;
-        } catch (RunNodesException e) {
-            if (e.getNodeErrors().size() > 0) {
-                node = Iterables.get(e.getNodeErrors().keySet(), 0);
-            }
-            LOG.error("Failed to start VM for {}: {}", setup.getDescription(), e.getMessage());
-            throw Throwables.propagate(e);
+            return machineResult;
         } catch (Exception e) {
-            LOG.error("Failed to start VM for {}: {}", setup.getDescription(), e.getMessage());
+            if (e instanceof RunNodesException && ((RunNodesException)e).getNodeErrors().size() > 0) {
+                node = Iterables.get(((RunNodesException)e).getNodeErrors().keySet(), 0);
+            }
+            boolean destroyNode = (node != null) && Boolean.TRUE.equals(setup.get(DESTROY_ON_FAILURE));
+            
+            LOG.error("Failed to start VM for {}{}: {}", 
+                    new Object[] {setup.getDescription(), (destroyNode ? " (destroying "+node+")" : ""), e.getMessage()});
             LOG.debug(Throwables.getStackTraceAsString(e));
-            throw Throwables.propagate(e);
+            
+            if (destroyNode) {
+                if (machineResult != null) {
+                    releaseSafely(machineResult);
+                } else {
+                    releaseNodeSafely(node);
+                }
+            }
+            
+            throw Exceptions.propagate(e);
+            
         } finally {
             //leave it open for reuse
 //            computeService.getContext().close();
@@ -514,7 +527,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             privateKey = Files.toString(new File(ResourceUtils.tidyFilePath(privateKeyFileName)), Charsets.UTF_8);
                         } catch (IOException e) {
                             LOG.error(privateKeyFileName + "not found", e);
-                            throw Throwables.propagate(e);
+                            throw Exceptions.propagate(e);
                         }
                         t.overrideLoginPrivateKey(privateKey);
                     }})
@@ -665,11 +678,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
         //also, it may not be valid for first login (it is created before login e.g. on amazon, so valid there;
-        //but not elsewhere, e.g. on rackspace)
+        //but not elsewhere, e.g. on rackspace).
         String user = getUser(config);
         String loginUser = config.get(LOGIN_USER);
         Boolean dontCreateUser = config.get(DONT_CREATE_USER);
         String publicKeyData = LocationConfigUtils.getPublicKeyData(config);
+        String explicitPassword = config.get(PASSWORD);
+        String password = truth(explicitPassword) ? explicitPassword : Identifiers.makeRandomId(12);
+        
         if (truth(user) && !NON_ADDABLE_USERS.contains(user) && 
                 !user.equals(loginUser) && !truth(dontCreateUser)) {
             // create the user, if it's not the login user and not a known root-level user
@@ -678,18 +694,35 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // e.g. using jclouds UserAdd.Builder, with RunScriptOnNode, or template.options.runScript(xxx)
             // (if that is a common use case, we could expose a property here)
             // note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
-            AdminAccess.Builder adminBuilder = AdminAccess.builder().
-                    adminUsername(user).
-                    grantSudoToAdminUser(true);
-            adminBuilder.adminPassword(truth(config.get(PASSWORD)) ? config.get(PASSWORD) : Identifiers.makeRandomId(12));
-            if (publicKeyData!=null)
+            AdminAccess.Builder adminBuilder = AdminAccess.builder()
+                    .adminUsername(user)
+                    .adminPassword(password)
+                    .grantSudoToAdminUser(true)
+                    .resetLoginPassword(true)
+                    .loginPassword(password);
+            
+            if (publicKeyData!=null) {
                 adminBuilder.authorizeAdminPublicKey(true).adminPublicKey(publicKeyData);
-            else
-                adminBuilder.authorizeAdminPublicKey(false).adminPublicKey("ignored").lockSsh(true);
-            adminBuilder.installAdminPrivateKey(false).adminPrivateKey("ignored");
-            adminBuilder.resetLoginPassword(true).loginPassword(Identifiers.makeRandomId(12));
-            adminBuilder.lockSsh(true);
+            } else {
+                adminBuilder.authorizeAdminPublicKey(false).adminPublicKey("ignored");
+            }
+            
+            // TODO Brittle code! This only works with adminPrivateKey set to non-null; 
+            // otherwise, in AdminAccess.build, if adminUsername != null && adminPassword != null 
+            // then authorizeAdminPublicKey is reset to null!
+            adminBuilder.installAdminPrivateKey(false).adminPrivateKey("ignore");
+            
+            if (truth(explicitPassword)) {
+                adminBuilder.lockSsh(false);
+            } else if (publicKeyData != null) {
+                adminBuilder.lockSsh(true);
+            } else {
+                // no keys or passwords supplied; using only defaults!
+                adminBuilder.lockSsh(false);
+            }
+            
             options.runScript(adminBuilder.build());
+            
         } else if (truth(publicKeyData)) {
             // don't create the user, but authorize the public key for the default user
             options.authorizePublicKey(publicKeyData);
@@ -778,7 +811,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             return registerJcloudsSshMachineLocation(node, hostname, setup);
             
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
     public JcloudsSshMachineLocation rebindMachine(Map flags) throws NoMachinesAvailableException {
@@ -842,6 +875,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return extractSshConfig(setup, nodeConfig).getAllConfigRaw();
     }
 
+    @Override
     public void release(SshMachineLocation machine) {
         String instanceId = vmInstanceIds.remove(machine);
         if (!truth(instanceId)) {
@@ -850,18 +884,45 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         
         LOG.info("Releasing machine {} in {}, instance id {}", new Object[] {machine, this, instanceId});
         
-        removeChildLocation(machine);
+        removeChild(machine);
+        try {
+            releaseNode(instanceId);
+        } catch (Exception e) {
+            LOG.error("Problem releasing machine "+machine+" in "+this+", instance id "+instanceId+
+                    "; discarding instance and continuing...", e);
+            Exceptions.propagate(e);
+        }
+    }
+
+    protected void releaseSafely(SshMachineLocation machine) {
+        try {
+            release(machine);
+        } catch (Exception e) {
+            // rely on exception having been logged by #release(SshMachineLocation), so no-op
+        }
+    }
+
+    protected void releaseNodeSafely(NodeMetadata node) {
+        String instanceId = node.getId();
+        LOG.info("Releasing node {} in {}, instance id {}", new Object[] {node, this, instanceId});
+        
+        ComputeService computeService = null;
+        try {
+            releaseNode(instanceId);
+        } catch (Exception e) {
+            LOG.warn("Problem releasing node "+node+" in "+this+", instance id "+instanceId+
+                    "; discarding instance and continuing...", e);
+        }
+    }
+
+    protected void releaseNode(String instanceId) {
         ComputeService computeService = null;
         try {
             computeService = JcloudsUtil.findComputeService(getConfigBag());
             computeService.destroyNode(instanceId);
-        } catch (Exception e) {
-            LOG.error("Problem releasing machine "+machine+" in "+this+", instance id "+instanceId+
-                    "; discarding instance and continuing...", e);
-            Throwables.propagate(e);
         } finally {
         /*
-         //don't close
+         //don't close, so can re-use...
             if (computeService != null) {
                 try {
                     computeService.getContext().close();
@@ -875,45 +936,84 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // ------------ support methods --------------------
 
-    protected LoginCredentials extractVmCredentials(ConfigBag setup, NodeMetadata node) {
-        LoginCredentials expectedCredentials = setup.get(CUSTOM_CREDENTIALS);
-        if (expectedCredentials!=null) {
+    /**
+     * In order of preference:
+     * <ol>
+     *   <li>Explicit LoginCredentials supplied in configuration
+     *   <li>AdminAccess set up through jclouds (see {@link #buildTemplate(ComputeService, ConfigBag)})
+     *   <li>Credentials obtained directly from the jclouds node
+     * </ol>
+     */
+    protected LoginCredentials extractVmCredentials(ConfigBag setup, NodeMetadata node, Template template) {
+        LoginCredentials customCredentials = setup.get(CUSTOM_CREDENTIALS);
+        
+        if (customCredentials!=null) {
             //set userName and other data, from these credentials
-            Object oldUsername = setup.put(USER, expectedCredentials.getUser());
-            LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, expectedCredentials.getUser(), oldUsername });
-            if (truth(expectedCredentials.getPassword())) setup.put(PASSWORD, expectedCredentials.getPassword());
-            if (truth(expectedCredentials.getPrivateKey())) setup.put(PRIVATE_KEY_DATA, expectedCredentials.getPrivateKey());
+            Object oldUsername = setup.put(USER, customCredentials.getUser());
+            LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, customCredentials.getUser(), oldUsername });
+            if (truth(customCredentials.getPassword())) setup.put(PASSWORD, customCredentials.getPassword());
+            if (truth(customCredentials.getPrivateKey())) setup.put(PRIVATE_KEY_DATA, customCredentials.getPrivateKey());
+            return customCredentials;
         }
-        if (expectedCredentials==null) {
-            expectedCredentials = LoginCredentials.fromCredentials(node.getCredentials());
-            String user = getUser(setup);
-            LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, user, expectedCredentials.getUser() });
-            if (truth(expectedCredentials.getUser())) {
-                if (user==null) {
-                    setup.put(USER, user = expectedCredentials.getUser());
-                } else if ("root".equals(user) && ROOT_ALIASES.contains(expectedCredentials.getUser())) {
-                    // deprecated, we used to default username to 'root'; now we leave null, then use autodetected credentials if no user specified
-                    // 
-                    LOG.warn("overriding username 'root' in favour of '"+expectedCredentials.getUser()+"' at {}; this behaviour may be removed in future", node);
-                    setup.put(USER, user = expectedCredentials.getUser());
-                }
+
+        AdminAccess adminAccess = (template.getOptions().getRunScript() instanceof AdminAccess) ? (AdminAccess)template.getOptions().getRunScript() : null;
+        String user = getUser(setup);
+        String localPrivateKeyData = LocationConfigUtils.getPrivateKeyData(setup);
+        String localPassword = setup.get(PASSWORD);
+        LoginCredentials nodeCredentials = LoginCredentials.fromCredentials(node.getCredentials());
+
+        LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, user, nodeCredentials.getUser() });
+        
+        if (adminAccess != null) {
+            Credentials adminCredentials = adminAccess.getAdminCredentials();
+            if (user == null || !user.equals(adminCredentials.identity)) {
+                LOG.warn("User mismatch in admin-access for node {}, config {}; admin {}; using user from configuration; may fail subsequently", 
+                        new Object[] {node, user, adminCredentials.identity});
             }
-            //override credentials
-            String pkd = elvis(LocationConfigUtils.getPrivateKeyData(setup), expectedCredentials.getPrivateKey());
-            String pwd = elvis(setup.get(PASSWORD), expectedCredentials.getPassword());
+            
+            if (localPrivateKeyData != null) {
+                // will rely on that; should have uploaded corresponding .pub file
+                return LoginCredentials.builder().user(user).privateKey(localPrivateKeyData).build();
+            } else {
+                String password = localPassword;
+                if (truth(localPassword) && !localPassword.equals(adminAccess.getAdminPassword())) {
+                    LOG.warn("Password mismatch in configuration and admin-access for node {}, user {}; using password from configuration; may fail subsequently", node, user);
+                } else if (!truth(password)) {
+                    password = adminAccess.getAdminPassword();
+                    setup.put(PASSWORD, password);
+                }
+                
+                return LoginCredentials.builder().user(user).password(password).build();
+            }
+        }
+
+        if (truth(nodeCredentials.getUser())) {
+            if (user==null) {
+                setup.put(USER, user = nodeCredentials.getUser());
+            } else if ("root".equals(user) && ROOT_ALIASES.contains(nodeCredentials.getUser())) {
+                // deprecated, we used to default username to 'root'; now we leave null, then use autodetected credentials if no user specified
+                // 
+                LOG.warn("overriding username 'root' in favour of '"+nodeCredentials.getUser()+"' at {}; this behaviour may be removed in future", node);
+                setup.put(USER, user = nodeCredentials.getUser());
+            }
+            
+            String pkd = elvis(localPrivateKeyData, nodeCredentials.getPrivateKey());
+            String pwd = elvis(localPassword, nodeCredentials.getPassword());
             if (user==null || (pkd==null && pwd==null)) {
                 String missing = (user==null ? "user" : "credential");
                 LOG.warn("Not able to determine "+missing+" for "+this+" at "+node+"; will likely fail subsequently");
-                expectedCredentials = null;
+                return null;
             } else {
-                LoginCredentials.Builder expectedCredentialsBuilder = LoginCredentials.builder().
-                        user(user);
-                if (pkd!=null) expectedCredentialsBuilder.privateKey(pkd);
-                if (pwd!=null && pkd==null) expectedCredentialsBuilder.password(pwd);
-                expectedCredentials = expectedCredentialsBuilder.build();        
+                LoginCredentials.Builder resultBuilder = LoginCredentials.builder()
+                        .user(user);
+                if (pkd!=null) resultBuilder.privateKey(pkd);
+                if (pwd!=null && pkd==null) resultBuilder.password(pwd);
+                return resultBuilder.build();        
             }
         }
-        return expectedCredentials;
+        
+        LOG.warn("No node-credentials or admin-access available for node "+node+" in "+this+"; will likely fail subsequently");
+        return null;
     }
 
     protected void waitForReachable(final ComputeService computeService, NodeMetadata node, LoginCredentials expectedCredentials, ConfigBag setup) {
@@ -1009,7 +1109,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         } catch (Exception e) {
             if (rethrow) {
                 LOG.warn("couldn't connect to "+metadata+" when trying to discover hostname (rethrowing): "+e);
-                throw Throwables.propagate(e);                
+                throw Exceptions.propagate(e);                
             }
             return false;
         }
@@ -1021,13 +1121,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             try {
                 vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
             } catch (Exception e) {
-                LOG.warn("Error reaching aws-ec2 instance on port 22; falling back to jclouds metadata for address", e);
+                LOG.warn("Error reaching aws-ec2 instance "+node.getId()+"@"+node.getLocation()+" on port "+node.getLoginPort()+"; falling back to jclouds metadata for address", e);
             }
             if (vmIp != null) {
                 try {
                     return getPublicHostnameAws(vmIp, setup);
                 } catch (Exception e) {
-                    LOG.warn("Error querying aws-ec2 instance over ssh for its hostname; falling back to first reachable IP", e);
+                    LOG.warn("Error querying aws-ec2 instance instance "+node.getId()+"@"+node.getLocation()+" over ssh for its hostname; falling back to first reachable IP", e);
                     return vmIp;
                 }
             }

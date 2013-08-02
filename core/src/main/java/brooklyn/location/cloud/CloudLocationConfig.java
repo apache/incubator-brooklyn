@@ -1,6 +1,7 @@
 package brooklyn.location.cloud;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -36,4 +37,5 @@ public interface CloudLocationConfig {
 
     public static final ConfigKey<Object> CALLER_CONTEXT = LocationConfigKeys.CALLER_CONTEXT;
 
+    public static final ConfigKey<Boolean> DESTROY_ON_FAILURE = ConfigKeys.newBooleanConfigKey("destroyOnFailure", "Whether to destroy the VM if provisioningLocation.obtain() fails", true);
 }
