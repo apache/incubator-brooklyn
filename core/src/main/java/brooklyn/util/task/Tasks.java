@@ -159,5 +159,10 @@ public class Tasks {
     public static <T> T tag(Class<T> type) {
         return tag(current(), type);
     }
-    
+
+    public static boolean isAncestorCancelled(Task t) {
+        if (t==null) return false;
+        if (t.isCancelled()) return true;
+        return isAncestorCancelled(t.getSubmittedByTask());
+    }
 }

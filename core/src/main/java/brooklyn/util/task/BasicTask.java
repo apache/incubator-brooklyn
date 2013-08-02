@@ -13,9 +13,7 @@ import java.lang.management.ThreadInfo;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -58,7 +56,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public final String displayName;
     public final String description;
 
-    protected final Set tags = new LinkedHashSet();
+    protected final Set<Object> tags = new LinkedHashSet<Object>();
 
     protected String blockingDetails = null;
     Object extraStatusText = null;
@@ -525,6 +523,52 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     }
     public Object getExtraStatusText() {
         return extraStatusText;
+    }
+
+    // ---- add a way to warn if task is not run
+    
+    public interface TaskFinalizer {
+        public void onTaskFinalization(Task<?> t);
+    }
+
+    public static final TaskFinalizer WARN_IF_NOT_RUN = new TaskFinalizer() {
+        @Override
+        public void onTaskFinalization(Task<?> t) {
+            if (!t.isDone()) {
+                // shouldn't happen
+                log.warn("Task "+this+" is being finalized before completion");
+                return;
+            }
+            if (!Tasks.isAncestorCancelled(t) && !t.isSubmitted()) {
+                log.warn("Task "+this+" was never submitted; did the code forget to run it?");
+            }
+        }
+    };
+
+    public static final TaskFinalizer NO_OP = new TaskFinalizer() {
+        @Override
+        public void onTaskFinalization(Task<?> t) {
+        }
+    };
+    
+    public void ignoreIfNotRun() {
+        setFinalizer(NO_OP);
+    }
+    
+    public void setFinalizer(TaskFinalizer f) {
+        TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class);
+        if (finalizer!=null && finalizer!=f)
+            throw new IllegalStateException("Cannot apply multiple finalizers");
+        if (isDone())
+            throw new IllegalStateException("Finalizer cannot be set on task "+this+" after it is finished");
+        tags.add(f);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        TaskFinalizer finalizer = Tasks.tag(this, TaskFinalizer.class);
+        if (finalizer==null) finalizer = WARN_IF_NOT_RUN;
+        finalizer.onTaskFinalization(this);
     }
     
 }
