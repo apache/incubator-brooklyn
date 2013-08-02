@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.management.CanAddTask;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
@@ -22,7 +23,7 @@ import com.google.common.base.Preconditions;
 /** Represents a task whose run() method can create other tasks
  * which are run sequentially, but that sequence runs in parallel to this task 
  **/
-public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChildren {
+public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChildren, CanAddTask {
 
     private static final Logger log = LoggerFactory.getLogger(CompoundTask.class);
                 
@@ -48,7 +49,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         this(MutableMap.of("tag", "compound"), mainJob);
     }
     
-    public DynamicSequentialTask(Map<String,?> flags, Callable<T> mainJob) {
+    public DynamicSequentialTask(Map<?,?> flags, Callable<T> mainJob) {
         super(flags);
         this.job = new DstJob(mainJob);
     }

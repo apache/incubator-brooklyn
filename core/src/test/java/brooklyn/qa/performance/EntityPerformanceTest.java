@@ -133,7 +133,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         
         measureAndAssert("invokeEffectorMultiEntityConcurrentAsyncAndGet", numIterations, minRatePerSec, new Runnable() {
             public void run() {
-                Task<?> task = Entities.invokeEffectorList(app, entities, TestEntity.MY_EFFECTOR);
+                Task<?> task = Entities.invokeEffector(app, entities, TestEntity.MY_EFFECTOR);
                 try {
                     task.get();
                 } catch (Exception e) {

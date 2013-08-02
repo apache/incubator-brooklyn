@@ -116,7 +116,7 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
             addChild(getZookeeper());
         } // And only start zookeeper if we are parent
         if (Objects.equal(this, getZookeeper().getParent())) childrenToStart.add(getZookeeper());
-        Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).getUnchecked();
+        Entities.invokeEffector(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).getUnchecked();
 
         connectSensors();
     }

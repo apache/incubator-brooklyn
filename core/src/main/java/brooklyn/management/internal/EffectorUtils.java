@@ -22,6 +22,8 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.Task;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 
@@ -252,7 +254,7 @@ public class EffectorUtils {
         }
     }
  
-    public static <T> Task<T> invokeEffectorAsync(AbstractEntity entity, Effector<T> eff, Map<String,?> parameters) {
+    public static <T> Task<T> invokeEffectorAsync(Entity entity, Effector<T> eff, Map<String,?> parameters) {
         String id = entity.getId();
         String name = eff.getName();
         
@@ -264,10 +266,13 @@ public class EffectorUtils {
         }
         ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal)entity).getManagementContext();
         
+        // FIXME seems brittle to have the listeners in the Utils method; better to move into the context.invokeEff
+        // (or whatever the last mile before invoking the effector is)
         mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
         try {
             return mgmtContext.invokeEffector(entity, eff, parameters);
         } finally {
+            // FIXME this is really Effector submitted
             mgmtSupport.getEntityChangeListener().onEffectorCompleted(eff);
         }
     }
@@ -293,4 +298,14 @@ public class EffectorUtils {
         }
         return null;
     }
+    
+    /** returns a (mutable) map of the standard flags which should be placed on an effector */
+    public static Map<Object,Object> getTaskFlagsForEffectorInvocation(Entity entity, Effector<?> effector) {
+        return MutableMap.builder()
+                .put("description", "Invoking effector "+effector.getName()+" on "+entity.getDisplayName())
+                .put("displayName", effector.getName())
+                .put("tags", MutableList.of(ManagementContextInternal.EFFECTOR_TAG))
+                .build();
+    }
+
 }

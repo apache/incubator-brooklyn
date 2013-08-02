@@ -2,29 +2,33 @@ package brooklyn.management.internal;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import brooklyn.internal.storage.BrooklynStorageFactory;
-import brooklyn.internal.storage.impl.inmemory.InMemoryBrooklynStorageFactory;
-import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractEffector;
+import brooklyn.entity.basic.EffectorWithBody;
+import brooklyn.entity.basic.Effectors;
+import brooklyn.internal.storage.BrooklynStorageFactory;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Identifiers;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * A local implementation of the {@link ManagementContext} API.
@@ -149,6 +153,13 @@ public class LocalManagementContext extends AbstractManagementContext {
     public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, elvis(Arrays.asList(flags.get("displayName"), flags.get("description"), flags, c)));
         return getExecutionContext(entity).submit(flags, c);
+    }
+
+    
+    @Override
+    protected <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, final Map parameters) {
+        manageIfNecessary(entity, eff);
+        return getExecutionContext(entity).submit(Effectors.invocation(entity, eff, parameters));
     }
 
     @Override

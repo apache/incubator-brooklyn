@@ -123,7 +123,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     @Override
     public void stop() {
         Iterable<Entity> stoppableChildren = Iterables.filter(getChildren(), Predicates.instanceOf(Startable.class));
-        Task invoke = Entities.invokeEffectorList(this, stoppableChildren, Startable.STOP);
+        Task invoke = Entities.invokeEffector(this, stoppableChildren, Startable.STOP);
         try {
 	        if (invoke != null) invoke.get();
         } catch (InterruptedException e) {

@@ -253,7 +253,7 @@ public class BrooklynRestResourceUtils {
         };
 
         ArrayList<Location> locations = Lists.newArrayList(transform(spec.getLocations(), buildLocationFromId));
-        return Entities.invokeEffectorWithMap((EntityLocal)app, app, Startable.START,
+        return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
                 MutableMap.of("locations", locations));
     }
 

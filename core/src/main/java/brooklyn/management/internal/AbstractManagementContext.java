@@ -162,11 +162,13 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return totalEffectorInvocationCount.get();
     }
     
-    public ExecutionContext getExecutionContext(Entity e) { 
+    public ExecutionContext getExecutionContext(Entity e) {
+        // BEC is a thin wrapper around EM so fine to create a new one here
         return new BasicExecutionContext(MutableMap.of("tag", e), getExecutionManager());
     }
     
     public SubscriptionContext getSubscriptionContext(Entity e) {
+        // BSC is a thin wrapper around SM so fine to create a new one here
         return new BasicSubscriptionContext(getSubscriptionManager(), e);
     }
 
@@ -218,19 +220,9 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected abstract void manageIfNecessary(Entity entity, Object context);
 
     public <T> Task<T> invokeEffector(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
-        return runAtEntity(
-                MutableMap.builder()
-                        .put("description", "invoking "+eff.getName()+" on "+entity+" ("+entity.getDisplayName()+")")
-                        .put("displayName", eff.getName())
-                        .put("tags", MutableList.of(EFFECTOR_TAG))
-                        .build(), 
-                entity, 
-                new Callable<T>() {
-                    public T call() {
-                        return ((AbstractEffector<T>)eff).call(entity, parameters);
-                    }});
+        return runAtEntity(entity, eff, parameters);
     }
-
+    
     protected <T> T invokeEffectorMethodLocal(Entity entity, Effector<T> eff, Object args) {
         assert isManagedLocally(entity) : "cannot invoke effector method at "+this+" because it is not managed here";
         totalEffectorInvocationCount.incrementAndGet();
@@ -279,8 +271,14 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      *
      * Returns the actual task (if it is local) or a proxy task (if it is remote);
      * if management for the entity has not yet started this may start it.
+     * 
+     * @deprecated since 0.6.0 use effectors (or support {@link #runAtEntity(Entity, Task)} if something else is needed);
+     * (Callable with Map flags is too open-ended, bothersome to support, and not used much) 
      */
+    @Deprecated
     public abstract <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c);
+
+    protected abstract <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters);
 
     public abstract void addEntitySetListener(CollectionChangeListener<Entity> listener);
 

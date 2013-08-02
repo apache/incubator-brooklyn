@@ -26,9 +26,9 @@ public class Tasks {
      * typically invoked prior to a wait, for transparency to a user;
      * then invoked with 'null' just after the wait */
     public static void setBlockingDetails(String description) {
-        Task current = current();
+        Task<?> current = current();
         if (current instanceof BasicTask)
-            ((BasicTask)current).setBlockingDetails(description); 
+            ((BasicTask<?>)current).setBlockingDetails(description); 
     }
     
     /** convenience for setting "blocking details" on any task where the current thread is running,
@@ -137,9 +137,27 @@ public class Tasks {
      * the extra status is presented in Task.getStatusDetails(true)
      */
     public static void setExtraStatusDetails(String notes) {
-        Task current = current();
+        Task<?> current = current();
         if (current instanceof BasicTask)
-            ((BasicTask)current).setExtraStatusText(notes); 
+            ((BasicTask<?>)current).setExtraStatusText(notes); 
     }
 
+    public static <T> TaskBuilder<T> builder() {
+        return TaskBuilder.<T>builder();
+    }
+    
+    /** returns the first tag found on the given task which matches the given type, looking up the submission hierarachy if necessary */
+    @SuppressWarnings("unchecked")
+    public static <T> T tag(Task<?> task, Class<T> type) {
+        if (task==null) return null;
+        for (Object tag: task.getTags())
+            if (type.isInstance(tag)) return (T)tag;
+        return tag(task.getSubmittedByTask(), type);
+    }
+    
+    /** as {@link #tag(Task, Class) but scoped to the current task (or null if no current task) */
+    public static <T> T tag(Class<T> type) {
+        return tag(current(), type);
+    }
+    
 }

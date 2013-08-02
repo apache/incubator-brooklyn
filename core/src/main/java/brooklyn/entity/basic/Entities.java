@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,12 +42,13 @@ import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ParallelTask;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -92,9 +92,6 @@ public class Entities {
             final Effector<T> effector, final Map<String,?> parameters) {
         // formulation is complicated, but it is building up a list of tasks, without blocking on them initially,
         // but ensuring that when the parallel task is gotten it does block on all of them
-        // TODO why not just get list of tasks with `entity.invoke(effector, parameters))`?
-        //      What is advantage of invoking in callingEntity's context?
-
 
         if (entitiesToCall == null){
             entitiesToCall = ImmutableList.of();
@@ -103,18 +100,12 @@ public class Entities {
         List<Task<T>> tasks = Lists.newArrayList();
 
         for (final Entity entity : entitiesToCall) {
-            tasks.add(new BasicTask<T>(
-                    MutableMap.of("displayName", "invoke", "description", "invoke effector \""+effector.getName()+"\" on entity "+entity),
-                    new Callable<T>() {
-                        public T call() throws Exception {
-                            return entity.invoke(effector, parameters).get();
-                        }
-                    }));
+            tasks.add( Effectors.invocation(entity, effector, parameters) );
         }
         ParallelTask<T> invoke = new ParallelTask<T>(
                 MutableMap.of(
-                        "displayName", "compound-invoke",
-                        "description", "invoke effector \""+effector.getName()+"\" on "+tasks.size()+(tasks.size() == 1 ? " entity" : " entities")),
+                        "displayName", effector.getName()+" (parallel)",
+                        "description", "Invoking effector \""+effector.getName()+"\" on "+tasks.size()+(tasks.size() == 1 ? " entity" : " entities")),
                 tasks);
         ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(invoke);
         return invoke;
@@ -134,19 +125,46 @@ public class Entities {
             final Effector<T> effector) {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
     }
+
+    /** @deprecated since 0.6.0 use invokeEffector */ @Deprecated
     public static <T> Task<List<T>> invokeEffectorWithMap(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         return invokeEffectorList(callingEntity, ImmutableList.of(entityToCall), effector, parameters);
     }
-    public static <T> Task<List<T>> invokeEffectorWithArgs(EntityLocal callingEntity, Entity entityToCall,
-            final Effector<T> effector, Object ...args) {
-        return invokeEffectorListWithArgs(callingEntity, ImmutableList.of(entityToCall), effector, args);
+    
+    public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
+            final Effector<T> effector, final Map<String,?> parameters) {
+        Task<T> t = Effectors.invocation(entityToCall, effector, parameters);
+        ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(t);
+        return t;
     }
-    public static <T> Task<List<T>> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
+    @SuppressWarnings("unchecked")
+    public static <T> Task<T> invokeEffectorWithArgs(EntityLocal callingEntity, Entity entityToCall,
+            final Effector<T> effector, Object ...args) {
+        return invokeEffector(callingEntity, entityToCall, effector,
+                EffectorUtils.prepareArgsForEffectorAsMapFromArray(effector, args));
+    }
+    public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector) {
-        return invokeEffectorWithMap(callingEntity, entityToCall, effector, Collections.<String,Object>emptyMap());
+        return invokeEffector(callingEntity, entityToCall, effector, Collections.<String,Object>emptyMap());
     }
 
+    /** convenience - invokes in parallel if multiple, but otherwise invokes the item directly */
+    public static Task<?> invokeEffector(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
+            final Effector<?> effector, final Map<String,?> parameters) {
+        if (Iterables.size(entitiesToCall)==1)
+            return invokeEffector(callingEntity, entitiesToCall.iterator().next(), effector, parameters);
+        else
+            return invokeEffectorList(callingEntity, entitiesToCall, effector, parameters);
+    }
+    /** convenience - invokes in parallel if multiple, but otherwise invokes the item directly */
+    public static Task<?> invokeEffector(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
+            final Effector<?> effector) {
+        return invokeEffector(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
+    }
+    
+    // ------------------------------------
+    
     public static boolean isSecret(String name) {
         String lowerName = name.toLowerCase();
         for (String secretName : SECRET_NAMES) {
@@ -445,7 +463,7 @@ public class Entities {
             log.warn("Using discouraged mechanism to start management -- Entities.start(Application, Locations) -- caller should create and use the preferred management context");
             startManagement(e);
         }
-        if (e instanceof Startable) Entities.invokeEffectorWithMap((EntityLocal)e, e, Startable.START,
+        if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.START,
                 MutableMap.of("locations", locations)).getUnchecked();
     }
 
@@ -455,19 +473,46 @@ public class Entities {
             if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
             if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
             unmanage(e);
+            log.debug("destroyed and unmanaged "+e+"; mgmt now "+
+                    (e.getApplicationId()==null ? "(no app)" : e.getApplication().getManagementContext())+" - managed? "+isManaged(e));
+        } else {
+            log.debug("skipping destroy of "+e+": not managed");
+        }
+    }
+    
+    /** as {@link #destroy(Entity)} but catching all errors */
+    public static void destroyCatching(Entity entity) {
+        try {
+            destroy(entity);
+        } catch (Exception e) {
+            log.warn("ERROR destroying "+entity+" (ignoring): "+e, e);
+            Exceptions.propagateIfFatal(e);
         }
     }
 
     /** stops, destroys, and unmanages all apps in the given context,
      * and then terminates the management context */
     public static void destroyAll(ManagementContext mgmt) {
+        log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
         for (Application app: mgmt.getApplications()) {
+            log.debug("destroying app "+app+" (managed? "+isManaged(app)+"; mgmt is "+mgmt+")");
             destroy(app);
+            log.debug("destroyed app "+app+"; mgmt now "+mgmt);
         }
         if (mgmt instanceof ManagementContextInternal) 
             ((ManagementContextInternal)mgmt).terminate();
     }
-        
+
+    /** as {@link #destroyAll(ManagementContext)} but catching all errors */
+    public static void destroyAllCatching(ManagementContext mgmt) {
+        try {
+            destroyAll(mgmt);
+        } catch (Exception e) {
+            log.warn("ERROR destroying "+mgmt+" (ignoring): "+e, e);
+            Exceptions.propagateIfFatal(e);
+        }
+    }
+
     /**
      * stops, destroys, and unmanages the given application -- and terminates the mangaement context;
      * does as many as are valid given the type and state

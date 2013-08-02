@@ -128,7 +128,7 @@ public class ControlledDynamicWebAppClusterImpl extends AbstractEntity implement
         // And only start controller if we are parent
         if (this.equals(getController().getParent())) childrenToStart.add(getController());
         try {
-            Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).get();
+            Entities.invokeEffector(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).get();
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         } catch (ExecutionException e) {

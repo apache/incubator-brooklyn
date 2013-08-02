@@ -249,7 +249,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         // FIXME symmetry in order of added as child, managed, started, and added to group
         // FIXME assume stoppable; use logic of grow?
-        Task<List<Void>> invoke = Entities.invokeEffectorList(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
+        Task<?> invoke = Entities.invokeEffector(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
         try {
             invoke.get();
         } catch (Exception e) {
