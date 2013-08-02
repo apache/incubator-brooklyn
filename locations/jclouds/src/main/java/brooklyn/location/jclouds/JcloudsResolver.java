@@ -188,6 +188,7 @@ public class JcloudsResolver implements LocationResolver {
             jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionName);
         } else {
             // other "providers" are APIs so take an _endpoint_ (but not a location)
+            jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionName);
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.spec(JcloudsLocation.class)
