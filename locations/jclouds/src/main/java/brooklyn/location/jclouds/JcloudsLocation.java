@@ -370,26 +370,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             
             return machineResult;
-        } catch (RunNodesException e) {
-            if (e.getNodeErrors().size() > 0) {
-                node = Iterables.get(e.getNodeErrors().keySet(), 0);
-            }
-            boolean destroyNode = (node != null) && Boolean.TRUE.equals(setup.get(DESTROY_ON_FAILURE));
-            
-            LOG.error("Failed to start VM for {}{}: {}", 
-                    new Object[] {setup.getDescription(), (destroyNode ? " (destroying "+node+")" : ""), e.getMessage()});
-            
-            if (destroyNode) {
-                if (machineResult != null) {
-                    releaseSafely(machineResult);
-                } else {
-                    releaseNodeSafely(node);
-                }
-            }
-            
-            throw Exceptions.propagate(e);
-            
         } catch (Exception e) {
+            if (e instanceof RunNodesException && ((RunNodesException)e).getNodeErrors().size() > 0) {
+                node = Iterables.get(((RunNodesException)e).getNodeErrors().keySet(), 0);
+            }
             boolean destroyNode = (node != null) && Boolean.TRUE.equals(setup.get(DESTROY_ON_FAILURE));
             
             LOG.error("Failed to start VM for {}{}: {}", 
@@ -403,7 +387,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     releaseNodeSafely(node);
                 }
             }
-
+            
             throw Exceptions.propagate(e);
             
         } finally {
