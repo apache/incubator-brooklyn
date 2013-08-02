@@ -147,6 +147,13 @@ public class JcloudsLocationResolverTest {
     }
 
     @Test
+    public void testJcloudsEndpointLoads() {
+        JcloudsLocation loc = resolve("jclouds:openstack-nova:http://foo/api");
+        assertEquals(loc.getProvider(), "openstack-nova");
+        assertEquals(loc.getEndpoint(), "http://foo/api");
+    }
+
+    @Test
     public void testThrowsOnInvalid() throws Exception {
         // Tries to treat "wrongprefix" as a cloud provider
         assertThrows("wrongprefix:aws-ec2:us-east-1", NoSuchElementException.class);
