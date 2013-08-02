@@ -25,11 +25,11 @@ import brooklyn.util.collections.MutableMap;
  * This class holds the collection of child tasks, but subclasses have the responsibility of executing them in a
  * sensible manner by implementing the abstract {@link #runJobs} method.
  */
-public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasTaskChildren<T> {
+public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasTaskChildren {
 
     private static final Logger log = LoggerFactory.getLogger(CompoundTask.class);
                 
-    protected final List<Task<? extends T>> children;
+    protected final List<Task> children;
     protected final List<Object> result;
     
     /**
@@ -61,7 +61,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
         };
         
         this.result = new ArrayList<Object>(jobs.size());
-        this.children = new ArrayList<Task<? extends T>>(jobs.size());
+        this.children = new ArrayList<Task>(jobs.size());
         for (Object job : jobs) {
             if (job instanceof Task)          { children.add((Task) job); }
             else if (job instanceof Closure)  { children.add(new BasicTask((Closure) job)); }
@@ -94,7 +94,7 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
         }
     }
     
-    public List<Task<? extends T>> getChildrenTasks() {
+    public List<Task> getChildrenTasks() {
         return children;
     }
     

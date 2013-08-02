@@ -1,10 +1,8 @@
 package brooklyn.management;
 
-import java.util.List;
+public interface HasTaskChildren {
 
-
-public interface HasTaskChildren<T> {
-
-    public Iterable<Task<? extends T>> getChildrenTasks();
+    @SuppressWarnings("rawtypes")
+    public Iterable<Task> getChildrenTasks();
     
 }

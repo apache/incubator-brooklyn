@@ -24,6 +24,7 @@ public class SequentialTask<T> extends CompoundTask<T> {
         List<T> result = new ArrayList<T>();
         for (Task<? extends T> task : children) {
             submitIfNecessary(task);
+            // throw exception (and cancel subsequent tasks) on error
             result.add(task.get());
         }
         return result;
