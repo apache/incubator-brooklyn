@@ -4,12 +4,16 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import brooklyn.util.task.BasicExecutionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.task.Tasks;
 
 import com.google.common.collect.ImmutableMap;
 
 public class MutexSupport implements WithMutexes {
 
+    private static final Logger log = LoggerFactory.getLogger(MutexSupport.class);
     private final Map<String,SemaphoreWithOwners> semaphores = new LinkedHashMap<String,SemaphoreWithOwners>();
 
     protected synchronized SemaphoreWithOwners getSemaphore(String mutexId) {
@@ -50,16 +54,22 @@ public class MutexSupport implements WithMutexes {
     @Override
     public void acquireMutex(String mutexId, String description) throws InterruptedException {
         SemaphoreWithOwners s = getSemaphore(mutexId, true);
-        if (description!=null) BasicExecutionManager.setBlockingDetails(description+" - waiting for "+mutexId);
+        if (description!=null) Tasks.setBlockingDetails(description+" - waiting for "+mutexId);
+        if (log.isDebugEnabled())
+            log.debug("Acquiring mutex: "+mutexId+"@"+this+" - "+description);
         s.acquire(); 
-        if (description!=null) BasicExecutionManager.setBlockingDetails(null);
+        if (description!=null) Tasks.setBlockingDetails(null);
         s.setDescription(description);
+        if (log.isDebugEnabled())
+            log.debug("Acquired mutex: "+mutexId+"@"+this+" - "+description);
     }
 
     @Override
     public boolean tryAcquireMutex(String mutexId, String description) {
         SemaphoreWithOwners s = getSemaphore(mutexId, true);
         if (s.tryAcquire()) {
+            if (log.isDebugEnabled())
+                log.debug("Acquired mutex (opportunistic): "+mutexId+"@"+this+" - "+description);
             s.setDescription(description);
             return true;
         }
@@ -69,6 +79,8 @@ public class MutexSupport implements WithMutexes {
     @Override
     public synchronized void releaseMutex(String mutexId) {
         SemaphoreWithOwners s;
+        if (log.isDebugEnabled())
+            log.debug("Releasing mutex: "+mutexId+"@"+this);
         synchronized (this) { s = semaphores.get(mutexId); }
         if (s==null) throw new IllegalStateException("No mutex known for '"+mutexId+"'");
         s.release();

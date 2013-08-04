@@ -104,6 +104,10 @@ public abstract class AbstractLocation implements Location, HasHostGeoInfo, Conf
     public AbstractLocation(Map properties) {
         inConstruction = true;
         _legacyConstruction = !InternalLocationFactory.FactoryConstructionTracker.isConstructing();
+        if (!_legacyConstruction && properties!=null && !properties.isEmpty()) {
+            LOG.warn("Forcing use of old-style location construction for "+getClass().getName()+" because properties were specified ("+properties+")");
+            _legacyConstruction = true;
+        }
         
         if (_legacyConstruction) {
             LOG.warn("Deprecated use of old-style location construction for "+getClass().getName()+"; instead use LocationManager().createLocation(spec)");

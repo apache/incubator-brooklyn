@@ -113,7 +113,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void provisionMore(int size) {
         for (int i=0; i<size; i++) {
-            Map flags = MutableMap.of("address", elvis(address, Networking.getLocalHost()));
+            Map flags = MutableMap.of("address", elvis(address, Networking.getLocalHost()),
+                    "mutexSupport", LocalhostMachine.mutexSupport);
             // TODO is this necessary? since they are inherited anyway? 
             // (probably, since inheritance is only respected for a small subset) 
             for (String k: SshMachineLocation.ALL_SSH_CONFIG_KEY_NAMES) {
@@ -182,8 +183,9 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         private final Set<Integer> portsObtained = Sets.newLinkedHashSet();
 
         public LocalhostMachine() {
-            this(MutableMap.of("mutexSupport", mutexSupport));
+            super();
         }
+        /** @deprecated since 0.6.0 use no-arg constructor (and spec) then configure */
         public LocalhostMachine(Map properties) {
             super(MutableMap.builder().putAll(properties).put("mutexSupport", mutexSupport).build());
         }
