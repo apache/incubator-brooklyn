@@ -27,4 +27,13 @@ public interface ActivityApi {
           @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId
   );
 
+  @GET
+  @Path("/{task}/children")
+  @ApiOperation(value = "Fetch list of children tasks of this task")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find task")
+  })
+  public Iterable<TaskSummary> children(
+          @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId);
+
 }

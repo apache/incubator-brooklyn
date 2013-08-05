@@ -1,12 +1,8 @@
-    <% if (task.startTimeUtc) { %>started <%= task.startTimeUtc %><% 
-        if (task.submitTimeUtc != task.startTimeUtc) { %> (submitted <%= task.submitTimeUtc %>)<% } 
-        if (task.endTimeUtc) { %>, finished <%= task.endTimeUtc %> 
+    <% if (task.startTimeUtc) { %>started <%= moment(task.startTimeUtc).fromNow() %><% 
+        if (task.submitTimeUtc != task.startTimeUtc) { %> (submitted <%= moment(task.submitTimeUtc).from(task.startTimeUtc, true) %> earlier)<% } 
+        if (task.endTimeUtc) { %>, finished after <%= moment(task.endTimeUtc).from(task.startTimeUtc, true) %> 
         <% } else { %>, in progress
         <% } %>
     <% } else { %>
-       submitted <%= task.submitTimeUtc %>, waiting
-    <% } %>
-    <% if (task.tags) { %>
-        <br/>
-        tags: <%= task.tags %>
+       submitted <%= moment(task.submitTimeUtc).fromNow() %>, waiting
     <% } %>

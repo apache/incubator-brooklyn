@@ -375,9 +375,13 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     ClientResponse response = client().resource("/v1/applications/simple-app")
         .delete(ClientResponse.class);
 
+    assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
+    TaskSummary task = response.getEntity(TaskSummary.class);
+    assertTrue(task.getDescription().toLowerCase().contains("destroy"), task.getDescription());
+    assertTrue(task.getDescription().toLowerCase().contains("simple-app"), task.getDescription());
+    
     waitForPageNotFoundResponse("/v1/applications/simple-app", ApplicationSummary.class);
 
-    assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
     assertEquals(getManagementContext().getApplications().size(), size-1);
   }
   

@@ -7,18 +7,20 @@ define([
     TaskSummary.Model = Backbone.Model.extend({
         defaults:function () {
             return {
-                entityId:"",
-                entityDisplayName:"",
+                id:"",
+                links:{},
                 displayName:"",
                 description:"",
-                id:"",
+                entityId:"",
+                entityDisplayName:"",
                 tags:{},
-                rawSubmitTimeUtc:-1,
-                submitTimeUtc:"",
-                startTimeUtc:"",
-                endTimeUtc:"",
+                submitTimeUtc:0,
+                startTimeUtc:0,
+                endTimeUtc:0,
                 currentStatus:"",
-                detailedStatus:""
+                children:[],
+                // missing a few -- submittedTask, blockingXxx -- but that seems okay
+                detailedStatus:"",
             }
         },
         getTagByName:function (name) {

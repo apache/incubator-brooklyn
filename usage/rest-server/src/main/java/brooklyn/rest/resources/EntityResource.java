@@ -48,7 +48,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   }
   
   @Override
-  public Iterable<TaskSummary> list(String applicationId, String entityId) {
+  public Iterable<TaskSummary> listTasks(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
       Set<Task<?>> tasks = mgmt().getExecutionManager().getTasksWithTag(entity);
       return Collections2.transform(tasks, TaskTransformer.FROM_TASK);

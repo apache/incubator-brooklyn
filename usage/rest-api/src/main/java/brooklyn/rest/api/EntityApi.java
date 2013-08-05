@@ -60,7 +60,7 @@ public interface EntityApi {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application or entity")
   })
-  public Iterable<TaskSummary> list(
+  public Iterable<TaskSummary> listTasks(
           @ApiParam(value = "Entity ID or name", required = true) @PathParam("application") String applicationId,
           @ApiParam(value = "Application ID or name", required = true) @PathParam("entity") String entityId);
 

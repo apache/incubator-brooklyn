@@ -325,7 +325,10 @@ public class BrooklynRestResourceUtils {
     }
     
     public Task<?> destroy(final Application application) {
-        return mgmt.getExecutionManager().submit(new Runnable() {
+        return mgmt.getExecutionManager().submit(
+                MutableMap.of("displayName", "destroying "+application,
+                        "description", "REST call to destroy application "+application.getDisplayName()+" ("+application+")"),
+                new Runnable() {
             @Override
             public void run() {
                 ((EntityInternal)application).destroy();

@@ -15,6 +15,7 @@ require.config({
         "jquery-slideto":"libs/jquery.slideto.min",
         "jquery-wiggle":"libs/jquery.wiggle.min",
         "jquery-ba-bbq":"libs/jquery.ba-bbq.min",
+        "moment":"libs/moment.min",
         "handlebars":"libs/handlebars-1.0.rc.1",
         "brooklyn":"libs/brooklyn",
         "brooklyn-utils":"libs/brooklyn-utils",

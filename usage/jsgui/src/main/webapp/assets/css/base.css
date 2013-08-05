@@ -1127,7 +1127,7 @@ input[type="file"] {
 }
 .subpanel-header-row {
 	color: black;
-	background-color: #b8b8b8;
+	background-color: #B0B8B0;
 	padding-top: 12px;
 	padding-bottom: 12px;
 	margin-bottom: 24px;
@@ -1135,4 +1135,34 @@ input[type="file"] {
 	vertical-align: top;
 	font-weight: 700;
 	font-size: 120%;
+}
+
+.activity-detail-panel .subpanel-header-row {
+	margin-bottom: 12px;
+}
+.activity-detail-panel .toggler-region {
+	margin-bottom: 12px;
+}
+.activity-detail-panel .toggler-header {
+    background-color: #D8DCD8;
+    padding: 2px 6px 2px 6px;
+}
+.activity-detail-panel .toggler-header {
+    background-color: #D8DCD8;
+    padding: 2px 6px 2px 6px;
+}
+.activity-detail-panel .toggler-region .activity-details-section {
+	padding: 4px 6px 0px 6px;
+}
+.activity-detail-panel .activity-details-section.activity-description, 
+.activity-detail-panel .activity-details-section.activity-status {
+	margin-bottom: 12px;
+}
+.activity-detail-panel .activity-label {
+	display: inline-block;
+	width: 100px;
+}
+.activity-detail-panel .toggler-region.tasks-submitted,
+.activity-detail-panel .toggler-region.tasks-children {
+	margin-bottom: 18px;
 }

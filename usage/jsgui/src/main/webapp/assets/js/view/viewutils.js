@@ -131,7 +131,9 @@ define([
             $togglers.click(this.onTogglerClick);
         },
         onTogglerClick: function(event) {
-            var root = $(event.currentTarget).closest(".toggler-header");
+            ViewUtils.onTogglerClickElement($(event.currentTarget).closest(".toggler-header"));
+        },
+        onTogglerClickElement: function(root) {
             root.toggleClass("user-hidden");
             $(".toggler-icon", root).toggleClass("icon-chevron-left").toggleClass("icon-chevron-down");
             var next = root.next();
@@ -151,15 +153,23 @@ define([
                 $ta.val("");
             }
             if (show) {
-                $div.show(100);
-                $ta.css("height", minPx);
-                // scrollHeight prop works sometimes (e.g. groovy page) but not others (e.g. summary)
-                var height = $ta.prop("scrollHeight");
+                ViewUtils.setHeightAutomatically($ta, minPx, maxPx, false)
+                if (alwaysShow) { $div.show(100); }
+            } else {
+                $div.hide();
+            }
+        },
+        setHeightAutomatically: function($ta, minPx, maxPx, deferred) {
+            var height = $ta.prop("scrollHeight");
+            if ($ta.css("padding-top")) height -= parseInt($ta.css("padding-top"), 10)
+            if ($ta.css("padding-bottom")) height -= parseInt($ta.css("padding-bottom"), 10)
+//            log("scroll height "+height+" - old real height "+$ta.css("height"))
+            if (height==0 && !deferred) {
+                _.defer(function() { ViewUtils.setHeightAutomatically($ta, minPx, maxPx, true) })
+            } else {
                 height = Math.min(height, maxPx);
                 height = Math.max(height, minPx);
                 $ta.css("height", height);
-            } else {
-                $div.hide();
             }
         },
         each: function(collection, fn) {

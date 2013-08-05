@@ -146,14 +146,21 @@ public class BrooklynGarbageCollector {
     }
     
     public void onTaskDone(Task<?> task) {
-        Set<Object> tags = task.getTags();
-        if (tags.contains(ManagementContextInternal.EFFECTOR_TAG) || tags.contains(ManagementContextInternal.NON_TRANSIENT_TASK_TAG)) {
-            // keep it for a while
-        } else {
+        if (shouldDeleteTask(task))
             executionManager.deleteTask(task);
-        }
     }
     
+    public boolean shouldDeleteTask(Task<?> task) {
+        Set<Object> tags = task.getTags();
+        if (tags.contains(ManagementContextInternal.EFFECTOR_TAG) || tags.contains(ManagementContextInternal.NON_TRANSIENT_TASK_TAG))
+            return false;
+        if (task.getSubmittedByTask()!=null && !shouldDeleteTask(task.getSubmittedByTask()))
+            return false;
+        // e.g. scheduled tasks, sensor events, etc
+        // TODO (in future may keep these for a shorter duration, e.g. to investigate)
+        return true;
+    }
+
     /**
      * Deletes old tasks. The age/number of tasks to keep is controlled by fields like 
      * {@link #maxTasksPerTag} and {@link #maxTaskAge}. 

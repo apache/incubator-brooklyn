@@ -69,6 +69,10 @@ public class Time {
         return makeTimeString(t, true);
     }
     /** @see #makeTimeString(long, boolean) */
+    public static String makeTimeStringRoundedSince(long utc) {
+        return makeTimeString(System.currentTimeMillis() - utc, true);
+    }
+    /** @see #makeTimeString(long, boolean) */
     public static String makeTimeStringExact(Duration d) {
         return makeTimeStringNanoExact(d.toNanoseconds());
     }

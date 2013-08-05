@@ -1,0 +1,106 @@
+<div class="subpanel-header-row">
+    <div>
+     <div style="float: left;"><i class="backDrillDown icon-chevron-left handy" rel="tooltip" title="Back up one level" style="margin-top: 3px;"></i>&nbsp;</div>
+     <div style="margin-bottom: 6px;">
+      <span style="font-weight: 400;" class="ifField-entityDisplayName"><span class="updateField-entityDisplayName"/>:</span>
+      <div style="display: inline-block;" class="updateField-displayName">Loading...</div>
+     </div>
+     <% for (crumb in breadcrumbs) { %>
+     <div style="margin-right: 20px; font-weight: 400; font-size: 80%; text-align: right; line-height: 14px;">
+        <%= breadcrumbs[crumb] %></span>
+     </div>
+     <% } %>
+    </div>
+</div>
+
+<div class="activity-details-section activity-description">
+    <span class="updateField-description"/>
+</div>
+<div class="activity-details-section activity-status">
+    <span class="updateField-currentStatus"/>
+</div>
+
+  <div class="toggler-region task-detail">
+    <div class="toggler-header">
+      <div class="toggler-icon icon-chevron-down"></div>
+      <div><b>Summary</b></div>
+    </div>
+    <div>
+
+<div class="activity-details-section activity-name-and-id">
+    <span class="activity-label">Name:</span> <span class="updateField-displayName">Loading...</span> <br/>
+    <span class="activity-label">ID:</span> <span class="updateField-id"><%= taskLink %></span>
+</div>
+<div class="activity-details-section activity-time">
+    <!-- these are dynamic -->
+    <div class="ifField-submitTimeUtc"><span class="activity-label">Submitted:</span> 
+        <span class="updateField-submitTimeUtc"/></div>
+    <div class="ifField-startTimeUtc"><span class="activity-label">Started:</span>
+        <span class="updateField-startTimeUtc"/></div>
+    <div class="ifField-endTimeUtc"><span class="activity-label">Finished:</span>
+        <span class="updateField-endTimeUtc"/></div>
+</div>
+<div class="ifField-tags">
+  <div class="activity-details-section activity-tags">
+    <span class="activity-label">Tags:</span> 
+        <span class="updateField-tags"/>
+  </div>
+</div>
+<div class="ifField-submittedByTask">
+  <div class="activity-details-section activity-tags">
+    <span class="activity-label">Submitted by:</span> 
+        <span class="updateField-submittedByTask"/>
+  </div>
+</div>
+
+    </div>
+  </div>
+    
+
+  <div class="toggler-region task-detail">
+    <div class="toggler-header">
+      <div class="toggler-icon icon-chevron-down"></div>
+      <div><b>Detailed Status</b></div>
+    </div>
+    <div class="activity-details-section activity-detailStatus">
+     <div class="for-textarea">
+      <textarea id="detailStatus-textrea" readonly="readonly" style="width: 100%;"></textarea>
+     </div>
+    </div>
+  </div>
+    
+  <div class="toggler-region tasks-children">
+    <div class="toggler-header">
+      <div class="toggler-icon icon-chevron-down"></div>
+      <div><b>Children Tasks</b></div>
+    </div>
+    <div class="activity-details-section activity-tasks-children">
+      <div id="activities-children-table" class="table-scroll-wrapper">
+      </div>
+    </div>
+  </div>
+    
+  <div class="toggler-region tasks-submitted">
+    <div class="toggler-header">
+      <div class="toggler-icon icon-chevron-down"></div>
+      <div><b>Background Tasks</b></div>
+    </div>
+    <div class="activity-details-section activity-tasks-submitted">
+      <div id="activities-submitted-table" class="table-scroll-wrapper">
+      </div>
+    </div>
+  </div>
+        
+  <div class="toggler-region task-json">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>JSON</b></div>
+    </div>
+    <div class="activity-details-section activity-json hide">
+     <div class="for-textarea">
+      <textarea id="json-textrea" readonly="readonly" style="width: 100%;"></textarea>
+     </div>
+    </div>     
+  </div>
+    
+</div>

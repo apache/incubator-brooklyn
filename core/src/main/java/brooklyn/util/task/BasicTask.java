@@ -31,6 +31,7 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
 
@@ -327,14 +328,14 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
             rv = "Submitted for execution";
             if (verbosity>0) {
                 long elapsed = System.currentTimeMillis() - submitTimeUtc;
-                rv += " "+elapsed+" ms ago";
+                rv += " "+Time.makeTimeStringRoundedSince(elapsed)+" ago";
             }
             if (verbosity >= 2 && getExtraStatusText()!=null) {
                 rv += "\n\n"+getExtraStatusText();
             }
         } else if (isDone()) {
             long elapsed = endTimeUtc - submitTimeUtc;
-            String duration = ""+elapsed+" ms";
+            String duration = Time.makeTimeStringRounded(elapsed);
             rv = "Ended ";
             if (isCancelled()) {
                 rv += "by cancellation";

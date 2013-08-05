@@ -1,8 +1,10 @@
 package brooklyn.rest.domain;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -11,52 +13,52 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import brooklyn.rest.util.JsonUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class TaskSummary {
 
   private final String id;
+  private final String displayName;
   private final String entityId;
   private final String entityDisplayName;
-  
-  private final String displayName;
   private final String description;
   private final Collection<Object> tags;
-  private final long rawSubmitTimeUtc;
-  private final String submitTimeUtc;
-  private final String startTimeUtc;
-  private final String endTimeUtc;
+  
+  private final Long submitTimeUtc;
+  private final Long startTimeUtc;
+  private final Long endTimeUtc;
+  
   private final String currentStatus;
-  private final List<LinkAndText> children;
-  private final LinkAndText submittedByTask;
-  private final LinkAndText blockingTask;
+  private final List<LinkWithMetadata> children;
+  private final LinkWithMetadata submittedByTask;
+  private final LinkWithMetadata blockingTask;
   private final String blockingDetails;
   private final String detailedStatus;
-
+  private final Map<String, URI> links;
   
   public TaskSummary(
           @JsonProperty("id") String id, 
-          @JsonProperty("entityId") String entityId, 
-          @JsonProperty("entityDisplayName") String entityDisplayName, 
           @JsonProperty("displayName") String displayName, 
           @JsonProperty("description") String description, 
+          @JsonProperty("entityId") String entityId, 
+          @JsonProperty("entityDisplayName") String entityDisplayName, 
           @JsonProperty("tags") Set<Object> tags,
-          @JsonProperty("rawSubmitTimeUtc") long rawSubmitTimeUtc, 
-          @JsonProperty("submitTimeUtc") String submitTimeUtc, 
-          @JsonProperty("startTimeUtc") String startTimeUtc, 
-          @JsonProperty("endTimeUtc") String endTimeUtc, 
+          @JsonProperty("submitTimeUtc") Long submitTimeUtc, 
+          @JsonProperty("startTimeUtc") Long startTimeUtc, 
+          @JsonProperty("endTimeUtc") Long endTimeUtc, 
           @JsonProperty("currentStatus") String currentStatus, 
-          @JsonProperty("children") List<LinkAndText> children,
-          @JsonProperty("submittedByTask") LinkAndText submittedByTask,
-          @JsonProperty("blockingTask") LinkAndText blockingTask,
+          @JsonProperty("children") List<LinkWithMetadata> children,
+          @JsonProperty("submittedByTask") LinkWithMetadata submittedByTask,
+          @JsonProperty("blockingTask") LinkWithMetadata blockingTask,
           @JsonProperty("blockingDetails") String blockingDetails,
-          @JsonProperty("detailedStatus") String detailedStatus) {
+          @JsonProperty("detailedStatus") String detailedStatus,
+          @JsonProperty("links") Map<String, URI> links) {
     this.id = id;
-    this.entityId = entityId;
-    this.entityDisplayName = entityDisplayName;
     this.displayName = displayName;
     this.description = description;
+    this.entityId = entityId;
+    this.entityDisplayName = entityDisplayName;
     this.tags = ImmutableList.<Object>copyOf(tags);
-    this.rawSubmitTimeUtc = rawSubmitTimeUtc;
     this.submitTimeUtc = submitTimeUtc;
     this.startTimeUtc = startTimeUtc;
     this.endTimeUtc = endTimeUtc;
@@ -66,21 +68,14 @@ public class TaskSummary {
     this.blockingTask = blockingTask;
     this.submittedByTask = submittedByTask;
     this.detailedStatus = detailedStatus;
+    this.links = ImmutableMap.copyOf(links);
 }
 
 
   public String getId() {
       return id;
   }
-
-  public String getEntityId() {
-    return entityId;
-  }
-
-  public String getEntityDisplayName() {
-    return entityDisplayName;
-  }
-
+  
   public String getDisplayName() {
     return displayName;
   }
@@ -89,6 +84,14 @@ public class TaskSummary {
     return description;
   }
 
+  public String getEntityId() {
+      return entityId;
+  }
+  
+  public String getEntityDisplayName() {
+      return entityDisplayName;
+  }
+  
   public Collection<Object> getTags() {
     List<Object> result = new ArrayList<Object>();
     for (Object t: tags)
@@ -101,19 +104,15 @@ public class TaskSummary {
       return tags;
     }
 
-  public long getRawSubmitTimeUtc() {
-    return rawSubmitTimeUtc;
-  }
-
-  public String getSubmitTimeUtc() {
+  public Long getSubmitTimeUtc() {
     return submitTimeUtc;
   }
 
-  public String getStartTimeUtc() {
+  public Long getStartTimeUtc() {
     return startTimeUtc;
   }
 
-  public String getEndTimeUtc() {
+  public Long getEndTimeUtc() {
     return endTimeUtc;
   }
 
@@ -121,15 +120,15 @@ public class TaskSummary {
     return currentStatus;
   }
 
-  public List<LinkAndText> getChildren() {
+  public List<LinkWithMetadata> getChildren() {
       return children;
   }
 
-  public LinkAndText getSubmittedByTask() {
+  public LinkWithMetadata getSubmittedByTask() {
       return submittedByTask;
   }
   
-  public LinkAndText getBlockingTask() {
+  public LinkWithMetadata getBlockingTask() {
     return blockingTask;
   }
   
@@ -141,6 +140,10 @@ public class TaskSummary {
       return detailedStatus;
   }
 
+  public Map<String, URI> getLinks() {
+      return links;
+  }
+  
   @Override
   public String toString() {
     return "TaskSummary{" +
