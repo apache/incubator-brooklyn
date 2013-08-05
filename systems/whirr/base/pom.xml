@@ -64,6 +64,18 @@
               </exclusion>             
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.jclouds.driver</groupId>
+            <artifactId>jclouds-joda</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jclouds.driver</groupId>
+            <artifactId>jclouds-netty</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.whirr</groupId>
             <artifactId>whirr-cli</artifactId>
