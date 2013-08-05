@@ -138,9 +138,9 @@ public class DependentConfiguration {
                 }});
             value = source.getAttribute(sensor);
             while (!ready.apply(value)) {
-                current.setBlockingDetails("Waiting for notification from subscription on "+source+" "+sensor);
+                current.setBlockingDetails("Waiting for ready from "+source+" "+sensor+" (subscription)");
                 semaphore.acquire();
-                current.setBlockingDetails(null);
+                current.resetBlockingDetails();
                 value = data.get();
             }
             if (LOG.isDebugEnabled()) LOG.debug("Attribute-ready for {} in entity {}", sensor, source);

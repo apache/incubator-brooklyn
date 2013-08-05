@@ -26,8 +26,10 @@ public class TaskSummary {
   private final String startTimeUtc;
   private final String endTimeUtc;
   private final String currentStatus;
-  private final List<String> children;
-  private final String submittedByTask;
+  private final List<LinkAndText> children;
+  private final LinkAndText submittedByTask;
+  private final LinkAndText blockingTask;
+  private final String blockingDetails;
   private final String detailedStatus;
 
   
@@ -43,8 +45,10 @@ public class TaskSummary {
           @JsonProperty("startTimeUtc") String startTimeUtc, 
           @JsonProperty("endTimeUtc") String endTimeUtc, 
           @JsonProperty("currentStatus") String currentStatus, 
-          @JsonProperty("children") List<String> children,
-          @JsonProperty("submittedByTask") String submittedByTask,
+          @JsonProperty("children") List<LinkAndText> children,
+          @JsonProperty("submittedByTask") LinkAndText submittedByTask,
+          @JsonProperty("blockingTask") LinkAndText blockingTask,
+          @JsonProperty("blockingDetails") String blockingDetails,
           @JsonProperty("detailedStatus") String detailedStatus) {
     this.id = id;
     this.entityId = entityId;
@@ -58,6 +62,8 @@ public class TaskSummary {
     this.endTimeUtc = endTimeUtc;
     this.currentStatus = currentStatus;
     this.children = children;
+    this.blockingDetails = blockingDetails;
+    this.blockingTask = blockingTask;
     this.submittedByTask = submittedByTask;
     this.detailedStatus = detailedStatus;
 }
@@ -115,12 +121,20 @@ public class TaskSummary {
     return currentStatus;
   }
 
-  public List<String> getChildren() {
+  public List<LinkAndText> getChildren() {
       return children;
   }
 
-  public String getSubmittedByTask() {
+  public LinkAndText getSubmittedByTask() {
       return submittedByTask;
+  }
+  
+  public LinkAndText getBlockingTask() {
+    return blockingTask;
+  }
+  
+  public String getBlockingDetails() {
+    return blockingDetails;
   }
 
   public String getDetailedStatus() {

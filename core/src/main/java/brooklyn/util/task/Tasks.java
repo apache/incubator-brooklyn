@@ -30,6 +30,21 @@ public class Tasks {
         if (current instanceof BasicTask)
             ((BasicTask<?>)current).setBlockingDetails(description); 
     }
+    public static void resetBlockingDetails() {
+        Task<?> current = current();
+        if (current instanceof BasicTask)
+            ((BasicTask<?>)current).resetBlockingDetails(); 
+    }
+    public static void setBlockingTask(Task<?> blocker) {
+        Task<?> current = current();
+        if (current instanceof BasicTask)
+            ((BasicTask<?>)current).setBlockingTask(blocker); 
+    }
+    public static void resetBlockingTask() {
+        Task<?> current = current();
+        if (current instanceof BasicTask)
+            ((BasicTask<?>)current).resetBlockingTask(); 
+    }
     
     /** convenience for setting "blocking details" on any task where the current thread is running,
      * while the passed code is executed; often used from groovy as

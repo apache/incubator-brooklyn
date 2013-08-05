@@ -59,6 +59,7 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     protected final Set<Object> tags = new LinkedHashSet<Object>();
 
     protected String blockingDetails = null;
+    protected Task blockingTask = null;
     Object extraStatusText = null;
 
     /**
@@ -216,8 +217,14 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     }
 
     public T get() throws InterruptedException, ExecutionException {
-        blockUntilStarted();
-        return result.get();
+        try {
+            if (!isDone())
+                Tasks.setBlockingTask(this);
+            blockUntilStarted();
+            return result.get();
+        } finally {
+            Tasks.resetBlockingTask();
+        }
     }
 
     public T getUnchecked() {
@@ -414,14 +421,22 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
 		if (getThread()==null)
 			//thread might have moved on to a new task; if so, recompute (it should now say "done")
 			return getStatusString(verbosity);
-		
-		if (verbosity >= 1 && GroovyJavaMethods.truth(blockingDetails)) {
-		    if (verbosity==1)
-		        // short status string will just show blocking details
-		        return blockingDetails;
-		    //otherwise show the blocking details, then a new line, then additional information
-		    rv = blockingDetails + "\n\n";
-		}
+        
+        if (verbosity >= 1 && GroovyJavaMethods.truth(blockingDetails)) {
+            if (verbosity==1)
+                // short status string will just show blocking details
+                return blockingDetails;
+            //otherwise show the blocking details, then a new line, then additional information
+            rv = blockingDetails + "\n\n";
+        }
+        
+        if (verbosity >= 1 && GroovyJavaMethods.truth(blockingTask)) {
+            if (verbosity==1)
+                // short status string will just show blocking details
+                return "Waiting on "+blockingTask;
+            //otherwise show the blocking details, then a new line, then additional information
+            rv = "Waiting on "+blockingTask + "\n\n";
+        }
 
 		if (verbosity>=2) {
             if (getExtraStatusText()!=null) {
@@ -513,9 +528,24 @@ public class BasicTask<T> extends BasicTaskStub implements Task<T> {
     public void setBlockingDetails(String blockingDetails) {
         this.blockingDetails = blockingDetails;
     }
-    
+    public void setBlockingTask(Task blockingTask) {
+        this.blockingTask = blockingTask;
+    }
+    public void resetBlockingDetails() {
+        this.blockingDetails = null;
+    }
+    public void resetBlockingTask() {
+        this.blockingTask = null;
+    }
+
+    /** returns a textual message giving details while the task is blocked */
     public String getBlockingDetails() {
         return blockingDetails;
+    }
+    
+    /** returns a task that this task is blocked on */
+    public Task getBlockingTask() {
+        return blockingTask;
     }
     
     public void setExtraStatusText(Object extraStatus) {

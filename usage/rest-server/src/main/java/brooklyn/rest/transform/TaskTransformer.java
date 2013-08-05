@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
+import brooklyn.rest.domain.LinkAndText;
 import brooklyn.rest.domain.TaskSummary;
+import brooklyn.util.task.BasicTask;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -52,21 +54,24 @@ public class TaskTransformer {
         String startTimeUtc = (task.getStartTimeUtc() == -1) ? "" : formatter.get().format(new Date(task.getStartTimeUtc()));
         String endTimeUtc = (task.getEndTimeUtc() == -1) ? "" : formatter.get().format(new Date(task.getEndTimeUtc()));
 
-        List<String> children = Collections.emptyList();
+        List<LinkAndText> children = Collections.emptyList();
         if (task instanceof HasTaskChildren) {
-            children = new ArrayList<String>();
+            children = new ArrayList<LinkAndText>();
             for (Object t: ((HasTaskChildren)task).getChildrenTasks()) {
                 children.add(asLink((Task)t));
             }
         }
         return new TaskSummary(task.getId(), entityId, entityDisplayName, task.getDisplayName(), task.getDescription(),
                 task.getTags(), task.getSubmitTimeUtc(), submitTimeUtc, startTimeUtc, endTimeUtc,
-                task.getStatusSummary(), children, asLink(task.getSubmittedByTask()), task.getStatusDetail(true));
+                task.getStatusSummary(), children, asLink(task.getSubmittedByTask()), 
+                task instanceof BasicTask ? asLink(((BasicTask<?>)task).getBlockingTask()) : null, 
+                task instanceof BasicTask ? ((BasicTask<?>)task).getBlockingDetails() : null, 
+                task.getStatusDetail(true));
     }
 
-    public static String asLink(Task t) {
+    public static LinkAndText asLink(Task t) {
         if (t==null) return null;
-        return "/v1/activities/"+t.getId();
+        return new LinkAndText("/v1/activities/"+t.getId(), t.getDisplayName());
     }
 
     // formatter is not thread-safe; use thread-local storage
