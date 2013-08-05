@@ -4,70 +4,80 @@ title: Release Notes
 toc: ../toc.json
 ---
 
-## Brooklyn Version 0.5.0 RC1 (0.5.0-rc.1)
+## Brooklyn Version 0.6.0 (Milestone One - 0.6.0-M1)
 
-API Tidy on top of M2, using `init()` as the method to override when building composed Application and Entity classes.
-
-There are known issues with Whirr clusters and the Cloud Foundry example (moving) which will be resolved for RC2.   
-
-
-## Brooklyn Version 0.5.0 Milestone Two (0.5.0-M2)
+* Introduction
+* New Features
+* Backwards Compatibility
 
 ### Introduction
 
-This milestone release includes many big features, and brings us much closer to a 0.5.0 release.
+This milestone release includes many additions and fixes, and brings us much closer to a 0.6.0 release.
 
 It incorporates a lot of improvements and feedback from our community. Thank you!
 
 Thanks also go to Brooklyn's commercial users. Already Brooklyn has been adopted into some very exciting projects including controlling custom PaaS offerings, big data clusters, and three-tier web-apps.
 
-Work on this release can be tracked using Brooklyn's GitHub issue tracker:
- 
-* [github.com/brooklyncentral/brooklyn/issues?milestone=1](https://github.com/brooklyncentral/brooklyn/issues?milestone=1)
+For more information, please checkout [http://brooklyncentral.github.io](http://http://brooklyncentral.github.io), and subscribe to the mailing lists:
 
-And via the mailing lists:
- 
 * [brooklyn-dev@googlegroups.com](http://groups.google.com/group/brooklyn-dev)
 * [brooklyn-users@googlegroups.com](http://groups.google.com/group/brooklyn-users)
+
  
 ### New Features
 
-The major changes between M1 and M2 are:
+The major changes between 0.5 and 0.6.0 (including any and all previous 0.6.0 milestone releases) are:
 
-1. Entities have been separated into an interface and implementation, rather than just a single class. Construction of entities is now done using an EntitySpec, rather than directly calling the constructor. This improvement is required to simplify remoting in a distributed brooklyn management plane.
+1. Locations are now constructed using a LocationSpec, rather than calling the constructor directly. This improvement is required to allow the Brooklyn management plane to track locations and persist their state.
 
-2. Downloading of entity installers is greatly improved:
-	* More configurable, with ability to specify URLs in the brooklyn configuration files or to override in code.
-	* Will fallback to a repository maintained by Cloudsoft, so if an artifact is removed from the official public site then it will not break the entity. 
-	
-		See [downloads.cloudsoftcorp.com/brooklyn/repository/](http://downloads.cloudsoftcorp.com/brooklyn/repository/)
+2. A datagrid can be used to store the entity/location state within Brooklyn. This feature is currently disabled by default (i.e. storing to an in-memory pseduo-datagrid); work will continue on this in subsequent releases.
 
-3. Support for running applications across private subnets.
+3. A new location-metadata.properties file allows metadata values (e.g. ISO-3166, lat/lon coordinates, etc) to be added to and overridden.
 
-4. Policies can now be re-configured on-the-fly through the REST api and through the web-console.
+4. Several additional clouds are supported, including:
+	* Abiquo
+	* Google Compute Engine 
+	* IBM SmartCloud (see [https://github.com/cloudsoft/ibm-smartcloud](github.com/cloudsoft/ibm-smartcloud) 
+)
 
-5. Some entities now support configuration files being supplied in FreeMarker template format. These include JBoss AS7, ActiveMQ and MySql. More will be converted to use this pattern.
-
-6. Several new entities have been added, including:
-	* MongoDB
-	* Cassandra
-	* RubyRep
-	* DynamicWebAppFabric
+5. Several new entities have been added, including:
+	* BindDnsServer
+	* Jetty6Server
+	* MongoDB replica sets
+	* BrooklynNode (for Brooklyn bootstrap deploying Brooklyn)
 
 
 ### Backwards Compatibility
 
-For upgrading from 0.5.0-M1 to M2:
+For upgrading from 0.5.0 to 0.6.0, existing entities/applications/policies will still work, provided they did not previously have deprecation warnings.
 
-1. Entity classes have been renamed, e.g. MySqlNode is now an interface and the implementationis MySqlNodeImpl.
-	* The minimum change for this to work is to update your references to include the Impl suffixes. However, that will result in deprecation warnings.
-	* The recommended approach is to use the EntitySpec when constructing entities. A good place to start is to look at the updated example applications.
+Some additional code has been deprecated - users are strongly encouraged to update these:
 
-2. The default username for provisioning with jclouds has changed to use the name of the user executing the Brooklyn process. 
-	* Java's `System.getProperty("user.name")` is used instead of 'root' or 'ubuntu'
-	* Usernames can be overridden in `brooklyn.properties` or using system properties.
-		For example, by entering '`brooklyn.location.named.acmecloud.user=root`' in `brooklyn.properties` or using the command syntax `-Dbrooklyn.location.named.acmecloud.user=root`.
-		
-		'`brooklyn.jclouds.aws-ec2.user=root`' could also be used to apply `user=root` to all aws-ec2 VMs. 
+1. Some previously deprecated code has been deleted.
 
-3. Some deprecated code has been deleted. All of this code was commented in 0.4.0 with text such as "will be deleted in 0.5".
+2. Use `LocationSpec` (and `managementContext.getLocationManager().createLocation(LocationSpec.spec(MyLocClazz.class)`), rather than calling location constructors directly.
+
+3. Use camelCase for property names in brooklyn.properties (e.g. brooklyn.jclouds.publicKeyFile instead of brooklyn.jclouds.public-key-file).
+
+4. Use `@Effector` and `@EffectorParam` for annotating effector methods in an entity (rather than `@Description`, `@NamedParameter` and `@DefaultValue`).
+
+5. `location.getName()` has been renamed to `location.getDisplayName()`, to be consistent with Entity. The `location.getChildLocations()` and `location.getParentLocation()` have also been renamed to `getChildren()` and `getParent()` respectively.
+
+6. If overriding a config key in an entity to change the default value specified in a super-type entity or constant, then use `ConfigKeys.newConfigKeyWithDefault(...)`.
+
+7. Use `ConfigKeys.newStringConfigKey(...)` and similar methods, rather than using `new ConfigKey<String>(String.class, ...)`
+
+8. `ListConfigKey` has been deprecated because it no longer guarantees order; instead use `SetConfigKey`. This is a consequence of efficiently using a datagrid to store the data.
+
+9. Use the new `FeedConfig.onFailure()`, `FeedConfig.onError()` and `FeedConfig.checkSuccess()`. This is now called for example to determine if a http 404 is a success or failure (default failure), and if an ssh non-zero exit code is a failure (default yes).
+
+10. Some package/class changes, such as:
+	* `brooklyn.util.NetworkUtils` renamed to `brooklyn.util.net.Networking`  
+	* `brooklyn.entity.basic.lifecycle.CommonCommands` renamed to `brooklyn.util.ssh.CommonCommands`  
+	* `brooklyn.util.MutableMap` renamed to `brooklyn.util.collections.MutableMap`  
+
+
+## Previous Release Notes
+
+[http://brooklyncentral.github.io/v/0.5.0/start/release-notes.html](0.5.0) 
+
