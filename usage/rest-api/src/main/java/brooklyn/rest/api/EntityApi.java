@@ -2,6 +2,8 @@ package brooklyn.rest.api;
 
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.domain.TaskSummary;
+
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
@@ -51,5 +53,28 @@ public interface EntityApi {
       @PathParam("application") final String application,
       @PathParam("entity") final String entity
   ) ;
+
+  @GET
+  @Path("/{entity}/activities")
+  @ApiOperation(value = "Fetch list of tasks for this entity")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application or entity")
+  })
+  public Iterable<TaskSummary> list(
+          @ApiParam(value = "Entity ID or name", required = true) @PathParam("application") String applicationId,
+          @ApiParam(value = "Application ID or name", required = true) @PathParam("entity") String entityId);
+
+  @GET
+  @Path("/{entity}/activities/{task}")
+  @ApiOperation(value = "Fetch task details", responseClass = "brooklyn.rest.domain.TaskSummary")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application, entity or task")
+  })
+  @Produces("text/json")
+  public TaskSummary getTask(
+          @ApiParam(value = "Application ID or name", required = true) @PathParam("application") final String application,
+          @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") final String entityToken,
+          @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId
+  );
 
 }

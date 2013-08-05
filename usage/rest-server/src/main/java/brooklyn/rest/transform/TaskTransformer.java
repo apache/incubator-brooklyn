@@ -56,12 +56,17 @@ public class TaskTransformer {
         if (task instanceof HasTaskChildren) {
             children = new ArrayList<String>();
             for (Object t: ((HasTaskChildren)task).getChildrenTasks()) {
-                children.add(((Task)t).getId());
+                children.add(asLink((Task)t));
             }
         }
         return new TaskSummary(task.getId(), entityId, entityDisplayName, task.getDisplayName(), task.getDescription(),
                 task.getTags(), task.getSubmitTimeUtc(), submitTimeUtc, startTimeUtc, endTimeUtc,
-                task.getStatusSummary(), task.getStatusDetail(true), children);
+                task.getStatusSummary(), children, asLink(task.getSubmittedByTask()), task.getStatusDetail(true));
+    }
+
+    public static String asLink(Task t) {
+        if (t==null) return null;
+        return "/v1/activities/"+t.getId();
     }
 
     // formatter is not thread-safe; use thread-local storage

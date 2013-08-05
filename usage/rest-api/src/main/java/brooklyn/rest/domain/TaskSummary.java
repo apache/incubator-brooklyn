@@ -25,8 +25,9 @@ public class TaskSummary {
   private final String submitTimeUtc;
   private final String startTimeUtc;
   private final String endTimeUtc;
-  private final List<String> children;
   private final String currentStatus;
+  private final List<String> children;
+  private final String submittedByTask;
   private final String detailedStatus;
 
   
@@ -42,8 +43,9 @@ public class TaskSummary {
           @JsonProperty("startTimeUtc") String startTimeUtc, 
           @JsonProperty("endTimeUtc") String endTimeUtc, 
           @JsonProperty("currentStatus") String currentStatus, 
-          @JsonProperty("detailedStatus") String detailedStatus,
-          @JsonProperty("children") List<String> children) {
+          @JsonProperty("children") List<String> children,
+          @JsonProperty("submittedByTask") String submittedByTask,
+          @JsonProperty("detailedStatus") String detailedStatus) {
     this.id = id;
     this.entityId = entityId;
     this.entityDisplayName = entityDisplayName;
@@ -55,8 +57,9 @@ public class TaskSummary {
     this.startTimeUtc = startTimeUtc;
     this.endTimeUtc = endTimeUtc;
     this.currentStatus = currentStatus;
-    this.detailedStatus = detailedStatus;
     this.children = children;
+    this.submittedByTask = submittedByTask;
+    this.detailedStatus = detailedStatus;
 }
 
 
@@ -108,16 +111,20 @@ public class TaskSummary {
     return endTimeUtc;
   }
 
-  public List<String> getChildren() {
-      return children;
-    }
-
   public String getCurrentStatus() {
     return currentStatus;
   }
 
+  public List<String> getChildren() {
+      return children;
+  }
+
+  public String getSubmittedByTask() {
+      return submittedByTask;
+  }
+
   public String getDetailedStatus() {
-    return detailedStatus;
+      return detailedStatus;
   }
 
   @Override

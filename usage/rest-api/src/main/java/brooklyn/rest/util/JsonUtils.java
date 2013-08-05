@@ -15,7 +15,6 @@ public class JsonUtils {
         return x.toString();
     }
     
-    @SuppressWarnings("unchecked")
     public static boolean isPrimitiveOrBoxer(Class<?> type) {
         return Primitives.allPrimitiveTypes().contains(type) || Primitives.allWrapperTypes().contains(type);
     }
