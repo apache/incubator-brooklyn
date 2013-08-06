@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -88,6 +90,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
+import com.google.common.primitives.Ints;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -114,6 +117,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      *  where root@ is not allowed to log in */
     public static final List<String> ROOT_ALIASES = ImmutableList.of("ubuntu", "ec2-user");
     public static final List<String> NON_ADDABLE_USERS = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).build();
+    
+    private static final Pattern LIST_PATTERN = Pattern.compile("^\\[(.*)\\]$");
+    private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
     
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
@@ -1220,6 +1226,28 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
         } else if (v instanceof Integer) {
             result = new int[] {(Integer)v};
+        } else if (v instanceof String) {
+            Matcher listMatcher = LIST_PATTERN.matcher(v.toString());
+            boolean intList = true;
+            if (listMatcher.matches()) {
+                List<String> strings = KeyValueParser.parseList(listMatcher.group(1));
+                List<Integer> integers = new ArrayList<Integer>();
+                for (String string : strings) {
+                    if (INTEGER_PATTERN.matcher(string).matches()) {
+                        integers.add(Integer.parseInt(string));
+                    } else {
+                        intList = false;
+                        break;
+                    }
+                }
+                result = Ints.toArray(integers);
+            } else {
+                intList = false;
+                result = null;
+            }
+            if (!intList) {
+                throw new IllegalArgumentException("Invalid type for int[]: "+v+" of type "+v.getClass());
+            }
         } else {
             throw new IllegalArgumentException("Invalid type for int[]: "+v+" of type "+v.getClass());
         }
