@@ -1,7 +1,5 @@
 package brooklyn.entity.nosql.redis;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -14,8 +12,6 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.collect.ImmutableList;
 
@@ -24,16 +20,14 @@ import com.google.common.collect.ImmutableList;
  */
 public class RedisIntegrationTest {
 
-    static { TimeExtras.init(); }
-
     private TestApplication app;
-    private Location testLocation;
+    private Location loc;
     private RedisStore redis;
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        testLocation = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "london"));
+        loc = new LocalhostMachineProvisioningLocation();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -47,7 +41,7 @@ public class RedisIntegrationTest {
     @Test(groups = { "Integration" })
     public void canStartupAndShutdown() throws Exception {
         redis = app.createAndManageChild(EntitySpecs.spec(RedisStore.class));
-        app.start(ImmutableList.of(testLocation));
+        app.start(ImmutableList.of(loc));
 
         EntityTestUtils.assertAttributeEqualsEventually(redis, Startable.SERVICE_UP, true);
 
@@ -62,16 +56,11 @@ public class RedisIntegrationTest {
     @Test(groups = { "Integration" })
     public void testRedisConnection() throws Exception {
         redis = app.createAndManageChild(EntitySpecs.spec(RedisStore.class));
-        app.start(ImmutableList.of(testLocation));
+        app.start(ImmutableList.of(loc));
 
         EntityTestUtils.assertAttributeEqualsEventually(redis, Startable.SERVICE_UP, true);
 
         JedisSupport support = new JedisSupport(redis);
-        try {
-            support.redisTest();
-        } finally {
-            redis.stop();
-        }
+        support.redisTest();
     }
-
 }
