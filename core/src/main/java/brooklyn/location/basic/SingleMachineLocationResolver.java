@@ -11,6 +11,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.MachineLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.text.KeyValueParser;
 
 public class SingleMachineLocationResolver implements LocationResolver {
     
@@ -39,10 +40,13 @@ public class SingleMachineLocationResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like single(named:foo)");
         }
         String args = matcher.group(2);
-        if (!managementContext.getLocationRegistry().canResolve(args)) {
-            throw new IllegalArgumentException("Invalid target location '" + args + "'; must be resolvable location");
+        Map locationArgs = KeyValueParser.parseMap(args);
+        String target = locationArgs.get("target").toString();
+        locationArgs.remove("target");
+        if (!managementContext.getLocationRegistry().canResolve(target)) {
+            throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
         }
-        return new SingleMachineProvisioningLocation<MachineLocation>(args);
+        return new SingleMachineProvisioningLocation<MachineLocation>(target, locationArgs);
     }
 
     @Override

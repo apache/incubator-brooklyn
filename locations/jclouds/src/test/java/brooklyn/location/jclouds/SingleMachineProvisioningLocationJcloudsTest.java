@@ -66,7 +66,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     @Test(groups="Live")
     public void testJcloudsSingle() throws Exception {
         location = (SingleMachineProvisioningLocation<MachineLocation>) 
-            managementContext.getLocationRegistry().resolve("single:(jclouds:aws-ec2:us-east-1)");
+            managementContext.getLocationRegistry().resolve("single:(target='jclouds:aws-ec2:us-east-1')");
         location.setManagementContext(managementContext);
         
         MachineLocation m1 = location.obtain();
@@ -82,7 +82,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     @Test(groups="Live")
     public void testJcloudsSingleRelease() throws Exception {
         location = (SingleMachineProvisioningLocation<SshMachineLocation>) 
-            managementContext.getLocationRegistry().resolve("single:(jclouds:aws-ec2:us-east-1)");
+            managementContext.getLocationRegistry().resolve("single:(target='jclouds:aws-ec2:us-east-1')");
         location.setManagementContext(managementContext);
         
         SshMachineLocation m1 = (SshMachineLocation) location.obtain();
@@ -114,7 +114,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     @Test(groups="Live")
     public void testJcloudsSingleObtainReleaseObtain() throws Exception {
         location = (SingleMachineProvisioningLocation<SshMachineLocation>) 
-            managementContext.getLocationRegistry().resolve("single:(jclouds:aws-ec2:us-east-1)");
+            managementContext.getLocationRegistry().resolve("single:(target='jclouds:aws-ec2:us-east-1')");
         location.setManagementContext(managementContext);
         SshMachineLocation m1 = (SshMachineLocation) location.obtain();
         log.info("GOT " + m1);
@@ -142,7 +142,7 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     @Test(groups="Live")
     public void testJCloudsNamedSingle() throws Exception {
         location = (SingleMachineProvisioningLocation<SshMachineLocation>) 
-            managementContext.getLocationRegistry().resolve("single:(named:FooServers)");
+            managementContext.getLocationRegistry().resolve("single:(target='named:FooServers')");
         location.setManagementContext(managementContext);
         
         SshMachineLocation m1 = (SshMachineLocation) location.obtain();
