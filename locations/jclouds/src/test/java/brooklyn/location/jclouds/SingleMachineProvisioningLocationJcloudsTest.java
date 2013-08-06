@@ -1,10 +1,12 @@
 package brooklyn.location.jclouds;
 
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +24,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SingleMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.exceptions.CompoundRuntimeException;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -45,14 +48,18 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
     @SuppressWarnings("unchecked")
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
+        Set<Exception> exceptions = Collections.EMPTY_SET;
         for (MachineLocation machineLocation: machinesToTearDown) {
             try {
                 location.release(machineLocation);
             } catch (Exception e) {
-
+                exceptions.add(e);
             }
         }
         if (managementContext != null) managementContext.terminate();
+        if (exceptions.size() > 0) {
+            throw new CompoundRuntimeException("Exception during tear down", exceptions);
+        }
     }
     
     @SuppressWarnings("unchecked")
@@ -63,6 +70,8 @@ private static final Logger log = LoggerFactory.getLogger(SingleMachineProvision
         location.setManagementContext(managementContext);
         
         MachineLocation m1 = location.obtain();
+        
+        assertNotNull(m1);
 
         log.info("GOT "+m1);
         
