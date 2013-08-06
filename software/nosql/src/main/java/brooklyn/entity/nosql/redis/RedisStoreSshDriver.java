@@ -72,11 +72,10 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
                 .execute();
     }
 
-
     @Override
     public boolean isRunning() {
         return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
-                .body.append("./bin/redis-cli ping > /dev/null")
+                .body.append("./bin/redis-cli -p " + getEntity().getAttribute(RedisStore.REDIS_PORT) + " ping > /dev/null")
                 .execute() == 0;
     }
 
@@ -87,7 +86,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
     public void stop() {
         newScript(MutableMap.of("usePidFile", false), STOPPING)
                 .failOnNonZeroResultCode()
-                .body.append("./bin/redis-cli shutdown")
+                .body.append("./bin/redis-cli -p " + getEntity().getAttribute(RedisStore.REDIS_PORT) + " shutdown")
                 .execute();
     }
 }

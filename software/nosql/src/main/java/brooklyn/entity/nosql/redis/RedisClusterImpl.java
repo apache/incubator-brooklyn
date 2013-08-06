@@ -12,12 +12,22 @@ import brooklyn.location.Location;
 
 public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
 
-    RedisStore master;
-    DynamicCluster slaves;
+    protected RedisStore master;
+    protected DynamicCluster slaves;
 
     public RedisClusterImpl() {
     }
 
+    @Override
+    public RedisStore getMaster() {
+        return master;
+    }
+    
+    @Override
+    public DynamicCluster getSlaves() {
+        return slaves;
+    }
+    
     @Override
     public void start(Collection<? extends Location> locations) {
         master = addChild(EntitySpecs.spec(RedisStore.class));
