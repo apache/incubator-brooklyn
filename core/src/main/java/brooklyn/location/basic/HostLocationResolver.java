@@ -43,7 +43,7 @@ public class HostLocationResolver implements LocationResolver {
         if (!managementContext.getLocationRegistry().canResolve(target)) {
             throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
         }
-        return new SingleMachineProvisioningLocation<MachineLocation>(target);
+        return new SingleMachineProvisioningLocation<MachineLocation>(target, locationFlags);
     }
     
     @Override
