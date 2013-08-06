@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.Maps;
-
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
@@ -42,14 +40,15 @@ public class HostLocationResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like host:(\"1.1.1.1\")");
         }
         String args = matcher.group(2);
-        String target = "target='byon:(hosts=" + args + ")'";
+        String target = "byon:(hosts=" + args + ")";
+        String locationString = "target='" + target + "'";
         if (!managementContext.getLocationRegistry().canResolve(target)) {
             throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
         }
         if (locationFlags == null) {
             locationFlags = Collections.EMPTY_MAP;
         }
-        return new SingleMachineProvisioningLocation<MachineLocation>(target, locationFlags);
+        return new SingleMachineProvisioningLocation<MachineLocation>(locationString, locationFlags);
     }
     
     @Override
