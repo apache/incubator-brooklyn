@@ -51,10 +51,14 @@ public class SingleMachineProvisioningLocation<T extends MachineLocation> extend
     }
 
     public synchronized void release(T machine) {
+        if (!machine.equals(singleLocation)) {
+            throw new IllegalArgumentException("Invalid machine " + machine + " passed to release, expecting: " + singleLocation);
+        }
         if (--referenceCount == 0) {
             provisioningLocation.release(machine);
             singleLocation = null;
         }
+        inUse.remove(machine);
     };
 
 }
