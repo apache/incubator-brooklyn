@@ -30,7 +30,7 @@ public class SingleMachineProvisioningLocationTest {
     @Test
     public void testLocalhostSingle() throws Exception {
         SingleMachineProvisioningLocation<SshMachineLocation> l = (SingleMachineProvisioningLocation<SshMachineLocation>) 
-            managementContext.getLocationRegistry().resolve("single:(localhost)");
+            managementContext.getLocationRegistry().resolve("single:(target='localhost')");
         l.setManagementContext(managementContext);
         
         SshMachineLocation m1 = l.obtain();
