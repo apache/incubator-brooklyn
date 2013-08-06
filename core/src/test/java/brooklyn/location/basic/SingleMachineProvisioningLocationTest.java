@@ -1,5 +1,7 @@
 package brooklyn.location.basic;
 
+import static org.testng.Assert.assertNotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -32,6 +34,8 @@ public class SingleMachineProvisioningLocationTest {
         l.setManagementContext(managementContext);
         
         SshMachineLocation m1 = l.obtain();
+        
+        assertNotNull(m1);
 
         log.info("GOT "+m1);
         
