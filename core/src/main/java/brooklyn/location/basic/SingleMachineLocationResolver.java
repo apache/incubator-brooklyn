@@ -2,6 +2,8 @@ package brooklyn.location.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +21,10 @@ public class SingleMachineLocationResolver implements LocationResolver {
     
     private static final Pattern PATTERN = Pattern.compile("(" + SINGLE + "|" + SINGLE.toUpperCase() + ")" + ":" + "\\((.*)\\)$");
     
+    private static final Pattern LIST_PATTERN = Pattern.compile("^\\[(.*)\\]$");
+    
+    private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
+    
     private volatile ManagementContext managementContext;
 
     @Override
@@ -33,7 +39,7 @@ public class SingleMachineLocationResolver implements LocationResolver {
     }
 
     @Override
-    @SuppressWarnings({ "rawtypes" })
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
@@ -43,6 +49,26 @@ public class SingleMachineLocationResolver implements LocationResolver {
         Map locationArgs = KeyValueParser.parseMap(args);
         String target = locationArgs.get("target").toString();
         locationArgs.remove("target");
+        for (Object key : locationArgs.keySet()) {
+            Object value = locationArgs.get(key); 
+            if (value instanceof String) {
+                Matcher listMatcher = LIST_PATTERN.matcher(value.toString());
+                if (listMatcher.matches()) {
+                    List<String> strings = KeyValueParser.parseList(listMatcher.group(1));
+                    List<Integer> integers = new ArrayList<Integer>();
+                    boolean intList = true;
+                    for (String string : strings) {
+                        if (INTEGER_PATTERN.matcher(string).matches()) {
+                            integers.add(Integer.parseInt(string));
+                        } else {
+                            intList = false;
+                            break;
+                        }
+                    }
+                    locationArgs.put(key, intList ? integers : strings);
+                }
+            }
+        }
         if (!managementContext.getLocationRegistry().canResolve(target)) {
             throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
         }
