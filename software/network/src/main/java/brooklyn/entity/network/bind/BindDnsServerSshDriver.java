@@ -45,7 +45,7 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
     public void install() {
         List<String> commands = ImmutableList.<String>builder()
                 .add(CommonCommands.installPackage(MutableMap.of("yum", "bind"), "bind"))
-                .add("which setenforce && " + CommonCommands.sudo("setenforce 0"))
+                .add(CommonCommands.ok("which setenforce && " + CommonCommands.sudo("setenforce 0")))
                 .build();
 
         newScript(INSTALLING)
