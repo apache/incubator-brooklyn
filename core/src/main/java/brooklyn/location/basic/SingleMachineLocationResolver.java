@@ -41,6 +41,9 @@ public class SingleMachineLocationResolver implements LocationResolver {
         }
         String args = matcher.group(2);
         Map locationArgs = KeyValueParser.parseMap(args);
+        if (locationArgs == null || locationArgs.get("target") == null) {
+            throw new IllegalArgumentException("target must be specified in spec");
+        }
         String target = locationArgs.get("target").toString();
         locationArgs.remove("target");
         if (!managementContext.getLocationRegistry().canResolve(target)) {

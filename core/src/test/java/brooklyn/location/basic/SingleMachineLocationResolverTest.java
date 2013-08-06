@@ -39,9 +39,9 @@ public class SingleMachineLocationResolverTest {
 
     @Test
     public void resolveHosts() {
-        resolve("single:(localhost)");
-        resolve("single:(named:foo)");
-        resolve("single:(byon:(hosts=\"1.1.1.1\"))");
+        resolve("single:(target=localhost)");
+        resolve("single:(target=named:foo)");
+        resolve("single:(target=byon:(hosts=\"1.1.1.1\"))");
     }
     
     private void assertThrowsNoSuchElement(String val) {

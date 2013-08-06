@@ -2,9 +2,12 @@ package brooklyn.location.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.Maps;
 
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
@@ -39,9 +42,12 @@ public class HostLocationResolver implements LocationResolver {
             throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like host:(\"1.1.1.1\")");
         }
         String args = matcher.group(2);
-        String target = "byon:(hosts=" + args + ")";
+        String target = "target='byon:(hosts=" + args + ")'";
         if (!managementContext.getLocationRegistry().canResolve(target)) {
             throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
+        }
+        if (locationFlags == null) {
+            locationFlags = Collections.EMPTY_MAP;
         }
         return new SingleMachineProvisioningLocation<MachineLocation>(target, locationFlags);
     }
