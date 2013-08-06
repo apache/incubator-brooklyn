@@ -1,5 +1,7 @@
 package brooklyn.rest.security.provider;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -22,6 +24,8 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
     
     public static final String AUTHENTICATION_KEY = ExplicitUsersSecurityProvider.class.getCanonicalName()+"."+"AUTHENTICATED";
 
+    private static final Set<String> DEPRECATED_WARNING_EXPLICIT_USERS = Collections.synchronizedSet(new HashSet<String>());
+    
     protected final ManagementContext mgmt;
     
     public ExplicitUsersSecurityProvider(ManagementContext mgmt) {
@@ -86,8 +90,10 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
         if (actualP==null) {
             actualP = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user));
             if (actualP!=null) {
-                LOG.warn("Web console user password set using decprecated property "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getName()+"; " +
-            		"configure using "+BrooklynWebConfig.PASSWORD_FOR_USER(user).getName()+" instead");
+                if (DEPRECATED_WARNING_EXPLICIT_USERS.add(user)) {
+                    LOG.warn("Web console user password set using deprecated property "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getName()+"; " +
+                		"configure using "+BrooklynWebConfig.PASSWORD_FOR_USER(user).getName()+" instead");
+                }
             }
         }
         if (actualP==null) {
