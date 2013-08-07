@@ -1,7 +1,5 @@
 package brooklyn.location.jclouds;
 
-import static org.testng.Assert.assertTrue;
-
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -11,8 +9,7 @@ import org.jclouds.compute.domain.Template;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsLocationConfig;
+import brooklyn.config.BrooklynProperties;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -57,14 +54,66 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         }
     }
     
+    public static class BailOutWithTemplateJcloudsLocation extends JcloudsLocation {
+        ConfigBag lastConfigBag;
+        
+        Template template;
+
+        public BailOutWithTemplateJcloudsLocation() {
+           super();
+        }
+        
+        public BailOutWithTemplateJcloudsLocation(Map<?, ?> conf) {
+             super(conf);
+         }
+         
+         @Override
+         protected Template buildTemplate(ComputeService computeService, ConfigBag config) {
+             template = super.buildTemplate(computeService, config);
+             
+             lastConfigBag = config;
+             throw BAIL_OUT_FOR_TESTING;
+         }
+         protected synchronized void tryObtainAndCheck(Map<?,?> flags, Predicate<ConfigBag> test) {
+             try {
+                 obtain(flags);
+             } catch (Throwable e) {
+                 if (e==BAIL_OUT_FOR_TESTING) {
+                     test.apply(lastConfigBag);
+                 } else {
+                     throw Exceptions.propagate(e);
+                 }
+             }
+         }
+         
+         public Template getTemplate() {
+             return template;
+         }
+     }
+    
     public static BailOutJcloudsLocation newSampleBailOutJcloudsLocationForTesting() {
         BailOutJcloudsLocation jcl = new BailOutJcloudsLocation(MutableMap.of(
+                IMAGE_ID, "bogus",
                 CLOUD_PROVIDER, "aws-ec2",
                 ACCESS_IDENTITY, "bogus",
+                CLOUD_REGION_ID, "bogus",
                 ACCESS_CREDENTIAL, "bogus",
                 USER, "fred",
                 MIN_RAM, 16));
         return jcl;
+    }
+    
+    public static BailOutWithTemplateJcloudsLocation newSamplBailOutWithTemplateJcloudsLocation() {
+        BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
+        BailOutWithTemplateJcloudsLocation jcloudsLocation = new BailOutWithTemplateJcloudsLocation(MutableMap.of(
+                CLOUD_PROVIDER, "aws-ec2",
+                CLOUD_REGION_ID, "eu-west-1",
+                ACCESS_IDENTITY, properties.get("brooklyn.jclouds.aws-ec2.identity"),
+                ACCESS_CREDENTIAL, properties.get("brooklyn.jclouds.aws-ec2.credential"),
+                USER, "fred",
+                INBOUND_PORTS, "[22, 80, 9999]"
+            ));
+        return jcloudsLocation;
     }
     
     public static Predicate<ConfigBag> checkerFor(final String user, final Integer minRam, final Integer minCores) {
@@ -75,6 +124,16 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
                 Assert.assertEquals(input.get(MIN_RAM), minRam);
                 Assert.assertEquals(input.get(MIN_CORES), minCores);
                 return true;
+            }
+        };
+    }
+    
+    public static Predicate<ConfigBag> templateCheckerFor(final String ports) {
+        return new Predicate<ConfigBag>() {
+            @Override
+            public boolean apply(@Nullable ConfigBag input) {
+                Assert.assertEquals(input.get(INBOUND_PORTS), ports);
+                return false;
             }
         };
     }
@@ -137,5 +196,23 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         JcloudsLocation.toIntArray(stringArray);
     }
     
+    @Test(groups="Live")
+    public void testCreateWithInboundPorts() {
+        BailOutWithTemplateJcloudsLocation jcloudsLocation = newSamplBailOutWithTemplateJcloudsLocation();
+        jcloudsLocation = (BailOutWithTemplateJcloudsLocation) jcloudsLocation.newSubLocation(MutableMap.of());
+        jcloudsLocation.tryObtainAndCheck(MutableMap.of(), templateCheckerFor("[22, 80, 9999]"));
+        int[] ports = new int[] {22, 80, 9999};
+        Assert.assertEquals(jcloudsLocation.template.getOptions().getInboundPorts(), ports);
+    }
+    
+    @Test(groups="Live")
+    public void testCreateWithInboundPortsOverride() {
+        BailOutWithTemplateJcloudsLocation jcloudsLocation = newSamplBailOutWithTemplateJcloudsLocation();
+        jcloudsLocation = (BailOutWithTemplateJcloudsLocation) jcloudsLocation.newSubLocation(MutableMap.of());
+        jcloudsLocation.tryObtainAndCheck(MutableMap.of(INBOUND_PORTS, "[23, 81, 9998]"), templateCheckerFor("[23, 81, 9998]"));
+        int[] ports = new int[] {23, 81, 9998};
+        Assert.assertEquals(jcloudsLocation.template.getOptions().getInboundPorts(), ports);
+    }
+
     // TODO more tests, where flags come in from resolver, named locations, etc
 }
