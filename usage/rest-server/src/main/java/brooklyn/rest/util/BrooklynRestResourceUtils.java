@@ -45,6 +45,7 @@ import brooklyn.rest.domain.EntitySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
@@ -298,7 +299,7 @@ public class BrooklynRestResourceUtils {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
-            Class<?>[] additionalInterfaceClazzes = clazz.getInterfaces();
+            Set<Class<?>> additionalInterfaceClazzes = Reflections.getInterfacesIncludingClassAncestors(clazz);
             result = EntitySpecs.spec(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         

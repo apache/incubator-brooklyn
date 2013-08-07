@@ -2,10 +2,13 @@ package brooklyn.entity.basic;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.runtime.MethodClosure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -19,9 +22,14 @@ import brooklyn.util.text.Strings;
 import com.google.common.collect.Lists;
 
 /** concrete class for providing an Effector implementation that gets its information from annotations on a method;
- * see Effector*Test for usage example
+ * see Effector*Test for usage example.
+ * <p>
+ * note that the method must be on an interface in order for it to be remoted, with the current implementation.
+ * see comments in {@link #call(Entity, Map)} for more details.
  */
 public class MethodEffector<T> extends AbstractEffector<T> {
+
+    private static final Logger log = LoggerFactory.getLogger(MethodEffector.class);
     
     @SuppressWarnings("rawtypes")
     public static Effector<?> create(Method m) {
@@ -159,19 +167,34 @@ public class MethodEffector<T> extends AbstractEffector<T> {
         if (entity instanceof AbstractEntity) {
             return EffectorUtils.invokeEffector(entity, this, parametersArray);
         } else {
+            // we are dealing with a proxy here
+            // this implementation invokes the method on the proxy
+            // (requiring it to be on the interface)
+            // and letting the proxy deal with the remoting / runAtEntity;
+            // alternatively we could create the task here and pass it to runAtEntity;
+            // the latter may allow us to simplify/remove a lot of the stuff from 
+            // EffectorUtils and possibly Effectors and Entities
+            
             // TODO Should really find method with right signature, rather than just the right args.
             // TODO prepareArgs can miss things out that have "default values"! Code below will probably fail if that happens.
             Method[] methods = entity.getClass().getMethods();
             for (Method method : methods) {
-                if (method.getName().equals(getName()) && parametersArray.length == method.getParameterTypes().length) {
-                    try {
-                        return (T) method.invoke(entity, parametersArray);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Error invoking effector "+this+" on entity "+entity, e);
+                if (method.getName().equals(getName())) {
+                    if (parametersArray.length == method.getParameterTypes().length) {
+                        try {
+                            return (T) method.invoke(entity, parametersArray);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Error invoking effector "+this+" on entity "+entity, e);
+                        }
                     }
                 }
             }
-            throw new IllegalStateException("Could not find method for effector "+getName()+" with "+parametersArray.length+" parameters on "+entity);
+            String msg = "Could not find method for effector "+getName()+" with "+parametersArray.length+" parameters on "+entity;
+            log.warn(msg+" (throwing); available methods are: "+Arrays.toString(methods));
+            throw new IllegalStateException(msg);
         }
     }
+    /*
+
+     */
 }

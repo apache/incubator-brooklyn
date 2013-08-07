@@ -1,9 +1,11 @@
 package brooklyn.entity.proxying;
 
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.StartableApplication;
+import brooklyn.util.javalang.Reflections;
 
 /**
  * For creating {@link EntitySpec} instances.
@@ -61,7 +63,7 @@ public class EntitySpecs {
             return (BasicEntitySpec<StartableApplication, ?>) EntitySpecs.spec(type);
         } else {
             // is implementation
-            Class<?>[] additionalInterfaceClazzes = type.getInterfaces();
+            Set<Class<?>> additionalInterfaceClazzes = Reflections.getInterfacesIncludingClassAncestors(type);
             return EntitySpecs.spec(StartableApplication.class, type)
                     .additionalInterfaces(additionalInterfaceClazzes);
         }

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import brooklyn.entity.Entity;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.Reflections;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -89,6 +90,7 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
     private <T extends Entity> Class<? super T> getInterfaceWithAnnotationMatching(Class<T> implClazz) {
         // getInterfaces() only looks at one level of interfaces (i.e. not interfaces declared on supertypes)
         // so if an impl indirectly extends the interface we need to look deeper.
+        // -- see also Reflections.getInterfacesIncludingClassAncestors and usages of that (duplication?)
         Set<Class<?>> visited = Sets.newLinkedHashSet();
         Deque<Class<?>> tovisit = new LinkedList<Class<?>>();
         tovisit.add(implClazz);

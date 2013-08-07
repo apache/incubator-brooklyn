@@ -103,7 +103,6 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     waitForApplicationToBeRunning(response.getLocation());
   }
 
-  @Test(dependsOnMethods = {"testDeployApplication", "testLocatedLocation"})
   public void testDeployApplicationImpl() throws Exception {
     ApplicationSpec spec = ApplicationSpec.builder()
             .type(RestMockApp.class.getCanonicalName())

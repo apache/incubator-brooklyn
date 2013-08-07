@@ -443,7 +443,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         } catch (IllegalArgumentException e) {
             String typeName = getClass().getCanonicalName();
             if (typeName == null) typeName = getClass().getName();
-            LOG.warn("Entity type interface not found for entity "+this+"; instead using "+typeName);
+            LOG.warn("Entity type interface not found for entity "+this+"; instead using "+typeName+" as entity type name");
             return typeName;
         }
     }

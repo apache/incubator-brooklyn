@@ -66,13 +66,23 @@ abstract public class ApidocResource {
     protected <A extends Annotation> A getAnnotation(Class<?> r, Class<A> annotationClass) {
         A result = r.getAnnotation(annotationClass);
         if (result == null) {
-            result = r.getSuperclass().getAnnotation(annotationClass);
+            // first look at things directly on superclass (not inherited)
+            if (r.getSuperclass()!=null)
+                result = r.getSuperclass().getAnnotation(annotationClass);
         }
         if (result == null) {
+            // then look at interfaces here (not inherited)
+            // we look at superclasses next so don't have to here
             for(Class<?> parentInterface :  r.getInterfaces()) {
                 result = parentInterface.getAnnotation(annotationClass);
                 if (result != null) break;
             }
+        }
+        if (result == null) {
+            // lastly take annotations on superclass and interfaces on superclass, recursively
+            // (so in short we prefer things lower down)
+            if (r.getSuperclass()!=null)
+                result = getAnnotation(r.getSuperclass(), annotationClass);
         }
         return result;
     }
